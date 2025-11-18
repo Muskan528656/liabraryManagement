@@ -1,0 +1,196 @@
+/**
+ * Handles all incoming request for /api/book endpoint
+ * DB table for this public.books
+ * Model used here is book.model.js
+ * SUPPORTED API ENDPOINTS
+ *              GET     /api/book
+ *              GET     /api/book/:id
+ *              POST    /api/book
+ *              PUT     /api/book/:id
+ *              DELETE  /api/book/:id
+ *
+ * @author      Muskan Khan
+ * @date        DEC, 2025
+ * @copyright   www.ibirdsservices.com
+ */
+
+const e = require("express");
+const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js");
+const Book = require("../models/book.model.js");
+
+module.exports = (app) => {
+  const { body, validationResult } = require("express-validator");
+
+  var router = require("express").Router();
+
+  // Get all books
+  router.get("/", fetchUser, async (req, res) => {
+    try {
+      Book.init(req.userinfo.tenantcode);
+      const books = await Book.findAll();
+      return res.status(200).json(books);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // Get book by ID
+  router.get("/:id", fetchUser, async (req, res) => {
+    try {
+      Book.init(req.userinfo.tenantcode);
+      const book = await Book.findById(req.params.id);
+      if (!book) {
+        return res.status(404).json({ errors: "Book not found" });
+      }
+      return res.status(200).json(book);
+    } catch (error) {
+      console.error("Error fetching book:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // Get book by ISBN
+  router.get("/isbn/:isbn", fetchUser, async (req, res) => {
+    try {
+      Book.init(req.userinfo.tenantcode);
+      const isbn = decodeURIComponent(req.params.isbn);
+      const book = await Book.findByISBN(isbn);
+      if (!book) {
+        return res.status(404).json({ errors: "Book not found" });
+      }
+      return res.status(200).json(book);
+    } catch (error) {
+      console.error("Error fetching book by ISBN:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // Create a new book
+  router.post(
+    "/",
+    fetchUser,
+
+    [
+      // Make validation optional for barcode scanning - allow empty strings
+      body("title").optional().custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true; // Allow empty for barcode scans
+        }
+        return value.trim().length > 0;
+      }).withMessage("Title is required"),
+      body("author_id").optional().custom((value) => {
+        // Allow null, undefined, or empty string for barcode scans
+        return true;
+      }),
+      body("category_id").optional().custom((value) => {
+        // Allow null, undefined, or empty string for barcode scans
+        return true;
+      }),
+      body("isbn").optional().custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true; // Allow empty for barcode scans
+        }
+        return value.trim().length > 0;
+      }).withMessage("ISBN is required"),
+    ],
+    async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+
+        Book.init(req.userinfo.tenantcode);
+
+        // Only check for duplicate ISBN if ISBN is provided
+        if (req.body.isbn && req.body.isbn.trim()) {
+          const existingBook = await Book.findByISBN(req.body.isbn);
+          if (existingBook) {
+            return res
+              .status(400)
+              .json({ errors: "Book with this ISBN already exists" });
+          }
+        }
+
+        const userId = req.user?.id || null;
+        const book = await Book.create(req.body, userId);
+        if (!book) {
+          return res.status(400).json({ errors: "Failed to create book" });
+        }
+        return res.status(200).json({ success: true, data: book });
+      } catch (error) {
+        console.error("Error creating book:", error);
+        return res.status(500).json({ errors: error.message });
+      }
+    }
+  );
+
+  // Update book by ID
+  router.put(
+    "/:id",
+    fetchUser,
+
+    [
+      body("title").notEmpty().withMessage("Title is required"),
+      body("author_id").notEmpty().withMessage("Author ID is required"),
+      body("category_id").notEmpty().withMessage("Category ID is required"),
+      body("isbn").notEmpty().withMessage("ISBN is required"),
+    ],
+    async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+
+        Book.init(req.userinfo.tenantcode);
+
+        // Check if book exists
+        const existingBook = await Book.findById(req.params.id);
+        if (!existingBook) {
+          return res.status(404).json({ errors: "Book not found" });
+        }
+
+        // Check for duplicate ISBN (excluding current book)
+        const duplicateBook = await Book.findByISBN(
+          req.body.isbn,
+          req.params.id
+        );
+        if (duplicateBook) {
+          return res
+            .status(400)
+            .json({ errors: "Book with this ISBN already exists" });
+        }
+
+        const userId = req.user?.id || null;
+        const book = await Book.updateById(req.params.id, req.body, userId);
+        if (!book) {
+          return res.status(400).json({ errors: "Failed to update book" });
+        }
+        return res.status(200).json({ success: true, data: book });
+      } catch (error) {
+        console.error("Error updating book:", error);
+        return res.status(500).json({ errors: error.message });
+      }
+    }
+  );
+
+  // Delete book by ID
+  router.delete("/:id", fetchUser, async (req, res) => {
+    try {
+      Book.init(req.userinfo.tenantcode);
+      const result = await Book.deleteById(req.params.id);
+      if (!result.success) {
+        return res.status(404).json({ errors: result.message });
+      }
+      return res.status(200).json({ success: true, message: result.message });
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  app.use(process.env.BASE_API_URL + "/api/book", router);
+};
+

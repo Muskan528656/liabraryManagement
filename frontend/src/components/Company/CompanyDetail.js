@@ -1,0 +1,88 @@
+import React from "react";
+import ModuleDetail from "../common/ModuleDetail";
+
+const CompanyDetail = () => {
+  const fields = {
+    title: "name",
+    subtitle: "systememail",
+    status: "isactive",
+    overview: [
+      { key: "name", label: "Company Name", type: "text" },
+      { key: "systememail", label: "System Email", type: "email" },
+      { key: "adminemail", label: "Admin Email", type: "email" },
+      { key: "userlicenses", label: "User Licenses", type: "number" },
+      { key: "currency", label: "Currency", type: "text" },
+    ],
+    details: [
+      { key: "name", label: "Company Name", type: "text" },
+      { key: "tenantcode", label: "Tenant Code", type: "text" },
+      { key: "userlicenses", label: "User Licenses", type: "number" },
+      { key: "isactive", label: "Active Status", type: "boolean" },
+      { key: "systememail", label: "System Email", type: "email" },
+      { key: "adminemail", label: "Admin Email", type: "email" },
+      { key: "logourl", label: "Logo URL", type: "url" },
+      { key: "sidebarbgurl", label: "Sidebar Background URL", type: "url" },
+      { key: "sourceschema", label: "Source Schema", type: "text" },
+      { key: "city", label: "City", type: "text" },
+      { key: "street", label: "Street", type: "text" },
+      { key: "pincode", label: "Pincode", type: "text" },
+      { key: "state", label: "State", type: "text" },
+      { key: "country", label: "Country", type: "text" },
+      { key: "platform_name", label: "Platform Name", type: "text" },
+      {
+        key: "platform_api_endpoint",
+        label: "Platform API Endpoint",
+        type: "json"
+      },
+      { key: "is_external", label: "External Company", type: "boolean" },
+      { key: "has_wallet", label: "Has Wallet", type: "boolean" },
+      { key: "currency", label: "Currency", type: "text" },
+      { key: "created_at", label: "Created At", type: "datetime" },
+      { key: "updated_at", label: "Updated At", type: "datetime" },
+    ],
+    address: [
+      { key: "street", label: "Street", type: "text" },
+      { key: "city", label: "City", type: "text" },
+      { key: "state", label: "State", type: "text" },
+      { key: "country", label: "Country", type: "text" },
+      { key: "pincode", label: "Pincode", type: "text" },
+    ],
+    contact: [
+      { key: "systememail", label: "System Email", type: "email" },
+      { key: "adminemail", label: "Admin Email", type: "email" },
+    ],
+    settings: [
+      { key: "userlicenses", label: "User Licenses", type: "number" },
+      { key: "isactive", label: "Active Status", type: "boolean" },
+      { key: "is_external", label: "External Company", type: "boolean" },
+      { key: "has_wallet", label: "Has Wallet", type: "boolean" },
+      { key: "currency", label: "Currency", type: "text" },
+      { key: "platform_name", label: "Platform Name", type: "text" },
+    ]
+  };
+
+  return (
+    <ModuleDetail
+      moduleName="company"
+      moduleApi="company"
+      moduleLabel="Company"
+      fields={fields}
+      relatedModules={[
+        {
+          label: "Users",
+          api: "user",
+          filterKey: "company_id",
+          columns: ["name", "email", "role"]
+        },
+        {
+          label: "Departments",
+          api: "department",
+          filterKey: "company_id",
+          columns: ["name", "code", "head"]
+        }
+      ]}
+    />
+  );
+};
+
+export default CompanyDetail;
