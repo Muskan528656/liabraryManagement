@@ -385,31 +385,43 @@ const User = () => {
       sortable: false,
       width: 80,
     },
-    { field: "id", label: "User ID", sortable: true },
+    // { field: "id", label: "User ID", sortable: true },
     {
       field: "firstname",
       label: "First Name",
       sortable: true,
-      render: (value, record) => (
-        <a
-          href={`/user/${record.id}`}
+      render: (value, record) => {
+        const userId = record.id;
+        const userName = value || record.lastname || "N/A";
+        return (
+          <a
+            href={`/user/${userId}`}
             onClick={(e) => {
               e.preventDefault();
-              navigate(`/user/${record.id}`);
+              e.stopPropagation();
+              try {
+                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+              } catch (err) {}
+              navigate(`/user/${userId}`, { state: record });
             }}
-          style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500" }}
-          onMouseEnter={(e) => {
-            try {
-              const key = `prefetch:user:${record.id}`;
-              localStorage.setItem(key, JSON.stringify(record));
-            } catch (err) {}
-            e.target.style.textDecoration = "underline";
-          }}
-          onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
-        >
-          {value || "N/A"}
-        </a>
-      ),
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              try {
+                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+              } catch (err) {}
+              window.open(`/user/${userId}`, '_blank');
+            }}
+            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500", cursor: "pointer" }}
+            onMouseEnter={(e) => {
+              e.target.style.textDecoration = "underline";
+            }}
+            onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+          >
+            {userName}
+          </a>
+        );
+      },
     },
     { field: "lastname", label: "Last Name", sortable: true },
     { field: "email", label: "Email", sortable: true },

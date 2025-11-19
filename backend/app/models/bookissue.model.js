@@ -223,7 +223,6 @@ async function issueBook(issueData, userId) {
     const settings = await LibrarySettings.getAllSettings();
     const maxBooksPerCard = parseInt(settings.max_books_per_card || 1);
     const durationDays = parseInt(settings.duration_days || 15);
-    const maxIssuePerDay = parseInt(settings.max_issue_per_day || 1);
 
     // Check how many books are currently issued to this user
     const activeIssuesQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
@@ -236,15 +235,18 @@ async function issueBook(issueData, userId) {
       throw new Error(`Maximum ${maxBooksPerCard} book(s) can be issued per user. User already has ${activeIssuesCount} book(s) issued.`);
     }
 
-    // Check how many books were issued today to this user
-    const todayIssuesQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
-                              WHERE issued_to = $1 AND DATE(issue_date) = CURRENT_DATE`;
-    const todayIssuesResult = await client.query(todayIssuesQuery, [issued_to]);
-    const todayIssuesCount = parseInt(todayIssuesResult.rows[0].count || 0);
+    // **NEW LOGIC: Check if user already got the SAME book today**
+    const sameBookTodayQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
+                                WHERE issued_to = $1 
+                                AND book_id = $2 
+                                AND DATE(issue_date) = CURRENT_DATE
+                                AND return_date IS NULL 
+                                AND status = 'issued'`;
+    const sameBookTodayResult = await client.query(sameBookTodayQuery, [issued_to, issueData.book_id]);
+    const sameBookTodayCount = parseInt(sameBookTodayResult.rows[0].count || 0);
 
-    // Check if user has reached maximum issues per day limit
-    if (todayIssuesCount >= maxIssuePerDay) {
-      throw new Error(`Maximum ${maxIssuePerDay} book(s) can be issued per day. User has already been issued ${todayIssuesCount} book(s) today.`);
+    if (sameBookTodayCount > 0) {
+      throw new Error(`User can only get 1 copy of the same book per day. This book has already been issued to the user today.`);
     }
 
     // Calculate due date from settings

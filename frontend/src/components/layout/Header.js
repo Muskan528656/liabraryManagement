@@ -160,7 +160,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const resp = await api.fetchAll();
       const result = resp?.data;
       let modules = [];
-      
+
       if (result && result.success && Array.isArray(result.records)) {
         modules = result.records;
       } else if (Array.isArray(result?.records)) {
@@ -241,7 +241,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
     window.addEventListener("storage", handleStorageChange);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -358,9 +358,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     });
   };
 
-  const handleCloseBookSubmitModal = () => {
-    setShowBookSubmitModal(false);
-  };
+  // const handleCloseBookSubmitModal = () => {
+  //   setShowBookSubmitModal(false);
+  // };
 
   const handleQuickAction = (actionType) => {
     setQuickActionType(actionType);
@@ -718,24 +718,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   <i className="fa-solid fa-user me-2" style={{ width: "20px", color: "#6b7280" }}></i>
                   My Profile
                 </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() => navigate("/settings")}
-                  style={{
-                    padding: "10px 16px",
-                    color: "#374151",
-                    fontSize: "14px",
-                    cursor: "pointer"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <i className="fa-solid fa-gear me-2" style={{ width: "20px", color: "#6b7280" }}></i>
-                  Settings
-                </Dropdown.Item>
+
                 <Dropdown.Divider />
                 <Dropdown.Item
                   onClick={handleLogout}
@@ -766,7 +749,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         expand="lg"
         style={{
           padding: "0.75rem 1.5rem",
-     
+
           background: "dadde2",
           boxShadow: "none"
         }}
@@ -930,10 +913,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         actionType={quickActionType}
       />
 
-      <BookSubmitModal
+      {/* <BookSubmitModal
         show={showBookSubmitModal}
         onHide={handleCloseBookSubmitModal}
-      />
+      /> */}
     </div>
   );
 }

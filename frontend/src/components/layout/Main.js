@@ -3,7 +3,8 @@ import { Outlet } from "react-router-dom";
 import Header from "./Header";
 // import Sidebar from "./Sidebar"; // Commented out - modules now in header
 import Footer from "./Footer";
-import LibraryWorkflowGuide from "../common/LibraryWorkflowGuide";
+// import Libr
+// aryWorkflowGuide from "../common/LibraryWorkflowGuide";
 import UniversalBarcodeScanner from "../common/UniversalBarcodeScanner";
 
 export default function Main({ socket }) {
@@ -25,7 +26,6 @@ export default function Main({ socket }) {
         }}
       >
         <Header open={sidebarOpen} handleDrawerOpen={toggleSidebar} socket={socket} />
-        <LibraryWorkflowGuide isSidebar />
         <UniversalBarcodeScanner />
         <main
           style={{

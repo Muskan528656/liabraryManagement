@@ -244,7 +244,7 @@ const Settings = () => {
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label className="fw-semibold">
-                      Issuance Duration (Days)
+                      Book  Issue (Days)
                       <Badge bg="info" className="ms-2">Current: {librarySettings.duration_days}</Badge>
                     </Form.Label>
                     {isEditingSettings ? (

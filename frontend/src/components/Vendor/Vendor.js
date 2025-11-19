@@ -2,18 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Form, Modal, InputGroup, Badge, Dropdown } from "react-bootstrap";
 import * as XLSX from "xlsx";
 import { useNavigate, useLocation } from "react-router-dom";
-import ResizableTable from "../../src/components/common/ResizableTable";
-import ScrollToTop from "../../src/components/common/ScrollToTop";
-import Loader from "../../src/components/common/Loader";
-import TableHeader from "../../src/components/common/TableHeader";
-import FormModal from "../../src/components/common/FormModal";
-import DataApi from "../api/dataApi";
+import ResizableTable from "../common/ResizableTable";
+import ScrollToTop from "../common/ScrollToTop";
+import Loader from "../common/Loader";
+import TableHeader from "../common/TableHeader";
+import FormModal from "../common/FormModal";
+import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
-import { exportToExcel } from "../../src/utils/excelExport";
-import CityState from "../constants/CityState.json";
-import CityPincode from "../constants/CityPincode.json";
+import { exportToExcel } from "../../utils/excelExport";
+import CityState from "../../constants/CityState.json";
+import CityPincode from "../../constants/CityPincode.json";
 import Select from "react-select";
-const PurchaseVendor = () => {
+const Vendor = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [vendors, setVendors] = useState([]);
@@ -28,7 +28,6 @@ const PurchaseVendor = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const recordsPerPage = 10;
 
-  // City-State-Pincode dependency states
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [pincodes, setPincodes] = useState([]);
@@ -1070,5 +1069,5 @@ const PurchaseVendor = () => {
   );
 };
 
-export default PurchaseVendor;
+export default Vendor;
 

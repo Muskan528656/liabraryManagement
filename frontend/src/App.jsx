@@ -8,7 +8,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
 import Home from "./components/Home";
 import React, { useEffect, useState } from "react";
-import { UserAdd, UserList, UserTracking, UserView } from "./components/user";
+import { UserAdd, UserList, UserView } from "./components/user";
 import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 import Main from "./components/layout/Main";
@@ -19,8 +19,8 @@ import Author from "./components/author/Author";
 import AuthorDetail from "./components/author/AuthorDetail";
 import Category from "./components/category/Category";
 import CategoryDetail from "./components/category/CategoryDetail";
-import PurchaseVendor from "./components/Vendor";
-import VendorDetail from "./components/VendorDetail";
+import Vendor from "./components/Vendor/Vendor";
+import VendorDetail from "./components/Vendor/VendorDetail";
 import Purchase from "./components/purchase/Purchase";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
 import User from "./components/user/User";
@@ -135,7 +135,7 @@ function App() {
             <Route path="books/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
             <Route path="category/:id" element={<CategoryDetail />} />
-            <Route path="vendor" element={<PurchaseVendor />} />
+            <Route path="vendor" element={<Vendor />} />
             <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
@@ -153,7 +153,7 @@ function App() {
             <Route path="users/e" element={<UserAdd />} />
             <Route path="users/:id/e" element={<UserAdd />} />
             <Route path="users/:id" element={<UserView />} />
-            <Route path="usertracking" element={<UserTracking />} />
+            {/* <Route path="usertracking" element={<UserTracking />} /> */}
             <Route path="myprofile" element={<EditProfile />} />
             <Route path="Company" element={<Company />} />
             <Route path="/company/:id" element={<CompanyDetail />} />

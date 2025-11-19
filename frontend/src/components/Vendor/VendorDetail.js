@@ -1,5 +1,5 @@
 import React from "react";
-import ModuleDetail from "./common/ModuleDetail";
+import ModuleDetail from "../common/ModuleDetail";
 
 const VendorDetail = () => {
   const fields = {

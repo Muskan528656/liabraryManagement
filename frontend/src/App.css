@@ -21,8 +21,8 @@ button,
 select,
 textarea,
 a {
-  font-family: var(--app-font-stack);
-  font-size: var(--app-font-size);
+  /* font-family: var(--app-font-stack); */
+  /* font-size: var(--app-font-size); */
 }
 
 /* --- Palette overrides to keep UI constrained to light purple + white --- */
@@ -167,7 +167,7 @@ body {
 
 .maplabel {
   font-weight: bold;
-  font-size: .75rem !important;
+  font-size: .85rem !important;
 }
 
 body {
@@ -1286,13 +1286,13 @@ textarea.form-control[required] {
 
 
 .template-body {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.5;
   white-space: pre-line;
 }
 
 .template-footer {
-  font-size: 12px;
+  font-size: 15px;
   color: #757575;
 }
 
@@ -1303,7 +1303,7 @@ textarea.form-control[required] {
   background-color: white;
   border: none;
   border-radius: 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #00a5f4;
   border-top: 1px solid #dadde1;
 }
@@ -1398,7 +1398,7 @@ textarea.form-control[required] {
   padding: 12px 16px;
   text-align: left;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 20px;
   color: #2d3748;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1431,7 +1431,7 @@ textarea.form-control[required] {
 
 .salesforce-table tbody td {
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: 17px;
   color: #2d3748;
   border-right: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -1463,7 +1463,7 @@ textarea.form-control[required] {
   color: #6a6573;
   border-color: #e2e8f0;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 19px;
   background-color: #ffffff;
 }
 

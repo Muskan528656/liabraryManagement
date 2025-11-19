@@ -921,7 +921,31 @@ const BookIssue = () => {
       field: "book_title",
       label: "Book Title",
       width: 250,
-      render: (value) => <strong>{value || "N/A"}</strong>
+      render: (value, record) => (
+        <a
+          href={`/books/${record.book_id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/books/${record.book_id}`);
+          }}
+          style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "600" }}
+          onMouseEnter={(e) => {
+            try {
+              const bookPrefetch = {
+                id: record.book_id,
+                title: record.book_title,
+                isbn: record.book_isbn,
+                author_name: record.author_name
+              };
+              localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(bookPrefetch));
+            } catch (err) {}
+            e.target.style.textDecoration = "underline";
+          }}
+          onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+        >
+          <strong>{value || "N/A"}</strong>
+        </a>
+      )
     },
     {
       field: "book_isbn",
@@ -937,9 +961,44 @@ const BookIssue = () => {
       field: "issued_to_name",
       label: "Issued To",
       width: 200,
-      render: (value, record) => (
-        record.issued_to_name || record.student_name || record.issued_to || "N/A"
-      )
+      render: (value, record) => {
+        const userId = record.user_id || record.student_id || record.issued_to;
+        const displayName = record.issued_to_name || record.student_name || record.issued_to || "N/A";
+        if (userId) {
+          return (
+            <a
+              href={`/user/${userId}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+                } catch (err) {}
+                navigate(`/user/${userId}`, { state: record });
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+                } catch (err) {}
+                window.open(`/user/${userId}`, '_blank');
+              }}
+              style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
+              onMouseEnter={(e) => {
+                e.target.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.textDecoration = "none";
+              }}
+              title="Click to view user details (Right-click to open in new tab)"
+            >
+              {displayName}
+            </a>
+          );
+        }
+        return displayName;
+      }
     },
     {
       field: "card_number",
@@ -1001,29 +1060,7 @@ const BookIssue = () => {
   return (
     <Container fluid className="mt-4" style={{ marginTop: "90px", padding: "0 1.5rem" }}>
       {/* Header Card */}
-      <Card className="mb-4" style={{ border: "none", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)", background: "#ffffff" }}>
-        <Card.Body className="p-4">
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-              <h4 className="mb-1 fw-bold" style={{ color: "#000000", fontSize: "24px" }}>
-                <i className="fa-solid fa-hand-holding me-2" style={{ color: "#6b7280" }}></i>
-                Issue Book
-              </h4>
-              <p className="text-muted mb-0" style={{ fontSize: "15px" }}>Select book and library card to issue</p>
-            </div>
-            <div className="d-flex gap-2 align-items-center">
-              <Badge bg="info" style={{ fontSize: "0.875rem", padding: "0.5rem 1rem" }}>
-                <i className="fa-solid fa-book-open me-1"></i>
-                {issuedBooks.length} Book{issuedBooks.length !== 1 ? 's' : ''} Issued
-              </Badge>
-              <Badge bg="light" text="dark" style={{ fontSize: "0.875rem", padding: "0.5rem 1rem" }}>
-                <i className="fa-solid fa-book me-1"></i>
-                Quick Issue
-              </Badge>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
+     
 
       {/* Tabs */}
       <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "issue")}>

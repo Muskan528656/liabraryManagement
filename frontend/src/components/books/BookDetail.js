@@ -25,11 +25,23 @@ const BookDetail = () => {
       const data = resp.data && resp.data.data ? resp.data.data : resp.data;
       setBook(data || null);
 
-      // fetch borrow history (book issues)
+      // fetch borrow history (book issues) - fetch all issues including returned ones
       try {
         const issueApi = new DataApi("bookissue");
+        // Try to fetch all issues for this book
         const ir = await issueApi.get(`/book/${id}`);
-        const idata = ir.data && ir.data.data ? ir.data.data : ir.data;
+        let idata = ir.data && ir.data.data ? ir.data.data : ir.data;
+        // If response is not an array, try to get all issues
+        if (!Array.isArray(idata)) {
+          // Try fetching all issues and filter by book_id
+          const allIssuesResp = await issueApi.fetchAll();
+          const allIssues = allIssuesResp.data && Array.isArray(allIssuesResp.data) 
+            ? allIssuesResp.data 
+            : (allIssuesResp.data?.data && Array.isArray(allIssuesResp.data.data) 
+              ? allIssuesResp.data.data 
+              : []);
+          idata = allIssues.filter(issue => issue.book_id === id || issue.book_id === parseInt(id));
+        }
         setIssues(Array.isArray(idata) ? idata : []);
       } catch (ie) {
         console.error("Error fetching issues", ie);
@@ -58,6 +70,14 @@ const BookDetail = () => {
       </Container>
     );
   }
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <Container fluid>
@@ -118,9 +138,48 @@ const BookDetail = () => {
                   ) : (
                     issues.map((it) => (
                       <tr key={it.id}>
-                        <td>{it.issued_to_name || it.student_name || it.issued_to || "-"}</td>
-                        <td>{it.issue_date || "-"}</td>
-                        <td>{it.return_date || "-"}</td>
+                        <td>
+                          {(() => {
+                            const userId = it.user_id || it.student_id || it.issued_to;
+                            const displayName = it.issued_to_name || it.student_name || it.issued_to || "-";
+                            if (userId) {
+                              return (
+                                <a
+                                  href={`/user/${userId}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    try {
+                                      localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(it));
+                                    } catch (err) {}
+                                    navigate(`/user/${userId}`, { state: it });
+                                  }}
+                                  onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    try {
+                                      localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(it));
+                                    } catch (err) {}
+                                    window.open(`/user/${userId}`, '_blank');
+                                  }}
+                                  style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.textDecoration = "underline";
+                                  }}
+                                  onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                                  title="Click to view user details (Right-click to open in new tab)"
+                                >
+                                  {displayName}
+                                </a>
+                              );
+                            }
+                            return displayName;
+                          })()}
+                        </td>
+                        <td>{formatDate(it.issue_date)}</td>
+                        <td>{formatDate(it.return_date)}</td>
+                        {/* <td>{it.issue_date || "-"}</td>
+                        <td>{it.return_date || "-"}</td> */}
                         <td>--</td>
                       </tr>
                     ))

@@ -154,7 +154,7 @@ module.exports = (app) => {
   router.delete(
     "/:id",
     fetchUser,
-    
+
     async (req, res) => {
       try {
         BookSubmission.init(req.userinfo.tenantcode);
@@ -172,5 +172,5 @@ module.exports = (app) => {
     }
   );
 
-  app.use("/api/book-submissions", router);
+  app.use(process.env.BASE_API_URL + "/api/book_submissions", router);
 };

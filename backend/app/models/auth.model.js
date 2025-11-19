@@ -1,7 +1,7 @@
 const sql = require("./db.js");
 
 function init(schema_name, company_id = null) {
- 
+
   this.schema = schema_name;
   this.companyId = company_id;
 }
@@ -87,7 +87,7 @@ async function createUser(newUser) {
 //     console.error("Error: Schema not initialized in checkLicenses");
 //     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
 //   }
-  
+
 //   const company = await sql.query(
 //     "SELECT userlicenses from company where id = $1 ",
 //     [companyid]
@@ -232,12 +232,146 @@ async function createUser(newUser) {
 
 //   return null;
 // }
+// async function findByEmail(email) {
+//   if (!this.schema) {
+//     console.error("Error: Schema not initialized in findByEmail");
+//     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
+//   }
+
+//   const emailLower = email ? email.toLowerCase().trim() : "";
+
+//   const userCheck = await sql.query(`
+//     SELECT * FROM ${this.schema}.user 
+//     WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+//     LIMIT 1
+//   `, [emailLower]);
+
+//   if (!userCheck || userCheck.rows.length === 0) {
+//     console.log("User not found in schema:", this.schema, "for email:", emailLower);
+//     return null;
+//   }
+//   const result = await sql.query(`
+//   WITH user_info AS (
+//     SELECT * FROM ${this.schema}.user 
+//     WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+//   ),
+//   company_info AS (
+//     SELECT * FROM public.company 
+//     WHERE isactive = true AND id = (SELECT companyid FROM user_info)
+//   ),
+//   subscription_info AS (
+//     SELECT s.*, i.status AS invoice_status
+//     FROM public.subscriptions s
+//     LEFT JOIN public.invoices i ON i.subscription_id = s.id
+//     WHERE s.company_id = (SELECT id FROM company_info)
+//     ORDER BY s.start_date DESC
+//     LIMIT 1
+//   ),
+//   plan_modules AS (
+//     SELECT DISTINCT m.*
+//     FROM public.subscriptions s
+//     JOIN public.plans p ON s.plan_id = p.id
+//     JOIN public.plan_module pm ON pm.planid = p.id
+//     JOIN public.module m ON pm.moduleid = m.id
+//     WHERE s.id = (SELECT id FROM subscription_info)
+//       AND m.status = 'active'
+//   ),
+//   addon_modules AS (
+//     SELECT DISTINCT m.*
+//     FROM public.invoices i
+//     JOIN public.invoice_items ii ON ii.invoice_id = i.id
+//     JOIN public.addons a ON ii.addon_id = a.id
+//     JOIN public.module m ON a.name = m.url
+//     WHERE i.subscription_id = (SELECT id FROM subscription_info)
+//       AND ii.type = 'addon'
+//       AND m.status = 'active'
+//   ),
+//   all_modules AS (
+//     SELECT * FROM plan_modules
+//     UNION
+//     SELECT * FROM addon_modules
+//   )
+
+//   SELECT json_build_object(
+//     'id', u.id,
+//     'firstname', u.firstname,
+//     'lastname', u.lastname,
+//     'email', u.email,
+//     'whatsapp_number', u.whatsapp_number,
+//     'country_code', u.country_code,
+//     'password', u.password,
+//     'userrole', u.userrole,
+//     'companyid', u.companyid,
+//     'whatsapp_settings', u.whatsapp_settings,
+//     'companyname', c.name,
+//     'companystreet', c.street,
+//     'companycity', c.city,
+//     'companypincode', c.pincode,
+//     'companystate', c.state,
+//     'companycountry', c.country,
+//     'tenantcode', c.tenantcode,
+//     'logourl', c.logourl,
+//     'has_wallet', c.has_wallet,
+//     'subscription', json_build_object(
+//       'id', s.id,
+//       'validity', s.validity,
+//       'end_date', CASE 
+//         WHEN s.invoice_status = 'Complete' THEN s.end_date
+//         ELSE NULL
+//       END
+//     ),
+//     'plan', json_build_object(
+//       'id', p.id,
+//       'name', p.name,
+//       'msg_limits', p.msg_limits,
+//       'number_of_whatsapp_setting', COALESCE(p.number_of_whatsapp_setting, 0),
+//       'number_of_users', COALESCE(p.number_of_users, 0)
+//     ),
+//     'addons', (
+//       SELECT COALESCE(json_agg(DISTINCT jsonb_build_object(
+//         'name', a2.name,
+//         'quantity', ii2.quantity
+//       )) FILTER (WHERE ii2.addon_id IS NOT NULL), '[]')
+//       FROM public.invoices i2
+//       JOIN public.invoice_items ii2 ON ii2.invoice_id = i2.id
+//       JOIN public.addons a2 ON ii2.addon_id = a2.id
+//       WHERE i2.subscription_id = s.id
+//         AND ii2.type = 'addon'
+//     ),
+//     'modules', (
+//       SELECT COALESCE(json_agg(
+//         jsonb_build_object(
+//           'id', m.id,
+//           'name', m.name,
+//           'url', m.url,
+//           'icon', m.icon,
+//           'order_no', m.order_no,
+//           'status', m.status,
+//           'parent_module', m.parent_module
+//         ) ORDER BY m.order_no), '[]'
+//       )
+//       FROM all_modules m
+//     )
+//   ) AS userinfo
+
+//   FROM user_info u
+//   INNER JOIN company_info c ON u.companyid = c.id
+//   LEFT JOIN subscription_info s ON s.company_id = c.id
+//   LEFT JOIN public.plans p ON s.plan_id = p.id
+//   LIMIT 1
+//   `, [emailLower]);
+
+//   console.log("result@@@", result);
+
+//   return result.rows.length > 0 ? result.rows[0] : null;
+// }
+
 async function findByEmail(email) {
   if (!this.schema) {
     console.error("Error: Schema not initialized in findByEmail");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
-  
+
   const emailLower = email ? email.toLowerCase().trim() : "";
 
   const userCheck = await sql.query(`
@@ -250,123 +384,53 @@ async function findByEmail(email) {
     console.log("User not found in schema:", this.schema, "for email:", emailLower);
     return null;
   }
+
   const result = await sql.query(`
-  WITH user_info AS (
-    SELECT * FROM ${this.schema}.user 
-    WHERE LOWER(TRIM(email)) = $1 AND isactive = true
-  ),
-  company_info AS (
-    SELECT * FROM public.company 
-    WHERE isactive = true AND id = (SELECT companyid FROM user_info)
-  ),
-  subscription_info AS (
-    SELECT s.*, i.status AS invoice_status
-    FROM public.subscriptions s
-    LEFT JOIN public.invoices i ON i.subscription_id = s.id
-    WHERE s.company_id = (SELECT id FROM company_info)
-    ORDER BY s.start_date DESC
-    LIMIT 1
-  ),
-  plan_modules AS (
-    SELECT DISTINCT m.*
-    FROM public.subscriptions s
-    JOIN public.plans p ON s.plan_id = p.id
-    JOIN public.plan_module pm ON pm.planid = p.id
-    JOIN public.module m ON pm.moduleid = m.id
-    WHERE s.id = (SELECT id FROM subscription_info)
-      AND m.status = 'active'
-  ),
-  addon_modules AS (
-    SELECT DISTINCT m.*
-    FROM public.invoices i
-    JOIN public.invoice_items ii ON ii.invoice_id = i.id
-    JOIN public.addons a ON ii.addon_id = a.id
-    JOIN public.module m ON a.name = m.url
-    WHERE i.subscription_id = (SELECT id FROM subscription_info)
-      AND ii.type = 'addon'
-      AND m.status = 'active'
-  ),
-  all_modules AS (
-    SELECT * FROM plan_modules
-    UNION
-    SELECT * FROM addon_modules
-  )
-
-  SELECT json_build_object(
-    'id', u.id,
-    'firstname', u.firstname,
-    'lastname', u.lastname,
-    'email', u.email,
-    'whatsapp_number', u.whatsapp_number,
-    'country_code', u.country_code,
-    'password', u.password,
-    'userrole', u.userrole,
-    'companyid', u.companyid,
-    'whatsapp_settings', u.whatsapp_settings,
-    'companyname', c.name,
-    'companystreet', c.street,
-    'companycity', c.city,
-    'companypincode', c.pincode,
-    'companystate', c.state,
-    'companycountry', c.country,
-    'tenantcode', c.tenantcode,
-    'logourl', c.logourl,
-    'has_wallet', c.has_wallet,
-    'subscription', json_build_object(
-      'id', s.id,
-      'validity', s.validity,
-      'end_date', CASE 
-        WHEN s.invoice_status = 'Complete' THEN s.end_date
-        ELSE NULL
-      END
+    WITH user_info AS (
+      SELECT *
+      FROM ${this.schema}.user
+      WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+      LIMIT 1
     ),
-    'plan', json_build_object(
-      'id', p.id,
-      'name', p.name,
-      'msg_limits', p.msg_limits,
-      'number_of_whatsapp_setting', COALESCE(p.number_of_whatsapp_setting, 0),
-      'number_of_users', COALESCE(p.number_of_users, 0)
-    ),
-    'addons', (
-      SELECT COALESCE(json_agg(DISTINCT jsonb_build_object(
-        'name', a2.name,
-        'quantity', ii2.quantity
-      )) FILTER (WHERE ii2.addon_id IS NOT NULL), '[]')
-      FROM public.invoices i2
-      JOIN public.invoice_items ii2 ON ii2.invoice_id = i2.id
-      JOIN public.addons a2 ON ii2.addon_id = a2.id
-      WHERE i2.subscription_id = s.id
-        AND ii2.type = 'addon'
-    ),
-    'modules', (
-      SELECT COALESCE(json_agg(
-        jsonb_build_object(
-          'id', m.id,
-          'name', m.name,
-          'url', m.url,
-          'icon', m.icon,
-          'order_no', m.order_no,
-          'status', m.status,
-          'parent_module', m.parent_module
-        ) ORDER BY m.order_no), '[]'
-      )
-      FROM all_modules m
+    company_info AS (
+      SELECT *
+      FROM public.company
+      WHERE id = (SELECT companyid FROM user_info)
+        AND isactive = true
+      LIMIT 1
     )
-  ) AS userinfo
 
-  FROM user_info u
-  INNER JOIN company_info c ON u.companyid = c.id
-  LEFT JOIN subscription_info s ON s.company_id = c.id
-  LEFT JOIN public.plans p ON s.plan_id = p.id
-  LIMIT 1
+    SELECT json_build_object(
+      'id', u.id,
+      'firstname', u.firstname,
+      'lastname', u.lastname,
+      'email', u.email,
+      'whatsapp_number', u.whatsapp_number,
+      'country_code', u.country_code,
+      'password', u.password,
+      'userrole', u.userrole,
+      'companyid', u.companyid,
+      'whatsapp_settings', u.whatsapp_settings,
+
+      -- company info
+      'companyname', c.name,
+      'companystreet', c.street,
+      'companycity', c.city,
+      'companypincode', c.pincode,
+      'companystate', c.state,
+      'companycountry', c.country,
+      'tenantcode', c.tenantcode,
+      'logourl', c.logourl,
+      'has_wallet', c.has_wallet
+    ) AS userinfo
+
+    FROM user_info u
+    LEFT JOIN company_info c ON c.id = u.companyid
+    LIMIT 1;
   `, [emailLower]);
-
-  console.log("result@@@", result);
 
   return result.rows.length > 0 ? result.rows[0] : null;
 }
-
-
 async function findById(id) {
   try {
     let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.managerid, concat(mu.firstname,' ', mu.lastname) managername, u.whatsapp_number, u.country_code, u.whatsapp_settings FROM ${this.schema}.user u`;
@@ -492,7 +556,7 @@ async function checkForDuplicate(email, whatsappNumber, userId = null) {
     console.error("Error: Schema not initialized in checkForDuplicate");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
-  
+
   const params = [email, whatsappNumber];
   let query = `
       SELECT id, email, whatsapp_number
@@ -547,7 +611,7 @@ async function getUserCount(companyId) {
     console.error("Error: Schema not initialized in getUserCount");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
-  
+
   try {
     const query = `SELECT COUNT(*) FROM ${this.schema}.user WHERE companyid = $1 AND userrole = $2`;
     const result = await sql.query(query, [companyId, "USER"]);

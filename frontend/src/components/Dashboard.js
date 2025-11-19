@@ -15,7 +15,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    // Get user info from token if not passed as prop
     let currentUserInfo = propUserInfo;
     if (!currentUserInfo) {
       try {
