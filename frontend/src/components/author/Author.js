@@ -569,23 +569,7 @@ const Author = () => {
         </Col>
       </Row>
 
-      <Row className="mb-3">
-        <Col>
-          <InputGroup>
-            <InputGroup.Text style={{ background: "#f3e9fc", borderColor: "#e9ecef" }}>
-              <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
-            </InputGroup.Text>
-            <Form.Control
-              placeholder="Search authors by name, email, or bio..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ borderColor: "#e9ecef" }}
-            />
-          </InputGroup>
-
-
-        </Col>
-      </Row>
+  
 
       <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
         <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>

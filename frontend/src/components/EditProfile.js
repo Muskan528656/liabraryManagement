@@ -263,9 +263,9 @@ const EditProfile = ({ userId }) => {
           // Upload image using FormData and axios directly
           const formData = new FormData();
           formData.append('file', selectedFiles);
-          
+
           const token = sessionStorage.getItem('token');
-          
+
           // Upload image to user profile image endpoint
           const uploadResponse = await axios.post(
             `${constants.API_BASE_URL}/api/user/${profile.id}/upload-image`,
@@ -295,12 +295,12 @@ const EditProfile = ({ userId }) => {
               // Update the image path in session storage
               const imagePath = `${profileImg}/${profile.id}`;
               sessionStorage.setItem("myimage", imagePath);
-              
+
               // Refresh the page to show new image
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
-              
+
               PubSub.publish("RECORD_SAVED_TOAST", {
                 title: "Success",
                 message: "Profile and image updated successfully",
@@ -314,7 +314,7 @@ const EditProfile = ({ userId }) => {
         } catch (uploadError) {
           console.error("Error uploading image:", uploadError);
           toast.error("Failed to upload image. Please try again.");
-          
+
           // Still update profile data even if image upload fails
           const userApi = new DataApi("user");
           const updateData = {
