@@ -8264,6 +8264,293 @@ const LibraryCard = () => {
   const recordsPerPage = 10;
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null); // Changed from selectedBarcode to selectedCard
+  // const handlePrintView = () => {
+  //     try {
+  //       const printWindow = window.open('', '_blank', 'width=1000,height=800');
+
+  //       let htmlContent = `
+  //         <!DOCTYPE html>
+  //         <html>
+  //         <head>
+  //           <title>Library Card Barcodes - Print</title>
+  //           <style>
+  //             * {
+  //               margin: 0;
+  //               padding: 0;
+  //               box-sizing: border-box;
+  //             }
+  //             body {
+  //               font-family: Arial, sans-serif;
+  //               background: white;
+  //               padding: 20px;
+  //             }
+  //             .page {
+  //               background: white;
+  //               page-break-after: always;
+  //               padding: 20px;
+  //               margin-bottom: 20px;
+  //             }
+  //             .header {
+  //               text-align: center;
+  //               margin-bottom: 20px;
+  //               border-bottom: 2px solid #6f42c1;
+  //               padding-bottom: 10px;
+  //             }
+  //             .header h1 {
+  //               color: #6f42c1;
+  //               font-size: 24px;
+  //               margin-bottom: 5px;
+  //             }
+  //             .header p {
+  //               color: #666;
+  //               font-size: 14px;
+  //             }
+  //             .cards-grid {
+  //               display: grid;
+  //               grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  //               gap: 15px;
+  //               margin-top: 20px;
+  //             }
+  //             .card-item {
+  //               border: 2px solid #e0e0e0;
+  //               padding: 15px;
+  //               border-radius: 8px;
+  //               text-align: center;
+  //               page-break-inside: avoid;
+  //               background: white;
+  //             }
+  //             .card-item-header {
+  //               color: #6f42c1;
+  //               font-weight: bold;
+  //               font-size: 12px;
+  //               margin-bottom: 8px;
+  //               text-transform: uppercase;
+  //               letter-spacing: 1px;
+  //             }
+  //             .barcode-container {
+  //               background: white;
+  //               padding: 8px;
+  //               border-radius: 4px;
+  //               margin: 8px 0;
+  //               min-height: 50px;
+  //               display: flex;
+  //               align-items: center;
+  //               justify-content: center;
+  //               border: 1px solid #ddd;
+  //             }
+  //             .barcode-container svg {
+  //               max-width: 100%;
+  //               height: 40px;
+  //             }
+  //             .isbn-number {
+  //               font-family: monospace;
+  //               font-size: 10px;
+  //               color: #333;
+  //               font-weight: bold;
+  //               margin: 6px 0;
+  //               word-break: break-all;
+  //             }
+  //             .card-number {
+  //               font-size: 9px;
+  //               color: #666;
+  //               margin-bottom: 4px;
+  //               font-weight: bold;
+  //             }
+  //             .user-info {
+  //               font-size: 10px;
+  //               color: #555;
+  //               margin-top: 8px;
+  //               border-top: 1px solid #e0e0e0;
+  //               padding-top: 6px;
+  //             }
+  //             .user-name {
+  //               font-weight: bold;
+  //               color: #333;
+  //               font-size: 11px;
+  //             }
+  //             .user-email {
+  //               font-size: 8px;
+  //               color: #999;
+  //             }
+  //             @media print {
+  //               body {
+  //                 background: white;
+  //                 padding: 10px;
+  //               }
+  //               .page {
+  //                 box-shadow: none;
+  //                 margin-bottom: 0;
+  //                 page-break-after: always;
+  //               }
+  //               .card-item {
+  //                 border: 1px solid #ccc;
+  //               }
+  //             }
+  //           </style>
+  //         </head>
+  //         <body>
+  //           <div class="page">
+  //             <div class="header">
+  //               <h1>📚 Library Card Barcodes</h1>
+  //               <p>Print and distribute these cards</p>
+  //               <p>Generated on ${new Date().toLocaleDateString()}</p>
+  //             </div>
+  //             <div class="cards-grid">
+  //       `;
+
+  //       // Add each card with barcode
+  //       filteredCards.forEach((card, index) => {
+  //         let isbn13Number;
+  //         try {
+  //           isbn13Number = generateISBN13Number(card);
+  //           if (!isbn13Number || !/^\d+$/.test(isbn13Number)) {
+  //             isbn13Number = generateSimpleISBN13(card, index);
+  //           }
+  //         } catch (error) {
+  //           isbn13Number = generateSimpleISBN13(card, index);
+  //         }
+
+  //         const cardNumber = generateCardNumber(card);
+  //         const userName = card.user_name || card.student_name || '-';
+  //         const userEmail = card.user_email || card.email || '-';
+
+  //         // Generate barcode SVG using the same method as in table
+  //         const barcodeSvg = generateBarcodeSvgForPrint(isbn13Number);
+
+  //         htmlContent += `
+  //           <div class="card-item">
+  //             <div class="card-item-header">📋 Library Card</div>
+  //             <div class="barcode-container">
+  //               ${barcodeSvg}
+  //             </div>
+  //             <div class="isbn-number">${isbn13Number}</div>
+  //             <div class="card-number">Card: ${cardNumber}</div>
+  //             <div class="user-info">
+  //               <div class="user-name">${userName}</div>
+  //               <div class="user-email">${userEmail}</div>
+  //             </div>
+  //           </div>
+  //         `;
+  //       });
+
+  //       htmlContent += `
+  //             </div>
+  //           </div>
+  //           <script>
+  //             // Auto print after content loads
+  //             window.onload = function() {
+  //               setTimeout(() => {
+  //                 window.print();
+  //                 // Close window after printing
+  //                 setTimeout(() => {
+  //                   window.close();
+  //                 }, 500);
+  //               }, 1000);
+  //             };
+  //           </script>
+  //         </body>
+  //         </html>
+  //       `;
+
+  //       printWindow.document.write(htmlContent);
+  //       printWindow.document.close();
+
+  //       PubSub.publish("RECORD_SAVED_TOAST", {
+  //         title: "Print View Opened",
+  //         message: "Barcode cards are ready to print",
+  //       });
+  //     } catch (error) {
+  //       console.error("Error opening print view:", error);
+  //       PubSub.publish("RECORD_ERROR_TOAST", {
+  //         title: "Error",
+  //         message: "Failed to open print view",
+  //       });
+  //     }
+  //   };
+
+  // Add this function to generate barcode SVG for print
+  // const generateBarcodeSvgForPrint = (barcodeNumber) => {
+  //   if (!barcodeNumber || barcodeNumber.length < 12) {
+  //     barcodeNumber = '9780000000000';
+  //   }
+
+  //   // Create EAN-13 barcode pattern
+  //   let bars = '';
+  //   const barWidth = 1.5;
+  //   let xPosition = 20;
+
+  //   // EAN-13 pattern: 3 start bars + 6 left digits + 5 middle bars + 6 right digits + 3 end bars
+  //   const patterns = {
+  //     '0': '0001101', '1': '0011001', '2': '0010011', '3': '0111101', '4': '0100011',
+  //     '5': '0110001', '6': '0101111', '7': '0111011', '8': '0110111', '9': '0001011'
+  //   };
+
+  //   // Start pattern (3 bars)
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+
+  //   // Left 6 digits
+  //   for (let i = 0; i < 6; i++) {
+  //     const digit = barcodeNumber[i];
+  //     const pattern = patterns[digit];
+  //     for (let j = 0; j < 7; j++) {
+  //       if (pattern[j] === '1') {
+  //         bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //       } else {
+  //         bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //       }
+  //       xPosition += barWidth;
+  //     }
+  //   }
+
+  //   // Middle pattern (5 bars)
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //   xPosition += barWidth;
+
+  //   // Right 6 digits
+  //   for (let i = 6; i < 12; i++) {
+  //     const digit = barcodeNumber[i];
+  //     const pattern = patterns[digit];
+  //     for (let j = 0; j < 7; j++) {
+  //       if (pattern[j] === '1') {
+  //         bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //       } else {
+  //         bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //       }
+  //       xPosition += barWidth;
+  //     }
+  //   }
+
+  //   // End pattern (3 bars)
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="white"/>';
+  //   xPosition += barWidth;
+  //   bars += '<rect x="' + xPosition + '" y="5" width="' + barWidth + '" height="40" fill="black"/>';
+  //   xPosition += barWidth;
+
+  //   const totalWidth = xPosition + 20;
+
+  //   return `
+  //   <svg width="${totalWidth}" height="60" viewBox="0 0 ${totalWidth} 60" xmlns="http://www.w3.org/2000/svg">
+  //     <rect width="100%" height="100%" fill="white"/>
+  //     ${bars}
+  //     <text x="${totalWidth / 2}" y="55" text-anchor="middle" font-family="Arial" font-size="8" fill="black">${barcodeNumber}</text>
+  //   </svg>
+  // `;
+  // };
 
   // Column visibility state
   const [visibleColumns, setVisibleColumns] = useState({
@@ -8322,6 +8609,56 @@ const LibraryCard = () => {
 
     return final12Digits + checkDigit;
   }, []);
+  const handleExport = async () => {
+    try {
+      const dataToExport = selectedItems.length > 0
+        ? filteredCards.filter(card => selectedItems.includes(card.id))
+        : filteredCards;
+
+      if (dataToExport.length === 0) {
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Export Error",
+          message: selectedItems.length > 0
+            ? "No selected items to export"
+            : "No data to export",
+        });
+        return;
+      }
+
+      const exportData = dataToExport.map((card, index) => ({
+        "Card Number": generateCardNumber(card),
+        "User Name": card.user_name || "",
+        "Email": card.user_email || "",
+        "Issue Date": formatDateToDDMMYYYY(card.issue_date),
+        "Expiry Date": formatDateToDDMMYYYY(card.expiry_date),
+        "Status": card.is_active ? "Active" : "Inactive",
+        "Barcode Number": generateISBN13Number(card)
+      }));
+
+      const columns = [
+        { key: 'Card Number', header: 'Card Number', width: 20 },
+        { key: 'User Name', header: 'User Name', width: 25 },
+        { key: 'Email', header: 'Email', width: 30 },
+        { key: 'Issue Date', header: 'Issue Date', width: 15 },
+        { key: 'Expiry Date', header: 'Expiry Date', width: 15 },
+        { key: 'Status', header: 'Status', width: 12 },
+        { key: 'Barcode Number', header: 'Barcode Number', width: 20 }
+      ];
+
+      await exportToExcel(exportData, 'library_cards', 'Library Cards', columns);
+
+      PubSub.publish("RECORD_SAVED_TOAST", {
+        title: "Export Successful",
+        message: `Exported ${dataToExport.length} library card${dataToExport.length > 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      console.error('Error exporting library cards:', error);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Export Error",
+        message: "Failed to export library cards",
+      });
+    }
+  };
 
   const calculateISBN13CheckDigit = (first12Digits) => {
     if (first12Digits.length !== 12) {
@@ -8462,6 +8799,23 @@ const LibraryCard = () => {
     } finally {
       setLoading(false);
     }
+  };
+  const handleAdd = () => {
+    setEditingCard(null);
+
+    const durationDays = parseInt(librarySettings.duration_days || 365);
+    const issueDate = new Date();
+    const expiryDate = new Date(issueDate);
+    expiryDate.setDate(expiryDate.getDate() + durationDays);
+
+    setFormData({
+      user_id: "",
+      issue_date: issueDate.toISOString().split('T')[0],
+      expiry_date: expiryDate.toISOString().split('T')[0],
+      is_active: true,
+    });
+    fetchUsers();
+    setShowModal(true);
   };
 
   const fetchUsers = async () => {
@@ -8647,7 +9001,7 @@ const LibraryCard = () => {
       size: "sm",
       icon: "fa-solid fa-download",
       label: "Export",
-      onClick: () => { }, // Add your export function
+      onClick: () => { handleExport() }, // Add your export function
     },
     {
       variant: "outline-primary",
@@ -8692,7 +9046,42 @@ const LibraryCard = () => {
         searchPlaceholder="Search library cards..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        actionButtons={actionButtons}
+        // actionButtons={actionButtons}
+        actionButtons={[
+          {
+            variant: "outline-success",
+            size: "sm",
+            icon: "fa-solid fa-download",
+            label: "Export",
+            onClick: handleExport,
+          },
+          {
+            variant: "outline-primary",
+            size: "sm",
+            icon: "fa-solid fa-upload",
+            label: "Import",
+            onClick: () => document.getElementById("importFile").click(),
+            style: { borderColor: "#6f42c1", color: "#6f42c1" },
+          },
+          // {
+          //   variant: "outline-primary",
+          //   size: "sm",
+          //   icon: "fa-solid fa-layer-group",
+          //   label: "Bulk Insert",
+          //   onClick: handleBulkInsert,
+          //   style: { borderColor: "#6f42c1", color: "#6f42c1" },
+          // },
+          {
+            size: "sm",
+            icon: "fa-solid fa-plus",
+            label: "Add Book",
+            onClick: handleAdd,
+            style: {
+              background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+              border: "none",
+            },
+          },
+        ]}
       />
 
       <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
@@ -8746,72 +9135,72 @@ const LibraryCard = () => {
 
         <Modal.Body className="text-center">
           {selectedCard && (
-           
-              // <div className="card-content p-4 border">
-                <Row className="align-items-center">
-                  {/* User Information */}
-                  <Col md={12}>
-                    <Card className="h-100">
-                      <Card.Header className="bg-light fw-bold">
-                        <i className="fa-solid fa-user me-2"></i>
-                        Member Information
-                      </Card.Header>
-                      <Card.Body>
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Card Number:</Col>
-                          <Col lg={6} className="text-end text-primary fw-bold">
-                            {generateCardNumber(selectedCard)}
-                          </Col>
-                        </Row>
 
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Member Name:</Col>
-                          <Col lg={6} className="text-end">
-                            {selectedCard.user_name || 'N/A'}
-                          </Col>
-                        </Row>
+            // <div className="card-content p-4 border">
+            <Row className="align-items-center">
+              {/* User Information */}
+              <Col md={12}>
+                <Card className="h-100">
+                  <Card.Header className="bg-light fw-bold">
+                    <i className="fa-solid fa-user me-2"></i>
+                    Member Information
+                  </Card.Header>
+                  <Card.Body>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Card Number:</Col>
+                      <Col lg={6} className="text-end text-primary fw-bold">
+                        {generateCardNumber(selectedCard)}
+                      </Col>
+                    </Row>
 
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Email:</Col>
-                          <Col lg={6} className="text-end text-truncate">
-                            {selectedCard.user_email || 'N/A'}
-                          </Col>
-                        </Row>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Member Name:</Col>
+                      <Col lg={6} className="text-end">
+                        {selectedCard.user_name || 'N/A'}
+                      </Col>
+                    </Row>
 
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Issue Date:</Col>
-                          <Col lg={6} className="text-end">
-                            {formatDateToDDMMYYYY(selectedCard.issue_date)}
-                          </Col>
-                        </Row>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Email:</Col>
+                      <Col lg={6} className="text-end text-truncate">
+                        {selectedCard.user_email || 'N/A'}
+                      </Col>
+                    </Row>
 
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Expiry Date:</Col>
-                          <Col lg={6} className={`text-end ${new Date(selectedCard.expiry_date) < new Date() ? 'text-danger fw-bold' : ''}`}>
-                            {selectedCard.expiry_date ? formatDateToDDMMYYYY(selectedCard.expiry_date) : 'N/A'}
-                          </Col>
-                        </Row>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Issue Date:</Col>
+                      <Col lg={6} className="text-end">
+                        {formatDateToDDMMYYYY(selectedCard.issue_date)}
+                      </Col>
+                    </Row>
 
-                        <Row className="mb-2">
-                          <Col lg={6} className="text-start fw-medium">Status:</Col>
-                          <Col lg={6} className="text-end">
-                            <Badge bg={selectedCard.is_active ? "success" : "secondary"}>
-                              {selectedCard.is_active ? "Active" : "Inactive"}
-                            </Badge>
-                          </Col>
-                        </Row>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Expiry Date:</Col>
+                      <Col lg={6} className={`text-end ${new Date(selectedCard.expiry_date) < new Date() ? 'text-danger fw-bold' : ''}`}>
+                        {selectedCard.expiry_date ? formatDateToDDMMYYYY(selectedCard.expiry_date) : 'N/A'}
+                      </Col>
+                    </Row>
 
-                        <Row>    <div className="barcode-container bg-light p-3 rounded border">
-                          <svg
-                            id={`barcode-modal-${selectedCard.id}`}
-                            className="barcode-svg"
-                          ></svg>
-                        </div></Row>
-                      </Card.Body>
-                    </Card>
-                  </Col>
+                    <Row className="mb-2">
+                      <Col lg={6} className="text-start fw-medium">Status:</Col>
+                      <Col lg={6} className="text-end">
+                        <Badge bg={selectedCard.is_active ? "success" : "secondary"}>
+                          {selectedCard.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </Col>
+                    </Row>
 
-                </Row>
+                    <Row>    <div className="barcode-container bg-light p-3 rounded border">
+                      <svg
+                        id={`barcode-modal-${selectedCard.id}`}
+                        className="barcode-svg"
+                      ></svg>
+                    </div></Row>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+            </Row>
 
 
           )}
