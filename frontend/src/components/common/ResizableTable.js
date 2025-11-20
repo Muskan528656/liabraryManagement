@@ -28,15 +28,12 @@ const ResizableTable = ({
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
-    // Calculate pagination
     const totalPages = Math.ceil(data.length / recordsPerPage);
     const startRecord = (currentPage - 1) * recordsPerPage;
     const endRecord = startRecord + recordsPerPage;
 
-    // Lazy loading: Show more rows as user scrolls
     const paginatedData = useMemo(() => {
         if (currentPage === 1) {
-            // For first page, use lazy loading
             return data.slice(0, Math.min(visibleRows, data.length));
         } else {
             // For other pages, use normal pagination
@@ -274,7 +271,7 @@ const ResizableTable = ({
                     boxSizing: "border-box"
                 }}
             >
-                <div style={{ width: "100%", minWidth: "100%" }}>
+                <div>
                     <Table
                         ref={tableRef}
                         className="mb-0 salesforce-table"
@@ -299,9 +296,8 @@ const ResizableTable = ({
                                             fontWeight: "600",
                                             color: "#6f42c1",
                                             borderBottom: "2px solid #e9d5ff",
-                                            padding: "12px 8px",
+                                            // padding: "12px 8px",
                                             fontSize: "13px",
-                                            textTransform: "uppercase",
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -343,7 +339,7 @@ const ResizableTable = ({
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
                                             fontSize: "13px",
-                                            textTransform: "uppercase",
+                                            // textTransform: "uppercase",
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -386,7 +382,7 @@ const ResizableTable = ({
                                                 borderBottom: "2px solid #e9d5ff",
                                                 padding: "12px 8px",
                                                 fontSize: "13px",
-                                                textTransform: "uppercase",
+                                                // textTransform: "uppercase",
                                                 letterSpacing: "0.5px"
                                             }}
                                         >
@@ -421,7 +417,7 @@ const ResizableTable = ({
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
                                             fontSize: "13px",
-                                            textTransform: "uppercase",
+                                            // textTransform: "uppercase",
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -507,7 +503,7 @@ const ResizableTable = ({
                                                         width: columnWidths[colIndexForWidth] || column.width || column.minWidth || "150px",
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap"
+                                                        // whiteSpace: "nowrap"
                                                     }}
                                                 >
                                                     {column.render

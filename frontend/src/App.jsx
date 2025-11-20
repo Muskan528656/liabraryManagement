@@ -28,7 +28,7 @@ import UserDetail from "./components/user/UserDetail";
 import LibraryCard from "./components/librarycard/LibraryCard";
 import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import BookIssue from "./components/bookissue/BookIssue";
-import ReturnBook from "./components/bookissue/ReturnBook";
+import BookSubmit from "./components/booksubmit/BookSubmit";
 import LibrarySettings from "./components/librarysettings/LibrarySettings";
 // import MemberPortal from "./components/memberportal/MemberPortal";
 import RequestBook from "./components/bookrequest/RequestBook";
@@ -144,11 +144,11 @@ function App() {
             <Route path="librarycard" element={<LibraryCard />} />
             <Route path="librarycard/:id" element={<LibraryCardDetail />} />
             <Route path="bookissue" element={<BookIssue />} />
-            <Route path="bookreturn" element={<ReturnBook />} />
+            <Route path="bookreturn" element={<BookSubmit />} />
             <Route path="librarysettings" element={<LibrarySettings />} />
             <Route path="requestbook" element={<RequestBook />} />
             <Route path="librarycardtype" element={<LibrarySettings />} />
-            <Route path="booksubmit" element={<ReturnBook />} />
+            <Route path="booksubmit" element={<BookSubmit />} />
             <Route path="users" element={<UserList />} />
             <Route path="users/e" element={<UserAdd />} />
             <Route path="users/:id/e" element={<UserAdd />} />
