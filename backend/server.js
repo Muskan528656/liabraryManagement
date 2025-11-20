@@ -35,6 +35,7 @@ const io = require("socket.io")(server, {
 app.set('io', io);
 
 io.on("connection", (socket) => {
+  
   console.log("✅ New socket connected:", socket.id);
 
   socket.on("setup", (userData) => {
