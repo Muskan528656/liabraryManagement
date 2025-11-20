@@ -571,7 +571,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   <Dropdown.ItemText className="text-center text-muted">
                     No new notifications
                   </Dropdown.ItemText>
-                ) : dueNotifications && (
+                ) : dueNotifications && ( 
 
                   dueNotifications?.slice(0, 10).map((notification) => (
                     <React.Fragment key={notification.id}>
