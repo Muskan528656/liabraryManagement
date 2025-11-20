@@ -438,7 +438,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         <Navbar.Brand
           href="#"
           className="fw-bold"
-          style={{ fontSize: "20px", fontWeight: "800", color: "rgb(1, 118, 211)", letterSpacing: "0.8px", margin: 0 }}
+          style={{ fontSize: "1.9rem", fontWeight: "900", color: "rgb(1, 118, 211)", letterSpacing: "0.8px", margin: 0 }}
         >
           Library Management
         </Navbar.Brand>

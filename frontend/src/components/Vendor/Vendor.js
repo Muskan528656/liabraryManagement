@@ -730,6 +730,7 @@ const Vendor = () => {
       <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
         <Col>
           <TableHeader
+            className="table-header"
             title="Vendor Management"
             icon="fa-solid fa-store"
             totalCount={filteredVendors.length}

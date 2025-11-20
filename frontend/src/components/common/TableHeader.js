@@ -23,12 +23,12 @@ const TableHeader = ({
       <Card.Body className="p-3">
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div className="d-flex align-items-center gap-3">
-            <h4 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>
+            <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>
               {icon && <i className={`${icon} me-2`}></i>}
               {title}
-            </h4>
+            </h6>
             {totalCount !== undefined && (
-              <Badge bg="light" text="dark" style={{ fontSize: "0.875rem", padding: "0.5rem 0.75rem" }}>
+              <Badge bg="light" text="dark" style={{ fontSize: "0.75rem", padding: "0.5rem 0.75rem" }}>
                 {icon && <i className={`${icon} me-1`}></i>}
                 Total: {totalCount} {totalLabel || (totalCount === 1 ? "Item" : "Items")}
               </Badge>

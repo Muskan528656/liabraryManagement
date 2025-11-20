@@ -97,9 +97,10 @@ table.fc-col-header {
 .custom-table td,
 .custom-table th,
 .salesforce-table tbody td {
-  white-space: normal !important;
-  word-break: break-word !important;
+  /* white-space: normal !important; */
+  /* word-break: break-word !important; */
   overflow-wrap: anywhere !important;
+  line-height: normal;
 }
 
 .card,
@@ -129,7 +130,11 @@ table.fc-col-header {
 /* Keep nav links simple and purple-accented */
 .nav-link,
 .nav-link[aria-selected=false] {
-  /* color: var(--primary-purple) !important; */
+  /* color: red !important; */
+  /* border: 2px solid red !important; */
+  font-size: 1.3rem !important;
+  font-style: bold !important;
+  color: #555353 !important;
 
 }
 
@@ -147,28 +152,25 @@ table.fc-col-header {
 }
 
 /* Give more breathing room to headings on the Book Submit page */
-h5,
+/* h5,
 h6 {
   color: var(--primary-purple);
   line-height: 1.3;
-}
+} */
 
 /* Keep only light purple and white as prominent colors; other color utilities will inherit purple/white */
 
-
+/* 
 a {
   text-decoration: none !important;
 }
 
-body {
-  background: #F4F5FA !important;
 
-}
 
 .maplabel {
   font-weight: bold;
   font-size: .85rem !important;
-}
+} */
 
 body {
   overflow-x: hidden;
@@ -1657,4 +1659,9 @@ textarea.form-control[required] {
 
 .row {
   overflow: visible !important;
+}
+
+.table-header {
+  font-size: 1.3rem;
+  color: #ff6363;
 }
