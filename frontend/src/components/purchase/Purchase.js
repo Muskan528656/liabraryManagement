@@ -1559,3 +1559,55 @@ const Purchase = () => {
 
 export default Purchase;
 
+
+
+// components/Purchase.js
+// import React from "react";
+
+// import DynamicCRUD from "../common/DynaminCrud";
+// import { getPurchaseConfig } from "./pur";
+// import { useDataManager } from "../common/userdatamanager";
+// import Loader from "../common/Loader";
+
+// const Purchase = (props) => {
+//   // Get base config structure first
+//   const baseConfig = getPurchaseConfig();
+
+//   // Fetch data with dependencies
+//   const { data, loading, error } = useDataManager(
+//     baseConfig.dataDependencies,
+//     props
+//   );
+
+//   if (loading) {
+//     return <Loader message="Loading purchases data..." />;
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="alert alert-danger">
+//         <h4>Error Loading Purchases</h4>
+//         <p>{error.message}</p>
+//         <button
+//           className="btn btn-primary"
+//           onClick={() => window.location.reload()}
+//         >
+//           Retry
+//         </button>
+//       </div>
+//     );
+//   }
+
+//   // Merge props data and fetched data
+//   const allData = {
+//     ...data,
+//     ...props
+//   };
+
+//   // Get final config with all data
+//   const finalConfig = getPurchaseConfig(allData);
+
+//   return <DynamicCRUD {...finalConfig} />;
+// };
+
+// export default Purchase;

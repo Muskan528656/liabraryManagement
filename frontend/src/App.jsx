@@ -14,28 +14,28 @@ import io from "socket.io-client";
 import Main from "./components/layout/Main";
 import EditProfile from "./components/EditProfile";
 import Books from "./components/books/Books";
-import BookDetail from "./components/books/BookDetail";
+// import BookDetail from "./components/books/BookDetail";
 import Author from "./components/author/Author";
-import AuthorDetail from "./components/author/AuthorDetail";
-import Category from "./components/category/Category";
-import CategoryDetail from "./components/category/CategoryDetail";
-import Vendor from "./components/Vendor/Vendor";
-import VendorDetail from "./components/Vendor/VendorDetail";
-import Purchase from "./components/purchase/Purchase";
-import PurchaseDetail from "./components/purchase/PurchaseDetail";
+// import AuthorDetail from "./components/author/AuthorDetail";
+import Category from "./components/category/category";
+// import CategoryDetail from "./components/category/CategoryDetail";
+import Vendor from "./components/Vendor/vendor";
+// import VendorDetail from "./components/Vendor/VendorDetail";
+import Purchase from "./components/purchase/purchase";
 import User from "./components/user/User";
 import UserDetail from "./components/user/UserDetail";
 import LibraryCard from "./components/librarycard/LibraryCard";
-import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
+// import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import BookIssue from "./components/bookissue/BookIssue";
 import BookSubmit from "./components/booksubmit/BookSubmit";
 import LibrarySettings from "./components/librarysettings/LibrarySettings";
 // import MemberPortal from "./components/memberportal/MemberPortal";
-import RequestBook from "./components/bookrequest/RequestBook";
+// import RequestBook from "./components/bookrequest/RequestBook";
 import ToastManager from "./components/common/ToastManager";
 import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
 import CompanyDetail from "./components/Company/CompanyDetail";
+import PurchaseDetail from "./components/purchase/PurchaseDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -130,23 +130,23 @@ function App() {
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Home userInfo={userInfo} />} />
             <Route path="author" element={<Author />} />
-            <Route path="author/:id" element={<AuthorDetail />} />
+            {/* <Route path="author/:id" element={<AuthorDetail />} /> */}
             <Route path="books" element={<Books />} />
-            <Route path="books/:id" element={<BookDetail />} />
+            {/* <Route path="books/:id" element={<BookDetail />} /> */}
             <Route path="category" element={<Category />} />
-            <Route path="category/:id" element={<CategoryDetail />} />
+            {/* <Route path="category/:id" element={<CategoryDetail />} /> */}
             <Route path="vendor" element={<Vendor />} />
-            <Route path="vendor/:id" element={<VendorDetail />} />
+            {/* <Route path="vendor/:id" element={<VendorDetail />} /> */}
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />
-            <Route path="librarycard/:id" element={<LibraryCardDetail />} />
+            {/* <Route path="librarycard/:id" element={<LibraryCardDetail />} /> */}
             <Route path="bookissue" element={<BookIssue />} />
             <Route path="bookreturn" element={<BookSubmit />} />
             <Route path="librarysettings" element={<LibrarySettings />} />
-            <Route path="requestbook" element={<RequestBook />} />
+            {/* <Route path="requestbook" element={<RequestBook />} /> */}
             <Route path="librarycardtype" element={<LibrarySettings />} />
             <Route path="booksubmit" element={<BookSubmit />} />
             <Route path="users" element={<UserList />} />
