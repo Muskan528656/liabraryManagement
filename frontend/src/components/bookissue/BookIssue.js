@@ -14,7 +14,7 @@ import {
   Nav,
   Dropdown,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import DataApi from "../../api/dataApi";
@@ -1402,13 +1402,13 @@ const BookIssue = () => {
                             ></i>
                             Issue New Book
                           </h5>
-                          <Button style={{backgroundColor:'blue'}}>
-                            <i
-                              className="fa-solid fa-plus me-2"
-                              style={{ color: "#ffffff" }}
-                            ></i>
-                            Bulk Issue
-                          </Button>
+                          <NavLink to="/bulkissued" style={{ textDecoration: "none" }}>
+                            <Button style={{ backgroundColor: "blue", color: "#fff" }}>
+                              <i className="fa-solid fa-plus me-2"></i>
+                              Bulk Issue
+                            </Button>
+                          </NavLink>
+
                         </Card.Header>
                         <Card.Body className="p-4">
                           {/* Top Row - 2 Fields */}
@@ -1485,7 +1485,7 @@ const BookIssue = () => {
                               </Form.Group>
                             </Col>
                           </Row>
-                          {/* {issued Quantity } */}
+                          {/* {issued Quantity Details } */}
                           <Row className="mb-4">
                             {/* give me issued quantity input box */}
                             <Col> 
@@ -1506,7 +1506,7 @@ const BookIssue = () => {
                                     }}
                                   >
                                     <div className="d-flex justify-content-between align-items-center mb-2">
-                                      <div style={{ fontWeight: 600 }}>
+                                      <div style={{ fontWeight: 900 }}>
                                         Card: {selectedLibraryCard.data.card_number || selectedLibraryCard.label}
                                       </div>
                                       <div>

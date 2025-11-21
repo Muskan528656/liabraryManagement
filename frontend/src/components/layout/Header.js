@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Dropdown, Button, InputGroup, Form } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
-import QuickActions from "../common/QuickActions";
+// import QuickActions from "../common/QuickActions";
 import BookSubmitModal from "../common/BookSubmitModal";
 import * as constants from "../../constants/CONSTANT";
 import helper from "../common/helper";
@@ -13,8 +13,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
-  const [showQuickAction, setShowQuickAction] = useState(false);
-  const [quickActionType, setQuickActionType] = useState(null);
+  // const [showQuickAction, setShowQuickAction] = useState(false);
+  // const [quickActionType, setQuickActionType] = useState(null);
   const [showBookSubmitModal, setShowBookSubmitModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -391,10 +391,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   //   setShowBookSubmitModal(false);
   // };
 
-  const handleQuickAction = (actionType) => {
-    setQuickActionType(actionType);
-    setShowQuickAction(true);
-  };
+  // const handleQuickAction = (actionType) => {
+  //   setQuickActionType(actionType);
+  //   setShowQuickAction(true);
+  // };
 
   const getUserInitials = () => {
     if (userInfo) {
@@ -943,14 +943,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Collapse>
       </Navbar>
 
-      <QuickActions
+      {/* <QuickActions
         show={showQuickAction}
         onHide={() => {
           setShowQuickAction(false);
           setQuickActionType(null);
         }}
         actionType={quickActionType}
-      />
+      /> */}
 
       {/* <BookSubmitModal
         show={showBookSubmitModal}

@@ -1702,3 +1702,20 @@ textarea.form-control[required] {
   align-items: center;
   justify-content: center;
 }
+
+.square-loader {
+    display: inline-block;
+    background-color: #6f42c1;
+    animation: squarePulse 0.8s infinite ease-in-out alternate;
+}
+
+@keyframes squarePulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.5);
+        opacity: 0.5;
+    }
+}

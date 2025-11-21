@@ -1,22 +1,27 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 
+const statusBadges = {
+  active: { variant: "success", label: "Active" },
+  inactive: { variant: "secondary", label: "Inactive" },
+  suspended: { variant: "warning", label: "Suspended" },
+};
+
 const VendorDetail = () => {
   const fields = {
     title: "name",
     subtitle: "company_name",
     status: "status",
     overview: [
-      { key: "name", label: "Name", type: "text" },
-      { key: "company_name", label: "Company Name", type: "text" },
+      { key: "phone", label: "Phone", type: "text" },
       { key: "email", label: "Email", type: "email" },
-      { key: "phone", label: "Phone", type: "tel" },
+      { key: "city", label: "City", type: "text" },
     ],
     details: [
-      { key: "name", label: "Name", type: "text" },
+      { key: "name", label: "Vendor Name", type: "text" },
       { key: "company_name", label: "Company Name", type: "text" },
       { key: "email", label: "Email", type: "email" },
-      { key: "phone", label: "Phone", type: "tel" },
+      { key: "phone", label: "Phone", type: "text" },
       { key: "gst_number", label: "GST Number", type: "text" },
       { key: "pan_number", label: "PAN Number", type: "text" },
       { key: "address", label: "Address", type: "text" },
@@ -28,14 +33,7 @@ const VendorDetail = () => {
         key: "status",
         label: "Status",
         type: "badge",
-        badgeConfig: {
-          active: "success",
-          active_label: "Active",
-          inactive: "secondary",
-          inactive_label: "Inactive",
-          suspended: "warning",
-          suspended_label: "Suspended",
-        },
+        badgeConfig: statusBadges
       },
       { key: "created_at", label: "Created At", type: "datetime" },
       { key: "updated_at", label: "Updated At", type: "datetime" },
@@ -48,7 +46,6 @@ const VendorDetail = () => {
       moduleApi="purchasevendor"
       moduleLabel="Vendor"
       fields={fields}
-      relatedModules={[]}
     />
   );
 };
