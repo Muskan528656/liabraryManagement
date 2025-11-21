@@ -12,25 +12,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-                render: (value, record) => (
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{
-                                width: "32px",
-                                height: "32px",
-                                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                                color: "white",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <i className="fa-solid fa-tags"></i>
-                        </div>
-                        <span style={{ color: "#6f42c1", fontWeight: "500" }}>
-                            {value}
-                        </span>
-                    </div>
-                ),
+           
             },
             {
                 field: "description",

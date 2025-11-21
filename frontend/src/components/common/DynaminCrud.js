@@ -243,7 +243,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -275,7 +275,6 @@ const DynamicCRUD = ({
     const enhancedColumns = getEnhancedColumns();
     const finalDetailConfig = getAutoDetailConfig();
 
-    // ✅ INITIALIZE VISIBLE COLUMNS
     useEffect(() => {
         const initialVisibility = {};
         columns.forEach(col => {
@@ -284,12 +283,12 @@ const DynamicCRUD = ({
         setVisibleColumns(initialVisibility);
     }, [columns]);
 
-    // ✅ INITIALIZE FORM DATA
+
     useEffect(() => {
         setFormData(initialFormData);
     }, [initialFormData]);
 
-    // ✅ USER INFO AND PERMISSIONS
+
     useEffect(() => {
         const token = sessionStorage.getItem("token");
         if (token) {
@@ -302,7 +301,6 @@ const DynamicCRUD = ({
         }
     }, []);
 
-    // ✅ FETCH DATA
     useEffect(() => {
         if (userInfo) {
             fetchData();
@@ -875,83 +873,7 @@ const DynamicCRUD = ({
                 </Modal.Footer>
             </Modal>
 
-            {/* Bulk Insert Modal - Only rendered if showBulkInsert is true */}
-            {/* {showBulkInsert && (
-                    <Modal show={showBulkInsertModal} onHide={() => setShowBulkInsertModal(false)} size="lg" centered>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Bulk Insert {moduleLabel}</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <p className="text-muted mb-3">
-                                Add multiple {moduleLabel.toLowerCase()} records at once. Leave rows empty to skip.
-                            </p>
 
-                            {multiInsertRows.map((row, index) => (
-                                <Card key={index} className="mb-3">
-                                    <Card.Header className="d-flex justify-content-between align-items-center py-2">
-                                        <span>Record #{index + 1}</span>
-                                        {multiInsertRows.length > 1 && (
-                                            <Button
-                                                variant="outline-danger"
-                                                size="sm"
-                                                onClick={() => handleRemoveMultiRow(index)}
-                                            >
-                                                <i className="fa-solid fa-times"></i>
-                                            </Button>
-                                        )}
-                                    </Card.Header>
-                                    <Card.Body>
-                                        <Row>
-                                            {formFields.map((field) => (
-                                                <Col key={field.name} md={6} className="mb-2">
-                                                    <Form.Group>
-                                                        <Form.Label>{field.label}</Form.Label>
-                                                        {field.type === 'select' ? (
-                                                            <Form.Select
-                                                                value={row[field.name] || ''}
-                                                                onChange={(e) => handleMultiRowChange(index, field.name, e.target.value)}
-                                                            >
-                                                                {field.options && field.options.map(opt => (
-                                                                    <option key={opt.value} value={opt.value}>
-                                                                        {opt.label}
-                                                                    </option>
-                                                                ))}
-                                                            </Form.Select>
-                                                        ) : (
-                                                            <Form.Control
-                                                                type={field.type}
-                                                                value={row[field.name] || ''}
-                                                                onChange={(e) => handleMultiRowChange(index, field.name, e.target.value)}
-                                                                placeholder={field.placeholder}
-                                                            />
-                                                        )}
-                                                    </Form.Group>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </Card.Body>
-                                </Card>
-                            ))}
-
-                            <Button variant="outline-primary" onClick={handleAddMultiRow}>
-                                <i className="fa-solid fa-plus me-2"></i>
-                                Add Another Row
-                            </Button>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="outline-secondary" onClick={() => setShowBulkInsertModal(false)}>
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={handleMultiInsertSave}
-                                disabled={loading || multiInsertRows.filter(hasRowData).length === 0}
-                            >
-                                {loading ? "Inserting..." : `Insert ${multiInsertRows.filter(hasRowData).length} Records`}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )} */}
             {showBulkInsert && (
                 <Modal show={showBulkInsertModal} onHide={() => setShowBulkInsertModal(false)} size="xl" centered scrollable>
                     <Modal.Header closeButton>
@@ -962,7 +884,6 @@ const DynamicCRUD = ({
                             Add multiple {moduleLabel.toLowerCase()} records at once. Leave cells empty to skip.
                         </p>
 
-                        {/* ✅ TABLE STYLE LAYOUT */}
                         <div className="table-responsive">
                             <Table striped bordered hover size="sm">
                                 <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>

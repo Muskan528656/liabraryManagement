@@ -86,7 +86,8 @@ const Settings = () => {
         setLibrarySettings(settingsObj);
       }
     } catch (error) {
-      console.error("Error fetching settings:", error);
+      console.error('Error fetching settings:', error);
+
     }
   };
 
@@ -97,7 +98,7 @@ const Settings = () => {
 
   const handleSettingsSave = async () => {
     try {
-      const settingsApi = new DataApi("librarysettings");
+      const settingsApi = new DataApi('librarysettings');
 
       const settingsArray = [
         {
@@ -126,9 +127,7 @@ const Settings = () => {
         },
       ];
 
-      const response = await settingsApi.put("/bulk", {
-        settings: settingsArray,
-      });
+      const response = await settingsApi.put('/bulk', { settings: settingsArray });
 
       if (response.data && response.data.success) {
         setLibrarySettings({ ...tempSettings });
@@ -136,9 +135,9 @@ const Settings = () => {
         setAlertMessage("Library settings updated successfully!");
         setShowAlert(true);
 
-        PubSub.publish("RECORD_SAVED_TOAST", {
-          title: "Success",
-          message: "Library settings updated successfully!",
+        PubSub.publish('RECORD_SAVED_TOAST', {
+          title: 'Success',
+          message: 'Library settings updated successfully!'
         });
       } else {
         throw new Error("Failed to update settings");
@@ -148,9 +147,9 @@ const Settings = () => {
       setAlertMessage("Failed to update settings. Please try again.");
       setShowAlert(true);
 
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: "Failed to update library settings",
+      PubSub.publish('RECORD_ERROR_TOAST', {
+        title: 'Error',
+        message: 'Failed to update library settings'
       });
     }
   };

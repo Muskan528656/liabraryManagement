@@ -3,9 +3,8 @@ import axios from 'axios';
 export default class DataApi {
     constructor(path) {
         this.token = sessionStorage.getItem('token');
-        //console.log("Token: ", this.token);
-        //this.objectName = objectName; // e.g., "contact", "property", "task"
-        this.baseUrl = `${constants.API_BASE_URL}/api/${path}`; // REST endpoints like /api/contact
+      
+        this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
         console.log('baseUrl: ', this.baseUrl);
     }
 

@@ -1,7 +1,5 @@
-// config/libraryCardConfig.js
 import { Badge, Button } from "react-bootstrap";
 
-// Helper functions first
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -61,28 +59,19 @@ const generateCardNumber = (card) => {
 };
 
 export const getLibraryCardConfig = (externalData = {}) => {
-    // Extract custom handlers from externalData safely
+
     const customHandlers = externalData.customHandlers || {};
 
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
 
-    // Default columns define karein
+
     const defaultColumns = [
         {
             field: "card_number",
             label: "Card Number",
             sortable: true,
-            render: (value, card) => (
-                <div>
-                    <strong style={{ fontFamily: 'monospace', fontSize: '14px' }}>
-                        {generateCardNumber(card)}
-                    </strong>
-                    <div style={{ fontSize: '11px', color: '#666' }}>
-                        ISBN-13 Format
-                    </div>
-                </div>
-            )
+
         },
         { field: "user_name", label: "User Name", sortable: true },
         { field: "user_email", label: "Email", sortable: true },
@@ -151,14 +140,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 label: "Active Status",
                 type: "checkbox",
                 colSize: 12,
-            }
+            },
+
+
+
         ],
         validationRules: (formData, allCards, editingCard) => {
             const errors = [];
             if (!formData.user_id) errors.push("User is required");
             if (!formData.issue_date) errors.push("Issue date is required");
-
-            // Check if user already has an active card
             const existingCard = allCards.find(
                 card => card.user_id === formData.user_id &&
                     card.is_active &&

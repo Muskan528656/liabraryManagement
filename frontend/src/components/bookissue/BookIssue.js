@@ -58,6 +58,8 @@ const BookIssue = () => {
   const recordsPerPage = 20;
 
   const [durationDays, setDurationDays] = useState(7);
+  const [maxBooksPerCard, setMaxBooksPerCard] = useState(1);
+  const [showCardDetails, setShowCardDetails] = useState(true);
 
   const [bookSearchField, setBookSearchField] = useState("all");
   const [cardSearchField, setCardSearchField] = useState("all");
@@ -147,7 +149,9 @@ const BookIssue = () => {
       if (response.data && response.data.success && response.data.data) {
         // Response format: { success: true, data: { duration_days: "15", ... } }
         const duration = parseInt(response.data.data.duration_days) || 7;
+        const maxBooks = parseInt(response.data.data.max_books_per_card) || 1;
         setDurationDays(duration);
+        setMaxBooksPerCard(maxBooks);
       } else if (
         response.data &&
         typeof response.data === "object" &&
@@ -155,7 +159,9 @@ const BookIssue = () => {
       ) {
         // Direct object response
         const duration = parseInt(response.data.duration_days) || 7;
+        const maxBooks = parseInt(response.data.max_books_per_card) || 1;
         setDurationDays(duration);
+        setMaxBooksPerCard(maxBooks);
       }
     } catch (error) {
       console.error("Error fetching library settings:", error);
@@ -334,11 +340,10 @@ const BookIssue = () => {
       // Show ALL books (not just available ones) - user can see all data
       return books.slice(0, 50).map((book) => ({
         value: book.id,
-        label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${
-          book.available_copies !== undefined
-            ? ` - Available: ${book.available_copies || 0}`
-            : ""
-        }`,
+        label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${book.available_copies !== undefined
+          ? ` - Available: ${book.available_copies || 0}`
+          : ""
+          }`,
         data: book,
       }));
     }
@@ -353,7 +358,7 @@ const BookIssue = () => {
         (book) =>
           book.isbn &&
           book.isbn.replace(/[-\s]/g, "").toLowerCase() ===
-            cleanInput.toLowerCase()
+          cleanInput.toLowerCase()
       );
 
       if (foundBook) {
@@ -361,11 +366,10 @@ const BookIssue = () => {
         return [
           {
             value: foundBook.id,
-            label: `${foundBook.title} (ISBN: ${foundBook.isbn})${
-              foundBook.available_copies !== undefined
-                ? ` - Available: ${foundBook.available_copies || 0}`
-                : ""
-            }`,
+            label: `${foundBook.title} (ISBN: ${foundBook.isbn})${foundBook.available_copies !== undefined
+              ? ` - Available: ${foundBook.available_copies || 0}`
+              : ""
+              }`,
             data: foundBook,
           },
         ];
@@ -390,11 +394,10 @@ const BookIssue = () => {
           return [
             {
               value: bookData.id,
-              label: `${bookData.title} (ISBN: ${bookData.isbn})${
-                bookData.available_copies !== undefined
-                  ? ` - Available: ${bookData.available_copies || 0}`
-                  : ""
-              }`,
+              label: `${bookData.title} (ISBN: ${bookData.isbn})${bookData.available_copies !== undefined
+                ? ` - Available: ${bookData.available_copies || 0}`
+                : ""
+                }`,
               data: bookData,
             },
           ];
@@ -474,9 +477,8 @@ const BookIssue = () => {
 
     return filtered.slice(0, 50).map((book) => ({
       value: book.id,
-      label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${
-        book.available_copies ? ` - Available: ${book.available_copies}` : ""
-      }`,
+      label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${book.available_copies ? ` - Available: ${book.available_copies}` : ""
+        }`,
       data: book,
     }));
   };
@@ -506,9 +508,8 @@ const BookIssue = () => {
     if (!inputValue || inputValue.length < 1) {
       return libraryCards.slice(0, 50).map((card) => ({
         value: card.id,
-        label: `${card.card_number || "N/A"} - ${
-          card.user_name || card.student_name || "Unknown"
-        }`,
+        label: `${card.card_number || "N/A"} - ${card.user_name || card.student_name || "Unknown"
+          }`,
         data: card,
       }));
     }
@@ -533,17 +534,15 @@ const BookIssue = () => {
       if (foundCard) {
         setSelectedLibraryCard({
           value: foundCard.id,
-          label: `${foundCard.card_number} - ${
-            foundCard.user_name || foundCard.student_name || "Unknown"
-          }`,
+          label: `${foundCard.card_number} - ${foundCard.user_name || foundCard.student_name || "Unknown"
+            }`,
           data: foundCard,
         });
         return [
           {
             value: foundCard.id,
-            label: `${foundCard.card_number} - ${
-              foundCard.user_name || foundCard.student_name || "Unknown"
-            }`,
+            label: `${foundCard.card_number} - ${foundCard.user_name || foundCard.student_name || "Unknown"
+              }`,
             data: foundCard,
           },
         ];
@@ -566,17 +565,15 @@ const BookIssue = () => {
           }
           setSelectedLibraryCard({
             value: cardData.id,
-            label: `${cardData.card_number} - ${
-              cardData.user_name || cardData.student_name || "Unknown"
-            }`,
+            label: `${cardData.card_number} - ${cardData.user_name || cardData.student_name || "Unknown"
+              }`,
             data: cardData,
           });
           return [
             {
               value: cardData.id,
-              label: `${cardData.card_number} - ${
-                cardData.user_name || cardData.student_name || "Unknown"
-              }`,
+              label: `${cardData.card_number} - ${cardData.user_name || cardData.student_name || "Unknown"
+                }`,
               data: cardData,
             },
           ];
@@ -632,9 +629,8 @@ const BookIssue = () => {
 
     return filtered.slice(0, 50).map((card) => ({
       value: card.id,
-      label: `${card.card_number || "N/A"} - ${
-        card.user_name || card.student_name || "Unknown"
-      }`,
+      label: `${card.card_number || "N/A"} - ${card.user_name || card.student_name || "Unknown"
+        }`,
       data: card,
     }));
   };
@@ -806,11 +802,9 @@ const BookIssue = () => {
         if (result.success) {
           PubSub.publish("RECORD_SAVED_TOAST", {
             title: "Success",
-            message: `Book "${
-              selectedBook?.data?.title || "Book"
-            }" issued successfully to ${
-              userDetails?.user_name || userDetails?.firstname || "User"
-            }`,
+            message: `Book "${selectedBook?.data?.title || "Book"
+              }" issued successfully to ${userDetails?.user_name || userDetails?.firstname || "User"
+              }`,
           });
           resetForm();
           // Refresh books to update available copies
@@ -890,8 +884,8 @@ const BookIssue = () => {
       backgroundColor: state.isSelected
         ? "#8b5cf6"
         : state.isFocused
-        ? "#f3e8ff"
-        : "white",
+          ? "#f3e8ff"
+          : "white",
       color: state.isSelected ? "white" : "#374151",
       padding: "10px 12px",
       fontSize: "14px",
@@ -972,6 +966,27 @@ const BookIssue = () => {
     }
   };
 
+  // Compute issued books for currently selected card
+  const issuedListForSelected = selectedLibraryCard
+    ? issuedBooks.filter((issue) => {
+      try {
+        const issueCardId = issue.card_id || issue.cardId || issue.library_card_id;
+        return (
+          issueCardId &&
+          selectedLibraryCard.data &&
+          issueCardId.toString() === selectedLibraryCard.data.id.toString() &&
+          (issue.status !== "returned" && issue.return_date == null)
+        );
+      } catch (e) {
+        return false;
+      }
+    })
+    : [];
+
+  const computedIssuedCount = selectedLibraryCard
+    ? parseInt(selectedLibraryCard.data.issued_count) || issuedListForSelected.length
+    : 0;
+
   // Handle export to Excel
   const handleExport = async () => {
     try {
@@ -979,9 +994,8 @@ const BookIssue = () => {
         const daysRemaining = getDaysRemaining(issue.due_date);
         let statusText = "";
         if (daysRemaining !== null && daysRemaining < 0) {
-          statusText = `Overdue by ${Math.abs(daysRemaining)} day${
-            Math.abs(daysRemaining) !== 1 ? "s" : ""
-          }`;
+          statusText = `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? "s" : ""
+            }`;
         } else if (
           daysRemaining !== null &&
           daysRemaining >= 0 &&
@@ -992,9 +1006,8 @@ const BookIssue = () => {
               ? "Due Today"
               : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`;
         } else if (daysRemaining !== null) {
-          statusText = `${daysRemaining} day${
-            daysRemaining !== 1 ? "s" : ""
-          } left`;
+          statusText = `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
+            } left`;
         }
 
         return {
@@ -1072,7 +1085,7 @@ const BookIssue = () => {
                 `prefetch:book:${record.book_id}`,
                 JSON.stringify(bookPrefetch)
               );
-            } catch (err) {}
+            } catch (err) { }
             e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
@@ -1120,7 +1133,7 @@ const BookIssue = () => {
                     `prefetch:user:${userId}`,
                     JSON.stringify(record)
                   );
-                } catch (err) {}
+                } catch (err) { }
                 navigate(`/user/${userId}`, { state: record });
               }}
               onContextMenu={(e) => {
@@ -1131,7 +1144,7 @@ const BookIssue = () => {
                     `prefetch:user:${userId}`,
                     JSON.stringify(record)
                   );
-                } catch (err) {}
+                } catch (err) { }
                 window.open(`/user/${userId}`, "_blank");
               }}
               style={{
@@ -1191,9 +1204,8 @@ const BookIssue = () => {
                   <Badge bg="warning" text="dark">
                     {daysRemaining === 0
                       ? "Due Today"
-                      : `${daysRemaining} day${
-                          daysRemaining !== 1 ? "s" : ""
-                        } left`}
+                      : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
+                      } left`}
                   </Badge>
                 ) : (
                   <Badge bg="success">
@@ -1356,6 +1368,9 @@ const BookIssue = () => {
                             border: "none",
                             borderBottom: "2px solid #d1d5db",
                             padding: "20px 24px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
                           <h5
@@ -1372,6 +1387,13 @@ const BookIssue = () => {
                             ></i>
                             Issue New Book
                           </h5>
+                          <Button style={{ backgroundColor: 'blue' }}>
+                            <i
+                              className="fa-solid fa-plus me-2"
+                              style={{ color: "#ffffff" }}
+                            ></i>
+                            Bulk Issue
+                          </Button>
                         </Card.Header>
                         <Card.Body className="p-4">
                           {/* Top Row - 2 Fields */}
@@ -1392,7 +1414,6 @@ const BookIssue = () => {
                                     defaultOptions
                                     loadOptions={loadBookOptions}
                                     value={selectedBook}
-                                    isMulti={true}
                                     onChange={handleBookChange}
                                     styles={customSelectStyles}
                                     placeholder="Search by book name, author, ISBN..."
@@ -1449,8 +1470,83 @@ const BookIssue = () => {
                               </Form.Group>
                             </Col>
                           </Row>
-                          
-                           
+                          {/* {issued Quantity } */}
+                          <Row className="mb-4">
+                            {/* give me issued quantity input box */}
+                            <Col>
+                              {selectedLibraryCard && (() => {
+                                const allowed = parseInt(maxBooksPerCard) || 1;
+                                const issued = computedIssuedCount || 0;
+                                const remaining = Math.max(0, allowed - issued);
+
+                                return (
+                                  <div
+                                    style={{
+                                      background: "#e6f0ff",
+                                      border: "1px solid #cfe0ff",
+                                      borderRadius: "8px",
+                                      padding: "12px 16px",
+                                      fontSize: "14px",
+                                      color: "#0f172a",
+                                    }}
+                                  >
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                      <div style={{ fontWeight: 600 }}>
+                                        Card: {selectedLibraryCard.data.card_number || selectedLibraryCard.label}
+                                      </div>
+                                      <div>
+                                        <Button
+                                          variant="link"
+                                          size="sm"
+                                          onClick={() => setShowCardDetails(!showCardDetails)}
+                                          style={{ textDecoration: 'none' }}
+                                        >
+                                          {showCardDetails ? 'Minimize' : 'Expand'}
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    {!showCardDetails ? (
+                                      <div>
+                                        <strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued} &nbsp;•&nbsp;
+                                        <strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed} &nbsp;•&nbsp;
+                                        <strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <div className="mb-2">
+                                          <div><strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued}</div>
+                                          <div><strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed}</div>
+                                          <div><strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}</div>
+                                        </div>
+
+                                        <div>
+                                          <strong className="d-block mb-2">Books currently issued on this card:</strong>
+                                          {issuedListForSelected && issuedListForSelected.length > 0 ? (
+                                            <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                                              {issuedListForSelected.map((iss) => (
+                                                <li key={iss.id || iss.book_id || Math.random()} style={{ marginBottom: '6px' }}>
+                                                  <div style={{ fontSize: '14px' }}>
+                                                    {iss.book_title || iss.title || 'Unknown Book'}
+                                                    {iss.due_date && (
+                                                      <small className="text-muted"> &nbsp;— due {new Date(iss.due_date).toLocaleDateString()}</small>
+                                                    )}
+                                                  </div>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          ) : (
+                                            <div className="text-muted">No active issued books on this card.</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </Col>
+                          </Row>
+
                           {/* Bottom Row - 2 Fields */}
                           <Row className="g-3">
                             {/* Issue Date */}
@@ -1600,9 +1696,9 @@ const BookIssue = () => {
                                   disabled={
                                     loading ||
                                     !formData.book_id ||
-                                    (!formData.card_id &&
-                                      !formData.issued_to) ||
-                                    !formData.due_date
+                                    (!formData.card_id && !formData.issued_to) ||
+                                    !formData.due_date ||
+                                    (formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)))
                                   }
                                   className="btn-submit"
                                 >
@@ -1621,6 +1717,13 @@ const BookIssue = () => {
                                 </Button>
                               </div>
                             </Col>
+                            {formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)) && (
+                              <Col lg={12} className="mt-2">
+                                <Alert variant="warning" className="py-2">
+                                  This card has reached the issue limit ({maxBooksPerCard}). You cannot issue more books to this card until some are returned.
+                                </Alert>
+                              </Col>
+                            )}
                           </Row>
                         </Card.Body>
                       </Card>
@@ -1765,9 +1868,8 @@ const BookIssue = () => {
                                     <Col xs={8}>
                                       {userDetails.user_name ||
                                         userDetails.student_name ||
-                                        `${userDetails.firstname || ""} ${
-                                          userDetails.lastname || ""
-                                        }`.trim() ||
+                                        `${userDetails.firstname || ""} ${userDetails.lastname || ""
+                                          }`.trim() ||
                                         "Unknown"}
                                     </Col>
                                   </Row>
@@ -1858,7 +1960,7 @@ const BookIssue = () => {
                                         {Math.ceil(
                                           (new Date(formData.due_date) -
                                             new Date(formData.issue_date)) /
-                                            (1000 * 60 * 60 * 24)
+                                          (1000 * 60 * 60 * 24)
                                         )}{" "}
                                         days
                                       </Col>
@@ -1878,8 +1980,8 @@ const BookIssue = () => {
                                             ? "success"
                                             : formData.condition_before ===
                                               "Fair"
-                                            ? "warning"
-                                            : "danger"
+                                              ? "warning"
+                                              : "danger"
                                         }
                                         className="fs-6 py-2 px-3"
                                       >
