@@ -5,7 +5,7 @@ import ResizableTable from "../common/ResizableTable";
 import ScrollToTop from "../common/ScrollToTop";
 import Loader from "../common/Loader";
 import TableHeader from "../common/TableHeader";
-import DataApi from "../../api/dataApi";
+import DataApi from "../../api/DataApi";
 import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import { FaGalacticSenate } from "react-icons/fa";

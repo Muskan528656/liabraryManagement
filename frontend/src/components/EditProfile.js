@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { NameInitialsAvatar } from "react-name-initials-avatar"; // npm install react-name-initials-avatar --force
 import jwt_decode from "jwt-decode";
 import CountryCode from "../constants/CountryCode.json";
-import DataApi from "../api/dataApi";
+import DataApi from "../api/DataApi";
 import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import axios from "axios";

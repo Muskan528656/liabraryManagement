@@ -1,6 +1,6 @@
 // hooks/useDataManager.js
 import { useState, useEffect } from 'react';
-import DataApi from '../../api/dataApi';
+import DataApi from '../../api/DataApi';
 
 export const useDataManager = (dependencies = {}, propsData = {}) => {
   const [data, setData] = useState({});

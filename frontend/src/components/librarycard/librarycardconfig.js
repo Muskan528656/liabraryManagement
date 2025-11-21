@@ -73,16 +73,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             field: "card_number",
             label: "Card Number",
             sortable: true,
-            render: (value, card) => (
-                <div>
-                    <strong style={{ fontFamily: 'monospace', fontSize: '14px' }}>
-                        {generateCardNumber(card)}
-                    </strong>
-                    <div style={{ fontSize: '11px', color: '#666' }}>
-                        ISBN-13 Format
-                    </div>
-                </div>
-            )
+
         },
         { field: "user_name", label: "User Name", sortable: true },
         { field: "user_email", label: "Email", sortable: true },

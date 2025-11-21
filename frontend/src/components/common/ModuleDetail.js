@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
-import DataApi from "../../api/dataApi";
+import DataApi from "../../api/DataApi";
 import Loader from "./Loader";
 import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";

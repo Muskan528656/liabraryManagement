@@ -1,11 +1,10 @@
 // config/booksConfig.js
 export const getBooksConfig = (externalData = {}, props = {}) => {
-    // Multiple data sources - priority order
     const authors =
-        props.authors ||           // 1. Props se aaya data (highest priority)
-        externalData.authors ||    // 2. Fetched data  
-        externalData.author ||     // 3. Alternative key
-        [];                       // 4. Default
+        props.authors ||          
+        externalData.authors ||  
+        externalData.author ||    
+        [];                      
 
     const categories =
         props.categories ||

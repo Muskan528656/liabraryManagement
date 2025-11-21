@@ -651,8 +651,8 @@
 
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
-import { getCategoryConfig } from "./categoryconfig";
-import { useDataManager } from "../common/userdatamanager";
+import { getCategoryConfig } from "./CategoryConfig";
+import { useDataManager } from "../common/UserDataManager";
 import Loader from "../common/Loader";
 
 const Category = (props) => {

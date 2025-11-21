@@ -12,26 +12,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-                render: (value, record) => (
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{
-                                width: "32px",
-                                height: "32px",
-                                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                                color: "white",
-                                fontWeight: "bold",
-                                fontSize: "14px",
-                            }}
-                        >
-                            {value?.charAt(0) || 'A'}
-                        </div>
-                        <span style={{ color: "#6f42c1", fontWeight: "500" }}>
-                            {value}
-                        </span>
-                    </div>
-                ),
+
             },
             {
                 field: "email",
@@ -72,11 +53,11 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
-            
+
             // Check for duplicate name
             const duplicate = allAuthors.find(
-                author => author.name?.toLowerCase() === formData.name?.toLowerCase() && 
-                author.id !== editingAuthor?.id
+                author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
+                    author.id !== editingAuthor?.id
             );
             if (duplicate) errors.push("Author with this name already exists");
 
