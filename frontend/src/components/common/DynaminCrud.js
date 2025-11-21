@@ -101,11 +101,15 @@ const DynamicCRUD = ({
             nameClickHandler(item);
             return;
         }
-
+        console.log('apiEndpoint' , apiEndpoint)
+        navigate(`/${apiEndpoint}/${item.id}`, {
+        state: { type: apiEndpoint, rowData: item },
+        });
+        console.log('item' , item)
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
-
+            
             if (enablePrefetch) {
                 try {
                     localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));

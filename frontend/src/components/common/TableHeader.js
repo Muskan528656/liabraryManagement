@@ -68,7 +68,7 @@ const TableHeader = ({
                     padding: "0.475rem 0.235rem"
                   }}
                 >
-                  <i className="fa-solid fa-gear"></i>
+                  <i className="fs-5 fa-solid fa-gear"></i>
                 </Dropdown.Toggle>
                 <Dropdown.Menu align="end" style={{ minWidth: "200px", maxHeight: "400px", overflowY: "auto" }}>
                   <Dropdown.Header>Show/Hide Columns</Dropdown.Header>

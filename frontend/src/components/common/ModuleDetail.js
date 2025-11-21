@@ -25,10 +25,12 @@ const ModuleDetail = ({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
-
+  const moduleNameFromUrl = window.location.pathname.split("/")[1];
+ console.log('moduleName' , moduleName)
   useEffect(() => {
     const tryLoadFromLocalStorage = () => {
       try {
+       
         if (!id || !moduleApi) return false;
         const key = `prefetch:${moduleApi}:${id}`;
         const raw = localStorage.getItem(key);
@@ -57,8 +59,10 @@ const ModuleDetail = ({
   const fetchData = async () => {
     try {
       setLoading(true);
-      const api = new DataApi(moduleApi);
+      console.log('moduleNameFromUrl' , moduleNameFromUrl)
+      const api = new DataApi(moduleNameFromUrl);
       const response = await api.fetchById(id);
+      console.log('response' , response)
       if (response.data) {
         if (response.data.success && response.data.data) {
           setData(response.data.data);

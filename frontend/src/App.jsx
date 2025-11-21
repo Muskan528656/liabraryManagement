@@ -38,6 +38,7 @@ import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
 import CompanyDetail from "./components/Company/CompanyDetail";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
+import ModuleDetail from "./components/common/ModuleDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -132,7 +133,7 @@ function App() {
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Home userInfo={userInfo} />} />
             <Route path="author" element={<Author />} />
-            {/* <Route path="author/:id" element={<AuthorDetail />} /> */}
+            <Route path="author/:id" element={<ModuleDetail />} />
             <Route path="books" element={<Books />} />
             <Route path="books/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
