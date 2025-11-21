@@ -5,7 +5,7 @@ import Loader from "../common/Loader";
 
 import DynamicCRUD from "../common/DynaminCrud";
 import { getAuthorConfig } from "./AuthorConfig";
-import { useDataManager } from "../common/UserDataManager";
+import { useDataManager } from "../common/userdatamanager";
 
 
 const Author = (props) => {

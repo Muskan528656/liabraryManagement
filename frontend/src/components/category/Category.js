@@ -6,7 +6,7 @@
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getCategoryConfig } from "./CategoryConfig";
-import { useDataManager } from "../common/UserDataManager";
+import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
 
 const Category = (props) => {

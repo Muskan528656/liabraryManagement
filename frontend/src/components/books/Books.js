@@ -1,7 +1,7 @@
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./BookConfig";
-import { useDataManager } from "../common/UserDataManager";
+import { useDataManager } from "../common/userdatamanager";
 
 const Books = (props) => {
   const baseConfig = getBooksConfig();
