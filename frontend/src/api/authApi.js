@@ -84,11 +84,11 @@ const AuthApi = {
         sessionStorage.setItem("token", result.authToken);
         sessionStorage.setItem("r-t", result.refreshToken);
       } else {
-        
+
       }
       return result;
     } catch (error) {
-      
+
       this.logout();
       return;
     }
