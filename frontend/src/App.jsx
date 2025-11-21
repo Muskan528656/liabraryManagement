@@ -41,6 +41,8 @@ import PurchaseDetail from "./components/purchase/PurchaseDetail";
 import BlukIssued from "./components/bookissue/BlukIssued";
 import BulkIssue from "./components/bookissue/BulkIssue";
 import AuthorDetail from "./components/author/AuthorDetail";
+import CategoryDetail from "./components/category/CategoryDetail";
+import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -136,10 +138,10 @@ function App() {
             <Route index element={<Home userInfo={userInfo} />} />
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
-            <Route path="books" element={<Books />} />
-            <Route path="books/:id" element={<BookDetail />} />
+            <Route path="book" element={<Books />} />
+            <Route path="book/:id" element={<AuthorDetail />} />
             <Route path="category" element={<Category />} />
-            {/* <Route path="category/:id" element={<CategoryDetail />} /> */}
+            <Route path="category/:id" element={<CategoryDetail />} />
             <Route path="vendor" element={<Vendor />} />
             <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
@@ -147,7 +149,7 @@ function App() {
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />
-            {/* <Route path="librarycard/:id" element={<LibraryCardDetail />} /> */}
+            <Route path="librarycard/:id" element={<LibraryCardDetail />} />
             <Route path="bookissue" element={<BookIssue />} />
             <Route path="bookreturn" element={<BookSubmit />} />
             <Route path="librarysettings" element={<LibrarySettings />} />

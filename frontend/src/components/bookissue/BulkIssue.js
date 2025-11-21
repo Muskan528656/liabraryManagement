@@ -17,12 +17,12 @@ import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 
-// BulkIssue: issue multiple books to a single user/card
 const BulkIssue = () => {
+  // --- State Management ---
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
   const [users, setUsers] = useState([]);
-  const [issuedBooks, setIssuedBooks] = useState([]); // active issued records
+  const [issuedBooks, setIssuedBooks] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -39,19 +39,11 @@ const BulkIssue = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  // --- Effects ---
   useEffect(() => {
     fetchAll();
   }, []);
 
-  useEffect(() => {
-    if (!dueDate) {
-      const d = new Date();
-      d.setDate(d.getDate() + (durationDays || 7));
-      setDueDate(d.toISOString().split("T")[0]);
-    }
-  }, [durationDays]);
-
-  // When issueDate changes, update dueDate automatically to issueDate + durationDays
   useEffect(() => {
     if (issueDate) {
       const duration = durationDays || 15;
@@ -61,6 +53,7 @@ const BulkIssue = () => {
     }
   }, [issueDate, durationDays]);
 
+  // --- Data Fetching ---
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -80,26 +73,10 @@ const BulkIssue = () => {
         ]);
 
       // Normalize responses
-      const booksList = Array.isArray(booksResp?.data)
-        ? booksResp.data
-        : Array.isArray(booksResp)
-        ? booksResp
-        : [];
-      const cardsList = Array.isArray(cardsResp?.data)
-        ? cardsResp.data
-        : Array.isArray(cardsResp)
-        ? cardsResp
-        : [];
-      const usersList = Array.isArray(usersResp?.data)
-        ? usersResp.data
-        : Array.isArray(usersResp)
-        ? usersResp
-        : [];
-      const issuesList = Array.isArray(issuesResp?.data)
-        ? issuesResp.data
-        : Array.isArray(issuesResp)
-        ? issuesResp
-        : [];
+      const booksList = normalize(booksResp);
+      const cardsList = normalize(cardsResp);
+      const usersList = normalize(usersResp);
+      const issuesList = normalize(issuesResp);
 
       setBooks(booksList);
       setLibraryCards(
@@ -107,7 +84,6 @@ const BulkIssue = () => {
       );
       setUsers(usersList);
 
-      // Only active issues
       const activeIssues = issuesList.filter(
         (issue) =>
           issue.status !== "returned" &&
@@ -115,7 +91,6 @@ const BulkIssue = () => {
       );
       setIssuedBooks(activeIssues);
 
-      // settingsResp returns object with duration_days and max_books_per_card
       if (settingsResp && typeof settingsResp === "object") {
         const dur =
           parseInt(settingsResp.duration_days) ||
@@ -135,7 +110,12 @@ const BulkIssue = () => {
     }
   };
 
-  // helper to call settings /all endpoint safely
+  const normalize = (resp) => {
+    if (Array.isArray(resp?.data)) return resp.data;
+    if (Array.isArray(resp)) return resp;
+    return [];
+  };
+
   const settingsRespTry = async (settingsApi) => {
     try {
       const r = await settingsApi.get("/all");
@@ -146,30 +126,7 @@ const BulkIssue = () => {
     }
   };
 
-  const bookOptions = books.map((b) => ({
-    value: b.id,
-    label: `${b.title || "Untitled"}${b.isbn ? ` (ISBN: ${b.isbn})` : ""}${
-      b.available_copies !== undefined
-        ? ` - Available: ${b.available_copies || 0}`
-        : ""
-    }`,
-    data: b,
-  }));
-
-  const cardOptions = libraryCards.map((c) => ({
-    value: c.id,
-    label: `${c.card_number || "N/A"} - ${
-      c.user_name || c.student_name || "Unknown"
-    }`,
-    data: c,
-  }));
-  const userOptions = users.map((u) => ({
-    value: u.id,
-    label:
-      `${u.firstname || ""} ${u.lastname || ""}`.trim() || u.email || "Unknown",
-    data: u,
-  }));
-
+  // --- Logic Helpers ---
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
@@ -179,23 +136,44 @@ const BulkIssue = () => {
     ).length;
   };
 
+  const availableForSelect = (option) => {
+    const b = option.data;
+    if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0)
+      return false;
+
+    if (selectedCard) {
+      const alreadyIssued = issuedBooks.some(
+        (iss) =>
+          (
+            iss.card_id ||
+            iss.cardId ||
+            iss.library_card_id
+          )?.toString() === selectedCard.value.toString() &&
+          iss.book_id?.toString() === b.id.toString() &&
+          iss.status !== "returned" &&
+          (iss.return_date == null || iss.return_date === undefined)
+      );
+      if (alreadyIssued) return false;
+    }
+    return true;
+  };
+
   const handleIssue = async () => {
     if ((!selectedCard && !selectedUser) || selectedBooks.length === 0) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Validation",
-        message: "Select a card/user and at least one book",
+        message: "Select a card and at least one book",
       });
       return;
     }
 
-    // check limit
     if (selectedCard) {
-      const issuedCount = computeIssuedCountForCard(selectedCard.value) + 0;
+      const issuedCount = computeIssuedCountForCard(selectedCard.value);
       const toIssueCount = selectedBooks.length;
       if (issuedCount + toIssueCount > (parseInt(maxBooksPerCard) || 1)) {
         PubSub.publish("RECORD_ERROR_TOAST", {
           title: "Limit Exceeded",
-          message: `This card can only have ${maxBooksPerCard} books. Selected ${toIssueCount}, already issued ${issuedCount}.`,
+          message: `Limit: ${maxBooksPerCard}. Selected: ${toIssueCount}, Issued: ${issuedCount}.`,
         });
         return;
       }
@@ -214,58 +192,33 @@ const BulkIssue = () => {
         if (selectedCard) body.card_id = selectedCard.value;
         else if (selectedUser) body.issued_to = selectedUser.value;
 
-        const resp = await helper.fetchWithAuth(
+        await helper.fetchWithAuth(
           `${constants.API_BASE_URL}/api/bookissue/issue`,
           "POST",
           JSON.stringify(body)
         );
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          console.error("Issue failed for book", b, err);
-        }
       }
 
       PubSub.publish("RECORD_SAVED_TOAST", {
         title: "Success",
         message: `${selectedBooks.length} book(s) issued successfully`,
       });
-      // reset
       setSelectedBooks([]);
       setSelectedCard(null);
       setSelectedUser(null);
-      // refresh available lists
       fetchAll();
     } catch (err) {
       console.error("Bulk issue error:", err);
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Error",
-        message: "Failed to issue books. See console.",
+        message: "Failed to issue books.",
       });
     } finally {
       setProcessing(false);
     }
   };
 
-  const availableForSelect = (option) => {
-    // hide books with 0 available copies
-    const b = option.data;
-    if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0)
-      return false;
-    // If a card is selected, hide books already issued on that card
-    if (selectedCard) {
-      const alreadyIssued = issuedBooks.some(
-        (iss) =>
-          (iss.card_id || iss.cardId || iss.library_card_id)?.toString() ===
-            selectedCard.value.toString() &&
-          iss.book_id?.toString() === b.id.toString() &&
-          iss.status !== "returned" &&
-          (iss.return_date == null || iss.return_date === undefined)
-      );
-      if (alreadyIssued) return false;
-    }
-    return true;
-  };
-
+  // --- Calculated Values ---
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
@@ -274,173 +227,211 @@ const BulkIssue = () => {
     (parseInt(maxBooksPerCard) || 1) - issuedCountForSelectedCard
   );
 
+  // React Select Options
+  const bookOptions = books.map((b) => ({
+    value: b.id,
+    label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
+    subLabel: `Available: ${b.available_copies || 0}`,
+    data: b,
+  }));
+
+  const cardOptions = libraryCards.map((c) => ({
+    value: c.id,
+    label: `${c.card_number}`,
+    subLabel: c.user_name || c.student_name || "Unknown",
+    data: c,
+  }));
+
+  // --- Custom Styles for React Select to match theme ---
+  const customSelectStyles = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#dee2e6",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#8b5cf6" },
+      padding: "4px",
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "#8b5cf6"
+        : state.isFocused
+        ? "#f3f0ff"
+        : "white",
+    }),
+  };
+
   return (
-    <>
-      {/* i need three card to show issued books and remaing books and alloted books */}
-
-      <div className="d-flex justify-content-between mt-4 gap-4 flex-wrap">
-        {/* Card Data */}
-        {[
-          {
-            title: "Issued",
-            value: issuedCountForSelectedCard,
-            icon: "fa-book",
-          },
-          {
-            title: "Allotted",
-            value: maxBooksPerCard,
-            icon: "fa-layer-group",
-          },
-          {
-            title: "Remaining",
-            value: remainingForCard,
-            icon: "fa-chart-pie",
-          },
-        ].map((item, index) => (
-          <Card
-            key={index}
-            className="text-center shadow-sm"
-            style={{
-              flex: "1 1 200px",
-              minWidth: "200px",
-              borderRadius: "20px",
-              border: "none",
-              background: "linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)",
-              transition: "transform 0.3s ease, box-shadow 0.3s ease",
-            }}
-           
-          >
-            <Card.Body
-              style={{
-                padding: "1rem",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "50%",
-                  background:"linear-gradient(135deg, rgb(111, 66, 193) 0%, rgb(139, 92, 246) 100%)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "26px",
-                  marginBottom: "12px",
-                  boxShadow: "0 6px 12px rgba(76, 110, 245, 0.35)",
-                  mariginleft: "20px",
-                }}
-              >
-                <i className={`fa-solid ${item.icon}`}></i>
-              </div>
-
-              <Card.Title
-                style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 600,
-                  color: "#2b2b2b",
-                  marginTop: "-78px",
-                  marginBottom: "0",
-                }}
-              >
-                {item.title}
-              </Card.Title>
-
-              <Card.Text  style={{
-                  fontSize: "2rem",
-                  fontWeight: 700,
-                  color: "#12141aff",
-                  marginTop: "10px",
-                }}
-              >
-                {item.value}
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        ))}
+    <Container
+      fluid
+      className="p-4"
+      style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
+    >
+      {/* Header Section */}
+      <div className="mb-4">
+        <h3 className="fw-bold text-dark mb-1">Bulk Books Issue Process... </h3>
+        <p className="text-muted">
+          Streamline the book issuing process for library members.
+        </p>
       </div>
 
-      <Container fluid className="mt-4" style={{ padding: "1rem" }}>
-        <Card className="shadow-sm">
-          <Card.Header>
-            <strong>Bulk Issue Books</strong>
-            <div className="text-muted small">
-              Issue multiple books to a single user or card
-            </div>
-          </Card.Header>
-          <Card.Body>
-            {loading ? (
-              <div className="text-center p-4">
-                <Spinner />
-              </div>
-            ) : (
-              <Row className="g-3">
-                <Col md={6}>
-                  <Form.Label className="fw-bold">
-                    Select Library Card
-                  </Form.Label>
-                  <Select
-                    options={cardOptions}
-                    value={selectedCard}
-                    onChange={(v) => {
-                      setSelectedCard(v);
-                      setSelectedUser(null);
-                    }}
-                    isClearable
-                  />
-                  <Form.Text className="text-muted">
-                    Or select a user below instead of card
-                  </Form.Text>
-
-                  {selectedCard && (
-                    <div
-                      className="mt-2"
-                      style={{
-                        background: "#eef6ff",
-                        padding: "10px",
-                        borderRadius: 6,
-                      }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>Card:</strong> {selectedCard.label}
-                        </div>
-                        <div>
-                          <Badge bg="info" className="me-2">
-                            Allowed: {maxBooksPerCard}
-                          </Badge>
-                          <Badge bg="secondary">
-                            Issued: {issuedCountForSelectedCard}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <ProgressBar
-                          now={Math.min(
-                            100,
-                            (issuedCountForSelectedCard /
-                              (parseInt(maxBooksPerCard) || 1)) *
-                              100
-                          )}
-                          label={`${remainingForCard} left`}
-                        />
-                      </div>
+      {loading ? (
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "300px" }}
+        >
+          <Spinner animation="border" variant="primary" />
+        </div>
+      ) : (
+        <Row>
+          {/* LEFT COLUMN: CARD SELECTION & STATS */}
+          <Col lg={4} md={5} className="mb-4">
+            {/* 1. Select Library Card */}
+            <Card
+              className="shadow-sm border-0 mb-4"
+              style={{ borderRadius: "16px" }}
+            >
+              <Card.Body className="p-4">
+                <h6 className="fw-bold text-uppercase text-muted small mb-3">
+                  Step 1: Select Member
+                </h6>
+                <Form.Label className="fw-bold">Find Library Card</Form.Label>
+                <Select
+                  options={cardOptions}
+                  value={selectedCard}
+                  onChange={(v) => {
+                    setSelectedCard(v);
+                    setSelectedUser(null);
+                    setSelectedBooks([]);
+                  }}
+                  isClearable
+                  placeholder="Search by card number or name..."
+                  styles={customSelectStyles}
+                  formatOptionLabel={({ label, subLabel }) => (
+                    <div className="d-flex flex-column">
+                      <span className="fw-bold">{label}</span>
+                      <span className="small text-muted">{subLabel}</span>
                     </div>
                   )}
-                </Col>
+                />
+              </Card.Body>
+            </Card>
 
-                <Col md={6}>
-                  <Form.Label className="fw-bold">
-                    Select Books (multiple)
-                  </Form.Label>
+            {/* 2. Member Profile / Stats Preview */}
+            <Card
+              className="shadow-sm border-0"
+              style={{
+                borderRadius: "16px",
+                background: selectedCard ? "white" : "#f1f3f5",
+                opacity: selectedCard ? 1 : 0.7,
+              }}
+            >
+              <Card.Body className="p-4 text-center">
+                {!selectedCard ? (
+                  <div className="py-4 text-muted">
+                    <i className="fa-solid fa-id-card fa-3x mb-3 text-secondary"></i>
+                    <p className="mb-0">Select a card above to view status</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <div className="text-start">
+                        <h5 className="fw-bold mb-0">
+                          {selectedCard.data.user_name ||
+                            selectedCard.data.student_name}
+                        </h5>
+                        <span className="text-muted small">
+                          {selectedCard.label}
+                        </span>
+                      </div>
+                      <Badge
+                        bg={remainingForCard > 0 ? "success" : "danger"}
+                        pill
+                      >
+                        {remainingForCard > 0 ? "Active" : "Limit Reached"}
+                      </Badge>
+                    </div>
+
+                    <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />
+
+                    {/* Stats Grid */}
+                    <Row className="g-2 mb-3">
+                      <Col xs={4}>
+                        <div className="p-2 bg-light rounded-3">
+                          <div className="small text-muted">Issued</div>
+                          <div className="h5 mb-0 fw-bold text-primary">
+                            {issuedCountForSelectedCard}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={4}>
+                        <div className="p-2 bg-light rounded-3">
+                          <div className="small text-muted">Limit</div>
+                          <div className="h5 mb-0 fw-bold text-dark">
+                            {maxBooksPerCard}
+                          </div>
+                        </div>
+                      </Col>
+                      <Col xs={4}>
+                        <div className="p-2 bg-light rounded-3">
+                          <div className="small text-muted">Left</div>
+                          <div className="h5 mb-0 fw-bold text-success">
+                            {remainingForCard}
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+
+                    <div className="text-start">
+                      <div className="d-flex justify-content-between small mb-1">
+                        <span>Usage</span>
+                        <span>
+                          {Math.round(
+                            (issuedCountForSelectedCard / maxBooksPerCard) * 100
+                          )}
+                          %
+                        </span>
+                      </div>
+                      <ProgressBar
+                        now={
+                          (issuedCountForSelectedCard / maxBooksPerCard) * 100
+                        }
+                        variant={remainingForCard === 0 ? "danger" : "primary"}
+                        style={{ height: "8px", borderRadius: "10px" }}
+                      />
+                    </div>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* RIGHT COLUMN: BOOK SELECTION & ACTION */}
+          <Col lg={8} md={7}>
+            <Card
+              className="shadow-sm border-0"
+              style={{ borderRadius: "16px", height: "100%" }}
+            >
+              <Card.Body className="p-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="fw-bold text-uppercase text-muted small mb-0">
+                    Step 2: Select Books
+                  </h6>
+                  {selectedBooks.length > 0 && (
+                    <Badge bg="primary" pill>
+                      {selectedBooks.length} Selected
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="mb-4">
                   <Select
                     options={bookOptions.filter(availableForSelect)}
                     isMulti
                     value={selectedBooks}
                     onChange={(v) => {
-                      // If a card is selected, prevent selection of books already issued
                       if (selectedCard && v) {
+                        // Validation Logic
                         const invalid = v.find((sel) => {
                           const b = sel.data;
                           return issuedBooks.some(
@@ -451,127 +442,173 @@ const BulkIssue = () => {
                                 iss.library_card_id
                               )?.toString() === selectedCard.value.toString() &&
                               iss.book_id?.toString() === b.id.toString() &&
-                              iss.status !== "returned" &&
-                              (iss.return_date == null ||
-                                iss.return_date === undefined)
+                              iss.status !== "returned"
                           );
                         });
                         if (invalid) {
                           PubSub.publish("RECORD_ERROR_TOAST", {
                             title: "Already Issued",
-                            message: `Book '${invalid.label}' is already issued on this card.`,
+                            message: `Book '${invalid.label}' is already issued.`,
                           });
                           return;
                         }
                       }
                       setSelectedBooks(v || []);
-                      // Auto-set due date to issue date + durationDays (default 15)
-                      const duration = durationDays || 15;
-                      const baseDate = issueDate
-                        ? new Date(issueDate)
-                        : new Date();
-                      baseDate.setDate(baseDate.getDate() + duration);
-                      setDueDate(baseDate.toISOString().split("T")[0]);
                     }}
-                    closeMenuOnSelect={false}
-                    isDisabled={
-                      selectedCard && selectedBooks.length >= remainingForCard
+                    // Hide default dropdown when selected to use custom grid below
+                    controlShouldRenderValue={false}
+                    placeholder={
+                      !selectedCard
+                        ? "Select card first..."
+                        : selectedBooks.length >= remainingForCard
+                        ? "Limit Reached"
+                        : `Select up to ${
+                            remainingForCard - selectedBooks.length
+                          } more book(s)...`
                     }
+                    /* 
+                       UPDATED LOGIC HERE:
+                       Disable if:
+                       1. No card is selected OR
+                       2. The card has 0 remaining slots initially OR
+                       3. The user has ALREADY selected enough books to fill the slots
+                    */
+                    isDisabled={
+                      !selectedCard ||
+                      remainingForCard === 0 ||
+                      selectedBooks.length >= remainingForCard
+                    }
+                    styles={customSelectStyles}
+                    formatOptionLabel={({ label, subLabel }) => (
+                      <div className="d-flex justify-content-between">
+                        <span>{label}</span>
+                        <Badge bg="light" text="dark">
+                          {subLabel}
+                        </Badge>
+                      </div>
+                    )}
                   />
-                  <Form.Text className="text-danger">
-                    You can select multiple books. Books with zero available
-                    copies are hidden.
-                  </Form.Text>
+                  {!selectedCard && (
+                    <Form.Text className="text-danger">
+                      Please select a library card first.
+                    </Form.Text>
+                  )}
+                  {/* Show specific message when selection limit is hit */}
+                  {selectedCard &&
+                    selectedBooks.length >= remainingForCard &&
+                    remainingForCard > 0 && (
+                      <Form.Text className="text-warning fw-bold">
+                        <i className="fa-solid fa-lock me-1"></i>
+                        You have selected the maximum allowed books for this
+                        transaction.
+                      </Form.Text>
+                    )}
+                  {selectedCard && remainingForCard === 0 && (
+                    <Form.Text className="text-danger fw-bold">
+                      This card has reached its issue limit.
+                    </Form.Text>
+                  )}
+                </div>
 
-                  {selectedBooks && selectedBooks.length > 0 && (
+                {/* SELECTED BOOKS GRID (Cards Below) */}
+                <div className="mb-4">
+                  <h6 className="fw-bold mb-3">Books to be Issued</h6>
+                  {selectedBooks.length === 0 ? (
                     <div
-                      className="mt-3"
+                      className="text-center p-5 border rounded-3"
                       style={{
-                        border: "1px solid #e9ecef",
-                        padding: 10,
-                        borderRadius: 6,
+                        borderStyle: "dashed",
+                        borderColor: "#dee2e6",
+                        backgroundColor: "#f8f9fa",
                       }}
                     >
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <strong>Selected Books ({selectedBooks.length})</strong>
-                        <div>
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={() => setSelectedBooks([])}
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        {selectedBooks.map((b) => (
-                          <div
-                            key={b.value}
-                            className="d-flex justify-content-between align-items-center mb-1"
-                          >
-                            <div style={{ maxWidth: "80%" }}>{b.label}</div>
-                            <div>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedBooks((prev) =>
-                                    prev.filter((x) => x.value !== b.value)
-                                  )
-                                }
-                                style={{ textDecoration: "none" }}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <i className="fa-solid fa-book-open text-muted fa-2x mb-2 opacity-50"></i>
+                      <p className="text-muted mb-0">No books selected yet.</p>
                     </div>
+                  ) : (
+                    <Row className="g-3">
+                      {selectedBooks.map((book) => (
+                        <Col xl={6} key={book.value}>
+                          <div className="p-3 border rounded-3 d-flex justify-content-between align-items-center position-relative bg-white shadow-sm hover-shadow">
+                            <div className="d-flex align-items-center">
+                              <div
+                                className="me-3 d-flex align-items-center justify-content-center rounded bg-light"
+                                style={{ width: "50px", height: "60px" }}
+                              >
+                                <i className="fa-solid fa-book text-primary fa-lg"></i>
+                              </div>
+                              <div>
+                                <div
+                                  className="fw-bold text-dark text-truncate"
+                                  style={{ maxWidth: "200px" }}
+                                >
+                                  {book.data.title}
+                                </div>
+                                <div className="text-muted small">
+                                  ISBN: {book.data.isbn || "N/A"}
+                                </div>
+                                <div className="text-muted small">
+                                  Author: {book.data.author || "Unknown"}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              variant="light"
+                              className="text-danger border-0 shadow-none"
+                              size="sm"
+                              onClick={() =>
+                                setSelectedBooks((prev) =>
+                                  prev.filter((x) => x.value !== book.value)
+                                )
+                              }
+                            >
+                              <i className="fa-solid fa-trash-can"></i>
+                            </Button>
+                          </div>
+                        </Col>
+                      ))}
+                    </Row>
                   )}
-                </Col>
+                </div>
 
-                {/* <Col md={6}>
-                <Form.Label className="fw-bold">Select User</Form.Label>
-                <Select
-                  options={userOptions}
-                  value={selectedUser}
-                  onChange={(v) => { setSelectedUser(v); setSelectedCard(null); }}
-                  isClearable
-                />
-              </Col> */}
+                <hr style={{ borderColor: "#f0f0f0" }} />
 
-                <Col md={4}>
-                  <Form.Label className="fw-bold">Issue Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={issueDate}
-                    onChange={(e) => setIssueDate(e.target.value)}
-                  />
-                </Col>
-
-                <Col md={4}>
-                  <Form.Label className="fw-bold">Submission Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    min={issueDate}
-                  />
-                </Col>
-
-                <Col md={4} className="d-flex align-items-end">
-                  <div>
+                {/* DATES & CONFIRM */}
+                <Row className="g-3 align-items-end">
+                  <Col md={4}>
+                    <Form.Label className="fw-bold small text-muted text-uppercase">
+                      Issue Date
+                    </Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={issueDate}
+                      onChange={(e) => setIssueDate(e.target.value)}
+                    />
+                  </Col>
+                  <Col md={4}>
+                    <Form.Label className="fw-bold small text-muted text-uppercase">
+                      Due Date
+                    </Form.Label>
+                    <Form.Control
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      min={issueDate}
+                    />
+                  </Col>
+                  <Col md={4}>
                     <Button
+                      className="w-100 py-2 fw-bold text-white border-0"
                       style={{
-                        background:"linear-gradient(135deg, rgb(111, 66, 193) 0%, rgb(139, 92, 246) 100%)"
+                        background:
+                          "linear-gradient(135deg, rgb(111, 66, 193) 0%, rgb(139, 92, 246) 100%)",
+                        boxShadow: "0 4px 12px rgba(111, 66, 193, 0.3)",
                       }}
                       onClick={handleIssue}
                       disabled={
                         processing ||
                         selectedBooks.length === 0 ||
-                        (!selectedCard && !selectedUser) ||
+                        !selectedCard ||
                         (selectedCard &&
                           selectedBooks.length > remainingForCard)
                       }
@@ -579,33 +616,25 @@ const BulkIssue = () => {
                       {processing ? (
                         <>
                           <Spinner
+                            as="span"
                             animation="border"
                             size="sm"
                             className="me-2"
-                          />
+                          />{" "}
                           Processing...
                         </>
                       ) : (
-                        <>Issue Selected Books</>
+                        <>Confirm Issue ({selectedBooks.length})</>
                       )}
                     </Button>
-                    {selectedCard &&
-                      selectedBooks.length > remainingForCard && (
-                        <div className="mt-2">
-                          <Alert variant="warning">
-                            Selected {selectedBooks.length} books but only{" "}
-                            {remainingForCard} can be issued to this card.
-                          </Alert>
-                        </div>
-                      )}
-                  </div>
-                </Col>
-              </Row>
-            )}
-          </Card.Body>
-        </Card>
-      </Container>
-    </>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+    </Container>
   );
 };
 

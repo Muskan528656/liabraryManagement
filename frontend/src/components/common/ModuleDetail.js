@@ -25,7 +25,8 @@ const ModuleDetail = ({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
-
+  const moduleNameFromUrl = window.location.pathname.split("/")[1];
+ console.log('moduleNameFromUrl' , moduleNameFromUrl)
   useEffect(() => {
     console.log("ModuleDetail useEffect running with:", { id, moduleApi, moduleName });
 
