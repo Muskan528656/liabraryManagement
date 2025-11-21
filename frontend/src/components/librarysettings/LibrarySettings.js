@@ -73,7 +73,7 @@ const Settings = () => {
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
-   
+
     }
   };
 
@@ -85,7 +85,7 @@ const Settings = () => {
   const handleSettingsSave = async () => {
     try {
       const settingsApi = new DataApi('librarysettings');
-   
+
       const settingsArray = [
         { setting_key: 'max_books_per_card', setting_value: tempSettings.max_books_per_card.toString() },
         { setting_key: 'duration_days', setting_value: tempSettings.duration_days.toString() },
@@ -96,13 +96,13 @@ const Settings = () => {
       ];
 
       const response = await settingsApi.put('/bulk', { settings: settingsArray });
-      
+
       if (response.data && response.data.success) {
         setLibrarySettings({ ...tempSettings });
         setIsEditingSettings(false);
         setAlertMessage('Library settings updated successfully!');
         setShowAlert(true);
-        
+
         PubSub.publish('RECORD_SAVED_TOAST', {
           title: 'Success',
           message: 'Library settings updated successfully!'
@@ -114,7 +114,7 @@ const Settings = () => {
       console.error('Error saving settings:', error);
       setAlertMessage('Failed to update settings. Please try again.');
       setShowAlert(true);
-      
+
       PubSub.publish('RECORD_ERROR_TOAST', {
         title: 'Error',
         message: 'Failed to update library settings'
