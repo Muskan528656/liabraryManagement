@@ -14,12 +14,14 @@ import io from "socket.io-client";
 import Main from "./components/layout/Main";
 import EditProfile from "./components/EditProfile";
 import Books from "./components/books/Books";
+import BookDetail from "./components/books/BookDetail";
 // import BookDetail from "./components/books/BookDetail";
 import Author from "./components/author/Author";
 // import AuthorDetail from "./components/author/AuthorDetail";
 import Category from "./components/category/category";
 // import CategoryDetail from "./components/category/CategoryDetail";
 import Vendor from "./components/Vendor/vendor";
+import VendorDetail from "./components/Vendor/VendorDetail";
 // import VendorDetail from "./components/Vendor/VendorDetail";
 import Purchase from "./components/purchase/purchase";
 import User from "./components/user/User";
@@ -132,11 +134,11 @@ function App() {
             <Route path="author" element={<Author />} />
             {/* <Route path="author/:id" element={<AuthorDetail />} /> */}
             <Route path="books" element={<Books />} />
-            {/* <Route path="books/:id" element={<BookDetail />} /> */}
+            <Route path="books/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
             {/* <Route path="category/:id" element={<CategoryDetail />} /> */}
             <Route path="vendor" element={<Vendor />} />
-            {/* <Route path="vendor/:id" element={<VendorDetail />} /> */}
+            <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
             <Route path="user" element={<User />} />

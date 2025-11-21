@@ -1624,10 +1624,10 @@ import { useDataManager } from "../common/userdatamanager";
 const Books = (props) => {
   // Pehle config lo WITHOUT data
   const baseConfig = getBooksConfig();
-  
+
   // Phir data fetch karo
   const { data, loading, error } = useDataManager(
-    baseConfig.dataDependencies, 
+    baseConfig.dataDependencies,
     props  // Direct props pass karo
   );
 

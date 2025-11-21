@@ -28,6 +28,7 @@ const DynamicCRUD = ({
     permissions = {},
     detailConfig = null,
     customActionButtons = [],
+    lookupNavigation = {},
     nameClickHandler = null,
     emptyMessage = null,
     enablePrefetch = true,
@@ -69,7 +70,6 @@ const DynamicCRUD = ({
     const [visibleColumns, setVisibleColumns] = useState({});
     const [relatedData, setRelatedData] = useState({});
 
-    // ✅ MISSING BULK INSERT HELPER FUNCTIONS
     const handleAddMultiRow = () => {
         setMultiInsertRows([...multiInsertRows, { ...initialFormData }]);
     };
@@ -86,7 +86,6 @@ const DynamicCRUD = ({
         setMultiInsertRows(updatedRows);
     };
 
-    // ✅ Helper function for bulk insert
     const hasRowData = (row) => {
         return Object.values(row).some(val =>
             val !== null && val !== undefined && val !== '' && val !== 0
@@ -120,7 +119,6 @@ const DynamicCRUD = ({
         setSelectedItem(null);
     };
 
-    // ✅ AUTO-GENERATE DETAIL CONFIG IF NOT PROVIDED
     const getAutoDetailConfig = () => {
         if (detailConfig) return detailConfig;
 
@@ -140,10 +138,112 @@ const DynamicCRUD = ({
         };
     };
 
-    // ✅ ENHANCE COLUMNS WITH CLICK HANDLERS
+    const normalizeLookupPath = (path = "") => {
+        return path.replace(/^\/+|\/+$/g, "");
+    };
+
+    const getLookupTargetId = (lookupConfig = {}, record = {}) => {
+        if (typeof lookupConfig.idResolver === "function") {
+            return lookupConfig.idResolver(record);
+        }
+
+        if (lookupConfig.idField && Object.prototype.hasOwnProperty.call(record, lookupConfig.idField)) {
+            return record[lookupConfig.idField];
+        }
+
+        if (lookupConfig.moduleIdField && Object.prototype.hasOwnProperty.call(record, lookupConfig.moduleIdField)) {
+            return record[lookupConfig.moduleIdField];
+        }
+
+        if (lookupConfig.module) {
+            const fallbackField = `${lookupConfig.module.replace(/s$/, "")}_id`;
+            if (Object.prototype.hasOwnProperty.call(record, fallbackField)) {
+                return record[fallbackField];
+            }
+        }
+
+        return record.id;
+    };
+
+    const getLookupLabel = (value, record, lookupConfig = {}) => {
+        if (typeof lookupConfig.labelResolver === "function") {
+            return lookupConfig.labelResolver(record);
+        }
+
+        if (lookupConfig.labelField && Object.prototype.hasOwnProperty.call(record, lookupConfig.labelField)) {
+            return record[lookupConfig.labelField] ?? value;
+        }
+
+        return value ?? "—";
+    };
+
+    const handleLookupNavigation = (lookupConfig, record, event = null) => {
+        if (event) {
+            event.preventDefault();
+        }
+
+        if (!lookupConfig) return;
+
+        const targetId = getLookupTargetId(lookupConfig, record);
+        if (!targetId) return;
+
+        const basePath = lookupConfig.path || lookupConfig.module;
+        if (!basePath) return;
+
+        const finalPath = normalizeLookupPath(basePath);
+        if (!finalPath) return;
+
+        const targetUrl = `/${finalPath}/${targetId}`;
+
+        if (lookupConfig.newTab) {
+            window.open(targetUrl, "_blank");
+            return;
+        }
+
+        navigate(targetUrl);
+    };
+
+    const renderLookupLink = (value, record, lookupConfig) => {
+        const label = getLookupLabel(value, record, lookupConfig);
+
+        return (
+            <a
+                href="#"
+                onClick={(e) => handleLookupNavigation(lookupConfig, record, e)}
+                style={{
+                    color: "#6f42c1",
+                    textDecoration: "none",
+                    fontWeight: "500",
+                    cursor: "pointer"
+                }}
+                onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+                onMouseLeave={(e) => e.target.style.textDecoration = "none"}
+            >
+                {label}
+            </a>
+        );
+    };
+
     const getEnhancedColumns = () => {
         return columns.map(col => {
-            if ((col.field === 'title' || col.field === 'name') && showDetailView) {
+            const customRenderer = customHandlers.columnRenderers?.[col.field];
+
+            if (customRenderer) {
+                return {
+                    ...col,
+                    render: customRenderer
+                };
+            }
+
+            const lookupConfig = lookupNavigation[col.field];
+            if (lookupConfig && !col.render) {
+                return {
+                    ...col,
+                    render: (value, record) => renderLookupLink(value, record, lookupConfig)
+                };
+            }
+
+            if ((col.field === 'title' || col.field === 'name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -165,13 +265,6 @@ const DynamicCRUD = ({
                             {value}
                         </a>
                     )
-                };
-            }
-
-            if (customHandlers.columnRenderers && customHandlers.columnRenderers[col.field]) {
-                return {
-                    ...col,
-                    render: customHandlers.columnRenderers[col.field]
                 };
             }
 
@@ -283,11 +376,9 @@ const DynamicCRUD = ({
         }
     };
 
-    // ✅ PROCESS FORM FIELDS WITH RELATED DATA
-    // ✅ MORE ROBUST FORM FIELD PROCESSING
+
     const getProcessedFormFields = () => {
         return formFields.map(field => {
-            // Only process select fields with options
             if (field.type !== 'select' || !field.options) {
                 return field;
             }
@@ -295,19 +386,15 @@ const DynamicCRUD = ({
             try {
                 let optionsArray = [];
 
-                // Debug logging
                 console.log(`Processing field: ${field.name}`, {
                     optionsType: typeof field.options,
                     optionsValue: field.options,
                     hasRelatedData: relatedData[field.options] ? true : false
                 });
 
-                // Handle different types of options
                 if (Array.isArray(field.options)) {
-                    // Already an array - use as is
                     optionsArray = field.options;
                 } else if (typeof field.options === 'string') {
-                    // String key - lookup from relatedData
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
@@ -315,19 +402,15 @@ const DynamicCRUD = ({
                             label: item.name || item.title || item.email || `Item ${item.id}`
                         }));
                     } else {
-                        // Not loaded yet, return empty options
                         optionsArray = [];
                     }
                 } else {
-                    // Invalid options type, return empty
                     console.warn(`Invalid options type for field ${field.name}:`, typeof field.options);
                     optionsArray = [];
                 }
 
-                // Ensure all options have proper structure
                 optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
 
-                // Add default option only if we have actual options
                 if (optionsArray.length > 0) {
                     const hasEmptyOption = optionsArray.some(opt =>
                         opt.value === '' || opt.value === null || opt.value === undefined
@@ -348,7 +431,6 @@ const DynamicCRUD = ({
 
             } catch (error) {
                 console.error(`Error processing field ${field.name}:`, error);
-                // Return original field without options on error
                 return {
                     ...field,
                     options: []
@@ -357,7 +439,6 @@ const DynamicCRUD = ({
         });
     };
 
-    // ✅ CRUD OPERATIONS
     const handleAdd = () => {
         setEditingItem(null);
         setFormData(initialFormData);
@@ -465,7 +546,6 @@ const DynamicCRUD = ({
         }
     };
 
-    // ✅ BULK INSERT (Conditional)
     const handleBulkInsert = () => {
         setMultiInsertRows([{ ...initialFormData }]);
         setShowBulkInsertModal(true);
@@ -528,7 +608,6 @@ const DynamicCRUD = ({
         }
     };
 
-    // ✅ EXPORT FUNCTIONALITY
     const handleExport = async () => {
         try {
             const exportList = selectedItems.length > 0
@@ -558,7 +637,6 @@ const DynamicCRUD = ({
         }
     };
 
-    // ✅ FILTER DATA
     const filteredData = data.filter(item => {
         if (!searchTerm || !showSearch) return true;
 
@@ -572,7 +650,6 @@ const DynamicCRUD = ({
         });
     });
 
-    // ✅ TOGGLE COLUMN VISIBILITY
     const toggleColumnVisibility = (field) => {
         setVisibleColumns(prev => ({
             ...prev,
@@ -580,7 +657,6 @@ const DynamicCRUD = ({
         }));
     };
 
-    // ✅ PREPARE ACTION BUTTONS (Conditional)
     const getActionButtons = () => {
         const buttons = [];
 
@@ -627,7 +703,6 @@ const DynamicCRUD = ({
     const processedFormFields = getProcessedFormFields();
     const actionButtons = getActionButtons();
 
-    // ✅ DETAIL VIEW
     if (showDetail && selectedItem) {
         return (
             <Container fluid>
@@ -657,7 +732,6 @@ const DynamicCRUD = ({
         );
     }
 
-    // ✅ LIST VIEW
     return (
         <Container fluid>
             <ScrollToTop />
@@ -735,7 +809,7 @@ const DynamicCRUD = ({
                 </Col>
             </Row>
 
-            {/* Add/Edit Modal */}
+        
             <FormModal
                 show={showModal}
                 onHide={() => {
@@ -753,7 +827,7 @@ const DynamicCRUD = ({
                 editingItem={editingItem}
             />
 
-            {/* Delete Confirmation Modal */}
+          
             <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirm Delete</Modal.Title>

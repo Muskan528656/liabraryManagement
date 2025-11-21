@@ -1085,10 +1085,8 @@ import CityState from "../../constants/CityState.json"
 import CityPincode from "../../constants/CityPincode.json";
 
 const Vendor = (props) => {
-  // Get base config structure first
   const baseConfig = getVendorConfig();
 
-  // Fetch data with dependencies
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
     props
@@ -1113,7 +1111,6 @@ const Vendor = (props) => {
     );
   }
 
-  // Merge props data and fetched data with static data
   const allData = {
     ...data,
     ...props,
@@ -1121,7 +1118,6 @@ const Vendor = (props) => {
     CityPincode: CityPincode
   };
 
-  // Get final config with all data
   const finalConfig = getVendorConfig(allData);
 
   return <DynamicCRUD {...finalConfig} />;
