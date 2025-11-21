@@ -62,6 +62,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
+
     const defaultColumns = [
         {
             name: "user_image",
@@ -81,7 +82,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
             field: "card_number",
             label: "Card Number",
             sortable: true,
-
         },
         { field: "user_name", label: "User Name", sortable: true },
         { field: "user_email", label: "Email", sortable: true },
@@ -114,14 +114,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
         moduleName: "librarycards",
         moduleLabel: "Library Card",
         apiEndpoint: "librarycard",
-        // Ensure columns array always exists
         columns: defaultColumns,
         initialFormData: {
             user_id: "",
             issue_date: new Date().toISOString().split('T')[0],
             expiry_date: "",
             is_active: true,
+            image: null
         },
+
         formFields: [
             {
                 name: "user_id",
@@ -131,6 +132,10 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: true,
                 placeholder: "Select user",
                 colSize: 12,
+                props: {
+                    valueKey: "id",
+                    labelKey: "name"
+                }
             },
             {
                 name: "image",
@@ -140,8 +145,17 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: false,
                 colSize: 12,
                 preview: true,
-                maxSize: 2 * 1024 * 1024, // 2MB limit
-                helperText: "Upload user photo (JPG, PNG, max 2MB)"
+                maxSize: 2 * 1024 * 1024,
+                helperText: "Upload user photo (JPG, PNG, max 2MB)",
+      
+                onChange: (file, formData, setFormData) => {
+                    if (file) {
+                        setFormData(prev => ({
+                            ...prev,
+                            image: file
+                        }));
+                    }
+                }
             },
             {
                 name: "issue_date",
@@ -162,26 +176,38 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "checkbox",
                 colSize: 12,
             },
-
-
-
         ],
+
+  
         validationRules: (formData, allCards, editingCard) => {
-            const errors = [];
-            if (!formData.user_id) errors.push("User is required");
-            if (!formData.issue_date) errors.push("Issue date is required");
-            const existingCard = allCards.find(
+            const errors = {};
+
+            if (!formData.user_id) {
+                errors.user_id = "User is required";
+            }
+
+            if (!formData.issue_date) {
+                errors.issue_date = "Issue date is required";
+            }
+
+         
+            const existingCard = allCards?.find(
                 card => card.user_id === formData.user_id &&
                     card.is_active &&
                     card.id !== editingCard?.id
             );
-            if (existingCard) errors.push("User already has an active library card");
+
+            if (existingCard) {
+                errors.user_id = "User already has an active library card";
+            }
 
             return errors;
         },
+
         dataDependencies: {
             users: "user"
         },
+
         features: {
             showImportExport: true,
             showDetailView: true,
@@ -193,6 +219,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             allowEdit: true,
             allowDelete: true
         },
+
         details: [
             { key: "card_number", label: "Card Number", type: "text" },
             { key: "user_name", label: "User Name", type: "text" },
@@ -201,12 +228,30 @@ export const getLibraryCardConfig = (externalData = {}) => {
             { key: "expiry_date", label: "Expiry Date", type: "date" },
             { key: "is_active", label: "Status", type: "badge" },
         ],
+
         customHandlers: {
             generateCardNumber,
             generateISBN13Number,
             calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
             handleBarcodePreview
+        }, beforeSubmit: (formData, isEditing) => {
+            const errors = [];
+
+            if (!formData.user_id) {
+                errors.push("Please select a user");
+            }
+
+            if (!formData.issue_date) {
+                errors.push("Issue date is required");
+            }
+
+            // File size validation
+            if (formData.image && formData.image.size > 2 * 1024 * 1024) {
+                errors.push("Image size must be less than 2MB");
+            }
+
+            return errors;
         }
     };
 };

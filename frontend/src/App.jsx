@@ -40,6 +40,7 @@ import CompanyDetail from "./components/Company/CompanyDetail";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
 import BlukIssued from "./components/bookissue/BlukIssued";
 import BulkIssue from "./components/bookissue/BulkIssue";
+import AuthorDetail from "./components/author/AuthorDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -134,7 +135,7 @@ function App() {
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Home userInfo={userInfo} />} />
             <Route path="author" element={<Author />} />
-            {/* <Route path="author/:id" element={<AuthorDetail />} /> */}
+            <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="books" element={<Books />} />
             <Route path="books/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
