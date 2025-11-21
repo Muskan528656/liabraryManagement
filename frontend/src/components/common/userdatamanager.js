@@ -7,17 +7,17 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 ///hgfgh
+//hgfgahjsdhgfgahsjdhgshjdhgshdjjshgdhj
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
         const dataMap = { ...propsData }; 
 
-   
+
         const apiEndpoints = Object.values(dependencies)
           .filter(endpoint => typeof endpoint === 'string' && !propsData[endpoint]);
-        
-      
+             
         const promises = apiEndpoints.map(async (endpoint) => {
           const api = new DataApi(endpoint);
           const response = await api.fetchAll();
