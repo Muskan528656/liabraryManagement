@@ -8,6 +8,8 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
   const [error, setError] = useState(null);
 ///hgfgh
 //hgfgahjsdhgfgahsjdhgshjdhgshdjjshgdhj
+
+//sdfghjkjhgfdfghj
   useEffect(() => {
     const fetchAllData = async () => {
       try {
