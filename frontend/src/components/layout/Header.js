@@ -19,6 +19,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [dueNotifications, setDueNotifications] = useState(false);
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
@@ -50,6 +51,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
+
   // Fetch unread count
   const fetchUnreadCount = async () => {
     try {
@@ -65,6 +67,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       console.error("Error fetching unread count:", error);
     }
   };
+
+
+  //fetch due notifications
+
 
   // Mark notification as read
   const markAsRead = async (notificationId) => {
@@ -200,12 +206,30 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
+  const fetchDueNotifications = async () => {
+    try {
+      const response = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/book_submissions/due_notifications`,
+        "GET"
+      );
+      // console.log("response1111 ", response);
+      const result = await response.json();
+      if (result.success) {
+        setDueNotifications(result.notifications || []);
+      }
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  }
+
+
   useEffect(() => {
     try {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
         setUserInfo(user);
+        fetchDueNotifications();
         fetchNotifications();
         fetchUnreadCount();
         fetchModulesFromDB();
@@ -315,7 +339,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         console.log("📬 New notification received via socket:", notification);
         setNotifications(prev => [notification, ...prev]);
         setUnreadCount(prev => prev + 1);
-
+        setDueNotifications(prev => prev + 1);
         // Show browser notification if permission granted
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(notification.title, {
@@ -335,6 +359,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       console.warn("⚠️ Socket not available for notification listener");
     }
   }, [socket]);
+
+
+  // console.log('due Notification', dueNotifications.map(n => n.message));
 
   // Request notification permission
   useEffect(() => {
@@ -484,12 +511,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         <div className="d-flex align-items-center gap-2">
           {/* Notifications Bell Icon */}
           <Dropdown
-            show={showNotifications}
+            show={dueNotifications}
             onToggle={(isOpen) => {
               setShowNotifications(isOpen);
               if (isOpen) {
                 fetchNotifications();
                 fetchUnreadCount();
+                fetchDueNotifications();
               }
             }}
           >
@@ -502,6 +530,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 border: "none",
                 padding: "8px",
               }}
+              onClick={() => setShowNotifications(!showNotifications)}
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
               {unreadCount > 0 && (
@@ -513,108 +542,116 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 </span>
               )}
             </Dropdown.Toggle>
-            <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
-              <Dropdown.Header className="d-flex justify-content-between align-items-center">
-                <span>Notifications</span>
-                {unreadCount > 0 && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markAllAsRead();
-                    }}
-                    style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
-                  >
-                    Mark all as read
-                  </Button>
+            {
+              showNotifications ? 
+              <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
+                <Dropdown.Header className="d-flex justify-content-between align-items-center">
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAllAsRead();
+                      }}
+                      style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
+                    >
+                      Mark all as read
+                    </Button>
+                  )}
+                </Dropdown.Header>
+                <Dropdown.Divider />
+                {dueNotifications.length === 0 ? (
+                  <Dropdown.ItemText className="text-center text-muted">
+                    No new notifications
+                  </Dropdown.ItemText>
+                ) : dueNotifications && ( 
+
+                  dueNotifications?.slice(0, 10).map((notification) => (
+                    <React.Fragment key={notification.id}>
+                      <Dropdown.Item
+                        onClick={() => {
+                          if (!notification.is_read) {
+                            markAsRead(notification.id);
+                          }
+                          if (notification.related_type === "book_issue") {
+                            navigate("/mybooks");
+                          } else if (notification.related_type === "book_request") {
+                            // navigate("/bookrequest");
+                          }
+                          // setShowNotifications(false);
+                        }}
+                        style={{
+                          backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
+                          cursor: "pointer"
+                        }}
+                      >
+                        <div className="d-flex">
+                          <div className="me-2">
+                            {notification.type === "overdue" && (
+                              <i className="fa-solid fa-exclamation-triangle text-danger"></i>
+                            )}
+                            {notification.type === "due_today" && (
+                              <i className="fa-solid fa-clock text-warning"></i>
+                            )}
+                            {notification.type === "book_request" && (
+                              <i className="fa-solid fa-book text-primary"></i>
+                            )}
+                            {notification.type === "announcement" && (
+                              <i className="fa-solid fa-bullhorn text-info"></i>
+                            )}
+                            {notification.type === "fine" && (
+                              <i className="fa-solid fa-money-bill-wave text-danger"></i>
+                            )}
+                            {notification.type === "book_issued" && (
+                              <i className="fa-solid fa-book text-success"></i>
+                            )}
+                            {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
+                              <i className="fa-solid fa-bell text-secondary"></i>
+                            )}
+
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
+                              {notification.message}
+                            </div>
+                            <small className="text-muted" style={{ fontSize: "12px" }}>
+                              {notification.due_date}
+                            </small>
+                            <div className="text-muted" style={{ fontSize: "12px" }}>
+                              {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
+                            </div>
+
+                          </div>
+                          {!notification.is_read && (
+                            <div className="ms-2">
+                              <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
+                            </div>
+                          )}
+                        </div>
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                    </React.Fragment>
+                  ))
+
                 )}
-              </Dropdown.Header>
-              <Dropdown.Divider />
-              {notifications.length === 0 ? (
-                <Dropdown.ItemText className="text-center text-muted">
-                  No new notifications
-                </Dropdown.ItemText>
-              ) : (
-                notifications.slice(0, 10).map((notification) => (
-                  <React.Fragment key={notification.id}>
+                {notifications.length > 10 && (
+                  <>
                     <Dropdown.Item
+                      className="text-center"
                       onClick={() => {
-                        if (!notification.is_read) {
-                          markAsRead(notification.id);
-                        }
-                        if (notification.related_type === "book_issue") {
-                          navigate("/mybooks");
-                        } else if (notification.related_type === "book_request") {
-                          // navigate("/bookrequest");
-                        }
+                        // navigate("/notifications");
                         setShowNotifications(false);
                       }}
-                      style={{
-                        backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
-                        cursor: "pointer"
-                      }}
                     >
-                      <div className="d-flex">
-                        <div className="me-2">
-                          {notification.type === "overdue" && (
-                            <i className="fa-solid fa-exclamation-triangle text-danger"></i>
-                          )}
-                          {notification.type === "due_today" && (
-                            <i className="fa-solid fa-clock text-warning"></i>
-                          )}
-                          {notification.type === "book_request" && (
-                            <i className="fa-solid fa-book text-primary"></i>
-                          )}
-                          {notification.type === "announcement" && (
-                            <i className="fa-solid fa-bullhorn text-info"></i>
-                          )}
-                          {notification.type === "fine" && (
-                            <i className="fa-solid fa-money-bill-wave text-danger"></i>
-                          )}
-                          {notification.type === "book_issued" && (
-                            <i className="fa-solid fa-book text-success"></i>
-                          )}
-                          {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
-                            <i className="fa-solid fa-bell text-secondary"></i>
-                          )}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
-                            {notification.title}
-                          </div>
-                          <small className="text-muted" style={{ fontSize: "12px" }}>
-                            {notification.message}
-                          </small>
-                          <div className="text-muted" style={{ fontSize: "10px", marginTop: "4px" }}>
-                            {new Date(notification.created_at).toLocaleString()}
-                          </div>
-                        </div>
-                        {!notification.is_read && (
-                          <div className="ms-2">
-                            <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
-                          </div>
-                        )}
-                      </div>
+                      <small className="text-primary">View all notifications</small>
                     </Dropdown.Item>
-                    <Dropdown.Divider />
-                  </React.Fragment>
-                ))
-              )}
-              {notifications.length > 10 && (
-                <>
-                  <Dropdown.Item
-                    className="text-center"
-                    onClick={() => {
-                      navigate("/notifications");
-                      setShowNotifications(false);
-                    }}
-                  >
-                    <small className="text-primary">View all notifications</small>
-                  </Dropdown.Item>
-                </>
-              )}
-            </Dropdown.Menu>
+                  </>
+                )}
+              </Dropdown.Menu>
+              : null
+            }
           </Dropdown>
 
           {/* Profile/Admin Dropdown */}

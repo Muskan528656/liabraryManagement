@@ -29,6 +29,8 @@ module.exports = (app) => {
     try {
       console.log("Fetching all book submissions for tenant:", req.userinfo.tenantcode);
       BookSubmission.init(req.userinfo.tenantcode);
+      console.log('req.userinfo.tenantcode', req.userinfo.tenantcode);
+      
       const submissions = await BookSubmission.findAll();
       return res.status(200).json({ success: true, data: submissions });
     } catch (error) {
@@ -36,6 +38,31 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
+
+  router.get("/due_notifications", fetchUser, async (req, res) => {
+
+  // console.log("Fetching notifications for book submissions nearing due date...");
+  // res.send('Notifications endpoint hit')
+    try {
+      const notifications = await BookSubmission.checkbeforeDue();
+      // console.log('notification ', notifications);
+      
+      return res.status(200).json({
+        success: true,
+        notifications,
+      });
+
+    } catch (error) {
+      console.error("❌ Error fetching notifications:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch notifications",
+        error: error.message
+      });
+    }
+  });
+
 
   // Get book submission by ID
   router.get("/:id", fetchUser, async (req, res) => {
@@ -88,6 +115,8 @@ module.exports = (app) => {
       }
     }
   );
+
+  
 
   // Submit/return a book with before/after condition and remarks
   router.post(
@@ -172,6 +201,8 @@ module.exports = (app) => {
       }
     }
   );
+
+
 
   app.use(process.env.BASE_API_URL + "/api/book_submissions", router);
 };
