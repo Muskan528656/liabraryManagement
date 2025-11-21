@@ -780,7 +780,6 @@ const DynamicCRUD = ({
                                             {allowEdit && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleEdit(item)}
                                                     title="Edit"
                                                     style={{
@@ -789,13 +788,12 @@ const DynamicCRUD = ({
                                                         textDecoration: "none"
                                                     }}
                                                 >
-                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                    <i className="fs-5 fa-solid fa-pen-to-square"></i>
                                                 </Button>
                                             )}
                                             {allowDelete && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleDelete(item.id)}
                                                     title="Delete"
                                                     style={{
@@ -804,7 +802,7 @@ const DynamicCRUD = ({
                                                         textDecoration: "none"
                                                     }}
                                                 >
-                                                    <i className="fa-solid fa-trash"></i>
+                                                    <i className="fs-5 fa-solid fa-trash"></i>
                                                 </Button>
 
                                             )}
