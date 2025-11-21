@@ -24,7 +24,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     book_barcode: "",
     condition_after: "Good",
@@ -109,7 +109,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  
+
   // Fetch role permissions
   // const fetchRolePermissions = async (userRole) => {
   //   try {
@@ -433,7 +433,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const handleBarcodeSearch = (e) => {
     e.preventDefault();
     if (searchBarcode.trim()) {
-      // Navigate to books page with search query
       navigate(`/books?q=${encodeURIComponent(searchBarcode.trim())}`);
       setSearchBarcode("");
     }
@@ -544,114 +543,114 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               )}
             </Dropdown.Toggle>
             {
-              showNotifications ? 
-              <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
-                <Dropdown.Header className="d-flex justify-content-between align-items-center">
-                  <span>Notifications</span>
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        markAllAsRead();
-                      }}
-                      style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
-                    >
-                      Mark all as read
-                    </Button>
-                  )}
-                </Dropdown.Header>
-                <Dropdown.Divider />
-                {dueNotifications.length === 0 ? (
-                  <Dropdown.ItemText className="text-center text-muted">
-                    No new notifications
-                  </Dropdown.ItemText>
-                ) : dueNotifications && ( 
-
-                  dueNotifications?.slice(0, 10).map((notification) => (
-                    <React.Fragment key={notification.id}>
-                      <Dropdown.Item
-                        onClick={() => {
-                          if (!notification.is_read) {
-                            markAsRead(notification.id);
-                          }
-                          if (notification.related_type === "book_issue") {
-                            navigate("/mybooks");
-                          } else if (notification.related_type === "book_request") {
-                            // navigate("/bookrequest");
-                          }
-                          // setShowNotifications(false);
+              showNotifications ?
+                <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
+                  <Dropdown.Header className="d-flex justify-content-between align-items-center">
+                    <span>Notifications</span>
+                    {unreadCount > 0 && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAllAsRead();
                         }}
-                        style={{
-                          backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
-                          cursor: "pointer"
+                        style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
+                      >
+                        Mark all as read
+                      </Button>
+                    )}
+                  </Dropdown.Header>
+                  <Dropdown.Divider />
+                  {dueNotifications.length === 0 ? (
+                    <Dropdown.ItemText className="text-center text-muted">
+                      No new notifications
+                    </Dropdown.ItemText>
+                  ) : dueNotifications && (
+
+                    dueNotifications?.slice(0, 10).map((notification) => (
+                      <React.Fragment key={notification.id}>
+                        <Dropdown.Item
+                          onClick={() => {
+                            if (!notification.is_read) {
+                              markAsRead(notification.id);
+                            }
+                            if (notification.related_type === "book_issue") {
+                              navigate("/mybooks");
+                            } else if (notification.related_type === "book_request") {
+                              // navigate("/bookrequest");
+                            }
+                            // setShowNotifications(false);
+                          }}
+                          style={{
+                            backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div className="d-flex">
+                            <div className="me-2">
+                              {notification.type === "overdue" && (
+                                <i className="fa-solid fa-exclamation-triangle text-danger"></i>
+                              )}
+                              {notification.type === "due_today" && (
+                                <i className="fa-solid fa-clock text-warning"></i>
+                              )}
+                              {notification.type === "book_request" && (
+                                <i className="fa-solid fa-book text-primary"></i>
+                              )}
+                              {notification.type === "announcement" && (
+                                <i className="fa-solid fa-bullhorn text-info"></i>
+                              )}
+                              {notification.type === "fine" && (
+                                <i className="fa-solid fa-money-bill-wave text-danger"></i>
+                              )}
+                              {notification.type === "book_issued" && (
+                                <i className="fa-solid fa-book text-success"></i>
+                              )}
+                              {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
+                                <i className="fa-solid fa-bell text-secondary"></i>
+                              )}
+
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
+                                {notification.message}
+                              </div>
+                              <small className="text-muted" style={{ fontSize: "12px" }}>
+                                {notification.due_date}
+                              </small>
+                              <div className="text-muted" style={{ fontSize: "12px" }}>
+                                {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
+                              </div>
+
+                            </div>
+                            {!notification.is_read && (
+                              <div className="ms-2">
+                                <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
+                              </div>
+                            )}
+                          </div>
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                      </React.Fragment>
+                    ))
+
+                  )}
+                  {notifications.length > 10 && (
+                    <>
+                      <Dropdown.Item
+                        className="text-center"
+                        onClick={() => {
+                          // navigate("/notifications");
+                          setShowNotifications(false);
                         }}
                       >
-                        <div className="d-flex">
-                          <div className="me-2">
-                            {notification.type === "overdue" && (
-                              <i className="fa-solid fa-exclamation-triangle text-danger"></i>
-                            )}
-                            {notification.type === "due_today" && (
-                              <i className="fa-solid fa-clock text-warning"></i>
-                            )}
-                            {notification.type === "book_request" && (
-                              <i className="fa-solid fa-book text-primary"></i>
-                            )}
-                            {notification.type === "announcement" && (
-                              <i className="fa-solid fa-bullhorn text-info"></i>
-                            )}
-                            {notification.type === "fine" && (
-                              <i className="fa-solid fa-money-bill-wave text-danger"></i>
-                            )}
-                            {notification.type === "book_issued" && (
-                              <i className="fa-solid fa-book text-success"></i>
-                            )}
-                            {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
-                              <i className="fa-solid fa-bell text-secondary"></i>
-                            )}
-
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
-                              {notification.message}
-                            </div>
-                            <small className="text-muted" style={{ fontSize: "12px" }}>
-                              {notification.due_date}
-                            </small>
-                            <div className="text-muted" style={{ fontSize: "12px" }}>
-                              {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
-                            </div>
-
-                          </div>
-                          {!notification.is_read && (
-                            <div className="ms-2">
-                              <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
-                            </div>
-                          )}
-                        </div>
+                        <small className="text-primary">View all notifications</small>
                       </Dropdown.Item>
-                      <Dropdown.Divider />
-                    </React.Fragment>
-                  ))
-
-                )}
-                {notifications.length > 10 && (
-                  <>
-                    <Dropdown.Item
-                      className="text-center"
-                      onClick={() => {
-                        // navigate("/notifications");
-                        setShowNotifications(false);
-                      }}
-                    >
-                      <small className="text-primary">View all notifications</small>
-                    </Dropdown.Item>
-                  </>
-                )}
-              </Dropdown.Menu>
-              : null
+                    </>
+                  )}
+                </Dropdown.Menu>
+                : null
             }
           </Dropdown>
 

@@ -133,7 +133,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 colSize: 12,
             },
             {
-                name: "user_image",
+                name: "image",
                 label: "User Photo",
                 type: "file",
                 accept: "image/*",
