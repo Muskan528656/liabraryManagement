@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Badge, Table } from 'react-bootstrap';
-import DataApi from '../../api/DataApi';
+import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
 
 const Settings = () => {

@@ -6,7 +6,7 @@ import ScrollToTop from "../common/ScrollToTop";
 import Loader from "../common/Loader";
 import TableHeader from "../common/TableHeader";
 import FormModal from "../common/FormModal";
-import DataApi from "../../api/DataApi";
+import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import Select from "react-select";

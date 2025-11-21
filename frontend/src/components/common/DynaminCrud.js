@@ -7,7 +7,7 @@ import ScrollToTop from "./ScrollToTop";
 import Loader from "./Loader";
 import TableHeader from "./TableHeader";
 import FormModal from "./FormModal";
-import DataApi from "../../api/DataApi";
+import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import jwt_decode from "jwt-decode";

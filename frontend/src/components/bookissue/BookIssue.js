@@ -17,7 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
-import DataApi from "../../api/DataApi";
+import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 import helper from "../common/helper";
 import * as constants from "../../constants/CONSTANT";

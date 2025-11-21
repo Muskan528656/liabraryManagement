@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import DataApi from "../../api/DataApi";
+import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 
 const UniversalBarcodeScanner = () => {

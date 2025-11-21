@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Alert, Col, Container, Row } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import AuthApi from "../api/AuthApi";
+import AuthApi from "../api/authApi";
 
 
 const Login = () => {

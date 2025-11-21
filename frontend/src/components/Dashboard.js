@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Col, Container, Row, Badge, Button } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
-import DataApi from "../api/DataApi";
+import DataApi from "../api/dataApi";
 import Loader from "./common/Loader";
 import { useNavigate } from "react-router-dom";
 import jwt_decode from "jwt-decode";

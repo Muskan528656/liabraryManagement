@@ -6884,7 +6884,7 @@ import { useNavigate } from "react-router-dom";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
-import DataApi from "../../api/DataApi";
+import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 
 const BookSubmit = () => {

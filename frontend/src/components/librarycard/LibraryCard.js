@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Container, Row, Col, Card, Button, Form, Modal, Alert, Dropdown } from "react-bootstrap";
 import DynamicCRUD from "../common/DynaminCrud";
-import { getLibraryCardConfig } from "./LibraryCardConfig";
+import { getLibraryCardConfig } from "./librarycardconfig";
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
 import JsBarcode from "jsbarcode";
