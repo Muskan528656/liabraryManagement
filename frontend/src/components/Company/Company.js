@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert} from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
 
@@ -24,7 +24,7 @@ const Company = () => {
     is_external: false,
     has_wallet: false,
     currency: "",
-    time_zone:"",
+    time_zone: "",
   });
 
   const [showAlert, setShowAlert] = useState(false);
@@ -115,18 +115,7 @@ const Company = () => {
     <Container fluid className="py-4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-          {showAlert && (
-            <Alert
-              variant={
-                alertMessage.includes("successfully") ? "success" : "danger"
-              }
-              dismissible
-              onClose={() => setShowAlert(false)}
-              className="mb-4"
-            >
-              {alertMessage}
-            </Alert>
-          )}
+
           <Card className="border-0 shadow-sm">
             <Card.Body className="">
               <div
@@ -158,7 +147,7 @@ const Company = () => {
                 ) : (
                   <div className="d-flex gap-2">
                     <button
-                    className="custom-btn-primary"
+                      className="custom-btn-primary"
                       onClick={handleCompanySave}
                     >
                       <i className="fa-solid fa-check me-2"></i>
@@ -396,8 +385,8 @@ const Company = () => {
                             tempCompany.logourl
                               ? tempCompany.logourl
                               : Company?.logourl
-                              ? `${Company.logourl}?${new Date().getTime()}`
-                              : "/default-logo.png"
+                                ? `${Company.logourl}?${new Date().getTime()}`
+                                : "/default-logo.png"
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
@@ -467,7 +456,7 @@ const Company = () => {
                       />
                     </Form.Group>
                   </Col>
-                   <Col md={4}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">State</Form.Label>
                       <Form.Control
@@ -528,7 +517,7 @@ const Company = () => {
                       />
                     </Form.Group>
                   </Col>
-                </Row>  
+                </Row>
               </Row>
             </Card.Body>
           </Card>

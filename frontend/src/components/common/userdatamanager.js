@@ -6,7 +6,6 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -16,8 +15,9 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
 
         const apiEndpoints = Object.values(dependencies)
           .filter(endpoint => typeof endpoint === 'string' && !propsData[endpoint]);
-
+          
         const promises = apiEndpoints.map(async (endpoint) => {
+       
           const api = new DataApi(endpoint);
           const response = await api.fetchAll();
           return { endpoint, data: response.data || [] };
@@ -40,7 +40,7 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
     };
 
     fetchAllData();
-  }, [JSON.stringify(dependencies), JSON.stringify(propsData)]);
+  }, [JSON.stringify(), JSON.stringify()]);
 
   return { data, loading, error };
 };

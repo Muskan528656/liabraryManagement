@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import Select from "react-select";
 
@@ -19,6 +19,8 @@ const FormModal = ({
   customFooter = null,
   children,
 }) => {
+  const [filePreviews, setFilePreviews] = useState({});
+
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
@@ -31,6 +33,101 @@ const FormModal = ({
     }
   };
 
+const handleFileChange = (field, event) => {
+  const file = event.target.files[0];
+  const fieldName = field.name;
+
+  if (!file) {
+    // File remove karna hai
+    handleInputChange(fieldName, null);
+    setFilePreviews(prev => ({
+      ...prev,
+      [fieldName]: null
+    }));
+    return;
+  }
+
+  // File validation
+  if (field.maxSize && file.size > field.maxSize) {
+    alert(`File size must be less than ${field.maxSize / 1024 / 1024}MB`);
+    event.target.value = ''; // Clear file input
+    return;
+  }
+
+  // ✅ FIXED: File type validation
+  if (field.accept) {
+    const allowedTypes = field.accept.split(',').map(type => type.trim());
+    const isFileValid = isFileTypeValid(file, allowedTypes);
+    
+    if (!isFileValid) {
+      alert(`Only ${field.accept} files are allowed`);
+      event.target.value = ''; // Clear file input
+      return;
+    }
+  }
+
+  // Preview generate karen (images ke liye)
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setFilePreviews(prev => ({
+        ...prev,
+        [fieldName]: e.target.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Form data mein file set karen
+  handleInputChange(fieldName, file);
+};
+
+// ✅ NEW: File type validation function
+const isFileTypeValid = (file, allowedTypes) => {
+  for (const allowedType of allowedTypes) {
+    // Case 1: Wildcard match (image/*, */*)
+    if (allowedType.includes('/*')) {
+      const [category] = allowedType.split('/*');
+      if (category === '*' || file.type.startsWith(`${category}/`)) {
+        return true;
+      }
+    }
+    
+    // Case 2: Exact MIME type match
+    else if (file.type === allowedType) {
+      return true;
+    }
+    
+    // Case 3: File extension match (.pdf, .jpg, etc.)
+    else if (allowedType.startsWith('.')) {
+      const fileName = file.name.toLowerCase();
+      if (fileName.endsWith(allowedType.toLowerCase())) {
+        return true;
+      }
+    }
+    
+    // Case 4: Specific type patterns (application/pdf, etc.)
+    else if (allowedType.includes('/')) {
+      if (file.type === allowedType) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+  const removeFile = (fieldName) => {
+    handleInputChange(fieldName, null);
+    setFilePreviews(prev => ({
+      ...prev,
+      [fieldName]: null
+    }));
+    // File input reset karen
+    const fileInput = document.getElementById(`file-${fieldName}`);
+    if (fileInput) fileInput.value = '';
+  };
+
   const renderField = (field) => {
     const value = formData[field.name] || "";
     const error = validationErrors[field.name];
@@ -38,6 +135,67 @@ const FormModal = ({
     const fieldId = `field-${field.name}`;
 
     switch (field.type) {
+      case "file":
+        const hasExistingFile = editingItem && typeof value === 'string' && value;
+        const showPreview = filePreviews[field.name] || hasExistingFile;
+
+        return (
+          <Form.Group className="mb-3" key={field.name}>
+            <Form.Label>
+              {field.label} {isRequired && <span className="text-danger">*</span>}
+            </Form.Label>
+
+            {/* File Preview */}
+            {showPreview && (
+              <div className="mb-2 text-center">
+                {field.accept?.includes('image') ? (
+                  <img
+                    src={filePreviews[field.name] || value}
+                    alt="Preview"
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '2px solid #6f42c1'
+                    }}
+                  />
+                ) : (
+                  <div className="p-2 bg-light rounded">
+                    <i className="fa-solid fa-file me-2"></i>
+                    {hasExistingFile ? 'Existing file' : 'File selected'}
+                  </div>
+                )}
+                <div className="mt-1">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => removeFile(field.name)}
+                  >
+                    <i className="fa-solid fa-trash me-1"></i>
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <Form.Control
+              type="file"
+              id={`file-${field.name}`}
+              accept={field.accept}
+              onChange={(e) => handleFileChange(field, e)}
+              isInvalid={!!error}
+              {...field.props}
+            />
+            {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
+            {field.helperText && (
+              <Form.Text className="text-muted">
+                {field.helperText}
+              </Form.Text>
+            )}
+          </Form.Group>
+        );
+
       case "text":
       case "email":
       case "number":
@@ -150,6 +308,22 @@ const FormModal = ({
           </Form.Group>
         );
 
+      case "checkbox":
+        return (
+          <Form.Group className="mb-3" key={field.name}>
+            <Form.Check
+              type="checkbox"
+              label={field.label}
+              checked={!!value}
+              onChange={(e) => handleFieldChange(field, e.target.checked)}
+              disabled={field.disabled}
+              id={fieldId}
+              {...field.props}
+            />
+            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+          </Form.Group>
+        );
+
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
@@ -218,4 +392,3 @@ const FormModal = ({
 };
 
 export default FormModal;
-

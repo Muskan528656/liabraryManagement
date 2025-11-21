@@ -12,7 +12,6 @@ const LibraryCard = (props) => {
   const [barcodeError, setBarcodeError] = useState(null);
   const [barcodeData, setBarcodeData] = useState("");
 
-  // Pehle base config lein
   const baseConfig = getLibraryCardConfig();
   const dataDependencies = baseConfig.dataDependencies || [];
   const { data, loading, error } = useDataManager(dataDependencies, props);
@@ -31,7 +30,6 @@ const LibraryCard = (props) => {
     setSelectedCard(card);
     setBarcodeError(null);
 
-    // Generate barcode data with all information
     const cardData = generateBarcodeData(card);
     setBarcodeData(cardData);
 
@@ -87,15 +85,15 @@ const LibraryCard = (props) => {
       try {
         barcodeElement.innerHTML = '';
 
-        // Optimized barcode settings for proper width
+        // Consistent barcode settings for all views
         JsBarcode(barcodeElement, barcodeData, {
           format: "CODE128",
-          width: 1.5, // Reduced width for smaller barcode
-          height: 80,  // Reasonable height
-          displayValue: true,
+          width: 2, // Fixed width
+          height: 80,
+          displayValue: true, // Show text below barcode
           text: generateCardNumber(selectedCard),
-          fontSize: 12,
-          margin: 5,   // Reduced margin
+          fontSize: 14,
+          margin: 10,
           background: "#ffffff",
           lineColor: "#000000",
           flat: true
@@ -103,41 +101,43 @@ const LibraryCard = (props) => {
 
         setBarcodeError(null);
       } catch (error) {
-        setBarcodeError(error.message);
+        console.error("Barcode generation error:", error);
+        setBarcodeError("Barcode generation failed: " + error.message);
       }
-    }, 300);
+    }, 100);
   };
 
   const handleDownloadBarcode = (card) => {
     if (!card) return;
 
     try {
-      // Create a new canvas with proper dimensions
+      // Create new canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      // Set fixed dimensions for download
-      canvas.width = 300;  // Fixed width
-      canvas.height = 120; // Fixed height
+      // Set dimensions
+      canvas.width = 400;
+      canvas.height = 200;
 
-      // Create barcode SVG
+      // Create barcode with SAME settings as modal
       const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
       JsBarcode(barcodeSvg, barcodeData, {
         format: "CODE128",
         width: 2,
-        height: 70,
+        height: 80,
         displayValue: true,
         text: generateCardNumber(card),
-        fontSize: 12,
-        margin: 8,
+        fontSize: 14,
+        margin: 10,
         background: "#ffffff",
-        lineColor: "#000000"
+        lineColor: "#000000",
+        flat: true
       });
 
-      // Set SVG dimensions to match canvas
-      barcodeSvg.setAttribute("width", "300");
-      barcodeSvg.setAttribute("height", "100");
+      // Set SVG dimensions
+      barcodeSvg.setAttribute("width", "400");
+      barcodeSvg.setAttribute("height", "120");
 
       const svgData = new XMLSerializer().serializeToString(barcodeSvg);
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
@@ -150,19 +150,13 @@ const LibraryCard = (props) => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Draw barcode centered
-        ctx.drawImage(img, 0, 10, canvas.width, 80);
-
-        // Add card number text
-        ctx.fillStyle = "#000000";
-        ctx.font = "bold 14px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(generateCardNumber(card), canvas.width / 2, 105);
+        ctx.drawImage(img, 50, 30, 300, 120);
 
         // Convert to PNG and download
         const pngUrl = canvas.toDataURL('image/png');
         const downloadLink = document.createElement('a');
         downloadLink.href = pngUrl;
-        downloadLink.download = `barcode-${generateCardNumber(card)}.png`;
+        downloadLink.download = `library-card-${generateCardNumber(card)}.png`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
@@ -177,84 +171,133 @@ const LibraryCard = (props) => {
       setBarcodeError("Failed to download barcode");
     }
   };
-
   const handlePrintBarcode = (card) => {
     if (!card) return;
 
     try {
-      const cardData = generateBarcodeData(card);
-      const decodedData = decodeBarcodeData(cardData);
+      // First ensure barcode is rendered in modal
+      const barcodeId = `barcode-modal-${card.id}`;
+      const barcodeElement = document.getElementById(barcodeId);
 
-      const printContent = document.createElement('div');
-      printContent.innerHTML = `
-        <div style="text-align: center; padding: 20px; font-family: Arial, sans-serif;">
-          <h2 style="color: #6f42c1; margin-bottom: 20px;">Library Identity Card</h2>
-          
-          <div style="border: 2px solid #6f42c1; padding: 20px; border-radius: 10px; max-width: 400px; margin: 0 auto;">
-            <!-- Header -->
-            <div style="background: #6f42c1; color: white; padding: 10px; margin: -20px -20px 20px -20px; border-radius: 8px 8px 0 0;">
-              <h3 style="margin: 0;">LIBRARY CARD</h3>
+      if (!barcodeElement) {
+        setBarcodeError("Barcode not found for printing");
+        return;
+      }
+
+      const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Library Card - ${generateCardNumber(card)}</title>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: Arial, sans-serif; 
+              background: white;
+            }
+            .library-card {
+              border: 3px solid #6f42c1;
+              border-radius: 15px;
+              max-width: 500px;
+              margin: 0 auto;
+              background: white;
+            }
+            .card-header {
+              background: #6f42c1;
+              color: white;
+              padding: 15px;
+              text-align: center;
+              border-radius: 12px 12px 0 0;
+            }
+            .card-body {
+              padding: 20px;
+            }
+            .member-info {
+              text-align: left;
+              margin-bottom: 20px;
+            }
+            .member-info p {
+              margin: 8px 0;
+              font-size: 14px;
+            }
+            .barcode-container {
+              border: 1px solid #ddd;
+              padding: 15px;
+              background: white;
+              text-align: center;
+              margin: 15px 0;
+            }
+            .barcode-svg {
+              width: 100%;
+              max-width: 350px;
+              height: auto;
+            }
+            .footer {
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+              margin-top: 15px;
+            }
+            @media print {
+              body { margin: 0; padding: 0; }
+              .library-card { border: 2px solid #000; }
+              button { display: none !important; }
+              @page { margin: 0.5cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="library-card">
+            <div class="card-header">
+              <h2 style="margin: 0; font-size: 24px;">LIBRARY CARD</h2>
             </div>
             
-            <!-- Member Info -->
-            <div style="text-align: left; margin-bottom: 15px;">
-              <p><strong>Card No:</strong> ${generateCardNumber(card)}</p>
-              <p><strong>Name:</strong> ${card.user_name || 'N/A'}</p>
-              <p><strong>Email:</strong> ${card.user_email || 'N/A'}</p>
-              <p><strong>Issue Date:</strong> ${formatDate(card.issue_date)}</p>
-              <p><strong>Expiry Date:</strong> ${formatDate(card.expiry_date) || 'N/A'}</p>
-              <p><strong>Status:</strong> <span style="color: green;">${card.status || 'Active'}</span></p>
-            </div>
-            
-            <!-- Barcode -->
-            <div style="border: 1px solid #ddd; padding: 15px; background: white;">
-              ${document.getElementById(`barcode-modal-${card.id}`).outerHTML}
-            </div>
-            
-            <!-- Footer -->
-            <div style="margin-top: 15px; font-size: 10px; color: #666;">
-              <p>Scan barcode to verify membership</p>
-              <p>Generated: ${new Date().toLocaleDateString()}</p>
+            <div class="card-body">
+              <div class="member-info">
+                <p><strong>Card No:</strong> ${generateCardNumber(card)}</p>
+                <p><strong>Name:</strong> ${card.user_name || 'N/A'}</p>
+                <p><strong>Email:</strong> ${card.user_email || 'N/A'}</p>
+                <p><strong>Issue Date:</strong> ${formatDate(card.issue_date)}</p>
+                <p><strong>Expiry Date:</strong> ${formatDate(card.expiry_date) || 'N/A'}</p>
+                <p><strong>Status:</strong> <span style="color: green; font-weight: bold;">${card.status || 'Active'}</span></p>
+              </div>
+              
+              <div class="barcode-container">
+                ${barcodeElement.outerHTML}
+              </div>
+              
+              <div class="footer">
+                <p>Scan barcode to verify membership</p>
+                <p>Generated: ${new Date().toLocaleDateString('en-GB')}</p>
+              </div>
             </div>
           </div>
           
-          <!-- Hidden data for reference -->
-          <div style="display: none;">
-            <h4>Encoded Data (Base64):</h4>
-            <p style="word-break: break-all; font-size: 8px;">${cardData}</p>
-            <h4>Decoded Data:</h4>
-            <pre>${JSON.stringify(decodedData, null, 2)}</pre>
+          <div style="text-align: center; margin-top: 20px; display: none;">
+            <button onclick="window.print()" style="padding: 10px 20px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              Print Now
+            </button>
+            <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+              Close
+            </button>
           </div>
-        </div>
-      `;
+
+          <script>
+            // Auto-print and close after printing
+            window.onload = function() {
+              window.print();
+              setTimeout(() => {
+                window.close();
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
 
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Library Card - ${generateCardNumber(card)}</title>
-            <style>
-              body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-              @media print {
-                body { margin: 0; padding: 10px; }
-                button { display: none; }
-                @page { margin: 0; }
-              }
-            </style>
-          </head>
-          <body>
-            ${printContent.innerHTML}
-            <div style="text-align: center; margin-top: 20px;">
-              <button onclick="window.print()" style="padding: 10px 20px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Print Now
-              </button>
-              <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
-                Close
-              </button>
-            </div>
-          </body>
-        </html>
-      `);
+      printWindow.document.write(printContent);
       printWindow.document.close();
 
     } catch (error) {
@@ -393,7 +436,7 @@ const LibraryCard = (props) => {
 
                 {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
 
-                {/* Compact Barcode Container */}
+              
                 <div className="barcode-container bg-white p-3 rounded border text-center">
                   <div className="mb-1 text-muted small">
                     <i className="fa-solid fa-info-circle me-1"></i>
@@ -415,12 +458,11 @@ const LibraryCard = (props) => {
                     ></svg>
                   </div>
 
-                  <div className="mt-1 text-muted small">
+                  <div className="mt-1 text-muted small fw-bold">
                     {generateCardNumber(selectedCard)}
                   </div>
                 </div>
 
-                {/* Test Scan Button */}
                 <div className="text-center mt-3">
                   <Button
                     variant="outline-info"

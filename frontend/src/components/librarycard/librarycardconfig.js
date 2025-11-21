@@ -59,14 +59,24 @@ const generateCardNumber = (card) => {
 };
 
 export const getLibraryCardConfig = (externalData = {}) => {
-
     const customHandlers = externalData.customHandlers || {};
-
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
-
-
     const defaultColumns = [
+        {
+            name: "user_image",
+            label: "Photo",
+            type: "image",
+            width: "80px",
+            render: (value, row) => {
+                if (value) {
+                    return `<img src="${value}" alt="${row.user_name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />`;
+                }
+                return `<div style="width: 50px; height: 50px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-user"></i>
+              </div>`;
+            }
+        },
         {
             field: "card_number",
             label: "Card Number",
@@ -121,6 +131,17 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: true,
                 placeholder: "Select user",
                 colSize: 12,
+            },
+            {
+                name: "user_image",
+                label: "User Photo",
+                type: "file",
+                accept: "image/*",
+                required: false,
+                colSize: 12,
+                preview: true,
+                maxSize: 2 * 1024 * 1024, // 2MB limit
+                helperText: "Upload user photo (JPG, PNG, max 2MB)"
             },
             {
                 name: "issue_date",

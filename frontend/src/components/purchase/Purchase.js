@@ -719,9 +719,9 @@ const Purchase = () => {
         }}
         style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-edit text-primary"></i>
+        <i className=" fs-5 fas fa-edit text-primary"></i>
       </Button>
-      <Button
+      <Button 
         variant="link"
         size="sm"
         onClick={(e) => {
@@ -731,7 +731,7 @@ const Purchase = () => {
         }}
         style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-trash text-danger"></i>
+        <i className=" fs-5 fas fa-trash text-danger"></i>
       </Button>
     </>
   );
