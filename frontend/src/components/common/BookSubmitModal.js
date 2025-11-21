@@ -1,5 +1,5 @@
 import { Modal, Button } from "react-bootstrap";
-import ReturnBook from "../bookissue/ReturnBook";
+import BookSubmit from "../booksubmit/BookSubmit";
 
 const BookSubmitModal = ({ show, onHide }) => {
 
@@ -25,7 +25,7 @@ const BookSubmitModal = ({ show, onHide }) => {
                 <Modal.Body className="p-0">
                     {/* Barcode Scan Content */}
                     <div style={{ minHeight: "400px", padding: "1.5rem" }}>
-                        <ReturnBook tabType="barcode" />
+                        <BookSubmit tabType="barcode" />
                     </div>
                 </Modal.Body>
 

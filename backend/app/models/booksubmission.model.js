@@ -21,7 +21,7 @@ async function create(submissionData, userId) {
   try {
     await client.query("BEGIN");
 
-    // Validate required fields
+  
     if (!submissionData.issue_id) {
       throw new Error("Issue ID is required");
     }
@@ -52,7 +52,7 @@ async function create(submissionData, userId) {
     const dueDate = new Date(issue.due_date);
     const today = new Date();
     const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
-    
+
     let penalty = 0;
     if (daysOverdue > 0) {
       try {
@@ -82,7 +82,7 @@ async function create(submissionData, userId) {
     if (submissionData.condition_after && submissionData.condition_before) {
       const conditionBefore = submissionData.condition_before.toLowerCase();
       const conditionAfter = submissionData.condition_after.toLowerCase();
-      
+
       if (conditionAfter === 'damaged' && conditionBefore !== 'damaged') {
         // Add additional penalty for damage
         penalty += 500; // Add 500 for damage
@@ -98,7 +98,7 @@ async function create(submissionData, userId) {
                             (issue_id, book_id, submitted_by, submit_date, condition_before, condition_after, remarks, penalty, created_at)
                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
                             RETURNING *`;
-    
+
     const submissionValues = [
       submissionData.issue_id,
       issue.book_id,
@@ -176,7 +176,8 @@ async function findById(id) {
 // Find all submissions
 async function findAll() {
   console.log('schema', schema);
-  
+  console.log("findAll called for schema:", schema);
+
   try {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -383,7 +384,7 @@ async function checkbeforeDue() {
   let notifications = [];
   try {
     const response = await getAllBooks();
-    console.log(response.data);
+    // console.log(response.data);
     
     const submittedBooks = response.data;
 

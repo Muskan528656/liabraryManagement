@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Spinner, Alert, Tab, Nav, Dropdown } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  InputGroup,
+  Badge,
+  Spinner,
+  Alert,
+  Tab,
+  Nav,
+  Dropdown,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
@@ -20,25 +34,21 @@ const BookIssue = () => {
   const [selectedLibraryCard, setSelectedLibraryCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
-
   const [formData, setFormData] = useState({
     book_id: "",
     card_id: "",
     issued_to: "",
-    issue_date: new Date().toISOString().split('T')[0],
+    issue_date: new Date().toISOString().split("T")[0],
     due_date: "",
     condition_before: "Good",
     remarks: "",
   });
 
-
   const [loading, setLoading] = useState(false);
   const [searchingBooks, setSearchingBooks] = useState(false);
   const [searchingCards, setSearchingCards] = useState(false);
 
-
   const [userDetails, setUserDetails] = useState(null);
-
 
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [loadingIssuedBooks, setLoadingIssuedBooks] = useState(false);
@@ -48,7 +58,6 @@ const BookIssue = () => {
   const recordsPerPage = 20;
 
   const [durationDays, setDurationDays] = useState(7);
-
 
   const [bookSearchField, setBookSearchField] = useState("all");
   const [cardSearchField, setCardSearchField] = useState("all");
@@ -102,7 +111,7 @@ const BookIssue = () => {
 
     // Auto-focus on book input when component mounts
     setTimeout(() => {
-      const bookSelect = bookInputRef.current?.querySelector('input');
+      const bookSelect = bookInputRef.current?.querySelector("input");
       if (bookSelect) {
         bookSelect.focus();
         bookSelect.click();
@@ -114,7 +123,7 @@ const BookIssue = () => {
       resetForm();
       setActiveTab("issue");
       setTimeout(() => {
-        const bookSelect = bookInputRef.current?.querySelector('input');
+        const bookSelect = bookInputRef.current?.querySelector("input");
         if (bookSelect) {
           bookSelect.focus();
           bookSelect.click();
@@ -139,7 +148,11 @@ const BookIssue = () => {
         // Response format: { success: true, data: { duration_days: "15", ... } }
         const duration = parseInt(response.data.data.duration_days) || 7;
         setDurationDays(duration);
-      } else if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+      } else if (
+        response.data &&
+        typeof response.data === "object" &&
+        !Array.isArray(response.data)
+      ) {
         // Direct object response
         const duration = parseInt(response.data.duration_days) || 7;
         setDurationDays(duration);
@@ -155,9 +168,9 @@ const BookIssue = () => {
     if (!formData.due_date && durationDays) {
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + durationDays);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        due_date: dueDate.toISOString().split('T')[0]
+        due_date: dueDate.toISOString().split("T")[0],
       }));
     }
   }, [durationDays]);
@@ -166,18 +179,21 @@ const BookIssue = () => {
   useEffect(() => {
     if (selectedLibraryCard && selectedLibraryCard.data) {
       setUserDetails(selectedLibraryCard.data);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         card_id: selectedLibraryCard.data.id,
-        issued_to: selectedLibraryCard.data.user_id || selectedLibraryCard.data.student_id || ""
+        issued_to:
+          selectedLibraryCard.data.user_id ||
+          selectedLibraryCard.data.student_id ||
+          "",
       }));
       setSelectedUser(null);
     } else if (selectedUser && selectedUser.data) {
       setUserDetails(selectedUser.data);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         issued_to: selectedUser.data.id,
-        card_id: ""
+        card_id: "",
       }));
       setSelectedLibraryCard(null);
     } else {
@@ -188,9 +204,9 @@ const BookIssue = () => {
   // Update form when book is selected
   useEffect(() => {
     if (selectedBook && selectedBook.data) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        book_id: selectedBook.data.id
+        book_id: selectedBook.data.id,
       }));
     }
   }, [selectedBook]);
@@ -235,8 +251,8 @@ const BookIssue = () => {
       const cardApi = new DataApi("librarycard");
       const response = await cardApi.fetchAll();
       if (response.data && Array.isArray(response.data)) {
-        const activeCards = response.data.filter(card =>
-          card.is_active === true || card.is_active === "true"
+        const activeCards = response.data.filter(
+          (card) => card.is_active === true || card.is_active === "true"
         );
         setLibraryCards(activeCards);
       }
@@ -264,8 +280,12 @@ const BookIssue = () => {
       const response = await issueApi.fetchAll();
       if (response.data && Array.isArray(response.data)) {
         // Filter only active/issued books (not returned)
-        const activeIssues = response.data.filter(issue =>
-          issue.status === "issued" || issue.status === null || issue.status === undefined || issue.return_date === null
+        const activeIssues = response.data.filter(
+          (issue) =>
+            issue.status === "issued" ||
+            issue.status === null ||
+            issue.status === undefined ||
+            issue.return_date === null
         );
         setIssuedBooks(activeIssues);
       }
@@ -273,7 +293,7 @@ const BookIssue = () => {
       console.error("Error fetching issued books:", error);
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Error",
-        message: "Failed to fetch issued books"
+        message: "Failed to fetch issued books",
       });
     } finally {
       setLoadingIssuedBooks(false);
@@ -285,7 +305,7 @@ const BookIssue = () => {
     if (!bookSearchInput.trim()) return;
 
     const query = bookSearchInput.trim();
-    const cleanInput = query.replace(/[-\s]/g, '');
+    const cleanInput = query.replace(/[-\s]/g, "");
     const isBarcode = /^\d{10,13}$/.test(cleanInput);
 
     // If barcode detected, search by ISBN
@@ -295,7 +315,10 @@ const BookIssue = () => {
         setSelectedBook(results[0]);
       }
     } else {
-      const results = await loadBookOptionsByField(query.toLowerCase(), bookSearchField);
+      const results = await loadBookOptionsByField(
+        query.toLowerCase(),
+        bookSearchField
+      );
       if (results && results.length > 0) {
         // If only one result, auto-select it
         if (results.length === 1) {
@@ -309,53 +332,72 @@ const BookIssue = () => {
   const loadBookOptionsByField = async (inputValue, fieldType = "all") => {
     if (!inputValue || inputValue.length < 1) {
       // Show ALL books (not just available ones) - user can see all data
-      return books
-        .slice(0, 50)
-        .map(book => ({
-          value: book.id,
-          label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${book.available_copies !== undefined ? ` - Available: ${book.available_copies || 0}` : ""}`,
-          data: book
-        }));
+      return books.slice(0, 50).map((book) => ({
+        value: book.id,
+        label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${
+          book.available_copies !== undefined
+            ? ` - Available: ${book.available_copies || 0}`
+            : ""
+        }`,
+        data: book,
+      }));
     }
 
     const query = inputValue.toLowerCase().trim();
-    const cleanInput = inputValue.replace(/[-\s]/g, '');
+    const cleanInput = inputValue.replace(/[-\s]/g, "");
     const isBarcode = /^\d{10,13}$/.test(cleanInput);
 
     if (isBarcode || fieldType === "isbn") {
       // Try to find by ISBN directly
-      const foundBook = books.find(book =>
-        book.isbn && book.isbn.replace(/[-\s]/g, '').toLowerCase() === cleanInput.toLowerCase()
+      const foundBook = books.find(
+        (book) =>
+          book.isbn &&
+          book.isbn.replace(/[-\s]/g, "").toLowerCase() ===
+            cleanInput.toLowerCase()
       );
 
       if (foundBook) {
         // Return ALL books, not just available ones
-        return [{
-          value: foundBook.id,
-          label: `${foundBook.title} (ISBN: ${foundBook.isbn})${foundBook.available_copies !== undefined ? ` - Available: ${foundBook.available_copies || 0}` : ""}`,
-          data: foundBook
-        }];
+        return [
+          {
+            value: foundBook.id,
+            label: `${foundBook.title} (ISBN: ${foundBook.isbn})${
+              foundBook.available_copies !== undefined
+                ? ` - Available: ${foundBook.available_copies || 0}`
+                : ""
+            }`,
+            data: foundBook,
+          },
+        ];
       }
 
       // If not found locally, search via API
       try {
         setSearchingBooks(true);
         const bookResp = await helper.fetchWithAuth(
-          `${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(cleanInput)}`,
+          `${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(
+            cleanInput
+          )}`,
           "GET"
         );
 
         if (bookResp.ok) {
           const bookData = await bookResp.json();
           // Return ALL books, not just available ones
-          if (!books.find(b => b.id === bookData.id)) {
-            setBooks(prev => [...prev, bookData]);
+          if (!books.find((b) => b.id === bookData.id)) {
+            setBooks((prev) => [...prev, bookData]);
           }
-          return [{
-            value: bookData.id,
-            label: `${bookData.title} (ISBN: ${bookData.isbn})${bookData.available_copies !== undefined ? ` - Available: ${bookData.available_copies || 0}` : ""}`,
-            data: bookData
-          }];
+          return [
+            {
+              value: bookData.id,
+              label: `${bookData.title} (ISBN: ${bookData.isbn})${
+                bookData.available_copies !== undefined
+                  ? ` - Available: ${bookData.available_copies || 0}`
+                  : ""
+              }`,
+              data: bookData,
+            },
+          ];
         }
       } catch (error) {
         console.error("Error searching book by ISBN:", error);
@@ -366,12 +408,12 @@ const BookIssue = () => {
 
     // Regular text search - search only in selected fields based on checkboxes
     // Show ALL books, not just available ones
-    const filtered = books.filter(book => {
+    const filtered = books.filter((book) => {
       // Remove the available_copies filter to show all books
 
       // Get all searchable fields
       const title = (book.title || "").toLowerCase();
-      const isbn = (book.isbn || "").replace(/[-\s]/g, '').toLowerCase();
+      const isbn = (book.isbn || "").replace(/[-\s]/g, "").toLowerCase();
       const author = (book.author_name || "").toLowerCase();
       const category = (book.category_name || "").toLowerCase();
       const publisher = (book.publisher || "").toLowerCase();
@@ -379,11 +421,13 @@ const BookIssue = () => {
       const edition = (book.edition || "").toString().toLowerCase();
       const description = (book.description || "").toLowerCase();
 
-      const searchTerm = query.replace(/[-\s]/g, '');
+      const searchTerm = query.replace(/[-\s]/g, "");
       const queryNumbers = query.replace(/\D/g, "");
 
       // Check if at least one field is selected
-      const hasSelectedFields = Object.values(bookSearchFields).some(val => val === true);
+      const hasSelectedFields = Object.values(bookSearchFields).some(
+        (val) => val === true
+      );
 
       // If no fields selected, search all fields (fallback)
       if (!hasSelectedFields) {
@@ -396,32 +440,44 @@ const BookIssue = () => {
           language.includes(query) ||
           edition.includes(query) ||
           description.includes(query) ||
-          (queryNumbers.length > 0 && (
-            isbn.includes(queryNumbers) ||
-            (book.id && book.id.toString().includes(queryNumbers))
-          ))
+          (queryNumbers.length > 0 &&
+            (isbn.includes(queryNumbers) ||
+              (book.id && book.id.toString().includes(queryNumbers))))
         );
       }
 
       // Search only in selected fields
       let matches = false;
       if (bookSearchFields.title && title.includes(query)) matches = true;
-      if (bookSearchFields.isbn && (isbn.includes(searchTerm) || (queryNumbers.length > 0 && isbn.includes(queryNumbers)))) matches = true;
+      if (
+        bookSearchFields.isbn &&
+        (isbn.includes(searchTerm) ||
+          (queryNumbers.length > 0 && isbn.includes(queryNumbers)))
+      )
+        matches = true;
       if (bookSearchFields.author && author.includes(query)) matches = true;
       if (bookSearchFields.category && category.includes(query)) matches = true;
-      if (bookSearchFields.publisher && publisher.includes(query)) matches = true;
+      if (bookSearchFields.publisher && publisher.includes(query))
+        matches = true;
       if (bookSearchFields.language && language.includes(query)) matches = true;
 
       // Also check ISBN for numeric queries if ISBN is selected
-      if (bookSearchFields.isbn && queryNumbers.length > 0 && isbn.includes(queryNumbers)) matches = true;
+      if (
+        bookSearchFields.isbn &&
+        queryNumbers.length > 0 &&
+        isbn.includes(queryNumbers)
+      )
+        matches = true;
 
       return matches;
     });
 
-    return filtered.slice(0, 50).map(book => ({
+    return filtered.slice(0, 50).map((book) => ({
       value: book.id,
-      label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${book.available_copies ? ` - Available: ${book.available_copies}` : ""}`,
-      data: book
+      label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${
+        book.available_copies ? ` - Available: ${book.available_copies}` : ""
+      }`,
+      data: book,
     }));
   };
 
@@ -448,13 +504,13 @@ const BookIssue = () => {
   // Load card options by specific field
   const loadCardOptionsByField = async (inputValue, fieldType = "all") => {
     if (!inputValue || inputValue.length < 1) {
-      return libraryCards
-        .slice(0, 50)
-        .map(card => ({
-          value: card.id,
-          label: `${card.card_number || "N/A"} - ${card.user_name || card.student_name || "Unknown"}`,
-          data: card
-        }));
+      return libraryCards.slice(0, 50).map((card) => ({
+        value: card.id,
+        label: `${card.card_number || "N/A"} - ${
+          card.user_name || card.student_name || "Unknown"
+        }`,
+        data: card,
+      }));
     }
 
     const query = inputValue.trim();
@@ -462,50 +518,68 @@ const BookIssue = () => {
     const queryNumbers = query.replace(/\D/g, "");
 
     // Check if it's a barcode scan (card number format)
-    const isBarcode = query.length >= 3 && (query.match(/^[A-Z]{2,}/i) || /^\d{6,}$/.test(query));
+    const isBarcode =
+      query.length >= 3 &&
+      (query.match(/^[A-Z]{2,}/i) || /^\d{6,}$/.test(query));
 
     if (isBarcode || fieldType === "card_number") {
       // Try to find by card number directly
-      const foundCard = libraryCards.find(card =>
-        card.card_number && card.card_number.toUpperCase() === query.toUpperCase()
+      const foundCard = libraryCards.find(
+        (card) =>
+          card.card_number &&
+          card.card_number.toUpperCase() === query.toUpperCase()
       );
 
       if (foundCard) {
         setSelectedLibraryCard({
           value: foundCard.id,
-          label: `${foundCard.card_number} - ${foundCard.user_name || foundCard.student_name || "Unknown"}`,
-          data: foundCard
+          label: `${foundCard.card_number} - ${
+            foundCard.user_name || foundCard.student_name || "Unknown"
+          }`,
+          data: foundCard,
         });
-        return [{
-          value: foundCard.id,
-          label: `${foundCard.card_number} - ${foundCard.user_name || foundCard.student_name || "Unknown"}`,
-          data: foundCard
-        }];
+        return [
+          {
+            value: foundCard.id,
+            label: `${foundCard.card_number} - ${
+              foundCard.user_name || foundCard.student_name || "Unknown"
+            }`,
+            data: foundCard,
+          },
+        ];
       }
 
       // If not found locally, search via API
       try {
         setSearchingCards(true);
         const cardResp = await helper.fetchWithAuth(
-          `${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(query.toUpperCase())}`,
+          `${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(
+            query.toUpperCase()
+          )}`,
           "GET"
         );
 
         if (cardResp.ok) {
           const cardData = await cardResp.json();
-          if (!libraryCards.find(c => c.id === cardData.id)) {
-            setLibraryCards(prev => [...prev, cardData]);
+          if (!libraryCards.find((c) => c.id === cardData.id)) {
+            setLibraryCards((prev) => [...prev, cardData]);
           }
           setSelectedLibraryCard({
             value: cardData.id,
-            label: `${cardData.card_number} - ${cardData.user_name || cardData.student_name || "Unknown"}`,
-            data: cardData
+            label: `${cardData.card_number} - ${
+              cardData.user_name || cardData.student_name || "Unknown"
+            }`,
+            data: cardData,
           });
-          return [{
-            value: cardData.id,
-            label: `${cardData.card_number} - ${cardData.user_name || cardData.student_name || "Unknown"}`,
-            data: cardData
-          }];
+          return [
+            {
+              value: cardData.id,
+              label: `${cardData.card_number} - ${
+                cardData.user_name || cardData.student_name || "Unknown"
+              }`,
+              data: cardData,
+            },
+          ];
         }
       } catch (error) {
         console.error("Error searching card:", error);
@@ -515,15 +589,20 @@ const BookIssue = () => {
     }
 
     // Regular text search based on selected checkboxes
-    const filtered = libraryCards.filter(card => {
+    const filtered = libraryCards.filter((card) => {
       const userName = (card.user_name || "").toLowerCase();
       const studentName = (card.student_name || "").toLowerCase();
       const cardNumber = (card.card_number || "").toLowerCase();
-      const phone = (card.phone || card.whatsapp_number || "").replace(/\D/g, "");
+      const phone = (card.phone || card.whatsapp_number || "").replace(
+        /\D/g,
+        ""
+      );
       const email = (card.user_email || card.email || "").toLowerCase();
 
       // Check if at least one field is selected
-      const hasSelectedFields = Object.values(cardSearchFields).some(val => val === true);
+      const hasSelectedFields = Object.values(cardSearchFields).some(
+        (val) => val === true
+      );
 
       // If no fields selected, search all fields (fallback)
       if (!hasSelectedFields) {
@@ -538,19 +617,25 @@ const BookIssue = () => {
 
       // Search only in selected fields
       let matches = false;
-      if (cardSearchFields.card_number && cardNumber.includes(queryLower)) matches = true;
-      if (cardSearchFields.user_name && userName.includes(queryLower)) matches = true;
-      if (cardSearchFields.student_name && studentName.includes(queryLower)) matches = true;
-      if (cardSearchFields.phone && phone.includes(queryNumbers)) matches = true;
+      if (cardSearchFields.card_number && cardNumber.includes(queryLower))
+        matches = true;
+      if (cardSearchFields.user_name && userName.includes(queryLower))
+        matches = true;
+      if (cardSearchFields.student_name && studentName.includes(queryLower))
+        matches = true;
+      if (cardSearchFields.phone && phone.includes(queryNumbers))
+        matches = true;
       if (cardSearchFields.email && email.includes(queryLower)) matches = true;
 
       return matches;
     });
 
-    return filtered.slice(0, 50).map(card => ({
+    return filtered.slice(0, 50).map((card) => ({
       value: card.id,
-      label: `${card.card_number || "N/A"} - ${card.user_name || card.student_name || "Unknown"}`,
-      data: card
+      label: `${card.card_number || "N/A"} - ${
+        card.user_name || card.student_name || "Unknown"
+      }`,
+      data: card,
     }));
   };
 
@@ -562,26 +647,32 @@ const BookIssue = () => {
   // Load user options with search
   const loadUserOptions = async (inputValue) => {
     if (!inputValue || inputValue.length < 1) {
-      return users
-        .slice(0, 50)
-        .map(user => ({
-          value: user.id,
-          label: `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || "Unknown",
-          data: user
-        }));
+      return users.slice(0, 50).map((user) => ({
+        value: user.id,
+        label:
+          `${user.firstname || ""} ${user.lastname || ""}`.trim() ||
+          user.email ||
+          "Unknown",
+        data: user,
+      }));
     }
 
     const query = inputValue.trim().toLowerCase();
     const queryNumbers = query.replace(/\D/g, "");
 
-    const filtered = users.filter(user => {
+    const filtered = users.filter((user) => {
       const firstName = (user.firstname || "").toLowerCase();
       const lastName = (user.lastname || "").toLowerCase();
       const email = (user.email || "").toLowerCase();
-      const phone = (user.phone || user.whatsapp_number || "").replace(/\D/g, "");
+      const phone = (user.phone || user.whatsapp_number || "").replace(
+        /\D/g,
+        ""
+      );
 
       // Check if at least one field is selected
-      const hasSelectedFields = Object.values(userSearchFields).some(val => val === true);
+      const hasSelectedFields = Object.values(userSearchFields).some(
+        (val) => val === true
+      );
 
       // If no fields selected, search all fields (fallback)
       if (!hasSelectedFields) {
@@ -596,19 +687,29 @@ const BookIssue = () => {
 
       // Search only in selected fields
       let matches = false;
-      if (userSearchFields.firstname && firstName.includes(query)) matches = true;
+      if (userSearchFields.firstname && firstName.includes(query))
+        matches = true;
       if (userSearchFields.lastname && lastName.includes(query)) matches = true;
-      if (userSearchFields.firstname && userSearchFields.lastname && `${firstName} ${lastName}`.includes(query)) matches = true;
+      if (
+        userSearchFields.firstname &&
+        userSearchFields.lastname &&
+        `${firstName} ${lastName}`.includes(query)
+      )
+        matches = true;
       if (userSearchFields.email && email.includes(query)) matches = true;
-      if (userSearchFields.phone && phone.includes(queryNumbers)) matches = true;
+      if (userSearchFields.phone && phone.includes(queryNumbers))
+        matches = true;
 
       return matches;
     });
 
-    return filtered.slice(0, 50).map(user => ({
+    return filtered.slice(0, 50).map((user) => ({
       value: user.id,
-      label: `${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || "Unknown",
-      data: user
+      label:
+        `${user.firstname || ""} ${user.lastname || ""}`.trim() ||
+        user.email ||
+        "Unknown",
+      data: user,
     }));
   };
 
@@ -618,7 +719,7 @@ const BookIssue = () => {
     if (selectedOption) {
       // Auto-focus on card input after book selection
       setTimeout(() => {
-        const cardSelect = cardInputRef.current?.querySelector('input');
+        const cardSelect = cardInputRef.current?.querySelector("input");
         if (cardSelect) {
           cardSelect.focus();
           cardSelect.click();
@@ -655,7 +756,7 @@ const BookIssue = () => {
     if (!formData.book_id) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Validation Error",
-        message: "Please select a book"
+        message: "Please select a book",
       });
       return;
     }
@@ -663,7 +764,7 @@ const BookIssue = () => {
     if (!formData.card_id && !formData.issued_to) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Validation Error",
-        message: "Please select a library card or user"
+        message: "Please select a library card or user",
       });
       return;
     }
@@ -671,7 +772,7 @@ const BookIssue = () => {
     if (!formData.due_date) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Validation Error",
-        message: "Please select a due date"
+        message: "Please select a due date",
       });
       return;
     }
@@ -684,7 +785,7 @@ const BookIssue = () => {
         issue_date: formData.issue_date,
         due_date: formData.due_date,
         condition_before: formData.condition_before,
-        remarks: formData.remarks || ""
+        remarks: formData.remarks || "",
       };
 
       // Add either card_id or issued_to
@@ -705,7 +806,11 @@ const BookIssue = () => {
         if (result.success) {
           PubSub.publish("RECORD_SAVED_TOAST", {
             title: "Success",
-            message: `Book "${selectedBook?.data?.title || 'Book'}" issued successfully to ${userDetails?.user_name || userDetails?.firstname || 'User'}`
+            message: `Book "${
+              selectedBook?.data?.title || "Book"
+            }" issued successfully to ${
+              userDetails?.user_name || userDetails?.firstname || "User"
+            }`,
           });
           resetForm();
           // Refresh books to update available copies
@@ -715,21 +820,21 @@ const BookIssue = () => {
         } else {
           PubSub.publish("RECORD_ERROR_TOAST", {
             title: "Error",
-            message: result.errors || "Failed to issue book"
+            message: result.errors || "Failed to issue book",
           });
         }
       } else {
         const error = await response.json().catch(() => ({}));
         PubSub.publish("RECORD_ERROR_TOAST", {
           title: "Error",
-          message: error.errors || "Failed to issue book"
+          message: error.errors || "Failed to issue book",
         });
       }
     } catch (error) {
       console.error("Error issuing book:", error);
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Error",
-        message: error.message || "Failed to issue book"
+        message: error.message || "Failed to issue book",
       });
     } finally {
       setLoading(false);
@@ -747,11 +852,11 @@ const BookIssue = () => {
       book_id: "",
       card_id: "",
       issued_to: "",
-      issue_date: new Date().toISOString().split('T')[0],
+      issue_date: new Date().toISOString().split("T")[0],
       due_date: (() => {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + durationDays);
-        return dueDate.toISOString().split('T')[0];
+        return dueDate.toISOString().split("T")[0];
       })(),
       condition_before: "Good",
       remarks: "",
@@ -768,45 +873,51 @@ const BookIssue = () => {
   const customSelectStyles = {
     control: (base, state) => ({
       ...base,
-      border: '2px solid #8b5cf6',
-      borderRadius: '8px',
-      padding: '4px 8px',
-      fontSize: '14px',
-      boxShadow: state.isFocused ? '0 0 0 0.2rem rgba(139, 92, 246, 0.25)' : 'none',
-      minHeight: '44px',
-      '&:hover': {
-        borderColor: '#7c3aed'
-      }
+      border: "2px solid #8b5cf6",
+      borderRadius: "8px",
+      padding: "4px 8px",
+      fontSize: "14px",
+      boxShadow: state.isFocused
+        ? "0 0 0 0.2rem rgba(139, 92, 246, 0.25)"
+        : "none",
+      minHeight: "44px",
+      "&:hover": {
+        borderColor: "#7c3aed",
+      },
     }),
     option: (base, state) => ({
       ...base,
-      backgroundColor: state.isSelected ? '#8b5cf6' : state.isFocused ? '#f3e8ff' : 'white',
-      color: state.isSelected ? 'white' : '#374151',
-      padding: '10px 12px',
-      fontSize: '14px',
-      cursor: 'pointer'
+      backgroundColor: state.isSelected
+        ? "#8b5cf6"
+        : state.isFocused
+        ? "#f3e8ff"
+        : "white",
+      color: state.isSelected ? "white" : "#374151",
+      padding: "10px 12px",
+      fontSize: "14px",
+      cursor: "pointer",
     }),
     menu: (base) => ({
       ...base,
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      zIndex: 9999
+      borderRadius: "8px",
+      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      zIndex: 9999,
     }),
     placeholder: (base) => ({
       ...base,
-      color: '#9ca3af',
-      fontSize: '14px'
+      color: "#9ca3af",
+      fontSize: "14px",
     }),
     singleValue: (base) => ({
       ...base,
-      color: '#374151',
-      fontSize: '14px'
+      color: "#374151",
+      fontSize: "14px",
     }),
     input: (base) => ({
       ...base,
-      color: '#374151',
-      fontSize: '14px'
-    })
+      color: "#374151",
+      fontSize: "14px",
+    }),
   };
 
   const formatDate = (dateString) => {
@@ -814,8 +925,8 @@ const BookIssue = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
       return `${day}-${month}-${year}`;
     } catch (error) {
@@ -824,12 +935,17 @@ const BookIssue = () => {
   };
 
   // Filter issued books based on search term
-  const filteredIssuedBooks = issuedBooks.filter(issue => {
+  const filteredIssuedBooks = issuedBooks.filter((issue) => {
     if (!searchTerm) return true;
     const query = searchTerm.toLowerCase();
     const bookTitle = (issue.book_title || "").toLowerCase();
     const isbn = (issue.book_isbn || "").toLowerCase();
-    const userName = (issue.issued_to_name || issue.student_name || issue.issued_to || "").toLowerCase();
+    const userName = (
+      issue.issued_to_name ||
+      issue.student_name ||
+      issue.issued_to ||
+      ""
+    ).toLowerCase();
     const cardNumber = (issue.card_number || "").toLowerCase();
 
     return (
@@ -863,55 +979,69 @@ const BookIssue = () => {
         const daysRemaining = getDaysRemaining(issue.due_date);
         let statusText = "";
         if (daysRemaining !== null && daysRemaining < 0) {
-          statusText = `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''}`;
-        } else if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3) {
-          statusText = daysRemaining === 0 ? "Due Today" : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left`;
+          statusText = `Overdue by ${Math.abs(daysRemaining)} day${
+            Math.abs(daysRemaining) !== 1 ? "s" : ""
+          }`;
+        } else if (
+          daysRemaining !== null &&
+          daysRemaining >= 0 &&
+          daysRemaining <= 3
+        ) {
+          statusText =
+            daysRemaining === 0
+              ? "Due Today"
+              : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left`;
         } else if (daysRemaining !== null) {
-          statusText = `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left`;
+          statusText = `${daysRemaining} day${
+            daysRemaining !== 1 ? "s" : ""
+          } left`;
         }
 
         return {
           "Book Title": issue.book_title || "N/A",
-          "ISBN": issue.book_isbn || "-",
-          "Issued To": issue.issued_to_name || issue.student_name || issue.issued_to || "N/A",
+          ISBN: issue.book_isbn || "-",
+          "Issued To":
+            issue.issued_to_name ||
+            issue.student_name ||
+            issue.issued_to ||
+            "N/A",
           "Card Number": issue.card_number || "-",
           "Issue Date": formatDate(issue.issue_date),
-          "Due Date": formatDate(issue.due_date),
+          "Submission Date": formatDate(issue.due_date),
           "Days Remaining": statusText || "-",
-          "Status": issue.status === "returned" ? "Returned" : "Issued"
+          Status: issue.status === "returned" ? "Returned" : "Issued",
         };
       });
 
       const columns = [
-        { key: 'Book Title', header: 'Book Title', width: 40 },
-        { key: 'ISBN', header: 'ISBN', width: 20 },
-        { key: 'Issued To', header: 'Issued To', width: 30 },
-        { key: 'Card Number', header: 'Card Number', width: 20 },
-        { key: 'Issue Date', header: 'Issue Date', width: 15 },
-        { key: 'Due Date', header: 'Due Date', width: 15 },
-        { key: 'Days Remaining', header: 'Days Remaining', width: 20 },
-        { key: 'Status', header: 'Status', width: 15 }
+        { key: "Book Title", header: "Book Title", width: 40 },
+        { key: "ISBN", header: "ISBN", width: 20 },
+        { key: "Issued To", header: "Issued To", width: 30 },
+        { key: "Card Number", header: "Card Number", width: 20 },
+        { key: "Issue Date", header: "Issue Date", width: 15 },
+        { key: "Submission Date", header: "Submission Date", width: 15 },
+        { key: "Days Remaining", header: "Days Remaining", width: 20 },
+        { key: "Status", header: "Status", width: 15 },
       ];
 
       const filename = searchTerm
-        ? `issued_books_filtered_${new Date().toISOString().split('T')[0]}`
-        : `issued_books_${new Date().toISOString().split('T')[0]}`;
+        ? `issued_books_filtered_${new Date().toISOString().split("T")[0]}`
+        : `issued_books_${new Date().toISOString().split("T")[0]}`;
 
-      await exportToExcel(exportData, filename, 'Issued Books', columns);
+      await exportToExcel(exportData, filename, "Issued Books", columns);
 
       PubSub.publish("RECORD_SAVED_TOAST", {
         title: "Export Success",
-        message: `Exported ${exportData.length} issued book(s) to Excel`
+        message: `Exported ${exportData.length} issued book(s) to Excel`,
       });
     } catch (error) {
-      console.error('Error exporting issued books:', error);
+      console.error("Error exporting issued books:", error);
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Export Error",
-        message: "Failed to export issued books"
+        message: "Failed to export issued books",
       });
     }
   };
-
 
   const issueColumns = [
     {
@@ -925,34 +1055,47 @@ const BookIssue = () => {
             e.preventDefault();
             navigate(`/books/${record.book_id}`);
           }}
-          style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "600" }}
+          style={{
+            color: "#6f42c1",
+            textDecoration: "none",
+            fontWeight: "600",
+          }}
           onMouseEnter={(e) => {
             try {
               const bookPrefetch = {
                 id: record.book_id,
                 title: record.book_title,
                 isbn: record.book_isbn,
-                author_name: record.author_name
+                author_name: record.author_name,
               };
-              localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(bookPrefetch));
-            } catch (err) { }
+              localStorage.setItem(
+                `prefetch:book:${record.book_id}`,
+                JSON.stringify(bookPrefetch)
+              );
+            } catch (err) {}
             e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
         >
           <strong>{value || "N/A"}</strong>
         </a>
-      )
+      ),
     },
     {
       field: "book_isbn",
       label: "ISBN",
       width: 150,
       render: (value) => (
-        <code style={{ background: "#f8f9fa", padding: "4px 8px", borderRadius: "4px" }}>
+        <code
+          style={{
+            background: "#f8f9fa",
+            padding: "4px 8px",
+            borderRadius: "4px",
+          }}
+        >
           {value || "-"}
         </code>
-      )
+      ),
     },
     {
       field: "issued_to_name",
@@ -960,7 +1103,11 @@ const BookIssue = () => {
       width: 200,
       render: (value, record) => {
         const userId = record.user_id || record.student_id || record.issued_to;
-        const displayName = record.issued_to_name || record.student_name || record.issued_to || "N/A";
+        const displayName =
+          record.issued_to_name ||
+          record.student_name ||
+          record.issued_to ||
+          "N/A";
         if (userId) {
           return (
             <a
@@ -969,19 +1116,30 @@ const BookIssue = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 try {
-                  localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-                } catch (err) { }
+                  localStorage.setItem(
+                    `prefetch:user:${userId}`,
+                    JSON.stringify(record)
+                  );
+                } catch (err) {}
                 navigate(`/user/${userId}`, { state: record });
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 try {
-                  localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-                } catch (err) { }
-                window.open(`/user/${userId}`, '_blank');
+                  localStorage.setItem(
+                    `prefetch:user:${userId}`,
+                    JSON.stringify(record)
+                  );
+                } catch (err) {}
+                window.open(`/user/${userId}`, "_blank");
               }}
-              style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
+              style={{
+                color: "#6f42c1",
+                textDecoration: "none",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
               onMouseEnter={(e) => {
                 e.target.style.textDecoration = "underline";
               }}
@@ -995,28 +1153,29 @@ const BookIssue = () => {
           );
         }
         return displayName;
-      }
+      },
     },
     {
       field: "card_number",
       label: "Card Number",
       width: 150,
-      render: (value) => value || "-"
+      render: (value) => value || "-",
     },
     {
       field: "issue_date",
       label: "Issue Date",
       width: 120,
-      render: (value) => formatDate(value)
+      render: (value) => formatDate(value),
     },
     {
       field: "due_date",
-      label: "Due Date",
+      label: "Submission Date",
       width: 180,
       render: (value, record) => {
         const daysRemaining = getDaysRemaining(value);
         const isOverdue = daysRemaining !== null && daysRemaining < 0;
-        const isDueSoon = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3;
+        const isDueSoon =
+          daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3;
 
         return (
           <div>
@@ -1025,22 +1184,27 @@ const BookIssue = () => {
               <div className="small mt-1">
                 {isOverdue ? (
                   <Badge bg="danger">
-                    Overdue by {Math.abs(daysRemaining)} day{Math.abs(daysRemaining) !== 1 ? 's' : ''}
+                    Overdue by {Math.abs(daysRemaining)} day
+                    {Math.abs(daysRemaining) !== 1 ? "s" : ""}
                   </Badge>
                 ) : isDueSoon ? (
                   <Badge bg="warning" text="dark">
-                    {daysRemaining === 0 ? "Due Today" : `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left`}
+                    {daysRemaining === 0
+                      ? "Due Today"
+                      : `${daysRemaining} day${
+                          daysRemaining !== 1 ? "s" : ""
+                        } left`}
                   </Badge>
                 ) : (
                   <Badge bg="success">
-                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left
+                    {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
                   </Badge>
                 )}
               </div>
             )}
           </div>
         );
-      }
+      },
     },
     {
       field: "status",
@@ -1050,399 +1214,698 @@ const BookIssue = () => {
         <Badge bg={value === "returned" ? "secondary" : "primary"}>
           {value === "returned" ? "Returned" : "Issued"}
         </Badge>
-      )
-    }
+      ),
+    },
   ];
 
   return (
-    <Container fluid className="mt-4" style={{ marginTop: "90px", padding: "0 1.5rem" }}>
+    <Container
+      fluid
+      className="mt-4"
+      style={{ marginTop: "90px", padding: "0 1.5rem" }}
+    >
       {/* Header Card */}
 
-
       {/* Tabs */}
-      <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "issue")}>
-        <Nav variant="tabs" className="mb-4" style={{ borderBottom: "2px solid #e5e7eb" }}>
+      <Tab.Container
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k || "issue")}
+      >
+        <Nav
+          variant="tabs"
+          style={{ borderBottom: "2px solid #e5e7eb", position: "relative" }}
+        >
           <Nav.Item>
             <Nav.Link
               eventKey="issue"
               style={{
-                color: activeTab === "issue" ? "#000000" : "#6b7280",
-                fontWeight: activeTab === "issue" ? "600" : "400",
-                borderBottom: activeTab === "issue" ? "3px solid #6b7280" : "none"
+                color: activeTab === "submit" ? "#000000" : "#6b7280",
+                fontWeight: activeTab === "submit" ? "600" : "400",
+                borderBottom:
+                  activeTab === "submit" ? "3px solid #6b7280" : "none",
               }}
-              className={activeTab !== "issue" ? "text-black" : ""}
             >
-              <i className="fa-solid fa-hand-holding me-2" style={{ color: activeTab === "issue" ? "#000000" : "#6b7280", fontSize: "15px" }}></i>
-              <span style={{ color: activeTab === "issue" ? "#000000" : "#6b7280", fontSize: "15px" }}>Issue New Book</span>
+              <i
+                className="fa-solid fa-book-return me-2"
+                style={{
+                  color: activeTab === "submit" ? "#000000" : "#6b7280",
+                  fontSize: "15px",
+                }}
+              ></i>
+              <span
+                style={{
+                  color: activeTab === "submit" ? "#000000" : "#6b7280",
+                  fontSize: "15px",
+                }}
+              >
+                Issue New Book
+              </span>
             </Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link
               eventKey="list"
               style={{
-                color: activeTab === "list" ? "#000000" : "#6b7280",
-                fontWeight: activeTab === "list" ? "600" : "400",
-                borderBottom: activeTab === "list" ? "3px solid #6b7280" : "none"
+                color: activeTab === "submitted" ? "#000000" : "#6b7280",
+                fontWeight: activeTab === "submitted" ? "600" : "400",
+                borderBottom:
+                  activeTab === "submitted" ? "3px solid #6b7280" : "none",
               }}
-              className={activeTab !== "list" ? "text-black" : ""}
             >
-              <i className="fa-solid fa-list me-2" style={{ color: activeTab === "list" ? "#000000" : "#6b7280", fontSize: "15px" }}></i>
-              <span style={{ color: activeTab === "list" ? "#000000" : "#6b7280", fontSize: "15px" }}>View Issued Books ({issuedBooks.length})</span>
+              <span
+                style={{
+                  color: activeTab === "submitted" ? "#000000" : "#6b7280",
+                  fontSize: "15px",
+                }}
+              >
+                View Issued Books ({issuedBooks.length})
+              </span>
             </Nav.Link>
           </Nav.Item>
-        </Nav>
 
+          {/* Right aligned search bar */}
+          {activeTab === "list" && (
+            <div
+              style={{
+                position: "absolute",
+                right: "0",
+                top: "50%",
+                transform: "translateY(-50%)",
+                paddingRight: "15px",
+              }}
+            >
+              <InputGroup style={{ maxWidth: "250px" }}>
+                <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
+                  <InputGroup.Text
+                    style={{
+                      background: "#f3e9fc",
+                      borderColor: "#e9ecef",
+                      padding: "0.375rem 0.75rem",
+                    }}
+                  >
+                    <i
+                      className="fa-solid fa-search"
+                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                    ></i>
+                  </InputGroup.Text>
+
+                  <Form.Control
+                    placeholder="Search books..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      borderColor: "#e9ecef",
+                      fontSize: "0.875rem",
+                      padding: "0.375rem 0.75rem",
+                    }}
+                  />
+                </InputGroup>
+
+                {searchTerm && (
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setSearchTerm("")}
+                    style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "0 6px 6px 0",
+                      marginLeft: "-1px",
+                      height: "38px",
+                    }}
+                  >
+                    <i className="fa-solid fa-times"></i>
+                  </Button>
+                )}
+              </InputGroup>
+            </div>
+          )}
+        </Nav>
         <Tab.Content>
           <Tab.Pane eventKey="issue">
-          
-              
-              <Row className=" g-4">
-                <Col>
-                  <Col lg={12}>
-                
-                    {/* <Card className="shadow-sm" style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e5e7eb" }}> */}
-                  <Row className="g-4">
-  {/* Left Side - Form Section */}
-  <Col lg={12}>
-    <Card className="shadow-sm h-100">
-      <Card.Header style={{ 
-        background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)", 
-        border: "none", 
-        borderBottom: "2px solid #d1d5db",
-        padding: "20px 24px"
-      }}>
-        <h5 className="mb-0 fw-bold" style={{ 
-          color: "#1f2937", 
-          fontSize: "20px",
-          letterSpacing: "0.3px"
-        }}>
-          <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
-          Issue New Book
-        </h5>
-      </Card.Header>
-      <Card.Body className="p-4">
-        {/* Top Row - 2 Fields */}
-        <Row className="g-3 mb-4">
-          {/* Book Selection */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-book me-2" style={{ color: "#6b7280" }}></i>
-                Select Book *
-              </Form.Label>
-              <div ref={bookInputRef}>
-                <AsyncSelect
-                  cacheOptions
-                  defaultOptions
-                  loadOptions={loadBookOptions}
-                  value={selectedBook}
-                  onChange={handleBookChange}
-                  styles={customSelectStyles}
-                  placeholder="Search by book name, author, ISBN..."
-                  isSearchable
-                  isLoading={searchingBooks}
-                  noOptionsMessage={({ inputValue }) =>
-                    inputValue ? "No books found. Try different search terms." : "Start typing to search books..."
-                  }
-                />
-              </div>
-              <Form.Text className="text-muted mt-1 d-block small">
-                <i className="fa-solid fa-info-circle me-1"></i>
-                Search by title, author, ISBN, language, or scan barcode
-              </Form.Text>
-            </Form.Group>
-          </Col>
+            <Row>
+              <Col>
+                <Col lg={12}>
+                  {/* <Card className="shadow-sm" style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e5e7eb" }}> */}
+                  <Row>
+                    {/* Left Side - Form Section */}
+                    <Col lg={12}>
+                      <Card className="shadow-sm h-100">
+                        <Card.Header
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                            border: "none",
+                            borderBottom: "2px solid #d1d5db",
+                            padding: "20px 24px",
+                          }}
+                        >
+                          <h5
+                            className="mb-0 fw-bold"
+                            style={{
+                              color: "#1f2937",
+                              fontSize: "20px",
+                              letterSpacing: "0.3px",
+                            }}
+                          >
+                            <i
+                              className="fa-solid fa-book-open me-3"
+                              style={{ color: "#6b7280" }}
+                            ></i>
+                            Issue New Book
+                          </h5>
+                        </Card.Header>
+                        <Card.Body className="p-4">
+                          {/* Top Row - 2 Fields */}
+                          <Row className="g-3 mb-4">
+                            {/* Book Selection */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-book me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Select Book *
+                                </Form.Label>
+                                <div ref={bookInputRef}>
+                                  <AsyncSelect
+                                    cacheOptions
+                                    defaultOptions
+                                    loadOptions={loadBookOptions}
+                                    value={selectedBook}
+                                    isMulti={true}
+                                    onChange={handleBookChange}
+                                    styles={customSelectStyles}
+                                    placeholder="Search by book name, author, ISBN..."
+                                    isSearchable
+                                    isLoading={searchingBooks}
+                                    noOptionsMessage={({ inputValue }) =>
+                                      inputValue
+                                        ? "No books found. Try different search terms."
+                                        : "Start typing to search books..."
+                                    }
+                                  />
+                                </div>
+                                <Form.Text className="text-muted mt-1 d-block small">
+                                  {/* <i className="fa-solid fa-info-circle me-1"></i> */}
+                                  Search by title, author, ISBN, language, or
+                                  scan barcode
+                                </Form.Text>
+                              </Form.Group>
+                            </Col>
 
-          {/* Library Card Selection */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-id-card me-2" style={{ color: "#6b7280" }}></i>
-                Select Library Card *
-              </Form.Label>
-              <div ref={cardInputRef}>
-                <AsyncSelect
-                  cacheOptions
-                  defaultOptions
-                  loadOptions={loadCardOptions}
-                  value={selectedLibraryCard}
-                  onChange={handleCardChange}
-                  styles={customSelectStyles}
-                  placeholder="Search by card number, name, phone..."
-                  isSearchable
-                  isLoading={searchingCards}
-                  noOptionsMessage={({ inputValue }) =>
-                    inputValue ? "No cards found. Try different search terms." : "Start typing to search cards..."
-                  }
-                />
-              </div>
-              <Form.Text className="text-muted mt-1 d-block small">
-                <i className="fa-solid fa-info-circle me-1"></i>
-                Search by card number, user name, phone, email, or scan barcode
-              </Form.Text>
-            </Form.Group>
-          </Col>
-        </Row>
+                            {/* Library Card Selection */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-id-card me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Select Library Card *
+                                </Form.Label>
+                                <div ref={cardInputRef}>
+                                  <AsyncSelect
+                                    cacheOptions
+                                    defaultOptions
+                                    loadOptions={loadCardOptions}
+                                    value={selectedLibraryCard}
+                                    onChange={handleCardChange}
+                                    styles={customSelectStyles}
+                                    placeholder="Search by card number, name, phone..."
+                                    isSearchable
+                                    isLoading={searchingCards}
+                                    noOptionsMessage={({ inputValue }) =>
+                                      inputValue
+                                        ? "No cards found. Try different search terms."
+                                        : "Start typing to search cards..."
+                                    }
+                                  />
+                                </div>
+                                <Form.Text className="text-muted mt-1 d-block small">
+                                  {/* <i className="fa-solid fa-info-circle me-1"></i> */}
+                                  Search by card number, user name, phone,
+                                  email, or scan barcode
+                                </Form.Text>
+                              </Form.Group>
+                            </Col>
+                          </Row>
+                          
+                           
+                          {/* Bottom Row - 2 Fields */}
+                          <Row className="g-3">
+                            {/* Issue Date */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-calendar me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Issue Date
+                                </Form.Label>
+                                <Form.Control
+                                  type="date"
+                                  value={formData.issue_date}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      issue_date: e.target.value,
+                                    })
+                                  }
+                                  style={{
+                                    border: "2px solid #e5e7eb",
+                                    borderRadius: "8px",
+                                    padding: "10px",
+                                    fontSize: "14px",
+                                  }}
+                                />
+                              </Form.Group>
+                            </Col>
 
-        {/* Bottom Row - 2 Fields */}
-        <Row className="g-3">
-          {/* Issue Date */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-calendar me-2" style={{ color: "#6b7280" }}></i>
-                Issue Date
-              </Form.Label>
-              <Form.Control
-                type="date"
-                value={formData.issue_date}
-                onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
-                style={{ 
-                  border: "2px solid #e5e7eb", 
-                  borderRadius: "8px", 
-                  padding: "10px",
-                  fontSize: "14px"
-                }}
-              />
-            </Form.Group>
-          </Col>
+                            {/* Submission Date */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-calendar-check me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Submission Date{" "}
+                                  <span className="text-danger">*</span>
+                                </Form.Label>
+                                <Form.Control
+                                  id="due_date"
+                                  type="date"
+                                  value={formData.due_date}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      due_date: e.target.value,
+                                    })
+                                  }
+                                  min={formData.issue_date}
+                                  required
+                                  style={{
+                                    border: "2px solid #e5e7eb",
+                                    borderRadius: "8px",
+                                    padding: "10px",
+                                    fontSize: "14px",
+                                  }}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
 
-          {/* Due Date */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-calendar-check me-2" style={{ color: "#6b7280" }}></i>
-                Due Date <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                id="due_date"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                min={formData.issue_date}
-                required
-                style={{ 
-                  border: "2px solid #e5e7eb", 
-                  borderRadius: "8px", 
-                  padding: "10px",
-                  fontSize: "14px"
-                }}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+                          {/* Additional Fields Row */}
+                          <Row className="g-3 mt-3">
+                            {/* Book Condition */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-clipboard-check me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Book Condition
+                                </Form.Label>
+                                <Form.Select
+                                  value={formData.condition_before}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      condition_before: e.target.value,
+                                    })
+                                  }
+                                  style={{
+                                    border: "2px solid #e5e7eb",
+                                    borderRadius: "8px",
+                                    padding: "10px",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  <option value="Good">✅ Good</option>
+                                  <option value="Fair">⚠️ Fair</option>
+                                  <option value="Damaged">❌ Damaged</option>
+                                </Form.Select>
+                              </Form.Group>
+                            </Col>
 
-        {/* Additional Fields Row */}
-        <Row className="g-3 mt-3">
-          {/* Book Condition */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-clipboard-check me-2" style={{ color: "#6b7280" }}></i>
-                Book Condition
-              </Form.Label>
-              <Form.Select
-                value={formData.condition_before}
-                onChange={(e) => setFormData({ ...formData, condition_before: e.target.value })}
-                style={{ 
-                  border: "2px solid #e5e7eb", 
-                  borderRadius: "8px", 
-                  padding: "10px",
-                  fontSize: "14px"
-                }}
-              >
-                <option value="Good">✅ Good</option>
-                <option value="Fair">⚠️ Fair</option>
-                <option value="Damaged">❌ Damaged</option>
-              </Form.Select>
-            </Form.Group>
-          </Col>
+                            {/* Remarks */}
+                            <Col lg={6}>
+                              <Form.Group>
+                                <Form.Label
+                                  className="fw-bold mb-2"
+                                  style={{ color: "#374151", fontSize: "14px" }}
+                                >
+                                  {/* <i className="fa-solid fa-comment me-2" style={{ color: "#6b7280" }}></i> */}
+                                  Remarks (Optional)
+                                </Form.Label>
+                                <Form.Control
+                                  as="textarea"
+                                  rows={2}
+                                  placeholder="Add any additional notes or remarks..."
+                                  value={formData.remarks}
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      remarks: e.target.value,
+                                    })
+                                  }
+                                  style={{
+                                    border: "2px solid #e5e7eb",
+                                    borderRadius: "8px",
+                                    padding: "10px",
+                                    fontSize: "14px",
+                                    resize: "vertical",
+                                  }}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
 
-          {/* Remarks */}
-          <Col lg={6}>
-            <Form.Group>
-              <Form.Label className="fw-bold mb-2" style={{ color: "#374151", fontSize: "14px" }}>
-                <i className="fa-solid fa-comment me-2" style={{ color: "#6b7280" }}></i>
-                Remarks (Optional)
-              </Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                placeholder="Add any additional notes or remarks..."
-                value={formData.remarks}
-                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                style={{ 
-                  border: "2px solid #e5e7eb", 
-                  borderRadius: "8px", 
-                  padding: "10px",
-                  fontSize: "14px",
-                  resize: "vertical"
-                }}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-
-        {/* Action Buttons */}
-        <Row className="mt-4">
-          <Col lg={12}>
-            <div className="d-flex gap-3">
-              <Button
-                variant="primary"
-                onClick={handleIssueBook}
-                disabled={loading || !formData.book_id || (!formData.card_id && !formData.issued_to) || !formData.due_date}
-             
-                style={{
-                  background: (loading || !formData.book_id || (!formData.card_id && !formData.issued_to) || !formData.due_date)
-                    ? "#9ca3af"
-                    : "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
-                  border: "none",
-                  padding: "14px 32px",
-                  fontWeight: "600",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  height: "50px",
-                  color: "#ffffff"
-                }}
-              >
-                {loading ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Issuing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fa-solid fa-hand-holding me-2"></i>
-                    Issue Book
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline-secondary"
-                onClick={resetForm}
-                disabled={loading}
-                style={{
-                  border: "2px solid #6b7280",
-                  color: "#6b7280",
-                  padding: "14px 24px",
-                  fontWeight: "600",
-                  borderRadius: "8px",
-                  height: "50px",
-                  background: "transparent"
-                }}
-              >
-                <i className="fa-solid fa-rotate me-2"></i>
-                Reset
-              </Button>
-            </div>
-          </Col>
-        </Row>
-      </Card.Body>
-    </Card>
-  </Col>
-</Row>
+                          {/* Action Buttons */}
+                          <Row className="mt-4">
+                            <Col lg={12}>
+                              <div className="d-flex gap-3">
+                                <Button
+                                  // variant="outline-secondary"
+                                  onClick={resetForm}
+                                  disabled={loading}
+                                  className="btn-cancel"
+                                >
+                                  Reset
+                                </Button>
+                                <Button
+                                  onClick={handleIssueBook}
+                                  disabled={
+                                    loading ||
+                                    !formData.book_id ||
+                                    (!formData.card_id &&
+                                      !formData.issued_to) ||
+                                    !formData.due_date
+                                  }
+                                  className="btn-submit"
+                                >
+                                  {loading ? (
+                                    <>
+                                      <Spinner
+                                        animation="border"
+                                        size="sm"
+                                        className="me-2"
+                                      />
+                                      Issuing...
+                                    </>
+                                  ) : (
+                                    <>Issue Book</>
+                                  )}
+                                </Button>
+                              </div>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
                   {/* </Card> */}
-                  </Col>
-                  
-                  </Col>
+                </Col>
+              </Col>
 
-                <Col>
+              <Col>
+                <Col lg={12}>
+                  <Card
+                    className="shadow-sm"
+                    style={{
+                      position: "sticky",
+                      top: "100px",
+                      background: "#ffffff",
+                      border: "1px solid #e5e7eb",
+                      height: "539px",
+                    }}
+                  >
+                    <Card.Header
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                        border: "none",
+                        borderBottom: "2px solid #d1d5db",
+                        padding: "20px 24px",
+                      }}
+                    >
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{
+                          color: "#1f2937",
+                          fontSize: "20px",
+                          letterSpacing: "0.3px",
+                        }}
+                      >
+                        <i
+                          className="fa-solid fa-book-open me-3"
+                          style={{ color: "#6b7280" }}
+                        ></i>
+                        Issue Summary
+                      </h5>
+                    </Card.Header>
+                    <Card.Body>
+                      <Row>
+                        {/* Book Information - Left Side */}
+                        <Col lg={6}>
+                          <Card className="h-100">
+                            <Card.Header
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                border: "none",
+                                borderBottom: "2px solid #d1d5db",
+                                padding: "10px 24px",
+                              }}
+                            >
+                              <h5
+                                className="mb-0 fw-bold"
+                                style={{
+                                  color: "#1f2937",
+                                  fontSize: "14px",
+                                  letterSpacing: "0.3px",
+                                }}
+                              >
+                                Book Information
+                              </h5>
+                            </Card.Header>
+                            <Card.Body>
+                              {selectedBook && selectedBook.data ? (
+                                <div>
+                                  <Row>
+                                    <Col xs={4} className="text-end pe-3">
+                                      <strong>Title:</strong>
+                                    </Col>
+                                    <Col xs={8}>{selectedBook.data.title}</Col>
+                                  </Row>
+                                  {selectedBook.data.isbn && (
+                                    <Row className="mb-2">
+                                      <Col xs={4} className="text-end pe-3">
+                                        <strong>ISBN:</strong>
+                                      </Col>
+                                      <Col xs={8}>{selectedBook.data.isbn}</Col>
+                                    </Row>
+                                  )}
+                                  {selectedBook.data.author_name && (
+                                    <Row className="mb-2">
+                                      <Col xs={4} className="text-end pe-3">
+                                        <strong>Author:</strong>
+                                      </Col>
+                                      <Col xs={8}>
+                                        {selectedBook.data.author_name}
+                                      </Col>
+                                    </Row>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-center text-muted py-3">
+                                  <i
+                                    className="fa-solid fa-book"
+                                    style={{ fontSize: "48px", opacity: 0.3 }}
+                                  ></i>
+                                  <p className="mt-2">No book selected</p>
+                                </div>
+                              )}
+                            </Card.Body>
+                          </Card>
+                        </Col>
 
-                  <Col lg={12}>
-                    <Card className="shadow-sm" style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-                  <Card.Header style={{ 
-        background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)", 
-        border: "none", 
-        borderBottom: "2px solid #d1d5db",
-        padding: "20px 24px"
-      }}>
-        <h5 className="mb-0 fw-bold" style={{ 
-          color: "#1f2937", 
-          fontSize: "20px",
-          letterSpacing: "0.3px"
-        }}>
-          <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
-          Issue Summary
+                        {/* Member Information - Right Side */}
+                        <Col lg={6}>
+                          <Card className="h-100">
+                            <Card.Header
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                border: "none",
+                                borderBottom: "2px solid #d1d5db",
+                                padding: "10px 24px",
+                              }}
+                            >
+                              <h5
+                                className="mb-0 fw-bold"
+                                style={{
+                                  color: "#1f2937",
+                                  fontSize: "14px",
+                                  letterSpacing: "0.3px",
+                                }}
+                              >
+                                Member Information
+                              </h5>
+                            </Card.Header>
+                            <Card.Body>
+                              {userDetails ? (
+                                <div>
+                                  <Row className="mb-2">
+                                    <Col xs={4} className="text-end pe-3">
+                                      <strong>Name:</strong>
+                                    </Col>
+                                    <Col xs={8}>
+                                      {userDetails.user_name ||
+                                        userDetails.student_name ||
+                                        `${userDetails.firstname || ""} ${
+                                          userDetails.lastname || ""
+                                        }`.trim() ||
+                                        "Unknown"}
+                                    </Col>
+                                  </Row>
+                                  {userDetails.card_number && (
+                                    <Row className="mb-2">
+                                      <Col xs={4} className="text-end pe-3">
+                                        <strong>Card:</strong>
+                                      </Col>
+                                      <Col xs={8}>
+                                        {userDetails.card_number}
+                                      </Col>
+                                    </Row>
+                                  )}
+                                  {userDetails.email && (
+                                    <Row className="mb-2">
+                                      <Col xs={4} className="text-end pe-3">
+                                        <strong>Email:</strong>
+                                      </Col>
+                                      <Col xs={8}>{userDetails.email}</Col>
+                                    </Row>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-center text-muted py-3">
+                                  <i
+                                    className="fa-solid fa-user"
+                                    style={{ fontSize: "48px", opacity: 0.3 }}
+                                  ></i>
+                                  <p className="mt-2">No member selected</p>
+                                </div>
+                              )}
+                            </Card.Body>
+                          </Card>
+                        </Col>
 
-        </h5>
-      </Card.Header>
-                      <Card.Body className="p-4">
-                        {selectedBook && selectedBook.data ? (
-                          <div className="mb-3">
-                            <h6 className="fw-bold text-muted mb-2">Book Information</h6>
-                            <p className="mb-1"><strong>Title:</strong> {selectedBook.data.title}</p>
-                            {selectedBook.data.isbn && (
-                              <p className="mb-1"><strong>ISBN:</strong> {selectedBook.data.isbn}</p>
-                            )}
-                            {selectedBook.data.author_name && (
-                              <p className="mb-1"><strong>Author:</strong> {selectedBook.data.author_name}</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center text-muted py-3">
-                            <i className="fa-solid fa-book" style={{ fontSize: "48px", opacity: 0.3 }}></i>
-                            <p className="mt-2">No book selected</p>
-                          </div>
-                        )}
+                        {/* Issue Dates and Condition - Full Width */}
+                        <Col lg={12} className="mt-2">
+                          <Card>
+                            <Card.Header
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                border: "none",
+                                borderBottom: "2px solid #d1d5db",
+                                padding: "10px 24px",
+                              }}
+                            >
+                              <h5
+                                className="mb-0 fw-bold"
+                                style={{
+                                  color: "#1f2937",
+                                  fontSize: "14px",
+                                  letterSpacing: "0.3px",
+                                }}
+                              >
+                                Issue Details
+                              </h5>
+                            </Card.Header>
+                            <Card.Body>
+                              <Row>
+                                {formData.due_date && (
+                                  <Col lg={6}>
+                                    <Row className="mb-2">
+                                      <Col xs={5} className="text-end pe-3">
+                                        <strong>Issue Date:</strong>
+                                      </Col>
+                                      <Col xs={7}>
+                                        {new Date(
+                                          formData.issue_date
+                                        ).toLocaleDateString()}
+                                      </Col>
+                                    </Row>
+                                    <Row className="mb-2">
+                                      <Col xs={5} className="text-end pe-3">
+                                        <strong>Submission Date:</strong>
+                                      </Col>
+                                      <Col xs={7}>
+                                        {new Date(
+                                          formData.due_date
+                                        ).toLocaleDateString()}
+                                      </Col>
+                                    </Row>
+                                    <Row className="mb-2">
+                                      <Col xs={5} className="text-end pe-3">
+                                        <strong>Duration:</strong>
+                                      </Col>
+                                      <Col xs={7}>
+                                        {Math.ceil(
+                                          (new Date(formData.due_date) -
+                                            new Date(formData.issue_date)) /
+                                            (1000 * 60 * 60 * 24)
+                                        )}{" "}
+                                        days
+                                      </Col>
+                                    </Row>
+                                  </Col>
+                                )}
 
-                        {userDetails ? (
-                          <div className="mb-3">
-                            <h6 className="fw-bold text-muted mb-2">Member Information</h6>
-                            <p className="mb-1">
-                              <strong>Name:</strong> {userDetails.user_name || userDetails.student_name || `${userDetails.firstname || ""} ${userDetails.lastname || ""}`.trim() || "Unknown"}
-                            </p>
-                            {userDetails.card_number && (
-                              <p className="mb-1"><strong>Card:</strong> {userDetails.card_number}</p>
-                            )}
-                            {userDetails.email && (
-                              <p className="mb-1"><strong>Email:</strong> {userDetails.email}</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center text-muted py-3">
-                            <i className="fa-solid fa-user" style={{ fontSize: "48px", opacity: 0.3 }}></i>
-                            <p className="mt-2">No member selected</p>
-                          </div>
-                        )}
+                                {formData.condition_before && (
+                                  <Col lg={6}>
+                                    <div className="text-center">
+                                      <strong className="d-block mb-2">
+                                        Book Condition Before Issue:
+                                      </strong>
+                                      <Badge
+                                        bg={
+                                          formData.condition_before === "Good"
+                                            ? "success"
+                                            : formData.condition_before ===
+                                              "Fair"
+                                            ? "warning"
+                                            : "danger"
+                                        }
+                                        className="fs-6 py-2 px-3"
+                                      >
+                                        {formData.condition_before}
+                                      </Badge>
+                                    </div>
+                                  </Col>
+                                )}
+                              </Row>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Col>
+            </Row>
 
-                        {formData.due_date && (
-                          <div className="mb-3">
-                            <h6 className="fw-bold text-muted mb-2">Issue Dates</h6>
-                            <p className="mb-1">
-                              <strong>Issue Date:</strong> {new Date(formData.issue_date).toLocaleDateString()}
-                            </p>
-                            <p className="mb-1">
-                              <strong>Due Date:</strong> {new Date(formData.due_date).toLocaleDateString()}
-                            </p>
-                            <p className="mb-0">
-                              <strong>Duration:</strong> {Math.ceil((new Date(formData.due_date) - new Date(formData.issue_date)) / (1000 * 60 * 60 * 24))} days
-                            </p>
-                          </div>
-                        )}
-
-                        {formData.condition_before && (
-                          <div>
-                            <h6 className="fw-bold text-muted mb-2">Condition</h6>
-                            <Badge bg={formData.condition_before === "Good" ? "success" : formData.condition_before === "Fair" ? "warning" : "danger"}>
-                              {formData.condition_before}
-                            </Badge>
-                          </div>
-                        )}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  
-                  </Col>
-              </Row>
-         
-    
             {/* </Card> */}
           </Tab.Pane>
 
           {/* Issued Books List Tab */}
           <Tab.Pane eventKey="list">
             <Card className="shadow-sm">
-              <Card.Body className="p-0" style={{ overflow: "hidden", }}>
+              <Card.Body className="p-0" style={{ overflow: "hidden" }}>
                 <ResizableTable
                   data={filteredIssuedBooks}
                   columns={issueColumns}
@@ -1456,7 +1919,11 @@ const BookIssue = () => {
                   onPageChange={(page) => {
                     setCurrentPage(page);
                   }}
-                  emptyMessage={searchTerm ? "No issued books found matching your search" : "No books have been issued yet"}
+                  emptyMessage={
+                    searchTerm
+                      ? "No issued books found matching your search"
+                      : "No books have been issued yet"
+                  }
                   onRowClick={(issue) => {
                     // Optional: Navigate to issue details or show more info
                     console.log("Issue clicked:", issue);
@@ -1464,10 +1931,16 @@ const BookIssue = () => {
                 />
               </Card.Body>
               {filteredIssuedBooks.length > 0 && (
-                <Card.Footer style={{ background: "#f8f9fa", borderTop: "1px solid #e9ecef" }}>
+                <Card.Footer
+                  style={{
+                    background: "#f8f9fa",
+                    borderTop: "1px solid #e9ecef",
+                  }}
+                >
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
-                      <strong>Total Issued Books:</strong> {filteredIssuedBooks.length}
+                      <strong>Total Issued Books:</strong>{" "}
+                      {filteredIssuedBooks.length}
                       {searchTerm && (
                         <span className="text-muted ms-2">
                           (Filtered from {issuedBooks.length} total)
@@ -1499,16 +1972,6 @@ const BookIssue = () => {
 
 export default BookIssue;
 
-
-
-
-
-
-
-
-
-
-
 // import React, { useState, useEffect, useRef } from "react";
 // import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Spinner, Alert, Tab, Nav, Dropdown } from "react-bootstrap";
 // import { useNavigate } from "react-router-dom";
@@ -1531,7 +1994,6 @@ export default BookIssue;
 //   const [selectedLibraryCard, setSelectedLibraryCard] = useState(null);
 //   const [selectedUser, setSelectedUser] = useState(null);
 
-
 //   const [formData, setFormData] = useState({
 //     book_id: "",
 //     card_id: "",
@@ -1542,14 +2004,11 @@ export default BookIssue;
 //     remarks: "",
 //   });
 
-
 //   const [loading, setLoading] = useState(false);
 //   const [searchingBooks, setSearchingBooks] = useState(false);
 //   const [searchingCards, setSearchingCards] = useState(false);
 
-
 //   const [userDetails, setUserDetails] = useState(null);
-
 
 //   const [issuedBooks, setIssuedBooks] = useState([]);
 //   const [loadingIssuedBooks, setLoadingIssuedBooks] = useState(false);
@@ -1559,7 +2018,6 @@ export default BookIssue;
 //   const recordsPerPage = 20;
 
 //   const [durationDays, setDurationDays] = useState(7);
-
 
 //   const [bookSearchField, setBookSearchField] = useState("all");
 //   const [cardSearchField, setCardSearchField] = useState("all");
@@ -2387,7 +2845,7 @@ export default BookIssue;
 //           "Issued To": issue.issued_to_name || issue.student_name || issue.issued_to || "N/A",
 //           "Card Number": issue.card_number || "-",
 //           "Issue Date": formatDate(issue.issue_date),
-//           "Due Date": formatDate(issue.due_date),
+//           "Submission Date": formatDate(issue.due_date),
 //           "Days Remaining": statusText || "-",
 //           "Status": issue.status === "returned" ? "Returned" : "Issued"
 //         };
@@ -2399,7 +2857,7 @@ export default BookIssue;
 //         { key: 'Issued To', header: 'Issued To', width: 30 },
 //         { key: 'Card Number', header: 'Card Number', width: 20 },
 //         { key: 'Issue Date', header: 'Issue Date', width: 15 },
-//         { key: 'Due Date', header: 'Due Date', width: 15 },
+//         { key: 'Submission Date', header: 'Submission Date', width: 15 },
 //         { key: 'Days Remaining', header: 'Days Remaining', width: 20 },
 //         { key: 'Status', header: 'Status', width: 15 }
 //       ];
@@ -2422,7 +2880,6 @@ export default BookIssue;
 //       });
 //     }
 //   };
-
 
 //   const issueColumns = [
 //     {
@@ -2522,7 +2979,7 @@ export default BookIssue;
 //     },
 //     {
 //       field: "due_date",
-//       label: "Due Date",
+//       label: "Submission Date",
 //       width: 180,
 //       render: (value, record) => {
 //         const daysRemaining = getDaysRemaining(value);
@@ -2569,7 +3026,6 @@ export default BookIssue;
 //     <Container fluid className="mt-4" style={{ marginTop: "90px", padding: "0 1.5rem" }}>
 //       {/* Header Card */}
 
-
 //       {/* Tabs */}
 //       <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "issue")}>
 //         <Nav variant="tabs" className="mb-4" style={{ borderBottom: "2px solid #e5e7eb" }}>
@@ -2604,7 +3060,7 @@ export default BookIssue;
 //         </Nav>
 
 //         <Tab.Content>
-        
+
 //           <Tab.Pane eventKey="issue">
 //             <Row style={{ border: "1px solid red" }}>
 //               <Col lg={6} >
@@ -2777,8 +3233,6 @@ export default BookIssue;
 //                         Search by book name, author name, ISBN number, language, category, publisher, or scan barcode
 //                       </Form.Text>
 //                     </Form.Group>
-
-
 
 //                     {/* {selectedBook && selectedBook.data && (
 //                       <Alert variant="success" className="mt-3 mb-0" style={{ borderRadius: "8px" }}>
@@ -3023,7 +3477,7 @@ export default BookIssue;
 //                         <Form.Group>
 //                           <Form.Label className="fw-bold" style={{ color: "#000000", fontSize: "15px" }}>
 //                             <i className="fa-solid fa-calendar-check me-2" style={{ color: "#6b7280" }}></i>
-//                             Due Date <span className="text-danger">*</span>
+//                             Submission Date <span className="text-danger">*</span>
 //                           </Form.Label>
 //                           <Form.Control
 //                             id="due_date"
@@ -3178,7 +3632,7 @@ export default BookIssue;
 //                           <strong>Issue Date:</strong> {new Date(formData.issue_date).toLocaleDateString()}
 //                         </p>
 //                         <p className="mb-1">
-//                           <strong>Due Date:</strong> {new Date(formData.due_date).toLocaleDateString()}
+//                           <strong>Submission Date:</strong> {new Date(formData.due_date).toLocaleDateString()}
 //                         </p>
 //                         <p className="mb-0">
 //                           <strong>Duration:</strong> {Math.ceil((new Date(formData.due_date) - new Date(formData.issue_date)) / (1000 * 60 * 60 * 24))} days

@@ -27,6 +27,7 @@ module.exports = (app) => {
   // Get all book submissions
   router.get("/", fetchUser, async (req, res) => {
     try {
+      console.log("Fetching all book submissions for tenant:", req.userinfo.tenantcode);
       BookSubmission.init(req.userinfo.tenantcode);
       console.log('req.userinfo.tenantcode', req.userinfo.tenantcode);
       
@@ -44,7 +45,7 @@ module.exports = (app) => {
   // res.send('Notifications endpoint hit')
     try {
       const notifications = await BookSubmission.checkbeforeDue();
-      console.log('notification ', notifications);
+      // console.log('notification ', notifications);
       
       return res.status(200).json({
         success: true,

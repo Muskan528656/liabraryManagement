@@ -6,7 +6,7 @@ import QuickActions from "../common/QuickActions";
 import BookSubmitModal from "../common/BookSubmitModal";
 import * as constants from "../../constants/CONSTANT";
 import helper from "../common/helper";
-import ReturnBook from "../bookissue/ReturnBook";
+import BookSubmit from "../booksubmit/BookSubmit";
 import DataApi from "../../api/dataApi";
 
 export default function Header({ open, handleDrawerOpen, socket }) {
@@ -23,6 +23,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
+  
   const [formData, setFormData] = useState({
     book_barcode: "",
     condition_after: "Good",
@@ -107,6 +108,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
+  
   // Fetch role permissions
   // const fetchRolePermissions = async (userRole) => {
   //   try {
@@ -212,7 +214,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       // console.log("response1111 ", response);
       const result = await response.json();
-      console.log('----------- ', result?.notifications.length);
       if (result.success) {
         setDueNotifications(result.notifications || []);
       }
@@ -220,11 +221,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       console.error("Error fetching unread count:", error);
     }
   }
-
-  if (dueNotifications) {
-    console.log('setNotification', dueNotifications.slice(0, 10).map(n => n.message));
-  }
-
 
 
   useEffect(() => {
@@ -547,8 +543,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               )}
             </Dropdown.Toggle>
             {
-              showNotifications &&
-
+              showNotifications ? 
               <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
                 <Dropdown.Header className="d-flex justify-content-between align-items-center">
                   <span>Notifications</span>
@@ -585,7 +580,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           } else if (notification.related_type === "book_request") {
                             // navigate("/bookrequest");
                           }
-                          setShowNotifications(false);
+                          // setShowNotifications(false);
                         }}
                         style={{
                           backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
@@ -625,7 +620,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                               {notification.due_date}
                             </small>
                             <div className="text-muted" style={{ fontSize: "12px" }}>
-                              {notification.return_date}
+                              {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
                             </div>
 
                           </div>
@@ -655,7 +650,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   </>
                 )}
               </Dropdown.Menu>
-
+              : null
             }
           </Dropdown>
 
