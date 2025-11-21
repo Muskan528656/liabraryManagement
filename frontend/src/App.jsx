@@ -38,7 +38,6 @@ import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
 import CompanyDetail from "./components/Company/CompanyDetail";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
-import BlukIssued from "./components/bookissue/BlukIssued";
 import BulkIssue from "./components/bookissue/BulkIssue";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
