@@ -816,7 +816,6 @@ console.log("fetchRelatedData called");
                                             {allowEdit && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleEdit(item)}
                                                     title="Edit"
                                                     style={{
@@ -831,7 +830,6 @@ console.log("fetchRelatedData called");
                                             {allowDelete && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleDelete(item.id)}
                                                     title="Delete"
                                                     style={{
