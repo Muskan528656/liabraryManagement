@@ -7689,16 +7689,16 @@ const BookSubmit = () => {
                         <Nav.Item>
                             <Nav.Link
                                 eventKey="submit"
-                                   style={{
-                    color: activeTab === "submit" ? "#000000" : "#6b7280",
-                    fontWeight: activeTab === "submit" ? "600" : "400",
-                    borderBottom: activeTab === "submit" ? "3px solid #6b7280" : "none"
-                }}
+                                style={{
+                                    color: activeTab === "submit" ? "#000000" : "#6b7280",
+                                    fontWeight: activeTab === "submit" ? "600" : "400",
+                                    borderBottom: activeTab === "submit" ? "3px solid #6b7280" : "none"
+                                }}
                             >
                                 <i className="fa-solid fa-book-return me-2"
                                     style={{ color: activeTab === "submit" ? "#000000" : "#6b7280" }}></i>
                                 {/* Submit Book */}
-                                       <span style={{ color: activeTab === "submit" ? "#000000" : "#6b7280", fontSize: "15px" }}>       Submit Book</span>
+                                <span style={{ color: activeTab === "submit" ? "#000000" : "#6b7280", fontSize: "15px" }}>       Submit Book</span>
                             </Nav.Link>
                         </Nav.Item>
 
@@ -7706,16 +7706,16 @@ const BookSubmit = () => {
                         <Nav.Item>
                             <Nav.Link
                                 eventKey="submitted"
-                                  style={{
-                    color: activeTab === "submitted" ? "#000000" : "#6b7280",
-                    fontWeight: activeTab === "submitted" ? "600" : "400",
-                    borderBottom: activeTab === "submitted" ? "3px solid #6b7280" : "none"
-                }}
+                                style={{
+                                    color: activeTab === "submitted" ? "#000000" : "#6b7280",
+                                    fontWeight: activeTab === "submitted" ? "600" : "400",
+                                    borderBottom: activeTab === "submitted" ? "3px solid #6b7280" : "none"
+                                }}
                             >
 
-                                
-                <span style={{ color: activeTab === "submitted" ? "#000000" : "#6b7280", fontSize: "15px" }}>View Submitted Books ({submittedBooks.length})</span>
-                                
+
+                                <span style={{ color: activeTab === "submitted" ? "#000000" : "#6b7280", fontSize: "15px" }}>View Submitted Books ({submittedBooks.length})</span>
+
                             </Nav.Link>
                         </Nav.Item>
 
@@ -8017,7 +8017,7 @@ const BookSubmit = () => {
                                                     </h5>
                                                 </Col>
                                                 <Col xs="auto">
-                                                    <InputGroup style={{ maxWidth: "300px" }}>
+                                                    {/* <InputGroup style={{ maxWidth: "300px" }}>
                                                         <InputGroup.Text style={{ backgroundColor: "#fff", border: "2px solid #8b5cf6", borderRight: "none" }}>
                                                             <i className="fa-solid fa-search" style={{ color: "#8b5cf6" }}></i>
                                                         </InputGroup.Text>
@@ -8030,6 +8030,44 @@ const BookSubmit = () => {
                                                         />
                                                         {searchTerm && (
                                                             <Button variant="outline-secondary" onClick={() => setSearchTerm("")} style={{ border: "2px solid #8b5cf6" }}>
+                                                                <i className="fa-solid fa-times"></i>
+                                                            </Button>
+                                                        )}
+                                                    </InputGroup> */}
+
+
+                                                    <InputGroup style={{ maxWidth: "250px" }}>
+                                                        <InputGroup.Text
+                                                            style={{
+                                                                background: "#f3e9fc",
+                                                                borderColor: "#e9ecef",
+                                                                padding: "0.375rem 0.75rem"
+                                                            }}
+                                                        >
+                                                            <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                                                        </InputGroup.Text>
+
+                                                        <Form.Control
+                                                            placeholder="Search by title, ISBN, name..."
+                                                            value={searchTerm}
+                                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                                            style={{
+                                                                borderColor: "#e9ecef",
+                                                                fontSize: "0.875rem",
+                                                                padding: "0.375rem 0.75rem"
+                                                            }}
+                                                        />
+
+                                                        {searchTerm && (
+                                                            <Button
+                                                                variant="outline-secondary"
+                                                                onClick={() => setSearchTerm("")}
+                                                                style={{
+                                                                    border: "1px solid #d1d5db",
+                                                                    borderRadius: "0 6px 6px 0",
+                                                                    height: "38px"
+                                                                }}
+                                                            >
                                                                 <i className="fa-solid fa-times"></i>
                                                             </Button>
                                                         )}

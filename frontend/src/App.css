@@ -1673,3 +1673,32 @@ textarea.form-control[required] {
   font-size: 1.3rem;
   color: #ff6363;
 }
+
+
+/* Additional CSS for better styling */
+.library-card-preview {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%) !important;
+}
+
+.text-mono {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+}
+
+.barcode-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.barcode-container {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
