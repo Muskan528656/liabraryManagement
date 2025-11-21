@@ -27,64 +27,70 @@ const ModuleDetail = ({
   const [relatedData, setRelatedData] = useState({});
 
   useEffect(() => {
-    const tryLoadFromLocalStorage = () => {
-      try {
-        if (!id || !moduleApi) return false;
-        const key = `prefetch:${moduleApi}:${id}`;
-        const raw = localStorage.getItem(key);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setData(parsed);
-          localStorage.removeItem(key);
-          setLoading(false);
-          return true;
-        }
-      } catch (e) {
-        console.warn('Failed to load prefetch from localStorage', e);
-      }
-      return false;
-    };
+    console.log("ModuleDetail useEffect running with:", { id, moduleApi, moduleName });
 
     const loadData = async () => {
-      const loadedFromCache = tryLoadFromLocalStorage();
-      if (!loadedFromCache) {
+      try {
+        setLoading(true);
+
+        // First try to fetch main data
         await fetchData();
-      }
-      if (relatedModules.length > 0) {
-        await fetchRelatedData();
+
+        // Then fetch related data if needed
+        if (relatedModules.length > 0) {
+          await fetchRelatedData();
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadData();
-  }, []);
+    if (id && moduleApi) {
+      loadData();
+    } else {
+      console.error("Missing id or moduleApi:", { id, moduleApi });
+      setLoading(false);
+    }
+  }, [id, moduleApi, moduleLabel]); // Add dependencies
 
-  console.log("ModuleDetail moduleApi:", moduleApi);
-  console.log("ModuleDetail moduleName:", moduleName);
-  console.log("ModuleDetail moduleLabel:", moduleLabel);
+  console.log("ModuleDetail Props:", {
+    moduleApi,
+    moduleName,
+    moduleLabel,
+    fields,
+    id
+  });
+
+  console.log("Current Data State:", data);
+  console.log("Loading State:", loading);
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      console.log("Fetching data for:", { moduleApi, id });
+
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
 
-      console.log("API Response:", response);
+      console.log("Full API Response:", response);
 
-      if (response && response.data) {
-        if (response.data.success && response.data.data) {
+      if (response) {
+        // Handle different response formats
+        if (response.success && response.data) {
+          setData(response.data);
+        } else if (response.data && response.data.success && response.data.data) {
           setData(response.data.data);
-        } else if (response.data.id || (fields && fields.title && response.data[fields.title])) {
+        } else if (response.data) {
           setData(response.data);
-        } else if (Array.isArray(response.data) && response.data.length > 0) {
-          setData(response.data[0]);
-        } else if (response.data.id) {
-          setData(response.data);
+        } else if (response.id) {
+          setData(response);
         } else {
-          console.warn("Unexpected response format:", response.data);
-          setData(response.data)
+          console.warn("Unexpected response format:", response);
+          setData(response); // Set whatever we got
         }
       } else {
-        throw new Error("No data received from API");
+        throw new Error("No response received from API");
       }
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
@@ -92,8 +98,6 @@ const ModuleDetail = ({
         title: "Error",
         message: `Failed to fetch ${moduleLabel} details`,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -121,6 +125,9 @@ const ModuleDetail = ({
 
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
+
+    console.log(`Formatting field: ${field.key}, value:`, value, "type:", field.type);
+
     if (field.type === "date") {
       try {
         return new Date(value).toLocaleDateString();
@@ -203,26 +210,88 @@ const ModuleDetail = ({
       <Container fluid>
         <ScrollToTop />
         <Card>
-          <Card.Body>
-            <p>No data found</p>
-            <Button onClick={() => navigate(`/${moduleName}`)}>Back to List</Button>
+          <Card.Body className="text-center">
+            <h4>No Data Found</h4>
+            <p>Unable to load {moduleLabel} details.</p>
+            <Button variant="primary" onClick={() => navigate(`/${moduleName}`)}>
+              Back to List
+            </Button>
           </Card.Body>
         </Card>
       </Container>
     );
   }
 
-  const getImageUrl = () => {
-    if (imageUrl) return imageUrl;
-    if (imageField && data[imageField]) return data[imageField];
-    return null;
-  };
+  // Debug: Check what fields are available in data
+  console.log("Available data fields:", Object.keys(data));
+  console.log("Fields configuration:", fields);
 
   return (
     <Container fluid className="py-4">
       <ScrollToTop />
 
-      {/* Details Section */}
+      {/* Header Section with Title and Actions */}
+      <Row className="mb-4">
+        <Col>
+          <Card style={{
+            border: "none",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+            borderRadius: "12px",
+            overflow: "hidden"
+          }}>
+            <Card.Body style={{ padding: "20px 24px" }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h4 style={{ margin: 0, color: "#6f42c1" }}>
+                    {moduleLabel} Details
+                  </h4>
+                  <p style={{ margin: "8px 0 0 0", color: "#6c757d", fontSize: "14px" }}>
+                    ID: {id}
+                  </p>
+                </div>
+                <div>
+                  <Button variant="outline-primary" onClick={handleEdit} className="me-2">
+                    <i className="fa-solid fa-edit me-2"></i>
+                    Edit
+                  </Button>
+                  <Button variant="outline-danger" onClick={handleDelete}>
+                    <i className="fa-solid fa-trash me-2"></i>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row>
+        <Card>
+          <Card.Body style={{ textAlign: "center", padding: "24px" }}>
+            <h4>Your Data Title</h4>
+            <p>This is where your data will appear</p>
+
+            {data && (
+              <div>
+                <p><strong>ID:</strong> {data.id}</p>
+                <p><strong>Name:</strong> {data.name}</p>
+                <p><strong>Email:</strong> {data.email}</p>
+              </div>
+            )}
+
+            {fields && fields.details && data && (
+              <div>
+                {fields.details.map((field, index) => (
+                  <div key={index} style={{ marginBottom: "10px" }}>
+                    <strong>{field.label}:</strong> {data[field.key]}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </Row>
+      {/* Main Details Section */}
       {fields && fields.details && (
         <Row className="mb-4">
           <Col>
@@ -248,7 +317,7 @@ const ModuleDetail = ({
                     gap: "8px"
                   }}>
                     <i className="fa-solid fa-file-lines"></i>
-                    Details
+                    Basic Information
                   </h5>
                 </div>
 
@@ -256,23 +325,37 @@ const ModuleDetail = ({
                   <Row>
                     <Col md={6}>
                       <div className="detail-section">
-                        {fields.details.slice(0, Math.ceil(fields.details.length / 2)).map((field, index) => (
-                          <div key={index} className="detail-row">
-                            <div className="detail-label">{field.label}</div>
-                            <div className="detail-value">{formatValue(data[field.key], field)}</div>
-                          </div>
-                        ))}
+                        {fields.details.slice(0, Math.ceil(fields.details.length / 2)).map((field, index) => {
+                          const value = data[field.key];
+                          console.log(`Rendering field: ${field.key}, value:`, value);
+
+                          return (
+                            <div key={index} className="detail-row">
+                              <div className="detail-label">{field.label}</div>
+                              <div className="detail-value">
+                                {formatValue(value, field)}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </Col>
 
                     <Col md={6}>
                       <div className="detail-section">
-                        {fields.details.slice(Math.ceil(fields.details.length / 2)).map((field, index) => (
-                          <div key={index} className="detail-row">
-                            <div className="detail-label">{field.label}</div>
-                            <div className="detail-value">{formatValue(data[field.key], field)}</div>
-                          </div>
-                        ))}
+                        {fields.details.slice(Math.ceil(fields.details.length / 2)).map((field, index) => {
+                          const value = data[field.key];
+                          console.log(`Rendering field: ${field.key}, value:`, value);
+
+                          return (
+                            <div key={index} className="detail-row">
+                              <div className="detail-label">{field.label}</div>
+                              <div className="detail-value">
+                                {formatValue(value, field)}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </Col>
                   </Row>
