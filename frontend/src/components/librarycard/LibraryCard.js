@@ -998,84 +998,92 @@
 // export default LibraryCard;
 
 // components/librarycards/LibraryCard.js
+// LibraryCard.js
+// LibraryCard.js
 
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Container, Row, Col, Card, Button, Form, Modal, Alert, Dropdown } from "react-bootstrap";
+
 import DynamicCRUD from "../common/DynaminCrud";
 import { getLibraryCardConfig } from "./librarycardconfig";
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
-import { Modal, Button, Badge, Card, Row, Col } from "react-bootstrap";
 import JsBarcode from "jsbarcode";
-
 const LibraryCard = (props) => {
-  // State for barcode modal
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [barcodeError, setBarcodeError] = useState(null);
 
+  // Pehle base config lein
   const baseConfig = getLibraryCardConfig();
-
   const dataDependencies = baseConfig.dataDependencies || [];
-
   const { data, loading, error } = useDataManager(dataDependencies, props);
 
   useEffect(() => {
     if (showBarcodeModal && selectedCard) {
-      initializeModalBarcode();
+      const timer = setTimeout(() => {
+        initializeModalBarcode();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [showBarcodeModal, selectedCard]);
 
+  // ✅ YE FUNCTION THEEK SE BANAYEIN
+  const handleModalOpen = (card) => {
+    console.log("Opening modal for card:", card);
+    setSelectedCard(card);
+    setBarcodeError(null);
+    setShowBarcodeModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowBarcodeModal(false);
+    setSelectedCard(null);
+    setBarcodeError(null);
+  };
+
   const initializeModalBarcode = () => {
-    if (selectedCard && showBarcodeModal) {
-      const barcodeId = `barcode-modal-${selectedCard.id}`;
+    if (!selectedCard || !showBarcodeModal) return;
 
-      setTimeout(() => {
-        try {
-          const barcodeElement = document.getElementById(barcodeId);
-          if (barcodeElement && !barcodeElement.hasAttribute('data-barcode-generated')) {
-            let isbn13Number;
+    const barcodeId = `barcode-modal-${selectedCard.id}`;
+    
+    setTimeout(() => {
+      const barcodeElement = document.getElementById(barcodeId);
+      if (!barcodeElement) {
+        setBarcodeError("Barcode element not found");
+        return;
+      }
 
-            try {
-              if (baseConfig.customHandlers && baseConfig.customHandlers.generateISBN13Number) {
-                isbn13Number = baseConfig.customHandlers.generateISBN13Number(selectedCard);
-              } else {
-                isbn13Number = generateDefaultISBN(selectedCard);
-              }
+      try {
+        barcodeElement.innerHTML = '';
+        const isbn13Number = generateDefaultISBN(selectedCard);
+        
+        JsBarcode(barcodeElement, isbn13Number, {
+          format: "EAN13",
+          width: 2,
+          height: 80,
+          displayValue: true,
+        });
 
-              if (!/^\d+$/.test(isbn13Number) || isbn13Number.length !== 13) {
-                throw new Error("Invalid ISBN format");
-              }
-            } catch (error) {
-              console.warn("Using fallback ISBN generation for modal");
-              isbn13Number = generateDefaultISBN(selectedCard);
-            }
-
-            JsBarcode(`#${barcodeId}`, isbn13Number, {
-              format: "EAN13",
-              width: 2,
-              height: 80,
-              displayValue: true,
-              font: "Arial",
-              textAlign: "center",
-              textMargin: 2,
-              fontSize: 14,
-              background: "#ffffff",
-              lineColor: "#000000",
-              margin: 10
-            });
-
-            barcodeElement.setAttribute('data-barcode-generated', 'true');
-          }
-        } catch (error) {
-          console.error("Error generating barcode in modal:", error);
-        }
-      }, 100);
-    }
+        setBarcodeError(null);
+      } catch (error) {
+        setBarcodeError(error.message);
+      }
+    }, 300);
   };
 
   const generateDefaultISBN = (card) => {
-    const baseNumber = "978" + (card.id?.replace(/-/g, '').substring(0, 9) || "000000000").padEnd(9, '0');
-    const isbn12 = (baseNumber + "000").slice(0, 12);
-    return isbn12 + calculateCheckDigit(isbn12);
+    try {
+      const cardId = card.id || "000000000";
+      const numericPart = cardId.replace(/\D/g, '').padEnd(9, '0').substring(0, 9);
+      const baseNumber = "978" + numericPart;
+      const isbn12 = (baseNumber + "000").slice(0, 12);
+      const checkDigit = calculateCheckDigit(isbn12);
+      return isbn12 + checkDigit;
+    } catch (error) {
+      return "9780000000000";
+    }
   };
 
   const calculateCheckDigit = (isbn12) => {
@@ -1084,15 +1092,13 @@ const LibraryCard = (props) => {
       const digit = parseInt(isbn12[i]);
       sum += (i % 2 === 0) ? digit : digit * 3;
     }
-    const checkDigit = (10 - (sum % 10)) % 10;
-    return checkDigit.toString();
+    return ((10 - (sum % 10)) % 10).toString();
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-GB');
+      return new Date(dateString).toLocaleDateString('en-GB');
     } catch {
       return 'Invalid Date';
     }
@@ -1102,150 +1108,108 @@ const LibraryCard = (props) => {
     return card.id ? `LC-${card.id.substring(0, 8).toUpperCase()}` : 'N/A';
   };
 
-  if (loading) {
-    return <Loader message="Loading library cards data..." />;
-  }
+  if (loading) return <Loader message="Loading library cards data..." />;
+  if (error) return (
+    <div className="alert alert-danger m-3">
+      <h4>Error Loading Library Cards</h4>
+      <p>{error.message}</p>
+      <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>
+        Retry
+      </button>
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="alert alert-danger m-3">
-        <h4>Error Loading Library Cards</h4>
-        <p>{error.message || "Unknown error occurred"}</p>
-        <button
-          className="btn btn-primary mt-2"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  // Merge data safely
-  const allData = {
-    ...(data || {}),
-    ...props
+  // ✅ DATA MERGE KARTE TIME CUSTOM HANDLERS THEEK SE PASS KAREIN
+  const allData = { 
+    ...(data || {}), 
+    ...props 
   };
 
-  // Get final config with fallbacks
-  const finalConfig = getLibraryCardConfig(allData);
-
-  const customHandlers = finalConfig.customHandlers || {};
-
-  const enhancedConfig = {
-    ...finalConfig,
+  // ✅ FINAL CONFIG BANATE TIME CUSTOM HANDLERS DIRECT PASS KAREIN
+  const finalConfig = {
+    ...getLibraryCardConfig(allData),
+    // ✅ YE LINE ADD KAREIN - customHandlers ko directly pass karein
     customHandlers: {
-      generateCardNumber: customHandlers.generateCardNumber || generateCardNumber,
-      formatDateToDDMMYYYY: customHandlers.formatDateToDDMMYYYY || formatDate,
-      generateISBN13Number: customHandlers.generateISBN13Number || generateDefaultISBN,
-      calculateISBN13CheckDigit: customHandlers.calculateISBN13CheckDigit || calculateCheckDigit,
-      handleBarcodePreview: (card) => {
-        setSelectedCard(card);
-        setShowBarcodeModal(true);
-      }
+      ...getLibraryCardConfig(allData).customHandlers,
+      handleBarcodePreview: handleModalOpen, // ✅ Ye function directly pass karein
+      generateCardNumber: generateCardNumber,
+      formatDateToDDMMYYYY: formatDate,
+      generateISBN13Number: generateDefaultISBN,
+      calculateISBN13CheckDigit: calculateCheckDigit,
     }
   };
 
+  console.log("Final Config with handlers:", finalConfig.customHandlers);
+
   return (
     <>
-      <DynamicCRUD {...enhancedConfig} />
+      <DynamicCRUD {...finalConfig} />
 
-      {/* Barcode Preview Modal */}
-      <Modal show={showBarcodeModal} onHide={() => setShowBarcodeModal(false)} size="lg" centered>
-        <Modal.Header closeButton className="text-dark">
+      <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+        <Modal.Header closeButton>
           <Modal.Title>
             <i className="fa-solid fa-barcode me-2"></i>
-            Library Card Details
+            Library Card Barcode
           </Modal.Title>
         </Modal.Header>
-
-        <Modal.Body className="text-center">
+        <Modal.Body>
           {selectedCard && (
-            <Row className="align-items-center">
-              <Col md={12}>
-                <Card className="h-100">
-                  <Card.Header className="bg-light fw-bold">
-                    <i className="fa-solid fa-user me-2"></i>
-                    Member Information
-                  </Card.Header>
-                  <Card.Body>
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Card Number:</Col>
-                      <Col lg={6} className="text-end text-primary fw-bold">
-                        {enhancedConfig.customHandlers.generateCardNumber(selectedCard)}
-                      </Col>
-                    </Row>
+            <Card>
+              <Card.Header className="bg-light fw-bold">
+                <i className="fa-solid fa-user me-2"></i>
+                Member Information
+              </Card.Header>
+              <Card.Body>
+                <Row className="mb-2">
+                  <Col lg={6} className="text-start fw-medium">Card Number:</Col>
+                  <Col lg={6} className="text-end text-primary fw-bold">
+                    {generateCardNumber(selectedCard)}
+                  </Col>
+                </Row>
 
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Member Name:</Col>
-                      <Col lg={6} className="text-end">
-                        {selectedCard.user_name || 'N/A'}
-                      </Col>
-                    </Row>
+                <Row className="mb-2">
+                  <Col lg={6} className="text-start fw-medium">Member Name:</Col>
+                  <Col lg={6} className="text-end">
+                    {selectedCard.user_name || 'N/A'}
+                  </Col>
+                </Row>
 
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Email:</Col>
-                      <Col lg={6} className="text-end text-truncate">
-                        {selectedCard.user_email || 'N/A'}
-                      </Col>
-                    </Row>
+                <Row className="mb-2">
+                  <Col lg={6} className="text-start fw-medium">Email:</Col>
+                  <Col lg={6} className="text-end">
+                    {selectedCard.user_email || 'N/A'}
+                  </Col>
+                </Row>
 
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Issue Date:</Col>
-                      <Col lg={6} className="text-end">
-                        {enhancedConfig.customHandlers.formatDateToDDMMYYYY(selectedCard.issue_date)}
-                      </Col>
-                    </Row>
-
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Expiry Date:</Col>
-                      <Col lg={6} className={`text-end ${new Date(selectedCard.expiry_date) < new Date() ? 'text-danger fw-bold' : ''}`}>
-                        {selectedCard.expiry_date ? enhancedConfig.customHandlers.formatDateToDDMMYYYY(selectedCard.expiry_date) : 'N/A'}
-                      </Col>
-                    </Row>
-
-                    <Row className="mb-2">
-                      <Col lg={6} className="text-start fw-medium">Status:</Col>
-                      <Col lg={6} className="text-end">
-                        <Badge bg={selectedCard.is_active ? "success" : "secondary"}>
-                          {selectedCard.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </Col>
-                    </Row>
-
-                    <Row>
-                      <div className="barcode-container bg-light p-3 rounded border">
-                        <svg
-                          id={`barcode-modal-${selectedCard.id}`}
-                          className="barcode-svg"
-                        ></svg>
-                      </div>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+                <Row className="mb-3">
+                  <Col lg={6} className="text-start fw-medium">Issue Date:</Col>
+                  <Col lg={6} className="text-end">
+                    {formatDate(selectedCard.issue_date)}
+                  </Col>
+                </Row>
+                
+                {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
+                
+                <div className="barcode-container bg-light p-3 rounded border text-center">
+                  <svg
+                    id={`barcode-modal-${selectedCard.id}`}
+                    style={{ width: '100%', height: '80px' }}
+                  ></svg>
+                </div>
+              </Card.Body>
+            </Card>
           )}
         </Modal.Body>
-
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowBarcodeModal(false)}>
+          <Button variant="secondary" onClick={handleModalClose}>
             <i className="fa-solid fa-times me-1"></i>
             Close
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              window.print();
-            }}
-          >
-            <i className="fa-solid fa-print me-1"></i>
-            Print Card
           </Button>
         </Modal.Footer>
       </Modal>
     </>
   );
 };
+
 
 export default LibraryCard;

@@ -649,7 +649,6 @@
 
 
 
-// components/categories/Category.js
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getCategoryConfig } from "./categoryconfig";

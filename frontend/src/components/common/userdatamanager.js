@@ -11,13 +11,13 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
-        const dataMap = { ...propsData }; // Start with props data
+        const dataMap = { ...propsData }; 
 
-        // Extract API endpoints from dependencies
+   
         const apiEndpoints = Object.values(dependencies)
           .filter(endpoint => typeof endpoint === 'string' && !propsData[endpoint]);
         
-        // Fetch only missing data
+      
         const promises = apiEndpoints.map(async (endpoint) => {
           const api = new DataApi(endpoint);
           const response = await api.fetchAll();
@@ -26,7 +26,7 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
 
         const results = await Promise.all(promises);
         
-        // Merge fetched data with props data
+       
         results.forEach(({ endpoint, data }) => {
           dataMap[endpoint] = data;
         });

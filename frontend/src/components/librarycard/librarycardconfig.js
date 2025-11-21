@@ -60,82 +60,69 @@ const generateCardNumber = (card) => {
     return `LIB${uuidPart}`;
 };
 
-export const getLibraryCardConfig = (externalData = {}, props = {}) => {
-    // Extract custom handlers from props if available
-    const {
-        handleBarcodePreview = () => console.warn('Barcode preview handler not provided'),
-        ...otherHandlers
-    } = props.customHandlers || {};
+export const getLibraryCardConfig = (externalData = {}) => {
+    // Extract custom handlers from externalData safely
+    const customHandlers = externalData.customHandlers || {};
+
+    const handleBarcodePreview = customHandlers.handleBarcodePreview ||
+        ((card) => console.warn('Barcode preview handler not provided', card));
+
+    // Default columns define karein
+    const defaultColumns = [
+        {
+            field: "card_number",
+            label: "Card Number",
+            sortable: true,
+            render: (value, card) => (
+                <div>
+                    <strong style={{ fontFamily: 'monospace', fontSize: '14px' }}>
+                        {generateCardNumber(card)}
+                    </strong>
+                    <div style={{ fontSize: '11px', color: '#666' }}>
+                        ISBN-13 Format
+                    </div>
+                </div>
+            )
+        },
+        { field: "user_name", label: "User Name", sortable: true },
+        { field: "user_email", label: "Email", sortable: true },
+        {
+            field: "issue_date",
+            label: "Issue Date",
+            sortable: true,
+            render: (value) => formatDateToDDMMYYYY(value)
+        },
+        {
+            field: "expiry_date",
+            label: "Expiry Date",
+            sortable: true,
+            render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
+        },
+        {
+            field: "is_active",
+            label: "Status",
+            sortable: true,
+            render: (value) => (
+                <Badge bg={value ? "success" : "secondary"}>
+                    {value ? "Active" : "Inactive"}
+                </Badge>
+            )
+        },
+
+    ];
 
     return {
         moduleName: "librarycards",
         moduleLabel: "Library Card",
         apiEndpoint: "librarycard",
+        // Ensure columns array always exists
+        columns: defaultColumns,
         initialFormData: {
             user_id: "",
             issue_date: new Date().toISOString().split('T')[0],
             expiry_date: "",
             is_active: true,
         },
-        columns: [
-            {
-                field: "card_number",
-                label: "Card Number",
-                sortable: true,
-                render: (value, card) => (
-                    <div>
-                        <strong style={{ fontFamily: 'monospace', fontSize: '14px' }}>
-                            {generateCardNumber(card)}
-                        </strong>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                            ISBN-13 Format
-                        </div>
-                    </div>
-                )
-            },
-            { field: "user_name", label: "User Name", sortable: true },
-            { field: "user_email", label: "Email", sortable: true },
-            {
-                field: "issue_date",
-                label: "Issue Date",
-                sortable: true,
-                render: (value) => formatDateToDDMMYYYY(value)
-            },
-            {
-                field: "expiry_date",
-                label: "Expiry Date",
-                sortable: true,
-                render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
-            },
-            {
-                field: "is_active",
-                label: "Status",
-                sortable: true,
-                render: (value) => (
-                    <Badge bg={value ? "success" : "secondary"}>
-                        {value ? "Active" : "Inactive"}
-                    </Badge>
-                )
-            },
-            {
-                field: "barcode",
-                label: "Barcode",
-                sortable: false,
-                render: (value, card) => (
-                    <div className="d-flex align-items-center">
-                        <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => handleBarcodePreview(card)}
-                            title="View Barcode"
-                        >
-                            <i className="fa-solid fa-eye me-1"></i>
-                            View Barcode
-                        </Button>
-                    </div>
-                )
-            }
-        ],
         formFields: [
             {
                 name: "user_id",
@@ -208,10 +195,7 @@ export const getLibraryCardConfig = (externalData = {}, props = {}) => {
             generateISBN13Number,
             calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
-
-            handleBarcodePreview: () => {
-                console.warn('Barcode preview handler not implemented');
-            }
+            handleBarcodePreview
         }
     };
 };
