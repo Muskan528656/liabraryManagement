@@ -1,79 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Badge, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert} from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
 
 const Company = () => {
   const [Company, setCompany] = useState({
-    max_books_per_card: 1,
-    duration_days: 15,
-    fine_per_day: 10,
-    renew_limit: 2,
-    max_issue_per_day: 1,
-    lost_book_fine_percentage: 100
+    name: "",
+    tenantcode: "",
+    userlicenses: 0,
+    isactive: false,
+    systememail: "",
+    adminemail: "",
+    logourl: "",
+    sidebarbgurl: "",
+    sourceschema: "",
+    city: "",
+    street: "",
+    pincode: "",
+    state: "",
+    country: "",
+    platform_name: "",
+    platform_api_endpoint: "",
+    is_external: false,
+    has_wallet: false,
+    currency: "",
+    time_zone:"",
   });
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [twoFactorAuth, setTwoFactorAuth] = useState('text');
   const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
+  const [alertMessage, setAlertMessage] = useState("");
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setAlertMessage('New password and confirm password do not match!');
-      setShowAlert(true);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setAlertMessage('Password must be at least 6 characters long!');
-      setShowAlert(true);
-      return;
-    }
-
-    setAlertMessage('Password changed successfully! You will be logged out of all devices.');
-    setShowAlert(true);
-
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  };
-
-  const handleTwoFactorChange = (method) => {
-    setTwoFactorAuth(method);
-  };
-
-  // Fetch settings from backend
   useEffect(() => {
     fetchCompany();
   }, []);
 
+  function getCompanyIdFromToken() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.companyid || payload.companyid || null;
+  }
+
   const fetchCompany = async () => {
     try {
-      const settingsApi = new DataApi('librarysettings');
-      const response = await settingsApi.get('/all');
-      if (response.data && response.data.success) {
-        const Company = response.data.data;
-        // Convert key-value pairs to object
-        const settingsObj = {
-          max_books_per_card: parseInt(Company.max_books_per_card || 1),
-          duration_days: parseInt(Company.duration_days || 15),
-          fine_per_day: parseInt(Company.fine_per_day || 10),
-          renew_limit: parseInt(Company.renew_limit || 2),
-          max_issue_per_day: parseInt(Company.max_issue_per_day || 1),
-          lost_book_fine_percentage: parseInt(Company.lost_book_fine_percentage || 100)
-        };
-        setCompany(settingsObj);
+      const companyid = getCompanyIdFromToken();
+
+      if (!companyid) {
+        console.error("Company ID not found in token");
+        return;
+      }
+
+      const companyApi = new DataApi("company");
+      const response = await companyApi.fetchById(companyid);
+
+      if (response.data) {
+        setCompany(response.data);
+        console.log("Company:", response.data);
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
-
+      console.error("Error fetching company by ID:", error);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: "Failed to fetch company details",
+      });
     }
   };
 
@@ -84,41 +76,26 @@ const Company = () => {
 
   const handleCompanySave = async () => {
     try {
-      const settingsApi = new DataApi('librarysettings');
+      const companyId = getCompanyIdFromToken();
+      const companyApi = new DataApi("company");
 
-      const settingsArray = [
-        { setting_key: 'max_books_per_card', setting_value: tempCompany.max_books_per_card.toString() },
-        { setting_key: 'duration_days', setting_value: tempCompany.duration_days.toString() },
-        { setting_key: 'fine_per_day', setting_value: tempCompany.fine_per_day.toString() },
-        { setting_key: 'renew_limit', setting_value: tempCompany.renew_limit.toString() },
-        { setting_key: 'max_issue_per_day', setting_value: tempCompany.max_issue_per_day.toString() },
-        { setting_key: 'lost_book_fine_percentage', setting_value: tempCompany.lost_book_fine_percentage.toString() }
-      ];
+      const response = await companyApi.update(tempCompany, companyId);
 
-      const response = await settingsApi.put('/bulk', { settings: settingsArray });
-
-      if (response.data && response.data.success) {
+      if (response.data) {
         setCompany({ ...tempCompany });
         setIsEditingCompany(false);
-        setAlertMessage('Library settings updated successfully!');
+        setAlertMessage("Company details updated successfully!");
         setShowAlert(true);
 
-        PubSub.publish('RECORD_SAVED_TOAST', {
-          title: 'Success',
-          message: 'Library settings updated successfully!'
+        PubSub.publish("RECORD_SAVED_TOAST", {
+          title: "Success",
+          message: "Company details updated successfully!",
         });
-      } else {
-        throw new Error('Failed to update settings');
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
-      setAlertMessage('Failed to update settings. Please try again.');
+      console.error("Error updating company:", error);
+      setAlertMessage("Failed to update company details.");
       setShowAlert(true);
-
-      PubSub.publish('RECORD_ERROR_TOAST', {
-        title: 'Error',
-        message: 'Failed to update library settings'
-      });
     }
   };
 
@@ -127,25 +104,22 @@ const Company = () => {
     setTempCompany({ ...Company });
   };
 
-  const handleSettingChange = (key, value) => {
-    setTempCompany(prev => ({
+  const handleCompanyChange = (key, value) => {
+    setTempCompany((prev) => ({
       ...prev,
-      [key]: parseInt(value) || value
+      [key]: value,
     }));
   };
 
   return (
     <Container fluid className="py-4">
       <Row className="justify-content-center">
-        <Col lg={10} xl={8}>
-          <div className="mb-4">
-            <h2 className="fw-bold mb-1" style={{ color: '#6f42c1' }}>Company</h2>
-            <p className="text-muted">Manage your account settings and library configuration</p>
-          </div>
-
+        <Col lg={12} xl={12}>
           {showAlert && (
             <Alert
-              variant={alertMessage.includes('successfully') ? 'success' : 'danger'}
+              variant={
+                alertMessage.includes("successfully") ? "success" : "danger"
+              }
               dismissible
               onClose={() => setShowAlert(false)}
               className="mb-4"
@@ -153,22 +127,29 @@ const Company = () => {
               {alertMessage}
             </Alert>
           )}
-
-          {/* Library Configuration Section */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5 className="fw-bold mb-0" style={{ color: '#6f42c1' }}>Library Configuration</h5>
+          <Card className="border-0 shadow-sm">
+            <Card.Body className="">
+              <div
+                className="d-flex justify-content-between align-items-center mb-4 p-4"
+                style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "10px",
+                }}
+              >
+                <h2 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
+                  Company
+                </h2>
                 {!isEditingCompany ? (
                   <Button
                     variant="outline-primary"
                     onClick={handleCompanyEdit}
                     style={{
-                      border: '2px solid #6f42c1',
-                      color: '#6f42c1',
-                      borderRadius: '8px',
-                      padding: '8px 20px',
-                      fontWeight: '600'
+                      border: "2px solid var(--primary-color)",
+                      color: "var(--primary-color)",
+                      borderRadius: "8px",
+                      padding: "8px 20px",
+                      fontWeight: "600",
                     }}
                   >
                     <i className="fa-solid fa-edit me-2"></i>
@@ -176,216 +157,381 @@ const Company = () => {
                   </Button>
                 ) : (
                   <div className="d-flex gap-2">
-                    <Button
-                      variant="outline-success"
+                    <button
+                    className="custom-btn-primary"
                       onClick={handleCompanySave}
-                      style={{
-                        border: '2px solid #28a745',
-                        color: '#28a745',
-                        borderRadius: '8px',
-                        padding: '8px 20px',
-                        fontWeight: '600'
-                      }}
                     >
                       <i className="fa-solid fa-check me-2"></i>
                       Save
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
+                    </button>
+                    <button
+                      className="custom-btn-secondary "
                       onClick={handleCompanyCancel}
-                      style={{
-                        border: '2px solid #6c757d',
-                        color: '#6c757d',
-                        borderRadius: '8px',
-                        padding: '8px 20px',
-                        fontWeight: '600'
-                      }}
                     >
                       <i className="fa-solid fa-times me-2"></i>
                       Cancel
-                    </Button>
+                    </button>
                   </div>
                 )}
               </div>
-
-              <p className="text-muted mb-4">
-                Configure library rules and policies for book issuance and fines.
-              </p>
-
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Maximum Books Per Card
-                      <Badge bg="info" className="ms-2">Current: {Company.max_books_per_card}</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
-                      <Form.Control
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={tempCompany.max_books_per_card}
-                        onChange={(e) => handleSettingChange('max_books_per_card', e.target.value)}
+              <Row className="mt-4">
+                <Col md={12} className="mb-4">
+                  <h5
+                    className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                    style={{
+                      color: "var(--primary-color)",
+                      background: "var(--header-highlighter-color)",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    Company Information
+                  </h5>
+                </Col>
+                <Row className="px-5">
+                  <Col md={9}>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Company Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={isEditingCompany ? tempCompany.name : Company.name}
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("name", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Tenant Code</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.tenantcode
+                                : Company.tenantcode
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("tenantcode", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">User Licenses</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.userlicenses
+                                : Company.userlicenses
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("userlicenses", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">System Email</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.systememail
+                                : Company.systememail
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("systememail", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Admin Email</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.adminemail
+                                : Company.adminemail
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("adminemail", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Label className="fw-semibold">Is Active</Form.Label>
+                        <div
+                          className="d-flex align-items-center justify-content-between p-2 border rounded"
+                          style={{
+                            background: "var(--header-highlighter-color)",
+                            borderRadius: "10px",
+                            opacity: isEditingCompany ? 1 : 0.6,
+                            cursor: isEditingCompany ? "pointer" : "not-allowed",
+                            transition: "0.2s",
+                          }}
+                        >
+                          <Form.Check
+                            type="switch"
+                            checked={tempCompany.isactive}
+                            disabled={!isEditingCompany}
+                            onChange={(e) =>
+                              handleCompanyChange("isactive", e.target.checked)
+                            }
+                            style={{
+                              transform: "scale(1.1)",
+                            }}
+                          />
+                        </div>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Currency</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.currency
+                                : Company.currency
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("currency", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Time Zone</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.time_zone
+                                : Company.time_zone
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("time_zone", e.target.value)
+                            }
+                            style={{
+                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  </Col>
+                  <Col md={3} >
+                    <Form.Label className="fw-semibold">Company Logo</Form.Label>
+                    <div className="d-flex align-items-center justify-content-center ">
+                      <div
+                        className="border border-dashed d-flex align-items-center justify-content-center position-relative overflow-hidden"
                         style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
+                          width: "250px",
+                          height: "250px",
+                          cursor: isEditingCompany ? "pointer" : "default",
+                          opacity: isEditingCompany ? 1 : 0.8,
+                        }}
+                        onClick={() => {
+                          if (isEditingCompany) {
+                            document.getElementById("companyLogoInput").click();
+                          }
+                        }}
+                      >
+                        <img
+                          src={
+                            tempCompany.logourl
+                              ? tempCompany.logourl
+                              : Company?.logourl
+                              ? `${Company.logourl}?${new Date().getTime()}`
+                              : "/default-logo.png"
+                          }
+                          alt="Company Logo"
+                          className="w-100 h-100"
+                          style={{
+                            objectFit: "cover",
+                          }}
+                        />
+
+                        {isEditingCompany && (
+                          <div className="position-absolute bottom-0 start-0 w-100 text-center bg-dark bg-opacity-50 text-white small py-1">
+                            Click to change
+                          </div>
+                        )}
+                      </div>
+                      {isEditingCompany && (
+                        <Form.Control
+                          type="file"
+                          accept="image/*"
+                          id="companyLogoInput"
+                          className="d-none"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const previewUrl = URL.createObjectURL(file);
+                              handleCompanyChange("logourl", previewUrl);
+                            }
+                          }}
+                        />
+                      )}
+                    </div>
+                  </Col>
+                </Row>
+              </Row>
+
+              <Row className="mt-4">
+                <Col md={12} className="mb-4">
+                  <h5
+                    className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                    style={{
+                      color: "var(--primary-color)",
+                      background: "var(--header-highlighter-color)",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    Address Information
+                  </h5>
+                </Col>
+                <Row className="px-5">
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Country</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={
+                          isEditingCompany ? tempCompany.country : Company.country
+                        }
+                        readOnly={!isEditingCompany}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("country", e.target.value)
+                        }
+                        style={{
+                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">{Company.max_books_per_card} books</span>
-                        <small className="text-muted d-block mt-1">Maximum number of books that can be issued on one   Library Member</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Book  Issue (Days)
-                      <Badge bg="info" className="ms-2">Current: {Company.duration_days}</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
+                    </Form.Group>
+                  </Col>
+                   <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">State</Form.Label>
                       <Form.Control
-                        type="number"
-                        min="1"
-                        max="30"
-                        value={tempCompany.duration_days}
-                        onChange={(e) => handleSettingChange('duration_days', e.target.value)}
+                        type="text"
+                        value={
+                          isEditingCompany ? tempCompany.state : Company.state
+                        }
+                        readOnly={!isEditingCompany}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("state", e.target.value)
+                        }
                         style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
+                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">{Company.duration_days} days</span>
-                        <small className="text-muted d-block mt-1">Number of days a book can be issued for</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Fine Per Day (₹)
-                      <Badge bg="info" className="ms-2">Current: ₹{Company.fine_per_day}</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">City</Form.Label>
                       <Form.Control
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={tempCompany.fine_per_day}
-                        onChange={(e) => handleSettingChange('fine_per_day', e.target.value)}
+                        type="text"
+                        value={isEditingCompany ? tempCompany.city : Company.city}
+                        readOnly={!isEditingCompany}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("city", e.target.value)
+                        }
                         style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
+                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">₹{Company.fine_per_day} per day</span>
-                        <small className="text-muted d-block mt-1">Fine amount for each day after due date</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Renew Limit
-                      <Badge bg="info" className="ms-2">Current: {Company.renew_limit}</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Pincode</Form.Label>
                       <Form.Control
-                        type="number"
-                        min="0"
-                        max="5"
-                        value={tempCompany.renew_limit}
-                        onChange={(e) => handleSettingChange('renew_limit', e.target.value)}
+                        type="text"
+                        value={
+                          isEditingCompany ? tempCompany.pincode : Company.pincode
+                        }
+                        readOnly={!isEditingCompany}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("pincode", e.target.value)
+                        }
                         style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
+                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">{Company.renew_limit} times</span>
-                        <small className="text-muted d-block mt-1">Maximum number of times a book can be renewed</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Max Issues Per Day
-                      <Badge bg="info" className="ms-2">Current: {Company.max_issue_per_day}</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
-                      <Form.Control
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={tempCompany.max_issue_per_day}
-                        onChange={(e) => handleSettingChange('max_issue_per_day', e.target.value)}
-                        style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
-                        }}
-                      />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">{Company.max_issue_per_day} books/day</span>
-                        <small className="text-muted d-block mt-1">Maximum books that can be issued in one day per user</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">
-                      Lost Book Fine (%)
-                      <Badge bg="info" className="ms-2">Current: {Company.lost_book_fine_percentage}%</Badge>
-                    </Form.Label>
-                    {isEditingCompany ? (
-                      <Form.Control
-                        type="number"
-                        min="0"
-                        max="200"
-                        value={tempCompany.lost_book_fine_percentage}
-                        onChange={(e) => handleSettingChange('lost_book_fine_percentage', e.target.value)}
-                        style={{
-                          border: '2px solid #e9ecef',
-                          borderRadius: '8px',
-                          padding: '10px'
-                        }}
-                      />
-                    ) : (
-                      <div className="p-3 border rounded bg-light">
-                        <span className="fw-bold text-primary">{Company.lost_book_fine_percentage}% of book price</span>
-                        <small className="text-muted d-block mt-1">Fine for lost books as percentage of book price</small>
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
+                    </Form.Group>
+                  </Col>
+                </Row>  
               </Row>
             </Card.Body>
           </Card>
-
-          {/* Change Password Section */}
-
         </Col>
       </Row>
     </Container>
