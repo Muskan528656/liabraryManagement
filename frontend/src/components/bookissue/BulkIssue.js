@@ -242,7 +242,6 @@ const BulkIssue = () => {
     data: c,
   }));
 
-  // --- Custom Styles for React Select to match theme ---
   const customSelectStyles = {
     control: (base) => ({
       ...base,
