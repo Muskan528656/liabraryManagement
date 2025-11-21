@@ -1,9 +1,8 @@
-// pages/AuthorDetailPage.js
 import React from "react";
 import { useParams } from "react-router-dom";
 import ModuleDetail from "../common/ModuleDetail";
 
-const AuthorDetail = () => {
+const CategoryDetail = () => {
   const { id } = useParams();
   console.log("AuthorDetail id:", id);
   return (
@@ -23,4 +22,5 @@ const AuthorDetail = () => {
   );
 };
 
-export default AuthorDetail;
+export default CategoryDetail;
+

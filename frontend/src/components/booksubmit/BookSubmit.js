@@ -7446,14 +7446,14 @@ const BookSubmit = () => {
             width: 250,
             render: (value, record) => (
                 <a
-                    href={`/books/${record.book_id}`}
+                    href={`/book/${record.book_id}`}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
                             localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(record));
                         } catch (err) { }
-                        navigate(`/books/${record.book_id}`, { state: record });
+                        navigate(`/book/${record.book_id}`, { state: record });
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
@@ -7461,7 +7461,7 @@ const BookSubmit = () => {
                         try {
                             localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(record));
                         } catch (err) { }
-                        window.open(`/books/${record.book_id}`, '_blank');
+                        window.open(`/book/${record.book_id}`, '_blank');
                     }}
                     style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
                     onMouseEnter={(e) => {
@@ -7577,14 +7577,14 @@ const BookSubmit = () => {
             width: 250,
             render: (value, record) => (
                 <a
-                    href={`/books/${record.book_id}`}
+                    href={`/book/${record.book_id}`}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         try {
                             localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(record));
                         } catch (err) { }
-                        navigate(`/books/${record.book_id}`, { state: record });
+                        navigate(`/book/${record.book_id}`, { state: record });
                     }}
                     onContextMenu={(e) => {
                         e.preventDefault();
@@ -7592,7 +7592,7 @@ const BookSubmit = () => {
                         try {
                             localStorage.setItem(`prefetch:book:${record.book_id}`, JSON.stringify(record));
                         } catch (err) { }
-                        window.open(`/books/${record.book_id}`, '_blank');
+                        window.open(`/book/${record.book_id}`, '_blank');
                     }}
                     style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
                     onMouseEnter={(e) => {
@@ -7947,10 +7947,10 @@ const BookSubmit = () => {
                                                             <strong className="small">Title:</strong>
                                                             <div className="text-secondary">
                                                                 <a
-                                                                    href={`/books/${book.id}`}
+                                                                    href={`/book/${book.id}`}
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
-                                                                        navigate(`/books/${book.id}`);
+                                                                        navigate(`/book/${book.id}`);
                                                                     }}
                                                                     style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600 }}
                                                                     onMouseEnter={(e) => {

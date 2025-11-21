@@ -25,7 +25,7 @@ const BookDetail = () => {
 
   return (
     <ModuleDetail
-      moduleName="books"
+      moduleName="book"
       moduleApi="book"
       moduleLabel="Book"
       fields={fields}

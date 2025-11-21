@@ -26,7 +26,7 @@ const ModuleDetail = ({
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
- console.log('moduleName' , moduleName)
+ console.log('moduleNameFromUrl' , moduleNameFromUrl)
   useEffect(() => {
     const tryLoadFromLocalStorage = () => {
       try {
@@ -47,14 +47,22 @@ const ModuleDetail = ({
       return false;
     };
 
-    const loadedFromCache = tryLoadFromLocalStorage();
-    if (!loadedFromCache) {
-      fetchData();
-    }
-    if (relatedModules.length > 0) {
-      fetchRelatedData();
-    }
-  }, [id]);
+    const loadData = async () => {
+      const loadedFromCache = tryLoadFromLocalStorage();
+      if (!loadedFromCache) {
+        await fetchData();
+      }
+      if (relatedModules.length > 0) {
+        await fetchRelatedData();
+      }
+    };
+
+    loadData();
+  }, []);
+
+  console.log("ModuleDetail moduleApi:", moduleApi);
+  console.log("ModuleDetail moduleName:", moduleName);
+  console.log("ModuleDetail moduleLabel:", moduleLabel);
 
   const fetchData = async () => {
     try {
@@ -62,8 +70,10 @@ const ModuleDetail = ({
       console.log('moduleNameFromUrl' , moduleNameFromUrl)
       const api = new DataApi(moduleNameFromUrl);
       const response = await api.fetchById(id);
-      console.log('response' , response)
-      if (response.data) {
+
+      console.log("API Response:", response);
+
+      if (response && response.data) {
         if (response.data.success && response.data.data) {
           setData(response.data.data);
         } else if (response.data.id || (fields && fields.title && response.data[fields.title])) {
@@ -73,10 +83,11 @@ const ModuleDetail = ({
         } else if (response.data.id) {
           setData(response.data);
         } else {
-          throw new Error("Invalid response format");
+          console.warn("Unexpected response format:", response.data);
+          setData(response.data)
         }
       } else {
-        throw new Error("No data received");
+        throw new Error("No data received from API");
       }
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
@@ -96,7 +107,7 @@ const ModuleDetail = ({
         try {
           const api = new DataApi(relatedModule.api);
           const response = await api.get(relatedModule.endpoint ? relatedModule.endpoint(id) : `/${id}`);
-          if (response.data) {
+          if (response && response.data) {
             const responseData = response.data.success ? response.data.data : response.data;
             relatedDataObj[relatedModule.key] = Array.isArray(responseData) ? responseData : [responseData];
           }

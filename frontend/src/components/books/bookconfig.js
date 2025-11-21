@@ -14,7 +14,7 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
         [];
 
     return {
-        moduleName: "books",
+        moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
         initialFormData: {

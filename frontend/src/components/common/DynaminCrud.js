@@ -97,6 +97,8 @@ const DynamicCRUD = ({
     }, []);
 
     const handleNameClick = useCallback((item) => {
+        console.log("handleNameClick", item);
+        console.log("apiEndpoint", apiEndpoint);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
@@ -112,7 +114,8 @@ const DynamicCRUD = ({
             
             if (enablePrefetch) {
                 try {
-                    localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
+                    navigate(`/${apiEndpoint}/${item.id}`);
+                    // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -328,7 +331,6 @@ const DynamicCRUD = ({
 
     const fetchData = useCallback(async () => {
         try {
-            console.log("fetchDatafetchDatafetchDatafetchData");
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             const response = await api.fetchAll();
@@ -352,7 +354,7 @@ const DynamicCRUD = ({
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
-console.log("fetchRelatedData called");
+        console.log("fetchRelatedData called");
         try {
             const selectFields = formFields.filter(field =>
                 field && field.type === "select" && field.options && typeof field.options === "string"
