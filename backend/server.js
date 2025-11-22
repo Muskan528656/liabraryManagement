@@ -19,6 +19,9 @@ app.use(express.json({ limit: "50mb" }));
 app.use(
   express.urlencoded({ extended: true, limit: "50mb" })
 );
+
+const path = require("path");
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get("/ibs", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });

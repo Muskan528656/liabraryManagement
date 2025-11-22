@@ -38,6 +38,7 @@ module.exports = (app) => {
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       const author = await Author.findById(req.params.id);
+      console.log("Fetched author:", author);
       if (!author) {
         return res.status(404).json({ errors: "Author not found" });
       }

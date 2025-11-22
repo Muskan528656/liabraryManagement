@@ -147,11 +147,28 @@ const Submodule = () => {
     return () => window.removeEventListener("resize", calculateVisibleModules);
   }, [modulesFromDB]);
 
-  const isActive = (path) => {
+  const isActive = (path, moduleUrl) => {
     if (path === "/") {
       return location.pathname === "/";
     }
-    return location.pathname.startsWith(path);
+    // Exact match for root paths
+    if (location.pathname === path) {
+      return true;
+    }
+    // For nested paths, check if it starts with the path but ensure it's not a different module
+    // e.g., /book should match /book and /book/123 but not /booksubmit
+    if (location.pathname.startsWith(path + "/")) {
+      return true;
+    }
+    // Also check by moduleUrl to ensure exact module match
+    if (moduleUrl) {
+      const currentPath = location.pathname.toLowerCase();
+      const modulePath = `/${moduleUrl}`;
+      if (currentPath === modulePath || currentPath.startsWith(modulePath + "/")) {
+        return true;
+      }
+    }
+    return false;
   };
 
   return (
@@ -184,10 +201,10 @@ const Submodule = () => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 style={{
-                  color: isActive(item.path)
+                  color: isActive(item.path, item.moduleUrl)
                     ? "var(--primary-color)"
                     : "var(--header-list-item-color)",
-                  background: isActive(item.path)
+                  background: isActive(item.path, item.moduleUrl)
                     ? "var(--primary-background-color)"
                     : "transparent",
                   borderRadius: "6px",
@@ -199,13 +216,13 @@ const Submodule = () => {
                   transition: "all 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive(item.path)) {
+                  if (!isActive(item.path, item.moduleUrl)) {
                     e.currentTarget.style.background =
                       "var(--primary-background-color)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive(item.path)) {
+                  if (!isActive(item.path, item.moduleUrl)) {
                     e.currentTarget.style.background = "transparent";
                   }
                 }}
@@ -239,10 +256,10 @@ const Submodule = () => {
                     key={item.id}
                     onClick={() => navigate(item.path)}
                     style={{
-                      color: isActive(item.path)
+                      color: isActive(item.path, item.moduleUrl)
                         ? "var(--primary-color)"
                         : "var(--header-list-item-color)",
-                      background: isActive(item.path)
+                      background: isActive(item.path, item.moduleUrl)
                         ? "var(--primary-background-color)"
                         : "transparent",
                       padding: "12px 18px",
@@ -252,13 +269,13 @@ const Submodule = () => {
                       transition: "all 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive(item.path)) {
+                      if (!isActive(item.path, item.moduleUrl)) {
                         e.currentTarget.style.background =
                           "var(--primary-background-color)";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive(item.path)) {
+                      if (!isActive(item.path, item.moduleUrl)) {
                         e.currentTarget.style.background = "transparent";
                       }
                     }}

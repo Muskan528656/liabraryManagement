@@ -103,15 +103,15 @@ const DynamicCRUD = ({
             nameClickHandler(item);
             return;
         }
-        console.log('apiEndpoint' , apiEndpoint)
+        console.log('apiEndpoint', apiEndpoint)
         navigate(`/${apiEndpoint}/${item.id}`, {
-        state: { type: apiEndpoint, rowData: item },
+            state: { type: apiEndpoint, rowData: item },
         });
-        console.log('item' , item)
+        console.log('item', item)
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
-            
+
             if (enablePrefetch) {
                 try {
                     navigate(`/${apiEndpoint}/${item.id}`);
@@ -467,7 +467,25 @@ const DynamicCRUD = ({
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
         setEditingItem(item);
-        setFormData({ ...initialFormData, ...item });
+        
+        // Format date fields properly for date inputs
+        const formattedItem = { ...item };
+        if (formattedItem.issue_date) {
+            // Ensure date is in YYYY-MM-DD format
+            const issueDate = new Date(formattedItem.issue_date);
+            if (!isNaN(issueDate.getTime())) {
+                formattedItem.issue_date = issueDate.toISOString().split('T')[0];
+            }
+        }
+        if (formattedItem.expiry_date) {
+            // Ensure date is in YYYY-MM-DD format
+            const expiryDate = new Date(formattedItem.expiry_date);
+            if (!isNaN(expiryDate.getTime())) {
+                formattedItem.expiry_date = expiryDate.toISOString().split('T')[0];
+            }
+        }
+        
+        setFormData({ ...initialFormData, ...formattedItem });
         setShowModal(true);
     }, [allowEdit, initialFormData]);
 
@@ -766,6 +784,7 @@ const DynamicCRUD = ({
                     moduleApi={apiEndpoint}
                     moduleLabel={moduleLabel}
                     prefetchData={selectedItem}
+                    lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
                 />
             </Container>

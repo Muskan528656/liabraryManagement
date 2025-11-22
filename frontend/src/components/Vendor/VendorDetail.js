@@ -43,7 +43,7 @@ const VendorDetail = () => {
   return (
     <ModuleDetail
       moduleName="vendor"
-      moduleApi="purchasevendor"
+      moduleApi="vendor"
       moduleLabel="Vendor"
       fields={fields}
     />

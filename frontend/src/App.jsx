@@ -125,6 +125,21 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  // If user is not logged in, show only login page
+  if (userInfo === false) {
+    return (
+      <>
+        <ToastManager />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Login />} />
+          </Routes>
+        </Router>
+      </>
+    );
+  }
+
   return (
     <>
       <ToastManager />
@@ -139,7 +154,7 @@ function App() {
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="book" element={<Books />} />
-            <Route path="book/:id" element={<AuthorDetail />} />
+            <Route path="book/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
             <Route path="category/:id" element={<CategoryDetail />} />
             <Route path="vendor" element={<Vendor />} />

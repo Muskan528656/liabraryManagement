@@ -12,7 +12,6 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-           
             },
             {
                 field: "description",
@@ -41,11 +40,11 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         validationRules: (formData, allCategories, editingCategory) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
-            
+
             // Check for duplicate name
             const duplicate = allCategories.find(
-                category => category.name?.toLowerCase() === formData.name?.toLowerCase() && 
-                category.id !== editingCategory?.id
+                category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
+                    category.id !== editingCategory?.id
             );
             if (duplicate) errors.push("Category with this name already exists");
 
@@ -72,11 +71,10 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
-                // Additional custom validation if needed
                 return true;
             },
             afterSave: (response, editingItem) => {
-                // Custom after save logic
+              
                 console.log("Category saved:", response);
             }
         }

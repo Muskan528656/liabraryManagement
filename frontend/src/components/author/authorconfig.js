@@ -54,7 +54,6 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
 
-            // Check for duplicate name
             const duplicate = allAuthors.find(
                 author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
                     author.id !== editingAuthor?.id
@@ -85,11 +84,9 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
-                // Additional custom validation if needed
                 return true;
             },
             afterSave: (response, editingItem) => {
-                // Custom after save logic
                 console.log("Author saved:", response);
             }
         }

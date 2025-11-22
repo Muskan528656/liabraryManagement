@@ -147,35 +147,54 @@ const isFileTypeValid = (file, allowedTypes) => {
 
             {/* File Preview */}
             {showPreview && (
-              <div className="mb-2 text-center">
+              <div className="mb-3 text-center">
                 {field.accept?.includes('image') ? (
-                  <img
-                    src={filePreviews[field.name] || value}
-                    alt="Preview"
-                    style={{
-                      width: '100px',
-                      height: '100px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '2px solid #6f42c1'
-                    }}
-                  />
+                  <div style={{ position: "relative", display: "inline-block" }}>
+                    <img
+                      src={filePreviews[field.name] || value}
+                      alt="Preview"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        border: '4px solid #6f42c1',
+                        boxShadow: '0 4px 12px rgba(111, 66, 193, 0.3)'
+                      }}
+                    />
+                    <div style={{
+                      position: "absolute",
+                      bottom: "5px",
+                      right: "5px",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                      cursor: "pointer"
+                    }} onClick={() => removeFile(field.name)}>
+                      <i className="fa-solid fa-times" style={{ color: "#dc3545", fontSize: "16px" }}></i>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="p-2 bg-light rounded">
+                  <div className="p-3 bg-light rounded">
                     <i className="fa-solid fa-file me-2"></i>
                     {hasExistingFile ? 'Existing file' : 'File selected'}
+                    <div className="mt-2">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => removeFile(field.name)}
+                      >
+                        <i className="fa-solid fa-trash me-1"></i>
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 )}
-                <div className="mt-1">
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => removeFile(field.name)}
-                  >
-                    <i className="fa-solid fa-trash me-1"></i>
-                    Remove
-                  </Button>
-                </div>
               </div>
             )}
 
@@ -343,16 +362,67 @@ const isFileTypeValid = (file, allowedTypes) => {
       <Modal.Body>
         <Form>
           {fields.length > 0 ? (
-            <Row>
-              {fields.map((field) => {
-                const colSize = field.colSize || 12;
-                return (
-                  <Col md={colSize} key={field.name}>
-                    {renderField(field)}
-                  </Col>
-                );
-              })}
-            </Row>
+            // Check if fields have sections
+            fields.some(field => field.section) ? (
+              // Render with sections
+              Object.entries(
+                fields.reduce((acc, field) => {
+                  const sectionName = field.section || 'default';
+                  if (!acc[sectionName]) {
+                    acc[sectionName] = [];
+                  }
+                  acc[sectionName].push(field);
+                  return acc;
+                }, {})
+              ).map(([sectionName, sectionFields]) => (
+                <div key={sectionName} className="mb-4">
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      background: "linear-gradient(to right, #f3e9fc, #ffffff)",
+                      borderLeft: "4px solid #6f42c1",
+                      marginBottom: "20px",
+                      borderRadius: "6px"
+                    }}
+                  >
+                    <h6 style={{
+                      margin: 0,
+                      color: "#6f42c1",
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <i className="fa-solid fa-info-circle"></i>
+                      {sectionName}
+                    </h6>
+                  </div>
+                  <Row>
+                    {sectionFields.map((field) => {
+                      const colSize = field.colSize || 12;
+                      return (
+                        <Col md={colSize} key={field.name}>
+                          {renderField(field)}
+                        </Col>
+                      );
+                    })}
+                  </Row>
+                </div>
+              ))
+            ) : (
+              // Render without sections (default behavior)
+              <Row>
+                {fields.map((field) => {
+                  const colSize = field.colSize || 12;
+                  return (
+                    <Col md={colSize} key={field.name}>
+                      {renderField(field)}
+                    </Col>
+                  );
+                })}
+              </Row>
+            )
           ) : (
             children
           )}

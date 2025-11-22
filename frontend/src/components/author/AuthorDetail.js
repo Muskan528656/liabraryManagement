@@ -1,25 +1,28 @@
-// pages/AuthorDetailPage.js
 import React from "react";
-import { useParams } from "react-router-dom";
 import ModuleDetail from "../common/ModuleDetail";
 
 const AuthorDetail = () => {
-  const { id } = useParams();
-  console.log("AuthorDetail id:", id);
+  const fields = {
+    title: "name",
+    subtitle: "email",
+    overview: [
+      { key: "name", label: "Name", type: "text" },
+      { key: "email", label: "Email", type: "text" },
+    ],
+    details: [
+      { key: "name", label: "Name", type: "text" },
+      { key: "email", label: "Email", type: "text" },
+      { key: "bio", label: "Bio", type: "text" },
+    ],
+  };
+
   return (
-    <div className="container-fluid py-4">
-      <ModuleDetail
-        moduleName="author"
-        moduleApi="author"
-        moduleLabel="Author"
-        recordId={id}
-        fields={[
-          { key: "name", label: "Name", type: "text" },
-          { key: "email", label: "Email", type: "text" },
-          { key: "bio", label: "Bio", type: "text" },
-        ]}
-      />
-    </div>
+    <ModuleDetail
+      moduleName="author"
+      moduleApi="author"
+      moduleLabel="Author"
+      fields={fields}
+    />
   );
 };
 

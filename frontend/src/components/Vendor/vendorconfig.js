@@ -2,20 +2,17 @@
 export const getVendorConfig = (externalData = {}, props = {}) => {
     const { CityState = [], CityPincode = [] } = externalData;
 
-    // Get unique states from CityState
     const states = [...new Set(CityState.map(item => item.state))].map(state => ({
         value: state,
         label: state
     }));
 
-    // Get all cities from CityState
     const allCities = CityState.map(item => ({
         value: item.name,
         label: item.name,
         state: item.state
     }));
 
-    // Get all pincodes from CityPincode
     const allPincodes = CityPincode.map(item => ({
         value: item.pincode,
         label: `${item.pincode} - ${item.city}, ${item.state}`,
@@ -24,9 +21,10 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
     }));
 
     return {
-        moduleName: "vendors",
-        moduleLabel: "Vendor",
-        apiEndpoint: "purchasevendor",
+        moduleName: "vendor",        //  Navigation 
+        apiEndpoint: "vendor", //  API calls
+        moduleLabel: "Vendor",       //  UI display 
+
         initialFormData: {
             name: "",
             company_name: "",
@@ -45,42 +43,35 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-                render: (value, record) => (
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{
-                                width: "32px",
-                                height: "32px",
-                                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                                color: "white",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <i className="fa-solid fa-store"></i>
-                        </div>
-                        <a
-                            href={`/vendor/${record.id}`}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                window.location.href = `/vendor/${record.id}`;
-                            }}
-                            style={{
-                                color: "#6f42c1",
-                                textDecoration: "none",
-                                fontWeight: "500"
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.textDecoration = "underline";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.textDecoration = "none";
-                            }}
-                        >
-                            {value || "N/A"}
-                        </a>
-                    </div>
-                ),
+                // render: (value, record) => (
+                //     <div className="d-flex align-items-center">
+                //         <div
+                //             className="rounded-circle d-flex align-items-center justify-content-center me-2"
+                //             style={{
+                //                 width: "32px",
+                //                 height: "32px",
+                //                 background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                //                 color: "white",
+                //                 fontSize: "14px",
+                //             }}
+                //         >
+                //             <i className="fa-solid fa-store"></i>
+                //         </div>
+                //         <a
+                //             href={`/vendor/${record.id}`}
+                //             onClick={(e) => {
+                //                 e.preventDefault();
+                //             }}
+                //             style={{
+                //                 color: "#6f42c1",
+                //                 textDecoration: "none",
+                //                 fontWeight: "500"
+                //             }}
+                //         >
+                //             {value || "N/A"}
+                //         </a>
+                //     </div>
+                // ),
             },
             {
                 field: "company_name",
@@ -136,59 +127,14 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             }
         ],
         formFields: [
-            {
-                name: "name",
-                label: "Name",
-                type: "text",
-                required: true,
-                placeholder: "Enter vendor name",
-                colSize: 6,
-            },
+            // Section 1: Company Information
             {
                 name: "company_name",
                 label: "Company Name",
                 type: "text",
                 placeholder: "Enter company name",
-                colSize: 6,
-            },
-            {
-                name: "email",
-                label: "Email",
-                type: "email",
-                placeholder: "Enter email address",
-                colSize: 6,
-                customValidation: (value, formData, allVendors, editingVendor) => {
-                    if (value && value.trim()) {
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(value)) {
-                            return "Please enter a valid email address";
-                        }
-
-                        // Check for duplicate email
-                        const duplicate = allVendors.find(
-                            vendor => vendor.email?.toLowerCase() === value?.toLowerCase() &&
-                                vendor.id !== editingVendor?.id
-                        );
-                        if (duplicate) return "Vendor with this email already exists";
-                    }
-                    return null;
-                }
-            },
-            {
-                name: "phone",
-                label: "Phone",
-                type: "tel",
-                placeholder: "Enter phone number",
-                colSize: 6,
-                customValidation: (value) => {
-                    if (value && value.trim()) {
-                        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-                        if (!phoneRegex.test(value)) {
-                            return "Please enter a valid phone number";
-                        }
-                    }
-                    return null;
-                }
+                colSize: 12,
+                section: "Company Information"
             },
             {
                 name: "gst_number",
@@ -196,6 +142,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter GST number",
                 colSize: 6,
+                section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim() && value.length !== 15) {
                         return "GST number must be 15 characters";
@@ -209,6 +156,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter PAN number",
                 colSize: 6,
+                section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
                         const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
@@ -226,12 +174,14 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 rows: 3,
                 placeholder: "Enter address",
                 colSize: 12,
+                section: "Company Information"
             },
             {
                 name: "state",
                 label: "State",
                 type: "custom",
                 colSize: 4,
+                section: "Company Information",
                 render: (value, onChange, formData) => (
                     <select
                         className="form-control"
@@ -257,6 +207,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "City",
                 type: "custom",
                 colSize: 4,
+                section: "Company Information",
                 render: (value, onChange, formData) => {
                     const filteredCities = formData.state
                         ? allCities.filter(city => city.state === formData.state)
@@ -289,6 +240,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter pincode",
                 colSize: 4,
+                section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
                         const pincodeRegex = /^[0-9]{6}$/;
@@ -305,6 +257,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter country",
                 colSize: 6,
+                section: "Company Information",
                 defaultValue: "India"
             },
             {
@@ -312,23 +265,71 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Status",
                 type: "select",
                 colSize: 6,
+                section: "Company Information",
                 options: [
                     { value: "active", label: "Active" },
                     { value: "inactive", label: "Inactive" },
                     { value: "suspended", label: "Suspended" }
                 ],
                 defaultValue: "active"
+            },
+            // Section 2: Contact Person Information
+            {
+                name: "name",
+                label: "Contact Person Name",
+                type: "text",
+                required: true,
+                placeholder: "Enter contact person name",
+                colSize: 12,
+                section: "Contact Person Information"
+            },
+            {
+                name: "email",
+                label: "Email",
+                type: "email",
+                placeholder: "Enter email address",
+                colSize: 6,
+                section: "Contact Person Information",
+                customValidation: (value, formData, allVendors, editingVendor) => {
+                    if (value && value.trim()) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            return "Please enter a valid email address";
+                        }
+
+                        const duplicate = allVendors.find(
+                            vendor => vendor.email?.toLowerCase() === value?.toLowerCase() &&
+                                vendor.id !== editingVendor?.id
+                        );
+                        if (duplicate) return "Vendor with this email already exists";
+                    }
+                    return null;
+                }
+            },
+            {
+                name: "phone",
+                label: "Phone",
+                type: "tel",
+                placeholder: "Enter phone number",
+                colSize: 6,
+                section: "Contact Person Information",
+                customValidation: (value) => {
+                    if (value && value.trim()) {
+                        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+                        if (!phoneRegex.test(value)) {
+                            return "Please enter a valid phone number";
+                        }
+                    }
+                    return null;
+                }
             }
         ],
         validationRules: (formData, allVendors, editingVendor) => {
             const errors = [];
-
-            // Required field validation
             if (!formData.name?.trim()) {
                 errors.push("Name is required");
             }
 
-            // Check for duplicate name
             const duplicateName = allVendors.find(
                 vendor => vendor.name?.toLowerCase() === formData.name?.toLowerCase() &&
                     vendor.id !== editingVendor?.id
@@ -393,17 +394,13 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
-                // Clean up data before saving
                 const cleanedData = { ...formData };
-
-                // Trim all string fields
                 Object.keys(cleanedData).forEach(key => {
                     if (typeof cleanedData[key] === 'string') {
                         cleanedData[key] = cleanedData[key].trim();
                     }
                 });
 
-                // Set empty strings to null for optional fields
                 const optionalFields = ['company_name', 'email', 'phone', 'gst_number', 'pan_number', 'address', 'city', 'state', 'pincode'];
                 optionalFields.forEach(field => {
                     if (cleanedData[field] === '') {
@@ -415,32 +412,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             },
             afterSave: (response, editingItem) => {
                 console.log("Vendor saved:", response);
-                // Additional custom logic after save
-            },
-            onCityChange: (city, setFormData) => {
-                // Auto-fill pincode and state when city is selected
-                if (city && allCities.length > 0) {
-                    const cityData = allCities.find(c => c.value === city);
-                    if (cityData) {
-                        setFormData(prev => ({
-                            ...prev,
-                            state: prev.state || cityData.state
-                        }));
-                    }
-                }
-            },
-            onPincodeChange: (pincode, setFormData) => {
-                // Auto-fill city and state when pincode is entered
-                if (pincode && pincode.length >= 6 && allPincodes.length > 0) {
-                    const pincodeData = allPincodes.find(p => p.value === pincode);
-                    if (pincodeData) {
-                        setFormData(prev => ({
-                            ...prev,
-                            city: prev.city || pincodeData.city,
-                            state: prev.state || pincodeData.state
-                        }));
-                    }
-                }
             }
         },
         exportConfig: {

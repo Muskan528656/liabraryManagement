@@ -93,7 +93,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
         },
         {
             field: "expiry_date",
-            label: "Expiry Date",
+            label: "Submission Date",
             sortable: true,
             render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
         },
@@ -163,10 +163,68 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "date",
                 required: true,
                 colSize: 6,
+                onChange: (value, formData, setFormData) => {
+                    // Calculate submission date based on issue date and library settings
+                    if (value) {
+                        // Use dynamic import for DataApi
+                        import("../../api/dataApi").then(({ default: DataApi }) => {
+                            const settingsApi = new DataApi("librarysettings");
+                            settingsApi.get("/all").then(response => {
+                                let durationDays = 365; // Default to 1 year
+                                
+                                if (response.data && response.data.success && response.data.data) {
+                                    durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
+                                } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
+                                    durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
+                                }
+                                
+                                // Calculate submission date
+                                const issueDate = new Date(value);
+                                const submissionDate = new Date(issueDate);
+                                submissionDate.setDate(submissionDate.getDate() + durationDays);
+                                
+                                setFormData(prev => ({
+                                    ...prev,
+                                    issue_date: value,
+                                    expiry_date: submissionDate.toISOString().split('T')[0]
+                                }));
+                            }).catch(error => {
+                                console.error("Error fetching settings:", error);
+                                // If settings fetch fails, use default 365 days
+                                const issueDate = new Date(value);
+                                const submissionDate = new Date(issueDate);
+                                submissionDate.setDate(submissionDate.getDate() + 365);
+                                
+                                setFormData(prev => ({
+                                    ...prev,
+                                    issue_date: value,
+                                    expiry_date: submissionDate.toISOString().split('T')[0]
+                                }));
+                            });
+                        }).catch(error => {
+                            console.error("Error importing DataApi:", error);
+                            // If import fails, use default 365 days
+                            const issueDate = new Date(value);
+                            const submissionDate = new Date(issueDate);
+                            submissionDate.setDate(submissionDate.getDate() + 365);
+                            
+                            setFormData(prev => ({
+                                ...prev,
+                                issue_date: value,
+                                expiry_date: submissionDate.toISOString().split('T')[0]
+                            }));
+                        });
+                    } else {
+                        setFormData(prev => ({
+                            ...prev,
+                            issue_date: value
+                        }));
+                    }
+                }
             },
             {
                 name: "expiry_date",
-                label: "Expiry Date",
+                label: "Submission Date",
                 type: "date",
                 colSize: 6,
             },
@@ -225,7 +283,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             { key: "user_name", label: "User Name", type: "text" },
             { key: "user_email", label: "Email", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
-            { key: "expiry_date", label: "Expiry Date", type: "date" },
+            { key: "expiry_date", label: "Submission Date", type: "date" },
             { key: "is_active", label: "Status", type: "badge" },
         ],
 

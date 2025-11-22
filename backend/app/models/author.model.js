@@ -27,6 +27,7 @@ async function findById(id) {
   try {
     const query = `SELECT * FROM demo.authors WHERE id = $1`;
     const result = await sql.query(query, [id]);
+    console.log("findById result:", result.rows);
     if (result.rows.length > 0) {
       return result.rows[0];
     }

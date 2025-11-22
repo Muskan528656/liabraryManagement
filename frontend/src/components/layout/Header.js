@@ -783,22 +783,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </div>
       </div>
 
-      {/* Bottom Row: Navigation Modules */}
       <Submodule />
-
-      {/* <QuickActions
-        show={showQuickAction}
-        onHide={() => {
-          setShowQuickAction(false);
-          setQuickActionType(null);
-        }}
-        actionType={quickActionType}
-      /> */}
-
-      {/* <BookSubmitModal
-        show={showBookSubmitModal}
-        onHide={handleCloseBookSubmitModal}
-      /> */}
     </div>
   );
 }

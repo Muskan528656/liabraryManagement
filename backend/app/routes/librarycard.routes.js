@@ -17,8 +17,44 @@
  */
 
 const e = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../../uploads/librarycards');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Ensure directory exists before saving
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);  
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'librarycard-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -102,7 +138,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-    
+    upload.single('image'),
     [
       body("user_id").optional().isUUID().withMessage("User ID must be a valid UUID"),
       body("card_type_id").optional().isUUID().withMessage("Card type ID must be a valid UUID"),
@@ -120,7 +156,16 @@ module.exports = (app) => {
         
         LibraryCard.init(req.userinfo.tenantcode);
         const userId = req.user?.id || null;
-        const card = await LibraryCard.create(req.body, userId);
+        
+        // Handle file upload
+        const cardData = { ...req.body };
+        if (req.file) {
+          // Store file path or URL - use relative path from public/uploads
+          const fileUrl = `/uploads/librarycards/${req.file.filename}`;
+          cardData.image = fileUrl;
+        }
+        
+        const card = await LibraryCard.create(cardData, userId);
         if (!card) {
           return res.status(400).json({ errors: "Failed to create library card" });
         }
@@ -136,7 +181,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-    
+    upload.single('image'),
     async (req, res) => {
       try {
         LibraryCard.init(req.userinfo.tenantcode);
@@ -147,7 +192,16 @@ module.exports = (app) => {
         }
 
         const userId = req.user?.id || null;
-        const card = await LibraryCard.updateById(req.params.id, req.body, userId);
+        
+        // Handle file upload
+        const cardData = { ...req.body };
+        if (req.file) {
+          // Store file path or URL - use relative path from public/uploads
+          const fileUrl = `/uploads/librarycards/${req.file.filename}`;
+          cardData.image = fileUrl;
+        }
+        
+        const card = await LibraryCard.updateById(req.params.id, cardData, userId);
         if (!card) {
           return res.status(400).json({ errors: "Failed to update library card" });
         }

@@ -1063,10 +1063,10 @@ const BookIssue = () => {
       width: 250,
       render: (value, record) => (
         <a
-          href={`/books/${record.book_id}`}
+          href={`/book/${record.book_id}`}
           onClick={(e) => {
             e.preventDefault();
-            navigate(`/books/${record.book_id}`);
+            navigate(`/book/${record.book_id}`);
           }}
           style={{
             color: "#6f42c1",
@@ -2990,10 +2990,10 @@ export default BookIssue;
 //       width: 250,
 //       render: (value, record) => (
 //         <a
-//           href={`/books/${record.book_id}`}
+//           href={`/book/${record.book_id}`}
 //           onClick={(e) => {
 //             e.preventDefault();
-//             navigate(`/books/${record.book_id}`);
+//             navigate(`/book/${record.book_id}`);
 //           }}
 //           style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "600" }}
 //           onMouseEnter={(e) => {
