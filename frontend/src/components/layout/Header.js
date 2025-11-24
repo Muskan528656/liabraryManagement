@@ -398,6 +398,41 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       setSearchBarcode("");
     }
   };
+const [Company, setCompany] = useState([]);
+    useEffect(() => {
+      fetchCompany();
+    }, []);
+  
+    function getCompanyIdFromToken() {
+      const token = sessionStorage.getItem("token");
+      if (!token) return null;
+  
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.companyid || payload.companyid || null;
+    }
+  
+    const fetchCompany = async () => {
+      try {
+        const companyid = getCompanyIdFromToken();
+  
+        if (!companyid) {
+          console.error("Company ID not found in token");
+          return;
+        }
+  
+        const companyApi = new DataApi("company");
+        const response = await companyApi.fetchById(companyid);
+  
+        if (response.data) {
+          setCompany(response.data);
+          console.log("Company:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching company by ID:", error);
+      }
+    };
+
+    console.log('Company' , Company)
 
   return (
     <div
@@ -428,9 +463,20 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         <Navbar.Brand
           href="#"
           className="fw-bold"
-          style={{ fontSize: "1.9rem", fontWeight: "900", color: "rgb(1, 118, 211)", letterSpacing: "0.8px", margin: 0 }}
+          style={{ fontSize: "1.9rem", fontWeight: "900", color: "var(--primary-color)", letterSpacing: "0.8px", margin: 0 }}
         >
-          Library Management
+          {Company?.logourl && (
+          <img
+            src={Company.logourl}
+            style={{
+              height: "40px",
+              width: "40px",
+              objectFit: "contain",
+            }}
+          />
+        )}
+        {/* Company Name */}
+        <span>{Company?.name}</span>
         </Navbar.Brand>
 
         {/* Search Bar */}
