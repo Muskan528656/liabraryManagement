@@ -68,13 +68,11 @@ const BookDetail = () => {
         options: "categories",
         displayKey: "category_name"
       },
-      { key: "publisher", label: "Publisher", type: "text" },
       { key: "description", label: "Description", type: "text" },
-      { key: "published_year", label: "Published Year", type: "number" },
       { key: "total_copies", label: "Total Copies", type: "number" },
       { key: "available_copies", label: "Available Copies", type: "number" },
-      { key: "created_at", label: "Created At", type: "datetime" },
-      { key: "updated_at", label: "Updated At", type: "datetime" },
+      { key: "createddate", label: "Created At", type: "datetime" },
+      { key: "lastmodifieddate", label: "Updated At", type: "datetime" },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },

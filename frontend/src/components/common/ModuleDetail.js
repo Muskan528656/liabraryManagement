@@ -470,25 +470,25 @@ const ModuleDetail = ({
     other: fields?.other || [],
   };
 
-const normalizedAddressFields = {
-  address: fields?.address || [],
-};
+  const normalizedAddressFields = {
+    address: fields?.address || [],
+  };
 
 
-const chunkSize = Math.ceil(normalizedFields.details.length / 3);
-const col1 = normalizedFields.details.slice(0, chunkSize);
-const col2 = normalizedFields.details.slice(chunkSize, chunkSize * 2);
-const col3 = normalizedFields.details.slice(chunkSize * 2);
+  const chunkSize = Math.ceil(normalizedFields.details.length / 3);
+  const col1 = normalizedFields.details.slice(0, chunkSize);
+  const col2 = normalizedFields.details.slice(chunkSize, chunkSize * 2);
+  const col3 = normalizedFields.details.slice(chunkSize * 2);
 
   const chunkOtherSize = Math.ceil(normalizedOtherFields.other.length / 3);
   const colother1 = normalizedOtherFields.other.slice(0, chunkOtherSize);
   const colother2 = normalizedOtherFields.other.slice(chunkOtherSize, chunkOtherSize * 2);
   const colother3 = normalizedOtherFields.other.slice(chunkOtherSize * 2);
 
-const chunkAddressSize = Math.ceil(normalizedAddressFields?.address?.length / 3);
-const coladd1 = normalizedAddressFields.address?.slice(0, chunkAddressSize);
-const coladd2 = normalizedAddressFields.address?.slice(chunkAddressSize, chunkAddressSize * 2);
-const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
+  const chunkAddressSize = Math.ceil(normalizedAddressFields?.address?.length / 3);
+  const coladd1 = normalizedAddressFields.address?.slice(0, chunkAddressSize);
+  const coladd2 = normalizedAddressFields.address?.slice(chunkAddressSize, chunkAddressSize * 2);
+  const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
 
 
   return (
@@ -973,8 +973,8 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                           );
                                           return selected
                                             ? selected.name ||
-                                                selected.title ||
-                                                selected.email
+                                            selected.title ||
+                                            selected.email
                                             : "—";
                                         })()}
                                         style={{
@@ -1000,10 +1000,10 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                       field.type === "number"
                                         ? "number"
                                         : field.type === "date"
-                                        ? "date"
-                                        : field.type === "datetime"
-                                        ? "datetime-local"
-                                        : "text"
+                                          ? "date"
+                                          : field.type === "datetime"
+                                            ? "datetime-local"
+                                            : "text"
                                     }
                                     value={getFieldValue(field, currentData)}
                                     readOnly={!isEditing}
@@ -1079,13 +1079,13 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                   const normalizedModule =
                                     typeof relatedModule === "string"
                                       ? {
-                                          key: relatedModule,
-                                          label:
-                                            relatedModule
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            relatedModule.slice(1),
-                                        }
+                                        key: relatedModule,
+                                        label:
+                                          relatedModule
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          relatedModule.slice(1),
+                                      }
                                       : relatedModule;
 
                                   const moduleKey =
@@ -1094,7 +1094,7 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                     normalizedModule.label ||
                                     (typeof normalizedModule === "string"
                                       ? normalizedModule.charAt(0).toUpperCase() +
-                                        normalizedModule.slice(1)
+                                      normalizedModule.slice(1)
                                       : "Related");
 
                                   return (
@@ -1120,7 +1120,7 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                         {moduleLabel}
                                       </h6>
                                       {relatedData[moduleKey] &&
-                                      relatedData[moduleKey].length > 0 ? (
+                                        relatedData[moduleKey].length > 0 ? (
                                         normalizedModule.render ? (
                                           normalizedModule.render(
                                             relatedData[moduleKey],
@@ -1172,12 +1172,12 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                                                           "background-color 0.2s",
                                                       }}
                                                       onMouseEnter={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "#f8f9fa")
+                                                      (e.target.parentElement.style.background =
+                                                        "#f8f9fa")
                                                       }
                                                       onMouseLeave={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "transparent")
+                                                      (e.target.parentElement.style.background =
+                                                        "transparent")
                                                       }
                                                     >
                                                       {normalizedModule.columns?.map(
@@ -1243,7 +1243,7 @@ const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
                     )}
                   </Row>
                 </Row>
-                )}
+              )}
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h5

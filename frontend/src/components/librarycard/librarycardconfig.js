@@ -147,7 +147,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 preview: true,
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
-      
+
                 onChange: (file, formData, setFormData) => {
                     if (file) {
                         setFormData(prev => ({
@@ -171,18 +171,18 @@ export const getLibraryCardConfig = (externalData = {}) => {
                             const settingsApi = new DataApi("librarysettings");
                             settingsApi.get("/all").then(response => {
                                 let durationDays = 365; // Default to 1 year
-                                
+
                                 if (response.data && response.data.success && response.data.data) {
                                     durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
                                 } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
                                     durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
                                 }
-                                
+
                                 // Calculate submission date
                                 const issueDate = new Date(value);
                                 const submissionDate = new Date(issueDate);
                                 submissionDate.setDate(submissionDate.getDate() + durationDays);
-                                
+
                                 setFormData(prev => ({
                                     ...prev,
                                     issue_date: value,
@@ -194,7 +194,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                                 const issueDate = new Date(value);
                                 const submissionDate = new Date(issueDate);
                                 submissionDate.setDate(submissionDate.getDate() + 365);
-                                
+
                                 setFormData(prev => ({
                                     ...prev,
                                     issue_date: value,
@@ -207,7 +207,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                             const issueDate = new Date(value);
                             const submissionDate = new Date(issueDate);
                             submissionDate.setDate(submissionDate.getDate() + 365);
-                            
+
                             setFormData(prev => ({
                                 ...prev,
                                 issue_date: value,
@@ -236,7 +236,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             },
         ],
 
-  
+
         validationRules: (formData, allCards, editingCard) => {
             const errors = {};
 
@@ -248,7 +248,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 errors.issue_date = "Issue date is required";
             }
 
-         
+
             const existingCard = allCards?.find(
                 card => card.user_id === formData.user_id &&
                     card.is_active &&
@@ -274,7 +274,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: true,
+            allowEdit: false,
             allowDelete: true
         },
 

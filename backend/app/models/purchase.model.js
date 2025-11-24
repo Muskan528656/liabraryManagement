@@ -73,7 +73,7 @@ async function findById(id) {
 
 // Create a new purchase
 async function create(purchaseData, userId) {
- 
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -204,7 +204,7 @@ async function updateById(id, purchaseData, userId) {
 
 // Delete purchase by ID
 async function deleteById(id) {
-      
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
