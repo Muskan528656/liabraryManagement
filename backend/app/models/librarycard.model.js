@@ -204,7 +204,6 @@ async function updateById(id, cardData, userId) {
                    SET ${updates.join(', ')}
                    WHERE id = $${paramIndex} 
                    RETURNING *`;
-    
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
       return result.rows[0];

@@ -12,11 +12,11 @@ const VendorDetail = () => {
     title: "name",
     subtitle: "company_name",
     status: "status",
-    overview: [
-      { key: "phone", label: "Phone", type: "text" },
-      { key: "email", label: "Email", type: "email" },
-      { key: "city", label: "City", type: "text" },
-    ],
+    // overview: [
+    //   { key: "phone", label: "Phone", type: "text" },
+    //   { key: "email", label: "Email", type: "email" },
+    //   { key: "city", label: "City", type: "text" },
+    // ],
     details: [
       { key: "name", label: "Vendor Name", type: "text" },
       { key: "company_name", label: "Company Name", type: "text" },
@@ -38,6 +38,13 @@ const VendorDetail = () => {
       { key: "created_at", label: "Created At", type: "datetime" },
       { key: "updated_at", label: "Updated At", type: "datetime" },
     ],
+    other: [
+      { key: "createdbyid", label: "Created By", type: "text" },
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+      { key: "createddate", label: "Created Date", type: "date" },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      
+     ],
   };
 
   return (
