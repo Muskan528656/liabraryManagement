@@ -131,8 +131,8 @@ async function create(cardData, userId) {
     }
 
     const query = `INSERT INTO ${schema}.id_cards 
-                   (user_id, card_number, issue_date, expiry_date, is_active, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-                   VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $6, $6) 
+                   (user_id, card_number, issue_date, expiry_date, is_active, image, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
+                   VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7, $7) 
                    RETURNING *`;
     const values = [
       user_id || null,
@@ -140,6 +140,7 @@ async function create(cardData, userId) {
       cardData.issue_date || new Date().toISOString().split('T')[0],
       cardData.expiry_date || null,
       cardData.is_active !== undefined ? cardData.is_active : (cardData.status === 'active' ? true : false),
+      cardData.image || cardData.image_url || cardData.user_image || null,
       userId || null,
     ];
     const result = await sql.query(query, values);
@@ -157,19 +158,53 @@ async function create(cardData, userId) {
 async function updateById(id, cardData, userId) {
   try {
     const user_id = cardData.user_id || cardData.userId || cardData.student_id || cardData.studentId;
+    
+    // Build dynamic query based on provided fields
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    if (user_id !== undefined) {
+      updates.push(`user_id = $${paramIndex++}`);
+      values.push(user_id);
+    }
+    
+    if (cardData.issue_date !== undefined) {
+      updates.push(`issue_date = $${paramIndex++}`);
+      values.push(cardData.issue_date || null);
+    }
+    
+    if (cardData.expiry_date !== undefined) {
+      updates.push(`expiry_date = $${paramIndex++}`);
+      values.push(cardData.expiry_date || null);
+    }
+    
+    if (cardData.is_active !== undefined || cardData.status !== undefined) {
+      updates.push(`is_active = $${paramIndex++}`);
+      values.push(cardData.is_active !== undefined ? cardData.is_active : (cardData.status === 'active' ? true : false));
+    }
+    
+    if (cardData.image !== undefined) {
+      updates.push(`image = $${paramIndex++}`);
+      values.push(cardData.image || cardData.image_url || cardData.user_image || null);
+    }
+    
+    if (updates.length === 0) {
+      // No fields to update
+      return await findById(id);
+    }
+    
+    updates.push(`lastmodifieddate = CURRENT_TIMESTAMP`);
+    updates.push(`lastmodifiedbyid = $${paramIndex++}`);
+    values.push(userId || null);
+    
+    values.push(id); // For WHERE clause
+    
     const query = `UPDATE ${schema}.id_cards 
-                   SET user_id = $2, issue_date = $3, expiry_date = $4, is_active = $5,
-                       lastmodifieddate = CURRENT_TIMESTAMP, lastmodifiedbyid = $6
-                   WHERE id = $1 
+                   SET ${updates.join(', ')}
+                   WHERE id = $${paramIndex} 
                    RETURNING *`;
-    const values = [
-      id,
-      user_id !== undefined ? user_id : null,
-      cardData.issue_date || null,
-      cardData.expiry_date || null,
-      cardData.is_active !== undefined ? cardData.is_active : (cardData.status === 'active' ? true : false),
-      userId || null,
-    ];
+    
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
       return result.rows[0];

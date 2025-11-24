@@ -126,7 +126,7 @@ const Notification = {
   // Create notification for multiple users (broadcast)
   createBroadcast: async function (userIds, notification) {
     const { title, message, type, related_id, related_type } = notification;
-    const values = userIds.map((userId, index) => 
+    const values = userIds.map((userId, index) =>
       `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6}, false, NOW())`
     ).join(', ');
 

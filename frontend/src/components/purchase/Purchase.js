@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button, Form, Modal, InputGroup, Badge, Table, Dropdown, Tab, Tabs } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Modal, InputGroup, Badge, Table, Alert, Tab, Tabs } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import ResizableTable from "../common/ResizableTable";
 import ScrollToTop from "../common/ScrollToTop";
@@ -30,6 +30,8 @@ const Purchase = () => {
   const [currentRowIndex, setCurrentRowIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("manual");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [scanningBook, setScanningBook] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -303,6 +305,46 @@ const Purchase = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
+    }
+  };
+
+  const handleBarcodeScan = async (barcode) => {
+    if (!barcode || barcode.trim().length < 10) {
+      toast.error("Please enter a valid barcode/ISBN (minimum 10 characters)");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const bookApi = new DataApi("book");
+      
+      // Try to find book by ISBN
+      const allBooks = await bookApi.fetchAll();
+      const bookData = allBooks?.data || allBooks || [];
+      
+      // Search by ISBN (exact match or partial)
+      const foundBook = bookData.find(book => 
+        book.isbn && (
+          book.isbn === barcode.trim() || 
+          book.isbn.replace(/[-\s]/g, '') === barcode.trim().replace(/[-\s]/g, '') ||
+          book.isbn.includes(barcode.trim()) ||
+          barcode.trim().includes(book.isbn)
+        )
+      );
+
+      if (foundBook) {
+        setScanningBook(foundBook);
+        toast.success(`Book found: ${foundBook.title}`);
+      } else {
+        toast.error("Book not found with this ISBN/Barcode");
+        setScanningBook(null);
+      }
+    } catch (error) {
+      console.error("Error scanning barcode:", error);
+      toast.error("Failed to scan barcode. Please try again.");
+      setScanningBook(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -652,10 +694,10 @@ const Purchase = () => {
       sortable: true,
       render: (value, record) => (
         <a
-          href={`/books/${record.book_id}`}
+          href={`/book/${record.book_id}`}
           onClick={(e) => {
             e.preventDefault();
-            navigate(`/books/${record.book_id}`);
+            navigate(`/book/${record.book_id}`);
           }}
           style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500" }}
           onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
@@ -719,7 +761,7 @@ const Purchase = () => {
         }}
         style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-edit text-primary"></i>
+        <i className=" fs-5 fas fa-edit text-primary"></i>
       </Button>
       <Button
         variant="link"
@@ -731,7 +773,7 @@ const Purchase = () => {
         }}
         style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-trash text-danger"></i>
+        <i className=" fs-5 fas fa-trash text-danger"></i>
       </Button>
     </>
   );
@@ -998,12 +1040,12 @@ const Purchase = () => {
       {/* Bulk Insert Modal */}
       <Modal show={showBulkInsertModal} onHide={() => setShowBulkInsertModal(false)} size="xl" centered>
         <Modal.Header closeButton style={{
-          background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-          color: "white",
-          borderBottom: "none",
+          background: "linear-gradient(to right, #f3e9fc, #ffffff)",
+          color: "#6f42c1",
+          borderBottom: "1px solid #e9ecef",
           padding: "20px 24px"
         }}>
-          <Modal.Title style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "20px", fontWeight: "600", color: "white" }}>
+          <Modal.Title style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "20px", fontWeight: "600", color: "#6f42c1" }}>
             <i className="fa-solid fa-layer-group" style={{ fontSize: "24px" }}></i>
             Bulk Purchase Insert
           </Modal.Title>
@@ -1265,6 +1307,123 @@ const Purchase = () => {
               </div>
             </Tab>
             <Tab
+              eventKey="scan"
+              title="Scan Barcode"
+            >
+              <div className="mb-4">
+                <h6 style={{ color: "#333", fontWeight: "600", marginBottom: "15px" }}>Scan Book Barcode</h6>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontWeight: "500", marginBottom: "10px" }}>
+                    <i className="fa-solid fa-barcode me-2"></i>
+                    Barcode / ISBN
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="Scan or enter book barcode/ISBN"
+                      value={barcodeInput}
+                      onChange={(e) => {
+                        setBarcodeInput(e.target.value);
+                        if (e.target.value.length >= 10) {
+                          handleBarcodeScan(e.target.value);
+                        }
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && barcodeInput.trim()) {
+                          handleBarcodeScan(barcodeInput.trim());
+                        }
+                      }}
+                      style={{
+                        padding: "12px",
+                        fontSize: "16px",
+                        border: "2px solid #6f42c1",
+                        borderRadius: "8px"
+                      }}
+                    />
+                    <Button
+                      variant="outline-primary"
+                      onClick={() => {
+                        if (barcodeInput.trim()) {
+                          handleBarcodeScan(barcodeInput.trim());
+                        }
+                      }}
+                      style={{
+                        border: "2px solid #6f42c1",
+                        color: "#6f42c1",
+                        borderRadius: "0 8px 8px 0"
+                      }}
+                    >
+                      <i className="fa-solid fa-search"></i>
+                    </Button>
+                  </InputGroup>
+                  {scanningBook && (
+                    <Alert variant="success" className="mt-3">
+                      <i className="fa-solid fa-check-circle me-2"></i>
+                      Book found: <strong>{scanningBook.title}</strong> (ISBN: {scanningBook.isbn})
+                    </Alert>
+                  )}
+                </Form.Group>
+                {scanningBook && (
+                  <div className="mt-3 p-3" style={{
+                    background: "#f3e9fc",
+                    borderRadius: "8px",
+                    border: "1px solid #6f42c1"
+                  }}>
+                    <h6 style={{ color: "#6f42c1", marginBottom: "15px" }}>Book Details</h6>
+                    <Row>
+                      <Col md={6}>
+                        <p><strong>Title:</strong> {scanningBook.title}</p>
+                        <p><strong>ISBN:</strong> {scanningBook.isbn || "N/A"}</p>
+                        <p><strong>Author:</strong> {scanningBook.author_name || "N/A"}</p>
+                      </Col>
+                      <Col md={6}>
+                        <p><strong>Category:</strong> {scanningBook.category_name || "N/A"}</p>
+                        <p><strong>Available Copies:</strong> {scanningBook.available_copies || 0}</p>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => {
+                            // Add to current row or new row
+                            const currentRow = multiInsertRows[currentRowIndex];
+                            if (currentRow && !currentRow.book_id) {
+                              const updatedRows = [...multiInsertRows];
+                              updatedRows[currentRowIndex] = {
+                                ...updatedRows[currentRowIndex],
+                                book_id: scanningBook.id
+                              };
+                              setMultiInsertRows(updatedRows);
+                            } else {
+                              // Add new row with scanned book
+                              setMultiInsertRows([...multiInsertRows, {
+                                vendor_id: "",
+                                book_id: scanningBook.id,
+                                quantity: 1,
+                                unit_price: 0,
+                                purchase_date: new Date().toISOString().split('T')[0],
+                                notes: ""
+                              }]);
+                              setCurrentRowIndex(multiInsertRows.length);
+                            }
+                            setBarcodeInput("");
+                            setScanningBook(null);
+                            setActiveTab("manual");
+                          }}
+                          style={{
+                            background: "#6f42c1",
+                            border: "none",
+                            marginTop: "10px"
+                          }}
+                        >
+                          <i className="fa-solid fa-plus me-2"></i>
+                          Add to Purchase Entry
+                        </Button>
+                      </Col>
+                    </Row>
+                  </div>
+                )}
+              </div>
+            </Tab>
+            <Tab
               eventKey="import"
               title="Import File"
             >
@@ -1314,6 +1473,8 @@ const Purchase = () => {
               setShowBulkInsertModal(false);
               setActiveTab("manual");
               setSelectedFile(null);
+              setBarcodeInput("");
+              setScanningBook(null);
             }}
             style={{
               background: "white",
@@ -1328,13 +1489,13 @@ const Purchase = () => {
           </Button>
           <Button
             variant="primary"
-            onClick={activeTab === "manual" ? handleMultiInsertSave : () => {
+            onClick={activeTab === "manual" ? handleMultiInsertSave : activeTab === "import" ? () => {
               // Handle file import logic here
               toast.error("File import functionality coming soon");
-            }}
-            disabled={loading || (activeTab === "import" && !selectedFile)}
+            } : undefined}
+            disabled={loading || (activeTab === "import" && !selectedFile) || activeTab === "scan"}
             style={{
-              background: loading ? "#6c757d" : (activeTab === "manual" ? "#495057" : "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)"),
+              background: loading ? "#6c757d" : (activeTab === "manual" ? "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)" : activeTab === "import" ? "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)" : "#6c757d"),
               border: "none",
               color: "white",
               padding: "8px 24px",
@@ -1344,7 +1505,8 @@ const Purchase = () => {
           >
             {loading ? "Saving..." : activeTab === "manual"
               ? `Save ${multiInsertRows.filter(row => row.vendor_id && row.book_id && row.quantity && row.unit_price).length} Purchase${multiInsertRows.filter(row => row.vendor_id && row.book_id && row.quantity && row.unit_price).length !== 1 ? 's' : ''}`
-              : "Import File"
+              : activeTab === "import" ? "Import File"
+                : "Scan Barcode First"
             }
           </Button>
         </Modal.Footer>

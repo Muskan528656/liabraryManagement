@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Badge, Form } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import Loader from "./Loader";
@@ -19,60 +19,87 @@ const ModuleDetail = ({
   onDelete = null,
   imageField = null,
   imageUrl = null,
+  lookupNavigation = {},
+  externalData = {}, // For select dropdowns (authors, categories, etc.)
 }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
-
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempData, setTempData] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const moduleNameFromUrl = window.location.pathname.split("/")[1];
+ console.log('moduleApi' , moduleApi)
   useEffect(() => {
-    const tryLoadFromLocalStorage = () => {
+    console.log("ModuleDetail useEffect running with:", { id, moduleApi, moduleName });
+
+    const loadData = async () => {
       try {
-        if (!id || !moduleApi) return false;
-        const key = `prefetch:${moduleApi}:${id}`;
-        const raw = localStorage.getItem(key);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          setData(parsed);
-          localStorage.removeItem(key);
-          setLoading(false);
-          return true;
+        setLoading(true);
+
+        // First try to fetch main data
+        await fetchData();
+
+        // Then fetch related data if needed
+        if (relatedModules.length > 0) {
+          await fetchRelatedData();
         }
-      } catch (e) {
-        console.warn('Failed to load prefetch from localStorage', e);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
       }
-      return false;
     };
 
-    const loadedFromCache = tryLoadFromLocalStorage();
-    if (!loadedFromCache) {
-      fetchData();
+    if (id && moduleApi) {
+      loadData();
+    } else {
+      console.error("Missing id or moduleApi:", { id, moduleApi });
+      setLoading(false);
     }
-    if (relatedModules.length > 0) {
-      fetchRelatedData();
-    }
-  }, [id]);
+  }, [id, moduleApi, moduleLabel]); // Add dependencies
+
+  console.log("ModuleDetail Props:", {
+    moduleApi,
+    moduleName,
+    moduleLabel,
+    fields,
+    id
+  });
+
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      console.log("Fetching data for:", { moduleApi, id });
+
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
-      if (response.data) {
-        if (response.data.success && response.data.data) {
-          setData(response.data.data);
-        } else if (response.data.id || (fields && fields.title && response.data[fields.title])) {
-          setData(response.data);
-        } else if (Array.isArray(response.data) && response.data.length > 0) {
-          setData(response.data[0]);
-        } else if (response.data.id) {
-          setData(response.data);
+
+      console.log("Full API Response:", response);
+
+      if (response && response.data) {
+        // Axios wraps response in data property
+        const responseData = response.data;
+        
+        // Handle different response formats
+        if (responseData.success && responseData.data) {
+          setData(responseData.data);
+        } else if (responseData.data && responseData.data.success && responseData.data.data) {
+          setData(responseData.data.data);
+        } else if (responseData.data) {
+          setData(responseData.data);
+        } else if (responseData.id) {
+          setData(responseData);
+        } else if (Array.isArray(responseData) && responseData.length > 0) {
+          setData(responseData[0]);
         } else {
-          throw new Error("Invalid response format");
+          // Direct data object
+          setData(responseData);
         }
       } else {
-        throw new Error("No data received");
+        throw new Error("No response received from API");
       }
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
@@ -80,24 +107,38 @@ const ModuleDetail = ({
         title: "Error",
         message: `Failed to fetch ${moduleLabel} details`,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchRelatedData = async () => {
     try {
       const relatedDataObj = {};
-      for (const relatedModule of relatedModules) {
+      
+      // Normalize relatedModules - handle both string array and object array
+      const normalizedModules = relatedModules.map(module => {
+        if (typeof module === 'string') {
+          return {
+            key: module,
+            api: module,
+            label: module.charAt(0).toUpperCase() + module.slice(1)
+          };
+        }
+        return module;
+      });
+      
+      for (const relatedModule of normalizedModules) {
         try {
+          // Skip if no api specified
+          if (!relatedModule.api) continue;
+          
           const api = new DataApi(relatedModule.api);
           const response = await api.get(relatedModule.endpoint ? relatedModule.endpoint(id) : `/${id}`);
-          if (response.data) {
+          if (response && response.data) {
             const responseData = response.data.success ? response.data.data : response.data;
             relatedDataObj[relatedModule.key] = Array.isArray(responseData) ? responseData : [responseData];
           }
         } catch (error) {
-          console.error(`Error fetching related ${relatedModule.label}:`, error);
+          console.error(`Error fetching related ${relatedModule.label || relatedModule.key}:`, error);
           relatedDataObj[relatedModule.key] = [];
         }
       }
@@ -107,8 +148,101 @@ const ModuleDetail = ({
     }
   };
 
+  const normalizeLookupPath = (path = "") => {
+    return path.replace(/^\/+|\/+$/g, "");
+  };
+
+  const getLookupTargetId = (lookupConfig = {}, record = {}) => {
+    if (typeof lookupConfig.idResolver === "function") {
+      return lookupConfig.idResolver(record);
+    }
+
+    if (lookupConfig.idField && Object.prototype.hasOwnProperty.call(record, lookupConfig.idField)) {
+      return record[lookupConfig.idField];
+    }
+
+    if (lookupConfig.moduleIdField && Object.prototype.hasOwnProperty.call(record, lookupConfig.moduleIdField)) {
+      return record[lookupConfig.moduleIdField];
+    }
+
+    if (lookupConfig.module) {
+      const fallbackField = `${lookupConfig.module.replace(/s$/, "")}_id`;
+      if (Object.prototype.hasOwnProperty.call(record, fallbackField)) {
+        return record[fallbackField];
+      }
+    }
+
+    return record.id;
+  };
+
+  const getLookupLabel = (value, record, lookupConfig = {}) => {
+    if (typeof lookupConfig.labelResolver === "function") {
+      return lookupConfig.labelResolver(record);
+    }
+
+    if (lookupConfig.labelField && Object.prototype.hasOwnProperty.call(record, lookupConfig.labelField)) {
+      return record[lookupConfig.labelField] ?? value;
+    }
+
+    return value ?? "—";
+  };
+
+  const handleLookupNavigation = (lookupConfig, record, event = null) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (!lookupConfig) return;
+
+    const targetId = getLookupTargetId(lookupConfig, record);
+    if (!targetId) return;
+
+    const basePath = lookupConfig.path || lookupConfig.module;
+    if (!basePath) return;
+
+    const finalPath = normalizeLookupPath(basePath);
+    if (!finalPath) return;
+
+    const targetUrl = `/${finalPath}/${targetId}`;
+
+    if (lookupConfig.newTab) {
+      window.open(targetUrl, "_blank");
+      return;
+    }
+
+    navigate(targetUrl);
+  };
+
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
+
+    console.log(`Formatting field: ${field.key}, value:`, value, "type:", field.type);
+
+      // Check if this field has lookup navigation configured
+    const lookupConfig = lookupNavigation && lookupNavigation[field.key];
+    if (lookupConfig && data) {
+      const targetId = getLookupTargetId(lookupConfig, data);
+      if (targetId) {
+        const label = getLookupLabel(value, data, lookupConfig);
+        return (
+          <a
+            href="#"
+            onClick={(e) => handleLookupNavigation(lookupConfig, data, e)}
+            style={{
+              color: "#6f42c1",
+              textDecoration: "none",
+              fontWeight: "500",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+            onMouseLeave={(e) => e.target.style.textDecoration = "none"}
+          >
+            {label}
+          </a>
+        );
+      }
+    }
+
     if (field.type === "date") {
       try {
         return new Date(value).toLocaleDateString();
@@ -148,7 +282,95 @@ const ModuleDetail = ({
     if (onEdit) {
       onEdit(data);
     } else {
-      navigate(`/${moduleName}?edit=${id}`);
+      // Enable inline editing
+      setIsEditing(true);
+      setTempData({ ...data });
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const api = new DataApi(moduleApi);
+      const response = await api.update(tempData, id);
+      
+      if (response && response.data) {
+        const responseData = response.data;
+        if (responseData.success && responseData.data) {
+          setData(responseData.data);
+        } else if (responseData.data) {
+          setData(responseData.data);
+        } else {
+          setData(responseData);
+        }
+        
+        PubSub.publish("RECORD_SAVED_TOAST", {
+          title: "Success",
+          message: `${moduleLabel} updated successfully`,
+        });
+        
+        setIsEditing(false);
+        setTempData(null);
+      } else {
+        throw new Error("Failed to update");
+      }
+    } catch (error) {
+      console.error(`Error updating ${moduleLabel}:`, error);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: `Failed to update ${moduleLabel}: ${error.message}`,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setTempData(null);
+  };
+
+  const handleFieldChange = (fieldKey, value) => {
+    if (isEditing && tempData) {
+      setTempData({
+        ...tempData,
+        [fieldKey]: value
+      });
+    }
+  };
+
+  const getFieldValue = (field, currentData) => {
+    if (!currentData) return "";
+    const value = currentData[field.key];
+    
+    if (isEditing) {
+      // For editing mode, return raw value formatted for input
+      if (field.type === "date" && value) {
+        try {
+          const date = new Date(value);
+          return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        } catch {
+          return value;
+        }
+      }
+      if (field.type === "datetime" && value) {
+        try {
+          const date = new Date(value);
+          // Convert to datetime-local format (YYYY-MM-DDTHH:mm)
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${year}-${month}-${day}T${hours}:${minutes}`;
+        } catch {
+          return value;
+        }
+      }
+      return value || "";
+    } else {
+      // For display mode, use formatValue
+      return formatValue(value, field) || "—";
     }
   };
 
@@ -191,27 +413,331 @@ const ModuleDetail = ({
       <Container fluid>
         <ScrollToTop />
         <Card>
-          <Card.Body>
-            <p>No data found</p>
-            <Button onClick={() => navigate(`/${moduleName}`)}>Back to List</Button>
+          <Card.Body className="text-center">
+            <h4>No Data Found</h4>
+            <p>Unable to load {moduleLabel} details.</p>
+            <Button variant="primary" onClick={() => navigate(`/${moduleName}`)}>
+              Back to List
+            </Button>
           </Card.Body>
         </Card>
       </Container>
     );
   }
 
-  const getImageUrl = () => {
-    if (imageUrl) return imageUrl;
-    if (imageField && data[imageField]) return data[imageField];
-    return null;
-  };
+  // Normalize fields - handle both array and object format
+  const normalizedFields = Array.isArray(fields) 
+    ? { details: fields }
+    : fields || {};
+
+  // Get title and subtitle from fields config or data
+  const titleValue = normalizedFields?.title && data ? (data[normalizedFields.title] || data.name || data.title || moduleLabel) : (data?.name || data?.title || moduleLabel);
+  const subtitleValue = normalizedFields?.subtitle && data ? (data[normalizedFields.subtitle] || data.email || data.isbn || "") : (data?.email || data?.isbn || "");
+
+  // Debug: Check what fields are available in data
+  console.log("Available data fields:", Object.keys(data));
+  console.log("Fields configuration:", normalizedFields);
 
   return (
     <Container fluid className="py-4">
       <ScrollToTop />
 
-      {/* Details Section */}
-      {fields && fields.details && (
+      {/* Header Section with Title and Actions */}
+      <Row className="mb-4">
+        <Col>
+          <Card style={{
+            border: "none",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+            borderRadius: "12px",
+            overflow: "hidden"
+          }}>
+            <Card.Body style={{ padding: "20px 24px" }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h4 style={{ margin: 0, color: "#6f42c1" }}>
+                    {moduleLabel}
+                  </h4>
+                  {subtitleValue && (
+                    <p style={{ margin: "8px 0 0 0", color: "#6c757d", fontSize: "14px" }}>
+                      {subtitleValue}
+                    </p>
+                  )}
+                  {!subtitleValue && (
+                  <p style={{ margin: "8px 0 0 0", color: "#6c757d", fontSize: "14px" }}>
+                    ID: {id}
+                  </p>
+                  )}
+                </div>
+                <div>
+                  {!isEditing ? (
+                    <Button
+                      variant="outline-primary"
+                      onClick={handleEdit}
+                      style={{
+                        border: "2px solid var(--primary-color, #6f42c1)",
+                        color: "var(--primary-color, #6f42c1)",
+                        borderRadius: "8px",
+                        padding: "8px 20px",
+                        fontWeight: "600",
+                      }}
+                    >
+                    <i className="fa-solid fa-edit me-2"></i>
+                      Edit {moduleLabel}
+                  </Button>
+                  ) : (
+                    <div className="d-flex gap-2">
+                      <button
+                        className="custom-btn-primary"
+                        onClick={handleSave}
+                        disabled={saving}
+                        style={{
+                          background: "var(--primary-color, #6f42c1)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 20px",
+                          fontWeight: "600",
+                          cursor: saving ? "not-allowed" : "pointer",
+                          opacity: saving ? 0.6 : 1,
+                        }}
+                      >
+                        <i className="fa-solid fa-check me-2"></i>
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        className="custom-btn-secondary"
+                        onClick={handleCancel}
+                        disabled={saving}
+                        style={{
+                          background: "#6c757d",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "8px 20px",
+                          fontWeight: "600",
+                          cursor: saving ? "not-allowed" : "pointer",
+                          opacity: saving ? 0.6 : 1,
+                        }}
+                      >
+                        <i className="fa-solid fa-times me-2"></i>
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {!isEditing && (
+                    <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+                    <i className="fa-solid fa-trash me-2"></i>
+                    Delete
+                  </Button>
+                  )}
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Overview Section */}
+      {normalizedFields && normalizedFields.overview && normalizedFields.overview.length > 0 && (
+        <Row className="mb-4">
+          <Col>
+            <Card style={{
+              border: "none",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+              borderRadius: "12px",
+              overflow: "hidden"
+            }}>
+              <Card.Body style={{ padding: 0 }}>
+                <div style={{
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #e9ecef",
+                  background: "linear-gradient(to right, #f8f9fa, #ffffff)"
+                }}>
+                  <h5 style={{
+                    margin: 0,
+                    color: "#6f42c1",
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}>
+                    <i className="fa-solid fa-info-circle"></i>
+                    Overview
+                  </h5>
+                </div>
+
+                <div style={{ padding: "24px" }}>
+      <Row>
+                    <Col md={6}>
+                      {normalizedFields.overview.slice(0, Math.ceil(normalizedFields.overview.length / 2)).map((field, index) => {
+                        const currentData = isEditing ? tempData : data;
+                        
+                        // Handle select/dropdown fields
+                        if (field.type === "select" && field.options && externalData[field.options]) {
+                          const options = externalData[field.options] || [];
+                          const currentValue = currentData ? currentData[field.key] : null;
+                          
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              {isEditing ? (
+                                <Form.Select
+                                  value={currentValue || ""}
+                                  onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                  style={{
+                                    background: "white",
+                                  }}
+                                >
+                                  <option value="">Select {field.label}</option>
+                                  {options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {option.name || option.title || option.email || `Item ${option.id}`}
+                                    </option>
+                                  ))}
+                                </Form.Select>
+                              ) : (
+                                <Form.Control
+                                  type="text"
+                                  value={(() => {
+                                    if (field.displayKey && data) {
+                                      return data[field.displayKey] || "—";
+                                    }
+                                    const selected = options.find(opt => opt.id === currentValue);
+                                    return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                  })()}
+                                  readOnly
+                                  style={{
+                                    background: "var(--header-highlighter-color, #f8f9fa)",
+                                    pointerEvents: "none",
+                                    opacity: 0.9,
+                                  }}
+                                />
+                              )}
+                            </Form.Group>
+                          );
+                        }
+                        
+                        return (
+                          <Form.Group key={index} className="mb-3">
+                            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                            <Form.Control
+                              type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                              value={getFieldValue(field, currentData)}
+                              readOnly={!isEditing}
+                              onChange={(e) => {
+                                if (isEditing) {
+                                  let newValue = e.target.value;
+                                  if (field.type === "number") {
+                                    newValue = newValue ? parseFloat(newValue) : null;
+                                  } else if (field.type === "date" && newValue) {
+                                    newValue = newValue;
+                                  } else if (field.type === "datetime" && newValue) {
+                                    newValue = new Date(newValue).toISOString();
+                                  }
+                                  handleFieldChange(field.key, newValue);
+                                }
+                              }}
+                              style={{
+                                background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                pointerEvents: isEditing ? "auto" : "none",
+                                opacity: isEditing ? 1 : 0.9,
+                              }}
+                            />
+                          </Form.Group>
+                        );
+                      })}
+                    </Col>
+
+                    <Col md={6}>
+                      {normalizedFields.overview.slice(Math.ceil(normalizedFields.overview.length / 2)).map((field, index) => {
+                        const currentData = isEditing ? tempData : data;
+                        
+                        // Handle select/dropdown fields
+                        if (field.type === "select" && field.options && externalData[field.options]) {
+                          const options = externalData[field.options] || [];
+                          const currentValue = currentData ? currentData[field.key] : null;
+                          
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              {isEditing ? (
+                                <Form.Select
+                                  value={currentValue || ""}
+                                  onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                  style={{
+                                    background: "white",
+                                  }}
+                                >
+                                  <option value="">Select {field.label}</option>
+                                  {options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {option.name || option.title || option.email || `Item ${option.id}`}
+                                    </option>
+                                  ))}
+                                </Form.Select>
+                              ) : (
+                                <Form.Control
+                                  type="text"
+                                  value={(() => {
+                                    if (field.displayKey && data) {
+                                      return data[field.displayKey] || "—";
+                                    }
+                                    const selected = options.find(opt => opt.id === currentValue);
+                                    return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                  })()}
+                                  readOnly
+                                  style={{
+                                    background: "var(--header-highlighter-color, #f8f9fa)",
+                                    pointerEvents: "none",
+                                    opacity: 0.9,
+                                  }}
+                                />
+                              )}
+                            </Form.Group>
+                          );
+                        }
+                        
+                        return (
+                          <Form.Group key={index} className="mb-3">
+                            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                            <Form.Control
+                              type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                              value={getFieldValue(field, currentData)}
+                              readOnly={!isEditing}
+                              onChange={(e) => {
+                                if (isEditing) {
+                                  let newValue = e.target.value;
+                                  if (field.type === "number") {
+                                    newValue = newValue ? parseFloat(newValue) : null;
+                                  } else if (field.type === "date" && newValue) {
+                                    newValue = newValue;
+                                  } else if (field.type === "datetime" && newValue) {
+                                    newValue = new Date(newValue).toISOString();
+                                  }
+                                  handleFieldChange(field.key, newValue);
+                                }
+                              }}
+                              style={{
+                                background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                pointerEvents: isEditing ? "auto" : "none",
+                                opacity: isEditing ? 1 : 0.9,
+                              }}
+                            />
+                          </Form.Group>
+                        );
+                      })}
+                    </Col>
+                  </Row>
+              </div>
+          </Card.Body>
+        </Card>
+          </Col>
+      </Row>
+      )}
+
+      {/* Main Details Section */}
+      {normalizedFields && normalizedFields.details && (
         <Row className="mb-4">
           <Col>
             <Card style={{
@@ -236,32 +762,379 @@ const ModuleDetail = ({
                     gap: "8px"
                   }}>
                     <i className="fa-solid fa-file-lines"></i>
-                    Details
+                    Basic Information
                   </h5>
                 </div>
 
                 <div style={{ padding: "24px" }}>
                   <Row>
                     <Col md={6}>
-                      <div className="detail-section">
-                        {fields.details.slice(0, Math.ceil(fields.details.length / 2)).map((field, index) => (
-                          <div key={index} className="detail-row">
-                            <div className="detail-label">{field.label}</div>
-                            <div className="detail-value">{formatValue(data[field.key], field)}</div>
-                          </div>
-                        ))}
-                      </div>
+                      {normalizedFields.details.slice(0, Math.ceil(normalizedFields.details.length / 2)).map((field, index) => {
+                        const currentData = isEditing ? tempData : data;
+                        
+                        // Handle select/dropdown fields
+                        if (field.type === "select" && field.options && externalData[field.options]) {
+                          const options = externalData[field.options] || [];
+                          const currentValue = currentData ? currentData[field.key] : null;
+
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              {isEditing ? (
+                                <Form.Select
+                                  value={currentValue || ""}
+                                  onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                  style={{
+                                    background: "white",
+                                  }}
+                                >
+                                  <option value="">Select {field.label}</option>
+                                  {options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {option.name || option.title || option.email || `Item ${option.id}`}
+                                    </option>
+                                  ))}
+                                </Form.Select>
+                              ) : (
+                                <Form.Control
+                                  type="text"
+                                  value={(() => {
+                                    if (field.displayKey && data) {
+                                      return data[field.displayKey] || "—";
+                                    }
+                                    const selected = options.find(opt => opt.id === currentValue);
+                                    return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                  })()}
+                                  readOnly
+                                  style={{
+                                    background: "var(--header-highlighter-color, #f8f9fa)",
+                                    pointerEvents: "none",
+                                    opacity: 0.9,
+                                  }}
+                                />
+                              )}
+                            </Form.Group>
+                          );
+                        }
+                        
+                        return (
+                          <Form.Group key={index} className="mb-3">
+                            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                            <Form.Control
+                              type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                              value={getFieldValue(field, currentData)}
+                              readOnly={!isEditing}
+                              onChange={(e) => {
+                                if (isEditing) {
+                                  let newValue = e.target.value;
+                                  if (field.type === "number") {
+                                    newValue = newValue ? parseFloat(newValue) : null;
+                                  } else if (field.type === "date" && newValue) {
+                                    // Keep date in ISO format
+                                    newValue = newValue;
+                                  } else if (field.type === "datetime" && newValue) {
+                                    // Keep datetime in ISO format
+                                    newValue = new Date(newValue).toISOString();
+                                  }
+                                  handleFieldChange(field.key, newValue);
+                                }
+                              }}
+                              style={{
+                                background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                pointerEvents: isEditing ? "auto" : "none",
+                                opacity: isEditing ? 1 : 0.9,
+                              }}
+                            />
+                          </Form.Group>
+                          );
+                        })}
                     </Col>
 
                     <Col md={6}>
-                      <div className="detail-section">
-                        {fields.details.slice(Math.ceil(fields.details.length / 2)).map((field, index) => (
-                          <div key={index} className="detail-row">
-                            <div className="detail-label">{field.label}</div>
-                            <div className="detail-value">{formatValue(data[field.key], field)}</div>
-                          </div>
-                        ))}
-                      </div>
+                      {normalizedFields.details.slice(Math.ceil(normalizedFields.details.length / 2)).map((field, index) => {
+                        const currentData = isEditing ? tempData : data;
+                        
+                        // Handle select/dropdown fields
+                        if (field.type === "select" && field.options && externalData[field.options]) {
+                          const options = externalData[field.options] || [];
+                          const currentValue = currentData ? currentData[field.key] : null;
+                          
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              {isEditing ? (
+                                <Form.Select
+                                  value={currentValue || ""}
+                                  onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                  style={{
+                                    background: "white",
+                                  }}
+                                >
+                                  <option value="">Select {field.label}</option>
+                                  {options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {option.name || option.title || option.email || `Item ${option.id}`}
+                                    </option>
+                                  ))}
+                                </Form.Select>
+                              ) : (
+                                <Form.Control
+                                  type="text"
+                                  value={(() => {
+                                    if (field.displayKey && data) {
+                                      return data[field.displayKey] || "—";
+                                    }
+                                    const selected = options.find(opt => opt.id === currentValue);
+                                    return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                  })()}
+                                  readOnly
+                                  style={{
+                                    background: "var(--header-highlighter-color, #f8f9fa)",
+                                    pointerEvents: "none",
+                                    opacity: 0.9,
+                                  }}
+                                />
+                              )}
+                            </Form.Group>
+                          );
+                        }
+                        
+                        return (
+                          <Form.Group key={index} className="mb-3">
+                            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                            <Form.Control
+                              type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                              value={getFieldValue(field, currentData)}
+                              readOnly={!isEditing}
+                              onChange={(e) => {
+                                if (isEditing) {
+                                  let newValue = e.target.value;
+                                  if (field.type === "number") {
+                                    newValue = newValue ? parseFloat(newValue) : null;
+                                  } else if (field.type === "date" && newValue) {
+                                    // Keep date in ISO format
+                                    newValue = newValue;
+                                  } else if (field.type === "datetime" && newValue) {
+                                    // Keep datetime in ISO format
+                                    newValue = new Date(newValue).toISOString();
+                                  }
+                                  handleFieldChange(field.key, newValue);
+                                }
+                              }}
+                              style={{
+                                background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                pointerEvents: isEditing ? "auto" : "none",
+                                opacity: isEditing ? 1 : 0.9,
+                              }}
+                            />
+                          </Form.Group>
+                        );
+                      })}
+                    </Col>
+                  </Row>
+                              </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Custom Sections from fields object (address, contact, settings, etc.) */}
+      {normalizedFields && Object.keys(normalizedFields).filter(key => !['title', 'subtitle', 'overview', 'details'].includes(key)).map((sectionKey) => {
+        const sectionFields = normalizedFields[sectionKey];
+        if (!Array.isArray(sectionFields) || sectionFields.length === 0) return null;
+
+        const sectionTitle = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1).replace(/_/g, ' ');
+
+        return (
+          <Row key={sectionKey} className="mb-4">
+            <Col>
+              <Card style={{
+                border: "none",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                borderRadius: "12px",
+                overflow: "hidden"
+              }}>
+                <Card.Body style={{ padding: 0 }}>
+                  <div style={{
+                    padding: "20px 24px",
+                    borderBottom: "1px solid #e9ecef",
+                    background: "linear-gradient(to right, #f8f9fa, #ffffff)"
+                  }}>
+                    <h5 style={{
+                      margin: 0,
+                      color: "#6f42c1",
+                      fontSize: "16px",
+                      fontWeight: "700",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <i className="fa-solid fa-file-lines"></i>
+                      {sectionTitle}
+                    </h5>
+                            </div>
+
+                  <div style={{ padding: "24px" }}>
+                    <Row>
+                      <Col md={6}>
+                        {sectionFields.slice(0, Math.ceil(sectionFields.length / 2)).map((field, index) => {
+                          const currentData = isEditing ? tempData : data;
+                          
+                          // Handle select/dropdown fields
+                          if (field.type === "select" && field.options && externalData[field.options]) {
+                            const options = externalData[field.options] || [];
+                            const currentValue = currentData ? currentData[field.key] : null;
+                            
+                            return (
+                              <Form.Group key={index} className="mb-3">
+                                <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                                {isEditing ? (
+                                  <Form.Select
+                                    value={currentValue || ""}
+                                    onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                    style={{
+                                      background: "white",
+                                    }}
+                                  >
+                                    <option value="">Select {field.label}</option>
+                                    {options.map((option) => (
+                                      <option key={option.id} value={option.id}>
+                                        {option.name || option.title || option.email || `Item ${option.id}`}
+                                      </option>
+                                    ))}
+                                  </Form.Select>
+                                ) : (
+                                  <Form.Control
+                                    type="text"
+                                    value={(() => {
+                                      if (field.displayKey && data) {
+                                        return data[field.displayKey] || "—";
+                                      }
+                                      const selected = options.find(opt => opt.id === currentValue);
+                                      return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                    })()}
+                                    readOnly
+                                    style={{
+                                      background: "var(--header-highlighter-color, #f8f9fa)",
+                                      pointerEvents: "none",
+                                      opacity: 0.9,
+                                    }}
+                                  />
+                                )}
+                              </Form.Group>
+                            );
+                          }
+                          
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              <Form.Control
+                                type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                                value={getFieldValue(field, currentData)}
+                                readOnly={!isEditing}
+                                onChange={(e) => {
+                                  if (isEditing) {
+                                    let newValue = e.target.value;
+                                    if (field.type === "number") {
+                                      newValue = newValue ? parseFloat(newValue) : null;
+                                    } else if (field.type === "date" && newValue) {
+                                      newValue = newValue;
+                                    } else if (field.type === "datetime" && newValue) {
+                                      newValue = new Date(newValue).toISOString();
+                                    }
+                                    handleFieldChange(field.key, newValue);
+                                  }
+                                }}
+                                style={{
+                                  background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                  pointerEvents: isEditing ? "auto" : "none",
+                                  opacity: isEditing ? 1 : 0.9,
+                                }}
+                              />
+                            </Form.Group>
+                          );
+                        })}
+                      </Col>
+
+                      <Col md={6}>
+                        {sectionFields.slice(Math.ceil(sectionFields.length / 2)).map((field, index) => {
+                          const currentData = isEditing ? tempData : data;
+                          
+                          // Handle select/dropdown fields
+                          if (field.type === "select" && field.options && externalData[field.options]) {
+                            const options = externalData[field.options] || [];
+                            const currentValue = currentData ? currentData[field.key] : null;
+                            
+                            return (
+                              <Form.Group key={index} className="mb-3">
+                                <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                                {isEditing ? (
+                                  <Form.Select
+                                    value={currentValue || ""}
+                                    onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+                                    style={{
+                                      background: "white",
+                                    }}
+                                  >
+                                    <option value="">Select {field.label}</option>
+                                    {options.map((option) => (
+                                      <option key={option.id} value={option.id}>
+                                        {option.name || option.title || option.email || `Item ${option.id}`}
+                                      </option>
+                                    ))}
+                                  </Form.Select>
+                                ) : (
+                                  <Form.Control
+                                    type="text"
+                                    value={(() => {
+                                      if (field.displayKey && data) {
+                                        return data[field.displayKey] || "—";
+                                      }
+                                      const selected = options.find(opt => opt.id === currentValue);
+                                      return selected ? (selected.name || selected.title || selected.email || "—") : "—";
+                                    })()}
+                                    readOnly
+                                    style={{
+                                      background: "var(--header-highlighter-color, #f8f9fa)",
+                                      pointerEvents: "none",
+                                      opacity: 0.9,
+                                    }}
+                                  />
+                                )}
+                              </Form.Group>
+                            );
+                          }
+                          
+                          return (
+                            <Form.Group key={index} className="mb-3">
+                              <Form.Label className="fw-semibold">{field.label}</Form.Label>
+                              <Form.Control
+                                type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "datetime" ? "datetime-local" : "text"}
+                                value={getFieldValue(field, currentData)}
+                                readOnly={!isEditing}
+                                onChange={(e) => {
+                                  if (isEditing) {
+                                    let newValue = e.target.value;
+                                    if (field.type === "number") {
+                                      newValue = newValue ? parseFloat(newValue) : null;
+                                    } else if (field.type === "date" && newValue) {
+                                      newValue = newValue;
+                                    } else if (field.type === "datetime" && newValue) {
+                                      newValue = new Date(newValue).toISOString();
+                                    }
+                                    handleFieldChange(field.key, newValue);
+                                  }
+                                }}
+                                style={{
+                                  background: !isEditing ? "var(--header-highlighter-color, #f8f9fa)" : "white",
+                                  pointerEvents: isEditing ? "auto" : "none",
+                                  opacity: isEditing ? 1 : 0.9,
+                                }}
+                              />
+                            </Form.Group>
+                          );
+                        })}
                     </Col>
                   </Row>
                 </div>
@@ -269,7 +1142,8 @@ const ModuleDetail = ({
             </Card>
           </Col>
         </Row>
-      )}
+        );
+      })}
 
       {/* Custom Sections */}
       {customSections.length > 0 && customSections.map((section, idx) => (
@@ -336,7 +1210,16 @@ const ModuleDetail = ({
                 </div>
 
                 <div style={{ padding: "24px" }}>
-                  {relatedModules.map((relatedModule, idx) => (
+                  {relatedModules.map((relatedModule, idx) => {
+                    // Normalize relatedModule - handle both string and object
+                    const normalizedModule = typeof relatedModule === 'string' 
+                      ? { key: relatedModule, label: relatedModule.charAt(0).toUpperCase() + relatedModule.slice(1) }
+                      : relatedModule;
+                    
+                    const moduleKey = normalizedModule.key || normalizedModule;
+                    const moduleLabel = normalizedModule.label || (typeof normalizedModule === 'string' ? normalizedModule.charAt(0).toUpperCase() + normalizedModule.slice(1) : 'Related');
+                    
+                    return (
                     <div key={idx} className={idx > 0 ? "mt-4 pt-4" : ""} style={idx > 0 ? { borderTop: "1px solid #e9ecef" } : {}}>
                       <h6 style={{
                         marginBottom: "16px",
@@ -346,11 +1229,11 @@ const ModuleDetail = ({
                         textTransform: "uppercase",
                         letterSpacing: "0.5px"
                       }}>
-                        {relatedModule.label}
+                        {moduleLabel}
                       </h6>
-                      {relatedData[relatedModule.key] && relatedData[relatedModule.key].length > 0 ? (
-                        relatedModule.render ? (
-                          relatedModule.render(relatedData[relatedModule.key], data)
+                      {relatedData[moduleKey] && relatedData[moduleKey].length > 0 ? (
+                        normalizedModule.render ? (
+                          normalizedModule.render(relatedData[moduleKey], data)
                         ) : (
                           <div className="table-responsive">
                             <table style={{
@@ -360,7 +1243,7 @@ const ModuleDetail = ({
                             }}>
                               <thead>
                                 <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
-                                  {relatedModule.columns?.map((col, colIdx) => (
+                                  {normalizedModule.columns?.map((col, colIdx) => (
                                     <th
                                       key={colIdx}
                                       style={{
@@ -376,7 +1259,7 @@ const ModuleDetail = ({
                                 </tr>
                               </thead>
                               <tbody>
-                                {relatedData[relatedModule.key].map((item, itemIdx) => (
+                                {relatedData[moduleKey].map((item, itemIdx) => (
                                   <tr
                                     key={itemIdx}
                                     style={{
@@ -386,7 +1269,7 @@ const ModuleDetail = ({
                                     onMouseEnter={(e) => e.target.parentElement.style.background = "#f8f9fa"}
                                     onMouseLeave={(e) => e.target.parentElement.style.background = "transparent"}
                                   >
-                                    {relatedModule.columns?.map((col, colIdx) => (
+                                    {normalizedModule.columns?.map((col, colIdx) => (
                                       <td
                                         key={colIdx}
                                         style={{
@@ -422,12 +1305,13 @@ const ModuleDetail = ({
                             margin: 0,
                             fontSize: "14px"
                           }}>
-                            No {relatedModule.label.toLowerCase()} found.
+                            No {moduleLabel.toLowerCase()} found.
                           </p>
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Card.Body>
             </Card>

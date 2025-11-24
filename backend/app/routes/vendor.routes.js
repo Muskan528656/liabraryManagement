@@ -1,13 +1,13 @@
 /**
- * Handles all incoming request for /api/purchasevendor endpoint
+ * Handles all incoming request for /api/vendor endpoint
  * DB table for this demo.vendors (renamed from purchase_vendors)
- * Model used here is purchasevendor.model.js
+ * Model used here is vendor.model.js
  * SUPPORTED API ENDPOINTS
- *              GET     /api/purchasevendor
- *              GET     /api/purchasevendor/:id
- *              POST    /api/purchasevendor
- *              PUT     /api/purchasevendor/:id
- *              DELETE  /api/purchasevendor/:id
+ *              GET     /api/vendor
+ *              GET     /api/vendor/:id
+ *              POST    /api/vendor
+ *              PUT     /api/vendor/:id
+ *              DELETE  /api/vendor/:id
  *
  *@author     Muskan Khan
 @date   DEC,   2025
@@ -155,6 +155,6 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/purchasevendor", router);
+  app.use(process.env.BASE_API_URL + "/api/vendor", router);
 };
 

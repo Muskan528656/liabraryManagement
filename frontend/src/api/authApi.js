@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as constants from "../constants/CONSTANT";
 import helper from "../components/common/helper";
-const authApi = {
+const AuthApi = {
   async login(credentials) {
     try {
 
@@ -84,11 +84,11 @@ const authApi = {
         sessionStorage.setItem("token", result.authToken);
         sessionStorage.setItem("r-t", result.refreshToken);
       } else {
-        // console.error("Failed to refresh token:", result.error);
+
       }
       return result;
     } catch (error) {
-      // console.error("Error refreshing token:", error);
+
       this.logout();
       return;
     }
@@ -105,4 +105,4 @@ const authApi = {
   },
 };
 
-export default authApi;
+export default AuthApi;

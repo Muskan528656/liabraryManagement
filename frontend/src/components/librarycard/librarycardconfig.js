@@ -1,7 +1,5 @@
-// config/libraryCardConfig.js
 import { Badge, Button } from "react-bootstrap";
 
-// Helper functions first
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -61,28 +59,29 @@ const generateCardNumber = (card) => {
 };
 
 export const getLibraryCardConfig = (externalData = {}) => {
-    // Extract custom handlers from externalData safely
     const customHandlers = externalData.customHandlers || {};
-
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
 
-    // Default columns define karein
     const defaultColumns = [
+        {
+            name: "user_image",
+            label: "Photo",
+            type: "image",
+            width: "80px",
+            render: (value, row) => {
+                if (value) {
+                    return `<img src="${value}" alt="${row.user_name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />`;
+                }
+                return `<div style="width: 50px; height: 50px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                  <i class="fa-solid fa-user"></i>
+              </div>`;
+            }
+        },
         {
             field: "card_number",
             label: "Card Number",
             sortable: true,
-            render: (value, card) => (
-                <div>
-                    <strong style={{ fontFamily: 'monospace', fontSize: '14px' }}>
-                        {generateCardNumber(card)}
-                    </strong>
-                    <div style={{ fontSize: '11px', color: '#666' }}>
-                        ISBN-13 Format
-                    </div>
-                </div>
-            )
         },
         { field: "user_name", label: "User Name", sortable: true },
         { field: "user_email", label: "Email", sortable: true },
@@ -94,7 +93,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
         },
         {
             field: "expiry_date",
-            label: "Expiry Date",
+            label: "Submission Date",
             sortable: true,
             render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
         },
@@ -115,14 +114,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
         moduleName: "librarycards",
         moduleLabel: "Library Card",
         apiEndpoint: "librarycard",
-        // Ensure columns array always exists
         columns: defaultColumns,
         initialFormData: {
             user_id: "",
             issue_date: new Date().toISOString().split('T')[0],
             expiry_date: "",
             is_active: true,
+            image: null
         },
+
         formFields: [
             {
                 name: "user_id",
@@ -132,6 +132,30 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: true,
                 placeholder: "Select user",
                 colSize: 12,
+                props: {
+                    valueKey: "id",
+                    labelKey: "name"
+                }
+            },
+            {
+                name: "image",
+                label: "User Photo",
+                type: "file",
+                accept: "image/*",
+                required: false,
+                colSize: 12,
+                preview: true,
+                maxSize: 2 * 1024 * 1024,
+                helperText: "Upload user photo (JPG, PNG, max 2MB)",
+      
+                onChange: (file, formData, setFormData) => {
+                    if (file) {
+                        setFormData(prev => ({
+                            ...prev,
+                            image: file
+                        }));
+                    }
+                }
             },
             {
                 name: "issue_date",
@@ -139,10 +163,68 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "date",
                 required: true,
                 colSize: 6,
+                onChange: (value, formData, setFormData) => {
+                    // Calculate submission date based on issue date and library settings
+                    if (value) {
+                        // Use dynamic import for DataApi
+                        import("../../api/dataApi").then(({ default: DataApi }) => {
+                            const settingsApi = new DataApi("librarysettings");
+                            settingsApi.get("/all").then(response => {
+                                let durationDays = 365; // Default to 1 year
+                                
+                                if (response.data && response.data.success && response.data.data) {
+                                    durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
+                                } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
+                                    durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
+                                }
+                                
+                                // Calculate submission date
+                                const issueDate = new Date(value);
+                                const submissionDate = new Date(issueDate);
+                                submissionDate.setDate(submissionDate.getDate() + durationDays);
+                                
+                                setFormData(prev => ({
+                                    ...prev,
+                                    issue_date: value,
+                                    expiry_date: submissionDate.toISOString().split('T')[0]
+                                }));
+                            }).catch(error => {
+                                console.error("Error fetching settings:", error);
+                                // If settings fetch fails, use default 365 days
+                                const issueDate = new Date(value);
+                                const submissionDate = new Date(issueDate);
+                                submissionDate.setDate(submissionDate.getDate() + 365);
+                                
+                                setFormData(prev => ({
+                                    ...prev,
+                                    issue_date: value,
+                                    expiry_date: submissionDate.toISOString().split('T')[0]
+                                }));
+                            });
+                        }).catch(error => {
+                            console.error("Error importing DataApi:", error);
+                            // If import fails, use default 365 days
+                            const issueDate = new Date(value);
+                            const submissionDate = new Date(issueDate);
+                            submissionDate.setDate(submissionDate.getDate() + 365);
+                            
+                            setFormData(prev => ({
+                                ...prev,
+                                issue_date: value,
+                                expiry_date: submissionDate.toISOString().split('T')[0]
+                            }));
+                        });
+                    } else {
+                        setFormData(prev => ({
+                            ...prev,
+                            issue_date: value
+                        }));
+                    }
+                }
             },
             {
                 name: "expiry_date",
-                label: "Expiry Date",
+                label: "Submission Date",
                 type: "date",
                 colSize: 6,
             },
@@ -151,26 +233,39 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 label: "Active Status",
                 type: "checkbox",
                 colSize: 12,
-            }
+            },
         ],
-        validationRules: (formData, allCards, editingCard) => {
-            const errors = [];
-            if (!formData.user_id) errors.push("User is required");
-            if (!formData.issue_date) errors.push("Issue date is required");
 
-            // Check if user already has an active card
-            const existingCard = allCards.find(
+  
+        validationRules: (formData, allCards, editingCard) => {
+            const errors = {};
+
+            if (!formData.user_id) {
+                errors.user_id = "User is required";
+            }
+
+            if (!formData.issue_date) {
+                errors.issue_date = "Issue date is required";
+            }
+
+         
+            const existingCard = allCards?.find(
                 card => card.user_id === formData.user_id &&
                     card.is_active &&
                     card.id !== editingCard?.id
             );
-            if (existingCard) errors.push("User already has an active library card");
+
+            if (existingCard) {
+                errors.user_id = "User already has an active library card";
+            }
 
             return errors;
         },
+
         dataDependencies: {
             users: "user"
         },
+
         features: {
             showImportExport: true,
             showDetailView: true,
@@ -182,20 +277,39 @@ export const getLibraryCardConfig = (externalData = {}) => {
             allowEdit: true,
             allowDelete: true
         },
+
         details: [
             { key: "card_number", label: "Card Number", type: "text" },
             { key: "user_name", label: "User Name", type: "text" },
             { key: "user_email", label: "Email", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
-            { key: "expiry_date", label: "Expiry Date", type: "date" },
+            { key: "expiry_date", label: "Submission Date", type: "date" },
             { key: "is_active", label: "Status", type: "badge" },
         ],
+
         customHandlers: {
             generateCardNumber,
             generateISBN13Number,
             calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
             handleBarcodePreview
+        }, beforeSubmit: (formData, isEditing) => {
+            const errors = [];
+
+            if (!formData.user_id) {
+                errors.push("Please select a user");
+            }
+
+            if (!formData.issue_date) {
+                errors.push("Issue date is required");
+            }
+
+            // File size validation
+            if (formData.image && formData.image.size > 2 * 1024 * 1024) {
+                errors.push("Image size must be less than 2MB");
+            }
+
+            return errors;
         }
     };
 };

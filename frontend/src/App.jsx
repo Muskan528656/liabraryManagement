@@ -39,6 +39,9 @@ import Company from "./components/Company/Company";
 import CompanyDetail from "./components/Company/CompanyDetail";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
 import BulkIssue from "./components/bookissue/BulkIssue";
+import AuthorDetail from "./components/author/AuthorDetail";
+import CategoryDetail from "./components/category/CategoryDetail";
+import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -121,6 +124,21 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  // If user is not logged in, show only login page
+  if (userInfo === false) {
+    return (
+      <>
+        <ToastManager />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Login />} />
+          </Routes>
+        </Router>
+      </>
+    );
+  }
+
   return (
     <>
       <ToastManager />
@@ -133,11 +151,11 @@ function App() {
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Home userInfo={userInfo} />} />
             <Route path="author" element={<Author />} />
-            {/* <Route path="author/:id" element={<AuthorDetail />} /> */}
-            <Route path="books" element={<Books />} />
-            <Route path="books/:id" element={<BookDetail />} />
+            <Route path="author/:id" element={<AuthorDetail />} />
+            <Route path="book" element={<Books />} />
+            <Route path="book/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />
-            {/* <Route path="category/:id" element={<CategoryDetail />} /> */}
+            <Route path="category/:id" element={<CategoryDetail />} />
             <Route path="vendor" element={<Vendor />} />
             <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
@@ -145,7 +163,7 @@ function App() {
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />
-            {/* <Route path="librarycard/:id" element={<LibraryCardDetail />} /> */}
+            <Route path="librarycard/:id" element={<LibraryCardDetail />} />
             <Route path="bookissue" element={<BookIssue />} />
             <Route path="bookreturn" element={<BookSubmit />} />
             <Route path="librarysettings" element={<LibrarySettings />} />

@@ -74,6 +74,15 @@ const UniversalBarcodeScanner = () => {
             // Try to detect what type of data this is
             const detectedType = await detectDataType(barcode.trim());
             console.log("Detected data type:", detectedType);
+            
+            // If it's a library card with navigate flag, navigate directly
+            if (detectedType && detectedType.type === "librarycard" && detectedType.navigate) {
+                setLoading(false);
+                setShowModal(false);
+                navigate(detectedType.module);
+                return;
+            }
+            
             setDetectedData(detectedType);
         } catch (error) {
             console.error("Error detecting barcode data:", error);
@@ -87,6 +96,41 @@ const UniversalBarcodeScanner = () => {
 
     const detectDataType = async (barcode) => {
         console.log("Processing barcode:", barcode);
+
+        // Check if it's a library card number (before ISBN check)
+        // Library card numbers can be: LIB2025000003, LIB123456, LC-123456, or numeric 13-digit ISBN-like
+        const cardNumberPattern = /^(LIB|LC-?)?[A-Z0-9]{6,20}$/i;
+        const barcodeTrimmed = barcode.trim();
+        if (cardNumberPattern.test(barcodeTrimmed)) {
+            try {
+                const cardApi = new DataApi("librarycard");
+                // Try to find by card_number
+                const allCards = await cardApi.fetchAll();
+                if (allCards && allCards.data) {
+                    const cards = Array.isArray(allCards.data) ? allCards.data : (allCards.data.data || []);
+                    const foundCard = cards.find(card => {
+                        if (!card.card_number) return false;
+                        // Exact match (case insensitive)
+                        if (card.card_number.toUpperCase() === barcodeTrimmed.toUpperCase()) return true;
+                        // Partial match (if barcode is part of card_number or vice versa)
+                        if (card.card_number.toUpperCase().includes(barcodeTrimmed.toUpperCase()) ||
+                            barcodeTrimmed.toUpperCase().includes(card.card_number.toUpperCase())) return true;
+                        return false;
+                    });
+                    
+                    if (foundCard) {
+                        return {
+                            type: "librarycard",
+                            data: foundCard,
+                            module: `/librarycard/${foundCard.id}`,
+                            navigate: true
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking library card:", error);
+            }
+        }
 
         // First, check if it's a valid ISBN (highest priority)
         const isbnCheck = isValidISBN(barcode);
@@ -122,7 +166,7 @@ const UniversalBarcodeScanner = () => {
             return {
                 type: "book",
                 data: cleanedBookData,
-                module: "/books",
+                module: "/book",
             };
         }
 
@@ -241,7 +285,7 @@ const UniversalBarcodeScanner = () => {
                         return {
                             type: "book",
                             data: cleanedBookData,
-                            module: "/books",
+                            module: "/book",
                         };
                     }
                 }
@@ -253,7 +297,7 @@ const UniversalBarcodeScanner = () => {
             return {
                 type: "book",
                 data: { title: barcode.trim() },
-                module: "/books",
+                module: "/book",
             };
         }
 
@@ -534,7 +578,7 @@ const UniversalBarcodeScanner = () => {
             return {
                 type: "book",
                 data: bookData,
-                module: "/books",
+                module: "/book",
             };
         }
 

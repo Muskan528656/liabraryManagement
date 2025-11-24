@@ -8,6 +8,7 @@ import * as constants from "../../constants/CONSTANT";
 import helper from "../common/helper";
 import BookSubmit from "../booksubmit/BookSubmit";
 import DataApi from "../../api/dataApi";
+import Submodule from "./Submodule";
 
 export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     book_barcode: "",
     condition_after: "Good",
@@ -108,7 +109,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  
+
   // Fetch role permissions
   // const fetchRolePermissions = async (userRole) => {
   //   try {
@@ -432,7 +433,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const handleBarcodeSearch = (e) => {
     e.preventDefault();
     if (searchBarcode.trim()) {
-      // Navigate to books page with search query
       navigate(`/books?q=${encodeURIComponent(searchBarcode.trim())}`);
       setSearchBarcode("");
     }
@@ -543,114 +543,114 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               )}
             </Dropdown.Toggle>
             {
-              showNotifications ? 
-              <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
-                <Dropdown.Header className="d-flex justify-content-between align-items-center">
-                  <span>Notifications</span>
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        markAllAsRead();
-                      }}
-                      style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
-                    >
-                      Mark all as read
-                    </Button>
-                  )}
-                </Dropdown.Header>
-                <Dropdown.Divider />
-                {dueNotifications.length === 0 ? (
-                  <Dropdown.ItemText className="text-center text-muted">
-                    No new notifications
-                  </Dropdown.ItemText>
-                ) : dueNotifications && ( 
-
-                  dueNotifications?.slice(0, 10).map((notification) => (
-                    <React.Fragment key={notification.id}>
-                      <Dropdown.Item
-                        onClick={() => {
-                          if (!notification.is_read) {
-                            markAsRead(notification.id);
-                          }
-                          if (notification.related_type === "book_issue") {
-                            navigate("/mybooks");
-                          } else if (notification.related_type === "book_request") {
-                            // navigate("/bookrequest");
-                          }
-                          // setShowNotifications(false);
+              showNotifications ?
+                <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
+                  <Dropdown.Header className="d-flex justify-content-between align-items-center">
+                    <span>Notifications</span>
+                    {unreadCount > 0 && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAllAsRead();
                         }}
-                        style={{
-                          backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
-                          cursor: "pointer"
+                        style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
+                      >
+                        Mark all as read
+                      </Button>
+                    )}
+                  </Dropdown.Header>
+                  <Dropdown.Divider />
+                  {dueNotifications.length === 0 ? (
+                    <Dropdown.ItemText className="text-center text-muted">
+                      No new notifications
+                    </Dropdown.ItemText>
+                  ) : dueNotifications && (
+
+                    dueNotifications?.slice(0, 10).map((notification) => (
+                      <React.Fragment key={notification.id}>
+                        <Dropdown.Item
+                          onClick={() => {
+                            if (!notification.is_read) {
+                              markAsRead(notification.id);
+                            }
+                            if (notification.related_type === "book_issue") {
+                              navigate("/mybooks");
+                            } else if (notification.related_type === "book_request") {
+                              // navigate("/bookrequest");
+                            }
+                            // setShowNotifications(false);
+                          }}
+                          style={{
+                            backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div className="d-flex">
+                            <div className="me-2">
+                              {notification.type === "overdue" && (
+                                <i className="fa-solid fa-exclamation-triangle text-danger"></i>
+                              )}
+                              {notification.type === "due_today" && (
+                                <i className="fa-solid fa-clock text-warning"></i>
+                              )}
+                              {notification.type === "book_request" && (
+                                <i className="fa-solid fa-book text-primary"></i>
+                              )}
+                              {notification.type === "announcement" && (
+                                <i className="fa-solid fa-bullhorn text-info"></i>
+                              )}
+                              {notification.type === "fine" && (
+                                <i className="fa-solid fa-money-bill-wave text-danger"></i>
+                              )}
+                              {notification.type === "book_issued" && (
+                                <i className="fa-solid fa-book text-success"></i>
+                              )}
+                              {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
+                                <i className="fa-solid fa-bell text-secondary"></i>
+                              )}
+
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
+                                {notification.message}
+                              </div>
+                              <small className="text-muted" style={{ fontSize: "12px" }}>
+                                {notification.due_date}
+                              </small>
+                              <div className="text-muted" style={{ fontSize: "12px" }}>
+                                {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
+                              </div>
+
+                            </div>
+                            {!notification.is_read && (
+                              <div className="ms-2">
+                                <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
+                              </div>
+                            )}
+                          </div>
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                      </React.Fragment>
+                    ))
+
+                  )}
+                  {notifications.length > 10 && (
+                    <>
+                      <Dropdown.Item
+                        className="text-center"
+                        onClick={() => {
+                          // navigate("/notifications");
+                          setShowNotifications(false);
                         }}
                       >
-                        <div className="d-flex">
-                          <div className="me-2">
-                            {notification.type === "overdue" && (
-                              <i className="fa-solid fa-exclamation-triangle text-danger"></i>
-                            )}
-                            {notification.type === "due_today" && (
-                              <i className="fa-solid fa-clock text-warning"></i>
-                            )}
-                            {notification.type === "book_request" && (
-                              <i className="fa-solid fa-book text-primary"></i>
-                            )}
-                            {notification.type === "announcement" && (
-                              <i className="fa-solid fa-bullhorn text-info"></i>
-                            )}
-                            {notification.type === "fine" && (
-                              <i className="fa-solid fa-money-bill-wave text-danger"></i>
-                            )}
-                            {notification.type === "book_issued" && (
-                              <i className="fa-solid fa-book text-success"></i>
-                            )}
-                            {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
-                              <i className="fa-solid fa-bell text-secondary"></i>
-                            )}
-
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
-                              {notification.message}
-                            </div>
-                            <small className="text-muted" style={{ fontSize: "12px" }}>
-                              {notification.due_date}
-                            </small>
-                            <div className="text-muted" style={{ fontSize: "12px" }}>
-                              {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
-                            </div>
-
-                          </div>
-                          {!notification.is_read && (
-                            <div className="ms-2">
-                              <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
-                            </div>
-                          )}
-                        </div>
+                        <small className="text-primary">View all notifications</small>
                       </Dropdown.Item>
-                      <Dropdown.Divider />
-                    </React.Fragment>
-                  ))
-
-                )}
-                {notifications.length > 10 && (
-                  <>
-                    <Dropdown.Item
-                      className="text-center"
-                      onClick={() => {
-                        // navigate("/notifications");
-                        setShowNotifications(false);
-                      }}
-                    >
-                      <small className="text-primary">View all notifications</small>
-                    </Dropdown.Item>
-                  </>
-                )}
-              </Dropdown.Menu>
-              : null
+                    </>
+                  )}
+                </Dropdown.Menu>
+                : null
             }
           </Dropdown>
 
@@ -783,179 +783,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </div>
       </div>
 
-      {/* Bottom Row: Navigation Modules */}
-      <Navbar
-        expand="lg"
-        style={{
-          padding: "0.75rem 1.5rem",
-
-          background: "dadde2",
-          boxShadow: "none"
-        }}
-      >
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-
-        <Navbar.Collapse id="basic-navbar-nav">
-          {/* Modules Navigation - Light Gray Theme with Dropdown for many modules */}
-          <Nav className="me-auto d-flex align-items-center gap-1" style={{ flexWrap: "wrap" }}>
-            {menuItems.length <= 6 ? (
-              // Show all modules as links if 6 or fewer
-              menuItems.map((item) => (
-                <Nav.Link
-                  key={item.id}
-                  onClick={() => navigate(item.path)}
-                  style={{
-                    color: "#000000",
-                    background: isActive(item.path) ? "#f3f4f6" : "transparent",
-                    borderRadius: "6px",
-                    padding: "10px 16px",
-                    fontSize: "15px",
-                    fontWeight: isActive(item.path) ? "600" : "400",
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    border: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive(item.path)) {
-                      e.currentTarget.style.background = "#f3f4f6";
-                      e.currentTarget.style.color = "#000000";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive(item.path)) {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "#000000";
-                    }
-                  }}
-                >
-                  <i className={`fa-solid ${item.icon} me-1`} style={{ fontSize: "13px" }}></i>
-                  {item.label}
-                </Nav.Link>
-              ))
-            ) : (
-              // Show modules up to 70% width, rest in dropdown
-              <>
-                {menuItems.slice(0, visibleModulesCount).map((item) => (
-                  <Nav.Link
-                    key={item.id}
-                    onClick={() => navigate(item.path)}
-                    style={{
-                      color: isActive(item.path) ? "#374151" : "#6b7280",
-                      background: isActive(item.path) ? "#f3f4f6" : "transparent",
-                      borderRadius: "6px",
-                      padding: "10px 16px",
-                      fontSize: "15px",
-                      fontWeight: isActive(item.path) ? "500" : "400",
-                      textDecoration: "none",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      border: "none",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive(item.path)) {
-                        e.currentTarget.style.background = "#f9fafb";
-                        e.currentTarget.style.color = "#374151";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive(item.path)) {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.color = "#6b7280";
-                      }
-                    }}
-                  >
-                    <i className={`fa-solid ${item.icon} me-1`} style={{ fontSize: "13px" }}></i>
-                    {item.label}
-                  </Nav.Link>
-                ))}
-                {/* Dropdown for remaining modules */}
-                <Dropdown>
-                  <Dropdown.Toggle
-                    variant="link"
-                    style={{
-                      color: "#000000",
-                      textDecoration: "none",
-                      border: "none",
-                      padding: "10px 16px",
-                      fontSize: "15px",
-                      fontWeight: "400",
-                      borderRadius: "6px",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#f3f4f6";
-                      e.currentTarget.style.color = "#000000";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "#000000";
-                    }}
-                  >
-                    <i className="fa-solid fa-ellipsis me-1" style={{ fontSize: "13px" }}></i>
-                    More
-                    <i className="fa-solid fa-chevron-down ms-1" style={{ fontSize: "11px" }}></i>
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu align="start" style={{
-                    minWidth: "220px",
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                    background: "#ffffff",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
-                    marginTop: "8px",
-                    padding: "4px 0"
-                  }}>
-                    {menuItems.slice(visibleModulesCount).map((item) => (
-                      <Dropdown.Item
-                        key={item.id}
-                        onClick={() => navigate(item.path)}
-                        style={{
-                          color: isActive(item.path) ? "#000000" : "#374151",
-                          background: isActive(item.path) ? "#f3f4f6" : "transparent",
-                          padding: "12px 18px",
-                          fontSize: "15px",
-                          fontWeight: isActive(item.path) ? "600" : "400",
-                          borderRadius: "4px",
-                          margin: "2px 8px",
-                          transition: "all 0.2s"
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive(item.path)) {
-                            e.currentTarget.style.background = "#f3f4f6";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive(item.path)) {
-                            e.currentTarget.style.background = "transparent";
-                          }
-                        }}
-                      >
-                        <i className={`fa-solid ${item.icon} me-2`} style={{ fontSize: "12px", width: "16px", color: "#6b7280" }}></i>
-                        {item.label}
-                      </Dropdown.Item>
-                    ))}
-                  </Dropdown.Menu>
-                </Dropdown>
-              </>
-            )}
-          </Nav>
-        </Navbar.Collapse>
-      </Navbar>
-
-      {/* <QuickActions
-        show={showQuickAction}
-        onHide={() => {
-          setShowQuickAction(false);
-          setQuickActionType(null);
-        }}
-        actionType={quickActionType}
-      /> */}
-
-      {/* <BookSubmitModal
-        show={showBookSubmitModal}
-        onHide={handleCloseBookSubmitModal}
-      /> */}
+      <Submodule />
     </div>
   );
 }

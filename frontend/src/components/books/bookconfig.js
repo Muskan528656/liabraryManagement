@@ -14,7 +14,7 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
         [];
 
     return {
-        moduleName: "books",
+        moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
         initialFormData: {
@@ -154,7 +154,19 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
             { key: "language", label: "Language", type: "text" },
             { key: "total_copies", label: "Total Copies", type: "number" },
             { key: "available_copies", label: "Available Copies", type: "number" },
-        ]
+        ],
+        lookupNavigation: {
+            author_name: {
+                path: "author",
+                idField: "author_id",
+                labelField: "author_name"
+            },
+            category_name: {
+                path: "category",
+                idField: "category_id",
+                labelField: "category_name"
+            }
+        }
 
     };
 

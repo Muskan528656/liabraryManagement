@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Alert, Col, Container, Row } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import authApi from "../api/authApi";
+import AuthApi from "../api/authApi";
 
 
 const Login = () => {
@@ -23,7 +23,7 @@ const Login = () => {
     e.preventDefault();
     try {
       if (credentials.email && credentials.password && credentials.tcode) {
-        const result = await authApi.login(credentials);
+        const result = await AuthApi.login(credentials);
 
         if (result.success) {
           sessionStorage.setItem("token", result.authToken);

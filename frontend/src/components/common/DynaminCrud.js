@@ -1,6 +1,6 @@
 // components/common/DynamicCRUD.js
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Badge, Table } from "react-bootstrap";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Container, Row, Col, Card, Button, Modal, Form, Table } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
@@ -17,9 +17,9 @@ const DynamicCRUD = ({
     moduleName,
     moduleLabel,
     apiEndpoint,
-    columns,
-    formFields,
-    initialFormData,
+    columns = [],
+    formFields = [],
+    initialFormData = {},
     validationRules,
     features = {},
     importMapping,
@@ -70,41 +70,52 @@ const DynamicCRUD = ({
     const [visibleColumns, setVisibleColumns] = useState({});
     const [relatedData, setRelatedData] = useState({});
 
-    const handleAddMultiRow = () => {
-        setMultiInsertRows([...multiInsertRows, { ...initialFormData }]);
-    };
 
-    const handleRemoveMultiRow = (index) => {
+
+    const handleAddMultiRow = useCallback(() => {
+        setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
+    }, [initialFormData]);
+
+    const handleRemoveMultiRow = useCallback((index) => {
         if (multiInsertRows.length > 1) {
-            setMultiInsertRows(multiInsertRows.filter((_, i) => i !== index));
+            setMultiInsertRows(prev => prev.filter((_, i) => i !== index));
         }
-    };
+    }, [multiInsertRows.length]);
 
-    const handleMultiRowChange = (index, field, value) => {
-        const updatedRows = [...multiInsertRows];
-        updatedRows[index] = { ...updatedRows[index], [field]: value };
-        setMultiInsertRows(updatedRows);
-    };
+    const handleMultiRowChange = useCallback((index, field, value) => {
+        setMultiInsertRows(prev => {
+            const updatedRows = [...prev];
+            updatedRows[index] = { ...updatedRows[index], [field]: value };
+            return updatedRows;
+        });
+    }, []);
 
-    const hasRowData = (row) => {
+    const hasRowData = useCallback((row) => {
         return Object.values(row).some(val =>
             val !== null && val !== undefined && val !== '' && val !== 0
         );
-    };
+    }, []);
 
-    const handleNameClick = (item) => {
+    const handleNameClick = useCallback((item) => {
+        console.log("handleNameClick", item);
+        console.log("apiEndpoint", apiEndpoint);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
         }
-
+        console.log('apiEndpoint', apiEndpoint)
+        navigate(`/${apiEndpoint}/${item.id}`, {
+            state: { type: apiEndpoint, rowData: item },
+        });
+        console.log('item', item)
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
 
             if (enablePrefetch) {
                 try {
-                    localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
+                    navigate(`/${apiEndpoint}/${item.id}`);
+                    // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -112,21 +123,22 @@ const DynamicCRUD = ({
         } else {
             window.open(`/${moduleName}/${item.id}`, '_blank');
         }
-    };
+    }, [nameClickHandler, showDetailView, enablePrefetch, apiEndpoint, moduleName]);
 
-    const handleBackToList = () => {
+    const handleBackToList = useCallback(() => {
         setShowDetail(false);
         setSelectedItem(null);
-    };
+    }, []);
 
-    const getAutoDetailConfig = () => {
+    // Fixed getAutoDetailConfig function
+    const getAutoDetailConfig = useCallback(() => {
         if (detailConfig) return detailConfig;
 
         const autoDetails = columns
-            .filter(col => !col.field.includes('_id') && col.field !== 'actions')
+            .filter(col => col && col.field && !col.field.includes('_id') && col.field !== 'actions')
             .map(col => ({
                 key: col.field,
-                label: col.label,
+                label: col.label || col.field,
                 type: col.type || "text"
             }));
 
@@ -136,13 +148,13 @@ const DynamicCRUD = ({
             },
             relatedModules: []
         };
-    };
+    }, [detailConfig, columns]);
 
-    const normalizeLookupPath = (path = "") => {
+    const normalizeLookupPath = useCallback((path = "") => {
         return path.replace(/^\/+|\/+$/g, "");
-    };
+    }, []);
 
-    const getLookupTargetId = (lookupConfig = {}, record = {}) => {
+    const getLookupTargetId = useCallback((lookupConfig = {}, record = {}) => {
         if (typeof lookupConfig.idResolver === "function") {
             return lookupConfig.idResolver(record);
         }
@@ -163,9 +175,9 @@ const DynamicCRUD = ({
         }
 
         return record.id;
-    };
+    }, []);
 
-    const getLookupLabel = (value, record, lookupConfig = {}) => {
+    const getLookupLabel = useCallback((value, record, lookupConfig = {}) => {
         if (typeof lookupConfig.labelResolver === "function") {
             return lookupConfig.labelResolver(record);
         }
@@ -175,9 +187,9 @@ const DynamicCRUD = ({
         }
 
         return value ?? "—";
-    };
+    }, []);
 
-    const handleLookupNavigation = (lookupConfig, record, event = null) => {
+    const handleLookupNavigation = useCallback((lookupConfig, record, event = null) => {
         if (event) {
             event.preventDefault();
         }
@@ -201,9 +213,9 @@ const DynamicCRUD = ({
         }
 
         navigate(targetUrl);
-    };
+    }, [getLookupTargetId, normalizeLookupPath, navigate]);
 
-    const renderLookupLink = (value, record, lookupConfig) => {
+    const renderLookupLink = useCallback((value, record, lookupConfig) => {
         const label = getLookupLabel(value, record, lookupConfig);
 
         return (
@@ -222,10 +234,12 @@ const DynamicCRUD = ({
                 {label}
             </a>
         );
-    };
+    }, [getLookupLabel, handleLookupNavigation]);
 
-    const getEnhancedColumns = () => {
+    const getEnhancedColumns = useCallback(() => {
         return columns.map(col => {
+            if (!col) return null;
+
             const customRenderer = customHandlers.columnRenderers?.[col.field];
 
             if (customRenderer) {
@@ -243,7 +257,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -269,27 +283,26 @@ const DynamicCRUD = ({
             }
 
             return col;
-        });
-    };
+        }).filter(Boolean); // Remove null values
+    }, [columns, customHandlers.columnRenderers, lookupNavigation, renderLookupLink, showDetailView, moduleName, handleNameClick]);
 
-    const enhancedColumns = getEnhancedColumns();
-    const finalDetailConfig = getAutoDetailConfig();
+    const enhancedColumns = useMemo(() => getEnhancedColumns(), [getEnhancedColumns]);
+    const finalDetailConfig = useMemo(() => getAutoDetailConfig(), [getAutoDetailConfig]);
 
-    // ✅ INITIALIZE VISIBLE COLUMNS
     useEffect(() => {
         const initialVisibility = {};
         columns.forEach(col => {
-            initialVisibility[col.field] = col.hidden !== true;
+            if (col && col.field) {
+                initialVisibility[col.field] = col.hidden !== true;
+            }
         });
         setVisibleColumns(initialVisibility);
     }, [columns]);
 
-    // ✅ INITIALIZE FORM DATA
     useEffect(() => {
         setFormData(initialFormData);
     }, [initialFormData]);
 
-    // ✅ USER INFO AND PERMISSIONS
     useEffect(() => {
         const token = sessionStorage.getItem("token");
         if (token) {
@@ -302,17 +315,21 @@ const DynamicCRUD = ({
         }
     }, []);
 
-    // ✅ FETCH DATA
-    useEffect(() => {
-        if (userInfo) {
-            fetchData();
-            if (autoFetchRelated) {
-                fetchRelatedData();
-            }
-        }
-    }, [userInfo]);
+    const filteredData = useMemo(() => {
+        if (!searchTerm || !showSearch) return data;
 
-    const fetchData = async () => {
+        const searchTermLower = searchTerm.toLowerCase();
+        return data.filter(item =>
+            columns.some(col => {
+                if (!col || !col.field) return false;
+                const fieldValue = item[col.field];
+                return fieldValue != null &&
+                    String(fieldValue).toLowerCase().includes(searchTermLower);
+            })
+        );
+    }, [data, searchTerm, showSearch, columns]);
+
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
@@ -333,14 +350,14 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchRelatedData = async () => {
+    const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
-
+        console.log("fetchRelatedData called");
         try {
             const selectFields = formFields.filter(field =>
-                field.type === "select" && field.options && typeof field.options === "string"
+                field && field.type === "select" && field.options && typeof field.options === "string"
             );
 
             const uniqueOptions = [...new Set(selectFields.map(field => field.options))];
@@ -374,23 +391,25 @@ const DynamicCRUD = ({
         } catch (error) {
             console.error("Error fetching related data:", error);
         }
-    };
+    }, [autoFetchRelated, formFields]);
 
+    useEffect(() => {
+        if (userInfo) {
+            fetchData();
+            if (autoFetchRelated) {
+                fetchRelatedData();
+            }
+        }
+    }, [userInfo, fetchData, autoFetchRelated, fetchRelatedData]);
 
-    const getProcessedFormFields = () => {
+    const getProcessedFormFields = useCallback(() => {
         return formFields.map(field => {
-            if (field.type !== 'select' || !field.options) {
+            if (!field || field.type !== 'select' || !field.options) {
                 return field;
             }
 
             try {
                 let optionsArray = [];
-
-                console.log(`Processing field: ${field.name}`, {
-                    optionsType: typeof field.options,
-                    optionsValue: field.options,
-                    hasRelatedData: relatedData[field.options] ? true : false
-                });
 
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
@@ -437,28 +456,46 @@ const DynamicCRUD = ({
                 };
             }
         });
-    };
+    }, [formFields, relatedData]);
 
-    const handleAdd = () => {
+    const handleAdd = useCallback(() => {
         setEditingItem(null);
         setFormData(initialFormData);
         setShowModal(true);
-    };
+    }, [initialFormData]);
 
-    const handleEdit = (item) => {
+    const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
         setEditingItem(item);
-        setFormData({ ...initialFormData, ...item });
+        
+        // Format date fields properly for date inputs
+        const formattedItem = { ...item };
+        if (formattedItem.issue_date) {
+            // Ensure date is in YYYY-MM-DD format
+            const issueDate = new Date(formattedItem.issue_date);
+            if (!isNaN(issueDate.getTime())) {
+                formattedItem.issue_date = issueDate.toISOString().split('T')[0];
+            }
+        }
+        if (formattedItem.expiry_date) {
+            // Ensure date is in YYYY-MM-DD format
+            const expiryDate = new Date(formattedItem.expiry_date);
+            if (!isNaN(expiryDate.getTime())) {
+                formattedItem.expiry_date = expiryDate.toISOString().split('T')[0];
+            }
+        }
+        
+        setFormData({ ...initialFormData, ...formattedItem });
         setShowModal(true);
-    };
+    }, [allowEdit, initialFormData]);
 
-    const handleDelete = (id) => {
+    const handleDelete = useCallback((id) => {
         if (!allowDelete) return;
         setDeleteId(id);
         setShowDeleteModal(true);
-    };
+    }, [allowDelete]);
 
-    const confirmDelete = async () => {
+    const confirmDelete = useCallback(async () => {
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
@@ -484,9 +521,9 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
             if (customResult === false) return;
@@ -507,16 +544,50 @@ const DynamicCRUD = ({
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             let response;
+            const hasFileUpload = formFields.some(field => field && field.type === 'file');
 
-            const submitData = { ...formData };
-            Object.keys(submitData).forEach(key => {
-                if (submitData[key] === '') submitData[key] = null;
-            });
+            if (hasFileUpload) {
+                // FormData use karen file upload ke liye
+                const submitData = new FormData();
 
-            if (editingItem) {
-                response = await api.update(submitData, editingItem.id);
+                // Regular fields add karen
+                Object.keys(formData).forEach(key => {
+                    if (formData[key] !== null && formData[key] !== undefined) {
+                        // File field check karen
+                        const fieldConfig = formFields.find(f => f && f.name === key);
+                        if (fieldConfig && fieldConfig.type === 'file') {
+                            // File object directly append karen
+                            if (formData[key] instanceof File) {
+                                submitData.append(key, formData[key]);
+                            } else if (formData[key]) {
+                                // Agar string hai (existing image URL), toh usko bhi append karen
+                                submitData.append(key, formData[key]);
+                            }
+                        } else {
+                            // Regular fields
+                            submitData.append(key, formData[key]);
+                        }
+                    }
+                });
+
+                // API call with FormData
+                if (editingItem) {
+                    response = await api.update(submitData, editingItem.id);
+                } else {
+                    response = await api.create(submitData);
+                }
             } else {
-                response = await api.create(submitData);
+                // Normal JSON data
+                const submitData = { ...formData };
+                Object.keys(submitData).forEach(key => {
+                    if (submitData[key] === '') submitData[key] = null;
+                });
+
+                if (editingItem) {
+                    response = await api.update(submitData, editingItem.id);
+                } else {
+                    response = await api.create(submitData);
+                }
             }
 
             if (response.data?.success) {
@@ -544,14 +615,14 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [customHandlers, validationRules, formData, editingItem, data, apiEndpoint, formFields, moduleLabel, fetchData, initialFormData]);
 
-    const handleBulkInsert = () => {
+    const handleBulkInsert = useCallback(() => {
         setMultiInsertRows([{ ...initialFormData }]);
         setShowBulkInsertModal(true);
-    };
+    }, [initialFormData]);
 
-    const handleMultiInsertSave = async () => {
+    const handleMultiInsertSave = useCallback(async () => {
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
@@ -606,16 +677,16 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [apiEndpoint, multiInsertRows, moduleLabel, fetchData, initialFormData]);
 
-    const handleExport = async () => {
+    const handleExport = useCallback(async () => {
         try {
             const exportList = selectedItems.length > 0
                 ? filteredData.filter(item => selectedItems.includes(item.id))
                 : filteredData;
 
             const defaultExportColumns = columns
-                .filter(col => visibleColumns[col.field])
+                .filter(col => col && visibleColumns[col.field])
                 .map(col => ({
                     key: col.field,
                     header: col.label,
@@ -635,29 +706,16 @@ const DynamicCRUD = ({
                 message: `Failed to export ${moduleLabel}`,
             });
         }
-    };
+    }, [selectedItems, filteredData, columns, visibleColumns, moduleName, moduleLabel, exportColumns]);
 
-    const filteredData = data.filter(item => {
-        if (!searchTerm || !showSearch) return true;
-
-        const searchTermLower = (searchTerm || '').toLowerCase();
-
-        return columns.some(col => {
-            const fieldValue = item[col.field];
-            if (fieldValue == null) return false;
-
-            return String(fieldValue).toLowerCase().includes(searchTermLower);
-        });
-    });
-
-    const toggleColumnVisibility = (field) => {
+    const toggleColumnVisibility = useCallback((field) => {
         setVisibleColumns(prev => ({
             ...prev,
             [field]: !prev[field]
         }));
-    };
+    }, []);
 
-    const getActionButtons = () => {
+    const getActionButtons = useCallback(() => {
         const buttons = [];
 
         if (showImportExport) {
@@ -698,10 +756,10 @@ const DynamicCRUD = ({
         }
 
         return buttons;
-    };
+    }, [showImportExport, showBulkInsert, showAddButton, moduleLabel, handleExport, handleBulkInsert, handleAdd, customActionButtons]);
 
-    const processedFormFields = getProcessedFormFields();
-    const actionButtons = getActionButtons();
+    const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);
+    const actionButtons = useMemo(() => getActionButtons(), [getActionButtons]);
 
     if (showDetail && selectedItem) {
         return (
@@ -726,6 +784,7 @@ const DynamicCRUD = ({
                     moduleApi={apiEndpoint}
                     moduleLabel={moduleLabel}
                     prefetchData={selectedItem}
+                    lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
                 />
             </Container>
@@ -764,7 +823,7 @@ const DynamicCRUD = ({
                             ) : (
                                 <ResizableTable
                                     data={filteredData}
-                                    columns={enhancedColumns.filter(col => visibleColumns[col.field])}
+                                    columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
                                     loading={loading}
                                     showCheckbox={showCheckbox}
                                     selectedItems={selectedItems}
@@ -782,7 +841,6 @@ const DynamicCRUD = ({
                                             {allowEdit && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleEdit(item)}
                                                     title="Edit"
                                                     style={{
@@ -791,13 +849,12 @@ const DynamicCRUD = ({
                                                         textDecoration: "none"
                                                     }}
                                                 >
-                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                    <i className="fs-5 fa-solid fa-pen-to-square"></i>
                                                 </Button>
                                             )}
                                             {allowDelete && (
                                                 <Button
                                                     variant="link"
-                                                    size="sm"
                                                     onClick={() => handleDelete(item.id)}
                                                     title="Delete"
                                                     style={{
@@ -806,27 +863,19 @@ const DynamicCRUD = ({
                                                         textDecoration: "none"
                                                     }}
                                                 >
-                                                    <i className="fa-solid fa-trash"></i>
+                                                    <i className="fs-5 fa-solid fa-trash"></i>
                                                 </Button>
-
                                             )}
-
-
-                                            {customHandlers?.handleBarcodePreview ? (
+                                            {customHandlers?.handleBarcodePreview && (
                                                 <Button
                                                     variant="info"
                                                     size="sm"
-                                                    onClick={() => {
-                                                        console.log("Button clicked for item:", item);
-                                                        customHandlers.handleBarcodePreview(item);
-                                                    }}
+                                                    onClick={() => customHandlers.handleBarcodePreview(item)}
                                                     title="View Barcode"
                                                 >
                                                     <i className="fa-solid fa-barcode me-1"></i>
                                                     Preview
                                                 </Button>
-                                            ) : (
-                                                <span className="text-muted small"></span>
                                             )}
                                         </div>
                                     ) : null}
@@ -837,7 +886,6 @@ const DynamicCRUD = ({
                     </Card>
                 </Col>
             </Row>
-
 
             <FormModal
                 show={showModal}
@@ -855,7 +903,6 @@ const DynamicCRUD = ({
                 loading={loading}
                 editingItem={editingItem}
             />
-
 
             <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
                 <Modal.Header closeButton>
@@ -875,83 +922,6 @@ const DynamicCRUD = ({
                 </Modal.Footer>
             </Modal>
 
-            {/* Bulk Insert Modal - Only rendered if showBulkInsert is true */}
-            {/* {showBulkInsert && (
-                    <Modal show={showBulkInsertModal} onHide={() => setShowBulkInsertModal(false)} size="lg" centered>
-                        <Modal.Header closeButton>
-                            <Modal.Title>Bulk Insert {moduleLabel}</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <p className="text-muted mb-3">
-                                Add multiple {moduleLabel.toLowerCase()} records at once. Leave rows empty to skip.
-                            </p>
-
-                            {multiInsertRows.map((row, index) => (
-                                <Card key={index} className="mb-3">
-                                    <Card.Header className="d-flex justify-content-between align-items-center py-2">
-                                        <span>Record #{index + 1}</span>
-                                        {multiInsertRows.length > 1 && (
-                                            <Button
-                                                variant="outline-danger"
-                                                size="sm"
-                                                onClick={() => handleRemoveMultiRow(index)}
-                                            >
-                                                <i className="fa-solid fa-times"></i>
-                                            </Button>
-                                        )}
-                                    </Card.Header>
-                                    <Card.Body>
-                                        <Row>
-                                            {formFields.map((field) => (
-                                                <Col key={field.name} md={6} className="mb-2">
-                                                    <Form.Group>
-                                                        <Form.Label>{field.label}</Form.Label>
-                                                        {field.type === 'select' ? (
-                                                            <Form.Select
-                                                                value={row[field.name] || ''}
-                                                                onChange={(e) => handleMultiRowChange(index, field.name, e.target.value)}
-                                                            >
-                                                                {field.options && field.options.map(opt => (
-                                                                    <option key={opt.value} value={opt.value}>
-                                                                        {opt.label}
-                                                                    </option>
-                                                                ))}
-                                                            </Form.Select>
-                                                        ) : (
-                                                            <Form.Control
-                                                                type={field.type}
-                                                                value={row[field.name] || ''}
-                                                                onChange={(e) => handleMultiRowChange(index, field.name, e.target.value)}
-                                                                placeholder={field.placeholder}
-                                                            />
-                                                        )}
-                                                    </Form.Group>
-                                                </Col>
-                                            ))}
-                                        </Row>
-                                    </Card.Body>
-                                </Card>
-                            ))}
-
-                            <Button variant="outline-primary" onClick={handleAddMultiRow}>
-                                <i className="fa-solid fa-plus me-2"></i>
-                                Add Another Row
-                            </Button>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="outline-secondary" onClick={() => setShowBulkInsertModal(false)}>
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={handleMultiInsertSave}
-                                disabled={loading || multiInsertRows.filter(hasRowData).length === 0}
-                            >
-                                {loading ? "Inserting..." : `Insert ${multiInsertRows.filter(hasRowData).length} Records`}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
-                )} */}
             {showBulkInsert && (
                 <Modal show={showBulkInsertModal} onHide={() => setShowBulkInsertModal(false)} size="xl" centered scrollable>
                     <Modal.Header closeButton>
@@ -962,7 +932,6 @@ const DynamicCRUD = ({
                             Add multiple {moduleLabel.toLowerCase()} records at once. Leave cells empty to skip.
                         </p>
 
-                        {/* ✅ TABLE STYLE LAYOUT */}
                         <div className="table-responsive">
                             <Table striped bordered hover size="sm">
                                 <thead style={{ position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
@@ -981,7 +950,6 @@ const DynamicCRUD = ({
                                     {multiInsertRows.map((row, index) => (
                                         <tr key={index} className={index % 2 === 0 ? '' : 'table-light'}>
                                             <td className="text-center fw-bold">{index + 1}</td>
-
                                             {processedFormFields.map((field) => (
                                                 <td key={field.name}>
                                                     {field.type === 'select' ? (
@@ -993,7 +961,7 @@ const DynamicCRUD = ({
                                                         >
                                                             <option value="">Select {field.label}</option>
                                                             {Array.isArray(field.options) && field.options
-                                                                .filter(opt => opt.value !== '') // Remove empty option if exists
+                                                                .filter(opt => opt.value !== '')
                                                                 .map(opt => (
                                                                     <option key={opt.value} value={opt.value}>
                                                                         {opt.label}
@@ -1024,7 +992,6 @@ const DynamicCRUD = ({
                                                     )}
                                                 </td>
                                             ))}
-
                                             <td className="text-center">
                                                 {multiInsertRows.length > 1 && (
                                                     <Button
@@ -1043,7 +1010,6 @@ const DynamicCRUD = ({
                             </Table>
                         </div>
 
-                        {/* Add Row Button */}
                         <div className="text-center mt-3">
                             <Button variant="outline-primary" onClick={handleAddMultiRow}>
                                 <i className="fa-solid fa-plus me-2"></i>
@@ -1051,7 +1017,6 @@ const DynamicCRUD = ({
                             </Button>
                         </div>
 
-                        {/* Summary */}
                         <div className="mt-3 p-2 bg-light rounded">
                             <small className="text-muted">
                                 <strong>Summary:</strong> {multiInsertRows.length} row(s) |

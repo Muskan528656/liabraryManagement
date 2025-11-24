@@ -12,25 +12,6 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-                render: (value, record) => (
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style={{
-                                width: "32px",
-                                height: "32px",
-                                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                                color: "white",
-                                fontSize: "14px",
-                            }}
-                        >
-                            <i className="fa-solid fa-tags"></i>
-                        </div>
-                        <span style={{ color: "#6f42c1", fontWeight: "500" }}>
-                            {value}
-                        </span>
-                    </div>
-                ),
             },
             {
                 field: "description",
@@ -59,11 +40,11 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         validationRules: (formData, allCategories, editingCategory) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
-            
+
             // Check for duplicate name
             const duplicate = allCategories.find(
-                category => category.name?.toLowerCase() === formData.name?.toLowerCase() && 
-                category.id !== editingCategory?.id
+                category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
+                    category.id !== editingCategory?.id
             );
             if (duplicate) errors.push("Category with this name already exists");
 
@@ -90,11 +71,10 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
-                // Additional custom validation if needed
                 return true;
             },
             afterSave: (response, editingItem) => {
-                // Custom after save logic
+              
                 console.log("Category saved:", response);
             }
         }

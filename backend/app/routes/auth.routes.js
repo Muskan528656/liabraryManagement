@@ -332,12 +332,12 @@ module.exports = (app) => {
         userInfo.companyid = companyid; // Include companyid
         userInfo.tenantcode = tenantcode; // Include tenantcode
 
-        // Ensure plan is included in token (for WhatsApp setting checks)
+      
         if (!userInfo.plan && plan) {
           userInfo.plan = plan;
         }
 
-        // Ensure modules are included in token (for sidebar filtering)
+      
         if (!userInfo.modules || userInfo.modules.length === 0) {
           userInfo.modules = modules;
         }
@@ -386,7 +386,7 @@ module.exports = (app) => {
       );
       const email = decoded.email;
       const tenantcode = decoded.tenantcode;
-     
+
       await Auth.init(tenantcode);
 
       const userRec = await Auth.findByEmail(email);
@@ -416,430 +416,430 @@ module.exports = (app) => {
     }
   });
 
-//   router.put("/updatepassword", fetchUser, async (req, res) => {
-//     try {
-      
-//       const { password } = req.body;
-//       const errors = [];
-//       const userRec = {};
-//       const salt = bcrypt.genSaltSync(10);
-//       const secPass = bcrypt.hashSync(req.body.password, salt);
-//       if (req.body.hasOwnProperty("password")) {
-//         userRec.password = secPass;
-//       }
-//       //if(req.body.hasOwnProperty("id")){userRec.id = id};
+  //   router.put("/updatepassword", fetchUser, async (req, res) => {
+  //     try {
 
-//       if (errors.length !== 0) {
-//         return res.status(400).json({ errors: errors });
-//       }
-//       await Auth.init(req.userinfo.tenantcode);
-//       let resultUser = await Auth.findById(req.userinfo.id);
+  //       const { password } = req.body;
+  //       const errors = [];
+  //       const userRec = {};
+  //       const salt = bcrypt.genSaltSync(10);
+  //       const secPass = bcrypt.hashSync(req.body.password, salt);
+  //       if (req.body.hasOwnProperty("password")) {
+  //         userRec.password = secPass;
+  //       }
+  //       //if(req.body.hasOwnProperty("id")){userRec.id = id};
 
-//       if (resultUser) {
-//         resultLead = await Auth.updateById(req.userinfo.id, userRec);
-//         if (resultLead) {
-//           return res
-//             .status(200)
-//             .json({ success: true, message: "Record updated successfully" });
-//         }
-//         // return res.status(200).json(resultLead);
-//       } else {
-//         return res
-//           .status(200)
-//           .json({ success: false, message: "No record found" });
-//       }
-//     } catch (error) {
-//       console.log("error:", error);
-//       res.status(400).json({ errors: error });
-//     }
-//   });
+  //       if (errors.length !== 0) {
+  //         return res.status(400).json({ errors: errors });
+  //       }
+  //       await Auth.init(req.userinfo.tenantcode);
+  //       let resultUser = await Auth.findById(req.userinfo.id);
 
-//   // Get user by Id
-//   router.get("/users/:id/:tenant", fetchUser, async (req, res) => {
-    
-//     try {
-//       if ((req.userinfo.userrole = "ADMIN")) {
-//         await Auth.init(req.params.tenant);
-//       } else {
-//         await Auth.init(req.userinfo.tenantcode);
-//       }
-//       const userRec = await Auth.findById(req.params.id);
+  //       if (resultUser) {
+  //         resultLead = await Auth.updateById(req.userinfo.id, userRec);
+  //         if (resultLead) {
+  //           return res
+  //             .status(200)
+  //             .json({ success: true, message: "Record updated successfully" });
+  //         }
+  //         // return res.status(200).json(resultLead);
+  //       } else {
+  //         return res
+  //           .status(200)
+  //           .json({ success: false, message: "No record found" });
+  //       }
+  //     } catch (error) {
+  //       console.log("error:", error);
+  //       res.status(400).json({ errors: error });
+  //     }
+  //   });
 
-//       if (!userRec) {
-//         return res.status(400).json({ errors: "User not found" });
-//       }
+  //   // Get user by Id
+  //   router.get("/users/:id/:tenant", fetchUser, async (req, res) => {
 
-//       return res.status(200).json(userRec);
-//     } catch (error) {
-//       res.status(400).json({ errors: error });
-//     }
-//     // contacts.create(req, res);
-//   });
+  //     try {
+  //       if ((req.userinfo.userrole = "ADMIN")) {
+  //         await Auth.init(req.params.tenant);
+  //       } else {
+  //         await Auth.init(req.userinfo.tenantcode);
+  //       }
+  //       const userRec = await Auth.findById(req.params.id);
 
-//   router.put("/:id/profile", fetchUser, async (req, res) => {
-//     try {
-//       const MIMEType = new Map([
-//         ["text/csv", "csv"],
-//         ["application/msword", "doc"],
-//         [
-//           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-//           "docx",
-//         ],
-//         ["image/gif", "gif"],
-//         ["text/html", "html"],
-//         ["image/jpeg", "jpg"],
-//         ["image/jpg", "jpg"],
-//         ["application/json", "json"],
-//         ["audio/mpeg", "mp3"],
-//         ["video/mp4", "mp4"],
-//         ["image/png", "png"],
-//         ["application/pdf", "pdf"],
-//         ["application/vnd.ms-powerpoint", "ppt"],
-//         [
-//           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-//           "pptx",
-//         ],
-//         ["image/svg+xml", "svg"],
-//         ["text/plain", "txt"],
-//         ["application/vnd.ms-excel", "xls"],
-//         [
-//           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//           "xlsx",
-//         ],
-//         ["application/xml", "xml"],
-//         ["application/zip", "zip"],
-//       ]);
+  //       if (!userRec) {
+  //         return res.status(400).json({ errors: "User not found" });
+  //       }
 
-//       File.init(req.userinfo.tenantcode);
-//       Auth.init(req.userinfo.tenantcode);
-//       const resultFile = await File.findByParentId(req.params.id);
+  //       return res.status(200).json(userRec);
+  //     } catch (error) {
+  //       res.status(400).json({ errors: error });
+  //     }
+  //     // contacts.create(req, res);
+  //   });
 
-//       if (resultFile && resultFile.length > 0) {
-//         for (const file of resultFile) {
-//           const { id: fileId, parentid: parentId } = file;
-//           const filePath = `${process.env.FILE_UPLOAD_PATH}/${req.userinfo.tenantcode}/users/${parentId}`;
+  //   router.put("/:id/profile", fetchUser, async (req, res) => {
+  //     try {
+  //       const MIMEType = new Map([
+  //         ["text/csv", "csv"],
+  //         ["application/msword", "doc"],
+  //         [
+  //           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  //           "docx",
+  //         ],
+  //         ["image/gif", "gif"],
+  //         ["text/html", "html"],
+  //         ["image/jpeg", "jpg"],
+  //         ["image/jpg", "jpg"],
+  //         ["application/json", "json"],
+  //         ["audio/mpeg", "mp3"],
+  //         ["video/mp4", "mp4"],
+  //         ["image/png", "png"],
+  //         ["application/pdf", "pdf"],
+  //         ["application/vnd.ms-powerpoint", "ppt"],
+  //         [
+  //           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  //           "pptx",
+  //         ],
+  //         ["image/svg+xml", "svg"],
+  //         ["text/plain", "txt"],
+  //         ["application/vnd.ms-excel", "xls"],
+  //         [
+  //           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //           "xlsx",
+  //         ],
+  //         ["application/xml", "xml"],
+  //         ["application/zip", "zip"],
+  //       ]);
 
-//           if (fs.existsSync(filePath)) {
-//             const deletionResult = await File.deleteFile(fileId);
+  //       File.init(req.userinfo.tenantcode);
+  //       Auth.init(req.userinfo.tenantcode);
+  //       const resultFile = await File.findByParentId(req.params.id);
 
-//             if (deletionResult) {
-//               fs.unlinkSync(filePath); // Remove the actual file
-//             } else {
-//               return res.status(400).json({
-//                 success: false,
-//                 message: "Failed to delete the record.",
-//               });
-//             }
-//           } else {
-//             console.log("File path does not exist:", filePath);
-//           }
-//         }
-//       }
+  //       if (resultFile && resultFile.length > 0) {
+  //         for (const file of resultFile) {
+  //           const { id: fileId, parentid: parentId } = file;
+  //           const filePath = `${process.env.FILE_UPLOAD_PATH}/${req.userinfo.tenantcode}/users/${parentId}`;
 
-//       // Process new file upload
-//       const pdfreference = req?.files?.file;
-//       if (pdfreference) {
-//         const newVersionRecord = JSON.parse(JSON.parse(req.body.staffRecord));
-//         await Auth.init(req.userinfo.tenantcode);
-//         const resultObj = await Auth.findById(req.userinfo.id);
+  //           if (fs.existsSync(filePath)) {
+  //             const deletionResult = await File.deleteFile(fileId);
 
-//         if (resultObj) {
-//           delete newVersionRecord.contactname;
-//           delete newVersionRecord.managername;
+  //             if (deletionResult) {
+  //               fs.unlinkSync(filePath); // Remove the actual file
+  //             } else {
+  //               return res.status(400).json({
+  //                 success: false,
+  //                 message: "Failed to delete the record.",
+  //               });
+  //             }
+  //           } else {
+  //             console.log("File path does not exist:", filePath);
+  //           }
+  //         }
+  //       }
 
-//           const updateResult = await Auth.updateRecById(
-//             resultObj.id,
-//             newVersionRecord,
-//             req.userinfo.id
-//           );
-//           if (!updateResult)
-//             return res.status(400).json({ errors: "Bad Request" });
+  //       // Process new file upload
+  //       const pdfreference = req?.files?.file;
+  //       if (pdfreference) {
+  //         const newVersionRecord = JSON.parse(JSON.parse(req.body.staffRecord));
+  //         await Auth.init(req.userinfo.tenantcode);
+  //         const resultObj = await Auth.findById(req.userinfo.id);
 
-//           const newFileRecord = {
-//             title: pdfreference.name,
-//             filetype:
-//               MIMEType.get(pdfreference.mimetype) || pdfreference.mimetype,
-//             parentid: resultObj.id,
-//             filesize: pdfreference.size,
-//             description: "Outgoing",
-//           };
+  //         if (resultObj) {
+  //           delete newVersionRecord.contactname;
+  //           delete newVersionRecord.managername;
 
-//           const fileRec = await File.insertFileRecords(
-//             newFileRecord,
-//             req.userinfo.id
-//           );
-//           const uploadPath = `${process.env.FILE_UPLOAD_PATH}/${req.userinfo.tenantcode}/users`;
-//           const filePath = `${uploadPath}/${fileRec.parentid}`;
+  //           const updateResult = await Auth.updateRecById(
+  //             resultObj.id,
+  //             newVersionRecord,
+  //             req.userinfo.id
+  //           );
+  //           if (!updateResult)
+  //             return res.status(400).json({ errors: "Bad Request" });
 
-//           // Ensure the upload directory exists
-//           if (!fs.existsSync(uploadPath)) {
-//             await fs.promises.mkdir(uploadPath, { recursive: true });
-//           }
+  //           const newFileRecord = {
+  //             title: pdfreference.name,
+  //             filetype:
+  //               MIMEType.get(pdfreference.mimetype) || pdfreference.mimetype,
+  //             parentid: resultObj.id,
+  //             filesize: pdfreference.size,
+  //             description: "Outgoing",
+  //           };
 
-//           // Move the file
-//           pdfreference.mv(filePath, (err) => {
-//             if (err) {
-//               console.error("Error moving file:", err);
-//               return res.status(500).json({ error: "Error moving file." });
-//             }
-//             return res.status(200).json(updateResult);
-//           });
-//         }
-//       } else {
-//         return res.status(400).json({ error: "No file uploaded." });
-//       }
-//     } catch (error) {
-//       console.error("An error occurred while processing the request:", error);
-//       return res.status(500).json({ error: "Internal Server Error" });
-//     }
-//   });
+  //           const fileRec = await File.insertFileRecords(
+  //             newFileRecord,
+  //             req.userinfo.id
+  //           );
+  //           const uploadPath = `${process.env.FILE_UPLOAD_PATH}/${req.userinfo.tenantcode}/users`;
+  //           const filePath = `${uploadPath}/${fileRec.parentid}`;
 
-//   //......................................Update User.................................
-//   router.put("/:id", fetchUser, async (req, res) => {
-//     try {
-//       //Check permissions
+  //           // Ensure the upload directory exists
+  //           if (!fs.existsSync(uploadPath)) {
+  //             await fs.promises.mkdir(uploadPath, { recursive: true });
+  //           }
 
-//       // #swagger.tags = ['Users']
-//       // #swagger.path = ['/api/auth/:id']
-//       const {
-//         firstname,
-//         lastname,
-//         email,
-//         userrole,
-//         password,
-//         isactive,
-//         managerid,
-//         whatsapp_number,
-//         whatsapp_settings,
-//         country_code,
-//       } = req.body;
-//       const errors = [];
-//       const userRec = {};
+  //           // Move the file
+  //           pdfreference.mv(filePath, (err) => {
+  //             if (err) {
+  //               console.error("Error moving file:", err);
+  //               return res.status(500).json({ error: "Error moving file." });
+  //             }
+  //             return res.status(200).json(updateResult);
+  //           });
+  //         }
+  //       } else {
+  //         return res.status(400).json({ error: "No file uploaded." });
+  //       }
+  //     } catch (error) {
+  //       console.error("An error occurred while processing the request:", error);
+  //       return res.status(500).json({ error: "Internal Server Error" });
+  //     }
+  //   });
 
-//       if (req.body.hasOwnProperty("firstname")) {
-//         userRec.firstname = firstname;
-//         if (!firstname) {
-//           errors.push("Firstname is required");
-//         }
-//       }
-//       if (req.body.hasOwnProperty("lastname")) {
-//         userRec.lastname = lastname;
-//         if (!lastname) {
-//           errors.push("Lastname is required");
-//         }
-//       }
-//       if (req.body.hasOwnProperty("email")) {
-//         userRec.email = email;
-//         if (!email) {
-//           errors.push("Email is required");
-//         }
-//       }
-//       if (req.body.hasOwnProperty("password")) {
-//         userRec.password = password;
-//         if (!password) {
-//           errors.push("Password is required");
-//         }
-//       }
+  //   //......................................Update User.................................
+  //   router.put("/:id", fetchUser, async (req, res) => {
+  //     try {
+  //       //Check permissions
 
-//       if (req.body.hasOwnProperty("whatsapp_number")) {
-//         userRec.whatsapp_number = whatsapp_number;
-//       }
+  //       // #swagger.tags = ['Users']
+  //       // #swagger.path = ['/api/auth/:id']
+  //       const {
+  //         firstname,
+  //         lastname,
+  //         email,
+  //         userrole,
+  //         password,
+  //         isactive,
+  //         managerid,
+  //         whatsapp_number,
+  //         whatsapp_settings,
+  //         country_code,
+  //       } = req.body;
+  //       const errors = [];
+  //       const userRec = {};
 
-//       if (req.body.hasOwnProperty("userrole")) {
-//         userRec.userrole = userrole;
-//       }
-//       if (req.body.hasOwnProperty("isactive")) {
-//         userRec.isactive = isactive;
-//       }
-//       if (req.body.hasOwnProperty("managerid")) {
-//         userRec.managerid = managerid;
-//       }
-//       if (req.body.hasOwnProperty("whatsapp_settings")) {
-//         userRec.whatsapp_settings = JSON.stringify(whatsapp_settings);
-//       }
-//       if (req.body.hasOwnProperty("country_code")) {
-//         userRec.country_code = country_code;
-//       }
+  //       if (req.body.hasOwnProperty("firstname")) {
+  //         userRec.firstname = firstname;
+  //         if (!firstname) {
+  //           errors.push("Firstname is required");
+  //         }
+  //       }
+  //       if (req.body.hasOwnProperty("lastname")) {
+  //         userRec.lastname = lastname;
+  //         if (!lastname) {
+  //           errors.push("Lastname is required");
+  //         }
+  //       }
+  //       if (req.body.hasOwnProperty("email")) {
+  //         userRec.email = email;
+  //         if (!email) {
+  //           errors.push("Email is required");
+  //         }
+  //       }
+  //       if (req.body.hasOwnProperty("password")) {
+  //         userRec.password = password;
+  //         if (!password) {
+  //           errors.push("Password is required");
+  //         }
+  //       }
+
+  //       if (req.body.hasOwnProperty("whatsapp_number")) {
+  //         userRec.whatsapp_number = whatsapp_number;
+  //       }
+
+  //       if (req.body.hasOwnProperty("userrole")) {
+  //         userRec.userrole = userrole;
+  //       }
+  //       if (req.body.hasOwnProperty("isactive")) {
+  //         userRec.isactive = isactive;
+  //       }
+  //       if (req.body.hasOwnProperty("managerid")) {
+  //         userRec.managerid = managerid;
+  //       }
+  //       if (req.body.hasOwnProperty("whatsapp_settings")) {
+  //         userRec.whatsapp_settings = JSON.stringify(whatsapp_settings);
+  //       }
+  //       if (req.body.hasOwnProperty("country_code")) {
+  //         userRec.country_code = country_code;
+  //       }
 
 
-//       if (errors.length !== 0) {
-//         return res.status(400).json({ errors: errors });
-//       }
-//       await Auth.init(req.userinfo.tenantcode);
-//       const duplicateUser = await Auth.checkForDuplicate(
-//         email,
-//         whatsapp_number,
-//         req.params.id
-//       );
+  //       if (errors.length !== 0) {
+  //         return res.status(400).json({ errors: errors });
+  //       }
+  //       await Auth.init(req.userinfo.tenantcode);
+  //       const duplicateUser = await Auth.checkForDuplicate(
+  //         email,
+  //         whatsapp_number,
+  //         req.params.id
+  //       );
 
-//       if (duplicateUser) {
-//         if (duplicateUser.email === email) {
-//           return res.status(400).json({ errors: "Email already exists" });
-//         } else if (duplicateUser.whatsapp_number === whatsapp_number) {
-//           return res
-//             .status(400)
-//             .json({ errors: "WhatsApp number already exists" });
-//         }
-//       }
+  //       if (duplicateUser) {
+  //         if (duplicateUser.email === email) {
+  //           return res.status(400).json({ errors: "Email already exists" });
+  //         } else if (duplicateUser.whatsapp_number === whatsapp_number) {
+  //           return res
+  //             .status(400)
+  //             .json({ errors: "WhatsApp number already exists" });
+  //         }
+  //       }
 
-//       let resultUser = await Auth.findById(req.params.id);
+  //       let resultUser = await Auth.findById(req.params.id);
 
-//       if (
-//         resultUser.userrole === "ADMIN" &&
-//         req.params.id !== req.userinfo.id
-//       ) {
-//         return res.status(400).json({ errors: "You cannot edit system admin" });
-//       }
+  //       if (
+  //         resultUser.userrole === "ADMIN" &&
+  //         req.params.id !== req.userinfo.id
+  //       ) {
+  //         return res.status(400).json({ errors: "You cannot edit system admin" });
+  //       }
 
-//       if (resultUser) {
-      
-//         if (
-//           req.body.hasOwnProperty("isactive") &&
-//           isactive === false &&
-//           req.params.id === req.userinfo.id
-//         ) {
-//           return res
-//             .status(400)
-//             .json({ errors: "You cannot deactivate yourself" });
-//         }
-//         if (req.body.hasOwnProperty("password")) {
-//           const salt = bcrypt.genSaltSync(10);
-//           const secPass = bcrypt.hashSync(req.body.password, salt);
-//           userRec.password = secPass;
-//         }
+  //       if (resultUser) {
 
-//         resultUser = await Auth.updateRecById(
-//           req.params.id,
-//           userRec,
-//           req.userinfo.id
-//         );
-//         if (resultUser) {
-//           if (resultUser.isError)
-//             return res
-//               .status(400)
-//               .json({ success: false, errors: resultUser.errors });
-//           else
-//             return res
-//               .status(200)
-//               .json({ success: true, message: "Record updated successfully" });
-//         }
-//         return res.status(200).json(resultUser);
-//       } else {
-//         return res
-//           .status(200)
-//           .json({ success: false, message: "No record found" });
-//       }
-//     } catch (error) {
-//       console.log("error:", error);
-//       res.status(400).json({ errors: error });
-//     }
-//   });
+  //         if (
+  //           req.body.hasOwnProperty("isactive") &&
+  //           isactive === false &&
+  //           req.params.id === req.userinfo.id
+  //         ) {
+  //           return res
+  //             .status(400)
+  //             .json({ errors: "You cannot deactivate yourself" });
+  //         }
+  //         if (req.body.hasOwnProperty("password")) {
+  //           const salt = bcrypt.genSaltSync(10);
+  //           const secPass = bcrypt.hashSync(req.body.password, salt);
+  //           userRec.password = secPass;
+  //         }
 
-//   // Create a new Tutorial
-//   router.get(
-//     "/getuser",
-//     fetchUser,
+  //         resultUser = await Auth.updateRecById(
+  //           req.params.id,
+  //           userRec,
+  //           req.userinfo.id
+  //         );
+  //         if (resultUser) {
+  //           if (resultUser.isError)
+  //             return res
+  //               .status(400)
+  //               .json({ success: false, errors: resultUser.errors });
+  //           else
+  //             return res
+  //               .status(200)
+  //               .json({ success: true, message: "Record updated successfully" });
+  //         }
+  //         return res.status(200).json(resultUser);
+  //       } else {
+  //         return res
+  //           .status(200)
+  //           .json({ success: false, message: "No record found" });
+  //       }
+  //     } catch (error) {
+  //       console.log("error:", error);
+  //       res.status(400).json({ errors: error });
+  //     }
+  //   });
 
-//     async (req, res) => {
-//       try {
-//         const userid = req.userinfo.id;
-//         await Auth.init(req.userinfo.tenantcode);
-//         const userRec = await Auth.findById(userid);
+  //   // Create a new Tutorial
+  //   router.get(
+  //     "/getuser",
+  //     fetchUser,
 
-//         if (!userRec) {
-//           return res.status(400).json({ errors: "User not found" });
-//         }
+  //     async (req, res) => {
+  //       try {
+  //         const userid = req.userinfo.id;
+  //         await Auth.init(req.userinfo.tenantcode);
+  //         const userRec = await Auth.findById(userid);
 
-//         return res.status(200).json(userRec);
-//       } catch (error) {
-//         res.status(400).json({ errors: error });
-//       }
-//       // contacts.create(req, res);
-//     }
-//   );
+  //         if (!userRec) {
+  //           return res.status(400).json({ errors: "User not found" });
+  //         }
 
-//   // Fetch all Users
-//   router.get(
-//     "/users",
-//     fetchUser,
+  //         return res.status(200).json(userRec);
+  //       } catch (error) {
+  //         res.status(400).json({ errors: error });
+  //       }
+  //       // contacts.create(req, res);
+  //     }
+  //   );
 
-//     async (req, res) => {
-//       // #swagger.tags = ['Users']
-//       // #swagger.path = ['/api/auth/users']
-//       try {
-//         await Auth.init(req.userinfo.tenantcode);
+  //   // Fetch all Users
+  //   router.get(
+  //     "/users",
+  //     fetchUser,
 
-//         const userRec = await Auth.findAll(req.userinfo);
-//         if (!userRec) {
-//           return res.status(200).json({ errors: "User not found" });
-//         }
-//         return res.status(200).json(userRec);
-//       } catch (error) {
-//         res.status(400).json({ errors: error });
-//       }
-//       // contacts.create(req, res);
-//     }
-//   );
+  //     async (req, res) => {
+  //       // #swagger.tags = ['Users']
+  //       // #swagger.path = ['/api/auth/users']
+  //       try {
+  //         await Auth.init(req.userinfo.tenantcode);
 
-//   // ................................................Download file .......................................
-//   router.get("/myimage", fetchUser, async (req, res) => {
-//     try {
-//       //const filePath = "D:/Files/" + parentId +"/"+ fileId + '.' + fileType;
-//       let filePath =
-//         process.env.FILE_UPLOAD_PATH +
-//         "/" +
-//         req.userinfo.tenantcode +
-//         "/users/" +
-//         req.userinfo.id;
-//       res.download(filePath, "myprofileimage", function (err) {
-//         if (err) {
-//           return res.status(400).json({ Error: false, message: err });
-//         }
-//       });
-//     } catch (error) {
-//       console.log("System Error:", error);
-//       return res.status(400).json({ Error: false, message: error });
-//     }
-//   });
+  //         const userRec = await Auth.findAll(req.userinfo);
+  //         if (!userRec) {
+  //           return res.status(200).json({ errors: "User not found" });
+  //         }
+  //         return res.status(200).json(userRec);
+  //       } catch (error) {
+  //         res.status(400).json({ errors: error });
+  //       }
+  //       // contacts.create(req, res);
+  //     }
+  //   );
 
-//   // ................................................Download file .......................................
-//   router.get("/userimage/:id", async (req, res) => {
-//     try {
-//       //const filePath = "D:/Files/" + parentId +"/"+ fileId + '.' + fileType;
-//       let filePath = process.env.FILE_UPLOAD_PATH + "/" + req.params.id;
-//       res.download(filePath, req.params.id, function (err) {
-//         console.log("err:", err);
-//         if (err) {
-//           return res.status(400).json({ Error: false, message: err });
-//         }
-//       });
-//     } catch (error) {
-//       console.log("System Error:", error);
-//       return res.status(400).json({ Error: false, message: error });
-//     }
-//   });
+  //   // ................................................Download file .......................................
+  //   router.get("/myimage", fetchUser, async (req, res) => {
+  //     try {
+  //       //const filePath = "D:/Files/" + parentId +"/"+ fileId + '.' + fileType;
+  //       let filePath =
+  //         process.env.FILE_UPLOAD_PATH +
+  //         "/" +
+  //         req.userinfo.tenantcode +
+  //         "/users/" +
+  //         req.userinfo.id;
+  //       res.download(filePath, "myprofileimage", function (err) {
+  //         if (err) {
+  //           return res.status(400).json({ Error: false, message: err });
+  //         }
+  //       });
+  //     } catch (error) {
+  //       console.log("System Error:", error);
+  //       return res.status(400).json({ Error: false, message: error });
+  //     }
+  //   });
 
-//   // Get user by Id
-//   router.get(
-//     "/managers",
-//     fetchUser,
+  //   // ................................................Download file .......................................
+  //   router.get("/userimage/:id", async (req, res) => {
+  //     try {
+  //       //const filePath = "D:/Files/" + parentId +"/"+ fileId + '.' + fileType;
+  //       let filePath = process.env.FILE_UPLOAD_PATH + "/" + req.params.id;
+  //       res.download(filePath, req.params.id, function (err) {
+  //         console.log("err:", err);
+  //         if (err) {
+  //           return res.status(400).json({ Error: false, message: err });
+  //         }
+  //       });
+  //     } catch (error) {
+  //       console.log("System Error:", error);
+  //       return res.status(400).json({ Error: false, message: error });
+  //     }
+  //   });
 
-//     async (req, res) => {
-//       // #swagger.tags = ['Users']
-//       // #swagger.path = ['/api/auth/managers']
-//       try {
-//         await Auth.init(req.userinfo.tenantcode);
-//         const userRecList = await Auth.getAllManager();
-//         if (!userRecList) {
-//           return res.status(400).json({ errors: "User not found" });
-//         }
+  //   // Get user by Id
+  //   router.get(
+  //     "/managers",
+  //     fetchUser,
 
-//         return res.status(200).json(userRecList);
-//       } catch (error) {
-//         res.status(400).json({ errors: error });
-//       }
-//     }
-//   );
+  //     async (req, res) => {
+  //       // #swagger.tags = ['Users']
+  //       // #swagger.path = ['/api/auth/managers']
+  //       try {
+  //         await Auth.init(req.userinfo.tenantcode);
+  //         const userRecList = await Auth.getAllManager();
+  //         if (!userRecList) {
+  //           return res.status(400).json({ errors: "User not found" });
+  //         }
+
+  //         return res.status(200).json(userRecList);
+  //       } catch (error) {
+  //         res.status(400).json({ errors: error });
+  //       }
+  //     }
+  //   );
 
   app.use(process.env.BASE_API_URL + "/api/auth", router);
 };

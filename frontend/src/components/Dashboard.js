@@ -510,7 +510,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       theme: "light",
       y: {
         formatter: function (val) {
-          return val + " books";
+          return val + " book";
         },
       },
     },
@@ -817,7 +817,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                       <i className="fa-solid fa-money-bill-wave me-2"></i>
                       My Fines
                     </Button>
-                    <Button variant="outline-primary" onClick={() => navigate("/books")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
+                    <Button variant="outline-primary" onClick={() => navigate("/book")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
                       <i className="fa-solid fa-book me-2"></i>
                       Browse Books
                     </Button>
