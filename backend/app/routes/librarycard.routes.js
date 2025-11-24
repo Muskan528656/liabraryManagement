@@ -161,8 +161,7 @@ module.exports = (app) => {
         const cardData = { ...req.body };
         if (req.file) {
           // Store file path or URL - use relative path from public/uploads
-          const fileUrl = `../frontend/public/uploads/librarycards/${req.file.filename}`;
-
+          const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
         
@@ -198,8 +197,7 @@ module.exports = (app) => {
         const cardData = { ...req.body };
         if (req.file) {
           // Store file path or URL - use relative path from public/uploads
-          const fileUrl = `../frontend/public/uploads/librarycards/${req.file.filename}`;
-          console.log('fileUrl' , fileUrl)
+          const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
         
