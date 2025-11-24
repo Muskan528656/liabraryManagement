@@ -13,8 +13,7 @@ import {
 } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-// import RelatedLocationHistory from "./RelatedLocationHistory";
-import { ToastContainer, toast } from "react-toastify"; // npm i react-toastify --force
+import { ToastContainer, toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
 import PubSub from "pubsub-js";
 const UserView = () => {
@@ -66,10 +65,7 @@ const UserView = () => {
     }
 
     async function inituser() {
-      // let result = await WhatsAppAPI.fetchUserById(user.id);
-      // let result = await WhatsAppAPI.fetchUserById(user.id, user.tenantcode);
-
-      // setUser(result);
+  
     }
     inituser();
   };
@@ -229,7 +225,7 @@ const UserView = () => {
                   <label>WhatsApp Setting</label>
                   <span className="text-capitalize">
                     {user.whatsapp_settings &&
-                    user.whatsapp_settings.length > 0 ? (
+                      user.whatsapp_settings.length > 0 ? (
                       user.whatsapp_settings.join(", ")
                     ) : (
                       <>&nbsp;</>
@@ -359,7 +355,7 @@ const UserView = () => {
                 className="ms-2"
                 variant="outline-secondary"
                 disabled={isSubmitDisabled()}
-                // onClick={handleChangeSubmit}
+              // onClick={handleChangeSubmit}
               >
                 Save
               </Button>
