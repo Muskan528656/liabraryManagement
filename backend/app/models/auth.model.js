@@ -432,7 +432,7 @@ async function findByEmail(email) {
   return result.rows.length > 0 ? result.rows[0] : null;
 }
 async function findById(id) {
-  console.log("Finding user by ID:", id, "in schema:", this.schema);
+  // console.log("Finding user by ID:", id, "in schema:", this.schema);
   try {
     let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.managerid, concat(mu.firstname,' ', mu.lastname) managername, u.whatsapp_number, u.country_code, u.whatsapp_settings FROM ${this.schema}.user u`;
     query += ` LEFT JOIN ${this.schema}.user mu ON mu.id = u.managerid `;
