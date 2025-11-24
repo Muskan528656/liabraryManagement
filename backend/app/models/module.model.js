@@ -68,20 +68,20 @@ function buildUpdateQuery(id, cols) {
 
 async function deleteRecord(id) {
   try {
-    await sql.query("BEGIN");
+   // await sql.query("BEGIN");
     const moduleResult = await sql.query(
       `DELETE FROM public.module WHERE id = $1`,
       [id]
     );
     if (moduleResult.rowCount > 0) {
-      await sql.query("COMMIT");
+      //await sql.query("COMMIT");
       return "Success";
     }
-    await sql.query("ROLLBACK");
+    //await sql.query("ROLLBACK");
     return null;
   } catch (error) {
     console.error("Error during delete operation:", error);
-    await sql.query("ROLLBACK");
+    //await sql.query("ROLLBACK");
     throw new Error("Failed to delete records");
   }
 }

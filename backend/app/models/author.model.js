@@ -38,29 +38,30 @@ async function findById(id) {
   }
 }
 
-// Create a new author
 async function create(authorData, userId) {
   try {
     const query = `INSERT INTO demo.authors 
                    (name, email, bio, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-                   VALUES ($1, $2, $3, NOW(), NOW(), $4, $4) 
+                   VALUES ($1, $2, $3, NOW(), NOW(), $4, $5) 
                    RETURNING *`;
+
     const values = [
       authorData.name || "Scanned Author",
       authorData.email || null,
       authorData.bio || null,
       userId || null,
+      userId || null
     ];
+
     const result = await sql.query(query, values);
-    if (result.rows.length > 0) {
-      return result.rows[0];
-    }
-    return null;
+    return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in create:", error);
     throw error;
   }
 }
+
 
 // Update author by ID
 async function updateById(id, authorData, userId) {
@@ -108,12 +109,12 @@ async function findByEmail(email, excludeId = null) {
   try {
     let query = `SELECT * FROM demo.authors WHERE email = $1`;
     const params = [email];
-    
+
     if (excludeId) {
       query += ` AND id != $2`;
       params.push(excludeId);
     }
-    
+
     const result = await sql.query(query, params);
     return result.rows.length > 0 ? result.rows[0] : null;
   } catch (error) {

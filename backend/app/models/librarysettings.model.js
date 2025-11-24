@@ -194,7 +194,7 @@ async function updateById(id, settingData, userId) {
 
 // Update settings (creates or updates active setting)
 async function updateSettings(settingData, userId) {
-  const client = await sql.connect();
+  // const client = await sql.connect();
   try {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -211,10 +211,10 @@ async function updateSettings(settingData, userId) {
       result = await create(settingData, userId);
     }
 
-    await client.query("COMMIT");
+    // await client.query("COMMIT");
     return result;
   } catch (error) {
-    await client.query("ROLLBACK");
+    // await client.query("ROLLBACK");
     console.error("Error in updateSettings:", error);
     throw error;
   } finally {

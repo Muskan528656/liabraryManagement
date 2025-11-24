@@ -63,12 +63,14 @@ async function create(bookData, userId) {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const totalCopies = bookData.total_copies || bookData.totalCopies || 1;
-    let availableCopies = bookData.available_copies || bookData.availableCopies;
 
-    if (availableCopies === undefined || availableCopies === null) {
+    const totalCopies = Number(bookData.total_copies || bookData.totalCopies || 1);
+    let availableCopies = Number(bookData.available_copies || bookData.availableCopies);
+
+    if (availableCopies === undefined || availableCopies === null || isNaN(availableCopies)) {
       availableCopies = totalCopies;
     }
+
     if (availableCopies > totalCopies) {
       throw new Error(`Available copies (${availableCopies}) cannot exceed total copies (${totalCopies})`);
     }
@@ -77,6 +79,7 @@ async function create(bookData, userId) {
                    (title, author_id, category_id, isbn, total_copies, available_copies, company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
                    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8) 
                    RETURNING *`;
+
     const values = [
       bookData.title || "Scanned Book",
       bookData.author_id || bookData.authorId || null,
@@ -87,11 +90,10 @@ async function create(bookData, userId) {
       bookData.company_id || bookData.companyId || null,
       userId || null,
     ];
+
     const result = await sql.query(query, values);
-    if (result.rows.length > 0) {
-      return result.rows[0];
-    }
-    return null;
+    return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in create:", error);
     throw error;
@@ -161,7 +163,6 @@ async function deleteById(id) {
   }
 }
 
-// Check if ISBN already exists (for duplicate check)
 async function findByISBN(isbn, excludeId = null) {
   try {
     if (!this.schema) {

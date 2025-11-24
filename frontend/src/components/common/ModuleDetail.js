@@ -20,7 +20,7 @@ const ModuleDetail = ({
   imageField = null,
   imageUrl = null,
   lookupNavigation = {},
-  externalData = {}, // For select dropdowns (authors, categories, etc.)
+  externalData = {},
 }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const ModuleDetail = ({
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
- console.log('moduleApi' , moduleApi)
+  console.log('moduleApi', moduleApi)
   useEffect(() => {
     console.log("ModuleDetail useEffect running with:", { id, moduleApi, moduleName });
 
@@ -39,10 +39,8 @@ const ModuleDetail = ({
       try {
         setLoading(true);
 
-        // First try to fetch main data
         await fetchData();
 
-        // Then fetch related data if needed
         if (relatedModules.length > 0) {
           await fetchRelatedData();
         }
@@ -59,7 +57,7 @@ const ModuleDetail = ({
       console.error("Missing id or moduleApi:", { id, moduleApi });
       setLoading(false);
     }
-  }, [id, moduleApi, moduleLabel]); // Add dependencies
+  }, [id, moduleApi, moduleLabel]);
 
   console.log("ModuleDetail Props:", {
     moduleApi,
@@ -80,10 +78,8 @@ const ModuleDetail = ({
       console.log("Full API Response:", response);
 
       if (response && response.data) {
-        // Axios wraps response in data property
         const responseData = response.data;
-        
-        // Handle different response formats
+
         if (responseData.success && responseData.data) {
           setData(responseData.data);
         } else if (responseData.data && responseData.data.success && responseData.data.data) {
@@ -113,8 +109,7 @@ const ModuleDetail = ({
   const fetchRelatedData = async () => {
     try {
       const relatedDataObj = {};
-      
-      // Normalize relatedModules - handle both string array and object array
+
       const normalizedModules = relatedModules.map(module => {
         if (typeof module === 'string') {
           return {
@@ -125,12 +120,11 @@ const ModuleDetail = ({
         }
         return module;
       });
-      
+
       for (const relatedModule of normalizedModules) {
         try {
-          // Skip if no api specified
           if (!relatedModule.api) continue;
-          
+
           const api = new DataApi(relatedModule.api);
           const response = await api.get(relatedModule.endpoint ? relatedModule.endpoint(id) : `/${id}`);
           if (response && response.data) {
@@ -218,7 +212,7 @@ const ModuleDetail = ({
 
     console.log(`Formatting field: ${field.key}, value:`, value, "type:", field.type);
 
-      // Check if this field has lookup navigation configured
+    // Check if this field has lookup navigation configured
     const lookupConfig = lookupNavigation && lookupNavigation[field.key];
     if (lookupConfig && data) {
       const targetId = getLookupTargetId(lookupConfig, data);
@@ -293,7 +287,7 @@ const ModuleDetail = ({
       setSaving(true);
       const api = new DataApi(moduleApi);
       const response = await api.update(tempData, id);
-      
+
       if (response && response.data) {
         const responseData = response.data;
         if (responseData.success && responseData.data) {
@@ -303,12 +297,12 @@ const ModuleDetail = ({
         } else {
           setData(responseData);
         }
-        
+
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
         });
-        
+
         setIsEditing(false);
         setTempData(null);
       } else {
@@ -342,13 +336,12 @@ const ModuleDetail = ({
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
     const value = currentData[field.key];
-    
+
     if (isEditing) {
-      // For editing mode, return raw value formatted for input
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
-          return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+          return date.toISOString().split('T')[0];
         } catch {
           return value;
         }
@@ -390,7 +383,7 @@ const ModuleDetail = ({
         } catch (error) {
           PubSub.publish("RECORD_ERROR_TOAST", {
             title: "Error",
-            message: `Failed to delete ${moduleLabel}`,
+            message: `Failed to delete ${moduleLabel} ${error.message}`,
           });
         }
       }
@@ -425,16 +418,13 @@ const ModuleDetail = ({
     );
   }
 
-  // Normalize fields - handle both array and object format
-  const normalizedFields = Array.isArray(fields) 
+  const normalizedFields = Array.isArray(fields)
     ? { details: fields }
     : fields || {};
 
-  // Get title and subtitle from fields config or data
-  const titleValue = normalizedFields?.title && data ? (data[normalizedFields.title] || data.name || data.title || moduleLabel) : (data?.name || data?.title || moduleLabel);
-  const subtitleValue = normalizedFields?.subtitle && data ? (data[normalizedFields.subtitle] || data.email || data.isbn || "") : (data?.email || data?.isbn || "");
+  const titleValue = normalizedFields?.title ? data[normalizedFields.title] : data.name || data.title || moduleLabel;
+  const subtitleValue = normalizedFields?.subtitle ? data[normalizedFields.subtitle] : data.email || data.isbn || "";
 
-  // Debug: Check what fields are available in data
   console.log("Available data fields:", Object.keys(data));
   console.log("Fields configuration:", normalizedFields);
 
@@ -442,7 +432,6 @@ const ModuleDetail = ({
     <Container fluid className="py-4">
       <ScrollToTop />
 
-      {/* Header Section with Title and Actions */}
       <Row className="mb-4">
         <Col>
           <Card style={{
@@ -462,11 +451,7 @@ const ModuleDetail = ({
                       {subtitleValue}
                     </p>
                   )}
-                  {!subtitleValue && (
-                  <p style={{ margin: "8px 0 0 0", color: "#6c757d", fontSize: "14px" }}>
-                    ID: {id}
-                  </p>
-                  )}
+
                 </div>
                 <div>
                   {!isEditing ? (
@@ -481,9 +466,9 @@ const ModuleDetail = ({
                         fontWeight: "600",
                       }}
                     >
-                    <i className="fa-solid fa-edit me-2"></i>
+                      <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
-                  </Button>
+                    </Button>
                   ) : (
                     <div className="d-flex gap-2">
                       <button
@@ -526,9 +511,9 @@ const ModuleDetail = ({
                   )}
                   {!isEditing && (
                     <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
-                    <i className="fa-solid fa-trash me-2"></i>
-                    Delete
-                  </Button>
+                      <i className="fa-solid fa-trash me-2"></i>
+                      Delete
+                    </Button>
                   )}
                 </div>
               </div>
@@ -568,16 +553,16 @@ const ModuleDetail = ({
                 </div>
 
                 <div style={{ padding: "24px" }}>
-      <Row>
+                  <Row>
                     <Col md={6}>
                       {normalizedFields.overview.slice(0, Math.ceil(normalizedFields.overview.length / 2)).map((field, index) => {
                         const currentData = isEditing ? tempData : data;
-                        
+
                         // Handle select/dropdown fields
                         if (field.type === "select" && field.options && externalData[field.options]) {
                           const options = externalData[field.options] || [];
                           const currentValue = currentData ? currentData[field.key] : null;
-                          
+
                           return (
                             <Form.Group key={index} className="mb-3">
                               <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -617,7 +602,7 @@ const ModuleDetail = ({
                             </Form.Group>
                           );
                         }
-                        
+
                         return (
                           <Form.Group key={index} className="mb-3">
                             <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -652,12 +637,12 @@ const ModuleDetail = ({
                     <Col md={6}>
                       {normalizedFields.overview.slice(Math.ceil(normalizedFields.overview.length / 2)).map((field, index) => {
                         const currentData = isEditing ? tempData : data;
-                        
+
                         // Handle select/dropdown fields
                         if (field.type === "select" && field.options && externalData[field.options]) {
                           const options = externalData[field.options] || [];
                           const currentValue = currentData ? currentData[field.key] : null;
-                          
+
                           return (
                             <Form.Group key={index} className="mb-3">
                               <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -697,7 +682,7 @@ const ModuleDetail = ({
                             </Form.Group>
                           );
                         }
-                        
+
                         return (
                           <Form.Group key={index} className="mb-3">
                             <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -729,11 +714,11 @@ const ModuleDetail = ({
                       })}
                     </Col>
                   </Row>
-              </div>
-          </Card.Body>
-        </Card>
+                </div>
+              </Card.Body>
+            </Card>
           </Col>
-      </Row>
+        </Row>
       )}
 
       {/* Main Details Section */}
@@ -771,8 +756,7 @@ const ModuleDetail = ({
                     <Col md={6}>
                       {normalizedFields.details.slice(0, Math.ceil(normalizedFields.details.length / 2)).map((field, index) => {
                         const currentData = isEditing ? tempData : data;
-                        
-                        // Handle select/dropdown fields
+
                         if (field.type === "select" && field.options && externalData[field.options]) {
                           const options = externalData[field.options] || [];
                           const currentValue = currentData ? currentData[field.key] : null;
@@ -816,7 +800,7 @@ const ModuleDetail = ({
                             </Form.Group>
                           );
                         }
-                        
+
                         return (
                           <Form.Group key={index} className="mb-3">
                             <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -830,10 +814,8 @@ const ModuleDetail = ({
                                   if (field.type === "number") {
                                     newValue = newValue ? parseFloat(newValue) : null;
                                   } else if (field.type === "date" && newValue) {
-                                    // Keep date in ISO format
                                     newValue = newValue;
                                   } else if (field.type === "datetime" && newValue) {
-                                    // Keep datetime in ISO format
                                     newValue = new Date(newValue).toISOString();
                                   }
                                   handleFieldChange(field.key, newValue);
@@ -846,19 +828,18 @@ const ModuleDetail = ({
                               }}
                             />
                           </Form.Group>
-                          );
-                        })}
+                        );
+                      })}
                     </Col>
 
                     <Col md={6}>
                       {normalizedFields.details.slice(Math.ceil(normalizedFields.details.length / 2)).map((field, index) => {
                         const currentData = isEditing ? tempData : data;
-                        
-                        // Handle select/dropdown fields
+
                         if (field.type === "select" && field.options && externalData[field.options]) {
                           const options = externalData[field.options] || [];
                           const currentValue = currentData ? currentData[field.key] : null;
-                          
+
                           return (
                             <Form.Group key={index} className="mb-3">
                               <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -898,7 +879,7 @@ const ModuleDetail = ({
                             </Form.Group>
                           );
                         }
-                        
+
                         return (
                           <Form.Group key={index} className="mb-3">
                             <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -912,10 +893,8 @@ const ModuleDetail = ({
                                   if (field.type === "number") {
                                     newValue = newValue ? parseFloat(newValue) : null;
                                   } else if (field.type === "date" && newValue) {
-                                    // Keep date in ISO format
                                     newValue = newValue;
                                   } else if (field.type === "datetime" && newValue) {
-                                    // Keep datetime in ISO format
                                     newValue = new Date(newValue).toISOString();
                                   }
                                   handleFieldChange(field.key, newValue);
@@ -932,14 +911,13 @@ const ModuleDetail = ({
                       })}
                     </Col>
                   </Row>
-                              </div>
+                </div>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       )}
 
-      {/* Custom Sections from fields object (address, contact, settings, etc.) */}
       {normalizedFields && Object.keys(normalizedFields).filter(key => !['title', 'subtitle', 'overview', 'details'].includes(key)).map((sectionKey) => {
         const sectionFields = normalizedFields[sectionKey];
         if (!Array.isArray(sectionFields) || sectionFields.length === 0) return null;
@@ -973,59 +951,14 @@ const ModuleDetail = ({
                       <i className="fa-solid fa-file-lines"></i>
                       {sectionTitle}
                     </h5>
-                            </div>
+                  </div>
 
                   <div style={{ padding: "24px" }}>
                     <Row>
                       <Col md={6}>
                         {sectionFields.slice(0, Math.ceil(sectionFields.length / 2)).map((field, index) => {
                           const currentData = isEditing ? tempData : data;
-                          
-                          // Handle select/dropdown fields
-                          if (field.type === "select" && field.options && externalData[field.options]) {
-                            const options = externalData[field.options] || [];
-                            const currentValue = currentData ? currentData[field.key] : null;
-                            
-                            return (
-                              <Form.Group key={index} className="mb-3">
-                                <Form.Label className="fw-semibold">{field.label}</Form.Label>
-                                {isEditing ? (
-                                  <Form.Select
-                                    value={currentValue || ""}
-                                    onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
-                                    style={{
-                                      background: "white",
-                                    }}
-                                  >
-                                    <option value="">Select {field.label}</option>
-                                    {options.map((option) => (
-                                      <option key={option.id} value={option.id}>
-                                        {option.name || option.title || option.email || `Item ${option.id}`}
-                                      </option>
-                                    ))}
-                                  </Form.Select>
-                                ) : (
-                                  <Form.Control
-                                    type="text"
-                                    value={(() => {
-                                      if (field.displayKey && data) {
-                                        return data[field.displayKey] || "—";
-                                      }
-                                      const selected = options.find(opt => opt.id === currentValue);
-                                      return selected ? (selected.name || selected.title || selected.email || "—") : "—";
-                                    })()}
-                                    readOnly
-                                    style={{
-                                      background: "var(--header-highlighter-color, #f8f9fa)",
-                                      pointerEvents: "none",
-                                      opacity: 0.9,
-                                    }}
-                                  />
-                                )}
-                              </Form.Group>
-                            );
-                          }
-                          
+
                           return (
                             <Form.Group key={index} className="mb-3">
                               <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -1060,52 +993,7 @@ const ModuleDetail = ({
                       <Col md={6}>
                         {sectionFields.slice(Math.ceil(sectionFields.length / 2)).map((field, index) => {
                           const currentData = isEditing ? tempData : data;
-                          
-                          // Handle select/dropdown fields
-                          if (field.type === "select" && field.options && externalData[field.options]) {
-                            const options = externalData[field.options] || [];
-                            const currentValue = currentData ? currentData[field.key] : null;
-                            
-                            return (
-                              <Form.Group key={index} className="mb-3">
-                                <Form.Label className="fw-semibold">{field.label}</Form.Label>
-                                {isEditing ? (
-                                  <Form.Select
-                                    value={currentValue || ""}
-                                    onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
-                                    style={{
-                                      background: "white",
-                                    }}
-                                  >
-                                    <option value="">Select {field.label}</option>
-                                    {options.map((option) => (
-                                      <option key={option.id} value={option.id}>
-                                        {option.name || option.title || option.email || `Item ${option.id}`}
-                                      </option>
-                                    ))}
-                                  </Form.Select>
-                                ) : (
-                                  <Form.Control
-                                    type="text"
-                                    value={(() => {
-                                      if (field.displayKey && data) {
-                                        return data[field.displayKey] || "—";
-                                      }
-                                      const selected = options.find(opt => opt.id === currentValue);
-                                      return selected ? (selected.name || selected.title || selected.email || "—") : "—";
-                                    })()}
-                                    readOnly
-                                    style={{
-                                      background: "var(--header-highlighter-color, #f8f9fa)",
-                                      pointerEvents: "none",
-                                      opacity: 0.9,
-                                    }}
-                                  />
-                                )}
-                              </Form.Group>
-                            );
-                          }
-                          
+
                           return (
                             <Form.Group key={index} className="mb-3">
                               <Form.Label className="fw-semibold">{field.label}</Form.Label>
@@ -1135,13 +1023,13 @@ const ModuleDetail = ({
                             </Form.Group>
                           );
                         })}
-                    </Col>
-                  </Row>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+                      </Col>
+                    </Row>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
         );
       })}
 
@@ -1211,105 +1099,104 @@ const ModuleDetail = ({
 
                 <div style={{ padding: "24px" }}>
                   {relatedModules.map((relatedModule, idx) => {
-                    // Normalize relatedModule - handle both string and object
-                    const normalizedModule = typeof relatedModule === 'string' 
+                    const normalizedModule = typeof relatedModule === 'string'
                       ? { key: relatedModule, label: relatedModule.charAt(0).toUpperCase() + relatedModule.slice(1) }
                       : relatedModule;
-                    
+
                     const moduleKey = normalizedModule.key || normalizedModule;
                     const moduleLabel = normalizedModule.label || (typeof normalizedModule === 'string' ? normalizedModule.charAt(0).toUpperCase() + normalizedModule.slice(1) : 'Related');
-                    
+
                     return (
-                    <div key={idx} className={idx > 0 ? "mt-4 pt-4" : ""} style={idx > 0 ? { borderTop: "1px solid #e9ecef" } : {}}>
-                      <h6 style={{
-                        marginBottom: "16px",
-                        color: "#495057",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px"
-                      }}>
-                        {moduleLabel}
-                      </h6>
-                      {relatedData[moduleKey] && relatedData[moduleKey].length > 0 ? (
-                        normalizedModule.render ? (
-                          normalizedModule.render(relatedData[moduleKey], data)
-                        ) : (
-                          <div className="table-responsive">
-                            <table style={{
-                              width: "100%",
-                              fontSize: "14px",
-                              borderCollapse: "collapse"
-                            }}>
-                              <thead>
-                                <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
-                                  {normalizedModule.columns?.map((col, colIdx) => (
-                                    <th
-                                      key={colIdx}
-                                      style={{
-                                        padding: "12px 16px",
-                                        textAlign: "left",
-                                        fontWeight: "600",
-                                        color: "#495057"
-                                      }}
-                                    >
-                                      {col.label}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {relatedData[moduleKey].map((item, itemIdx) => (
-                                  <tr
-                                    key={itemIdx}
-                                    style={{
-                                      borderBottom: "1px solid #e9ecef",
-                                      transition: "background-color 0.2s"
-                                    }}
-                                    onMouseEnter={(e) => e.target.parentElement.style.background = "#f8f9fa"}
-                                    onMouseLeave={(e) => e.target.parentElement.style.background = "transparent"}
-                                  >
+                      <div key={idx} className={idx > 0 ? "mt-4 pt-4" : ""} style={idx > 0 ? { borderTop: "1px solid #e9ecef" } : {}}>
+                        <h6 style={{
+                          marginBottom: "16px",
+                          color: "#495057",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px"
+                        }}>
+                          {moduleLabel}
+                        </h6>
+                        {relatedData[moduleKey] && relatedData[moduleKey].length > 0 ? (
+                          normalizedModule.render ? (
+                            normalizedModule.render(relatedData[moduleKey], data)
+                          ) : (
+                            <div className="table-responsive">
+                              <table style={{
+                                width: "100%",
+                                fontSize: "14px",
+                                borderCollapse: "collapse"
+                              }}>
+                                <thead>
+                                  <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
                                     {normalizedModule.columns?.map((col, colIdx) => (
-                                      <td
+                                      <th
                                         key={colIdx}
                                         style={{
                                           padding: "12px 16px",
-                                          color: "#6c757d"
+                                          textAlign: "left",
+                                          fontWeight: "600",
+                                          color: "#495057"
                                         }}
                                       >
-                                        {item[col.key] || "N/A"}
-                                      </td>
+                                        {col.label}
+                                      </th>
                                     ))}
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )
-                      ) : (
-                        <div style={{
-                          padding: "32px 16px",
-                          textAlign: "center",
-                          background: "#f8f9fa",
-                          borderRadius: "8px",
-                          border: "1px dashed #dee2e6"
-                        }}>
-                          <i className="fa-solid fa-inbox" style={{
-                            fontSize: "32px",
-                            color: "#adb5bd",
-                            marginBottom: "8px",
-                            display: "block"
-                          }}></i>
-                          <p style={{
-                            color: "#6c757d",
-                            margin: 0,
-                            fontSize: "14px"
+                                </thead>
+                                <tbody>
+                                  {relatedData[moduleKey].map((item, itemIdx) => (
+                                    <tr
+                                      key={itemIdx}
+                                      style={{
+                                        borderBottom: "1px solid #e9ecef",
+                                        transition: "background-color 0.2s"
+                                      }}
+                                      onMouseEnter={(e) => e.target.parentElement.style.background = "#f8f9fa"}
+                                      onMouseLeave={(e) => e.target.parentElement.style.background = "transparent"}
+                                    >
+                                      {normalizedModule.columns?.map((col, colIdx) => (
+                                        <td
+                                          key={colIdx}
+                                          style={{
+                                            padding: "12px 16px",
+                                            color: "#6c757d"
+                                          }}
+                                        >
+                                          {item[col.key] || "N/A"}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )
+                        ) : (
+                          <div style={{
+                            padding: "32px 16px",
+                            textAlign: "center",
+                            background: "#f8f9fa",
+                            borderRadius: "8px",
+                            border: "1px dashed #dee2e6"
                           }}>
-                            No {moduleLabel.toLowerCase()} found.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                            <i className="fa-solid fa-inbox" style={{
+                              fontSize: "32px",
+                              color: "#adb5bd",
+                              marginBottom: "8px",
+                              display: "block"
+                            }}></i>
+                            <p style={{
+                              color: "#6c757d",
+                              margin: 0,
+                              fontSize: "14px"
+                            }}>
+                              No {moduleLabel.toLowerCase()} found.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

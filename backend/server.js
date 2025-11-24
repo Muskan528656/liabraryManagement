@@ -38,7 +38,7 @@ const io = require("socket.io")(server, {
 app.set('io', io);
 
 io.on("connection", (socket) => {
-  
+
   console.log("✅ New socket connected:", socket.id);
 
   socket.on("setup", (userData) => {
@@ -82,10 +82,10 @@ require("./app/routes/booksubmission.routes.js")(app);
 require("./app/routes/librarysettings.routes.js")(app);
 require("./app/routes/user.routes.js")(app);
 require("./app/routes/purchase.routes.js")(app);
-require("./app/routes/bookrequest.routes.js")(app);
 require("./app/routes/notification.routes.js")(app);
 require("./app/routes/module.routes.js")(app);
 require("./app/routes/company.routes.js")(app);
+require("./app/routes/userrole.routes.js")(app);
 
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);

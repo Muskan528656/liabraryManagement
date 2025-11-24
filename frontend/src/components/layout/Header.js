@@ -110,45 +110,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   };
 
 
-  // Fetch role permissions
-  // const fetchRolePermissions = async (userRole) => {
-  //   try {
-  //     // ADMIN has all permissions
-  //     if (userRole === "ADMIN") {
-  //       const allModules = ["books", "author", "category", "supplier", "vendor", "purchase", "user", "librarycard", "bookissue", "bookrequest", "penalty", "booksubmit"];
-  //       const allPerms = {};
-  //       allModules.forEach(module => {
-  //         allPerms[module] = { can_create: true, can_read: true, can_update: true, can_delete: true };
-  //       });
-  //       setRolePermissions(allPerms);
-  //       return;
-  //     }
-
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/role-permissions/current-user`,
-  //       "GET"
-  //     );
-  //     const result = await response.json();
-
-  //     if (result.success) {
-  //       const permMap = {};
-  //       result.permissions.forEach(perm => {
-  //         permMap[perm.module_name] = {
-  //           can_create: perm.can_create,
-  //           can_read: perm.can_read,
-  //           can_update: perm.can_update,
-  //           can_delete: perm.can_delete
-  //         };
-  //       });
-  //       setRolePermissions(permMap);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching role permissions:", error);
-  //     setRolePermissions({});
-  //   }
-  // };
-
-  // Fetch modules from DB with localStorage cache
   const fetchModulesFromDB = async () => {
     try {
       // First, try to load from localStorage (for faster initial load in new tabs)

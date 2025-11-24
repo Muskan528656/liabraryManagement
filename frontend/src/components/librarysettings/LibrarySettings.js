@@ -170,18 +170,7 @@ const Settings = () => {
     <Container fluid className="py-4 ">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-          {showAlert && (
-            <Alert
-              variant={
-                alertMessage.includes("successfully") ? "success" : "danger"
-              }
-              dismissible
-              onClose={() => setShowAlert(false)}
-              className="mb-4"
-            >
-              {alertMessage}
-            </Alert>
-          )}
+
           <Card className="border-0 shadow-sm">
             <Card.Body className="">
               <div
@@ -216,7 +205,7 @@ const Settings = () => {
                 ) : (
                   <div className="d-flex gap-2">
                     <button
-                    className="custom-btn-primary"
+                      className="custom-btn-primary"
                       onClick={handleSettingsSave}
                     >
                       <i className="fa-solid fa-check me-2"></i>

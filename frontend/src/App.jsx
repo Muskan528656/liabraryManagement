@@ -43,6 +43,7 @@ import BulkIssue from "./components/bookissue/BulkIssue";
 import AuthorDetail from "./components/author/AuthorDetail";
 import CategoryDetail from "./components/category/CategoryDetail";
 import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
+import UserRole from "./components/userrole/userrole";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -151,6 +152,8 @@ function App() {
           {/* All other pages under Main layout */}
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Home userInfo={userInfo} />} />
+
+            <Route path="userroles" element={<UserRole />} />
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="book" element={<Books />} />

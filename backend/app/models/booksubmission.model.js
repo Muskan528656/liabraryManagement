@@ -21,7 +21,7 @@ async function create(submissionData, userId) {
   try {
     await client.query("BEGIN");
 
-  
+
     if (!submissionData.issue_id) {
       throw new Error("Issue ID is required");
     }
@@ -78,7 +78,6 @@ async function create(submissionData, userId) {
       }
     }
 
-    // Add penalty for damage condition if condition_after is worse than condition_before
     if (submissionData.condition_after && submissionData.condition_before) {
       const conditionBefore = submissionData.condition_before.toLowerCase();
       const conditionAfter = submissionData.condition_after.toLowerCase();
@@ -95,10 +94,9 @@ async function create(submissionData, userId) {
 
     // Create submission record
     const submissionQuery = `INSERT INTO ${schema}.book_submissions 
-                            (issue_id, book_id, submitted_by, submit_date, condition_before, condition_after, remarks, penalty, created_at)
-                            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-                            RETURNING *`;
-
+  (issue_id, book_id, submitted_by, submit_date, condition_before, condition_after, remarks, penalty, createddate)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+  RETURNING *`
     const submissionValues = [
       submissionData.issue_id,
       issue.book_id,
@@ -197,7 +195,7 @@ async function findAll() {
                    LEFT JOIN ${schema}.books b ON bs.book_id = b.id
                    LEFT JOIN ${schema}."user" u ON bi.issued_to = u.id
                    LEFT JOIN ${schema}."user" submitted_user ON bs.submitted_by = submitted_user.id
-                   ORDER BY bs.created_at DESC`;
+                   ORDER BY bs.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -258,7 +256,7 @@ async function findByBookId(bookId) {
                    LEFT JOIN ${schema}."user" u ON bi.issued_to = u.id
                    LEFT JOIN ${schema}."user" submitted_user ON bs.submitted_by = submitted_user.id
                    WHERE bs.book_id = $1
-                   ORDER BY bs.created_at DESC`;
+                   ORDER BY bs.createddate DESC`;
     const result = await sql.query(query, [bookId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -289,7 +287,7 @@ async function findByDateRange(startDate, endDate) {
                    LEFT JOIN ${schema}."user" u ON bi.issued_to = u.id
                    LEFT JOIN ${schema}."user" submitted_user ON bs.submitted_by = submitted_user.id
                    WHERE bs.submit_date >= $1 AND bs.submit_date <= $2
-                   ORDER BY bs.created_at DESC`;
+                   ORDER BY bs.createddate DESC`;
     const result = await sql.query(query, [startDate, endDate]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -320,7 +318,7 @@ async function findByLibrarian(librarianId) {
                    LEFT JOIN ${schema}."user" u ON bi.issued_to = u.id
                    LEFT JOIN ${schema}."user" submitted_user ON bs.submitted_by = submitted_user.id
                    WHERE bs.submitted_by = $1
-                   ORDER BY bs.created_at DESC`;
+                   ORDER BY bs.createddate DESC`;
     const result = await sql.query(query, [librarianId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -379,31 +377,31 @@ async function getAllBooks() {
 
 
 async function checkbeforeDue() {
- 
-  
+
+
   let notifications = [];
   try {
     const response = await getAllBooks();
     // console.log(response.data);
-    
+
     const submittedBooks = response.data;
 
     const today = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
- 
+
     notifications = [];
 
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
       // console.log('book title ',book.book_title,);
-      
+
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
         dueDate.getMonth() === tomorrow.getMonth() &&
         dueDate.getDate() === tomorrow.getDate()
       ) {
-        
+
         notifications.push({
           message: `Your book is due tomorrow. Please return "${book.book_title}"  to avoid penalties.`,
           user: book.issued_by,
