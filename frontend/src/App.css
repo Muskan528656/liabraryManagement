@@ -914,10 +914,6 @@ textarea.form-control[required] {
   color: black !important;
 }
 
-.nav-link[aria-selected=false] {
-  color: white !important;
-}
-
 /* .nav-link:hover, .nav-link:focus{
   color: #fff !important;
 } */

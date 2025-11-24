@@ -73,7 +73,7 @@ async function findById(id) {
 
 // Create a new purchase
 async function create(purchaseData, userId) {
-  // const sql = await sql.connect();
+ 
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -83,10 +83,6 @@ async function create(purchaseData, userId) {
       throw new Error("Vendor ID is required for purchase");
     }
 
-    //// await sql.query("BEGIN");
-
-    // Create purchase record
-    // Note: total_amount might be a GENERATED column, so we don't insert it
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
                    (vendor_id, book_id, quantity, unit_price, purchase_date, notes,
                     createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
@@ -112,26 +108,25 @@ async function create(purchaseData, userId) {
                             WHERE id = $2`;
     await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
 
-    ////await sql.query("COMMIT");
+    ////    
     return purchase;
   } catch (error) {
     //await sql.query("ROLLBACK");
     console.error("Error in create:", error);
     throw error;
   } finally {
-    sql.release();
   }
 }
 
 // Update purchase by ID
 async function updateById(id, purchaseData, userId) {
-  // const sql = await sql.connect();
+  //     
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    //// await sql.query("BEGIN");
+    ////    
 
     // Get old purchase to calculate difference
     const oldPurchase = await sql.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
@@ -193,7 +188,7 @@ async function updateById(id, purchaseData, userId) {
       }
     }
 
-    ////await sql.query("COMMIT");
+    ////    
     if (result.rows.length > 0) {
       return result.rows[0];
     }
@@ -209,15 +204,12 @@ async function updateById(id, purchaseData, userId) {
 
 // Delete purchase by ID
 async function deleteById(id) {
-  // const sql = await sql.connect();
+      
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    // //// await sql.query("BEGIN");
-
-    // Get purchase details
     const purchase = await sql.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
     if (purchase.rows.length === 0) {
       return { success: false, message: "Purchase not found" };
@@ -235,14 +227,11 @@ async function deleteById(id) {
                            lastmodifieddate = NOW()
                        WHERE id = $2`, [purchaseData.quantity, purchaseData.book_id]);
 
-    ////await sql.query("COMMIT");
     return { success: true, message: "Purchase deleted successfully" };
   } catch (error) {
-    //await sql.query("ROLLBACK");
     console.error("Error in deleteById:", error);
     throw error;
   } finally {
-    sql.release();
   }
 }
 

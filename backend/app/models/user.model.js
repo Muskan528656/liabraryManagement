@@ -25,13 +25,10 @@ async function findAll() {
                     email,
                     userrole,
                     phone,
-                    whatsapp_number,
+                 
                     country_code,
                     isactive,
-                    blocked,
-                    companyid,
-                    managerid,
-                    whatsapp_settings
+                    companyid
                    FROM ${this.schema}."user"
                    ORDER BY firstname ASC, lastname ASC`;
     const result = await sql.query(query);

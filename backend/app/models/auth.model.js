@@ -368,27 +368,33 @@ async function createUser(newUser) {
 
 async function findByEmail(email) {
   if (!this.schema) {
-    console.error("Error: Schema not initialized in findByEmail");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
 
   const emailLower = email ? email.toLowerCase().trim() : "";
 
-  const userCheck = await sql.query(`
-    SELECT * FROM ${this.schema}.user 
+  // STEP 1 — Check if active user exists
+  const userCheck = await sql.query(
+    `
+    SELECT * 
+    FROM ${this.schema}."user"
     WHERE LOWER(TRIM(email)) = $1 AND isactive = true
     LIMIT 1
-  `, [emailLower]);
+    `,
+    [emailLower]
+  );
 
-  if (!userCheck || userCheck.rows.length === 0) {
-    console.log("User not found in schema:", this.schema, "for email:", emailLower);
+  if (!userCheck.rows.length) {
+    console.log(`User not found in ${this.schema} for email: ${emailLower}`);
     return null;
   }
 
-  const result = await sql.query(`
+  // STEP 2 — Fetch user + company details
+  const result = await sql.query(
+    `
     WITH user_info AS (
       SELECT *
-      FROM ${this.schema}.user
+      FROM ${this.schema}."user"
       WHERE LOWER(TRIM(email)) = $1 AND isactive = true
       LIMIT 1
     ),
@@ -405,12 +411,12 @@ async function findByEmail(email) {
       'firstname', u.firstname,
       'lastname', u.lastname,
       'email', u.email,
-      'whatsapp_number', u.whatsapp_number,
+      'phone', u.phone,
       'country_code', u.country_code,
       'password', u.password,
       'userrole', u.userrole,
       'companyid', u.companyid,
-      'whatsapp_settings', u.whatsapp_settings,
+      'time_zone', u.time_zone,
 
       -- company info
       'companyname', c.name,
@@ -426,21 +432,49 @@ async function findByEmail(email) {
 
     FROM user_info u
     LEFT JOIN company_info c ON c.id = u.companyid
-    LIMIT 1;
-  `, [emailLower]);
+    LIMIT 1
+    `,
+    [emailLower]
+  );
 
-  return result.rows.length > 0 ? result.rows[0] : null;
+  return result.rows.length ? result.rows[0] : null;
 }
+
 async function findById(id) {
   console.log("Finding user by ID:", id, "in schema:", this.schema);
+
   try {
-    let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.managerid, concat(mu.firstname,' ', mu.lastname) managername, u.whatsapp_number, u.country_code, u.whatsapp_settings FROM ${this.schema}.user u`;
-    query += ` LEFT JOIN ${this.schema}.user mu ON mu.id = u.managerid `;
-    query += ` WHERE u.id = $1`;
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    const query = `
+      SELECT 
+        u.id,
+        u.email,
+        CONCAT(u.firstname, ' ', u.lastname) AS contactname,
+        u.firstname,
+        u.lastname,
+        u.userrole,
+        u.isactive,
+        u.phone,
+        u.country_code,
+        u.time_zone,
+        u.createddate,
+        u."lastmodifieddate ",
+        u."createdbyid ",
+        u.lastmodifiedbyid
+      FROM ${this.schema}."user" u
+      WHERE u.id = $1
+      LIMIT 1
+    `;
+
     const result = await sql.query(query, [id]);
+
     if (result.rows.length > 0) return result.rows[0];
+
   } catch (error) {
-    console.log("error ", error);
+    console.log("Error in findById:", error);
   }
 
   return null;

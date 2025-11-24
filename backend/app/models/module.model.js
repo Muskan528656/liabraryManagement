@@ -68,13 +68,13 @@ function buildUpdateQuery(id, cols) {
 
 async function deleteRecord(id) {
   try {
-   // await sql.query("BEGIN");
+   //    
     const moduleResult = await sql.query(
       `DELETE FROM public.module WHERE id = $1`,
       [id]
     );
     if (moduleResult.rowCount > 0) {
-      //await sql.query("COMMIT");
+      //    
       return "Success";
     }
     //await sql.query("ROLLBACK");
