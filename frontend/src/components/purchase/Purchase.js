@@ -779,56 +779,49 @@ console.log("Vendor Options:", vendorOptions);
   );
 
   return (
-    <Container fluid >
+    <Container fluid className="py-4">
       <ScrollToTop />
-      <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
-        <Col>
-          <TableHeader
-            title="Purchase Management"
-            icon="fa-solid fa-shopping-cart"
-            totalCount={filteredPurchases.length}
-            totalLabel={filteredPurchases.length === 1 ? "Purchase" : "Purchases"}
-            searchPlaceholder="Search purchases..."
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            showColumnVisibility={true}
-            allColumns={allColumns}
-            visibleColumns={visibleColumns}
-            onToggleColumnVisibility={toggleColumnVisibility}
-            actionButtons={[
-              {
-                variant: "outline-success",
-                size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
-                onClick: handleExport,
-              },
-              {
-                size: "sm",
-                icon: "fa-solid fa-layer-group",
-                label: "Add Purchase",
-                onClick: handleBulkInsert,
-                style: {
-                  background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                  border: "none",
-                },
-              },
-            ]}
-          />
-        </Col>
-      </Row>
-      {loading && purchases.length === 0 ? (
-        <Loader />
-      ) : (
-        <>
-
-          <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-            <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
-              <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
-                <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+      <Row className="justify-content-center">
+        <Col lg={12} xl={12}>
+            <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+              <Card.Body className="">
                   {loading ? (
-                    <Loader />
+                      <Loader />
                   ) : (
+                  <>
+                      <TableHeader
+                        title="Purchase Management"
+                        icon="fa-solid fa-shopping-cart"
+                        totalCount={filteredPurchases.length}
+                        totalLabel={filteredPurchases.length === 1 ? "Purchase" : "Purchases"}
+                        searchPlaceholder="Search purchases..."
+                        searchValue={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        showColumnVisibility={true}
+                        allColumns={allColumns}
+                        visibleColumns={visibleColumns}
+                        onToggleColumnVisibility={toggleColumnVisibility}
+                        actionButtons={[
+                          {
+                            variant: "outline-success",
+                            size: "sm",
+                            icon: "fa-solid fa-download",
+                            label: "Export",
+                            onClick: handleExport,
+                          },
+                          {
+                            size: "sm",
+                            icon: "fa-solid fa-layer-group",
+                            label: "Add Purchase",
+                            onClick: handleBulkInsert,
+                            style: {
+                              background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                              border: "none",
+                            },
+                          },
+                        ]}
+                      />
+
                     <ResizableTable
                       data={filteredPurchases}
                       columns={columns}
@@ -849,15 +842,12 @@ console.log("Vendor Options:", vendorOptions);
                       showSearch={false}
                       emptyMessage="No purchases found"
                     />
-                  )}
+                  </>   
+                  )}                 
                 </Card.Body>
-              </Card>
+                </Card>
             </Col>
-          </Row>
-
-        </>
-      )}
-
+        </Row>
 
       {/* Add/Edit Modal */}
       < Modal show={showModal} onHide={() => { setShowModal(false); resetForm(); }} size="lg" >

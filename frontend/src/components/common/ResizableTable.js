@@ -597,7 +597,7 @@ const ResizableTable = ({
             {/* Pagination */}
             {totalPages > 1 && (
                 <div
-                    className="d-flex justify-content-between align-items-center mt-3"
+                    className="d-flex justify-content-between align-items-center mt-3 detail-h2"
                     style={{
                         padding: "12px 16px",
                         background: "#fafbfc",
@@ -607,10 +607,8 @@ const ResizableTable = ({
                     }}
                 >
                     <div>
-                        <small className="text-muted" style={{ fontSize: "13px", color: "#6c757d" }}>
-                            Showing {startRecord + 1} to {Math.min(endRecord, data.length)} of{" "}
-                            {data.length} records
-                        </small>
+                        Showing {startRecord + 1} to {Math.min(endRecord, data.length)} of{" "}
+                        {data.length} records
                     </div>
                     <Pagination className="mb-0" style={{ marginBottom: 0 }}>
                         <Pagination.First
