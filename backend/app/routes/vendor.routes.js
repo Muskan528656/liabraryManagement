@@ -24,7 +24,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
   // Get all vendors (ADMIN and ADMIN)
-  router.get("/", fetchUser,  async (req, res) => {
+  router.get("/", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const vendors = await Vendor.findAll();
@@ -36,7 +36,7 @@ module.exports = (app) => {
   });
 
   // Get vendor by ID (ADMIN and ADMIN)
-  router.get("/:id", fetchUser,async (req, res) => {
+  router.get("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const vendor = await Vendor.findById(req.params.id);
@@ -54,7 +54,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-  
+
     [
       // Allow empty name for barcode scanning - will use default in model
       body("name").optional().custom((value) => {
@@ -69,7 +69,7 @@ module.exports = (app) => {
         }
 
         Vendor.init(req.userinfo.tenantcode);
-        
+
         // Check for duplicate name
         if (req.body.name) {
           const existingVendor = await Vendor.findByName(req.body.name);
@@ -97,7 +97,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-    
+
     [
       body("name").notEmpty().withMessage("Name is required"),
     ],
@@ -109,7 +109,7 @@ module.exports = (app) => {
         }
 
         Vendor.init(req.userinfo.tenantcode);
-        
+
         // Check if vendor exists
         const existingVendor = await Vendor.findById(req.params.id);
         if (!existingVendor) {
@@ -141,7 +141,7 @@ module.exports = (app) => {
   );
 
   // Delete vendor by ID (ADMIN and ADMIN)
-  router.delete("/:id", fetchUser,  async (req, res) => {
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const result = await Vendor.deleteById(req.params.id);

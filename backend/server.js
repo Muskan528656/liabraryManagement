@@ -87,6 +87,9 @@ require("./app/routes/module.routes.js")(app);
 require("./app/routes/company.routes.js")(app);
 require("./app/routes/userrole.routes.js")(app);
 
+//added dashboard route --Aabid
+require("./app/routes/dashbard.router.js")(app);
+
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
   console.log(`🌐 Base API URL: ${process.env.BASE_API_URL}`);

@@ -38,12 +38,12 @@ import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
 import CompanyDetail from "./components/Company/CompanyDetail";
 import PurchaseDetail from "./components/purchase/PurchaseDetail";
-import BlukIssued from "./components/bookissue/BlukIssued";
 import BulkIssue from "./components/bookissue/BulkIssue";
 import AuthorDetail from "./components/author/AuthorDetail";
 import CategoryDetail from "./components/category/CategoryDetail";
 import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import UserRole from "./components/userrole/userrole";
+import UserRoleDetail from "./components/userrole/userroleDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -154,6 +154,7 @@ function App() {
             <Route index element={<Home userInfo={userInfo} />} />
 
             <Route path="userroles" element={<UserRole />} />
+            <Route path="user-role/:id" element={<UserRoleDetail />} />
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="book" element={<Books />} />

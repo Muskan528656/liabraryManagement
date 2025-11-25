@@ -412,7 +412,7 @@ const LibraryCard = (props) => {
                 ${barcodeElement.outerHTML}
               </div>
               
-              <div class="footer">
+              <div class="footer">  
                 <p>Scan barcode to verify membership</p>
                 <p>Generated: ${new Date().toLocaleDateString('en-GB')}</p>
               </div>
@@ -625,7 +625,6 @@ Submitted Books: ${decodedData.submittedBooks || 0}
                         boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
                       }}
                       onError={(e) => {
-                        // If image fails to load, hide it and show icon
                         e.target.style.display = 'none';
                         if (e.target.nextSibling) {
                           e.target.nextSibling.style.display = 'flex';

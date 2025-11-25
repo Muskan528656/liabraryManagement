@@ -7,12 +7,18 @@ import Loader from "./common/Loader";
 import { useNavigate } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 
+import DashboardApi from "../api/dashboardApi";
+
 const Dashboard = ({ userInfo: propUserInfo }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [dueSoonCount, setDueSoonCount] = useState(0);
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
+  const [damagedCount, setDamagedCount] = useState(0);
 
   useEffect(() => {
     let currentUserInfo = propUserInfo;
@@ -29,6 +35,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     setUserInfo(currentUserInfo);
     setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
     fetchDashboardData();
+    fetchSubmissionAndIssueMetrics()
   }, [propUserInfo]);
 
   const fetchDashboardData = async () => {
@@ -49,6 +56,33 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       setLoading(false);
     }
   };
+
+  const fetchSubmissionAndIssueMetrics = async () => {
+    try {
+      const resp = await DashboardApi.fetchAll(); // this now returns the query result
+      const data = resp?.data || [];
+
+      console.log('data ',data.length);
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn("No data received from API");
+        return;
+      }
+
+      const metrics = data[0];
+
+      console.log( 'metrics ',metrics );
+      
+      // Set counts directly
+      setDueSoonCount(metrics.total_due_soon || 0);
+      setOverdueCount(metrics.overdue_books || 0);
+      setFineCollectedThisMonth(metrics.fine_collected_this_month || 0);
+      setDamagedCount(metrics.damaged_missing_books || 0);
+
+    } catch (err) {
+      console.error("Error fetching submission/issue metrics:", err);
+    }
+  };
+
 
   // Format number with commas
   const formatNumber = (num) => {
@@ -890,6 +924,111 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
             </Col>
           ))}
         </Row>
+
+           {/* Upcoming Submission Datess (submission related summary) */}
+        <Row className="mb-2">
+          <Col xs={12} className="mb-2">
+            <h5 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748" }}>Upcoming Submission Datess</h5>
+          </Col>
+        </Row>
+        <Row className="mb-2">
+          <Col lg={3} md={6} sm={12} className="mb-2">
+            <Card
+              style={{
+                border: "none",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
+                height: "100%",
+                background: "white",
+              }}
+            >
+              <Card.Body className="p-3">
+                <div className="d-flex align-items-center">
+                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#fff3cd", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-calendar-days" style={{ color: '#fd7e14' }}></i>
+                  </div>
+                  <div>
+                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(dueSoonCount)}</h3>
+                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Books Due Soon</p>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          <Col lg={3} md={6} sm={12} className="mb-2">
+            <Card
+              style={{
+                border: "none",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
+                height: "100%",
+                background: "white",
+              }}
+            >
+              <Card.Body className="p-3">
+                <div className="d-flex align-items-center">
+                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#f8d7da", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-exclamation-triangle" style={{ color: '#dc3545' }}></i>
+                  </div>
+                  <div>
+                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(overdueCount)}</h3>
+                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Overdue Books</p>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          <Col lg={3} md={6} sm={12} className="mb-2">
+            <Card
+              style={{
+                border: "none",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
+                height: "100%",
+                background: "white",
+              }}
+            >
+              <Card.Body className="p-3">
+                <div className="d-flex align-items-center">
+                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#e9f7ef", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-money-bill-wave" style={{ color: '#20c997' }}></i>
+                  </div>
+                  <div>
+                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatCurrency(fineCollectedThisMonth)}</h3>
+                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Fine Collected This Month</p>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          <Col lg={3} md={6} sm={12} className="mb-2">
+            <Card
+              style={{
+                border: "none",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
+                height: "100%",
+                background: "white",
+              }}
+            >
+              <Card.Body className="p-3">
+                <div className="d-flex align-items-center">
+                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#fff0f6", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className="fa-solid fa-skull-crossbones" style={{ color: '#e83e8c' }}></i>
+                  </div>
+                  <div>
+                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(damagedCount)}</h3>
+                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Damaged / Missing Books</p>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
 
         {/* Charts Row 1 - Daily Activity and Books This Month */}
         <Row className="mb-2">
