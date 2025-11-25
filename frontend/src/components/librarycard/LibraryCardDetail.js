@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import {
@@ -14,24 +14,28 @@ import {
 import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import ScrollToTop from "../common/ScrollToTop";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
   externalData = {},
 }) => {
+  const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [cardData, setCardData] = useState(null);
   const [issuedCount, setIssuedCount] = useState(0);
   const [submittedCount, setSubmittedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
   const [tempData, setTempData] = useState(null);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
   const [saving, setSaving] = useState(false);
-  const moduleNameFromUrl = window.location.pathname.split("/")[1];
+  const [deleteId, setDeleteId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const moduleName = "librarycards";
   const moduleApi = "librarycard";
@@ -601,6 +605,10 @@ const LibraryCardDetail = ({
     return String(value);
   };
 
+    useEffect(() => {
+     setTempData(location?.state?.rowData);
+    }, [location?.state?.isEdit]);
+
   const handleEdit = () => {
     if (onEdit) {
       onEdit(data);
@@ -697,29 +705,51 @@ const LibraryCardDetail = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (onDelete) {
-      onDelete(data);
-    } else {
-      if (
-        window.confirm(`Are you sure you want to delete this ${moduleLabel}?`)
-      ) {
-        try {
-          const api = new DataApi(moduleApi);
-          await api.delete(id);
+  // const handleDelete = async () => {
+  //   if (onDelete) {
+  //     onDelete(data);
+  //   } else {
+  //     if (
+  //       window.confirm(`Are you sure you want to delete this ${moduleLabel}?`)
+  //     ) {
+  //       try {
+  //         const api = new DataApi(moduleApi);
+  //         await api.delete(id);
+  //         PubSub.publish("RECORD_SAVED_TOAST", {
+  //           title: "Success",
+  //           message: `${moduleLabel} deleted successfully`,
+  //         });
+  //         navigate(`/${moduleName}`);
+  //       } catch (error) {
+  //         PubSub.publish("RECORD_ERROR_TOAST", {
+  //           title: "Error",
+  //           message: `Failed to delete ${moduleLabel}`,
+  //         });
+  //       }
+  //     }
+  //   }
+  // };
+
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const api = new DataApi(moduleApi);
+      await api.delete(id);
           PubSub.publish("RECORD_SAVED_TOAST", {
             title: "Success",
             message: `${moduleLabel} deleted successfully`,
           });
           navigate(`/${moduleName}`);
-        } catch (error) {
-          PubSub.publish("RECORD_ERROR_TOAST", {
-            title: "Error",
-            message: `Failed to delete ${moduleLabel}`,
-          });
-        }
+      } catch (error) {
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Error",
+          message: `Failed to delete ${moduleLabel} ${error.message}`,
+        });
       }
-    }
   };
 
   const normalizedFields = Array.isArray(fields)
@@ -753,7 +783,8 @@ const LibraryCardDetail = ({
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
-                  Library Card
+                  <i className="fa-solid fa-id-card me-2"></i>
+                  Library Card Management
                 </h2>
                 <div>
                   {!isEditing ? (
@@ -1504,7 +1535,15 @@ const LibraryCardDetail = ({
           </Card>
         </Col>
       </Row>
-
+      <ConfirmationModal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        onConfirm={confirmDelete}
+        title={`Delete ${moduleName}`}
+        message={`Are you sure you want to delete this ${moduleName}?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
       <style jsx>{`
         .detail-section {
           display: grid;

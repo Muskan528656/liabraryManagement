@@ -35,7 +35,7 @@ const TableHeader = ({
             </h2>
             {totalCount !== undefined && (
               <Badge bg="light" text="dark" >
-                {icon && <i className={`${icon} me-1`}></i>}
+                {/* {icon && <i className={`${icon} me-1`}></i>} */}
                 <span className="detail-h2">Total: {totalCount} {totalLabel || (totalCount === 1 ? "Item" : "Items")}</span>
               </Badge>
             )}

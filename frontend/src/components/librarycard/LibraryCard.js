@@ -568,7 +568,7 @@ Submitted Books: ${decodedData.submittedBooks || 0}
 
   return (
     <>
-      <DynamicCRUD {...finalConfig} />
+      <DynamicCRUD {...finalConfig} icon="fa-solid fa-id-card"/>
 
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header closeButton style={{

@@ -34,6 +34,7 @@ const DynamicCRUD = ({
     enablePrefetch = true,
     autoFetchRelated = true,
     recordsPerPage = 10,
+    icon
 }) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -96,25 +97,32 @@ const DynamicCRUD = ({
         );
     }, []);
 
-    const handleNameClick = useCallback((item) => {
-        console.log("handleNameClick", item);
-        console.log("apiEndpoint", apiEndpoint);
+    const handleNameClick = useCallback((item , isEdit) => {
+
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
         }
-        console.log('apiEndpoint', apiEndpoint)
+
         navigate(`/${apiEndpoint}/${item.id}`, {
-            state: { type: apiEndpoint, rowData: item },
+            state: { type: apiEndpoint, rowData: item},
         });
-        console.log('item', item)
+       
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
 
             if (enablePrefetch) {
                 try {
-                    navigate(`/${apiEndpoint}/${item.id}`);
+                    // navigate(`/${apiEndpoint}/${item.id}`);
+                    if(isEdit){
+                        navigate(`/${apiEndpoint}/${item.id}`, {
+                            state: { isEdit: true, rowData: item},
+                        });
+                    }else{
+                        navigate(`/${apiEndpoint}/${item.id}`);
+                    }
+                     
                     // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
@@ -781,6 +789,7 @@ const DynamicCRUD = ({
                     prefetchData={selectedItem}
                     lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
+                    
                 />
             </Container>
         );
@@ -819,7 +828,7 @@ const DynamicCRUD = ({
                                 <>
                                 <TableHeader
                         title={`${moduleLabel} Management`}
-                        icon="fa-solid fa-book"
+                        icon={icon}
                         totalCount={filteredData.length}
                         totalLabel={moduleLabel}
                         searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
@@ -847,45 +856,48 @@ const DynamicCRUD = ({
                                     showSerialNumber={true}
                                     showActions={showActions}
                                     actionsRenderer={showActions ? (item) => (
-                                        <div className="d-flex gap-2">
+                                        <div className="d-flex gap-2 justify-content-center">
                                             {allowEdit && (
-                                                <Button
-                                                    variant="link"
-                                                    onClick={() => handleEdit(item)}
+                                                <button
+                                                    // variant="link"
+                                                    onClick={() => handleNameClick(item , true)}
                                                     title="Edit"
-                                                    style={{
-                                                        padding: "4px 6px",
-                                                        color: "#0d6efd",
-                                                        textDecoration: "none"
-                                                    }}
+                                                    className="custom-btn-edit"
+                                                    // style={{
+                                                    //     padding: "4px 6px",
+                                                    //     color: "#0d6efd",
+                                                    //     textDecoration: "none"
+                                                    // }}
                                                 >
                                                     <i className="fs-5 fa-solid fa-pen-to-square"></i>
-                                                </Button>
+                                                </button>
                                             )}
                                             {allowDelete && (
-                                                <Button
-                                                    variant="link"
+                                                <button
+                                                    // variant="link"
                                                     onClick={() => handleDelete(item.id)}
                                                     title="Delete"
-                                                    style={{
-                                                        padding: "4px 6px",
-                                                        color: "#dc3545",
-                                                        textDecoration: "none"
-                                                    }}
+                                                    className="custom-btn-delete"
+                                                    // style={{
+                                                    //     padding: "4px 6px",
+                                                    //     color: "#dc3545",
+                                                    //     textDecoration: "none"
+                                                    // }}
                                                 >
                                                     <i className="fs-5 fa-solid fa-trash"></i>
-                                                </Button>
+                                                </button>
                                             )}
                                             {customHandlers?.handleBarcodePreview && (
-                                                <Button
-                                                    variant="info"
-                                                    size="sm"
+                                                <button
+                                                    // variant="info"
+                                                    className="custom-btn-edit"
+                                                    // size="sm"
                                                     onClick={() => customHandlers.handleBarcodePreview(item)}
                                                     title="View Barcode"
                                                 >
-                                                    <i className="fa-solid fa-barcode me-1"></i>
-                                                    Preview
-                                                </Button>
+                                                    <i className="fs-5 fa-solid fa-eye me-1"></i>
+                                                    {/* Preview */}
+                                                </button>
                                             )}
                                         </div>
                                     ) : null}

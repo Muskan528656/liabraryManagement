@@ -41,7 +41,7 @@ const Vendor = (props) => {
 
   const finalConfig = getVendorConfig(allData);
 
-  return <DynamicCRUD {...finalConfig} />;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-store"/>;
 };
 
 export default Vendor;

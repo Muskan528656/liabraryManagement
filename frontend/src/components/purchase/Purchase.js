@@ -750,31 +750,54 @@ console.log("Vendor Options:", vendorOptions);
     }));
   };
 
+  const handleNameClick = (e, record, navigate, isRightClick = false, isEdit) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const purchaseId = record.id;
+
+    if (isRightClick) {
+      window.open(`/purchase/${purchaseId}`, "_blank");
+    } else {
+      if (isEdit) {
+        navigate(`/purchase/${purchaseId}`, { state: { isEdit: true, rowData: record }, });
+      } else {
+        navigate(`/purchase/${purchaseId}`, { state: record });
+      }
+
+    }
+  };
+
   const actionsRenderer = (purchase) => (
     <>
-      <Button
-        variant="link"
-        size="sm"
+      <button
+        // variant="link"
+        // size="sm"
+        // onClick={(e) => {
+        //   e.stopPropagation();
+        //   handleEdit(purchase);
+        // }}
         onClick={(e) => {
-          e.stopPropagation();
-          handleEdit(purchase);
+          handleNameClick(e, purchase, navigate, false, true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+        className="custom-btn-edit"
+        // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className=" fs-5 fas fa-edit text-primary"></i>
-      </Button>
-      <Button
-        variant="link"
-        size="sm"
+        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+      </button>
+      <button
+        // variant="link"
+        // size="sm"
         onClick={(e) => {
           e.stopPropagation();
           setDeleteId(purchase.id);
           setShowDeleteModal(true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+        className="custom-btn-delete"
+        // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className=" fs-5 fas fa-trash text-danger"></i>
-      </Button>
+        <i className="fs-5 fa-solid fa-trash"></i>
+      </button>
     </>
   );
 

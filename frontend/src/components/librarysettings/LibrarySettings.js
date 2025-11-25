@@ -185,6 +185,7 @@ const Settings = () => {
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
+                  <i className="fa-solid fa-id-card me-2"></i>
                   Settings
                 </h2>
                 {!isEditingSettings ? (

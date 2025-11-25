@@ -39,7 +39,8 @@ const PurchaseDetail = () => {
     <ModuleDetail
       moduleName="purchase"
       moduleApi="purchase"
-      moduleLabel="Purchase"
+      moduleLabel="Purchase Management"
+      icon="fa-solid fa-shopping-cart"
       fields={fields}
       relatedModules={[]}
       customHeader={(data) => (

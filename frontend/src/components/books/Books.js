@@ -24,7 +24,7 @@ console.log("books data", loading);
 
   console.log("books finalConfig", finalConfig);
 
-  return <DynamicCRUD {...finalConfig} />;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book"/>;
 };
 
 export default Books;
