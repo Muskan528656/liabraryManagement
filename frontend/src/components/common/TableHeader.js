@@ -49,14 +49,14 @@ const TableHeader = ({
           <div className="d-flex gap-2 flex-wrap">
             {showSearch && (
               <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-                <InputGroup.Text style={{ borderColor: "var(--primary-color)", padding: "0.375rem 0.75rem" }}>
+                <InputGroup.Text style={{ padding: "0.375rem 0.75rem" }}>
                   <i className="fa-solid fa-search" style={{ color: "#6f42c1", fontSize: "0.875rem" }}></i>
                 </InputGroup.Text>
                 <Form.Control
                   placeholder={searchPlaceholder}
                   value={searchValue || ""}
                   onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                  style={{ borderColor: "var(--primary-color)", padding: "0.375rem 0.75rem" }}
+                  style={{  padding: "0.375rem 0.75rem" }}
                 />
               </InputGroup>
             )}

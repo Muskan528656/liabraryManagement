@@ -1212,11 +1212,10 @@ const LibraryCardDetail = ({
     const value = currentData[field.key];
 
     if (isEditing) {
-      // For editing mode, return raw value formatted for input
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
-          return date.toISOString().split("T")[0]; // YYYY-MM-DD format
+          return date.toISOString().split("T")[0];
         } catch {
           return value;
         }
@@ -1224,7 +1223,6 @@ const LibraryCardDetail = ({
       if (field.type === "datetime" && value) {
         try {
           const date = new Date(value);
-          // Convert to datetime-local format (YYYY-MM-DDTHH:mm)
           const year = date.getFullYear();
           const month = String(date.getMonth() + 1).padStart(2, "0");
           const day = String(date.getDate()).padStart(2, "0");
