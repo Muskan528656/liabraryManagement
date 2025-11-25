@@ -47,7 +47,7 @@ const Category = (props) => {
   // Get final config with all data
   const finalConfig = getCategoryConfig(allData);
 
-  return <DynamicCRUD {...finalConfig} />;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags"/>;
 };
 
 export default Category;

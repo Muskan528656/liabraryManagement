@@ -31,7 +31,7 @@ const UserRole = (props) => {
   const allData = { ...data, ...props };
   const finalConfig = getUserRoleConfig(allData);
 
-  return <DynamicCRUD {...finalConfig} />;
+  return <DynamicCRUD {...finalConfig} icon="fas fa-chalkboard-teacher"/>;
 };
 
 export default UserRole;

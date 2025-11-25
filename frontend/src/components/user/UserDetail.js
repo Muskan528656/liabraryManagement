@@ -32,7 +32,8 @@ const UserDetail = () => {
     <ModuleDetail
       moduleName="user"
       moduleApi="user"
-      moduleLabel="User"
+      moduleLabel="User Management"
+      icon="fa-solid fa-users"
       fields={fields}
       relatedModules={[]}
     />

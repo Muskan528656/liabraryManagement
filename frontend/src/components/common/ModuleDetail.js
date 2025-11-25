@@ -1678,6 +1678,8 @@ import DataApi from "../../api/dataApi";
 import Loader from "./Loader";
 import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";
+import { useLocation } from "react-router-dom";
+import ConfirmationModal from "./ConfirmationModal";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -1754,6 +1756,7 @@ const ModuleDetail = ({
   moduleName,
   moduleApi,
   moduleLabel,
+  icon,
   fields,
   relatedModules = [],
   customHeader = null,
@@ -1767,17 +1770,23 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
 }) => {
+  
+  const location = useLocation();
+  
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [lookupOptions, setLookupOptions] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+      const [deleteId, setDeleteId] = useState(null);
+
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
   const allFieldGroups = useMemo(() => {
     const groups = [];
@@ -1833,14 +1842,6 @@ const ModuleDetail = ({
       setLoading(false);
     }
   }, [id, moduleApi, moduleLabel]);
-
-  console.log("ModuleDetail Props:", {
-    moduleApi,
-    moduleName,
-    moduleLabel,
-    fields,
-    id,
-  });
 
   const fetchData = async () => {
     try {
@@ -2125,12 +2126,16 @@ const ModuleDetail = ({
     }
     return String(value);
   };
+console.log("Location state:", location?.state);
+  useEffect(() => {
+    
+   setTempData(location?.state?.rowData);
+  }, [location?.state?.isEdit]);
 
   const handleEdit = () => {
     if (onEdit) {
       onEdit(data);
     } else {
-      // Enable inline editing
       setIsEditing(true);
       setTempData({ ...data });
     }
@@ -2213,13 +2218,27 @@ const ModuleDetail = ({
     }
   };
 
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(data);
-      return;
-    }
-    setShowDeleteModal(true);
-  };
+    const handleDelete = (id) => {
+      setDeleteId(id);
+      setShowConfirmModal(true);
+    };
+  
+    const confirmDelete = async () => {
+      try {
+        const api = new DataApi(moduleApi);
+        await api.delete(id);
+            PubSub.publish("RECORD_SAVED_TOAST", {
+              title: "Success",
+              message: `${moduleLabel} deleted successfully`,
+            });
+            navigate(`/${moduleName}`);
+        } catch (error) {
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Error",
+            message: `Failed to delete ${moduleLabel} ${error.message}`,
+          });
+        }
+    };
 
   const confirmDeleteRecord = async () => {
     try {
@@ -2289,28 +2308,30 @@ const ModuleDetail = ({
     address: fields?.address || [],
   };
 
+  const splitInto3 = (arr = []) => {
+    const col1 = [];
+    const col2 = [];
+    const col3 = [];
 
-  const chunkSize = Math.ceil(normalizedFields.details.length / 3);
-  const col1 = normalizedFields.details.slice(0, chunkSize);
-  const col2 = normalizedFields.details.slice(chunkSize, chunkSize * 2);
-  const col3 = normalizedFields.details.slice(chunkSize * 2);
+    arr.forEach((item, index) => {
+      if (index % 3 === 0) col1.push(item);
+      else if (index % 3 === 1) col2.push(item);
+      else col3.push(item);
+    });
 
-  const chunkOtherSize = Math.ceil(normalizedOtherFields.other.length / 3);
-  const colother1 = normalizedOtherFields.other.slice(0, chunkOtherSize);
-  const colother2 = normalizedOtherFields.other.slice(chunkOtherSize, chunkOtherSize * 2);
-  const colother3 = normalizedOtherFields.other.slice(chunkOtherSize * 2);
+    return [col1, col2, col3];
+  };
 
-  const chunkAddressSize = Math.ceil(normalizedAddressFields?.address?.length / 3);
-  const coladd1 = normalizedAddressFields.address?.slice(0, chunkAddressSize);
-  const coladd2 = normalizedAddressFields.address?.slice(chunkAddressSize, chunkAddressSize * 2);
-  const coladd3 = normalizedAddressFields.address?.slice(chunkAddressSize * 2);
+  // 👉 Details fields
+  const [col1, col2, col3] = splitInto3(normalizedFields.details);
 
-  console.log("Fields configuration:", {
-    details: normalizedFields.details,
-    other: normalizedOtherFields.other,
-    address: normalizedAddressFields.address
-  });
+  // 👉 Other fields
+  const [colother1, colother2, colother3] =
+    splitInto3(normalizedOtherFields.other);
 
+  // 👉 Address fields
+  const [coladd1, coladd2, coladd3] =
+    splitInto3(normalizedAddressFields?.address);
 
   return (
     <>
@@ -2332,6 +2353,7 @@ const ModuleDetail = ({
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
+                  {icon && <i className={`${icon} me-2`}></i>}
                   {moduleLabel}
                 </h2>
                 <div>
@@ -3102,6 +3124,7 @@ const ModuleDetail = ({
                   </Row>
                 </Row>
               )}
+              {normalizedOtherFields.other.length > 0 &&
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h5
@@ -3464,12 +3487,20 @@ const ModuleDetail = ({
                     </Row>
                   )}
                 </Row>
-              </Row>
+              </Row>}
             </Card.Body>
           </Card>
         </Col>
       </Row>
-
+      <ConfirmationModal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        onConfirm={confirmDelete}
+        title={`Delete ${moduleName}`}
+        message={`Are you sure you want to delete this ${moduleName}?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
       <style jsx>{`
         .detail-section {
           display: grid;

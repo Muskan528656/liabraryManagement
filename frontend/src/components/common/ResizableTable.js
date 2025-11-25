@@ -261,9 +261,9 @@ const ResizableTable = ({
                     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                     width: "100%",
                     maxWidth: "100%",
-                    height: "calc(100vh - 200px)",
-                    minHeight: "calc(100vh - 200px)",
-                    maxHeight: "calc(100vh - 200px)",
+                    // height: "calc(100vh - 200px)",
+                    // minHeight: "calc(100vh - 200px)",
+                    // maxHeight: "calc(100vh - 200px)",
                     position: "relative",
                     display: "block",
                     isolation: "isolate",
@@ -375,6 +375,7 @@ const ResizableTable = ({
                                             style={{
                                                 width: columnWidths[colIndex] || column.width || column.minWidth || "150px",
                                                 position: "relative",
+                                                textAlign: "center",
                                                 userSelect: "none",
                                                 background: "#f3e9fc",
                                                 fontWeight: "600",
@@ -523,32 +524,32 @@ const ResizableTable = ({
                                                     ? actionsRenderer(record)
                                                     : (
                                                         <div className="d-flex gap-2 justify-content-center">
-                                                            <Button
-                                                                variant="link"
-                                                                size="sm"
-                                                                className="action-btn"
-                                                                style={{
-                                                                    color: "#6f42c1",
-                                                                    padding: "4px 8px",
-                                                                    textDecoration: "none"
-                                                                }}
+                                                            <button
+                                                                // variant="link"
+                                                                // size="sm"
+                                                                className="custom-btn-edit"
+                                                                // style={{
+                                                                //     color: "#6f42c1",
+                                                                //     padding: "4px 8px",
+                                                                //     textDecoration: "none"
+                                                                // }}
                                                                 title="Edit"
                                                             >
-                                                                <i className="fa-solid fa-edit"></i>
-                                                            </Button>
-                                                            <Button
-                                                                variant="link"
-                                                                size="sm"
-                                                                className="action-btn"
-                                                                style={{
-                                                                    color: "#dc3545",
-                                                                    padding: "4px 8px",
-                                                                    textDecoration: "none"
-                                                                }}
+                                                                <i className="fs-5 fa-solid fa-edit"></i>
+                                                            </button>
+                                                            <button
+                                                                // variant="link"
+                                                                // size="sm"
+                                                                className="custom-btn-delete"
+                                                                // style={{
+                                                                //     color: "#dc3545",
+                                                                //     padding: "4px 8px",
+                                                                //     textDecoration: "none"
+                                                                // }}
                                                                 title="Delete"
                                                             >
-                                                                <i className="fa-solid fa-trash"></i>
-                                                            </Button>
+                                                                <i className="fs-5 fa-solid fa-trash"></i>
+                                                            </button>
                                                         </div>
                                                     )}
                                             </td>

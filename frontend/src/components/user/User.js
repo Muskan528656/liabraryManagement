@@ -354,6 +354,29 @@ const User = () => {
     );
   });
 
+  const handleNameClick = (e, record, navigate, isRightClick = false, isEdit) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userId = record.id;
+
+    try {
+      localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+    } catch (err) { }
+
+    if (isRightClick) {
+      window.open(`/user/${userId}`, "_blank");
+    } else {
+      if (isEdit) {
+        navigate(`/user/${userId}`, { state: { isEdit: true, rowData: record }, });
+      } else {
+        navigate(`/user/${userId}`, { state: record });
+      }
+
+    }
+  };
+
+
   const allColumns = [
     {
       field: "checkbox",
@@ -385,7 +408,7 @@ const User = () => {
     },
     {
       field: "sr_no",
-      label: "SR.NO",
+      label: "Sr.No",
       render: (value, record) => {
         const idx = filteredUsers.findIndex(r => r.id === record.id);
         return idx >= 0 ? idx + 1 : "";
@@ -401,26 +424,18 @@ const User = () => {
       render: (value, record) => {
         const userId = record.id;
         const userName = value || record.lastname || "N/A";
+
         return (
           <a
             href={`/user/${userId}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) { }
-              navigate(`/user/${userId}`, { state: record });
+            style={{
+              color: "#6f42c1",
+              textDecoration: "none",
+              fontWeight: "500",
+              cursor: "pointer"
             }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) { }
-              window.open(`/user/${userId}`, '_blank');
-            }}
-            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500", cursor: "pointer" }}
+            onClick={(e) => handleNameClick(e, record, navigate, false)}
+            onContextMenu={(e) => handleNameClick(e, record, navigate, true)}
             onMouseEnter={(e) => {
               e.target.style.textDecoration = "underline";
             }}
@@ -431,6 +446,7 @@ const User = () => {
         );
       },
     },
+
     { field: "lastname", label: "Last Name", sortable: true },
     { field: "email", label: "Email", sortable: true },
     { field: "userrole", label: "Role", sortable: true },
@@ -480,28 +496,33 @@ const User = () => {
 
   const actionsRenderer = (user) => (
     <>
-      <Button
-        variant="link"
-        size="sm"
+      <button
+        // variant="link"
+        // size="sm"
+        className="custom-btn-edit"
+        // onClick={(e) => {
+        //   e.stopPropagation();
+        //   handleEdit(user);
+        // }}
         onClick={(e) => {
-          e.stopPropagation();
-          handleEdit(user);
+          handleNameClick(e, user, navigate, false, true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+      // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-edit text-primary"></i>
-      </Button>
-      <Button
-        variant="link"
-        size="sm"
+        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+      </button>
+      <button
+        // variant="link"
+        // size="sm"
+        className="custom-btn-delete"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete(user.id);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+      // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-trash text-danger"></i>
-      </Button>
+        <i className="fs-5 fa-solid fa-trash"></i>
+      </button>
     </>
   );
 
@@ -510,71 +531,72 @@ const User = () => {
   const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
 
   return (
-    <Container fluid>
+    <Container fluid className="py-4">
       <ScrollToTop />
       {/* User Management Header - Top Position */}
-      <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
-        <Col>
-          <TableHeader
-            title="User Management"
-            icon="fa-solid fa-users"
-            totalCount={filteredUsers.length}
-            totalLabel={filteredUsers.length === 1 ? "User" : "Users"}
-            filteredCount={filteredUsers.length}
-            showFiltered={!!searchTerm}
-            searchPlaceholder="Search users..."
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            showColumnVisibility={true}
-            allColumns={columnsForVisibilityToggle}
-            visibleColumns={visibleColumns}
-            onToggleColumnVisibility={toggleColumnVisibility}
-            actionButtons={[
-              {
-                variant: "outline-success",
-                size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
-                onClick: handleExport,
-              },
-              {
-                size: "sm",
-                icon: "fa-solid fa-plus",
-                label: "Add User",
-                onClick: handleAdd,
-              },
-            ]}
-          />
-        </Col>
-      </Row>
-
-      <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-        <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
-          <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
-            <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+      <Row className="justify-content-center">
+        <Col lg={12} xl={12}>
+          <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+            <Card.Body className="">
               {loading ? (
                 <Loader />
               ) : (
-                <ResizableTable
-                  data={filteredUsers}
-                  columns={columns}
-                  loading={loading}
-                  currentPage={currentPage}
-                  totalRecords={filteredUsers.length}
-                  recordsPerPage={recordsPerPage}
-                  onPageChange={setCurrentPage}
-                  showSerialNumber={false}
-                  showCheckbox={false}
-                  showActions={true}
-                  actionsRenderer={actionsRenderer}
-                  showSearch={false}
-                  emptyMessage="No users found"
-                />
+                <>
+                  <TableHeader
+                    title="User Management"
+                    icon="fa-solid fa-users"
+                    totalCount={filteredUsers.length}
+                    totalLabel={filteredUsers.length === 1 ? "User" : "Users"}
+                    filteredCount={filteredUsers.length}
+                    showFiltered={!!searchTerm}
+                    searchPlaceholder="Search users..."
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    showColumnVisibility={true}
+                    allColumns={columnsForVisibilityToggle}
+                    visibleColumns={visibleColumns}
+                    onToggleColumnVisibility={toggleColumnVisibility}
+                    actionButtons={[
+                      {
+                        variant: "outline-success",
+                        size: "sm",
+                        icon: "fa-solid fa-download",
+                        label: "Export",
+                        onClick: handleExport,
+                      },
+                      {
+                        size: "sm",
+                        icon: "fa-solid fa-plus",
+                        label: "Add User",
+                        onClick: handleAdd,
+                      },
+                    ]}
+                  />
+                  <ResizableTable
+                    data={filteredUsers}
+                    columns={columns}
+                    loading={loading}
+                    currentPage={currentPage}
+                    totalRecords={filteredUsers.length}
+                    recordsPerPage={recordsPerPage}
+                    onPageChange={setCurrentPage}
+                    showSerialNumber={false}
+                    showCheckbox={false}
+                    showActions={true}
+                    actionsRenderer={actionsRenderer}
+                    showSearch={false}
+                    emptyMessage="No users found"
+                  />
+                </>
+
               )}
+
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+
 
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">

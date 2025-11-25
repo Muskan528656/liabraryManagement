@@ -54,16 +54,15 @@ const BookDetail = () => {
       { key: "description", label: "Description", type: "text" },
       { key: "total_copies", label: "Total Copies", type: "number" },
       { key: "available_copies", label: "Available Copies", type: "number" },
-      { key: "createddate", label: "Created At", type: "datetime" },
-      { key: "lastmodifieddate", label: "Updated At", type: "datetime" },
+      // { key: "createddate", label: "Created At", type: "datetime" },
+      // { key: "lastmodifieddate", label: "Updated At", type: "datetime" },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-
-    ],
+     ],
   };
 
   const lookupNavigation = {
@@ -83,7 +82,8 @@ const BookDetail = () => {
     <ModuleDetail
       moduleName="book"
       moduleApi="book"
-      moduleLabel="Book"
+      moduleLabel="Book Management"
+      icon="fa-solid fa-book"
       fields={fields}
       lookupNavigation={lookupNavigation}
       externalData={externalData}

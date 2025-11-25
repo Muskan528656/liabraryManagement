@@ -127,6 +127,7 @@ const Company = () => {
                 }}
               >
                 <h2 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
+                  <i className="fa-solid fa-store me-2"></i>
                   Company
                 </h2>
                 {!isEditingCompany ? (
