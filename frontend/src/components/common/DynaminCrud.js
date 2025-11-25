@@ -767,9 +767,9 @@ const DynamicCRUD = ({
     }
 
     return (
-        <Container fluid>
+        <Container fluid className="py-4">
             <ScrollToTop />
-
+{/* 
             <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
                 <Col>
                     <TableHeader
@@ -787,15 +787,30 @@ const DynamicCRUD = ({
                         actionButtons={actionButtons}
                     />
                 </Col>
-            </Row>
+            </Row> */}
 
-            <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-                <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
+            <Row className="justify-content-center">
+                    <Col lg={12} xl={12}>
                     <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
-                        <Card.Body className="p-0">
+                        <Card.Body className="">
                             {loading ? (
                                 <Loader />
                             ) : (
+                                <>
+                                <TableHeader
+                        title={`${moduleLabel} Management`}
+                        icon="fa-solid fa-book"
+                        totalCount={filteredData.length}
+                        totalLabel={moduleLabel}
+                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                        searchValue={searchTerm}
+                        onSearchChange={showSearch ? setSearchTerm : null}
+                        showColumnVisibility={showColumnVisibility}
+                        allColumns={columns}
+                        visibleColumns={visibleColumns}
+                        onToggleColumnVisibility={toggleColumnVisibility}
+                        actionButtons={actionButtons}
+                    />
                                 <ResizableTable
                                     data={filteredData}
                                     columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
@@ -856,7 +871,10 @@ const DynamicCRUD = ({
                                     ) : null}
                                     emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
                                 />
+                                </>
+                                
                             )}
+                            
                         </Card.Body>
                     </Card>
                 </Col>

@@ -286,7 +286,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: false,
+            allowEdit: true,
             allowDelete: true
         },
 
