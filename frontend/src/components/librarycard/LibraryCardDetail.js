@@ -29,8 +29,11 @@ const LibraryCardDetail = ({
   const [isEditing, setIsEditing] = useState(false);
   const [tempData, setTempData] = useState(null);
   const [data, setData] = useState(null);
+  const [originalData, setOriginalData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [userNames, setUserNames] = useState({});
+  const [lookupData, setLookupData] = useState({});
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
 
   const moduleName = "librarycards";
@@ -518,28 +521,45 @@ const LibraryCardDetail = ({
     try {
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
+      let fetchedData = null;
       if (response && response.data) {
         const responseData = response.data;
         if (responseData.success && responseData.data) {
-          setData(responseData.data);
+          fetchedData = responseData.data;
         } else if (
           responseData.data &&
           responseData.data?.success &&
           responseData.data?.data
         ) {
-          setData(responseData?.data?.data);
+          fetchedData = responseData?.data?.data;
         } else if (responseData.data) {
-          setData(responseData.data);
+          fetchedData = responseData.data;
         } else if (responseData.id) {
-          setData(responseData);
+          fetchedData = responseData;
         } else if (Array.isArray(responseData) && responseData.length > 0) {
-          setData(responseData[0]);
+          fetchedData = responseData[0];
         } else {
           // Direct data object
-          setData(responseData);
+          fetchedData = responseData;
         }
       } else {
         throw new Error("No response received from API");
+      }
+      
+      if (fetchedData) {
+        setData(fetchedData);
+        setOriginalData(JSON.parse(JSON.stringify(fetchedData)));
+        
+        // Fetch user names for createdbyid and lastmodifiedbyid
+        const userIds = [];
+        if (fetchedData.createdbyid) userIds.push(fetchedData.createdbyid);
+        if (fetchedData.lastmodifiedbyid && fetchedData.lastmodifiedbyid !== fetchedData.createdbyid) {
+          userIds.push(fetchedData.lastmodifiedbyid);
+        }
+        
+        if (userIds.length > 0) {
+          await fetchUserNames(userIds);
+        }
       }
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
@@ -547,6 +567,30 @@ const LibraryCardDetail = ({
         title: "Error",
         message: `Failed to fetch ${moduleLabel} details`,
       });
+    }
+  };
+
+  const fetchUserNames = async (userIds) => {
+    try {
+      const userApi = new DataApi("user");
+      const names = {};
+      for (const userId of userIds) {
+        try {
+          const response = await userApi.fetchById(userId);
+          if (response && response.data) {
+            const user = response.data.success ? response.data.data : response.data;
+            if (user) {
+              names[userId] = `${user.firstname || ''} ${user.lastname || ''}`.trim() || user.email || `User ${userId}`;
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+          names[userId] = `User ${userId}`;
+        }
+      }
+      setUserNames(names);
+    } catch (error) {
+      console.error("Error fetching user names:", error);
     }
   };
 
@@ -564,7 +608,11 @@ const LibraryCardDetail = ({
 
     if (field.type === "date") {
       try {
-        return new Date(value).toLocaleDateString();
+        const date = new Date(value);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
       } catch {
         return value;
       }
@@ -601,17 +649,95 @@ const LibraryCardDetail = ({
     return String(value);
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (onEdit) {
       onEdit(data);
     } else {
       // Enable inline editing
       setIsEditing(true);
       setTempData({ ...data });
+      
+      // Fetch lookup field data for dropdowns
+      await fetchLookupData();
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const normalizedFields = {
+        details: fields?.details || [],
+        other: fields?.other || [],
+      };
+      
+      const allFields = [...(normalizedFields.details || []), ...(normalizedFields.other || [])];
+      const lookupFields = allFields.filter(field => 
+        field.type === "select" && field.options && typeof field.options === "string"
+      );
+      
+      const lookupDataObj = {};
+      const endpointMap = {
+        authors: "author",
+        author: "author",
+        categories: "category",
+        category: "category",
+        users: "user",
+        user: "user",
+        departments: "department"
+      };
+      
+      for (const field of lookupFields) {
+        if (!lookupDataObj[field.options]) {
+          try {
+            const endpoint = endpointMap[field.options] || field.options;
+            const api = new DataApi(endpoint);
+            const response = await api.fetchAll();
+            if (response && response.data) {
+              lookupDataObj[field.options] = Array.isArray(response.data) ? response.data : [];
+            }
+          } catch (error) {
+            console.error(`Error fetching lookup data for ${field.options}:`, error);
+            lookupDataObj[field.options] = [];
+          }
+        }
+      }
+      
+      setLookupData(lookupDataObj);
+    } catch (error) {
+      console.error("Error fetching lookup data:", error);
+    }
+  };
+
+  const hasDataChanged = () => {
+    if (!originalData || !tempData) return false;
+    
+    // Deep comparison of objects
+    const originalStr = JSON.stringify(originalData);
+    const tempStr = JSON.stringify(tempData);
+    
+    return originalStr !== tempStr;
+  };
+
+  const formatDateDDMMYYYY = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day} ${month} ${year}`;
+    } catch {
+      return '';
     }
   };
 
   const handleSave = async () => {
+    // Check if data has changed
+    if (!hasDataChanged()) {
+      setIsEditing(false);
+      setTempData(null);
+      return; // No toast if no changes
+    }
+    
     try {
       setSaving(true);
       const api = new DataApi(moduleApi);
@@ -619,13 +745,17 @@ const LibraryCardDetail = ({
 
       if (response && response.data) {
         const responseData = response.data;
+        let updatedData = null;
         if (responseData.success && responseData.data) {
-          setData(responseData.data);
+          updatedData = responseData.data;
         } else if (responseData.data) {
-          setData(responseData.data);
+          updatedData = responseData.data;
         } else {
-          setData(responseData);
+          updatedData = responseData;
         }
+        
+        setData(updatedData);
+        setOriginalData(JSON.parse(JSON.stringify(updatedData)));
 
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
@@ -693,6 +823,10 @@ const LibraryCardDetail = ({
       return value || "";
     } else {
       // For display mode, use formatValue
+      // Special handling for createdbyid and lastmodifiedbyid
+      if ((field.key === "createdbyid" || field.key === "lastmodifiedbyid") && value) {
+        return userNames[value] || value || "—";
+      }
       return formatValue(value, field) || "—";
     }
   };
@@ -779,7 +913,7 @@ const LibraryCardDetail = ({
                         disabled={saving}
                       >
                         <i className="fa-solid fa-check me-2"></i>
-                        {saving ? "Saving..." : "Save"}
+                        {saving ? "Saving..." : hasDataChanged() ? `Save - ${formatDateDDMMYYYY(new Date())}` : "Save"}
                       </button>
                       <button
                         className="custom-btn-secondary "
@@ -838,10 +972,10 @@ const LibraryCardDetail = ({
                                     if (
                                       field.type === "select" &&
                                       field.options &&
-                                      externalData[field.options]
+                                      (externalData[field.options] || lookupData[field.options])
                                     ) {
                                       const options =
-                                        externalData[field.options] || [];
+                                        externalData[field.options] || lookupData[field.options] || [];
                                       const currentValue = currentData
                                         ? currentData[field.key]
                                         : null;
@@ -992,10 +1126,10 @@ const LibraryCardDetail = ({
                                     if (
                                       field.type === "select" &&
                                       field.options &&
-                                      externalData[field.options]
+                                      (externalData[field.options] || lookupData[field.options])
                                     ) {
                                       const options =
-                                        externalData[field.options] || [];
+                                        externalData[field.options] || lookupData[field.options] || [];
                                       const currentValue = currentData
                                         ? currentData[field.key]
                                         : null;

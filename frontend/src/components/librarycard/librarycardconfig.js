@@ -265,7 +265,19 @@ export const getLibraryCardConfig = (externalData = {}) => {
         dataDependencies: {
             users: "user"
         },
-
+        lookupNavigation: {
+            author_name: {
+                path: "author",
+                idField: "author_id",
+                labelField: "author_name"
+            },
+            category_name: {
+                path: "category",
+                idField: "category_id",
+                labelField: "category_name"
+            }
+        }
+        ,
         features: {
             showImportExport: true,
             showDetailView: true,

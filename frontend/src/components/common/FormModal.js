@@ -33,89 +33,89 @@ const FormModal = ({
     }
   };
 
-const handleFileChange = (field, event) => {
-  const file = event.target.files[0];
-  const fieldName = field.name;
+  const handleFileChange = (field, event) => {
+    const file = event.target.files[0];
+    const fieldName = field.name;
 
-  if (!file) {
-    // File remove karna hai
-    handleInputChange(fieldName, null);
-    setFilePreviews(prev => ({
-      ...prev,
-      [fieldName]: null
-    }));
-    return;
-  }
+    if (!file) {
+      // File remove karna hai
+      handleInputChange(fieldName, null);
+      setFilePreviews(prev => ({
+        ...prev,
+        [fieldName]: null
+      }));
+      return;
+    }
 
-  // File validation
-  if (field.maxSize && file.size > field.maxSize) {
-    alert(`File size must be less than ${field.maxSize / 1024 / 1024}MB`);
-    event.target.value = ''; // Clear file input
-    return;
-  }
-
-  // ✅ FIXED: File type validation
-  if (field.accept) {
-    const allowedTypes = field.accept.split(',').map(type => type.trim());
-    const isFileValid = isFileTypeValid(file, allowedTypes);
-    
-    if (!isFileValid) {
-      alert(`Only ${field.accept} files are allowed`);
+    // File validation
+    if (field.maxSize && file.size > field.maxSize) {
+      alert(`File size must be less than ${field.maxSize / 1024 / 1024}MB`);
       event.target.value = ''; // Clear file input
       return;
     }
-  }
 
-  // Preview generate karen (images ke liye)
-  if (file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setFilePreviews(prev => ({
-        ...prev,
-        [fieldName]: e.target.result
-      }));
-    };
-    reader.readAsDataURL(file);
-  }
+    // ✅ FIXED: File type validation
+    if (field.accept) {
+      const allowedTypes = field.accept.split(',').map(type => type.trim());
+      const isFileValid = isFileTypeValid(file, allowedTypes);
 
-  // Form data mein file set karen
-  handleInputChange(fieldName, file);
-};
-
-// ✅ NEW: File type validation function
-const isFileTypeValid = (file, allowedTypes) => {
-  for (const allowedType of allowedTypes) {
-    // Case 1: Wildcard match (image/*, */*)
-    if (allowedType.includes('/*')) {
-      const [category] = allowedType.split('/*');
-      if (category === '*' || file.type.startsWith(`${category}/`)) {
-        return true;
+      if (!isFileValid) {
+        alert(`Only ${field.accept} files are allowed`);
+        event.target.value = ''; // Clear file input
+        return;
       }
     }
-    
-    // Case 2: Exact MIME type match
-    else if (file.type === allowedType) {
-      return true;
+
+    // Preview generate karen (images ke liye)
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreviews(prev => ({
+          ...prev,
+          [fieldName]: e.target.result
+        }));
+      };
+      reader.readAsDataURL(file);
     }
-    
-    // Case 3: File extension match (.pdf, .jpg, etc.)
-    else if (allowedType.startsWith('.')) {
-      const fileName = file.name.toLowerCase();
-      if (fileName.endsWith(allowedType.toLowerCase())) {
+
+    // Form data mein file set karen
+    handleInputChange(fieldName, file);
+  };
+
+  // ✅ NEW: File type validation function
+  const isFileTypeValid = (file, allowedTypes) => {
+    for (const allowedType of allowedTypes) {
+      // Case 1: Wildcard match (image/*, */*)
+      if (allowedType.includes('/*')) {
+        const [category] = allowedType.split('/*');
+        if (category === '*' || file.type.startsWith(`${category}/`)) {
+          return true;
+        }
+      }
+
+      // Case 2: Exact MIME type match
+      else if (file.type === allowedType) {
         return true;
       }
-    }
-    
-    // Case 4: Specific type patterns (application/pdf, etc.)
-    else if (allowedType.includes('/')) {
-      if (file.type === allowedType) {
-        return true;
+
+      // Case 3: File extension match (.pdf, .jpg, etc.)
+      else if (allowedType.startsWith('.')) {
+        const fileName = file.name.toLowerCase();
+        if (fileName.endsWith(allowedType.toLowerCase())) {
+          return true;
+        }
+      }
+
+      // Case 4: Specific type patterns (application/pdf, etc.)
+      else if (allowedType.includes('/')) {
+        if (file.type === allowedType) {
+          return true;
+        }
       }
     }
-  }
-  
-  return false;
-};
+
+    return false;
+  };
 
   const removeFile = (fieldName) => {
     handleInputChange(fieldName, null);

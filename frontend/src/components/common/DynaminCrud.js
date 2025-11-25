@@ -466,25 +466,11 @@ const DynamicCRUD = ({
 
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
-        setEditingItem(item);
-
-        const formattedItem = { ...item };
-        if (formattedItem.issue_date) {
-            const issueDate = new Date(formattedItem.issue_date);
-            if (!isNaN(issueDate.getTime())) {
-                formattedItem.issue_date = issueDate.toISOString().split('T')[0];
-            }
-        }
-        if (formattedItem.expiry_date) {
-            const expiryDate = new Date(formattedItem.expiry_date);
-            if (!isNaN(expiryDate.getTime())) {
-                formattedItem.expiry_date = expiryDate.toISOString().split('T')[0];
-            }
-        }
-
-        setFormData({ ...initialFormData, ...formattedItem });
-        setShowModal(true);
-    }, [allowEdit, initialFormData]);
+        // Navigate to detail page instead of opening modal
+        navigate(`/${apiEndpoint}/${item.id}`, {
+            state: { type: apiEndpoint, rowData: item },
+        });
+    }, [allowEdit, apiEndpoint, navigate]);
 
     const handleDelete = useCallback((id) => {
         if (!allowDelete) return;
@@ -548,31 +534,25 @@ const DynamicCRUD = ({
 
                 Object.keys(formData).forEach(key => {
                     if (formData[key] !== null && formData[key] !== undefined) {
-                        // File field check karen
                         const fieldConfig = formFields.find(f => f && f.name === key);
                         if (fieldConfig && fieldConfig.type === 'file') {
-                            // File object directly append karen
                             if (formData[key] instanceof File) {
                                 submitData.append(key, formData[key]);
                             } else if (formData[key]) {
-                                // Agar string hai (existing image URL), toh usko bhi append karen
                                 submitData.append(key, formData[key]);
                             }
                         } else {
-                            // Regular fields
                             submitData.append(key, formData[key]);
                         }
                     }
                 });
 
-                // API call with FormData
                 if (editingItem) {
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);
                 }
             } else {
-                // Normal JSON data
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;

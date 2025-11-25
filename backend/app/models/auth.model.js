@@ -441,7 +441,6 @@ async function findByEmail(email) {
 }
 
 async function findById(id) {
-  console.log("Finding user by ID:", id, "in schema:", this.schema);
 
   try {
     if (!this.schema) {

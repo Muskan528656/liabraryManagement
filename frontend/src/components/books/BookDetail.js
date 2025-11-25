@@ -12,12 +12,12 @@ const BookDetail = () => {
         const authorApi = new DataApi("author");
         const authorsResponse = await authorApi.fetchAll();
         const authors = authorsResponse?.data?.data || authorsResponse?.data || [];
-        
+
         // Fetch categories
         const categoryApi = new DataApi("category");
         const categoriesResponse = await categoryApi.fetchAll();
         const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
-        
+
         setExternalData({
           authors: Array.isArray(authors) ? authors : [],
           categories: Array.isArray(categories) ? categories : [],
@@ -33,37 +33,20 @@ const BookDetail = () => {
   const fields = {
     title: "title",
     subtitle: "isbn",
-    // overview: [
-    //   { key: "title", label: "Title", type: "text" },
-    //   { 
-    //     key: "author_id", 
-    //     label: "Author", 
-    //     type: "select",
-    //     options: "authors",
-    //     displayKey: "author_name" // For display in non-edit mode
-    //   },
-    //   { 
-    //     key: "category_id", 
-    //     label: "Category", 
-    //     type: "select",
-    //     options: "categories",
-    //     displayKey: "category_name" // For display in non-edit mode
-    //   },
-    //   { key: "language", label: "Language", type: "text" },
-    // ],
+
     details: [
       { key: "title", label: "Title", type: "text" },
       { key: "isbn", label: "ISBN", type: "text" },
-      { 
-        key: "author_id", 
-        label: "Author", 
+      {
+        key: "author_id",
+        label: "Author",
         type: "select",
         options: "authors",
         displayKey: "author_name"
       },
-      { 
-        key: "category_id", 
-        label: "Category", 
+      {
+        key: "category_id",
+        label: "Category",
         type: "select",
         options: "categories",
         displayKey: "category_name"
@@ -79,8 +62,8 @@ const BookDetail = () => {
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-      
-     ],
+
+    ],
   };
 
   const lookupNavigation = {
