@@ -69,7 +69,6 @@ const LibraryCard = (props) => {
     if (!barcodeString) return null;
 
     try {
-      // First, try to find card by card_number (direct match)
       const cardNumber = barcodeString.trim();
       const api = new DataApi("librarycard");
       const response = await api.fetchAll();
@@ -96,12 +95,10 @@ const LibraryCard = (props) => {
         };
       }
 
-      // If not found, try base64 decode (for backward compatibility)
       try {
         const decodedString = decodeURIComponent(escape(atob(barcodeString)));
         return JSON.parse(decodedString);
       } catch (e) {
-        // Not base64 encoded, return null
         return null;
       }
     } catch (error) {
@@ -528,7 +525,7 @@ Submitted Books: ${decodedData.submittedBooks || 0}
   const finalConfig = {
     ...getLibraryCardConfig(allData),
 
-    // ✅ FIXED: Proper initial form data
+
     initialFormData: {
       user_id: "",
       issue_date: new Date().toISOString().split('T')[0],
@@ -537,20 +534,15 @@ Submitted Books: ${decodedData.submittedBooks || 0}
       image: null
     },
 
-    // ✅ FIXED: Form submission handling
     onSubmit: async (formData, isEditing) => {
-      console.log('🎯 Submitting library card:', formData);
 
-      // Validate required fields
       if (!formData.user_id) {
-        alert('❌ Please select a user');
+        alert(' Please select a user');
         return false;
       }
 
-      // Handle file upload
       if (formData.image instanceof File) {
-        console.log('📁 Image file selected:', formData.image.name);
-        // File upload logic here
+        console.log(' Image file selected:', formData.image.name);
       }
 
       return true;

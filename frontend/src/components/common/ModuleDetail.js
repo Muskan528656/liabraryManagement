@@ -1662,7 +1662,7 @@
 // export default ModuleDetail;
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
   Row,
@@ -1671,12 +1671,84 @@ import {
   Button,
   Badge,
   Form,
+  Modal,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import Loader from "./Loader";
 import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";
+
+const LOOKUP_ENDPOINT_MAP = {
+  authors: "author",
+  author: "author",
+  categories: "category",
+  category: "category",
+  users: "user",
+  user: "user",
+  states: "state",
+  state: "state",
+  cities: "city",
+  city: "city",
+  vendors: "vendor",
+  vendor: "vendor",
+  roles: "user-role",
+  "user-role": "user-role",
+  modules: "module",
+  module: "module",
+  departments: "department",
+  department: "department",
+  libraries: "library",
+  library: "library",
+};
+
+const normalizeListResponse = (payload) => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (payload.data?.data) {
+    return Array.isArray(payload.data.data) ? payload.data.data : [];
+  }
+  if (Array.isArray(payload.rows)) return payload.rows;
+  if (payload.records && Array.isArray(payload.records)) return payload.records;
+  return [];
+};
+
+const getOptionValue = (option = {}) => {
+  return (
+    option.id ??
+    option.value ??
+    option.code ??
+    option.uuid ??
+    option.email ??
+    option.key ??
+    option.slug ??
+    option.name ??
+    option.label ??
+    option.firstname ??
+    option.lastname ??
+    ""
+  );
+};
+
+const getOptionDisplayLabel = (option = {}) => {
+  if (option.label) return option.label;
+  if (option.name) return option.name;
+  if (option.title) return option.title;
+  if (option.firstname || option.lastname) {
+    const composed = `${option.firstname || ""} ${option.lastname || ""}`.trim();
+    if (composed) return composed;
+  }
+  if (option.email) return option.email;
+  if (option.value) return option.value;
+  if (option.id) return option.id;
+  return "Item";
+};
+
+const toStringSafe = (value) => {
+  if (value === undefined || value === null) return "";
+  return value.toString();
+};
 
 const ModuleDetail = ({
   moduleName,
@@ -1703,7 +1775,34 @@ const ModuleDetail = ({
   const [isEditing, setIsEditing] = useState(false);
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [lookupOptions, setLookupOptions] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
+  const allFieldGroups = useMemo(() => {
+    const groups = [];
+    const appendFields = (list) => {
+      if (Array.isArray(list)) {
+        groups.push(...list);
+      }
+    };
+    appendFields(fields?.overview);
+    appendFields(fields?.details);
+    appendFields(fields?.other);
+    appendFields(fields?.address);
+    return groups;
+  }, [fields]);
+
+  const selectOptionKeys = useMemo(() => {
+    const keys = new Set();
+    allFieldGroups.forEach((field) => {
+      if (field?.type === "select" && typeof field.options === "string") {
+        keys.add(field.options);
+      }
+    });
+    return Array.from(keys);
+  }, [allFieldGroups]);
+
   useEffect(() => {
     console.log("ModuleDetail useEffect running with:", {
       id,
@@ -1824,6 +1923,44 @@ const ModuleDetail = ({
     }
   };
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLookupData = async () => {
+      if (selectOptionKeys.length === 0) {
+        return;
+      }
+
+      const fetchedOptions = {};
+      for (const key of selectOptionKeys) {
+        // Skip if externalData already provides options
+        if (externalData && Array.isArray(externalData[key])) {
+          continue;
+        }
+        try {
+          const endpoint = LOOKUP_ENDPOINT_MAP[key] || key;
+          const api = new DataApi(endpoint);
+          const response = await api.fetchAll();
+          const payload = response?.data ?? [];
+          fetchedOptions[key] = normalizeListResponse(payload);
+        } catch (error) {
+          console.error(`Error fetching lookup data for ${key}:`, error);
+          fetchedOptions[key] = [];
+        }
+      }
+
+      if (isMounted && Object.keys(fetchedOptions).length > 0) {
+        setLookupOptions((prev) => ({ ...prev, ...fetchedOptions }));
+      }
+    };
+
+    loadLookupData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectOptionKeys, externalData]);
+
   const normalizeLookupPath = (path = "") => {
     return path.replace(/^\/+|\/+$/g, "");
   };
@@ -1871,6 +2008,23 @@ const ModuleDetail = ({
 
     return value ?? "—";
   };
+
+  const getSelectOptions = useCallback(
+    (field) => {
+      if (!field || field.type !== "select" || !field.options) {
+        return [];
+      }
+      if (Array.isArray(field.options)) {
+        return field.options;
+      }
+      return (
+        externalData?.[field.options] ||
+        lookupOptions?.[field.options] ||
+        []
+      );
+    },
+    [externalData, lookupOptions]
+  );
 
   const handleLookupNavigation = (lookupConfig, record, event = null) => {
     if (event) {
@@ -1989,15 +2143,7 @@ const ModuleDetail = ({
       const response = await api.update(tempData, id);
 
       if (response && response.data) {
-        const responseData = response.data;
-        if (responseData.success && responseData.data) {
-          setData(responseData.data);
-        } else if (responseData.data) {
-          setData(responseData.data);
-        } else {
-          setData(responseData);
-        }
-
+        await fetchData();
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
@@ -2067,28 +2213,32 @@ const ModuleDetail = ({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (onDelete) {
       onDelete(data);
-    } else {
-      if (
-        window.confirm(`Are you sure you want to delete this ${moduleLabel}?`)
-      ) {
-        try {
-          const api = new DataApi(moduleApi);
-          await api.delete(id);
-          PubSub.publish("RECORD_SAVED_TOAST", {
-            title: "Success",
-            message: `${moduleLabel} deleted successfully`,
-          });
-          navigate(`/${moduleName}`);
-        } catch (error) {
-          PubSub.publish("RECORD_ERROR_TOAST", {
-            title: "Error",
-            message: `Failed to delete ${moduleLabel} ${error.message}`,
-          });
-        }
-      }
+      return;
+    }
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteRecord = async () => {
+    try {
+      setDeleteLoading(true);
+      const api = new DataApi(moduleApi);
+      await api.delete(id);
+      PubSub.publish("RECORD_SAVED_TOAST", {
+        title: "Success",
+        message: `${moduleLabel} deleted successfully`,
+      });
+      navigate(`/${moduleName}`);
+    } catch (error) {
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: `Failed to delete ${moduleLabel} ${error.message}`,
+      });
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
     }
   };
   if (loading) {
@@ -2163,7 +2313,8 @@ const ModuleDetail = ({
 
 
   return (
-    <Container fluid className="py-4">
+    <>
+      <Container fluid className="py-4">
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
@@ -2251,15 +2402,15 @@ const ModuleDetail = ({
                         <Col md={4} key={colIndex}>
                           {columnFields.map((field, index) => {
                             const currentData = isEditing ? tempData : data;
-                            if (
-                              field.type === "select" &&
-                              field.options &&
-                              externalData[field.options]
-                            ) {
-                              const options = externalData[field.options] || [];
-                              const currentValue = currentData
+                            if (field.type === "select" && field.options) {
+                              const options = getSelectOptions(field);
+                              const rawValue = currentData
                                 ? currentData[field.key]
                                 : null;
+                              const currentValue =
+                                rawValue === undefined || rawValue === null
+                                  ? ""
+                                  : rawValue.toString();
 
                               return (
                                 <Form.Group key={index} className="mb-3">
@@ -2268,7 +2419,7 @@ const ModuleDetail = ({
                                   </Form.Label>
                                   {isEditing ? (
                                     <Form.Select
-                                      value={currentValue || ""}
+                                      value={currentValue}
                                       onChange={(e) =>
                                         handleFieldChange(
                                           field.key,
@@ -2297,13 +2448,14 @@ const ModuleDetail = ({
                                       value={(() => {
                                         if (field.displayKey && data)
                                           return data[field.displayKey] || "—";
-                                        const selected = options.find(
-                                          (opt) => opt.id === currentValue
-                                        );
+                                        const selected = options.find((opt) => {
+                                          const optionValue = toStringSafe(
+                                            getOptionValue(opt)
+                                          );
+                                          return optionValue === currentValue;
+                                        });
                                         return selected
-                                          ? selected.name ||
-                                          selected.title ||
-                                          selected.email
+                                          ? getOptionDisplayLabel(selected)
                                           : "—";
                                       })()}
                                       style={{
@@ -2318,23 +2470,39 @@ const ModuleDetail = ({
                               );
                             }
 
-                            // --- Input Field ---
+                            const fieldValue = getFieldValue(field, currentData);
+                            const isElementValue = React.isValidElement(fieldValue);
+                            const controlType = isEditing
+                              ? field.type === "number"
+                                ? "number"
+                                : field.type === "date"
+                                  ? "date"
+                                  : field.type === "datetime"
+                                    ? "datetime-local"
+                                    : "text"
+                              : "text";
+
+                            if (!isEditing && isElementValue) {
+                              return (
+                                <Form.Group key={index} className="mb-3">
+                                  <Form.Label className="fw-semibold">
+                                    {field.label}
+                                  </Form.Label>
+                                  <div className="form-control-plaintext">
+                                    {fieldValue}
+                                  </div>
+                                </Form.Group>
+                              );
+                            }
+
                             return (
                               <Form.Group key={index} className="mb-3">
                                 <Form.Label className="fw-semibold">
                                   {field.label}
                                 </Form.Label>
                                 <Form.Control
-                                  type={
-                                    field.type === "number"
-                                      ? "number"
-                                      : field.type === "date"
-                                        ? "date"
-                                        : field.type === "datetime"
-                                          ? "datetime-local"
-                                          : "text"
-                                  }
-                                  value={getFieldValue(field, currentData)}
+                                  type={controlType}
+                                  value={isElementValue ? "" : fieldValue ?? ""}
                                   readOnly={!isEditing}
                                   onChange={(e) => {
                                     if (!isEditing) return;
@@ -2593,15 +2761,15 @@ const ModuleDetail = ({
                           <Col md={4} key={colIndex}>
                             {columnFields.map((field, index) => {
                               const currentData = isEditing ? tempData : data;
-                              if (
-                                field.type === "select" &&
-                                field.options &&
-                                externalData[field.options]
-                              ) {
-                                const options = externalData[field.options] || [];
-                                const currentValue = currentData
+                              if (field.type === "select" && field.options) {
+                                const options = getSelectOptions(field);
+                                const rawValue = currentData
                                   ? currentData[field.key]
                                   : null;
+                                const currentValue =
+                                  rawValue === undefined || rawValue === null
+                                    ? ""
+                                    : rawValue.toString();
 
                                 return (
                                   <Form.Group key={index} className="mb-3">
@@ -2610,7 +2778,7 @@ const ModuleDetail = ({
                                     </Form.Label>
                                     {isEditing ? (
                                       <Form.Select
-                                        value={currentValue || ""}
+                                        value={currentValue}
                                         onChange={(e) =>
                                           handleFieldChange(
                                             field.key,
@@ -2639,13 +2807,14 @@ const ModuleDetail = ({
                                         value={(() => {
                                           if (field.displayKey && data)
                                             return data[field.displayKey] || "—";
-                                          const selected = options.find(
-                                            (opt) => opt.id === currentValue
-                                          );
+                                          const selected = options.find((opt) => {
+                                            const optionValue = toStringSafe(
+                                              getOptionValue(opt)
+                                            );
+                                            return optionValue === currentValue;
+                                          });
                                           return selected
-                                            ? selected.name ||
-                                            selected.title ||
-                                            selected.email
+                                            ? getOptionDisplayLabel(selected)
                                             : "—";
                                         })()}
                                         style={{
@@ -2660,23 +2829,41 @@ const ModuleDetail = ({
                                 );
                               }
 
-                              // --- Input Field ---
+                              const fieldValue = getFieldValue(field, currentData);
+                              const isElementValue = React.isValidElement(fieldValue);
+                              const controlType = isEditing
+                                ? field.type === "number"
+                                  ? "number"
+                                  : field.type === "date"
+                                    ? "date"
+                                    : field.type === "datetime"
+                                      ? "datetime-local"
+                                      : "text"
+                                : "text";
+
+                              if (!isEditing && isElementValue) {
+                                return (
+                                  <Form.Group key={index} className="mb-3">
+                                    <Form.Label className="fw-semibold">
+                                      {field.label}
+                                    </Form.Label>
+                                    <div className="form-control-plaintext">
+                                      {fieldValue}
+                                    </div>
+                                  </Form.Group>
+                                );
+                              }
+
                               return (
                                 <Form.Group key={index} className="mb-3">
                                   <Form.Label className="fw-semibold">
                                     {field.label}
                                   </Form.Label>
                                   <Form.Control
-                                    type={
-                                      field.type === "number"
-                                        ? "number"
-                                        : field.type === "date"
-                                          ? "date"
-                                          : field.type === "datetime"
-                                            ? "datetime-local"
-                                            : "text"
+                                    type={controlType}
+                                    value={
+                                      isElementValue ? "" : fieldValue ?? ""
                                     }
-                                    value={getFieldValue(field, currentData)}
                                     readOnly={!isEditing}
                                     onChange={(e) => {
                                       if (!isEditing) return;
@@ -2935,15 +3122,15 @@ const ModuleDetail = ({
                         <Col md={4} key={colIndex}>
                           {columnFields.map((field, index) => {
                             const currentData = isEditing ? tempData : data;
-                            if (
-                              field.type === "select" &&
-                              field.options &&
-                              externalData[field.options]
-                            ) {
-                              const options = externalData[field.options] || [];
-                              const currentValue = currentData
+                            if (field.type === "select" && field.options) {
+                              const options = getSelectOptions(field);
+                              const rawValue = currentData
                                 ? currentData[field.key]
                                 : null;
+                              const currentValue =
+                                rawValue === undefined || rawValue === null
+                                  ? ""
+                                  : rawValue.toString();
 
                               return (
                                 <Form.Group key={index} className="mb-3">
@@ -2952,7 +3139,7 @@ const ModuleDetail = ({
                                   </Form.Label>
                                   {isEditing ? (
                                     <Form.Select
-                                      value={currentValue || ""}
+                                      value={currentValue}
                                       onChange={(e) =>
                                         handleFieldChange(
                                           field.key,
@@ -2981,13 +3168,14 @@ const ModuleDetail = ({
                                       value={(() => {
                                         if (field.displayKey && data)
                                           return data[field.displayKey] || "—";
-                                        const selected = options.find(
-                                          (opt) => opt.id === currentValue
-                                        );
+                                        const selected = options.find((opt) => {
+                                          const optionValue = toStringSafe(
+                                            getOptionValue(opt)
+                                          );
+                                          return optionValue === currentValue;
+                                        });
                                         return selected
-                                          ? selected.name ||
-                                          selected.title ||
-                                          selected.email
+                                          ? getOptionDisplayLabel(selected)
                                           : "—";
                                       })()}
                                       style={{
@@ -3002,46 +3190,69 @@ const ModuleDetail = ({
                               );
                             }
                             return (
-                              <Form.Group key={index} className="mb-3">
-                                <Form.Label className="fw-semibold">
-                                  {field.label}
-                                </Form.Label>
-                                <Form.Control
-                                  type={
-                                    field.type === "number"
-                                      ? "number"
-                                      : field.type === "date"
-                                        ? "date"
-                                        : field.type === "datetime"
-                                          ? "datetime-local"
-                                          : "text"
-                                  }
-                                  value={getFieldValue(field, currentData)}
-                                  readOnly={!isEditing}
-                                  onChange={(e) => {
-                                    if (!isEditing) return;
+                              (() => {
+                                const fieldValue = getFieldValue(field, currentData);
+                                const isElementValue = React.isValidElement(fieldValue);
+                                const controlType = isEditing
+                                  ? field.type === "number"
+                                    ? "number"
+                                    : field.type === "date"
+                                      ? "date"
+                                      : field.type === "datetime"
+                                        ? "datetime-local"
+                                        : "text"
+                                  : "text";
 
-                                    let newValue = e.target.value;
-                                    if (field.type === "number")
-                                      newValue = newValue
-                                        ? parseFloat(newValue)
-                                        : null;
-                                    if (field.type === "datetime")
-                                      newValue = new Date(
-                                        newValue
-                                      ).toISOString();
+                                if (!isEditing && isElementValue) {
+                                  return (
+                                    <Form.Group key={index} className="mb-3">
+                                      <Form.Label className="fw-semibold">
+                                        {field.label}
+                                      </Form.Label>
+                                      <div className="form-control-plaintext">
+                                        {fieldValue}
+                                      </div>
+                                    </Form.Group>
+                                  );
+                                }
 
-                                    handleFieldChange(field.key, newValue);
-                                  }}
-                                  style={{
-                                    background: !isEditing
-                                      ? "var(--header-highlighter-color, #f8f9fa)"
-                                      : "white",
-                                    pointerEvents: isEditing ? "auto" : "none",
-                                    opacity: isEditing ? 1 : 0.9,
-                                  }}
-                                />
-                              </Form.Group>
+                                return (
+                                  <Form.Group key={index} className="mb-3">
+                                    <Form.Label className="fw-semibold">
+                                      {field.label}
+                                    </Form.Label>
+                                    <Form.Control
+                                      type={controlType}
+                                      value={
+                                        isElementValue ? "" : fieldValue ?? ""
+                                      }
+                                      readOnly={!isEditing}
+                                      onChange={(e) => {
+                                        if (!isEditing) return;
+
+                                        let newValue = e.target.value;
+                                        if (field.type === "number")
+                                          newValue = newValue
+                                            ? parseFloat(newValue)
+                                            : null;
+                                        if (field.type === "datetime")
+                                          newValue = new Date(
+                                            newValue
+                                          ).toISOString();
+
+                                        handleFieldChange(field.key, newValue);
+                                      }}
+                                      style={{
+                                        background: !isEditing
+                                          ? "var(--header-highlighter-color, #f8f9fa)"
+                                          : "white",
+                                        pointerEvents: isEditing ? "auto" : "none",
+                                        opacity: isEditing ? 1 : 0.9,
+                                      }}
+                                    />
+                                  </Form.Group>
+                                );
+                              })()
                             );
                           })}
                         </Col>
@@ -3325,7 +3536,41 @@ const ModuleDetail = ({
           }
         }
       `}</style>
-    </Container>
+      </Container>
+      <Modal
+        show={showDeleteModal}
+        onHide={() => {
+          if (!deleteLoading) {
+            setShowDeleteModal(false);
+          }
+        }}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this {moduleLabel.toLowerCase()}? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowDeleteModal(false)}
+            disabled={deleteLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={confirmDeleteRecord}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? "Deleting..." : "Delete"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 };
 

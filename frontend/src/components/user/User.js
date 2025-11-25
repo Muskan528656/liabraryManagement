@@ -10,6 +10,8 @@ import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import { FaGalacticSenate } from "react-icons/fa";
 
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import the eye icons
+
 const User = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -46,6 +48,9 @@ const User = () => {
     isactive: true,
   });
   const [selectedItems, setSelectedItems] = useState([]);
+
+  // Password visibility state
+  const [passwordVisible, setPasswordVisible] = useState(false);  // Add state to toggle visibility
 
   useEffect(() => {
     fetchUsers();
@@ -207,11 +212,13 @@ const User = () => {
         email: formData.email || null,
         userrole: formData.userrole,
         phone: formData.phone || null,
-        whatsapp_number: formData.whatsapp_number || null,
+        // whatsapp_number: formData.whatsapp_number || "null",
         country_code: formData.country_code || null,
         isactive: formData.isactive,
         blocked: formData.blocked,
       };
+
+      console.log("userdatais ", userData)
 
       // Only include password if it's provided (for new users or password change)
       if (formData.password) {
@@ -226,6 +233,7 @@ const User = () => {
             title: "Success",
             message: "User updated successfully",
           });
+          console.log("res" + response)
           fetchUsers();
           setShowModal(false);
           setEditingUser(null);
@@ -305,7 +313,7 @@ const User = () => {
         "Email": user.email || "",
         "Role": user.userrole || "",
         "Phone": user.phone || "",
-        "WhatsApp": user.whatsapp_number || "",
+        // "WhatsApp": user.whatsapp_number || "",
         "Status": user.isactive ? "Active" : "Inactive",
         "Blocked": user.blocked ? "Yes" : "No",
       }));
@@ -316,7 +324,7 @@ const User = () => {
         { key: 'Email', header: 'Email', width: 30 },
         { key: 'Role', header: 'Role', width: 15 },
         { key: 'Phone', header: 'Phone', width: 18 },
-        { key: 'WhatsApp', header: 'WhatsApp', width: 18 },
+        // { key: 'WhatsApp', header: 'WhatsApp', width: 18 },
         { key: 'Status', header: 'Status', width: 12 },
         { key: 'Blocked', header: 'Blocked', width: 12 }
       ];
@@ -401,7 +409,7 @@ const User = () => {
               e.stopPropagation();
               try {
                 localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) {}
+              } catch (err) { }
               navigate(`/user/${userId}`, { state: record });
             }}
             onContextMenu={(e) => {
@@ -409,7 +417,7 @@ const User = () => {
               e.stopPropagation();
               try {
                 localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) {}
+              } catch (err) { }
               window.open(`/user/${userId}`, '_blank');
             }}
             style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500", cursor: "pointer" }}
@@ -497,6 +505,10 @@ const User = () => {
     </>
   );
 
+
+  // Toggle password visibility
+  const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+
   return (
     <Container fluid>
       <ScrollToTop />
@@ -578,6 +590,7 @@ const User = () => {
                   <Form.Control
                     type="text"
                     name="firstname"
+                    placeholder="Enter The First Name"
                     value={formData.firstname}
                     onChange={handleInputChange}
                     required
@@ -591,6 +604,7 @@ const User = () => {
                     type="text"
                     name="lastname"
                     value={formData.lastname}
+                    placeholder="Enter The Last Name"
                     onChange={handleInputChange}
                     required
                   />
@@ -605,6 +619,7 @@ const User = () => {
                     type="email"
                     name="email"
                     value={formData.email}
+                    placeholder="Enter The Email"
                     onChange={handleInputChange}
                   />
                 </Form.Group>
@@ -612,14 +627,30 @@ const User = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Password {!editingUser && <span className="text-danger">*</span>}</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
-                    required={!editingUser}
-                  />
+                  <InputGroup className="mb-3">
+                    <Form.Control
+                      type={passwordVisible ? "text" : "password"} // Toggle between text and password type
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                      required={!editingUser}
+                    />
+                    <InputGroup.Text
+                      // style={{
+                      //   cursor: "pointer",
+                      //   border: "none",
+                      //   backgroundColor: "transparent",
+                      //   position: "absolute",
+                      //   right: "10px",
+                      //   top: "10px",
+                      //   padding: "0",
+                      // }}
+                      onClick={togglePasswordVisibility}
+                    >
+                      {passwordVisible ? <FaEyeSlash /> : <FaEye />}  {/* Switch between Eye and EyeSlash */}
+                    </InputGroup.Text>
+                  </InputGroup>
                 </Form.Group>
               </Col>
             </Row>
@@ -643,6 +674,7 @@ const User = () => {
                   <Form.Control
                     type="text"
                     name="phone"
+                    placeholder="Enter the phone number"
                     value={formData.phone}
                     onChange={handleInputChange}
                   />
@@ -650,7 +682,7 @@ const User = () => {
               </Col>
             </Row>
             <Row>
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>WhatsApp Number</Form.Label>
                   <Form.Control
@@ -660,7 +692,7 @@ const User = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-              </Col>
+              </Col> */}
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Country Code</Form.Label>
@@ -686,7 +718,7 @@ const User = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Check
                     type="checkbox"
@@ -696,7 +728,7 @@ const User = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-              </Col>
+              </Col> */}
             </Row>
           </Form>
         </Modal.Body>

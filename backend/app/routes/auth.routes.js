@@ -307,28 +307,25 @@ module.exports = (app) => {
             .json({ success, errors: "Try to login with correct credentials" });
         }
 
-        //removing sensitive data from token
+      
         delete userInfo.password;
-        // delete userInfo.email;
-
-        // Store important fields before deletion
+      
         let username = userInfo.firstname + " " + userInfo.lastname;
-        let userrole = userInfo.userrole || "USER"; // Ensure userrole exists
+        let userrole = userInfo.userrole || "USER";
         let tenantcode = userInfo.tenantcode;
         let companyid = userInfo.companyid;
-        let modules = userInfo.modules || []; // Ensure modules are included
-        let plan = userInfo.plan || null; // Plan information
+        let modules = userInfo.modules || [];
+        let plan = userInfo.plan || null;
 
-        // Delete fields that we don't want in token
         delete userInfo.firstname;
         delete userInfo.lastname;
-        delete userInfo.whatsapp_settings; // Remove WhatsApp settings from token
-        delete userInfo.subscription; // Remove subscription from token
-        delete userInfo.addons; // Remove addons from token
+        delete userInfo.whatsapp_settings;
+        delete userInfo.subscription; 
+        delete userInfo.addons; 
 
         // Set fields that should be in token
         userInfo.username = username;
-        userInfo.userrole = userrole; // Ensure userrole is set
+        userInfo.userrole = userrole; 
         userInfo.companyid = companyid; // Include companyid
         userInfo.tenantcode = tenantcode; // Include tenantcode
 

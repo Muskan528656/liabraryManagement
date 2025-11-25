@@ -6,6 +6,7 @@ const http = require("http");
 const dotenv = require("dotenv").config();
 const moment = require("moment");
 const app = express();
+const fs = require("fs");
 
 
 app.set("view engine", "ejs");
@@ -21,7 +22,17 @@ app.use(
 );
 
 const path = require("path");
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
+if (!fs.existsSync(publicUploadsPath)) {
+  fs.mkdirSync(publicUploadsPath, { recursive: true });
+}
+const legacyUploadsPath = path.join(__dirname, "uploads");
+
+app.use("/uploads", express.static(publicUploadsPath));
+
+if (fs.existsSync(legacyUploadsPath)) {
+  app.use("/uploads", express.static(legacyUploadsPath));
+}
 app.get("/ibs", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });

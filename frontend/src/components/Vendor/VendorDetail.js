@@ -19,12 +19,12 @@ const VendorDetail = () => {
       { key: "phone", label: "Phone", type: "text" },
       { key: "gst_number", label: "GST Number", type: "text" },
       { key: "pan_number", label: "PAN Number", type: "text" },
-      
+
       {
         key: "status",
         label: "Status",
-        type: "badge",
-        badgeConfig: statusBadges
+        // type: "badge",
+        // badgeConfig: statusBadges
       },
       { key: "created_at", label: "Created At", type: "datetime" },
       { key: "updated_at", label: "Updated At", type: "datetime" },
@@ -35,15 +35,14 @@ const VendorDetail = () => {
       { key: "state", label: "State", type: "text" },
       { key: "address", label: "Address", type: "text" },
       { key: "city", label: "City", type: "text" },
-      
+
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-      
-     ],
+    ],
   };
 
   return (
