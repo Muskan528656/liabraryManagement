@@ -1,6 +1,6 @@
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
-import { getVendorConfig } from "./VendorConfig";
+import { getVendorConfig } from "./vendorconfig";
 
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
