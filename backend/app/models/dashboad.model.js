@@ -133,8 +133,6 @@ const fetchAll = async () => {
                 FROM demo.book_issues bi
                 WHERE bi.return_date IS NULL
                 AND bi.due_date BETWEEN NOW() AND (NOW() + INTERVAL '14 days');
-
-
             `);
         return result.rows;
     } catch (error) {

@@ -125,7 +125,7 @@ module.exports = (app) => {
         }
 
         User.init(tenantcode);
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
 
         // Hash password if provided
         let hashedPassword = req.body.password;

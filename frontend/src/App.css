@@ -1,8 +1,8 @@
 :root {
   --app-font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --app-font-size: 12px;
-}
 
+}
 
 /* Application color palette (limited to two main colors for a cleaner UI) */
 :root {
@@ -71,13 +71,13 @@
 }
 
 .custom-btn-setting:hover {
-   background-color: var(--primary-color) !important;
-   color: var(--primary-background-color) !important;
+  background-color: var(--primary-color) !important;
+  color: var(--primary-background-color) !important;
 }
 
 .custom-btn-table-header {
   background-color: var(--primary-background-color) !important;
-  border: 1px solid  var(--primary-color) !important;
+  border: 1px solid var(--primary-color) !important;
   border-radius: "2px";
   font-weight: 600;
   border-radius: 5px;
@@ -87,12 +87,12 @@
 }
 
 .custom-btn-table-header:hover {
-   background-color: var(--primary-color) !important;
-   color: var(--primary-background-color) !important;
+  background-color: var(--primary-color) !important;
+  color: var(--primary-background-color) !important;
 }
 
 .custom-btn-edit {
-  background-color:transparent !important;
+  background-color: transparent !important;
   border: none;
   font-weight: 600;
   color: var(--primary-color);
@@ -101,7 +101,7 @@
 }
 
 .custom-btn-delete {
-  background-color:transparent !important;
+  background-color: transparent !important;
   border: none;
   font-weight: 600;
   color: #dc3545;
@@ -1556,9 +1556,10 @@ textarea.form-control[required] {
 }
 
 /* Pagination styling - Using Sidebar Purple Colors */
-.pagination li{
-      --bs-pagination-font-size: 1.2rem !important;
+.pagination li {
+  --bs-pagination-font-size: 1.2rem !important;
 }
+
 .pagination-container .pagination,
 .salesforce-table+.pagination-container .pagination {
   margin-bottom: 0;

@@ -17,6 +17,7 @@ const UserDetail = () => {
       { key: "lastname", label: "Last Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
       { key: "phone", label: "Phone", type: "text" },
+      { key: "user_role", label: "user", type: "text", Option: "userroles " },
       { key: "isactive", label: "Status", type: "badge" },
     ],
     other: [
@@ -24,8 +25,8 @@ const UserDetail = () => {
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-      
-     ],
+
+    ],
   };
 
   return (

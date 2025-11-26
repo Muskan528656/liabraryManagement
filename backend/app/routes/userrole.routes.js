@@ -43,7 +43,6 @@ module.exports = (app) => {
     router.post(
         "/",
         fetchUser,
-        [body("role_name", "Role name is required").notEmpty()],
         async (req, res) => {
             const errors = validationResult(req);
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -52,8 +51,8 @@ module.exports = (app) => {
                 UserRole.init(req.userinfo.tenantcode);
                 const data = {
                     ...req.body,
-                    createdbyid: req.userinfo.userid,
-                    lastmodifiedbyid: req.userinfo.userid,
+                    createdbyid: req.userinfo.id,
+                    lastmodifiedbyid: req.userinfo.id,
                 };
 
                 const newRole = await UserRole.create(data);
@@ -69,7 +68,7 @@ module.exports = (app) => {
     router.put(
         "/:id",
         fetchUser,
-        [body("role_name", "Role name is required").notEmpty()],
+        [],
         async (req, res) => {
             const errors = validationResult(req);
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });

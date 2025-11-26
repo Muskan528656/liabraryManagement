@@ -137,7 +137,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        const userId = req.user?.id || req.userinfo?.id || null;
+        const userId = req.userinfo?.id || req.userinfo?.id || null;
         if (!userId) {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }

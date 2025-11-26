@@ -18,13 +18,13 @@ const Books = (props) => {
     console.log("books data", loading, data, error);
     return <div>Loading books data...</div>;
   }
-console.log("books data", loading);
+  console.log("books data", loading);
 
   const finalConfig = getBooksConfig(data, props);
 
   console.log("books finalConfig", finalConfig);
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book"/>;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book" />;
 };
 
 export default Books;

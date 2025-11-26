@@ -14,7 +14,6 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 
 
-// const Mailer = require("../models/mail.model.js");
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");

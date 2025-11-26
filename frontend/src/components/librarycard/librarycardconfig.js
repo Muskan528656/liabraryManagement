@@ -111,7 +111,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
 
     return {
         moduleName: "librarycards",
-        moduleLabel: "Library Card",
+        moduleLabel: "Library Members",
         apiEndpoint: "librarycard",
         columns: defaultColumns,
         initialFormData: {
@@ -125,15 +125,28 @@ export const getLibraryCardConfig = (externalData = {}) => {
         formFields: [
             {
                 name: "user_id",
-                label: "User",
+                label: "Member", // Changed from "User" to "Member"
                 type: "select",
-                options: "users",
+                options: "users", // This should match your API endpoint for users
                 required: true,
-                placeholder: "Select user",
+                placeholder: "Select member",
                 colSize: 12,
-                props: {
+                optionConfig: {
                     valueKey: "id",
-                    labelKey: "name"
+                    labelKey: "name", // Make sure your user API returns 'name' field
+                    // If your API returns different field names, adjust accordingly:
+                    // valueKey: "user_id",
+                    // labelKey: "user_name"
+                },
+                // Add this to ensure proper data loading
+                loadOptions: async (api) => {
+                    try {
+                        const response = await api.get("/user"); // Adjust endpoint as needed
+                        return response.data || [];
+                    } catch (error) {
+                        console.error("Error loading users:", error);
+                        return [];
+                    }
                 }
             },
             {
@@ -163,7 +176,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: true,
                 colSize: 6,
                 onChange: (value, formData, setFormData) => {
-                    // Calculate submission date based on issue date and library settings
                     if (value) {
                         // Use dynamic import for DataApi
                         import("../../api/dataApi").then(({ default: DataApi }) => {
@@ -235,18 +247,16 @@ export const getLibraryCardConfig = (externalData = {}) => {
             },
         ],
 
-
         validationRules: (formData, allCards, editingCard) => {
             const errors = {};
 
             if (!formData.user_id) {
-                errors.user_id = "User is required";
+                errors.user_id = "Member is required";
             }
 
             if (!formData.issue_date) {
                 errors.issue_date = "Issue date is required";
             }
-
 
             const existingCard = allCards?.find(
                 card => card.user_id === formData.user_id &&
@@ -255,7 +265,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             );
 
             if (existingCard) {
-                errors.user_id = "User already has an active library card";
+                errors.user_id = "Member already has an active library card";
             }
 
             return errors;
@@ -264,14 +274,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
         dataDependencies: {
             users: "user"
         },
+
         lookupNavigation: {
             user_id: {
                 path: "user",
                 idField: "id",
                 labelField: "name"
             }
-        }
-        ,
+        },
+
         features: {
             showImportExport: true,
             showDetailView: true,
@@ -286,13 +297,11 @@ export const getLibraryCardConfig = (externalData = {}) => {
 
         details: [
             { key: "card_number", label: "Card Number", type: "text" },
-            { key: "user_name", label: "User Name", type: "text" },
+            { key: "user_name", label: "Member Name", type: "text" },
             {
                 key: "user_email",
                 label: "Email",
-                type: "select",
-                options: "users",
-                displayKey: "user_email"
+                type: "text"
             },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
@@ -315,17 +324,18 @@ export const getLibraryCardConfig = (externalData = {}) => {
             calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
             handleBarcodePreview
-        }, beforeSubmit: (formData, isEditing) => {
+        },
+
+        beforeSubmit: (formData, isEditing) => {
             const errors = [];
 
             if (!formData.user_id) {
-                errors.push("Please select a user");
+                errors.push("Please select a member");
             }
 
             if (!formData.issue_date) {
                 errors.push("Issue date is required");
             }
-
 
             if (formData.image && formData.image.size > 2 * 1024 * 1024) {
                 errors.push("Image size must be less than 2MB");

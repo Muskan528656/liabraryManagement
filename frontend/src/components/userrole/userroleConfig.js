@@ -1,3 +1,5 @@
+import { Badge } from "react-bootstrap";
+
 // config/userRoleConfig.js
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     return {
@@ -23,10 +25,13 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                         {value ? "Active" : "Inactive"}
                     </span>
                 ),
-            },
-            {
-                field: "createddate",
-                label: "Created Date",
+
+                  render: (value) => (
+                <Badge bg={value ? "success" : "secondary"}>
+                    {value ? "Active" : "Inactive"}
+                </Badge>
+            )
+            
             }
         ],
 

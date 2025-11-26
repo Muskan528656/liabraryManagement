@@ -22,6 +22,8 @@ const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [roleOptions, setRoleOptions] = useState([]);
+
   const recordsPerPage = 10;
 
   const [formData, setFormData] = useState({
@@ -50,16 +52,34 @@ const User = () => {
   const [selectedItems, setSelectedItems] = useState([]);
 
   // Password visibility state
-  const [passwordVisible, setPasswordVisible] = useState(false);  // Add state to toggle visibility
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   useEffect(() => {
     fetchUsers();
+    fetchUserRoles();
   }, []);
+  const fetchUserRoles = async () => {
+    try {
+      const userRoleApi = new DataApi("user-role");
+      const response = await userRoleApi.fetchAll();
+      console.log("user roles response ", response)
+      if (response.data && Array.isArray(response.data)) {
+        setRoleOptions(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching user roles:", error);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: "Failed to fetch user roles",
+      });
+    }
+  };
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
+
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
       }
@@ -677,16 +697,23 @@ const User = () => {
               </Col>
             </Row>
             <Row>
+
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Role</Form.Label>
                   <Form.Select
+                    required
                     name="userrole"
                     value={formData.userrole}
                     onChange={handleInputChange}
                   >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="STUDENT">STUDENT</option>
+                    <option value="">Select Role</option>
+                    {roleOptions.map((role) => (
+                      <option key={role.id} value={role.role_name}>
+                        {role.role_name}
+                      </option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>

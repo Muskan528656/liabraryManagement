@@ -8,6 +8,8 @@
 
 const sql = require("./db.js");
 
+const cron = require("node-cron");
+
 let schema = "";
 
 const Notification = {
@@ -38,6 +40,8 @@ const Notification = {
       throw error;
     }
   },
+
+  
 
   // Get unread notification count
   getUnreadCount: async function (userId) {
@@ -177,8 +181,94 @@ const Notification = {
       console.error("Error fetching overdue books:", error);
       throw error;
     }
+  },
+
+
+  getAllBooks: async function () {
+  try {
+    const query = `SELECT 
+                    bi.*,
+                    b.title AS book_title,
+                    b.isbn AS book_isbn,
+                    issued_to_user.firstname || ' ' || issued_to_user.lastname AS issued_to_name,
+                    issued_to_user.firstname || ' ' || issued_to_user.lastname AS student_name,
+                    issued_to_user.email AS issued_to_email,
+                    issued_by_user.firstname || ' ' || issued_by_user.lastname AS issued_by_name,
+                    issued_by_user.email AS issued_by_email,
+                    lc.card_number,
+                    lc.id AS card_id
+                   FROM demo.book_issues bi
+                   LEFT JOIN demo.books b ON bi.book_id = b.id
+                   LEFT JOIN demo."user" issued_to_user ON bi.issued_to = issued_to_user.id
+                   LEFT JOIN demo."user" issued_by_user ON bi.issued_by = issued_by_user.id
+                   LEFT JOIN demo.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   ORDER BY bi.createddate DESC`;
+    const result = await sql.query(query);
+
+    if (result.rows.length > 0) {
+      return { success: true, data: result.rows };
+    }
+
+    return { success: false, data: [] };
+  } catch (error) {
+    console.error("Data not found:", error);
+    throw error;
   }
+},
+
+checkbeforeDue: async function () {
+
+  let notifications = [];
+  try {
+    const response = await getAllBooks();
+    // console.log(response.data);
+
+    const submittedBooks = response.data;
+
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    notifications = [];
+
+    submittedBooks.forEach(book => {
+      const dueDate = new Date(book.due_date);
+      // console.log('book title ',book.book_title,);
+
+      if (
+        dueDate.getFullYear() === tomorrow.getFullYear() &&
+        dueDate.getMonth() === tomorrow.getMonth() &&
+        dueDate.getDate() === tomorrow.getDate()
+      ) {
+
+        notifications.push({
+          message: `Your book is due tomorrow. Please return "${book.book_title}"  to avoid penalties.`,
+          user: book.issued_by,
+          due_date: dueDate,
+          return_date: book.return_date,
+          type: 'due_date',
+          quantity: 1,
+        });
+      }
+    });
+
+    // console.log("🔔 Notifications updated:", notifications);
+    return notifications;
+    
+  } catch (error) {
+    console.error("❌ Error:", error);
+  }
+  // Schedule the cron job to run every day at midnight
+  // cron.schedule("* * * * *", checkbeforeDue);
+}
+
+
+
 };
+
+
+
+
 
 module.exports = Notification;
 

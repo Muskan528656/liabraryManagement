@@ -1,454 +1,4 @@
-// import React, { useState } from 'react';
-// import { Table, Form, Button, Row, Col, Card, Tabs, Tab } from 'react-bootstrap';
-// import Select from 'react-select';
 
-// const BulkInsertTable = ({
-//     multiInsertRows,
-//     vendorOptions,
-//     bookOptions,
-//     onRowChange,
-//     onAddRow,
-//     onRemoveRow,
-//     onAddVendor,
-//     onAddBook
-// }) => {
-//     const [selectedVendor, setSelectedVendor] = useState(null);
-//     const [activeTab, setActiveTab] = useState("single"); // "single" or "multiple"
-
-//     const handleMultiRowChange = (index, field, value) => {
-//         onRowChange(index, field, value);
-//     };
-
-//     const handleVendorChange = (selectedOption) => {
-//         setSelectedVendor(selectedOption);
-//         // Single vendor mode mein sabhi rows mein selected vendor set karo
-//         if (activeTab === "single") {
-//             multiInsertRows.forEach((_, index) => {
-//                 onRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "");
-//             });
-//         }
-//     };
-
-//     const handleAddBookRow = () => {
-//         const newRow = { 
-//             vendor_id: activeTab === "single" ? (selectedVendor ? selectedVendor.value : "") : "",
-//             book_id: "", 
-//             quantity: 1, 
-//             unit_price: 0, 
-//             purchase_date: new Date().toISOString().split('T')[0], 
-//             notes: "" 
-//         };
-//         onAddRow(newRow);
-//     };
-
-//     const handleAddVendorRow = () => {
-//         const newRow = { 
-//             vendor_id: "", 
-//             book_id: "", 
-//             quantity: 1, 
-//             unit_price: 0, 
-//             purchase_date: new Date().toISOString().split('T')[0], 
-//             notes: "" 
-//         };
-//         onAddRow(newRow);
-//     };
-
-//     // Calculate totals
-//     const totalAmount = multiInsertRows.reduce((sum, row) => sum + ((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)), 0);
-//     const uniqueVendors = [...new Set(multiInsertRows.map(row => row.vendor_id).filter(Boolean))];
-//     const totalBooks = multiInsertRows.reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
-
-//     return (
-//         <div>
-//             {/* Mode Selection Tabs */}
-//             <Card className="mb-4">
-//                 <Card.Body className="p-0">
-//                     <Tabs
-//                         activeKey={activeTab}
-//                         onSelect={(k) => setActiveTab(k)}
-//                         className="mb-0"
-//                     >
-//                         <Tab 
-//                             eventKey="single" 
-//                             title={
-//                                 <span>
-//                                     <i className="fa-solid fa-user me-2"></i>
-//                                     Single Vendor
-//                                 </span>
-//                             }
-//                         >
-//                             <div className="p-3">
-//                                 <Row className="align-items-center">
-//                                     <Col md={8}>
-//                                         <Form.Group>
-//                                             <Form.Label className="fw-bold">
-//                                                 <i className="fa-solid fa-user-tie me-2 text-primary"></i>
-//                                                 Select Vendor <span className="text-danger">*</span>
-//                                             </Form.Label>
-//                                             <Select
-//                                                 value={selectedVendor}
-//                                                 onChange={handleVendorChange}
-//                                                 options={vendorOptions}
-//                                                 placeholder="Choose vendor for all purchases..."
-//                                                 isClearable
-//                                                 isSearchable
-//                                                 styles={{
-//                                                     control: (base) => ({
-//                                                         ...base,
-//                                                         minHeight: "45px",
-//                                                         fontSize: "16px",
-//                                                         border: "2px solid #6f42c1",
-//                                                         borderRadius: "8px",
-//                                                         "&:hover": {
-//                                                             borderColor: "#8b5cf6",
-//                                                         },
-//                                                     }),
-//                                                 }}
-//                                             />
-//                                         </Form.Group>
-//                                     </Col>
-//                                     <Col md={4} className="text-end">
-//                                         <Button
-//                                             variant="outline-primary"
-//                                             onClick={onAddVendor}
-//                                             className="mt-4"
-//                                             style={{
-//                                                 borderColor: "#6f42c1",
-//                                                 color: "#6f42c1",
-//                                                 fontWeight: "500"
-//                                             }}
-//                                         >
-//                                             <i className="fa-solid fa-plus me-2"></i>
-//                                             Add New Vendor
-//                                         </Button>
-//                                     </Col>
-//                                 </Row>
-//                                 {selectedVendor && (
-//                                     <div className="mt-3 p-3 bg-light rounded">
-//                                         <div className="d-flex justify-content-between align-items-center">
-//                                             <div>
-//                                                 <strong>Selected Vendor:</strong> {selectedVendor.label}
-//                                             </div>
-//                                             <small className="text-muted">
-//                                                 This vendor will be used for all book purchases below
-//                                             </small>
-//                                         </div>
-//                                     </div>
-//                                 )}
-//                             </div>
-//                         </Tab>
-
-//                         <Tab 
-//                             eventKey="multiple" 
-//                             title={
-//                                 <span>
-//                                     <i className="fa-solid fa-users me-2"></i>
-//                                     Multiple Vendors
-//                                 </span>
-//                             }
-//                         >
-//                             <div className="p-3">
-//                                 <div className="d-flex justify-content-between align-items-center">
-//                                     <div>
-//                                         <h6 className="mb-1">
-//                                             <i className="fa-solid fa-users me-2 text-info"></i>
-//                                             Multiple Vendors Mode
-//                                         </h6>
-//                                         <p className="text-muted mb-0">
-//                                             Add purchases from different vendors in one go
-//                                         </p>
-//                                     </div>
-//                                     <Button
-//                                         variant="outline-info"
-//                                         onClick={handleAddVendorRow}
-//                                         style={{
-//                                             borderColor: "#0ea5e9",
-//                                             color: "#0ea5e9",
-//                                             fontWeight: "500"
-//                                         }}
-//                                     >
-//                                         <i className="fa-solid fa-plus me-2"></i>
-//                                         Add Vendor Entry
-//                                     </Button>
-//                                 </div>
-//                             </div>
-//                         </Tab>
-//                     </Tabs>
-//                 </Card.Body>
-//             </Card>
-
-//             {/* Books Purchase Section */}
-//             <div className="mb-3 d-flex justify-content-between align-items-center">
-//                 <div>
-//                     <h6 style={{ color: "#333", fontWeight: "600", margin: 0 }}>
-//                         <i className="fa-solid fa-book me-2 text-success"></i>
-//                         {activeTab === "single" ? "Add Books for Purchase" : "Purchase Entries"}
-//                     </h6>
-//                     {activeTab === "single" && selectedVendor && (
-//                         <small className="text-muted">
-//                             Adding books for vendor: <strong>{selectedVendor.label}</strong>
-//                         </small>
-//                     )}
-//                     {activeTab === "multiple" && (
-//                         <small className="text-muted">
-//                             Add purchases from different vendors
-//                         </small>
-//                     )}
-//                 </div>
-//                 <div className="d-flex align-items-center gap-2">
-//                     <span style={{ color: "#6c757d", fontSize: "14px", fontWeight: "500" }}>
-//                         Entries: {multiInsertRows.length}
-//                     </span>
-//                     <Button
-//                         size='sm'
-//                         style={{
-//                             background: activeTab === "single" 
-//                                 ? "linear-gradient(135deg, #10b981 0%, #34d399 100%)"
-//                                 : "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)",
-//                             border: "none",
-//                         }}
-//                         onClick={activeTab === "single" ? handleAddBookRow : handleAddVendorRow}
-//                         disabled={activeTab === "single" && !selectedVendor}
-//                         title={activeTab === "single" && !selectedVendor ? "Please select a vendor first" : "Add new entry"}
-//                     >
-//                         <i className="fa-solid fa-plus me-1"></i>
-//                         {activeTab === "single" ? "Add Book" : "Add Entry"}
-//                     </Button>
-//                 </div>
-//             </div>
-
-//             {activeTab === "single" && !selectedVendor ? (
-//                 <div className="text-center py-5 border rounded bg-light">
-//                     <i className="fa-solid fa-user-tie fa-3x text-muted mb-3"></i>
-//                     <h5 className="text-muted">Please select a vendor first</h5>
-//                     <p className="text-muted">Choose a vendor above to start adding books for purchase</p>
-//                 </div>
-//             ) : (
-//                 <div className="table-responsive">
-//                     <Table bordered hover style={{ marginBottom: 0 }}>
-//                         <thead style={{ background: "#f8f9fa" }}>
-//                             <tr>
-//                                 {activeTab === "multiple" && (
-//                                     <th style={{ width: "20%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                         Vendor <span className="text-danger">*</span>
-//                                     </th>
-//                                 )}
-//                                 <th style={{ width: activeTab === "multiple" ? "20%" : "25%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Book <span className="text-danger">*</span>
-//                                 </th>
-//                                 <th style={{ width: "8%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Qty <span className="text-danger">*</span>
-//                                 </th>
-//                                 <th style={{ width: "10%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Unit Price <span className="text-danger">*</span>
-//                                 </th>
-//                                 <th style={{ width: "12%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Total Amount
-//                                 </th>
-//                                 <th style={{ width: "12%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Purchase Date
-//                                 </th>
-//                                 <th style={{ width: activeTab === "multiple" ? "12%" : "15%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
-//                                     Notes
-//                                 </th>
-//                                 <th style={{ width: "5%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6", textAlign: "center" }}>
-//                                     Actions
-//                                 </th>
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {multiInsertRows.map((row, index) => (
-//                                 <tr key={index}>
-//                                     {/* Vendor Column - Only in Multiple Mode */}
-//                                     {activeTab === "multiple" && (
-//                                         <td style={{ position: "relative", zIndex: 1, padding: "12px", verticalAlign: "middle" }}>
-//                                             <div className="d-flex gap-1" style={{ position: "relative" }}>
-//                                                 <div style={{ flex: 1, minWidth: 0 }}>
-//                                                     <Select
-//                                                         value={vendorOptions.find((v) => v.value === row.vendor_id) || null}
-//                                                         onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
-//                                                         options={vendorOptions}
-//                                                         placeholder="Select Vendor"
-//                                                         isClearable
-//                                                         isSearchable
-//                                                         menuPortalTarget={document.body}
-//                                                         menuPosition="fixed"
-//                                                         styles={{
-//                                                             control: (base) => ({
-//                                                                 ...base,
-//                                                                 minHeight: "38px",
-//                                                                 fontSize: "14px",
-//                                                                 width: "100%",
-//                                                                 border: "1px solid #ced4da",
-//                                                                 borderRadius: "4px",
-//                                                                 "&:hover": {
-//                                                                     borderColor: "#0ea5e9",
-//                                                                 },
-//                                                             }),
-//                                                         }}
-//                                                     />
-//                                                 </div>
-//                                                 <Button
-//                                                     variant="outline-info"
-//                                                     size="sm"
-//                                                     onClick={() => onAddVendor(index)}
-//                                                     style={{
-//                                                         minWidth: "38px",
-//                                                         padding: "6px 8px",
-//                                                         flexShrink: 0,
-//                                                         borderColor: "#0ea5e9",
-//                                                         color: "#0ea5e9"
-//                                                     }}
-//                                                     title="Add New Vendor"
-//                                                 >
-//                                                     <i className="fa-solid fa-plus"></i>
-//                                                 </Button>
-//                                             </div>
-//                                         </td>
-//                                     )}
-
-//                                     {/* Book Column */}
-//                                     <td style={{ position: "relative", zIndex: 1, padding: "12px", verticalAlign: "middle" }}>
-//                                         <div className="d-flex gap-1" style={{ position: "relative" }}>
-//                                             <div style={{ flex: 1, minWidth: 0 }}>
-//                                                 <Select
-//                                                     value={bookOptions.find((b) => b.value === row.book_id) || null}
-//                                                     onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
-//                                                     options={bookOptions}
-//                                                     placeholder="Select Book"
-//                                                     isClearable
-//                                                     isSearchable
-//                                                     menuPortalTarget={document.body}
-//                                                     menuPosition="fixed"
-//                                                     styles={{
-//                                                         control: (base) => ({
-//                                                             ...base,
-//                                                             minHeight: "38px",
-//                                                             fontSize: "14px",
-//                                                             width: "100%",
-//                                                             border: "1px solid #ced4da",
-//                                                             borderRadius: "4px",
-//                                                             "&:hover": {
-//                                                                 borderColor: "#10b981",
-//                                                             },
-//                                                         }),
-//                                                     }}
-//                                                 />
-//                                             </div>
-//                                             <Button
-//                                                 variant="outline-success"
-//                                                 size="sm"
-//                                                 onClick={() => onAddBook(index)}
-//                                                 style={{
-//                                                     minWidth: "38px",
-//                                                     padding: "6px 8px",
-//                                                     flexShrink: 0,
-//                                                     borderColor: "#10b981",
-//                                                     color: "#10b981"
-//                                                 }}
-//                                                 title="Add New Book"
-//                                             >
-//                                                 <i className="fa-solid fa-plus"></i>
-//                                             </Button>
-//                                         </div>
-//                                     </td>
-
-//                                     {/* Other Columns */}
-//                                     <td style={{ padding: "12px", verticalAlign: "middle" }}>
-//                                         <Form.Control
-//                                             type="number"
-//                                             value={row.quantity}
-//                                             onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
-//                                             min="1"
-//                                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
-//                                         />
-//                                     </td>
-//                                     <td style={{ padding: "12px", verticalAlign: "middle" }}>
-//                                         <Form.Control
-//                                             type="number"
-//                                             value={row.unit_price}
-//                                             onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
-//                                             min="0"
-//                                             step="0.01"
-//                                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
-//                                         />
-//                                     </td>
-//                                     <td style={{ padding: "12px", verticalAlign: "middle" }}>
-//                                         <Form.Control
-//                                             type="text"
-//                                             value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
-//                                             readOnly
-//                                             className="bg-light"
-//                                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da", backgroundColor: "#f8f9fa" }}
-//                                         />
-//                                     </td>
-//                                     <td style={{ padding: "12px", verticalAlign: "middle" }}>
-//                                         <Form.Control
-//                                             type="date"
-//                                             value={row.purchase_date}
-//                                             onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
-//                                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
-//                                         />
-//                                     </td>
-//                                     <td style={{ padding: "12px", verticalAlign: "middle" }}>
-//                                         <Form.Control
-//                                             type="text"
-//                                             value={row.notes}
-//                                             onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
-//                                             placeholder="Notes..."
-//                                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
-//                                         />
-//                                     </td>
-//                                     <td style={{ padding: "12px", verticalAlign: "middle", textAlign: "center" }}>
-//                                         <Button
-//                                             variant="outline-danger"
-//                                             size="sm"
-//                                             onClick={() => onRemoveRow(index)}
-//                                             disabled={multiInsertRows.length === 1}
-//                                             style={{
-//                                                 minWidth: "32px",
-//                                                 padding: "4px 6px",
-//                                                 borderColor: "#dc3545",
-//                                                 color: "#dc3545"
-//                                             }}
-//                                             title="Delete Row"
-//                                         >
-//                                             <i className="fa-solid fa-trash"></i>
-//                                         </Button>
-//                                     </td>
-//                                 </tr>
-//                             ))}
-//                         </tbody>
-//                     </Table>
-//                 </div>
-//             )}
-
-//             {/* Summary Section */}
-//             {multiInsertRows.length > 0 && (
-//                 <Card className={`mt-3 ${activeTab === "single" ? "border-success" : "border-info"}`}>
-//                     <Card.Body className="py-2">
-//                         <Row className="align-items-center">
-//                             <Col>
-//                                 <small className="text-muted">
-//                                     <strong>Summary:</strong> {multiInsertRows.length} entr{multiInsertRows.length !== 1 ? 'ies' : 'y'} • 
-//                                     {activeTab === "multiple" && ` ${uniqueVendors.length} vendor${uniqueVendors.length !== 1 ? 's' : ''}`} • 
-//                                     {` ${totalBooks} book${totalBooks !== 1 ? 's' : ''}`}
-//                                 </small>
-//                             </Col>
-//                             <Col xs="auto">
-//                                 <small className={`fw-bold ${activeTab === "single" ? "text-success" : "text-info"}`}>
-//                                     Total: ₹{totalAmount.toFixed(2)}
-//                                 </small>
-//                             </Col>
-//                         </Row>
-//                     </Card.Body>
-//                 </Card>
-//             )}
-//         </div>
-//     );
-// };
-
-// ex
 import React, { useState, useEffect } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
@@ -457,11 +7,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import DataApi from '../../api/dataApi';
-import PubSub from 'pubsub-js';
 import Loader from '../common/Loader';
 import { toast } from "react-toastify";
 import BarcodeScanPurchase from "../common/BarcodeScanPurchase";
 import PurchaseDataImport from "../common/PurchaseDataImport";
+
 
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
@@ -896,13 +446,7 @@ const BulkPurchasePage = () => {
                                 </Button>
                             </Col>
                         </Row>
-                        {selectedVendor && (
-                            <Alert variant="info" className="mb-4">
-                                <strong>Selected Vendor:</strong> {selectedVendor.label}
-                                <br />
-                                <small>This vendor will be used for all book purchases below</small>
-                            </Alert>
-                        )}
+
 
                         {/* Purchase Entries for Single Vendor */}
                         {renderPurchaseEntries("single")}
@@ -1154,7 +698,7 @@ const BulkPurchasePage = () => {
                         </div>
 
                         {/* Summary Section */}
-                        {multiInsertRows.length > 0 && (
+                        {/* {multiInsertRows.length > 0 && (
                             <Card className={`mt-3 ${tabType === "single" ? "border-success" : "border-info"}`}>
                                 <Card.Body>
                                     <Row className="align-items-center">
@@ -1175,7 +719,7 @@ const BulkPurchasePage = () => {
                                     </Row>
                                 </Card.Body>
                             </Card>
-                        )}
+                        )} */}
 
                         {/* Action Buttons */}
                         <div className="d-flex justify-content-between mt-4">
@@ -1219,11 +763,9 @@ const BulkPurchasePage = () => {
                         <div>
                             <h1 className="h3 fw-bold mb-1">
                                 <i className="fa-solid fa-layer-group me-2 text-purple"></i>
-                                Bulk Purchase Management
+                                Purchase Management
                             </h1>
-                            <p className="text-muted mb-0">
-                                Add multiple purchase entries in one go
-                            </p>
+
                         </div>
                         <div className="d-flex gap-2">
                             <Button
@@ -1279,7 +821,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={vendorFormData.name}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, name: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
                                         placeholder="Enter vendor name"
                                         required
                                     />
@@ -1291,7 +833,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={vendorFormData.company_name}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, company_name: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, company_name: e.target.value })}
                                         placeholder="Enter company name"
                                     />
                                 </Form.Group>
@@ -1302,7 +844,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="email"
                                         value={vendorFormData.email}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, email: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
                                         placeholder="Enter email address"
                                     />
                                 </Form.Group>
@@ -1313,7 +855,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="tel"
                                         value={vendorFormData.phone}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, phone: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
                                         placeholder="Enter phone number"
                                     />
                                 </Form.Group>
@@ -1325,7 +867,7 @@ const BulkPurchasePage = () => {
                                         as="textarea"
                                         rows={3}
                                         value={vendorFormData.address}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, address: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, address: e.target.value })}
                                         placeholder="Enter address"
                                     />
                                 </Form.Group>
@@ -1336,7 +878,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={vendorFormData.city}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, city: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, city: e.target.value })}
                                         placeholder="Enter city"
                                     />
                                 </Form.Group>
@@ -1347,7 +889,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={vendorFormData.state}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, state: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, state: e.target.value })}
                                         placeholder="Enter state"
                                     />
                                 </Form.Group>
@@ -1358,7 +900,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={vendorFormData.pincode}
-                                        onChange={(e) => setVendorFormData({...vendorFormData, pincode: e.target.value})}
+                                        onChange={(e) => setVendorFormData({ ...vendorFormData, pincode: e.target.value })}
                                         placeholder="Enter pincode"
                                     />
                                 </Form.Group>
@@ -1393,7 +935,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={bookFormData.title}
-                                        onChange={(e) => setBookFormData({...bookFormData, title: e.target.value})}
+                                        onChange={(e) => setBookFormData({ ...bookFormData, title: e.target.value })}
                                         placeholder="Enter book title"
                                         required
                                     />
@@ -1403,7 +945,7 @@ const BulkPurchasePage = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Author <span className="text-danger">*</span></Form.Label>
                                     <Select
-                                        value={authors.find((a) => a.id === bookFormData.author_id) ? 
+                                        value={authors.find((a) => a.id === bookFormData.author_id) ?
                                             { value: bookFormData.author_id, label: authors.find((a) => a.id === bookFormData.author_id).name } : null}
                                         onChange={(selectedOption) => setBookFormData({ ...bookFormData, author_id: selectedOption ? selectedOption.value : "" })}
                                         options={authors.map((a) => ({ value: a.id, label: a.name }))}
@@ -1417,7 +959,7 @@ const BulkPurchasePage = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Category <span className="text-danger">*</span></Form.Label>
                                     <Select
-                                        value={categories.find((c) => c.id === bookFormData.category_id) ? 
+                                        value={categories.find((c) => c.id === bookFormData.category_id) ?
                                             { value: bookFormData.category_id, label: categories.find((c) => c.id === bookFormData.category_id).name } : null}
                                         onChange={(selectedOption) => setBookFormData({ ...bookFormData, category_id: selectedOption ? selectedOption.value : "" })}
                                         options={categories.map((c) => ({ value: c.id, label: c.name }))}
@@ -1433,7 +975,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={bookFormData.isbn}
-                                        onChange={(e) => setBookFormData({...bookFormData, isbn: e.target.value})}
+                                        onChange={(e) => setBookFormData({ ...bookFormData, isbn: e.target.value })}
                                         placeholder="Enter ISBN number"
                                     />
                                 </Form.Group>
@@ -1444,7 +986,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="text"
                                         value={bookFormData.language}
-                                        onChange={(e) => setBookFormData({...bookFormData, language: e.target.value})}
+                                        onChange={(e) => setBookFormData({ ...bookFormData, language: e.target.value })}
                                         placeholder="Enter language"
                                     />
                                 </Form.Group>
@@ -1455,7 +997,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="number"
                                         value={bookFormData.total_copies}
-                                        onChange={(e) => setBookFormData({...bookFormData, total_copies: parseInt(e.target.value) || 1})}
+                                        onChange={(e) => setBookFormData({ ...bookFormData, total_copies: parseInt(e.target.value) || 1 })}
                                         min="1"
                                     />
                                 </Form.Group>
@@ -1466,7 +1008,7 @@ const BulkPurchasePage = () => {
                                     <Form.Control
                                         type="number"
                                         value={bookFormData.available_copies}
-                                        onChange={(e) => setBookFormData({...bookFormData, available_copies: parseInt(e.target.value) || 1})}
+                                        onChange={(e) => setBookFormData({ ...bookFormData, available_copies: parseInt(e.target.value) || 1 })}
                                         min="1"
                                     />
                                 </Form.Group>

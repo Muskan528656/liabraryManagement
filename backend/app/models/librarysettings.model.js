@@ -164,7 +164,8 @@ async function updateById(id, data, userId) {
           membership_validity_days = COALESCE($9, membership_validity_days),
           is_active = COALESCE($10, is_active),
           lastmodifieddate = NOW(),
-          lastmodifiedbyid = $11
+          lastmodifiedbyid = $11,
+          createdbyid = $12
       WHERE id = $1
       RETURNING *
     `;
@@ -180,6 +181,7 @@ async function updateById(id, data, userId) {
     data.reservation_limit,
     data.membership_validity_days,
     data.is_active,
+    userId || null,
     userId || null,
   ];
 

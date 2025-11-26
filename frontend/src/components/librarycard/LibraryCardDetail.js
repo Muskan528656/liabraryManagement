@@ -692,9 +692,6 @@ const LibraryCardDetail = ({
       "type:",
       field.type
     );
-
-    // Check if this field has lookup navigation configured
-
     if (field.type === "date") {
       try {
         const date = new Date(value);
@@ -1014,6 +1011,7 @@ const LibraryCardDetail = ({
   };
 
   const getSelectOptions = (field) => {
+    console.log("Getting select options for field:", field);
     if (!field || field.type !== "select" || !field.options) {
       return [];
     }
@@ -1022,6 +1020,7 @@ const LibraryCardDetail = ({
       return field.options;
     }
 
+    console.log("Fetching select options from external or lookup data for:", field.options);
     return externalData[field.options] || lookupData[field.options] || [];
   };
 
@@ -1323,7 +1322,7 @@ const LibraryCardDetail = ({
                   style={{ color: "var(--primary-color)" }}
                 >
                   <i className="fa-solid fa-id-card me-2"></i>
-                  Library Card Management
+                  Library Members
                 </h2>
                 <div>
                   {!isEditing ? (

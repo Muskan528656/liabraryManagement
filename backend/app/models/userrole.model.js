@@ -55,6 +55,7 @@ async function create(data) {
     ];
 
     const result = await sql.query(query, values);
+    console.log('New Role Created:', result.rows[0]);
     return result.rows[0];
   } catch (error) {
     console.error("Error in UserRole.create:", error);

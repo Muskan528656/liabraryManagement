@@ -268,7 +268,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -344,6 +344,7 @@ const DynamicCRUD = ({
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
+            console.log("Fetching data from API endpoint:", apiEndpoint);
             const response = await api.fetchAll();
             if (response.data) {
                 setData(response.data);
@@ -411,7 +412,7 @@ const DynamicCRUD = ({
                 fetchRelatedData();
             }
         }
-    }, [userInfo, fetchData, autoFetchRelated, fetchRelatedData]);
+    }, [userInfo]);
 
     const getProcessedFormFields = useCallback(() => {
         return formFields.map(field => {
@@ -469,15 +470,25 @@ const DynamicCRUD = ({
         });
     }, [formFields, relatedData]);
 
+    // const handleAdd = useCallback(() => {
+    //     setEditingItem(null);
+    //     setFormData(initialFormData);
+    //     setShowModal(true);
+    // }, [initialFormData]);
+
     const handleAdd = useCallback(() => {
+        if (customHandlers?.handleAdd) {
+            customHandlers.handleAdd(navigate);
+            return;
+        }
         setEditingItem(null);
         setFormData(initialFormData);
         setShowModal(true);
-    }, [initialFormData]);
+    }, [initialFormData, navigate]);
+
 
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
-        // Navigate to detail page instead of opening modal
         navigate(`/${apiEndpoint}/${item.id}`, {
             state: { type: apiEndpoint, rowData: item },
         });
@@ -812,7 +823,7 @@ const DynamicCRUD = ({
                             ) : (
                                 <>
                                     <TableHeader
-                                        title={`${moduleLabel} Management`}
+                                        title={`${moduleLabel}`}
                                         icon={icon}
                                         totalCount={filteredData.length}
                                         totalLabel={moduleLabel}
