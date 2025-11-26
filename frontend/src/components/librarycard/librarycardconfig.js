@@ -326,7 +326,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 errors.push("Issue date is required");
             }
 
-   
+
             if (formData.image && formData.image.size > 2 * 1024 * 1024) {
                 errors.push("Image size must be less than 2MB");
             }

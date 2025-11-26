@@ -44,6 +44,7 @@ import CategoryDetail from "./components/category/CategoryDetail";
 import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import UserRole from "./components/userrole/userrole";
 import UserRoleDetail from "./components/userrole/userroleDetail";
+import BulkPurchasePage from "./components/common/BulkPurchase";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -165,6 +166,7 @@ function App() {
             <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
+             <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />
