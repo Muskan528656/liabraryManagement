@@ -10,6 +10,33 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
+async function generatePurchaseSerialNo() {
+  try {
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+
+    const lastSerialQuery = `SELECT purchase_serial_no 
+                            FROM ${this.schema}.purchases 
+                            WHERE purchase_serial_no LIKE $1 
+                            ORDER BY createddate DESC 
+                            LIMIT 1`;
+    const pattern = `PUR-${year}-${month}-%`;
+    const lastSerialResult = await sql.query(lastSerialQuery, [pattern]);
+
+    let nextNumber = 1;
+    if (lastSerialResult.rows.length > 0) {
+      const lastSerial = lastSerialResult.rows[0].purchase_serial_no;
+      const lastNumber = parseInt(lastSerial.split('-')[3]) || 0;
+      nextNumber = lastNumber + 1;
+    }
+
+    return `PUR-${year}-${month}-${String(nextNumber).padStart(4, '0')}`;
+  } catch (error) {
+    console.error("Error generating purchase serial no:", error);
+    return `PUR-${Date.now()}`;
+  }
+}
+
 // Find all purchases with related data
 async function findAll() {
   try {
@@ -71,9 +98,35 @@ async function findById(id) {
   }
 }
 
+// Find purchase by serial number
+async function findBySerialNo(serialNo) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+    const query = `SELECT 
+                    p.*,
+                    pv.name AS vendor_name,
+                    pv.company_name AS vendor_company_name,
+                    b.title AS book_title,
+                    b.isbn AS book_isbn
+                   FROM ${this.schema}.purchases p
+                   LEFT JOIN ${this.schema}.vendors pv ON p.vendor_id = pv.id
+                   LEFT JOIN ${this.schema}.books b ON p.book_id = b.id
+                   WHERE p.purchase_serial_no = $1`;
+    const result = await sql.query(query, [serialNo]);
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+    return null;
+  } catch (error) {
+    console.error("Error in findBySerialNo:", error);
+    throw error;
+  }
+}
+
 // Create a new purchase
 async function create(purchaseData, userId) {
-
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -83,12 +136,15 @@ async function create(purchaseData, userId) {
       throw new Error("Vendor ID is required for purchase");
     }
 
+    const purchaseSerialNo = await this.generatePurchaseSerialNo();
+
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
-                   (vendor_id, book_id, quantity, unit_price, purchase_date, notes,
+                   (purchase_serial_no, vendor_id, book_id, quantity, unit_price, purchase_date, notes,
                     createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-                   VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), $7, $7) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8) 
                    RETURNING *`;
     const purchaseValues = [
+      purchaseSerialNo,
       purchaseData.vendor_id || purchaseData.vendorId,
       purchaseData.book_id || purchaseData.bookId,
       purchaseData.quantity || 1,
@@ -100,7 +156,6 @@ async function create(purchaseData, userId) {
     const purchaseResult = await sql.query(purchaseQuery, purchaseValues);
     const purchase = purchaseResult.rows[0];
 
-    // Update book inventory - add purchased copies
     const bookUpdateQuery = `UPDATE ${this.schema}.books 
                             SET total_copies = total_copies + $1,
                                 available_copies = available_copies + $1,
@@ -108,39 +163,31 @@ async function create(purchaseData, userId) {
                             WHERE id = $2`;
     await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
 
-    ////    
     return purchase;
   } catch (error) {
-    //await sql.query("ROLLBACK");
     console.error("Error in create:", error);
     throw error;
-  } finally {
   }
 }
 
 // Update purchase by ID
 async function updateById(id, purchaseData, userId) {
-  //     
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    ////    
-
-    // Get old purchase to calculate difference
     const oldPurchase = await sql.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
     if (oldPurchase.rows.length === 0) {
       throw new Error("Purchase not found");
     }
+
     const oldQty = oldPurchase.rows[0].quantity;
     const oldBookId = oldPurchase.rows[0].book_id;
     const newQty = purchaseData.quantity || oldQty;
     const newBookId = purchaseData.book_id || purchaseData.bookId || oldBookId;
     const newVendorId = purchaseData.vendor_id || purchaseData.vendorId || oldPurchase.rows[0].vendor_id;
 
-    // Update purchase record
-    // Note: total_amount might be a GENERATED column, so we don't update it
     const query = `UPDATE ${this.schema}.purchases 
                    SET vendor_id = $2, book_id = $3, quantity = $4, unit_price = $5, 
                        purchase_date = $6, notes = $7,
@@ -159,9 +206,7 @@ async function updateById(id, purchaseData, userId) {
     ];
     const result = await sql.query(query, values);
 
-    // Update book inventory if quantity or book changed
     if (oldBookId !== newBookId || oldQty !== newQty) {
-      // Remove old quantity from old book
       if (oldBookId !== newBookId) {
         await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies - $1,
@@ -169,7 +214,6 @@ async function updateById(id, purchaseData, userId) {
                                lastmodifieddate = NOW()
                            WHERE id = $2`, [oldQty, oldBookId]);
       } else {
-        // Same book, adjust difference
         const qtyDiff = newQty - oldQty;
         await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies + $1,
@@ -178,7 +222,6 @@ async function updateById(id, purchaseData, userId) {
                            WHERE id = $2`, [qtyDiff, newBookId]);
       }
 
-      // Add new quantity to new book (if different)
       if (oldBookId !== newBookId) {
         await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies + $1,
@@ -188,23 +231,18 @@ async function updateById(id, purchaseData, userId) {
       }
     }
 
-    ////    
     if (result.rows.length > 0) {
       return result.rows[0];
     }
     return null;
   } catch (error) {
-    //await sql.query("ROLLBACK");
     console.error("Error in updateById:", error);
     throw error;
-  } finally {
-    sql.release();
   }
 }
 
 // Delete purchase by ID
 async function deleteById(id) {
-
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -217,10 +255,8 @@ async function deleteById(id) {
 
     const purchaseData = purchase.rows[0];
 
-    // Delete purchase
     await sql.query(`DELETE FROM ${this.schema}.purchases WHERE id = $1`, [id]);
 
-    // Update book inventory - remove purchased copies
     await sql.query(`UPDATE ${this.schema}.books 
                        SET total_copies = total_copies - $1,
                            available_copies = GREATEST(0, available_copies - $1),
@@ -231,7 +267,6 @@ async function deleteById(id) {
   } catch (error) {
     console.error("Error in deleteById:", error);
     throw error;
-  } finally {
   }
 }
 
@@ -255,13 +290,42 @@ async function getStatistics() {
   }
 }
 
+// Get recent purchases with serial numbers
+async function getRecentPurchases(limit = 10) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+    const query = `SELECT 
+                    p.purchase_serial_no,
+                    pv.name AS vendor_name,
+                    b.title AS book_title,
+                    p.quantity,
+                    p.unit_price,
+                    p.total_amount,
+                    p.purchase_date
+                   FROM ${this.schema}.purchases p
+                   LEFT JOIN ${this.schema}.vendors pv ON p.vendor_id = pv.id
+                   LEFT JOIN ${this.schema}.books b ON p.book_id = b.id
+                   ORDER BY p.createddate DESC
+                   LIMIT $1`;
+    const result = await sql.query(query, [limit]);
+    return result.rows;
+  } catch (error) {
+    console.error("Error in getRecentPurchases:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   init,
   findAll,
   findById,
+  findBySerialNo,
   create,
   updateById,
   deleteById,
   getStatistics,
+  getRecentPurchases,
+  generatePurchaseSerialNo
 };
-

@@ -30,10 +30,10 @@ module.exports = (app) => {
       body("password", "Please enter password").isLength({ min: 6 }),
       body("firstname", "Please enter firstname").isLength({ min: 2 }),
       body("lastname", "Please enter lastname").isLength({ min: 2 }),
-      body("whatsapp_number", "Please enter whatsapp_number").isLength({
+      body("library_number", "Please enter library_number").isLength({
         min: 8,
       }),
-      body("whatsapp_settings", "WhatsApp settings must be an array")
+      body("library_settings", "library settings must be an array")
         .optional()
         .isArray(),
     ],
@@ -63,8 +63,8 @@ module.exports = (app) => {
         userrole,
         managerid,
         isactive,
-        whatsapp_number,
-        whatsapp_settings,
+        library_number,
+        library_settings,
         country_code,
       } = req.body;
       const errors = validationResult(req);
@@ -85,16 +85,16 @@ module.exports = (app) => {
 
       const duplicateUser = await Auth.checkForDuplicate(
         email,
-        whatsapp_number
+        library_number
       );
 
       if (duplicateUser) {
         if (duplicateUser.email === email) {
           return res.status(200).json({ errors: "Email already exists" });
-        } else if (duplicateUser.whatsapp_number === whatsapp_number) {
+        } else if (duplicateUser.library_number === library_number) {
           return res
             .status(200)
-            .json({ errors: "WhatsApp number already exists" });
+            .json({ errors: "library number already exists" });
         }
       }
 
@@ -142,9 +142,9 @@ module.exports = (app) => {
           managerid: managerid,
           companyid: userCompanyId,
           isactive: isactive,
-          whatsapp_number: whatsapp_number,
-          whatsapp_settings: whatsapp_settings
-            ? JSON.stringify(whatsapp_settings)
+          library_number: library_number,
+          library_settings: library_settings
+            ? JSON.stringify(library_settings)
             : null,
           country_code: country_code ? String(country_code).trim() : "+91",
         });
@@ -307,25 +307,28 @@ module.exports = (app) => {
             .json({ success, errors: "Try to login with correct credentials" });
         }
 
-      
+        //removing sensitive data from token
         delete userInfo.password;
-      
+        // delete userInfo.email;
+
+        // Store important fields before deletion
         let username = userInfo.firstname + " " + userInfo.lastname;
-        let userrole = userInfo.userrole || "USER";
+        let userrole = userInfo.userrole || "USER"; // Ensure userrole exists
         let tenantcode = userInfo.tenantcode;
         let companyid = userInfo.companyid;
-        let modules = userInfo.modules || [];
-        let plan = userInfo.plan || null;
+        let modules = userInfo.modules || []; // Ensure modules are included
+        let plan = userInfo.plan || null; // Plan information
 
+        // Delete fields that we don't want in token
         delete userInfo.firstname;
         delete userInfo.lastname;
-        delete userInfo.whatsapp_settings;
-        delete userInfo.subscription; 
-        delete userInfo.addons; 
+        delete userInfo.library_settings; // Remove library settings from token
+        delete userInfo.subscription; // Remove subscription from token
+        delete userInfo.addons; // Remove addons from token
 
         // Set fields that should be in token
         userInfo.username = username;
-        userInfo.userrole = userrole; 
+        userInfo.userrole = userrole; // Ensure userrole is set
         userInfo.companyid = companyid; // Include companyid
         userInfo.tenantcode = tenantcode; // Include tenantcode
 
@@ -350,7 +353,6 @@ module.exports = (app) => {
           { expiresIn: "7d" }
         );
         success = true;
-        //const permissions = userInfo.permissions;
         return res
           .cookie("refreshToken", refreshToken, {
             httpOnly: true,
@@ -359,7 +361,6 @@ module.exports = (app) => {
           .status(200)
           .json({ success, authToken, refreshToken });
 
-        // return res.status(200).json({ success, authToken, refreshToken });
       } catch (error) {
         console.log(error);
         res.status(400).json({ success, errors: error });
@@ -412,6 +413,6 @@ module.exports = (app) => {
         .json({ success: false, error: "Invalid or expired refresh token." });
     }
   });
-
   app.use(process.env.BASE_API_URL + "/api/auth", router);
+
 };
