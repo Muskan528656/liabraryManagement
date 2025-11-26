@@ -28,7 +28,6 @@ const LibraryCardDetail = ({
   const [issuedCount, setIssuedCount] = useState(0);
   const [submittedCount, setSubmittedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  // const [isEditing, setIsEditing] = useState(false);
   const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
   const [tempData, setTempData] = useState(null);
   const [data, setData] = useState(null);
@@ -287,7 +286,7 @@ const LibraryCardDetail = ({
                   textAlign: "center",
                 }}
               >
-                <h4 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h4>
+                <h5 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h5>
               </div>
               <Card.Body style={{ padding: "20px" }}>
                 <div className="text-center mb-3">
@@ -1135,7 +1134,7 @@ const LibraryCardDetail = ({
             value={displayValue || "—"}
             readOnly
             style={{
-              background: "var(--header-highlighter-color, #f8f9fa)",
+              // background: "var(--header-highlighter-color, #f8f9fa)",
               pointerEvents: "none",
               opacity: 0.9,
             }}
@@ -1195,9 +1194,9 @@ const LibraryCardDetail = ({
             handleFieldChange(field.key, newValue);
           }}
           style={{
-            background: !isEditing
-              ? "var(--header-highlighter-color, #f8f9fa)"
-              : "white",
+            // background: !isEditing
+            //   ? "var(--header-highlighter-color, #f8f9fa)"
+            //   : "white",
             pointerEvents: isInputEditable ? "auto" : "none",
             opacity: isInputEditable ? 1 : 0.9,
           }}
@@ -1234,8 +1233,7 @@ const LibraryCardDetail = ({
       }
       return value || "";
     } else {
-      // For display mode, use formatValue
-      // Special handling for createdbyid and lastmodifiedbyid
+    
       if ((field.key === "createdbyid" || field.key === "lastmodifiedbyid") && value) {
         return userNames[value] || value || "—";
       }
@@ -1243,30 +1241,6 @@ const LibraryCardDetail = ({
     }
   };
 
-  // const handleDelete = async () => {
-  //   if (onDelete) {
-  //     onDelete(data);
-  //   } else {
-  //     if (
-  //       window.confirm(`Are you sure you want to delete this ${moduleLabel}?`)
-  //     ) {
-  //       try {
-  //         const api = new DataApi(moduleApi);
-  //         await api.delete(id);
-  //         PubSub.publish("RECORD_SAVED_TOAST", {
-  //           title: "Success",
-  //           message: `${moduleLabel} deleted successfully`,
-  //         });
-  //         navigate(`/${moduleName}`);
-  //       } catch (error) {
-  //         PubSub.publish("RECORD_ERROR_TOAST", {
-  //           title: "Error",
-  //           message: `Failed to delete ${moduleLabel}`,
-  //         });
-  //       }
-  //     }
-  //   }
-  // };
 
   const handleDelete = (id) => {
     setDeleteId(id);
@@ -1295,51 +1269,39 @@ const LibraryCardDetail = ({
     : fields || {};
 
   return (
-    // <ModuleDetail
-    //   moduleName="librarycards"
-    //   moduleApi="librarycard"
-    //   moduleLabel="Library Card"
-    //   fields={fields}
-    //   customSections={customSections}
-    //   bookStatistics={bookStatistics}
-    // />
+  
     <Container fluid className="py-4">
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
               <div
-                className="d-flex justify-content-between align-items-center mb-4 p-4"
+                className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
                   color: "var(--primary-color)",
                   background: "var(--primary-background-color)",
                   borderRadius: "10px",
                 }}
               >
-                <h2
+                <h5
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
                   <i className="fa-solid fa-id-card me-2"></i>
                   Library Members
-                </h2>
+                </h5>
                 <div>
                   {!isEditing ? (
-                    <Button
-                      variant="outline-primary"
+                    <button
+              
                       onClick={handleEdit}
-                      style={{
-                        border: "2px solid var(--primary-color, #6f42c1)",
-                        color: "var(--primary-color, #6f42c1)",
-                        borderRadius: "8px",
-                        padding: "8px 20px",
-                        fontWeight: "600",
-                      }}
+                      className="custom-btn-primary"
+              
                     >
                       <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
-                    </Button>
+                    </button>
                   ) : (
                     <div className="d-flex gap-2">
                       <button
@@ -1361,14 +1323,14 @@ const LibraryCardDetail = ({
                     </div>
                   )}
                   {!isEditing && (
-                    <Button
-                      variant="outline-danger"
+                    <button
+                      // variant="outline-danger"
                       onClick={handleDelete}
-                      className="ms-2"
+                      className="ms-2 custom-btn-secondary "
                     >
                       <i className="fa-solid fa-trash me-2"></i>
                       Delete
-                    </Button>
+                    </button>
                   )}
                 </div>
               </div>
@@ -1379,7 +1341,7 @@ const LibraryCardDetail = ({
                   moduleName === "librarycards" && (
                     <>
                       <Col md={9}>
-                        <h5
+                        <h6
                           className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                           style={{
                             color: "var(--primary-color)",
@@ -1388,7 +1350,7 @@ const LibraryCardDetail = ({
                           }}
                         >
                           {moduleLabel} Information
-                        </h5>
+                        </h6>
                         <Row className="px-5">
                           <Col md={6}>
                             {normalizedFields.details
@@ -1415,7 +1377,7 @@ const LibraryCardDetail = ({
                           </Col>
                         </Row>
                         <Col className="pt-4">
-                          <h5
+                          <h6
                             className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                             style={{
                               color: "var(--primary-color)",
@@ -1424,7 +1386,7 @@ const LibraryCardDetail = ({
                             }}
                           >
                             Others
-                          </h5>
+                          </h6>
                           <Row className="px-5">
                             <Col md={6}>
                               {normalizedFields.other
@@ -1456,7 +1418,7 @@ const LibraryCardDetail = ({
                         {customSections.length > 0 &&
                           customSections.map((section, idx) => (
                             <>
-                              <h5
+                              <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
@@ -1466,7 +1428,7 @@ const LibraryCardDetail = ({
                                 }}
                               >
                                 {section.title}
-                              </h5>
+                              </h6>
                               <Col md={section.colSize || 12}>
                                 {section.render
                                   ? section.render(data)
@@ -1478,7 +1440,7 @@ const LibraryCardDetail = ({
                       {bookStatistics.length > 0 &&
                         bookStatistics.map((section, idx) => (
                           <Col md={section.colSize || 12} key={idx} className="mt-5">
-                            <h5
+                            <h6
                               className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                               style={{
                                 color: "var(--primary-color)",
@@ -1488,7 +1450,7 @@ const LibraryCardDetail = ({
                               }}
                             >
                               {section.title}
-                            </h5>
+                            </h6>
                             {section.render
                               ? section.render(data)
                               : section.content}

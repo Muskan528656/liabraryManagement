@@ -16,7 +16,7 @@ const Footer = () => {
     >
       <Row className="g-0 align-items-center">
         <Col lg={6} xs={12} className="text-center text-lg-start">
-          <span className="detail-h2">
+          <span className="detail-h3">
             © {new Date().getFullYear()} Library Management System. All Rights Reserved.
           </span>
         </Col>
@@ -28,7 +28,7 @@ const Footer = () => {
               style={{ color: "#6f42c1" }}
               title="Facebook"
             >
-              <i className="fs-5 fa-brands fa-facebook-f"></i>
+              <i className="fs-7 fa-brands fa-facebook-f"></i>
             </a>
             <a
               href="#"
@@ -36,7 +36,7 @@ const Footer = () => {
               style={{ color: "#6f42c1" }}
               title="Twitter"
             >
-              <i className="fs-5 fa-brands fa-twitter"></i>
+              <i className="fs-7 fa-brands fa-twitter"></i>
             </a>
             <a
               href="#"
@@ -44,7 +44,7 @@ const Footer = () => {
               style={{ color: "#6f42c1" }}
               title="LinkedIn"
             >
-              <i className="fs-5 fa-brands fa-linkedin"></i>
+              <i className="fs-7 fa-brands fa-linkedin"></i>
             </a>
             <a
               href="#"
@@ -52,7 +52,7 @@ const Footer = () => {
               style={{ color: "#6f42c1" }}
               title="Instagram"
             >
-              <i className="fs-5 fa-brands fa-instagram"></i>
+              <i className="fs-7 fa-brands fa-instagram"></i>
             </a>
           </div>
         </Col>

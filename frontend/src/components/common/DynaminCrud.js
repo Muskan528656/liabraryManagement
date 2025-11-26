@@ -865,7 +865,7 @@ const DynamicCRUD = ({
                                                     //     textDecoration: "none"
                                                     // }}
                                                     >
-                                                        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+                                                        <i className="fs-7 fa-solid fa-pen-to-square"></i>
                                                     </button>
                                                 )}
                                                 {allowDelete && (
@@ -880,7 +880,7 @@ const DynamicCRUD = ({
                                                     //     textDecoration: "none"
                                                     // }}
                                                     >
-                                                        <i className="fs-5 fa-solid fa-trash"></i>
+                                                        <i className="fs-7 fa-solid fa-trash"></i>
                                                     </button>
                                                 )}
                                                 {customHandlers?.handleBarcodePreview && (
@@ -891,7 +891,7 @@ const DynamicCRUD = ({
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >
-                                                        <i className="fs-5 fa-solid fa-eye me-1"></i>
+                                                        <i className="fs-7 fa-solid fa-eye me-1"></i>
                                                         {/* Preview */}
                                                     </button>
                                                 )}

@@ -11,9 +11,6 @@ function init(schema_name) {
 }
 
 
-// Get dashboard stats
-//dailyActivity, booksByCategory, monthlyTrend
-
 const getDashboardStats = async () => {
   try {
     console.log('bookCountResult ');

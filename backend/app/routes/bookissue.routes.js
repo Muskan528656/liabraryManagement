@@ -160,10 +160,8 @@ module.exports = (app) => {
               related_type: "book_issue"
             });
 
-            // Send real-time notification via socket
             if (req.app.get('io')) {
               const io = req.app.get('io');
-              // Send to both room formats for compatibility
               io.to(`user_${issue.issued_to}`).emit("new_notification", notification);
               io.to(issue.issued_to).emit("new_notification", notification);
               console.log(`📨 Sent book issue notification to user ${issue.issued_to} in rooms: user_${issue.issued_to}, ${issue.issued_to}`);
@@ -211,7 +209,6 @@ module.exports = (app) => {
     }
   );
 
-  // Calculate penalty for overdue book
   router.get("/penalty/:id", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -223,7 +220,7 @@ module.exports = (app) => {
     }
   });
 
-  // Process payment for fine/penalty (STUDENT can pay their own fines)
+
   router.post("/payment/:id", fetchUser, async (req, res) => {
     try {
       const { amount, payment_method, payment_date } = req.body;
@@ -235,22 +232,21 @@ module.exports = (app) => {
       BookIssue.init(req.userinfo.tenantcode);
       const userId = req.userinfo.id;
       
-      // Get book issue details
+    
       const issue = await BookIssue.findById(req.params.id);
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }
 
-      // Check if user owns this issue (STUDENT can only pay their own fines)
+    
       if (req.userinfo.userrole === "STUDENT" && issue.issued_to !== userId) {
         return res.status(403).json({ errors: "You can only pay for your own fines" });
       }
 
-      // Calculate current penalty
       const penaltyData = await BookIssue.calculatePenalty(req.params.id);
       const totalPenalty = penaltyData.penalty || 0;
       
-      // Get current paid amount
+     
       const currentPaid = issue.paid_amount || 0;
       const currentDue = totalPenalty - currentPaid;
 
@@ -258,7 +254,7 @@ module.exports = (app) => {
         return res.status(400).json({ errors: `Payment amount cannot exceed due amount of ₹${currentDue}` });
       }
 
-      // Update paid amount
+    
       const sql = require("../models/db.js");
       const updateQuery = `
         UPDATE ${req.userinfo.tenantcode}.book_issues 
@@ -276,10 +272,7 @@ module.exports = (app) => {
 
       const updatedIssue = result.rows[0];
 
-      // Create payment record (optional - if you have a payments table)
-      // For now, we'll just update the paid_amount in book_issues
 
-      // Create notification for the user
       try {
         const Notification = require("../models/notification.model.js");
         Notification.init(req.userinfo.tenantcode);
@@ -294,7 +287,7 @@ module.exports = (app) => {
           related_type: "book_issue"
         });
 
-        // Send real-time notification
+     
         if (req.app.get('io')) {
           const io = req.app.get('io');
           const notification = {

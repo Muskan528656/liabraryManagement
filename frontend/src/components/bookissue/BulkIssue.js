@@ -18,7 +18,6 @@ import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 
 const BulkIssue = () => {
-  // --- State Management ---
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
   const [users, setUsers] = useState([]);
