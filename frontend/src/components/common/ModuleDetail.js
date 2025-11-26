@@ -681,39 +681,40 @@ const ModuleDetail = ({
         <ScrollToTop />
         <Row className="justify-content-center">
           <Col lg={12} xl={12}>
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-sm detail-h4">
               <Card.Body>
                 <div
-                  className="d-flex justify-content-between align-items-center mb-4 p-4"
+                  className="d-flex justify-content-between align-items-center mb-4 p-2"
                   style={{
                     color: "var(--primary-color)",
                     background: "var(--primary-background-color)",
                     borderRadius: "10px",
                   }}
                 >
-                  <h2
+                  <h5
                     className="fw-bold mb-1"
                     style={{ color: "var(--primary-color)" }}
                   >
-                    {icon && <i className={`${icon} me-2`}></i>}
+                    {icon && <i className={`${icon} me-2 fs-6`}></i>}
                     {moduleLabel}
-                  </h2>
+                  </h5>
                   <div>
                     {!isEditing ? (
-                      <Button
-                        variant="outline-primary"
+                      <button
+                        // variant="outline-primary"
                         onClick={handleEdit}
-                        style={{
-                          border: "2px solid var(--primary-color, #6f42c1)",
-                          color: "var(--primary-color, #6f42c1)",
-                          borderRadius: "8px",
-                          padding: "8px 20px",
-                          fontWeight: "600",
-                        }}
+                        // style={{
+                        //   border: "2px solid var(--primary-color, #6f42c1)",
+                        //   color: "var(--primary-color, #6f42c1)",
+                        //   borderRadius: "8px",
+                        //   padding: "8px 20px",
+                        //   fontWeight: "600",
+                        // }}
+                        className="custom-btn-primary"
                       >
                         <i className="fa-solid fa-edit me-2"></i>
                         Edit {moduleLabel}
-                      </Button>
+                      </button>
                     ) : (
                       <div className="d-flex gap-2">
                         <button
@@ -725,7 +726,7 @@ const ModuleDetail = ({
                           {saving ? "Saving..." : "Save"}
                         </button>
                         <button
-                          className="custom-btn-secondary "
+                          className="custom-btn-secondary"
                           onClick={handleCancel}
                           disabled={saving}
                         >
@@ -735,20 +736,20 @@ const ModuleDetail = ({
                       </div>
                     )}
                     {!isEditing && (
-                      <Button
-                        variant="outline-danger"
+                      <button
+                        // variant="outline-danger"
                         onClick={handleDelete}
-                        className="ms-2"
+                        className="custom-btn-secondary ms-2"
                       >
                         <i className="fa-solid fa-trash me-2"></i>
                         Delete
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
                 <Row className="mt-4">
                   <Col md={12} className="mb-4">
-                    <h5
+                    <h6
                       className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                       style={{
                         color: "var(--primary-color)",
@@ -757,7 +758,7 @@ const ModuleDetail = ({
                       }}
                     >
                       {moduleLabel} Information
-                    </h5>
+                    </h6>
                   </Col>
                   <Row className="px-5">
                     {normalizedFields && normalizedFields.details && (
@@ -823,8 +824,8 @@ const ModuleDetail = ({
                                             : "—";
                                         })()}
                                         style={{
-                                          background:
-                                            "var(--header-highlighter-color, #f8f9fa)",
+                                          // background:
+                                          //   "var(--header-highlighter-color, #f8f9fa)",
                                           pointerEvents: "none",
                                           opacity: 0.9,
                                         }}
@@ -884,9 +885,9 @@ const ModuleDetail = ({
                                       handleFieldChange(field.key, newValue);
                                     }}
                                     style={{
-                                      background: !isEditing
-                                        ? "var(--header-highlighter-color, #f8f9fa)"
-                                        : "white",
+                                      // background: !isEditing
+                                      //   ? "var(--header-highlighter-color, #f8f9fa)"
+                                      //   : "white",
                                       pointerEvents: isEditing ? "auto" : "none",
                                       opacity: isEditing ? 1 : 0.9,
                                     }}
@@ -918,7 +919,7 @@ const ModuleDetail = ({
                                     "linear-gradient(to right, #f8f9fa, #ffffff)",
                                 }}
                               >
-                                <h5
+                                <h6
                                   style={{
                                     margin: 0,
                                     color: "#6f42c1",
@@ -931,7 +932,7 @@ const ModuleDetail = ({
                                 >
                                   <i className="fa-solid fa-link"></i>
                                   Related Records
-                                </h5>
+                                </h6>
                               </div>
 
                               <div style={{ padding: "24px" }}>
@@ -1107,7 +1108,7 @@ const ModuleDetail = ({
                 {normalizedAddressFields && normalizedAddressFields?.address?.length > 0 && (
                   <Row className="mt-4">
                     <Col md={12} className="mb-4">
-                      <h5
+                      <h6
                         className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
@@ -1116,7 +1117,7 @@ const ModuleDetail = ({
                         }}
                       >
                         Address Information
-                      </h5>
+                      </h6>
                     </Col>
                     <Row className="px-5">
                       {normalizedAddressFields && normalizedAddressFields.address && (
@@ -1182,8 +1183,8 @@ const ModuleDetail = ({
                                               : "—";
                                           })()}
                                           style={{
-                                            background:
-                                              "var(--header-highlighter-color, #f8f9fa)",
+                                            // background:
+                                            //   "var(--header-highlighter-color, #f8f9fa)",
                                             pointerEvents: "none",
                                             opacity: 0.9,
                                           }}
@@ -1245,9 +1246,9 @@ const ModuleDetail = ({
                                         handleFieldChange(field.key, newValue);
                                       }}
                                       style={{
-                                        background: !isEditing
-                                          ? "var(--header-highlighter-color, #f8f9fa)"
-                                          : "white",
+                                        // background: !isEditing
+                                        //   ? "var(--header-highlighter-color, #f8f9fa)"
+                                        //   : "white",
                                         pointerEvents: isEditing ? "auto" : "none",
                                         opacity: isEditing ? 1 : 0.9,
                                       }}
@@ -1279,7 +1280,7 @@ const ModuleDetail = ({
                                       "linear-gradient(to right, #f8f9fa, #ffffff)",
                                   }}
                                 >
-                                  <h5
+                                  <h6
                                     style={{
                                       margin: 0,
                                       color: "#6f42c1",
@@ -1292,7 +1293,7 @@ const ModuleDetail = ({
                                   >
                                     <i className="fa-solid fa-link"></i>
                                     Related Records
-                                  </h5>
+                                  </h6>
                                 </div>
 
                                 <div style={{ padding: "24px" }}>
@@ -1469,7 +1470,7 @@ const ModuleDetail = ({
                 {normalizedOtherFields.other.length > 0 &&
                   <Row className="mt-4">
                     <Col md={12} className="mb-4">
-                      <h5
+                      <h6
                         className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
@@ -1478,7 +1479,7 @@ const ModuleDetail = ({
                         }}
                       >
                         Others
-                      </h5>
+                      </h6>
                     </Col>
                     <Row className="px-5">
                       {normalizedOtherFields && normalizedOtherFields.other && (
@@ -1544,8 +1545,8 @@ const ModuleDetail = ({
                                               : "—";
                                           })()}
                                           style={{
-                                            background:
-                                              "var(--header-highlighter-color, #f8f9fa)",
+                                            // background:
+                                            //   "var(--header-highlighter-color, #f8f9fa)",
                                             pointerEvents: "none",
                                             opacity: 0.9,
                                           }}
@@ -1608,9 +1609,9 @@ const ModuleDetail = ({
                                             handleFieldChange(field.key, newValue);
                                           }}
                                           style={{
-                                            background: !isEditing
-                                              ? "var(--header-highlighter-color, #f8f9fa)"
-                                              : "white",
+                                            // background: !isEditing
+                                            //   ? "var(--header-highlighter-color, #f8f9fa)"
+                                            //   : "white",
                                             pointerEvents: isEditing ? "auto" : "none",
                                             opacity: isEditing ? 1 : 0.9,
                                           }}

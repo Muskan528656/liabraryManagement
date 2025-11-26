@@ -19,43 +19,39 @@ const TableHeader = ({
   showSearch = true,
 }) => {
   return (
-   
-    <div >
-      <div className="d-flex justify-content-between align-items-center mb-4 p-4"
+      <div className="d-flex justify-content-between align-items-center mb-4 p-2"
         style={{
           color: "var(--primary-color)",
           background: "var(--primary-background-color)",
           borderRadius: "10px",
         }}>
         <div className="d-flex align-items-center gap-3">
-          <h2 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
-            {icon && <i className={`${icon} me-2`}></i>}
+          <h5 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
+            {icon && <i className={`${icon} me-2 fs-6`}></i>}
             {title}
-          </h2>
+          </h5>
           {totalCount !== undefined && (
             <Badge bg="light" text="dark" >
-            
-              <span className="detail-h2">Total: {totalCount} {totalLabel || (totalCount === 1 ? "Item" : "Items")}</span>
+              <span className="detail-h3">Total: {totalCount} {totalLabel || (totalCount === 1 ? "Item" : "Items")}</span>
             </Badge>
           )}
           {showFiltered && filteredCount !== undefined && (
             <Badge bg="info">
               <i className="fa-solid fa-filter me-1"></i>
-              <span className="detail-h2">Filtered: {filteredCount}</span>
+              <span className="detail-h3">Filtered: {filteredCount}</span>
             </Badge>
           )}
         </div>
-        <div className="d-flex gap-2 flex-wrap">
+        <div className="d-flex gap-2 flex-wrap detail-h3">
           {showSearch && (
-            <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-              <InputGroup.Text style={{ padding: "0.375rem 0.75rem" }}>
-                <i className="fa-solid fa-search" style={{ color: "#6f42c1", fontSize: "0.875rem" }}></i>
+            <InputGroup size="sm" style={{ width: "250px", maxWidth: "100%" }}>
+              <InputGroup.Text >
+                <i className="fa-solid fa-search" style={{ color: "var(--primary-color)"}}></i>
               </InputGroup.Text>
               <Form.Control
                 placeholder={searchPlaceholder}
                 value={searchValue || ""}
                 onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-                style={{ padding: "0.375rem 0.75rem" }}
               />
             </InputGroup>
           )}
@@ -64,12 +60,12 @@ const TableHeader = ({
               <Dropdown.Toggle
                 variant="outline-secondary"
                 size="sm"
-                className="custom-btn-setting"
+                className="custom-btn-table-header"
               >
-                <i className="fs-5 fa-solid fa-gear"></i>
+                <i className="fs-7 fa-solid fa-gear"></i>
               </Dropdown.Toggle>
               <Dropdown.Menu align="end" style={{ minWidth: "200px", maxHeight: "400px", overflowY: "auto" }}>
-                <Dropdown.Header className="fs-6 fw-bold">Show/Hide Columns</Dropdown.Header>
+                <Dropdown.Header className="detail-h3 fw-bold">Show/Hide Columns</Dropdown.Header>
                 <Dropdown.Divider />
                 {allColumns.map((col) => (
                   <Dropdown.Item
@@ -78,9 +74,8 @@ const TableHeader = ({
                       e.stopPropagation();
                       onToggleColumnVisibility && onToggleColumnVisibility(col.field);
                     }}
-                    style={{ padding: "8px 16px" }}
                   >
-                    <div className="d-flex align-items-center detail-h2">
+                    <div className="d-flex align-items-center detail-h3">
                       <input
                         type="checkbox"
                         checked={visibleColumns[col.field] !== false}
@@ -110,9 +105,6 @@ const TableHeader = ({
           ))}
         </div>
       </div>
-    </div>
-    //   {/* </Card.Body>
-    // </Card> */}
   );
 };
 

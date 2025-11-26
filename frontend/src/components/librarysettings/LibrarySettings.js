@@ -167,42 +167,34 @@ const Settings = () => {
   };
 
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4 detail-h4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-
           <Card className="border-0 shadow-sm">
-            <Card.Body className="">
+            <Card.Body>
               <div
-                className="d-flex justify-content-between align-items-center mb-4 p-4"
+                className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
                   color: "var(--primary-color)",
                   background: "var(--primary-background-color)",
                   borderRadius: "10px",
                 }}
               >
-                <h2
+                <h5
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
-                  <i className="fa-solid fa-id-card me-2"></i>
-                  Settings
-                </h2>
+                  <i className="fa-solid fa-id-card me-2 fs-6"></i>
+                  Setting Management
+                </h5>
                 {!isEditingSettings ? (
-                  <Button
-                    variant="outline-primary"
+                  <button
                     onClick={handleSettingsEdit}
-                    style={{
-                      border: "2px solid var(--primary-color)",
-                      color: "var(--primary-color)",
-                      borderRadius: "8px",
-                      padding: "8px 20px",
-                      fontWeight: "600",
-                    }}
+                    className="custom-btn-table-header "
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Settings
-                  </Button>
+                  </button>
                 ) : (
                   <div className="d-flex gap-2">
                     <button
@@ -224,7 +216,7 @@ const Settings = () => {
               </div>
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
-                  <h5
+                  <h6
                     className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                     style={{
                       color: "var(--primary-color)",
@@ -233,7 +225,7 @@ const Settings = () => {
                     }}
                   >
                     Setting Information
-                  </h5>
+                  </h6>
                 </Col>
                 <Row className="px-5">
                   <Col md={6}>

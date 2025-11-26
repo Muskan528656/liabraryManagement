@@ -28,15 +28,19 @@
   font-size: small;
 }
 
+.detail-h4 {
+  font-size: 0.9rem;
+}
+
 .custom-btn-primary {
   background-color: var(--primary-background-color) !important;
-  border: 2px solid var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: "2px";
-  font-weight: 600;
-  border-radius: 10px;
+  border-radius: 5px;
   color: var(--primary-color);
-  padding: 8px 20px;
+  padding: 8px 8px !important;
   font-weight: bold;
+  font-size: small;
 }
 
 .custom-btn-primary:hover {
@@ -46,18 +50,18 @@
 
 .custom-btn-secondary {
   background-color: var(--primary-background-color) !important;
-  border: 2px solid var(--header-list-item-color);
+  border: 1px solid var(--header-list-item-color);
   border-radius: "2px";
   color: var(--header-list-item-color);
-  border-radius: 10px;
-  font-weight: 600;
-  padding: 8px 20px;
+  border-radius: 5px;
+  padding: 8px 8px !important;
   font-weight: bold;
+  font-size: small;
 }
 
 .custom-btn-secondary:hover {
   background-color: var(--header-list-item-color) !important;
-  border: 2px solid var(--ui-white);
+  border: 1px solid var(--ui-white);
   color: var(--ui-white);
 }
 
@@ -68,6 +72,7 @@
   color: var(--primary-color);
   padding: 8px 8px !important;
   font-weight: bold;
+  font-size: small;
 }
 
 .custom-btn-setting:hover {
@@ -78,12 +83,12 @@
 .custom-btn-table-header {
   background-color: var(--primary-background-color) !important;
   border: 1px solid  var(--primary-color) !important;
-  border-radius: "2px";
   font-weight: 600;
   border-radius: 5px;
   color: var(--primary-color);
   padding: 8px 8px !important;
   font-weight: bold;
+  font-size: small;
 }
 
 .custom-btn-table-header:hover {
@@ -156,7 +161,7 @@ a {
 .badge.bg-info {
   background-color: var(--primary-color) !important;
   color: var(--ui-white) !important;
-  padding: 10px 40px 10px 40px;
+  padding: 5px 30px 5px 30px;
   border-radius: 15px;
 }
 
@@ -191,7 +196,7 @@ table.fc-col-header {
   /* background-color: rgb(111, 66, 193) !important; */
   background-color: rgb(250, 250, 250) !important;
   color: rgb(0, 0, 0) !important;
-  font-size: 1.1rem !important;
+  /* font-size: 1.1rem !important; */
   border-color: #eee !important;
 }
 
@@ -213,11 +218,12 @@ table.fc-col-header {
 .btn,
 .form-control {
   word-break: break-word !important;
+  font-size: 0.9rem !important;
 }
 
 /* Slightly larger input padding for readability */
 .form-control {
-  padding: 0.5rem 0.75rem !important;
+  /* padding: 0.5rem 0.75rem !important; */
 }
 
 /* Tidy card visuals */
@@ -237,7 +243,7 @@ table.fc-col-header {
 .nav-link[aria-selected=false] {
   /* color: red !important; */
   /* border: 2px solid red !important; */
-  font-size: 1.2rem !important;
+  /* font-size: 1.2rem !important; */
   font-style: bold !important;
   /* color: #555353 !important; */
 
@@ -1501,7 +1507,7 @@ textarea.form-control[required] {
   padding: 12px 16px;
   text-align: left;
   font-weight: 600;
-  font-size: 20px;
+  /* font-size: 20px; */
   color: #2d3748;
   /* text-transform: uppercase; */
   letter-spacing: 0.5px;
@@ -1533,8 +1539,8 @@ textarea.form-control[required] {
 }
 
 .salesforce-table tbody td {
-  padding: 12px 16px;
-  font-size: 17px;
+  padding: 2px 5px;
+  /* font-size: 17px; */
   color: #2d3748;
   border-right: 1px solid #e2e8f0;
   vertical-align: middle;
@@ -1557,7 +1563,7 @@ textarea.form-control[required] {
 
 /* Pagination styling - Using Sidebar Purple Colors */
 .pagination li{
-      --bs-pagination-font-size: 1.2rem !important;
+      --bs-pagination-font-size: 0.8rem !important;
 }
 .pagination-container .pagination,
 .salesforce-table+.pagination-container .pagination {
@@ -1569,7 +1575,7 @@ textarea.form-control[required] {
   color: #6a6573;
   border-color: #e2e8f0;
   padding: 8px 12px;
-  font-size: 19px !important;
+  /* font-size: 19px !important; */
   background-color: #ffffff;
 }
 

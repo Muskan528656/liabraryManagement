@@ -509,7 +509,7 @@ const User = () => {
         }}
       // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+        <i className="fs-7 fa-solid fa-pen-to-square"></i>
       </button>
       <button
         // variant="link"
@@ -521,7 +521,7 @@ const User = () => {
         }}
       // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fs-5 fa-solid fa-trash"></i>
+        <i className="fs-7 fa-solid fa-trash"></i>
       </button>
     </>
   );

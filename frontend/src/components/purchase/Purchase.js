@@ -797,7 +797,7 @@ const Purchase = () => {
         }}
         className="custom-btn-edit"
       >
-        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+        <i className="fs-7 fa-solid fa-pen-to-square"></i>
       </button>
       <button
 
@@ -808,7 +808,7 @@ const Purchase = () => {
         }}
         className="custom-btn-delete"
       >
-        <i className="fs-5 fa-solid fa-trash"></i>
+        <i className="fs-7 fa-solid fa-trash"></i>
       </button>
     </>
   );
