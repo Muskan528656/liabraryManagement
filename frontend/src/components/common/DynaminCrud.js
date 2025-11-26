@@ -70,6 +70,7 @@ const DynamicCRUD = ({
     const [formData, setFormData] = useState(initialFormData);
     const [visibleColumns, setVisibleColumns] = useState({});
     const [relatedData, setRelatedData] = useState({});
+    const [isEditable, setIsEditable] = useState(false);
 
 
 
@@ -97,17 +98,19 @@ const DynamicCRUD = ({
         );
     }, []);
 
-    const handleNameClick = useCallback((item , isEdit) => {
-
+    const handleNameClick = useCallback((item, isEdit) => {
+        console.log("handleNameClick called with isEdit:", isEdit);
+        setIsEditable(isEdit)
+        console.log("isEditable in DynamicCRUD:", isEditable);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
         }
 
         navigate(`/${apiEndpoint}/${item.id}`, {
-            state: { type: apiEndpoint, rowData: item},
+            state: { type: apiEndpoint, rowData: item },
         });
-       
+
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
@@ -115,14 +118,14 @@ const DynamicCRUD = ({
             if (enablePrefetch) {
                 try {
                     // navigate(`/${apiEndpoint}/${item.id}`);
-                    if(isEdit){
+                    if (isEdit) {
                         navigate(`/${apiEndpoint}/${item.id}`, {
-                            state: { isEdit: true, rowData: item},
+                            state: { isEdit: true, rowData: item },
                         });
-                    }else{
+                    } else {
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
-                     
+
                     // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
@@ -769,7 +772,9 @@ const DynamicCRUD = ({
                     prefetchData={selectedItem}
                     lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
-                    
+                    setIsEditable={isEditable}
+                    isEditablee={isEditable}
+
                 />
             </Container>
         );
@@ -778,7 +783,7 @@ const DynamicCRUD = ({
     return (
         <Container fluid className="py-4">
             <ScrollToTop />
-{/* 
+            {/* 
             <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
                 <Col>
                     <TableHeader
@@ -799,94 +804,94 @@ const DynamicCRUD = ({
             </Row> */}
 
             <Row className="justify-content-center">
-                    <Col lg={12} xl={12}>
+                <Col lg={12} xl={12}>
                     <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
                                 <Loader />
                             ) : (
                                 <>
-                                <TableHeader
-                        title={`${moduleLabel} Management`}
-                        icon={icon}
-                        totalCount={filteredData.length}
-                        totalLabel={moduleLabel}
-                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
-                        searchValue={searchTerm}
-                        onSearchChange={showSearch ? setSearchTerm : null}
-                        showColumnVisibility={showColumnVisibility}
-                        allColumns={columns}
-                        visibleColumns={visibleColumns}
-                        onToggleColumnVisibility={toggleColumnVisibility}
-                        actionButtons={actionButtons}
-                    />
-                                <ResizableTable
-                                    data={filteredData}
-                                    columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
-                                    loading={loading}
-                                    showCheckbox={showCheckbox}
-                                    selectedItems={selectedItems}
-                                    onSelectionChange={setSelectedItems}
-                                    searchTerm={searchTerm}
-                                    onSearchChange={showSearch ? setSearchTerm : null}
-                                    currentPage={currentPage}
-                                    totalRecords={filteredData.length}
-                                    recordsPerPage={recordsPerPage}
-                                    onPageChange={setCurrentPage}
-                                    showSerialNumber={true}
-                                    showActions={showActions}
-                                    actionsRenderer={showActions ? (item) => (
-                                        <div className="d-flex gap-2 justify-content-center">
-                                            {allowEdit && (
-                                                <button
-                                                    // variant="link"
-                                                    onClick={() => handleNameClick(item , true)}
-                                                    title="Edit"
-                                                    className="custom-btn-edit"
+                                    <TableHeader
+                                        title={`${moduleLabel} Management`}
+                                        icon={icon}
+                                        totalCount={filteredData.length}
+                                        totalLabel={moduleLabel}
+                                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                                        searchValue={searchTerm}
+                                        onSearchChange={showSearch ? setSearchTerm : null}
+                                        showColumnVisibility={showColumnVisibility}
+                                        allColumns={columns}
+                                        visibleColumns={visibleColumns}
+                                        onToggleColumnVisibility={toggleColumnVisibility}
+                                        actionButtons={actionButtons}
+                                    />
+                                    <ResizableTable
+                                        data={filteredData}
+                                        columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
+                                        loading={loading}
+                                        showCheckbox={showCheckbox}
+                                        selectedItems={selectedItems}
+                                        onSelectionChange={setSelectedItems}
+                                        searchTerm={searchTerm}
+                                        onSearchChange={showSearch ? setSearchTerm : null}
+                                        currentPage={currentPage}
+                                        totalRecords={filteredData.length}
+                                        recordsPerPage={recordsPerPage}
+                                        onPageChange={setCurrentPage}
+                                        showSerialNumber={true}
+                                        showActions={showActions}
+                                        actionsRenderer={showActions ? (item) => (
+                                            <div className="d-flex gap-2 justify-content-center">
+                                                {allowEdit && (
+                                                    <button
+                                                        // variant="link"
+                                                        onClick={() => handleNameClick(item, true)}
+                                                        title="Edit"
+                                                        className="custom-btn-edit"
                                                     // style={{
                                                     //     padding: "4px 6px",
                                                     //     color: "#0d6efd",
                                                     //     textDecoration: "none"
                                                     // }}
-                                                >
-                                                    <i className="fs-5 fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                            )}
-                                            {allowDelete && (
-                                                <button
-                                                    // variant="link"
-                                                    onClick={() => handleDelete(item.id)}
-                                                    title="Delete"
-                                                    className="custom-btn-delete"
+                                                    >
+                                                        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                )}
+                                                {allowDelete && (
+                                                    <button
+                                                        // variant="link"
+                                                        onClick={() => handleDelete(item.id)}
+                                                        title="Delete"
+                                                        className="custom-btn-delete"
                                                     // style={{
                                                     //     padding: "4px 6px",
                                                     //     color: "#dc3545",
                                                     //     textDecoration: "none"
                                                     // }}
-                                                >
-                                                    <i className="fs-5 fa-solid fa-trash"></i>
-                                                </button>
-                                            )}
-                                            {customHandlers?.handleBarcodePreview && (
-                                                <button
-                                                    // variant="info"
-                                                    className="custom-btn-edit"
-                                                    // size="sm"
-                                                    onClick={() => customHandlers.handleBarcodePreview(item)}
-                                                    title="View Barcode"
-                                                >
-                                                    <i className="fs-5 fa-solid fa-eye me-1"></i>
-                                                    {/* Preview */}
-                                                </button>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                    emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
-                                />
+                                                    >
+                                                        <i className="fs-5 fa-solid fa-trash"></i>
+                                                    </button>
+                                                )}
+                                                {customHandlers?.handleBarcodePreview && (
+                                                    <button
+                                                        // variant="info"
+                                                        className="custom-btn-edit"
+                                                        // size="sm"
+                                                        onClick={() => customHandlers.handleBarcodePreview(item)}
+                                                        title="View Barcode"
+                                                    >
+                                                        <i className="fs-5 fa-solid fa-eye me-1"></i>
+                                                        {/* Preview */}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
+                                    />
                                 </>
-                                
+
                             )}
-                            
+
                         </Card.Body>
                     </Card>
                 </Col>
