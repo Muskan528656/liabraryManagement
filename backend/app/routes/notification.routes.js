@@ -35,6 +35,32 @@ module.exports = (app) => {
     }
   });
 
+
+  // Get book submission due notifications
+    router.get("/due_notifications", fetchUser, async (req, res) => {
+  
+    // console.log("Fetching notifications for book submissions nearing due date...");
+    // res.send('Notifications endpoint hit')
+      try {
+        const notifications = await BookSubmission.checkbeforeDue();
+        // console.log('notification ', notifications);
+        
+        return res.status(200).json({
+          success: true,
+          notifications,
+        });
+  
+      } catch (error) {
+        console.error("❌ Error fetching notifications:", error);
+  
+        return res.status(500).json({
+          success: false,
+          message: "Failed to fetch notifications",
+          error: error.message
+        });
+      }
+    });
+
   // Get unread notification count
   router.get("/unread-count", fetchUser, async (req, res) => {
     try {

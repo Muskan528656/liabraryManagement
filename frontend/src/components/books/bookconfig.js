@@ -1,11 +1,10 @@
 // config/booksConfig.js
 export const getBooksConfig = (externalData = {}, props = {}) => {
-    // Multiple data sources - priority order
     const authors =
-        props.authors ||           // 1. Props se aaya data (highest priority)
-        externalData.authors ||    // 2. Fetched data  
-        externalData.author ||     // 3. Alternative key
-        [];                       // 4. Default
+        props.authors ||
+        externalData.authors ||
+        externalData.author ||
+        [];
 
     const categories =
         props.categories ||
@@ -134,8 +133,8 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
             categories: "category"
         },
         features: {
-            showBulkInsert: true,        
-            showImportExport: true,       
+            showBulkInsert: true,
+            showImportExport: true,
             showDetailView: true,         // Detail view enable
             showSearch: true,             // Search enable
             showColumnVisibility: true,   // Column toggle enable
@@ -146,15 +145,15 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
             allowDelete: true,            // Delete permission
         },
 
-        details: [
-            { key: "title", label: "Title", type: "text" },
-            { key: "author_name", label: "Author", type: "text" },
-            { key: "category_name", label: "Category", type: "text" },
-            { key: "isbn", label: "ISBN", type: "text" },
-            { key: "language", label: "Language", type: "text" },
-            { key: "total_copies", label: "Total Copies", type: "number" },
-            { key: "available_copies", label: "Available Copies", type: "number" },
-        ],
+        // details: [
+        //     { key: "title", label: "Title", type: "text" },
+        //     { key: "author_name", label: "Author", type: "text" },
+        //     { key: "category_name", label: "Category", type: "text" },
+        //     { key: "isbn", label: "ISBN", type: "text" },
+        //     { key: "language", label: "Language", type: "text" },
+        //     { key: "total_copies", label: "Total Copies", type: "number" },
+        //     { key: "available_copies", label: "Available Copies", type: "number" },
+        // ],
         lookupNavigation: {
             author_name: {
                 path: "author",

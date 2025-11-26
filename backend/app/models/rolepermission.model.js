@@ -122,12 +122,12 @@ const RolePermission = {
 
   // Bulk update permissions for a role
   bulkUpdate: async function (role, permissions) {
-    const client = await sql.connect();
+    // const client = await sql.connect();
     try {
-      await client.query("BEGIN");
+      // await client.query("BEGIN");
 
       for (const perm of permissions) {
-        await client.query(
+        await sql.query(
           `INSERT INTO public.role_permissions 
            (role, module_name, can_create, can_read, can_update, can_delete, updated_at)
            VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -149,14 +149,11 @@ const RolePermission = {
         );
       }
 
-      await client.query("COMMIT");
       return { success: true };
     } catch (error) {
-      await client.query("ROLLBACK");
       console.error("Error bulk updating permissions:", error);
       throw error;
     } finally {
-      client.release();
     }
   }
 };

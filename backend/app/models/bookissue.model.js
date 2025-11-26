@@ -189,12 +189,12 @@ async function findByCardId(cardId) {
 
 // Issue a book (checkout)
 async function issueBook(issueData, userId) {
-  const client = await sql.connect();
+  // const sql = await sql.connect();
   try {
-    await client.query("BEGIN");
+    //   await sql.query("BEGIN");
 
     // Check if book is available
-    const bookCheck = await client.query(`SELECT available_copies FROM ${schema}.books WHERE id = $1`, [issueData.book_id]);
+    const bookCheck = await sql.query(`SELECT available_copies FROM ${schema}.books WHERE id = $1`, [issueData.book_id]);
     if (bookCheck.rows.length === 0) {
       throw new Error("Book not found");
     }
@@ -206,7 +206,7 @@ async function issueBook(issueData, userId) {
     let issued_to = issueData.issued_to || issueData.issuedTo;
     if (!issued_to && (issueData.card_id || issueData.cardId)) {
       const cardQuery = `SELECT user_id FROM ${schema}.id_cards WHERE id = $1`;
-      const cardResult = await client.query(cardQuery, [issueData.card_id || issueData.cardId]);
+      const cardResult = await sql.query(cardQuery, [issueData.card_id || issueData.cardId]);
       if (cardResult.rows.length === 0) {
         throw new Error("Library card not found");
       }
@@ -227,7 +227,7 @@ async function issueBook(issueData, userId) {
     // Check how many books are currently issued to this user
     const activeIssuesQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
                                WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`;
-    const activeIssuesResult = await client.query(activeIssuesQuery, [issued_to]);
+    const activeIssuesResult = await sql.query(activeIssuesQuery, [issued_to]);
     const activeIssuesCount = parseInt(activeIssuesResult.rows[0].count || 0);
 
     // Check if user has reached maximum books per card limit
@@ -242,7 +242,7 @@ async function issueBook(issueData, userId) {
                                 AND DATE(issue_date) = CURRENT_DATE
                                 AND return_date IS NULL 
                                 AND status = 'issued'`;
-    const sameBookTodayResult = await client.query(sameBookTodayQuery, [issued_to, issueData.book_id]);
+    const sameBookTodayResult = await sql.query(sameBookTodayQuery, [issued_to, issueData.book_id]);
     const sameBookTodayCount = parseInt(sameBookTodayResult.rows[0].count || 0);
 
     if (sameBookTodayCount > 0) {
@@ -269,30 +269,30 @@ async function issueBook(issueData, userId) {
       'issued',
       userId || null,
     ];
-    const issueResult = await client.query(issueQuery, issueValues);
+    const issueResult = await sql.query(issueQuery, issueValues);
 
     // Update book available copies
-    await client.query(`UPDATE ${schema}.books SET available_copies = available_copies - 1 WHERE id = $1`, [issueData.book_id]);
+    await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies - 1 WHERE id = $1`, [issueData.book_id]);
 
-    await client.query("COMMIT");
+    // await sql.query("COMMIT");
     return issueResult.rows[0];
   } catch (error) {
-    await client.query("ROLLBACK");
+    // await sql.query("ROLLBACK");
     console.error("Error in issueBook:", error);
     throw error;
   } finally {
-    client.release();
+    // sql.release();
   }
 }
 
 // Return a book (checkin)
 async function returnBook(issueId, returnData, userId) {
-  const client = await sql.connect();
+  // const sql = await sql.connect();
   try {
-    await client.query("BEGIN");
+    // await sql.query("BEGIN");
 
     // Get issue record
-    const issueCheck = await client.query(`SELECT * FROM ${schema}.book_issues WHERE id = $1`, [issueId]);
+    const issueCheck = await sql.query(`SELECT * FROM ${schema}.book_issues WHERE id = $1`, [issueId]);
     if (issueCheck.rows.length === 0) {
       throw new Error("Issue record not found");
     }
@@ -304,7 +304,7 @@ async function returnBook(issueId, returnData, userId) {
 
     const returnDate = returnData.return_date || new Date().toISOString().split('T')[0];
     const status = returnData.status || 'returned';
-    
+
     // Validate status
     const validStatuses = ['issued', 'returned', 'lost', 'damaged'];
     if (!validStatuses.includes(status)) {
@@ -317,7 +317,7 @@ async function returnBook(issueId, returnData, userId) {
                             lastmodifieddate = CURRENT_TIMESTAMP, lastmodifiedbyid = $4
                         WHERE id = $1 
                         RETURNING *`;
-    const updateResult = await client.query(updateQuery, [
+    const updateResult = await sql.query(updateQuery, [
       issueId,
       returnDate,
       status,
@@ -326,17 +326,17 @@ async function returnBook(issueId, returnData, userId) {
 
     // Update book available copies only if status is 'returned'
     if (status === 'returned') {
-      await client.query(`UPDATE ${schema}.books SET available_copies = available_copies + 1 WHERE id = $1`, [issue.book_id]);
+      await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies + 1 WHERE id = $1`, [issue.book_id]);
     }
 
-    await client.query("COMMIT");
+    // await sql.query("COMMIT");
     return updateResult.rows[0];
   } catch (error) {
-    await client.query("ROLLBACK");
+    // await sql.query("ROLLBACK");
     console.error("Error in returnBook:", error);
     throw error;
   } finally {
-    client.release();
+    // sql.release();
   }
 }
 
@@ -394,7 +394,7 @@ module.exports = {
   findActive,
   findByBookId,
   findByUserId,
-  findByCardId, 
+  findByCardId,
   issueBook,
   returnBook,
   calculatePenalty,

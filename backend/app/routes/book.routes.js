@@ -72,10 +72,9 @@ module.exports = (app) => {
     fetchUser,
 
     [
-      // Make validation optional for barcode scanning - allow empty strings
       body("title").optional().custom((value) => {
         if (value === null || value === undefined || value === "") {
-          return true; // Allow empty for barcode scans
+          return true;
         }
         return value.trim().length > 0;
       }).withMessage("Title is required"),
@@ -113,7 +112,7 @@ module.exports = (app) => {
           }
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const book = await Book.create(req.body, userId);
         if (!book) {
           return res.status(400).json({ errors: "Failed to create book" });
@@ -163,7 +162,7 @@ module.exports = (app) => {
             .json({ errors: "Book with this ISBN already exists" });
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const book = await Book.updateById(req.params.id, req.body, userId);
         if (!book) {
           return res.status(400).json({ errors: "Failed to update book" });

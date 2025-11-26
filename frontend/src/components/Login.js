@@ -58,7 +58,7 @@ const Login = () => {
     } catch (error) {
       // console.log(error)
     }
-  };  
+  };
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -106,7 +106,8 @@ const Login = () => {
                 <div className="text-center">
                   <div className="mb-4">
                     <img
-                      src="/logo.png"
+                      // src="/logo.png"
+                      src="https://banner2.cleanpng.com/cb4/nis/mpu/abme50yvh.webp"
                       alt="Library Management"
                       style={{
                         maxWidth: "100%",

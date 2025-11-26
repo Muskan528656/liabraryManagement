@@ -117,7 +117,7 @@ const Company = () => {
         <Col lg={12} xl={12}>
 
           <Card className="border-0 shadow-sm">
-            <Card.Body className="">
+            <Card.Body>
               <div
                 className="d-flex justify-content-between align-items-center mb-4 p-4"
                 style={{

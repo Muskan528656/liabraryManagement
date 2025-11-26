@@ -125,7 +125,7 @@ const Purchase = () => {
 
   const fetchVendors = async () => {
     try {
-      const vendorApi = new DataApi("purchasevendor");
+      const vendorApi = new DataApi("vendor");
       const response = await vendorApi.fetchAll();
       if (response.data) {
         setVendors(response.data);
@@ -191,12 +191,12 @@ const Purchase = () => {
       vendor_id: selectedOption ? selectedOption.value : "",
     }));
   };
-
+console.log("Vendors:", vendors);
   const vendorOptions = vendors.map((vendor) => ({
     value: vendor.id,
     label: vendor.name,
   }));
-
+console.log("Vendor Options:", vendorOptions);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const updatedData = { ...formData, [name]: value };
@@ -317,15 +317,15 @@ const Purchase = () => {
     try {
       setLoading(true);
       const bookApi = new DataApi("book");
-      
+
       // Try to find book by ISBN
       const allBooks = await bookApi.fetchAll();
       const bookData = allBooks?.data || allBooks || [];
-      
+
       // Search by ISBN (exact match or partial)
-      const foundBook = bookData.find(book => 
+      const foundBook = bookData.find(book =>
         book.isbn && (
-          book.isbn === barcode.trim() || 
+          book.isbn === barcode.trim() ||
           book.isbn.replace(/[-\s]/g, '') === barcode.trim().replace(/[-\s]/g, '') ||
           book.isbn.includes(barcode.trim()) ||
           barcode.trim().includes(book.isbn)
@@ -1088,22 +1088,14 @@ const Purchase = () => {
               eventKey="manual"
               title="Manual Entry"
             >
-              <div className="mb-3 d-flex justify-content-between align-items-center">
+              {/* <div className="mb-3 d-flex justify-content-between align-items-center">
                 <h6 style={{ color: "#333", fontWeight: "600", margin: 0 }}>Add Purchases Manually</h6>
                 <Button
                   variant="success"
                   size="sm"
                   onClick={handleAddMultiRow}
-                  style={{
-                    background: "#28a745",
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px"
-                  }}
+                  className="custom-btn-primary"
+
                 >
                   <i className="fa-solid fa-plus"></i>
                   Add Row
@@ -1299,6 +1291,237 @@ const Purchase = () => {
                             placeholder="Notes..."
                             style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
                           />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div> */}
+
+              <div className="mb-3 d-flex justify-content-between align-items-center">
+                <h6 style={{ color: "#333", fontWeight: "600", margin: 0 }}>Add Purchases Manually</h6>
+                <div className="d-flex align-items-center gap-2">
+                  <span style={{ color: "#6c757d", fontSize: "14px", fontWeight: "500" }}>
+                    Total Rows: {multiInsertRows.length}
+                  </span>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    onClick={handleAddMultiRow}
+                    className="custom-btn-primary"
+                  >
+                    <i className="fa-solid fa-plus me-1"></i>
+                    Add Row
+                  </Button>
+                </div>
+              </div>
+
+              <div className="table-responsive">
+                <Table bordered hover style={{ marginBottom: 0 }}>
+                  <thead style={{ background: "#f8f9fa" }}>
+                    <tr>
+                      <th style={{ width: "20%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Vendor <span className="text-danger">*</span>
+                      </th>
+                      <th style={{ width: "20%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Book <span className="text-danger">*</span>
+                      </th>
+                      <th style={{ width: "10%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Quantity <span className="text-danger">*</span>
+                      </th>
+                      <th style={{ width: "12%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Unit Price <span className="text-danger">*</span>
+                      </th>
+                      <th style={{ width: "12%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Total Amount
+                      </th>
+                      <th style={{ width: "12%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Purchase Date
+                      </th>
+                      <th style={{ width: "10%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6" }}>
+                        Notes
+                      </th>
+                      {/* नया Actions column जोड़ें */}
+                      <th style={{ width: "5%", padding: "12px", fontWeight: "600", fontSize: "14px", borderBottom: "2px solid #dee2e6", textAlign: "center" }}>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {multiInsertRows.map((row, index) => (
+                      <tr key={index}>
+                        <td style={{ position: "relative", zIndex: 1, padding: "12px", verticalAlign: "middle" }}>
+                          <div className="d-flex gap-1" style={{ position: "relative" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Select
+                                value={vendorOptions.find((v) => v.value === row.vendor_id) || null}
+                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                options={vendorOptions}
+                                placeholder="Select Vendor"
+                                isClearable
+                                isSearchable
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                                styles={{
+                                  control: (base) => ({
+                                    ...base,
+                                    minHeight: "38px",
+                                    fontSize: "14px",
+                                    width: "100%",
+                                    border: "1px solid #ced4da",
+                                    borderRadius: "4px",
+                                    "&:hover": {
+                                      borderColor: "#6f42c1",
+                                    },
+                                  }),
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                  menu: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
+                              />
+                            </div>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentRowIndex(index);
+                                setShowAddVendorModal(true);
+                              }}
+                              style={{
+                                minWidth: "38px",
+                                padding: "6px 8px",
+                                flexShrink: 0,
+                                borderColor: "#6f42c1",
+                                color: "#6f42c1"
+                              }}
+                              title="Add New Vendor"
+                            >
+                              <i className="fa-solid fa-plus"></i>
+                            </Button>
+                          </div>
+                        </td>
+                        <td style={{ position: "relative", zIndex: 1, padding: "12px", verticalAlign: "middle" }}>
+                          <div className="d-flex gap-1" style={{ position: "relative" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Select
+                                value={bookOptions.find((b) => b.value === row.book_id) || null}
+                                onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                options={bookOptions}
+                                placeholder="Select Book"
+                                isClearable
+                                isSearchable
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
+                                styles={{
+                                  control: (base) => ({
+                                    ...base,
+                                    minHeight: "38px",
+                                    fontSize: "14px",
+                                    width: "100%",
+                                    border: "1px solid #ced4da",
+                                    borderRadius: "4px",
+                                    "&:hover": {
+                                      borderColor: "#6f42c1",
+                                    },
+                                  }),
+                                  menuPortal: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                  menu: (base) => ({
+                                    ...base,
+                                    zIndex: 9999,
+                                  }),
+                                }}
+                              />
+                            </div>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentRowIndex(index);
+                                setShowAddBookModal(true);
+                              }}
+                              style={{
+                                minWidth: "38px",
+                                padding: "6px 8px",
+                                flexShrink: 0,
+                                borderColor: "#6f42c1",
+                                color: "#6f42c1"
+                              }}
+                              title="Add New Book"
+                            >
+                              <i className="fa-solid fa-plus"></i>
+                            </Button>
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                          <Form.Control
+                            type="number"
+                            value={row.quantity}
+                            onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                            min="1"
+                            style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
+                          />
+                        </td>
+                        <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                          <Form.Control
+                            type="number"
+                            value={row.unit_price}
+                            onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                            min="0"
+                            step="0.01"
+                            style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
+                          />
+                        </td>
+                        <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                          <Form.Control
+                            type="text"
+                            value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
+                            readOnly
+                            className="bg-light"
+                            style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da", backgroundColor: "#f8f9fa" }}
+                          />
+                        </td>
+                        <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                          <Form.Control
+                            type="date"
+                            value={row.purchase_date}
+                            onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                            style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
+                          />
+                        </td>
+                        <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                          <Form.Control
+                            type="text"
+                            value={row.notes}
+                            onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                            placeholder="Notes..."
+                            style={{ fontSize: "14px", height: "38px", border: "1px solid #ced4da" }}
+                          />
+                        </td>
+                        {/* नया Actions cell जोड़ें - Delete button के लिए */}
+                        <td style={{ padding: "12px", verticalAlign: "middle", textAlign: "center" }}>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleRemoveMultiRow(index)}
+                            disabled={multiInsertRows.length === 1}
+                            style={{
+                              minWidth: "32px",
+                              padding: "4px 6px",
+                              borderColor: "#dc3545",
+                              color: "#dc3545"
+                            }}
+                            title="Delete Row"
+                          >
+                            <i className="fa-solid fa-trash"></i>
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -1720,56 +1943,3 @@ const Purchase = () => {
 };
 
 export default Purchase;
-
-
-
-// components/Purchase.js
-// import React from "react";
-
-// import DynamicCRUD from "../common/DynaminCrud";
-// import { getPurchaseConfig } from "./pur";
-// import { useDataManager } from "../common/userdatamanager";
-// import Loader from "../common/Loader";
-
-// const Purchase = (props) => {
-//   // Get base config structure first
-//   const baseConfig = getPurchaseConfig();
-
-//   // Fetch data with dependencies
-//   const { data, loading, error } = useDataManager(
-//     baseConfig.dataDependencies,
-//     props
-//   );
-
-//   if (loading) {
-//     return <Loader message="Loading purchases data..." />;
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="alert alert-danger">
-//         <h4>Error Loading Purchases</h4>
-//         <p>{error.message}</p>
-//         <button
-//           className="btn btn-primary"
-//           onClick={() => window.location.reload()}
-//         >
-//           Retry
-//         </button>
-//       </div>
-//     );
-//   }
-
-//   // Merge props data and fetched data
-//   const allData = {
-//     ...data,
-//     ...props
-//   };
-
-//   // Get final config with all data
-//   const finalConfig = getPurchaseConfig(allData);
-
-//   return <DynamicCRUD {...finalConfig} />;
-// };
-
-// export default Purchase;

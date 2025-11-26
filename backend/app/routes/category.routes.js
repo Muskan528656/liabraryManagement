@@ -52,7 +52,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-    
+
     [
       // Allow empty name for barcode scanning - will use default in model
       body("name").optional().custom((value) => {
@@ -75,7 +75,7 @@ module.exports = (app) => {
             .json({ errors: "Category with this name already exists" });
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const category = await Category.create(req.body, userId);
         if (!category) {
           return res.status(400).json({ errors: "Failed to create category" });
@@ -85,7 +85,7 @@ module.exports = (app) => {
         console.error("Error creating category:", error);
         console.error("Error stack:", error.stack);
         console.error("Request body:", req.body);
-        return res.status(500).json({ 
+        return res.status(500).json({
           errors: error.message || "Internal server error",
           details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
@@ -97,7 +97,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-    
+
     [
       body("name").notEmpty().withMessage("Name is required"),
     ],
@@ -125,7 +125,7 @@ module.exports = (app) => {
             .json({ errors: "Category with this name already exists" });
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const category = await Category.updateById(req.params.id, req.body, userId);
         if (!category) {
           return res.status(400).json({ errors: "Failed to update category" });
@@ -139,7 +139,7 @@ module.exports = (app) => {
   );
 
   // Delete category by ID
-  router.delete("/:id", fetchUser,  async (req, res) => {
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const result = await Category.deleteById(req.params.id);
       if (!result.success) {

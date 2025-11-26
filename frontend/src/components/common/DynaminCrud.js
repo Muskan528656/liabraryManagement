@@ -257,7 +257,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -467,24 +467,21 @@ const DynamicCRUD = ({
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
         setEditingItem(item);
-        
-        // Format date fields properly for date inputs
+
         const formattedItem = { ...item };
         if (formattedItem.issue_date) {
-            // Ensure date is in YYYY-MM-DD format
             const issueDate = new Date(formattedItem.issue_date);
             if (!isNaN(issueDate.getTime())) {
                 formattedItem.issue_date = issueDate.toISOString().split('T')[0];
             }
         }
         if (formattedItem.expiry_date) {
-            // Ensure date is in YYYY-MM-DD format
             const expiryDate = new Date(formattedItem.expiry_date);
             if (!isNaN(expiryDate.getTime())) {
                 formattedItem.expiry_date = expiryDate.toISOString().split('T')[0];
             }
         }
-        
+
         setFormData({ ...initialFormData, ...formattedItem });
         setShowModal(true);
     }, [allowEdit, initialFormData]);
@@ -547,10 +544,8 @@ const DynamicCRUD = ({
             const hasFileUpload = formFields.some(field => field && field.type === 'file');
 
             if (hasFileUpload) {
-                // FormData use karen file upload ke liye
                 const submitData = new FormData();
 
-                // Regular fields add karen
                 Object.keys(formData).forEach(key => {
                     if (formData[key] !== null && formData[key] !== undefined) {
                         // File field check karen

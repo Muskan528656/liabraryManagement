@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    cb(null, uploadDir);  
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -153,10 +153,10 @@ module.exports = (app) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-        
+
         LibraryCard.init(req.userinfo.tenantcode);
-        const userId = req.user?.id || null;
-        
+        const userId = req.userinfo?.id || null;
+
         // Handle file upload
         const cardData = { ...req.body };
         if (req.file) {
@@ -164,7 +164,7 @@ module.exports = (app) => {
           const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
-        
+
         const card = await LibraryCard.create(cardData, userId);
         if (!card) {
           return res.status(400).json({ errors: "Failed to create library card" });
@@ -191,8 +191,8 @@ module.exports = (app) => {
           return res.status(404).json({ errors: "Library card not found" });
         }
 
-        const userId = req.user?.id || null;
-        
+        const userId = req.userinfo?.id || null;
+
         // Handle file upload
         const cardData = { ...req.body };
         if (req.file) {
@@ -200,7 +200,7 @@ module.exports = (app) => {
           const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
-        
+
         const card = await LibraryCard.updateById(req.params.id, cardData, userId);
         if (!card) {
           return res.status(400).json({ errors: "Failed to update library card" });

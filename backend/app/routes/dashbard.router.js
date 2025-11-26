@@ -24,9 +24,9 @@ module.exports = (app) => {
 
     router.get("/",  fetchUser, async (req, res) => {
         try {
-            console.log('dashboard router connect');
             
             const result = await Dashboard.fetchAll();
+            console.log('dashboard fetch all result', result);
             res.status(200).json({ success: true, data: result });
         } catch (error) {
             console.error("Error fetching dashboard data:", error);

@@ -9,7 +9,6 @@ import CityPincode from "../../constants/CityPincode.json";
 
 const Vendor = (props) => {
   const baseConfig = getVendorConfig();
-
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
     props
@@ -18,7 +17,6 @@ const Vendor = (props) => {
   if (loading) {
     return <Loader message="Loading vendors data..." />;
   }
-
   if (error) {
     return (
       <div className="alert alert-danger">

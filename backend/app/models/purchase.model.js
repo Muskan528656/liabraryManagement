@@ -73,20 +73,16 @@ async function findById(id) {
 
 // Create a new purchase
 async function create(purchaseData, userId) {
-  const client = await sql.connect();
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     if (!purchaseData.vendor_id && !purchaseData.vendorId) {
       throw new Error("Vendor ID is required for purchase");
     }
-    
-    await client.query("BEGIN");
 
-    // Create purchase record
-    // Note: total_amount might be a GENERATED column, so we don't insert it
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
                    (vendor_id, book_id, quantity, unit_price, purchase_date, notes,
                     createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
@@ -101,7 +97,7 @@ async function create(purchaseData, userId) {
       purchaseData.notes || null,
       userId || null,
     ];
-    const purchaseResult = await client.query(purchaseQuery, purchaseValues);
+    const purchaseResult = await sql.query(purchaseQuery, purchaseValues);
     const purchase = purchaseResult.rows[0];
 
     // Update book inventory - add purchased copies
@@ -110,31 +106,30 @@ async function create(purchaseData, userId) {
                                 available_copies = available_copies + $1,
                                 lastmodifieddate = NOW()
                             WHERE id = $2`;
-    await client.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
+    await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
 
-    await client.query("COMMIT");
+    ////    
     return purchase;
   } catch (error) {
-    await client.query("ROLLBACK");
+    //await sql.query("ROLLBACK");
     console.error("Error in create:", error);
     throw error;
   } finally {
-    client.release();
   }
 }
 
 // Update purchase by ID
 async function updateById(id, purchaseData, userId) {
-  const client = await sql.connect();
+  //     
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
-    await client.query("BEGIN");
+
+    ////    
 
     // Get old purchase to calculate difference
-    const oldPurchase = await client.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
+    const oldPurchase = await sql.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
     if (oldPurchase.rows.length === 0) {
       throw new Error("Purchase not found");
     }
@@ -162,13 +157,13 @@ async function updateById(id, purchaseData, userId) {
       purchaseData.notes !== undefined ? purchaseData.notes : oldPurchase.rows[0].notes,
       userId || null,
     ];
-    const result = await client.query(query, values);
+    const result = await sql.query(query, values);
 
     // Update book inventory if quantity or book changed
     if (oldBookId !== newBookId || oldQty !== newQty) {
       // Remove old quantity from old book
       if (oldBookId !== newBookId) {
-        await client.query(`UPDATE ${this.schema}.books 
+        await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies - $1,
                                available_copies = available_copies - $1,
                                lastmodifieddate = NOW()
@@ -176,7 +171,7 @@ async function updateById(id, purchaseData, userId) {
       } else {
         // Same book, adjust difference
         const qtyDiff = newQty - oldQty;
-        await client.query(`UPDATE ${this.schema}.books 
+        await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies + $1,
                                available_copies = available_copies + $1,
                                lastmodifieddate = NOW()
@@ -185,7 +180,7 @@ async function updateById(id, purchaseData, userId) {
 
       // Add new quantity to new book (if different)
       if (oldBookId !== newBookId) {
-        await client.query(`UPDATE ${this.schema}.books 
+        await sql.query(`UPDATE ${this.schema}.books 
                            SET total_copies = total_copies + $1,
                                available_copies = available_copies + $1,
                                lastmodifieddate = NOW()
@@ -193,32 +188,29 @@ async function updateById(id, purchaseData, userId) {
       }
     }
 
-    await client.query("COMMIT");
+    ////    
     if (result.rows.length > 0) {
       return result.rows[0];
     }
     return null;
   } catch (error) {
-    await client.query("ROLLBACK");
+    //await sql.query("ROLLBACK");
     console.error("Error in updateById:", error);
     throw error;
   } finally {
-    client.release();
+    sql.release();
   }
 }
 
 // Delete purchase by ID
 async function deleteById(id) {
-  const client = await sql.connect();
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
-    await client.query("BEGIN");
 
-    // Get purchase details
-    const purchase = await client.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
+    const purchase = await sql.query(`SELECT * FROM ${this.schema}.purchases WHERE id = $1`, [id]);
     if (purchase.rows.length === 0) {
       return { success: false, message: "Purchase not found" };
     }
@@ -226,23 +218,20 @@ async function deleteById(id) {
     const purchaseData = purchase.rows[0];
 
     // Delete purchase
-    await client.query(`DELETE FROM ${this.schema}.purchases WHERE id = $1`, [id]);
+    await sql.query(`DELETE FROM ${this.schema}.purchases WHERE id = $1`, [id]);
 
     // Update book inventory - remove purchased copies
-    await client.query(`UPDATE ${this.schema}.books 
+    await sql.query(`UPDATE ${this.schema}.books 
                        SET total_copies = total_copies - $1,
                            available_copies = GREATEST(0, available_copies - $1),
                            lastmodifieddate = NOW()
                        WHERE id = $2`, [purchaseData.quantity, purchaseData.book_id]);
 
-    await client.query("COMMIT");
     return { success: true, message: "Purchase deleted successfully" };
   } catch (error) {
-    await client.query("ROLLBACK");
     console.error("Error in deleteById:", error);
     throw error;
   } finally {
-    client.release();
   }
 }
 

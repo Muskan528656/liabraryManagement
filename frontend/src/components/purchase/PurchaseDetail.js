@@ -6,13 +6,13 @@ const PurchaseDetail = () => {
     title: "id",
     subtitle: null,
     status: null,
-    overview: [
-      { key: "vendor_name", label: "Vendor", type: "text" },
-      { key: "book_title", label: "Book", type: "text" },
-      { key: "quantity", label: "Quantity", type: "number" },
-      { key: "unit_price", label: "Unit Price", type: "currency" },
-      { key: "total_amount", label: "Total Amount", type: "currency" },
-    ],
+    // overview: [
+    //   { key: "vendor_name", label: "Vendor", type: "text" },
+    //   { key: "book_title", label: "Book", type: "text" },
+    //   { key: "quantity", label: "Quantity", type: "number" },
+    //   { key: "unit_price", label: "Unit Price", type: "currency" },
+    //   { key: "total_amount", label: "Total Amount", type: "currency" },
+    // ],
     details: [
       { key: "vendor_name", label: "Vendor", type: "text" },
       { key: "book_title", label: "Book", type: "text" },
@@ -25,6 +25,13 @@ const PurchaseDetail = () => {
       { key: "created_at", label: "Created At", type: "datetime" },
       { key: "updated_at", label: "Updated At", type: "datetime" },
     ],
+    other: [
+      { key: "createdbyid", label: "Created By", type: "text" },
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+      { key: "createddate", label: "Created Date", type: "date" },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      
+     ],
     detailsLayout: "grid",
   };
 

@@ -78,7 +78,7 @@ module.exports = (app) => {
           }
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const author = await Author.create(req.body, userId);
         if (!author) {
           return res.status(400).json({ errors: "Failed to create author" });

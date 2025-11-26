@@ -25,13 +25,10 @@ async function findAll() {
                     email,
                     userrole,
                     phone,
-                    whatsapp_number,
+                 
                     country_code,
                     isactive,
-                    blocked,
-                    companyid,
-                    managerid,
-                    whatsapp_settings
+                    companyid
                    FROM ${this.schema}."user"
                    ORDER BY firstname ASC, lastname ASC`;
     const result = await sql.query(query);
@@ -82,14 +79,12 @@ async function findByEmail(email) {
   }
 }
 
-// Create a new user
 async function create(userData, userId) {
   if (!this.schema) {
     console.error("Error: Schema not initialized in create");
     throw new Error("Schema name is not initialized. Please call User.init() first.");
   }
   try {
-    // Check if email already exists
     if (userData.email) {
       const existingUser = await this.findByEmail(userData.email);
       if (existingUser) {
@@ -97,19 +92,16 @@ async function create(userData, userId) {
       }
     }
 
-    // Final validation before query
     if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
       console.error("Error: Invalid schema name:", this.schema);
       throw new Error(`Invalid schema name: ${this.schema}. Cannot create user.`);
     }
 
-    // Validate company ID is provided
     if (!userData.companyid) {
       console.error("Error: Company ID is required for user creation");
       throw new Error("Company ID is required for user creation.");
     }
 
-    // Ensure password is hashed (should already be hashed from route, but double-check)
     if (userData.password && !userData.password.startsWith('$2a$') && !userData.password.startsWith('$2b$')) {
       console.warn("Warning: Password does not appear to be hashed. Please hash password before creating user.");
     }

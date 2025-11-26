@@ -61,7 +61,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     try {
       const resp = await DashboardApi.fetchAll(); // this now returns the query result
       const data = resp?.data || [];
-
+      console.log('dashbard data', data);
+      
       console.log('data ',data.length);
       if (!Array.isArray(data) || data.length === 0) {
         console.warn("No data received from API");
@@ -921,7 +922,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   </div>
                 </Card.Body>
               </Card>
-            </Col>
+            </Col> 
           ))}
         </Row>
 

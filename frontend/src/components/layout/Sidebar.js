@@ -28,43 +28,7 @@ export default function Sidebar({ open, handleDrawerClose }) {
     }
   }, []);
 
-  // const fetchRolePermissions = async (userRole) => {
-  //   try {
-  //     //   has all permissions, no need to fetch
-  //     if (userRole === "  ") {
-  //       // Set all permissions to true for   
-  //       const allModules = ["books", "author", "category", "supplier", "vendor", "purchase", "user", "librarycard", "bookissue", "bookrequest", "penalty"];
-  //       const allPerms = {};
-  //       allModules.forEach(module => {
-  //         allPerms[module] = { can_read: true };
-  //       });
-  //       setRolePermissions(allPerms);
-  //       return;
-  //     }
 
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/role-permissions/current-user`,
-  //       "GET"
-  //     );
-  //     const result = await response.json();
-
-  //     if (result.success) {
-  //       const permMap = {};
-  //       result.permissions.forEach(perm => {
-  //         permMap[perm.module_name] = {
-  //           can_read: perm.can_read,
-  //           can_create: perm.can_create,
-  //           can_update: perm.can_update,
-  //           can_delete: perm.can_delete
-  //         };
-  //       });
-  //       setRolePermissions(permMap);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching role permissions:", error);
-  //     setRolePermissions({});
-  //   }
-  // };
 
   const fetchModulesFromDB = async () => {
     try {

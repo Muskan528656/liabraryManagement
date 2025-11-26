@@ -20,7 +20,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [dueNotifications, setDueNotifications] = useState(false);
+  const [dueNotifications, setDueNotifications] = useState([]); // ⬅️ always an array
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
@@ -32,6 +32,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   });
   const [visibleModulesCount, setVisibleModulesCount] = useState(5);
   const [searchBarcode, setSearchBarcode] = useState("");
+
+  const [Company, setCompany] = useState([]);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -52,7 +54,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-
   // Fetch unread count
   const fetchUnreadCount = async () => {
     try {
@@ -69,86 +70,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-
-  //fetch due notifications
-
-
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
-    try {
-      const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
-        "PUT"
-      );
-      const result = await response.json();
-      if (result.success) {
-        setNotifications(prev =>
-          prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
-
-  // Mark all as read
-  const markAllAsRead = async () => {
-    try {
-      const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/notifications/read-all`,
-        "PUT"
-      );
-      const result = await response.json();
-      if (result.success) {
-        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-        setUnreadCount(0);
-      }
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-    }
-  };
-
-
-  // Fetch role permissions
-  // const fetchRolePermissions = async (userRole) => {
-  //   try {
-  //     // ADMIN has all permissions
-  //     if (userRole === "ADMIN") {
-  //       const allModules = ["books", "author", "category", "supplier", "vendor", "purchase", "user", "librarycard", "bookissue", "bookrequest", "penalty", "booksubmit"];
-  //       const allPerms = {};
-  //       allModules.forEach(module => {
-  //         allPerms[module] = { can_create: true, can_read: true, can_update: true, can_delete: true };
-  //       });
-  //       setRolePermissions(allPerms);
-  //       return;
-  //     }
-
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/role-permissions/current-user`,
-  //       "GET"
-  //     );
-  //     const result = await response.json();
-
-  //     if (result.success) {
-  //       const permMap = {};
-  //       result.permissions.forEach(perm => {
-  //         permMap[perm.module_name] = {
-  //           can_create: perm.can_create,
-  //           can_read: perm.can_read,
-  //           can_update: perm.can_update,
-  //           can_delete: perm.can_delete
-  //         };
-  //       });
-  //       setRolePermissions(permMap);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching role permissions:", error);
-  //     setRolePermissions({});
-  //   }
-  // };
-
-  // Fetch modules from DB with localStorage cache
   const fetchModulesFromDB = async () => {
     try {
       // First, try to load from localStorage (for faster initial load in new tabs)
@@ -182,7 +103,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         setModulesFromDB(modules);
         // Cache modules in localStorage for faster loading in new tabs
         localStorage.setItem("cached_modules", JSON.stringify(modules));
-        localStorage.setItem("cached_modules_timestamp", Date.now().toString());
+        localStorage.setItem(
+          "cached_modules_timestamp",
+          Date.now().toString()
+        );
       } else if (!cachedModules) {
         // Only set empty if we don't have cached data
         setModulesFromDB([]);
@@ -213,7 +137,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         `${constants.API_BASE_URL}/api/book_submissions/due_notifications`,
         "GET"
       );
-      // console.log("response1111 ", response);
       const result = await response.json();
       if (result.success) {
         setDueNotifications(result.notifications || []);
@@ -221,8 +144,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     } catch (error) {
       console.error("Error fetching unread count:", error);
     }
-  }
-
+  };
 
   useEffect(() => {
     try {
@@ -277,11 +199,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const getMenuItems = () => {
     const moduleItems = (modulesFromDB || [])
-      .filter(m => m && m.status && m.status.toLowerCase() === "active")
+      .filter((m) => m && m.status && m.status.toLowerCase() === "active")
       .sort((a, b) => (a.order_no || 999) - (b.order_no || 999))
-      .map(m => {
-        const urlKey = (m.url || m.api_name || m.name || "").toString().toLowerCase();
-        const path = m.url || `/${m.name.toLowerCase().replace(/\s+/g, "")}` || "/";
+      .map((m) => {
+        const urlKey = (
+          m.url ||
+          m.api_name ||
+          m.name ||
+          ""
+        )
+          .toString()
+          .toLowerCase();
+        const path =
+          m.url || `/${m.name.toLowerCase().replace(/\s+/g, "")}` || "/";
         return {
           id: m.id || urlKey,
           label: m.name || urlKey,
@@ -301,18 +231,22 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const screenWidth = window.innerWidth;
       const availableWidth = screenWidth * 0.7; // 70% of screen width
 
-      // Estimate width per module: icon (12px) + padding (12px*2) + text (average 80px) + gap (4px)
-      // Average module width: ~110px (conservative estimate)
+      // Estimate width per module
       const avgModuleWidth = 110;
       const moreButtonWidth = 80; // "More" button width
 
       // Calculate how many modules can fit
-      const maxModules = Math.floor((availableWidth - moreButtonWidth) / avgModuleWidth);
+      const maxModules = Math.floor(
+        (availableWidth - moreButtonWidth) / avgModuleWidth
+      );
 
       // Ensure at least 1 module is visible, and at least 1 goes to "More" if there are many modules
       const currentMenuItems = getMenuItems();
       if (currentMenuItems.length > 0) {
-        const visibleCount = Math.max(1, Math.min(maxModules, currentMenuItems.length - 1));
+        const visibleCount = Math.max(
+          1,
+          Math.min(maxModules, currentMenuItems.length - 1)
+        );
         setVisibleModulesCount(visibleCount);
       } else {
         setVisibleModulesCount(5); // Default fallback
@@ -320,8 +254,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     };
 
     calculateVisibleModules();
-    window.addEventListener('resize', calculateVisibleModules);
-    return () => window.removeEventListener('resize', calculateVisibleModules);
+    window.addEventListener("resize", calculateVisibleModules);
+    return () => window.removeEventListener("resize", calculateVisibleModules);
   }, [modulesFromDB]);
 
   const isActive = (path) => {
@@ -338,14 +272,15 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
       const handleNewNotification = (notification) => {
         console.log("📬 New notification received via socket:", notification);
-        setNotifications(prev => [notification, ...prev]);
-        setUnreadCount(prev => prev + 1);
-        setDueNotifications(prev => prev + 1);
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+        // removed buggy setDueNotifications(prev => prev + 1);
+
         // Show browser notification if permission granted
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(notification.title, {
             body: notification.message,
-            icon: "/logo.png"
+            icon: "/logo.png",
           });
         }
       };
@@ -360,9 +295,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       console.warn("⚠️ Socket not available for notification listener");
     }
   }, [socket]);
-
-
-  // console.log('due Notification', dueNotifications.map(n => n.message));
 
   // Request notification permission
   useEffect(() => {
@@ -387,15 +319,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       remarks: "",
     });
   };
-
-  // const handleCloseBookSubmitModal = () => {
-  //   setShowBookSubmitModal(false);
-  // };
-
-  // const handleQuickAction = (actionType) => {
-  //   setQuickActionType(actionType);
-  //   setShowQuickAction(true);
-  // };
 
   const getUserInitials = () => {
     if (userInfo) {
@@ -438,6 +361,79 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
+  useEffect(() => {
+    fetchCompany();
+  }, []);
+
+  function getCompanyIdFromToken() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.companyid || payload.companyid || null;
+  }
+
+  const fetchCompany = async () => {
+    try {
+      const companyid = getCompanyIdFromToken();
+
+      if (!companyid) {
+        console.error("Company ID not found in token");
+        return;
+      }
+
+      const companyApi = new DataApi("company");
+      const response = await companyApi.fetchById(companyid);
+
+      if (response.data) {
+        setCompany(response.data);
+        console.log("Company:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching company by ID:", error);
+    }
+  };
+
+  console.log("Company", Company);
+
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      const response = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
+        "PUT"
+      );
+      const result = await response.json();
+      if (result.success) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notificationId ? { ...n, is_read: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  // Mark all as read
+  const markAllAsRead = async () => {
+    try {
+      const response = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/notifications/read-all`,
+        "PUT"
+      );
+      const result = await response.json();
+      if (result.success) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true }))); 
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -449,7 +445,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         width: "100%",
         background: "#fafafa",
         borderBottom: "1px solid #e5e7eb",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
+        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
       }}
     >
       {/* Top Row: Brand + Bell Icon + Admin Dropdown */}
@@ -460,16 +456,39 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           alignItems: "center",
           padding: "0.5rem 0.5rem",
           borderBottom: "1px solid #e5e7eb",
-          background: "#ffffff"
+          background: "#ffffff",
         }}
       >
         {/* Brand */}
         <Navbar.Brand
           href="#"
           className="fw-bold"
-          style={{ fontSize: "1.9rem", fontWeight: "900", color: "rgb(1, 118, 211)", letterSpacing: "0.8px", margin: 0 }}
+          style={{
+            fontSize: "1.9rem",
+            fontWeight: "900",
+            color: "var(--primary-color)",
+            letterSpacing: "0.8px",
+            margin: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
         >
-          Library Management
+          {Company?.logourl ? (
+            <img
+              src={Company.logourl}
+              alt="Company Logo"
+              className="object-contain rounded-lg transition-transform group-hover:scale-105"
+              style={{ height: "40px", width: "40px" }}
+            />
+          ) : (
+            <div className="h-10 w-10 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+              <i className="fa-solid fa-book-open text-lg"></i>
+            </div>
+          )}
+          <span className="hidden md:block font-extrabold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-900 to-indigo-600 tracking-tight">
+            {Company?.name || " Library"}
+          </span>
         </Navbar.Brand>
 
         {/* Search Bar */}
@@ -486,7 +505,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   borderRadius: "6px 0 0 6px",
                   padding: "8px 12px",
                   fontSize: "14px",
-                  background: "#f9fafb"
+                  background: "#f9fafb",
                 }}
               />
               <Button
@@ -498,10 +517,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   borderRadius: "0 6px 6px 0",
                   background: "#f9fafb",
                   padding: "8px 12px",
-                  color: "#6b7280"
+                  color: "#6b7280",
                 }}
               >
-                <i className="fa-solid fa-magnifying-glass" style={{ fontSize: "14px" }}></i>
+                <i
+                  className="fa-solid fa-magnifying-glass"
+                  style={{ fontSize: "14px" }}
+                ></i>
               </Button>
             </InputGroup>
           </Form>
@@ -511,7 +533,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         <div className="d-flex align-items-center gap-2">
           {/* Notifications Bell Icon */}
           <Dropdown
-            show={dueNotifications}
+            show={showNotifications} // ⬅️ controlled by showNotifications
             onToggle={(isOpen) => {
               setShowNotifications(isOpen);
               if (isOpen) {
@@ -530,7 +552,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 border: "none",
                 padding: "8px",
               }}
-              onClick={() => setShowNotifications(!showNotifications)}
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
               {unreadCount > 0 && (
@@ -542,116 +563,151 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 </span>
               )}
             </Dropdown.Toggle>
-            {
-              showNotifications ?
-                <Dropdown.Menu align="end" style={{ minWidth: "350px", maxHeight: "400px", overflowY: "auto", marginTop: "10px" }}>
-                  <Dropdown.Header className="d-flex justify-content-between align-items-center">
-                    <span>Notifications</span>
-                    {unreadCount > 0 && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAllAsRead();
+
+            {showNotifications ? (
+              <Dropdown.Menu
+                align="end"
+                style={{
+                  minWidth: "350px",
+                  maxHeight: "400px",
+                  overflowY: "auto",
+                  marginTop: "10px",
+                }}
+              >
+                <Dropdown.Header className="d-flex justify-content-between align-items-center">
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAllAsRead();
+                      }}
+                      style={{
+                        padding: "0",
+                        fontSize: "12px",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Mark all as read
+                    </Button>
+                  )}
+                </Dropdown.Header>
+                <Dropdown.Divider />
+                {dueNotifications.length === 0 ? (
+                  <Dropdown.ItemText className="text-center text-muted">
+                    No new notifications
+                  </Dropdown.ItemText>
+                ) : (
+                  dueNotifications &&
+                  dueNotifications.slice(0, 10).map((notification) => (
+                    <React.Fragment key={notification.id}>
+                      <Dropdown.Item
+                        onClick={() => {
+                          if (!notification.is_read) {
+                            markAsRead(notification.id);
+                          }
+                          if (notification.related_type === "book_issue") {
+                            navigate("/mybooks");
+                          } else if (
+                            notification.related_type === "book_request"
+                          ) {
+                            // navigate("/bookrequest");
+                          }
                         }}
-                        style={{ padding: "0", fontSize: "12px", textDecoration: "none" }}
+                        style={{
+                          backgroundColor: notification.is_read
+                            ? "transparent"
+                            : "#f0f4ff",
+                          cursor: "pointer",
+                        }}
                       >
-                        Mark all as read
-                      </Button>
-                    )}
-                  </Dropdown.Header>
-                  <Dropdown.Divider />
-                  {dueNotifications.length === 0 ? (
-                    <Dropdown.ItemText className="text-center text-muted">
-                      No new notifications
-                    </Dropdown.ItemText>
-                  ) : dueNotifications && (
-
-                    dueNotifications?.slice(0, 10).map((notification) => (
-                      <React.Fragment key={notification.id}>
-                        <Dropdown.Item
-                          onClick={() => {
-                            if (!notification.is_read) {
-                              markAsRead(notification.id);
-                            }
-                            if (notification.related_type === "book_issue") {
-                              navigate("/mybooks");
-                            } else if (notification.related_type === "book_request") {
-                              // navigate("/bookrequest");
-                            }
-                            // setShowNotifications(false);
-                          }}
-                          style={{
-                            backgroundColor: notification.is_read ? "transparent" : "#f0f4ff",
-                            cursor: "pointer"
-                          }}
-                        >
-                          <div className="d-flex">
-                            <div className="me-2">
-                              {notification.type === "overdue" && (
-                                <i className="fa-solid fa-exclamation-triangle text-danger"></i>
-                              )}
-                              {notification.type === "due_today" && (
-                                <i className="fa-solid fa-clock text-warning"></i>
-                              )}
-                              {notification.type === "book_request" && (
-                                <i className="fa-solid fa-book text-primary"></i>
-                              )}
-                              {notification.type === "announcement" && (
-                                <i className="fa-solid fa-bullhorn text-info"></i>
-                              )}
-                              {notification.type === "fine" && (
-                                <i className="fa-solid fa-money-bill-wave text-danger"></i>
-                              )}
-                              {notification.type === "book_issued" && (
-                                <i className="fa-solid fa-book text-success"></i>
-                              )}
-                              {!["overdue", "due_today", "book_request", "announcement", "fine", "book_issued"].includes(notification.type) && (
-                                <i className="fa-solid fa-bell text-secondary"></i>
-                              )}
-
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div className={`fw-semibold ${!notification.is_read ? "text-dark" : ""}`}>
-                                {notification.message}
-                              </div>
-                              <small className="text-muted" style={{ fontSize: "12px" }}>
-                                {notification.due_date}
-                              </small>
-                              <div className="text-muted" style={{ fontSize: "12px" }}>
-                                {notification.quanitity ? `Quantity: ${notification.quantity}` : null}
-                              </div>
-
-                            </div>
-                            {!notification.is_read && (
-                              <div className="ms-2">
-                                <span className="badge bg-primary" style={{ fontSize: "8px" }}>New</span>
-                              </div>
+                        <div className="d-flex">
+                          <div className="me-2">
+                            {notification.type === "overdue" && (
+                              <i className="fa-solid fa-exclamation-triangle text-danger"></i>
+                            )}
+                            {notification.type === "due_today" && (
+                              <i className="fa-solid fa-clock text-warning"></i>
+                            )}
+                            {notification.type === "book_request" && (
+                              <i className="fa-solid fa-book text-primary"></i>
+                            )}
+                            {notification.type === "announcement" && (
+                              <i className="fa-solid fa-bullhorn text-info"></i>
+                            )}
+                            {notification.type === "fine" && (
+                              <i className="fa-solid fa-money-bill-wave text-danger"></i>
+                            )}
+                            {notification.type === "book_issued" && (
+                              <i className="fa-solid fa-book text-success"></i>
+                            )}
+                            {![
+                              "overdue",
+                              "due_today",
+                              "book_request",
+                              "announcement",
+                              "fine",
+                              "book_issued",
+                            ].includes(notification.type) && (
+                              <i className="fa-solid fa-bell text-secondary"></i>
                             )}
                           </div>
-                        </Dropdown.Item>
-                        <Dropdown.Divider />
-                      </React.Fragment>
-                    ))
-
-                  )}
-                  {notifications.length > 10 && (
-                    <>
-                      <Dropdown.Item
-                        className="text-center"
-                        onClick={() => {
-                          // navigate("/notifications");
-                          setShowNotifications(false);
-                        }}
-                      >
-                        <small className="text-primary">View all notifications</small>
+                          <div style={{ flex: 1 }}>
+                            <div
+                              className={`fw-semibold ${
+                                !notification.is_read ? "text-dark" : ""
+                              }`}
+                            >
+                              {notification.message}
+                            </div>
+                            <small
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
+                            >
+                              {notification.due_date}
+                            </small>
+                            <div
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
+                            >
+                              {notification.quantity
+                                ? `Quantity: ${notification.quantity}`
+                                : null}
+                            </div>
+                          </div>
+                          {!notification.is_read && (
+                            <div className="ms-2">
+                              <span
+                                className="badge bg-primary"
+                                style={{ fontSize: "8px" }}
+                              >
+                                New
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </Dropdown.Item>
-                    </>
-                  )}
-                </Dropdown.Menu>
-                : null
-            }
+                      <Dropdown.Divider />
+                    </React.Fragment>
+                  ))
+                )}
+                {notifications.length > 10 && (
+                  <Dropdown.Item
+                    className="text-center"
+                    onClick={() => {
+                      // navigate("/notifications");
+                      setShowNotifications(false);
+                    }}
+                  >
+                    <small className="text-primary">
+                      View all notifications
+                    </small>
+                  </Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            ) : null}
           </Dropdown>
 
           {/* Profile/Admin Dropdown */}
@@ -680,7 +736,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 {getUserInitials()}
               </div>
             </Dropdown.Toggle>
-            <Dropdown.Menu align="end" style={{ minWidth: "280px", marginTop: "10px" }}>
+            <Dropdown.Menu
+              align="end"
+              style={{ minWidth: "280px", marginTop: "10px" }}
+            >
               {/* User Info Section */}
               <div style={{ padding: "16px" }}>
                 <div className="d-flex align-items-center">
@@ -706,10 +765,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                         marginBottom: "4px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        whiteSpace: "nowrap"
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {userInfo?.email || userInfo?.username || "user@example.com"}
+                      {userInfo?.email ||
+                        userInfo?.username ||
+                        "user@example.com"}
                     </div>
                     {userInfo?.secondary_email && (
                       <div
@@ -719,7 +780,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           marginBottom: "4px",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {userInfo.secondary_email}
@@ -729,8 +790,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                       <div style={{ marginBottom: "2px" }}>
                         {getUserName() || "User"}
                       </div>
-                      <div style={{ fontWeight: "500", color: "#374151" }}>
-                        {userInfo?.userrole?.toUpperCase() || userInfo?.role?.toUpperCase() || userInfo?.user_type?.toUpperCase() || "USER"}
+                      <div
+                        style={{
+                          fontWeight: "500",
+                          color: "#374151",
+                        }}
+                      >
+                        {userInfo?.userrole?.toUpperCase() ||
+                          userInfo?.role?.toUpperCase() ||
+                          userInfo?.user_type?.toUpperCase() ||
+                          "USER"}
                       </div>
                     </div>
                   </div>
@@ -745,7 +814,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     padding: "10px 16px",
                     color: "#374151",
                     fontSize: "14px",
-                    cursor: "pointer"
+                    cursor: "pointer",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#f9fafb";
@@ -754,7 +823,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <i className="fa-solid fa-user me-2" style={{ width: "20px", color: "#6b7280" }}></i>
+                  <i
+                    className="fa-solid fa-user me-2"
+                    style={{ width: "20px", color: "#6b7280" }}
+                  ></i>
                   My Profile
                 </Dropdown.Item>
 
@@ -765,7 +837,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     padding: "10px 16px",
                     color: "#dc3545",
                     fontSize: "14px",
-                    cursor: "pointer"
+                    cursor: "pointer",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#f9fafb";
@@ -774,7 +846,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  <i className="fa-solid fa-sign-out-alt me-2" style={{ width: "20px" }}></i>
+                  <i
+                    className="fa-solid fa-sign-out-alt me-2"
+                    style={{ width: "20px" }}
+                  ></i>
                   Logout
                 </Dropdown.Item>
               </div>
