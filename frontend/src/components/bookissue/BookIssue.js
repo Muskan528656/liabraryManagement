@@ -1237,130 +1237,476 @@ const BookIssue = () => {
       style={{ marginTop: "90px", padding: "0 1.5rem" }}
     >
       {/* Header Card */}
+      <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+        <Card.Body className="">
+          <Tab.Container
+            activeKey={activeTab}
+            onSelect={(k) => setActiveTab(k || "issue")}
+          >
+            <Nav variant="tabs" className="custom-nav-tabs">
+              <Nav.Item>
+                <Nav.Link eventKey="issue">
+                  <i className="fa-solid fa-book-return me-2"></i>
+                  <span>Issue New Book</span>
+                </Nav.Link>
+              </Nav.Item>
 
-      {/* Tabs */}
-      <Tab.Container
-        activeKey={activeTab}
-        onSelect={(k) => setActiveTab(k || "issue")}
-      >
-        <Nav
-          variant="tabs"
-          style={{ borderBottom: "2px solid #e5e7eb", position: "relative" }}
-        >
-          <Nav.Item>
-            <Nav.Link
-              eventKey="issue"
-              style={{
-                color: activeTab === "submit" ? "#000000" : "#6b7280",
-                fontWeight: activeTab === "submit" ? "600" : "400",
-                borderBottom:
-                  activeTab === "submit" ? "3px solid #6b7280" : "none",
-              }}
-            >
-              <i
-                className="fa-solid fa-book-return me-2"
-                style={{
-                  color: activeTab === "submit" ? "#000000" : "#6b7280",
-                  fontSize: "15px",
-                }}
-              ></i>
-              <span
-                style={{
-                  color: activeTab === "submit" ? "#000000" : "#6b7280",
-                  fontSize: "15px",
-                }}
-              >
-                Issue New Book
-              </span>
-            </Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link
-              eventKey="list"
-              style={{
-                color: activeTab === "submitted" ? "#000000" : "#6b7280",
-                fontWeight: activeTab === "submitted" ? "600" : "400",
-                borderBottom:
-                  activeTab === "submitted" ? "3px solid #6b7280" : "none",
-              }}
-            >
-              <span
-                style={{
-                  color: activeTab === "submitted" ? "#000000" : "#6b7280",
-                  fontSize: "15px",
-                }}
-              >
-                View Issued Books ({issuedBooks.length})
-              </span>
-            </Nav.Link>
-          </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="list">
+                  <span>View Issued Books ({issuedBooks.length})</span>
+                </Nav.Link>
+              </Nav.Item>
 
-          {/* Right aligned search bar */}
-          {activeTab === "list" && (
-            <div
-              style={{
-                position: "absolute",
-                right: "0",
-                top: "50%",
-                transform: "translateY(-50%)",
-                paddingRight: "15px",
-              }}
-            >
-              <InputGroup style={{ maxWidth: "250px" }}>
-                <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-                  <InputGroup.Text
-                    style={{
-                      background: "#f3e9fc",
-                      borderColor: "#e9ecef",
-                      padding: "0.375rem 0.75rem",
-                    }}
-                  >
-                    <i
-                      className="fa-solid fa-search"
-                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
-                    ></i>
-                  </InputGroup.Text>
+              {/* Right aligned search bar */}
+              {activeTab === "list" && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "0",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    paddingRight: "15px",
+                  }}
+                >
+                  <InputGroup style={{ maxWidth: "250px" }}>
+                    <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
+                      <InputGroup.Text
+                        style={{
+                          background: "#f3e9fc",
+                          borderColor: "#e9ecef",
+                          padding: "0.375rem 0.75rem",
+                        }}
+                      >
+                        <i
+                          className="fa-solid fa-search"
+                          style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                        ></i>
+                      </InputGroup.Text>
 
-                  <Form.Control
-                    placeholder="Search books..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      borderColor: "#e9ecef",
-                      fontSize: "0.875rem",
-                      padding: "0.375rem 0.75rem",
-                    }}
-                  />
-                </InputGroup>
+                      <Form.Control
+                        placeholder="Search books..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                          borderColor: "#e9ecef",
+                          fontSize: "0.875rem",
+                          padding: "0.375rem 0.75rem",
+                        }}
+                      />
+                    </InputGroup>
 
-                {searchTerm && (
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => setSearchTerm("")}
-                    style={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0 6px 6px 0",
-                      marginLeft: "-1px",
-                      height: "38px",
-                    }}
-                  >
-                    <i className="fa-solid fa-times"></i>
-                  </Button>
-                )}
-              </InputGroup>
-            </div>
-          )}
-        </Nav>
-        <Tab.Content>
-          <Tab.Pane eventKey="issue">
-            <Row>
-              <Col>
-                <Col lg={12}>
-                  {/* <Card className="shadow-sm" style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e5e7eb" }}> */}
-                  <Row>
-                    {/* Left Side - Form Section */}
+                    {searchTerm && (
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => setSearchTerm("")}
+                        style={{
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0 6px 6px 0",
+                          marginLeft: "-1px",
+                          height: "38px",
+                        }}
+                      >
+                        <i className="fa-solid fa-times"></i>
+                      </Button>
+                    )}
+                  </InputGroup>
+                </div>
+              )}
+            </Nav>
+            <Tab.Content>
+              <Tab.Pane eventKey="issue">
+                <Row>
+                  <Col>
                     <Col lg={12}>
-                      <Card className="shadow-sm h-100">
+                      {/* <Card className="shadow-sm" style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e5e7eb" }}> */}
+                      <Row>
+                        {/* Left Side - Form Section */}
+                        <Col lg={12}>
+                          <Card className="shadow-sm h-100">
+                            <Card.Header
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                border: "none",
+                                borderBottom: "2px solid #d1d5db",
+                                padding: "20px 24px",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <h5
+                                className="mb-0 fw-bold"
+                                style={{
+                                  color: "#1f2937",
+                                  fontSize: "20px",
+                                  letterSpacing: "0.3px",
+                                }}
+                              >
+                                <i
+                                  className="fa-solid fa-book-open me-3"
+                                  style={{ color: "#6b7280" }}
+                                ></i>
+                                Issue New Book
+                              </h5>
+                              <NavLink to="/bulkissued" style={{ textDecoration: "none" }}>
+                                <Button style={{ backgroundColor: "blue", color: "#fff" }}>
+                                  <i className="fa-solid fa-plus me-2"></i>
+                                  Bulk Issue
+                                </Button>
+                              </NavLink>
+
+                            </Card.Header>
+                            <Card.Body className="p-4">
+                              {/* Top Row - 2 Fields */}
+                              <Row className="g-3 mb-4">
+                                {/* Book Selection */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-book me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Select Book *
+                                    </Form.Label>
+                                    <div ref={bookInputRef}>
+                                      <AsyncSelect
+                                        cacheOptions
+                                        defaultOptions
+                                        loadOptions={loadBookOptions}
+                                        value={selectedBook}
+                                        onChange={handleBookChange}
+                                        styles={customSelectStyles}
+                                        placeholder="Search by book name, author, ISBN..."
+                                        isSearchable
+                                        isLoading={searchingBooks}
+                                        noOptionsMessage={({ inputValue }) =>
+                                          inputValue
+                                            ? "No books found. Try different search terms."
+                                            : "Start typing to search books..."
+                                        }
+                                      />
+                                    </div>
+                                    <Form.Text className="text-muted mt-1 d-block small">
+                                      {/* <i className="fa-solid fa-info-circle me-1"></i> */}
+                                      Search by title, author, ISBN, language, or
+                                      scan barcode
+                                    </Form.Text>
+                                  </Form.Group>
+                                </Col>
+
+                                {/* Library Card Selection */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-id-card me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Select Library Card *
+                                    </Form.Label>
+                                    <div ref={cardInputRef}>
+                                      <AsyncSelect
+                                        cacheOptions
+                                        defaultOptions
+                                        loadOptions={loadCardOptions}
+                                        value={selectedLibraryCard}
+                                        onChange={handleCardChange}
+                                        styles={customSelectStyles}
+                                        placeholder="Search by card number, name, phone..."
+                                        isSearchable
+                                        isLoading={searchingCards}
+                                        noOptionsMessage={({ inputValue }) =>
+                                          inputValue
+                                            ? "No cards found. Try different search terms."
+                                            : "Start typing to search cards..."
+                                        }
+                                      />
+                                    </div>
+                                    <Form.Text className="text-muted mt-1 d-block small">
+                                      {/* <i className="fa-solid fa-info-circle me-1"></i> */}
+                                      Search by card number, user name, phone,
+                                      email, or scan barcode
+                                    </Form.Text>
+                                  </Form.Group>
+                                </Col>
+                              </Row>
+                              {/* {issued Quantity Details } */}
+                              <Row className="mb-4">
+                                {/* give me issued quantity input box */}
+                                <Col>
+                                  {selectedLibraryCard && (() => {
+                                    const allowed = parseInt(maxBooksPerCard) || 1;
+                                    const issued = computedIssuedCount || 0;
+                                    const remaining = Math.max(0, allowed - issued);
+
+                                    return (
+                                      <div
+                                        style={{
+                                          background: "#e6f0ff",
+                                          border: "1px solid #cfe0ff",
+                                          borderRadius: "8px",
+                                          padding: "12px 16px",
+                                          fontSize: "14px",
+                                          color: "#0f172a",
+                                        }}
+                                      >
+                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                          <div style={{ fontWeight: 900 }}>
+                                            Card: {selectedLibraryCard.data.card_number || selectedLibraryCard.label}
+                                          </div>
+                                          <div>
+                                            <Button
+                                              variant="link"
+                                              size="sm"
+                                              onClick={() => setShowCardDetails(!showCardDetails)}
+                                              style={{ textDecoration: 'none' }}
+                                            >
+                                              {showCardDetails ? 'Minimize' : 'Expand'}
+                                            </Button>
+                                          </div>
+                                        </div>
+
+                                        {!showCardDetails ? (
+                                          <div>
+                                            <strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued} &nbsp;•&nbsp;
+                                            <strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed} &nbsp;•&nbsp;
+                                            <strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <div className="mb-2">
+                                              <div><strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued}</div>
+                                              <div><strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed}</div>
+                                              <div><strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}</div>
+                                            </div>
+
+                                            <div>
+                                              <strong className="d-block mb-2">Books currently issued on this card:</strong>
+                                              {issuedListForSelected && issuedListForSelected.length > 0 ? (
+                                                <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                                                  {issuedListForSelected.map((iss) => (
+                                                    <li key={iss.id || iss.book_id || Math.random()} style={{ marginBottom: '6px' }}>
+                                                      <div style={{ fontSize: '14px' }}>
+                                                        {iss.book_title || iss.title || 'Unknown Book'}
+                                                        {iss.due_date && (
+                                                          <small className="text-muted"> &nbsp;— due {new Date(iss.due_date).toLocaleDateString()}</small>
+                                                        )}
+                                                      </div>
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                              ) : (
+                                                <div className="text-muted">No active issued books on this card.</div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </Col>
+                              </Row>
+
+                              {/* Bottom Row - 2 Fields */}
+                              <Row className="g-3">
+                                {/* Issue Date */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-calendar me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Issue Date
+                                    </Form.Label>
+                                    <Form.Control
+                                      type="date"
+                                      value={formData.issue_date}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          issue_date: e.target.value,
+                                        })
+                                      }
+                                      style={{
+                                        border: "2px solid #e5e7eb",
+                                        borderRadius: "8px",
+                                        padding: "10px",
+                                        fontSize: "14px",
+                                      }}
+                                    />
+                                  </Form.Group>
+                                </Col>
+
+                                {/* Submission Date */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-calendar-check me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Submission Date{" "}
+                                      <span className="text-danger">*</span>
+                                    </Form.Label>
+                                    <Form.Control
+                                      id="due_date"
+                                      type="date"
+                                      value={formData.due_date}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          due_date: e.target.value,
+                                        })
+                                      }
+                                      min={formData.issue_date}
+                                      required
+                                      style={{
+                                        border: "2px solid #e5e7eb",
+                                        borderRadius: "8px",
+                                        padding: "10px",
+                                        fontSize: "14px",
+                                      }}
+                                    />
+                                  </Form.Group>
+                                </Col>
+                              </Row>
+
+                              {/* Additional Fields Row */}
+                              <Row className="g-3 mt-3">
+                                {/* Book Condition */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-clipboard-check me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Book Condition
+                                    </Form.Label>
+                                    <Form.Select
+                                      value={formData.condition_before}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          condition_before: e.target.value,
+                                        })
+                                      }
+                                      style={{
+                                        border: "2px solid #e5e7eb",
+                                        borderRadius: "8px",
+                                        padding: "10px",
+                                        fontSize: "14px",
+                                      }}
+                                    >
+                                      <option value="Good">✅ Good</option>
+                                      <option value="Fair">⚠️ Fair</option>
+                                      <option value="Damaged">❌ Damaged</option>
+                                    </Form.Select>
+                                  </Form.Group>
+                                </Col>
+
+                                {/* Remarks */}
+                                <Col lg={6}>
+                                  <Form.Group>
+                                    <Form.Label
+                                      className="fw-bold mb-2"
+                                      style={{ color: "#374151", fontSize: "14px" }}
+                                    >
+                                      {/* <i className="fa-solid fa-comment me-2" style={{ color: "#6b7280" }}></i> */}
+                                      Remarks (Optional)
+                                    </Form.Label>
+                                    <Form.Control
+                                      as="textarea"
+                                      rows={2}
+                                      placeholder="Add any additional notes or remarks..."
+                                      value={formData.remarks}
+                                      onChange={(e) =>
+                                        setFormData({
+                                          ...formData,
+                                          remarks: e.target.value,
+                                        })
+                                      }
+                                      style={{
+                                        border: "2px solid #e5e7eb",
+                                        borderRadius: "8px",
+                                        padding: "10px",
+                                        fontSize: "14px",
+                                        resize: "vertical",
+                                      }}
+                                    />
+                                  </Form.Group>
+                                </Col>
+                              </Row>
+
+                              {/* Action Buttons */}
+                              <Row className="mt-4">
+                                <Col lg={12}>
+                                  <div className="d-flex gap-3">
+                                    <Button
+                                      // variant="outline-secondary"
+                                      onClick={resetForm}
+                                      disabled={loading}
+                                      className="btn-cancel"
+                                    >
+                                      Reset
+                                    </Button>
+                                    <Button
+                                      onClick={handleIssueBook}
+                                      disabled={
+                                        loading ||
+                                        !formData.book_id ||
+                                        (!formData.card_id && !formData.issued_to) ||
+                                        !formData.due_date ||
+                                        (formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)))
+                                      }
+                                      className="btn-submit"
+                                    >
+                                      {loading ? (
+                                        <>
+                                          <Spinner
+                                            animation="border"
+                                            size="sm"
+                                            className="me-2"
+                                          />
+                                          Issuing...
+                                        </>
+                                      ) : (
+                                        <>Issue Book</>
+                                      )}
+                                    </Button>
+                                  </div>
+                                </Col>
+                                {formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)) && (
+                                  <Col lg={12} className="mt-2">
+                                    <Alert variant="warning" className="py-2">
+                                      This card has reached the issue limit ({maxBooksPerCard}). You cannot issue more books to this card until some are returned.
+                                    </Alert>
+                                  </Col>
+                                )}
+                              </Row>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      </Row>
+                      {/* </Card> */}
+                    </Col>
+                  </Col>
+
+                  <Col>
+                    <Col lg={12}>
+                      <Card
+                        className="shadow-sm"
+                        style={{
+                          position: "sticky",
+                          top: "100px",
+                          background: "#ffffff",
+                          border: "1px solid #e5e7eb",
+                          height: "539px",
+                        }}
+                      >
                         <Card.Header
                           style={{
                             background:
@@ -1368,9 +1714,6 @@ const BookIssue = () => {
                             border: "none",
                             borderBottom: "2px solid #d1d5db",
                             padding: "20px 24px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
                           }}
                         >
                           <h5
@@ -1385,677 +1728,298 @@ const BookIssue = () => {
                               className="fa-solid fa-book-open me-3"
                               style={{ color: "#6b7280" }}
                             ></i>
-                            Issue New Book
+                            Issue Summary
                           </h5>
-                          <NavLink to="/bulkissued" style={{ textDecoration: "none" }}>
-                            <Button style={{ backgroundColor: "blue", color: "#fff" }}>
-                              <i className="fa-solid fa-plus me-2"></i>
-                              Bulk Issue
-                            </Button>
-                          </NavLink>
-
                         </Card.Header>
-                        <Card.Body className="p-4">
-                          {/* Top Row - 2 Fields */}
-                          <Row className="g-3 mb-4">
-                            {/* Book Selection */}
+                        <Card.Body>
+                          <Row>
+                            {/* Book Information - Left Side */}
                             <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
+                              <Card className="h-100">
+                                <Card.Header
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                    border: "none",
+                                    borderBottom: "2px solid #d1d5db",
+                                    padding: "10px 24px",
+                                  }}
                                 >
-                                  {/* <i className="fa-solid fa-book me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Select Book *
-                                </Form.Label>
-                                <div ref={bookInputRef}>
-                                  <AsyncSelect
-                                    cacheOptions
-                                    defaultOptions
-                                    loadOptions={loadBookOptions}
-                                    value={selectedBook}
-                                    onChange={handleBookChange}
-                                    styles={customSelectStyles}
-                                    placeholder="Search by book name, author, ISBN..."
-                                    isSearchable
-                                    isLoading={searchingBooks}
-                                    noOptionsMessage={({ inputValue }) =>
-                                      inputValue
-                                        ? "No books found. Try different search terms."
-                                        : "Start typing to search books..."
-                                    }
-                                  />
-                                </div>
-                                <Form.Text className="text-muted mt-1 d-block small">
-                                  {/* <i className="fa-solid fa-info-circle me-1"></i> */}
-                                  Search by title, author, ISBN, language, or
-                                  scan barcode
-                                </Form.Text>
-                              </Form.Group>
-                            </Col>
-
-                            {/* Library Card Selection */}
-                            <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
-                                >
-                                  {/* <i className="fa-solid fa-id-card me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Select Library Card *
-                                </Form.Label>
-                                <div ref={cardInputRef}>
-                                  <AsyncSelect
-                                    cacheOptions
-                                    defaultOptions
-                                    loadOptions={loadCardOptions}
-                                    value={selectedLibraryCard}
-                                    onChange={handleCardChange}
-                                    styles={customSelectStyles}
-                                    placeholder="Search by card number, name, phone..."
-                                    isSearchable
-                                    isLoading={searchingCards}
-                                    noOptionsMessage={({ inputValue }) =>
-                                      inputValue
-                                        ? "No cards found. Try different search terms."
-                                        : "Start typing to search cards..."
-                                    }
-                                  />
-                                </div>
-                                <Form.Text className="text-muted mt-1 d-block small">
-                                  {/* <i className="fa-solid fa-info-circle me-1"></i> */}
-                                  Search by card number, user name, phone,
-                                  email, or scan barcode
-                                </Form.Text>
-                              </Form.Group>
-                            </Col>
-                          </Row>
-                          {/* {issued Quantity Details } */}
-                          <Row className="mb-4">
-                            {/* give me issued quantity input box */}
-                            <Col>
-                              {selectedLibraryCard && (() => {
-                                const allowed = parseInt(maxBooksPerCard) || 1;
-                                const issued = computedIssuedCount || 0;
-                                const remaining = Math.max(0, allowed - issued);
-
-                                return (
-                                  <div
+                                  <h5
+                                    className="mb-0 fw-bold"
                                     style={{
-                                      background: "#e6f0ff",
-                                      border: "1px solid #cfe0ff",
-                                      borderRadius: "8px",
-                                      padding: "12px 16px",
+                                      color: "#1f2937",
                                       fontSize: "14px",
-                                      color: "#0f172a",
+                                      letterSpacing: "0.3px",
                                     }}
                                   >
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                      <div style={{ fontWeight: 900 }}>
-                                        Card: {selectedLibraryCard.data.card_number || selectedLibraryCard.label}
-                                      </div>
-                                      <div>
-                                        <Button
-                                          variant="link"
-                                          size="sm"
-                                          onClick={() => setShowCardDetails(!showCardDetails)}
-                                          style={{ textDecoration: 'none' }}
-                                        >
-                                          {showCardDetails ? 'Minimize' : 'Expand'}
-                                        </Button>
-                                      </div>
+                                    Book Information
+                                  </h5>
+                                </Card.Header>
+                                <Card.Body>
+                                  {selectedBook && selectedBook.data ? (
+                                    <div>
+                                      <Row>
+                                        <Col xs={4} className="text-end pe-3">
+                                          <strong>Title:</strong>
+                                        </Col>
+                                        <Col xs={8}>{selectedBook.data.title}</Col>
+                                      </Row>
+                                      {selectedBook.data.isbn && (
+                                        <Row className="mb-2">
+                                          <Col xs={4} className="text-end pe-3">
+                                            <strong>ISBN:</strong>
+                                          </Col>
+                                          <Col xs={8}>{selectedBook.data.isbn}</Col>
+                                        </Row>
+                                      )}
+                                      {selectedBook.data.author_name && (
+                                        <Row className="mb-2">
+                                          <Col xs={4} className="text-end pe-3">
+                                            <strong>Author:</strong>
+                                          </Col>
+                                          <Col xs={8}>
+                                            {selectedBook.data.author_name}
+                                          </Col>
+                                        </Row>
+                                      )}
                                     </div>
-
-                                    {!showCardDetails ? (
-                                      <div>
-                                        <strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued} &nbsp;•&nbsp;
-                                        <strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed} &nbsp;•&nbsp;
-                                        <strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        <div className="mb-2">
-                                          <div><strong style={{ color: '#0b5ed7' }}>Issued:</strong> {issued}</div>
-                                          <div><strong style={{ color: '#0b5ed7' }}>Allowed:</strong> {allowed}</div>
-                                          <div><strong style={{ color: '#0b5ed7' }}>Remaining:</strong> {remaining}</div>
-                                        </div>
-
-                                        <div>
-                                          <strong className="d-block mb-2">Books currently issued on this card:</strong>
-                                          {issuedListForSelected && issuedListForSelected.length > 0 ? (
-                                            <ul style={{ margin: 0, paddingLeft: '18px' }}>
-                                              {issuedListForSelected.map((iss) => (
-                                                <li key={iss.id || iss.book_id || Math.random()} style={{ marginBottom: '6px' }}>
-                                                  <div style={{ fontSize: '14px' }}>
-                                                    {iss.book_title || iss.title || 'Unknown Book'}
-                                                    {iss.due_date && (
-                                                      <small className="text-muted"> &nbsp;— due {new Date(iss.due_date).toLocaleDateString()}</small>
-                                                    )}
-                                                  </div>
-                                                </li>
-                                              ))}
-                                            </ul>
-                                          ) : (
-                                            <div className="text-muted">No active issued books on this card.</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })()}
-                            </Col>
-                          </Row>
-
-                          {/* Bottom Row - 2 Fields */}
-                          <Row className="g-3">
-                            {/* Issue Date */}
-                            <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
-                                >
-                                  {/* <i className="fa-solid fa-calendar me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Issue Date
-                                </Form.Label>
-                                <Form.Control
-                                  type="date"
-                                  value={formData.issue_date}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      issue_date: e.target.value,
-                                    })
-                                  }
-                                  style={{
-                                    border: "2px solid #e5e7eb",
-                                    borderRadius: "8px",
-                                    padding: "10px",
-                                    fontSize: "14px",
-                                  }}
-                                />
-                              </Form.Group>
-                            </Col>
-
-                            {/* Submission Date */}
-                            <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
-                                >
-                                  {/* <i className="fa-solid fa-calendar-check me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Submission Date{" "}
-                                  <span className="text-danger">*</span>
-                                </Form.Label>
-                                <Form.Control
-                                  id="due_date"
-                                  type="date"
-                                  value={formData.due_date}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      due_date: e.target.value,
-                                    })
-                                  }
-                                  min={formData.issue_date}
-                                  required
-                                  style={{
-                                    border: "2px solid #e5e7eb",
-                                    borderRadius: "8px",
-                                    padding: "10px",
-                                    fontSize: "14px",
-                                  }}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </Row>
-
-                          {/* Additional Fields Row */}
-                          <Row className="g-3 mt-3">
-                            {/* Book Condition */}
-                            <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
-                                >
-                                  {/* <i className="fa-solid fa-clipboard-check me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Book Condition
-                                </Form.Label>
-                                <Form.Select
-                                  value={formData.condition_before}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      condition_before: e.target.value,
-                                    })
-                                  }
-                                  style={{
-                                    border: "2px solid #e5e7eb",
-                                    borderRadius: "8px",
-                                    padding: "10px",
-                                    fontSize: "14px",
-                                  }}
-                                >
-                                  <option value="Good">✅ Good</option>
-                                  <option value="Fair">⚠️ Fair</option>
-                                  <option value="Damaged">❌ Damaged</option>
-                                </Form.Select>
-                              </Form.Group>
-                            </Col>
-
-                            {/* Remarks */}
-                            <Col lg={6}>
-                              <Form.Group>
-                                <Form.Label
-                                  className="fw-bold mb-2"
-                                  style={{ color: "#374151", fontSize: "14px" }}
-                                >
-                                  {/* <i className="fa-solid fa-comment me-2" style={{ color: "#6b7280" }}></i> */}
-                                  Remarks (Optional)
-                                </Form.Label>
-                                <Form.Control
-                                  as="textarea"
-                                  rows={2}
-                                  placeholder="Add any additional notes or remarks..."
-                                  value={formData.remarks}
-                                  onChange={(e) =>
-                                    setFormData({
-                                      ...formData,
-                                      remarks: e.target.value,
-                                    })
-                                  }
-                                  style={{
-                                    border: "2px solid #e5e7eb",
-                                    borderRadius: "8px",
-                                    padding: "10px",
-                                    fontSize: "14px",
-                                    resize: "vertical",
-                                  }}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </Row>
-
-                          {/* Action Buttons */}
-                          <Row className="mt-4">
-                            <Col lg={12}>
-                              <div className="d-flex gap-3">
-                                <Button
-                                  // variant="outline-secondary"
-                                  onClick={resetForm}
-                                  disabled={loading}
-                                  className="btn-cancel"
-                                >
-                                  Reset
-                                </Button>
-                                <Button
-                                  onClick={handleIssueBook}
-                                  disabled={
-                                    loading ||
-                                    !formData.book_id ||
-                                    (!formData.card_id && !formData.issued_to) ||
-                                    !formData.due_date ||
-                                    (formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)))
-                                  }
-                                  className="btn-submit"
-                                >
-                                  {loading ? (
-                                    <>
-                                      <Spinner
-                                        animation="border"
-                                        size="sm"
-                                        className="me-2"
-                                      />
-                                      Issuing...
-                                    </>
                                   ) : (
-                                    <>Issue Book</>
+                                    <div className="text-center text-muted py-3">
+                                      <i
+                                        className="fa-solid fa-book"
+                                        style={{ fontSize: "48px", opacity: 0.3 }}
+                                      ></i>
+                                      <p className="mt-2">No book selected</p>
+                                    </div>
                                   )}
-                                </Button>
-                              </div>
+                                </Card.Body>
+                              </Card>
                             </Col>
-                            {formData.card_id && (computedIssuedCount >= (parseInt(maxBooksPerCard) || 1)) && (
-                              <Col lg={12} className="mt-2">
-                                <Alert variant="warning" className="py-2">
-                                  This card has reached the issue limit ({maxBooksPerCard}). You cannot issue more books to this card until some are returned.
-                                </Alert>
-                              </Col>
-                            )}
+
+                            {/* Member Information - Right Side */}
+                            <Col lg={6}>
+                              <Card className="h-100">
+                                <Card.Header
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                    border: "none",
+                                    borderBottom: "2px solid #d1d5db",
+                                    padding: "10px 24px",
+                                  }}
+                                >
+                                  <h5
+                                    className="mb-0 fw-bold"
+                                    style={{
+                                      color: "#1f2937",
+                                      fontSize: "14px",
+                                      letterSpacing: "0.3px",
+                                    }}
+                                  >
+                                    Member Information
+                                  </h5>
+                                </Card.Header>
+                                <Card.Body>
+                                  {userDetails ? (
+                                    <div>
+                                      <Row className="mb-2">
+                                        <Col xs={4} className="text-end pe-3">
+                                          <strong>Name:</strong>
+                                        </Col>
+                                        <Col xs={8}>
+                                          {userDetails.user_name ||
+                                            userDetails.student_name ||
+                                            `${userDetails.firstname || ""} ${userDetails.lastname || ""
+                                              }`.trim() ||
+                                            "Unknown"}
+                                        </Col>
+                                      </Row>
+                                      {userDetails.card_number && (
+                                        <Row className="mb-2">
+                                          <Col xs={4} className="text-end pe-3">
+                                            <strong>Card:</strong>
+                                          </Col>
+                                          <Col xs={8}>
+                                            {userDetails.card_number}
+                                          </Col>
+                                        </Row>
+                                      )}
+                                      {userDetails.email && (
+                                        <Row className="mb-2">
+                                          <Col xs={4} className="text-end pe-3">
+                                            <strong>Email:</strong>
+                                          </Col>
+                                          <Col xs={8}>{userDetails.email}</Col>
+                                        </Row>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="text-center text-muted py-3">
+                                      <i
+                                        className="fa-solid fa-user"
+                                        style={{ fontSize: "48px", opacity: 0.3 }}
+                                      ></i>
+                                      <p className="mt-2">No member selected</p>
+                                    </div>
+                                  )}
+                                </Card.Body>
+                              </Card>
+                            </Col>
+
+                            {/* Issue Dates and Condition - Full Width */}
+                            <Col lg={12} className="mt-2">
+                              <Card>
+                                <Card.Header
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                    border: "none",
+                                    borderBottom: "2px solid #d1d5db",
+                                    padding: "10px 24px",
+                                  }}
+                                >
+                                  <h5
+                                    className="mb-0 fw-bold"
+                                    style={{
+                                      color: "#1f2937",
+                                      fontSize: "14px",
+                                      letterSpacing: "0.3px",
+                                    }}
+                                  >
+                                    Issue Details
+                                  </h5>
+                                </Card.Header>
+                                <Card.Body>
+                                  <Row>
+                                    {formData.due_date && (
+                                      <Col lg={6}>
+                                        <Row className="mb-2">
+                                          <Col xs={5} className="text-end pe-3">
+                                            <strong>Issue Date:</strong>
+                                          </Col>
+                                          <Col xs={7}>
+                                            {new Date(
+                                              formData.issue_date
+                                            ).toLocaleDateString()}
+                                          </Col>
+                                        </Row>
+                                        <Row className="mb-2">
+                                          <Col xs={5} className="text-end pe-3">
+                                            <strong>Submission Date:</strong>
+                                          </Col>
+                                          <Col xs={7}>
+                                            {new Date(
+                                              formData.due_date
+                                            ).toLocaleDateString()}
+                                          </Col>
+                                        </Row>
+                                        <Row className="mb-2">
+                                          <Col xs={5} className="text-end pe-3">
+                                            <strong>Duration:</strong>
+                                          </Col>
+                                          <Col xs={7}>
+                                            {Math.ceil(
+                                              (new Date(formData.due_date) -
+                                                new Date(formData.issue_date)) /
+                                              (1000 * 60 * 60 * 24)
+                                            )}{" "}
+                                            days
+                                          </Col>
+                                        </Row>
+                                      </Col>
+                                    )}
+
+                                    {formData.condition_before && (
+                                      <Col lg={6}>
+                                        <div className="text-center">
+                                          <strong className="d-block mb-2">
+                                            Book Condition Before Issue:
+                                          </strong>
+                                          <Badge
+                                            bg={
+                                              formData.condition_before === "Good"
+                                                ? "success"
+                                                : formData.condition_before ===
+                                                  "Fair"
+                                                  ? "warning"
+                                                  : "danger"
+                                            }
+                                            className="fs-6 py-2 px-3"
+                                          >
+                                            {formData.condition_before}
+                                          </Badge>
+                                        </div>
+                                      </Col>
+                                    )}
+                                  </Row>
+                                </Card.Body>
+                              </Card>
+                            </Col>
                           </Row>
                         </Card.Body>
                       </Card>
                     </Col>
-                  </Row>
-                  {/* </Card> */}
-                </Col>
-              </Col>
+                  </Col>
+                </Row>
 
-              <Col>
-                <Col lg={12}>
-                  <Card
-                    className="shadow-sm"
-                    style={{
-                      position: "sticky",
-                      top: "100px",
-                      background: "#ffffff",
-                      border: "1px solid #e5e7eb",
-                      height: "539px",
-                    }}
-                  >
-                    <Card.Header
+                {/* </Card> */}
+              </Tab.Pane>
+
+              {/* Issued Books List Tab */}
+              <Tab.Pane eventKey="list">
+                <Card className="shadow-sm">
+                  <Card.Body className="p-0" style={{ overflow: "hidden" }}>
+                    <ResizableTable
+                      data={filteredIssuedBooks}
+                      columns={issueColumns}
+                      loading={loadingIssuedBooks}
+                      showCheckbox={false}
+                      showSerialNumber={true}
+                      showActions={false}
+                      searchTerm={searchTerm}
+                      currentPage={currentPage}
+                      recordsPerPage={recordsPerPage}
+                      onPageChange={(page) => {
+                        setCurrentPage(page);
+                      }}
+                      emptyMessage={
+                        searchTerm
+                          ? "No issued books found matching your search"
+                          : "No books have been issued yet"
+                      }
+                      onRowClick={(issue) => {
+                        // Optional: Navigate to issue details or show more info
+                        console.log("Issue clicked:", issue);
+                      }}
+                    />
+                  </Card.Body>
+                  {filteredIssuedBooks.length > 0 && (
+                    <Card.Footer
                       style={{
-                        background:
-                          "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                        border: "none",
-                        borderBottom: "2px solid #d1d5db",
-                        padding: "20px 24px",
+                        background: "#f8f9fa",
+                        borderTop: "1px solid #e9ecef",
                       }}
                     >
-                      <h5
-                        className="mb-0 fw-bold"
-                        style={{
-                          color: "#1f2937",
-                          fontSize: "20px",
-                          letterSpacing: "0.3px",
-                        }}
-                      >
-                        <i
-                          className="fa-solid fa-book-open me-3"
-                          style={{ color: "#6b7280" }}
-                        ></i>
-                        Issue Summary
-                      </h5>
-                    </Card.Header>
-                    <Card.Body>
-                      <Row>
-                        {/* Book Information - Left Side */}
-                        <Col lg={6}>
-                          <Card className="h-100">
-                            <Card.Header
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                border: "none",
-                                borderBottom: "2px solid #d1d5db",
-                                padding: "10px 24px",
-                              }}
-                            >
-                              <h5
-                                className="mb-0 fw-bold"
-                                style={{
-                                  color: "#1f2937",
-                                  fontSize: "14px",
-                                  letterSpacing: "0.3px",
-                                }}
-                              >
-                                Book Information
-                              </h5>
-                            </Card.Header>
-                            <Card.Body>
-                              {selectedBook && selectedBook.data ? (
-                                <div>
-                                  <Row>
-                                    <Col xs={4} className="text-end pe-3">
-                                      <strong>Title:</strong>
-                                    </Col>
-                                    <Col xs={8}>{selectedBook.data.title}</Col>
-                                  </Row>
-                                  {selectedBook.data.isbn && (
-                                    <Row className="mb-2">
-                                      <Col xs={4} className="text-end pe-3">
-                                        <strong>ISBN:</strong>
-                                      </Col>
-                                      <Col xs={8}>{selectedBook.data.isbn}</Col>
-                                    </Row>
-                                  )}
-                                  {selectedBook.data.author_name && (
-                                    <Row className="mb-2">
-                                      <Col xs={4} className="text-end pe-3">
-                                        <strong>Author:</strong>
-                                      </Col>
-                                      <Col xs={8}>
-                                        {selectedBook.data.author_name}
-                                      </Col>
-                                    </Row>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="text-center text-muted py-3">
-                                  <i
-                                    className="fa-solid fa-book"
-                                    style={{ fontSize: "48px", opacity: 0.3 }}
-                                  ></i>
-                                  <p className="mt-2">No book selected</p>
-                                </div>
-                              )}
-                            </Card.Body>
-                          </Card>
-                        </Col>
-
-                        {/* Member Information - Right Side */}
-                        <Col lg={6}>
-                          <Card className="h-100">
-                            <Card.Header
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                border: "none",
-                                borderBottom: "2px solid #d1d5db",
-                                padding: "10px 24px",
-                              }}
-                            >
-                              <h5
-                                className="mb-0 fw-bold"
-                                style={{
-                                  color: "#1f2937",
-                                  fontSize: "14px",
-                                  letterSpacing: "0.3px",
-                                }}
-                              >
-                                Member Information
-                              </h5>
-                            </Card.Header>
-                            <Card.Body>
-                              {userDetails ? (
-                                <div>
-                                  <Row className="mb-2">
-                                    <Col xs={4} className="text-end pe-3">
-                                      <strong>Name:</strong>
-                                    </Col>
-                                    <Col xs={8}>
-                                      {userDetails.user_name ||
-                                        userDetails.student_name ||
-                                        `${userDetails.firstname || ""} ${userDetails.lastname || ""
-                                          }`.trim() ||
-                                        "Unknown"}
-                                    </Col>
-                                  </Row>
-                                  {userDetails.card_number && (
-                                    <Row className="mb-2">
-                                      <Col xs={4} className="text-end pe-3">
-                                        <strong>Card:</strong>
-                                      </Col>
-                                      <Col xs={8}>
-                                        {userDetails.card_number}
-                                      </Col>
-                                    </Row>
-                                  )}
-                                  {userDetails.email && (
-                                    <Row className="mb-2">
-                                      <Col xs={4} className="text-end pe-3">
-                                        <strong>Email:</strong>
-                                      </Col>
-                                      <Col xs={8}>{userDetails.email}</Col>
-                                    </Row>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="text-center text-muted py-3">
-                                  <i
-                                    className="fa-solid fa-user"
-                                    style={{ fontSize: "48px", opacity: 0.3 }}
-                                  ></i>
-                                  <p className="mt-2">No member selected</p>
-                                </div>
-                              )}
-                            </Card.Body>
-                          </Card>
-                        </Col>
-
-                        {/* Issue Dates and Condition - Full Width */}
-                        <Col lg={12} className="mt-2">
-                          <Card>
-                            <Card.Header
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                border: "none",
-                                borderBottom: "2px solid #d1d5db",
-                                padding: "10px 24px",
-                              }}
-                            >
-                              <h5
-                                className="mb-0 fw-bold"
-                                style={{
-                                  color: "#1f2937",
-                                  fontSize: "14px",
-                                  letterSpacing: "0.3px",
-                                }}
-                              >
-                                Issue Details
-                              </h5>
-                            </Card.Header>
-                            <Card.Body>
-                              <Row>
-                                {formData.due_date && (
-                                  <Col lg={6}>
-                                    <Row className="mb-2">
-                                      <Col xs={5} className="text-end pe-3">
-                                        <strong>Issue Date:</strong>
-                                      </Col>
-                                      <Col xs={7}>
-                                        {new Date(
-                                          formData.issue_date
-                                        ).toLocaleDateString()}
-                                      </Col>
-                                    </Row>
-                                    <Row className="mb-2">
-                                      <Col xs={5} className="text-end pe-3">
-                                        <strong>Submission Date:</strong>
-                                      </Col>
-                                      <Col xs={7}>
-                                        {new Date(
-                                          formData.due_date
-                                        ).toLocaleDateString()}
-                                      </Col>
-                                    </Row>
-                                    <Row className="mb-2">
-                                      <Col xs={5} className="text-end pe-3">
-                                        <strong>Duration:</strong>
-                                      </Col>
-                                      <Col xs={7}>
-                                        {Math.ceil(
-                                          (new Date(formData.due_date) -
-                                            new Date(formData.issue_date)) /
-                                          (1000 * 60 * 60 * 24)
-                                        )}{" "}
-                                        days
-                                      </Col>
-                                    </Row>
-                                  </Col>
-                                )}
-
-                                {formData.condition_before && (
-                                  <Col lg={6}>
-                                    <div className="text-center">
-                                      <strong className="d-block mb-2">
-                                        Book Condition Before Issue:
-                                      </strong>
-                                      <Badge
-                                        bg={
-                                          formData.condition_before === "Good"
-                                            ? "success"
-                                            : formData.condition_before ===
-                                              "Fair"
-                                              ? "warning"
-                                              : "danger"
-                                        }
-                                        className="fs-6 py-2 px-3"
-                                      >
-                                        {formData.condition_before}
-                                      </Badge>
-                                    </div>
-                                  </Col>
-                                )}
-                              </Row>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Col>
-            </Row>
-
-            {/* </Card> */}
-          </Tab.Pane>
-
-          {/* Issued Books List Tab */}
-          <Tab.Pane eventKey="list">
-            <Card className="shadow-sm">
-              <Card.Body className="p-0" style={{ overflow: "hidden" }}>
-                <ResizableTable
-                  data={filteredIssuedBooks}
-                  columns={issueColumns}
-                  loading={loadingIssuedBooks}
-                  showCheckbox={false}
-                  showSerialNumber={true}
-                  showActions={false}
-                  searchTerm={searchTerm}
-                  currentPage={currentPage}
-                  recordsPerPage={recordsPerPage}
-                  onPageChange={(page) => {
-                    setCurrentPage(page);
-                  }}
-                  emptyMessage={
-                    searchTerm
-                      ? "No issued books found matching your search"
-                      : "No books have been issued yet"
-                  }
-                  onRowClick={(issue) => {
-                    // Optional: Navigate to issue details or show more info
-                    console.log("Issue clicked:", issue);
-                  }}
-                />
-              </Card.Body>
-              {filteredIssuedBooks.length > 0 && (
-                <Card.Footer
-                  style={{
-                    background: "#f8f9fa",
-                    borderTop: "1px solid #e9ecef",
-                  }}
-                >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>Total Issued Books:</strong>{" "}
-                      {filteredIssuedBooks.length}
-                      {searchTerm && (
-                        <span className="text-muted ms-2">
-                          (Filtered from {issuedBooks.length} total)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Card.Footer>
-              )}
-            </Card>
-          </Tab.Pane>
-        </Tab.Content>
-      </Tab.Container>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Total Issued Books:</strong>{" "}
+                          {filteredIssuedBooks.length}
+                          {searchTerm && (
+                            <span className="text-muted ms-2">
+                              (Filtered from {issuedBooks.length} total)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Card.Footer>
+                  )}
+                </Card>
+              </Tab.Pane>
+            </Tab.Content>
+          </Tab.Container>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };

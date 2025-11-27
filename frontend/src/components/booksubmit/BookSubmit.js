@@ -811,461 +811,442 @@ const BookSubmit = () => {
 
     return (
         <>
-            <Container fluid className="mt-3" style={{ marginTop: "0.5rem", padding: "0 1.5rem" }}>
-                {/* Tabs */}
-                <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "submit")}>
-                    <Nav variant="tabs" style={{ borderBottom: "2px solid #e5e7eb", position: "relative" }}>
+            <Container fluid className="mt-4" style={{ marginTop: "0.5rem", padding: "0 1.5rem" }}>
+                <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+                    <Card.Body className="">
+                        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "submit")}>
+                            <Nav variant="tabs" className="custom-nav-tabs">
+                                <Nav.Item>
+                                    <Nav.Link eventKey="submit">
+                                        <i className="fa-solid fa-book-return me-2"></i>
+                                        <span>Submit Book</span>
+                                    </Nav.Link>
+                                </Nav.Item>
 
-                        {/* Submit Tab */}
-                        <Nav.Item>
-                            <Nav.Link
-                                eventKey="submit"
-                                style={{
-                                    color: activeTab === "submit" ? "#000000" : "#6b7280",
-                                    fontWeight: activeTab === "submit" ? "600" : "400",
-                                    borderBottom: activeTab === "submit" ? "3px solid #6b7280" : "none"
-                                }}
-                            >
-                                <i className="fa-solid fa-book-return me-2"
-                                    style={{ color: activeTab === "submit" ? "#000000" : "#6b7280" }}></i>
-                                {/* Submit Book */}
-                                <span style={{ color: activeTab === "submit" ? "#000000" : "#6b7280", fontSize: "15px" }}>       Submit Book</span>
-                            </Nav.Link>
-                        </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="submitted">
+                                        <span>View Submitted Books ({submittedBooks.length})</span>
+                                    </Nav.Link>
+                                </Nav.Item>
 
-                        {/* Submitted Tab */}
-                        <Nav.Item>
-                            <Nav.Link
-                                eventKey="submitted"
-                                style={{
-                                    color: activeTab === "submitted" ? "#000000" : "#6b7280",
-                                    fontWeight: activeTab === "submitted" ? "600" : "400",
-                                    borderBottom: activeTab === "submitted" ? "3px solid #6b7280" : "none"
-                                }}
-                            >
-
-
-                                <span style={{ color: activeTab === "submitted" ? "#000000" : "#6b7280", fontSize: "15px" }}>View Submitted Books ({submittedBooks.length})</span>
-
-                            </Nav.Link>
-                        </Nav.Item>
-
-                        {/* ⭐ Search Bar Only When ActiveTab === submitted */}
-                        {activeTab === "submitted" && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    right: "0",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    paddingRight: "15px"
-                                }}
-                            >
-                                <InputGroup style={{ maxWidth: "250px" }}>
-                                    <InputGroup.Text
+                                {/* ⭐ Search Bar Only When ActiveTab === submitted */}
+                                {activeTab === "submitted" && (
+                                    <div
                                         style={{
-                                            background: "#f3e9fc",
-                                            borderColor: "#e9ecef",
-                                            padding: "0.375rem 0.75rem"
+                                            position: "absolute",
+                                            right: "0",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            paddingRight: "15px"
                                         }}
                                     >
-                                        <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
-                                    </InputGroup.Text>
+                                        <InputGroup style={{ maxWidth: "250px" }}>
+                                            <InputGroup.Text
+                                                style={{
+                                                    background: "#f3e9fc",
+                                                    borderColor: "#e9ecef",
+                                                    padding: "0.375rem 0.75rem"
+                                                }}
+                                            >
+                                                <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                                            </InputGroup.Text>
 
-                                    <Form.Control
-                                        placeholder="Search books..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            borderColor: "#e9ecef",
-                                            fontSize: "0.875rem",
-                                            padding: "0.375rem 0.75rem"
-                                        }}
-                                    />
+                                            <Form.Control
+                                                placeholder="Search books..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                style={{
+                                                    borderColor: "#e9ecef",
+                                                    fontSize: "0.875rem",
+                                                    padding: "0.375rem 0.75rem"
+                                                }}
+                                            />
 
-                                    {searchTerm && (
-                                        <Button
-                                            variant="outline-secondary"
-                                            onClick={() => setSearchTerm("")}
-                                            style={{
-                                                border: "1px solid #d1d5db",
-                                                borderRadius: "0 6px 6px 0",
-                                                height: "38px"
-                                            }}
-                                        >
-                                            <i className="fa-solid fa-times"></i>
-                                        </Button>
-                                    )}
-                                </InputGroup>
-                            </div>
-                        )}
-
-                    </Nav>
-                    <Tab.Content>
-                        {/* Submit Book Tab */}
-                        <Tab.Pane eventKey="submit">
-                            <Row>
-                                <Col lg={3} md={12}>
-                                    {/* Book Identification Card */}
-                                    <Card className="mb-4 shadow-sm" style={{ background: "#f3e8ff", border: "1px solid #d8b4fe", borderRadius: "8px" }}>
-                                        <Card.Header style={{
-                                            background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                            border: "none",
-                                            borderBottom: "2px solid #d1d5db",
-                                            padding: "20px 24px"
-                                        }}>
-                                            <h5 className="mb-0 fw-bold" style={{
-                                                color: "#1f2937",
-                                                fontSize: "20px",
-                                                letterSpacing: "0.3px"
-                                            }}>
-                                                <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
-                                                Book Identification
-                                            </h5>
-                                        </Card.Header>
-                                        <Card.Body className="p-4">
-                                            {/* Search Mode Dropdown */}
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold small">Search By</Form.Label>
-                                                <Form.Select
-                                                    value={searchMode}
-                                                    onChange={handleSearchModeChange}
-                                                    style={{
-                                                        border: "2px solid #8b5cf6",
-                                                        borderRadius: "8px",
-                                                        fontSize: "0.95rem",
-                                                        padding: "0.75rem 1rem"
-                                                    }}
-                                                >
-                                                    <option value="isbn">Search by ISBN</option>
-                                                    <option value="card">Search by Library Card</option>
-                                                </Form.Select>
-                                            </Form.Group>
-
-                                            {/* Manual Input Group */}
-                                            <Form.Group className="mb-3">
-                                                <Form.Label className="fw-bold small">
-                                                    {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
-                                                </Form.Label>
-                                                <InputGroup>
-                                                    <Form.Control
-                                                        ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
-                                                        type="text"
-                                                        placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
-                                                        value={searchMode === "isbn" ? isbn : cardNumber}
-                                                        onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
-                                                        onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
-                                                        autoFocus
-                                                        disabled={loading}
-                                                        style={{
-                                                            border: "1px solid #dee2e6",
-                                                            borderRadius: "8px 0 0 8px",
-                                                            fontSize: "0.95rem",
-                                                            padding: "0.75rem 1rem"
-                                                        }}
-                                                    />
-                                                    {loading && (
-                                                        <InputGroup.Text style={{
-                                                            border: "1px solid #dee2e6",
-                                                            borderLeft: "none",
-                                                            borderRadius: "0",
-                                                            backgroundColor: "#f8f9fa"
-                                                        }}>
-                                                            <Spinner animation="border" size="sm" />
-                                                        </InputGroup.Text>
-                                                    )}
-                                                    <Button
-                                                        variant="outline-secondary"
-                                                        onClick={handleClearSearch}
-                                                        disabled={loading}
-                                                        style={{
-                                                            border: "1px solid #dee2e6",
-                                                            borderLeft: loading ? "none" : "1px solid #dee2e6",
-                                                            borderRadius: loading ? "0 8px 8px 0" : "0 8px 8px 0",
-                                                            minWidth: "50px",
-                                                            backgroundColor: "#f8f9fa"
-                                                        }}
-                                                    >
-                                                        <i className="fa-solid fa-xmark"></i>
-                                                    </Button>
-                                                </InputGroup>
-                                            </Form.Group>
-
-                                            {/* Scan Button */}
-                                            <div className="text-center">
+                                            {searchTerm && (
                                                 <Button
-                                                    variant="primary"
-                                                    onClick={handleScanButtonClick}
-                                                    disabled={loading}
+                                                    variant="outline-secondary"
+                                                    onClick={() => setSearchTerm("")}
                                                     style={{
-                                                        width: "100%",
-                                                        backgroundColor: "#0d6efd",
-                                                        border: "none",
-                                                        borderRadius: "8px",
-                                                        fontWeight: "600",
-                                                        fontSize: "0.95rem",
-                                                        padding: "0.75rem 1rem",
-                                                        boxShadow: "0 2px 4px rgba(13, 110, 253, 0.3)"
+                                                        border: "1px solid #d1d5db",
+                                                        borderRadius: "0 6px 6px 0",
+                                                        height: "38px"
                                                     }}
                                                 >
-                                                    {loading ? (
-                                                        <Spinner animation="border" size="sm" className="me-2" />
-                                                    ) : (
-                                                        <i className="fa-solid fa-camera me-2"></i>
-                                                    )}
-                                                    Scan {searchMode === "isbn" ? "ISBN" : "Library Card"}
+                                                    <i className="fa-solid fa-times"></i>
                                                 </Button>
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
+                                            )}
+                                        </InputGroup>
+                                    </div>
+                                )}
 
-                                    {/* Library Card Details */}
-                                    {libraryCard && (
-                                        <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                            <Card.Header className="py-3 px-4" style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #6f42c1" }}>
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1", fontSize: "1rem" }}>
-                                                        <i className="fa-solid fa-id-card me-2"></i>
-                                                        Library Card: {libraryCard.card_number}
-                                                    </h6>
-                                                    <Badge bg="info">
-                                                        {cardIssues.length} Active Issue{cardIssues.length !== 1 ? 's' : ''}
-                                                    </Badge>
-                                                </div>
-                                            </Card.Header>
-                                            <Card.Body className="py-3 px-4">
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">Card Holder:</strong>
-                                                            <div className="text-secondary">
-                                                                {libraryCard.user_name || libraryCard.student_name || "N/A"}
-                                                            </div>
-                                                        </div>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">Card Number:</strong>
-                                                            <div className="text-secondary">{libraryCard.card_number}</div>
-                                                        </div>
-                                                    </Col>
-                                                </Row>
-                                            </Card.Body>
-                                        </Card>
-                                    )}
-
-                                    {/* Book Details */}
-                                    {book && (
-                                        <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                            <Card.Header style={{
-                                                background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                                border: "none",
-                                                borderBottom: "2px solid #d1d5db",
-                                                padding: "20px 24px"
-                                            }}>
-                                                <h5 className="mb-0 fw-bold" style={{
-                                                    color: "#1f2937",
-                                                    fontSize: "20px",
-                                                    letterSpacing: "0.3px"
+                            </Nav>
+                            <Tab.Content>
+                                {/* Submit Book Tab */}
+                                <Tab.Pane eventKey="submit">
+                                    <Row>
+                                        <Col lg={3} md={12}>
+                                            {/* Book Identification Card */}
+                                            <Card className="mb-4 shadow-sm" style={{ background: "#f3e8ff", border: "1px solid #d8b4fe", borderRadius: "8px" }}>
+                                                <Card.Header style={{
+                                                    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                                    border: "none",
+                                                    borderBottom: "2px solid #d1d5db",
+                                                    padding: "20px 24px"
                                                 }}>
-                                                    Book Details for ISBN: {isbn}
-                                                </h5>
-                                            </Card.Header>
-                                            <Card.Body className="py-3 px-4">
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">Title:</strong>
-                                                            <div className="text-secondary">
-                                                                <a
-                                                                    href={`/book/${book.id}`}
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        navigate(`/book/${book.id}`);
-                                                                    }}
-                                                                    style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600 }}
-                                                                    onMouseEnter={(e) => {
-                                                                        try {
-                                                                            localStorage.setItem(`prefetch:book:${book.id}`, JSON.stringify(book));
-                                                                        } catch (err) { }
-                                                                        e.target.style.textDecoration = "underline";
-                                                                    }}
-                                                                    onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
-                                                                >
-                                                                    {book.title}
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">ISBN:</strong>
-                                                            <div className="text-secondary">{book.isbn}</div>
-                                                        </div>
-                                                    </Col>
-                                                </Row>
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">Author:</strong>
-                                                            <div className="text-secondary">{book.author || "N/A"}</div>
-                                                        </div>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <div className="mb-2">
-                                                            <strong className="small">Total Copies:</strong>
-                                                            <div className="text-secondary">{book.total_copies || 0}</div>
-                                                        </div>
-                                                    </Col>
-                                                </Row>
-                                            </Card.Body>
-                                        </Card>
-                                    )}
-
-
-                                </Col>
-
-                                <Col lg={9} md={12}>
-                                    {/* ✅ All Issued Books Card */}
-                                    <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                        <Card.Header style={{
-                                            background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                            border: "none",
-                                            borderBottom: "2px solid #d1d5db",
-                                        }}>
-                                            <Row className="align-items-center">
-                                                <Col>
                                                     <h5 className="mb-0 fw-bold" style={{
                                                         color: "#1f2937",
                                                         fontSize: "20px",
                                                         letterSpacing: "0.3px"
                                                     }}>
                                                         <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
-                                                        {bookIssues.length > 0 ? "Issued Books for this ISBN" : "All Issued Books"}
-                                                        <span style={{ color: "orange", fontSize: "16px", marginLeft: "8px" }}>
-                                                            ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
-                                                        </span>
+                                                        Book Identification
                                                     </h5>
-                                                </Col>
-                                                <Col xs="auto">
-                                                    {/* <InputGroup style={{ maxWidth: "300px" }}>
-                                                        <InputGroup.Text style={{ backgroundColor: "#fff", border: "2px solid #8b5cf6", borderRight: "none" }}>
-                                                            <i className="fa-solid fa-search" style={{ color: "#8b5cf6" }}></i>
-                                                        </InputGroup.Text>
-                                                        <Form.Control
-                                                            type="text"
-                                                            placeholder="Search by title, ISBN, name..."
-                                                            value={searchTerm}
-                                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                                            style={{ border: "2px solid #8b5cf6", borderRadius: "8px" }}
-                                                        />
-                                                        {searchTerm && (
-                                                            <Button variant="outline-secondary" onClick={() => setSearchTerm("")} style={{ border: "2px solid #8b5cf6" }}>
-                                                                <i className="fa-solid fa-times"></i>
-                                                            </Button>
-                                                        )}
-                                                    </InputGroup> */}
-
-
-                                                    <InputGroup style={{ maxWidth: "250px" }}>
-                                                        <InputGroup.Text
+                                                </Card.Header>
+                                                <Card.Body className="p-4">
+                                                    {/* Search Mode Dropdown */}
+                                                    <Form.Group className="mb-3">
+                                                        <Form.Label className="fw-bold small">Search By</Form.Label>
+                                                        <Form.Select
+                                                            value={searchMode}
+                                                            onChange={handleSearchModeChange}
                                                             style={{
-                                                                background: "#f3e9fc",
-                                                                borderColor: "#e9ecef",
-                                                                padding: "0.375rem 0.75rem"
+                                                                border: "2px solid #8b5cf6",
+                                                                borderRadius: "8px",
+                                                                fontSize: "0.95rem",
+                                                                padding: "0.75rem 1rem"
                                                             }}
                                                         >
-                                                            <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
-                                                        </InputGroup.Text>
+                                                            <option value="isbn">Search by ISBN</option>
+                                                            <option value="card">Search by Library Card</option>
+                                                        </Form.Select>
+                                                    </Form.Group>
 
-                                                        <Form.Control
-                                                            placeholder="Search by title, ISBN, name..."
-                                                            value={searchTerm}
-                                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                                            style={{
-                                                                borderColor: "#e9ecef",
-                                                                fontSize: "0.875rem",
-                                                                padding: "0.375rem 0.75rem"
-                                                            }}
-                                                        />
-
-                                                        {searchTerm && (
+                                                    {/* Manual Input Group */}
+                                                    <Form.Group className="mb-3">
+                                                        <Form.Label className="fw-bold small">
+                                                            {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
+                                                        </Form.Label>
+                                                        <InputGroup>
+                                                            <Form.Control
+                                                                ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
+                                                                type="text"
+                                                                placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
+                                                                value={searchMode === "isbn" ? isbn : cardNumber}
+                                                                onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
+                                                                onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
+                                                                autoFocus
+                                                                disabled={loading}
+                                                                style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderRadius: "8px 0 0 8px",
+                                                                    fontSize: "0.95rem",
+                                                                    padding: "0.75rem 1rem"
+                                                                }}
+                                                            />
+                                                            {loading && (
+                                                                <InputGroup.Text style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: "none",
+                                                                    borderRadius: "0",
+                                                                    backgroundColor: "#f8f9fa"
+                                                                }}>
+                                                                    <Spinner animation="border" size="sm" />
+                                                                </InputGroup.Text>
+                                                            )}
                                                             <Button
                                                                 variant="outline-secondary"
-                                                                onClick={() => setSearchTerm("")}
+                                                                onClick={handleClearSearch}
+                                                                disabled={loading}
                                                                 style={{
-                                                                    border: "1px solid #d1d5db",
-                                                                    borderRadius: "0 6px 6px 0",
-                                                                    height: "38px"
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: loading ? "none" : "1px solid #dee2e6",
+                                                                    borderRadius: loading ? "0 8px 8px 0" : "0 8px 8px 0",
+                                                                    minWidth: "50px",
+                                                                    backgroundColor: "#f8f9fa"
                                                                 }}
                                                             >
-                                                                <i className="fa-solid fa-times"></i>
+                                                                <i className="fa-solid fa-xmark"></i>
                                                             </Button>
-                                                        )}
-                                                    </InputGroup>
-                                                </Col>
-                                            </Row>
-                                        </Card.Header>
-                                        <ResizableTable
-                                            data={filteredIssuedBooks}
-                                            columns={issueColumns}
-                                            loading={loading}
-                                            showCheckbox={false}
-                                            showSerialNumber={true}
-                                            showActions={false}
-                                            searchTerm={searchTerm}
-                                            currentPage={currentPage}
-                                            recordsPerPage={recordsPerPage}
-                                            onPageChange={(page) => {
-                                                setCurrentPage(page);
-                                            }}
-                                            emptyMessage={
+                                                        </InputGroup>
+                                                    </Form.Group>
 
-                                                book && bookIssues && bookIssues.length === 0
-                                                    ? <div className="text-center py-4">
-                                                        <i className="fa-solid fa-check-circle fa-2x text-success mb-3"></i>
-                                                        <h6 className="text-success">No Active Issues Found</h6>
-                                                        <p className="text-muted mb-0">
-                                                            This book is not currently issued to anyone or all issues have been returned.
-                                                        </p>
+                                                    {/* Scan Button */}
+                                                    <div className="text-center">
+                                                        <Button
+                                                            variant="primary"
+                                                            onClick={handleScanButtonClick}
+                                                            disabled={loading}
+                                                            style={{
+                                                                width: "100%",
+                                                                backgroundColor: "#0d6efd",
+                                                                border: "none",
+                                                                borderRadius: "8px",
+                                                                fontWeight: "600",
+                                                                fontSize: "0.95rem",
+                                                                padding: "0.75rem 1rem",
+                                                                boxShadow: "0 2px 4px rgba(13, 110, 253, 0.3)"
+                                                            }}
+                                                        >
+                                                            {loading ? (
+                                                                <Spinner animation="border" size="sm" className="me-2" />
+                                                            ) : (
+                                                                <i className="fa-solid fa-camera me-2"></i>
+                                                            )}
+                                                            Scan {searchMode === "isbn" ? "ISBN" : "Library Card"}
+                                                        </Button>
                                                     </div>
-                                                    : searchTerm
-                                                        ? "No issued books found matching your search"
-                                                        : "No books have been issued yet"
-                                            }
-                                        />
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </Tab.Pane>
+                                                </Card.Body>
+                                            </Card>
 
-                        {/* View Submitted Books Tab */}
-                        <Tab.Pane eventKey="submitted">
-                            <Row>
-                                <Col lg={12}>
-                                    <Card className="shadow-sm">
+                                            {/* Library Card Details */}
+                                            {libraryCard && (
+                                                <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                                    <Card.Header className="py-3 px-4" style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #6f42c1" }}>
+                                                        <div className="d-flex justify-content-between align-items-center">
+                                                            <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1", fontSize: "1rem" }}>
+                                                                <i className="fa-solid fa-id-card me-2"></i>
+                                                                Library Card: {libraryCard.card_number}
+                                                            </h6>
+                                                            <Badge bg="info">
+                                                                {cardIssues.length} Active Issue{cardIssues.length !== 1 ? 's' : ''}
+                                                            </Badge>
+                                                        </div>
+                                                    </Card.Header>
+                                                    <Card.Body className="py-3 px-4">
+                                                        <Row>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">Card Holder:</strong>
+                                                                    <div className="text-secondary">
+                                                                        {libraryCard.user_name || libraryCard.student_name || "N/A"}
+                                                                    </div>
+                                                                </div>
+                                                            </Col>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">Card Number:</strong>
+                                                                    <div className="text-secondary">{libraryCard.card_number}</div>
+                                                                </div>
+                                                            </Col>
+                                                        </Row>
+                                                    </Card.Body>
+                                                </Card>
+                                            )}
 
-                                        <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
-                                            <ResizableTable
-                                                data={filteredSubmittedBooks}
-                                                columns={submittedBooksColumns}
-                                                loading={loadingSubmitted}
-                                                showCheckbox={false}
-                                                showSerialNumber={true}
-                                                showActions={false}
-                                                searchTerm={searchTerm}
-                                                currentPage={currentPage}
-                                                recordsPerPage={recordsPerPage}
-                                                onPageChange={(page) => setCurrentPage(page)}
-                                                emptyMessage={searchTerm ? "No submitted books found matching your search" : "No books have been submitted yet"}
-                                            />
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </Tab.Pane>
-                    </Tab.Content>
-                </Tab.Container>
+                                            {/* Book Details */}
+                                            {book && (
+                                                <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                                    <Card.Header style={{
+                                                        background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                                        border: "none",
+                                                        borderBottom: "2px solid #d1d5db",
+                                                        padding: "20px 24px"
+                                                    }}>
+                                                        <h5 className="mb-0 fw-bold" style={{
+                                                            color: "#1f2937",
+                                                            fontSize: "20px",
+                                                            letterSpacing: "0.3px"
+                                                        }}>
+                                                            Book Details for ISBN: {isbn}
+                                                        </h5>
+                                                    </Card.Header>
+                                                    <Card.Body className="py-3 px-4">
+                                                        <Row>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">Title:</strong>
+                                                                    <div className="text-secondary">
+                                                                        <a
+                                                                            href={`/book/${book.id}`}
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                navigate(`/book/${book.id}`);
+                                                                            }}
+                                                                            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600 }}
+                                                                            onMouseEnter={(e) => {
+                                                                                try {
+                                                                                    localStorage.setItem(`prefetch:book:${book.id}`, JSON.stringify(book));
+                                                                                } catch (err) { }
+                                                                                e.target.style.textDecoration = "underline";
+                                                                            }}
+                                                                            onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                                                                        >
+                                                                            {book.title}
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </Col>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">ISBN:</strong>
+                                                                    <div className="text-secondary">{book.isbn}</div>
+                                                                </div>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">Author:</strong>
+                                                                    <div className="text-secondary">{book.author || "N/A"}</div>
+                                                                </div>
+                                                            </Col>
+                                                            <Col md={6}>
+                                                                <div className="mb-2">
+                                                                    <strong className="small">Total Copies:</strong>
+                                                                    <div className="text-secondary">{book.total_copies || 0}</div>
+                                                                </div>
+                                                            </Col>
+                                                        </Row>
+                                                    </Card.Body>
+                                                </Card>
+                                            )}
+
+
+                                        </Col>
+
+                                        <Col lg={9} md={12}>
+                                            {/* ✅ All Issued Books Card */}
+                                            <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                                <Card.Header style={{
+                                                    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                                    border: "none",
+                                                    borderBottom: "2px solid #d1d5db",
+                                                }}>
+                                                    <Row className="align-items-center">
+                                                        <Col>
+                                                            <h5 className="mb-0 fw-bold" style={{
+                                                                color: "#1f2937",
+                                                                fontSize: "20px",
+                                                                letterSpacing: "0.3px"
+                                                            }}>
+                                                                <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
+                                                                {bookIssues.length > 0 ? "Issued Books for this ISBN" : "All Issued Books"}
+                                                                <span style={{ color: "orange", fontSize: "16px", marginLeft: "8px" }}>
+                                                                    ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
+                                                                </span>
+                                                            </h5>
+                                                        </Col>
+                                                        <Col xs="auto">
+                                                            {/* <InputGroup style={{ maxWidth: "300px" }}>
+                                                                <InputGroup.Text style={{ backgroundColor: "#fff", border: "2px solid #8b5cf6", borderRight: "none" }}>
+                                                                    <i className="fa-solid fa-search" style={{ color: "#8b5cf6" }}></i>
+                                                                </InputGroup.Text>
+                                                                <Form.Control
+                                                                    type="text"
+                                                                    placeholder="Search by title, ISBN, name..."
+                                                                    value={searchTerm}
+                                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                                    style={{ border: "2px solid #8b5cf6", borderRadius: "8px" }}
+                                                                />
+                                                                {searchTerm && (
+                                                                    <Button variant="outline-secondary" onClick={() => setSearchTerm("")} style={{ border: "2px solid #8b5cf6" }}>
+                                                                        <i className="fa-solid fa-times"></i>
+                                                                    </Button>
+                                                                )}
+                                                            </InputGroup> */}
+
+
+                                                            <InputGroup style={{ maxWidth: "250px" }}>
+                                                                <InputGroup.Text
+                                                                    style={{
+                                                                        background: "#f3e9fc",
+                                                                        borderColor: "#e9ecef",
+                                                                        padding: "0.375rem 0.75rem"
+                                                                    }}
+                                                                >
+                                                                    <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                                                                </InputGroup.Text>
+
+                                                                <Form.Control
+                                                                    placeholder="Search by title, ISBN, name..."
+                                                                    value={searchTerm}
+                                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                                    style={{
+                                                                        borderColor: "#e9ecef",
+                                                                        fontSize: "0.875rem",
+                                                                        padding: "0.375rem 0.75rem"
+                                                                    }}
+                                                                />
+
+                                                                {searchTerm && (
+                                                                    <Button
+                                                                        variant="outline-secondary"
+                                                                        onClick={() => setSearchTerm("")}
+                                                                        style={{
+                                                                            border: "1px solid #d1d5db",
+                                                                            borderRadius: "0 6px 6px 0",
+                                                                            height: "38px"
+                                                                        }}
+                                                                    >
+                                                                        <i className="fa-solid fa-times"></i>
+                                                                    </Button>
+                                                                )}
+                                                            </InputGroup>
+                                                        </Col>
+                                                    </Row>
+                                                </Card.Header>
+                                                <ResizableTable
+                                                    data={filteredIssuedBooks}
+                                                    columns={issueColumns}
+                                                    loading={loading}
+                                                    showCheckbox={false}
+                                                    showSerialNumber={true}
+                                                    showActions={false}
+                                                    searchTerm={searchTerm}
+                                                    currentPage={currentPage}
+                                                    recordsPerPage={recordsPerPage}
+                                                    onPageChange={(page) => {
+                                                        setCurrentPage(page);
+                                                    }}
+                                                    emptyMessage={
+
+                                                        book && bookIssues && bookIssues.length === 0
+                                                            ? <div className="text-center py-4">
+                                                                <i className="fa-solid fa-check-circle fa-2x text-success mb-3"></i>
+                                                                <h6 className="text-success">No Active Issues Found</h6>
+                                                                <p className="text-muted mb-0">
+                                                                    This book is not currently issued to anyone or all issues have been returned.
+                                                                </p>
+                                                            </div>
+                                                            : searchTerm
+                                                                ? "No issued books found matching your search"
+                                                                : "No books have been issued yet"
+                                                    }
+                                                />
+                                            </Card>
+                                        </Col>
+                                    </Row>
+                                </Tab.Pane>
+
+                                {/* View Submitted Books Tab */}
+                                <Tab.Pane eventKey="submitted">
+                                    <Row>
+                                        <Col lg={12}>
+                                            <Card className="shadow-sm">
+
+                                                <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+                                                    <ResizableTable
+                                                        data={filteredSubmittedBooks}
+                                                        columns={submittedBooksColumns}
+                                                        loading={loadingSubmitted}
+                                                        showCheckbox={false}
+                                                        showSerialNumber={true}
+                                                        showActions={false}
+                                                        searchTerm={searchTerm}
+                                                        currentPage={currentPage}
+                                                        recordsPerPage={recordsPerPage}
+                                                        onPageChange={(page) => setCurrentPage(page)}
+                                                        emptyMessage={searchTerm ? "No submitted books found matching your search" : "No books have been submitted yet"}
+                                                    />
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    </Row>
+                                </Tab.Pane>
+                            </Tab.Content>
+                        </Tab.Container>
+                    </Card.Body>
+                </Card>
             </Container >
 
             {/* ✅ Scan Modal */}

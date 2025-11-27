@@ -127,6 +127,31 @@
   color: var(--ui-white);
 }
 
+.custom-nav-tabs .nav-link  {
+  color: var(--header-list-item-color);
+  background: transparent;
+  border-radius: 6px !important;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-nav-tabs .nav-link:not(.active):hover {
+  background: var(--primary-background-color) !important;
+  color: var(--primary-color) !important;
+}
+
+.custom-nav-tabs .nav-link:not(.active) {
+  background: var(--header-highlighter-color) !important;
+  color: var(--header-list-item-color) !important;
+}
+
+.custom-nav-tabs .nav-link.active {
+  background: var(--primary-background-color) !important;
+  color: var(--primary-color) !important;
+}
 
 .custom-btn-edit {
   background-color: transparent !important;
@@ -981,12 +1006,12 @@ textarea.form-control[required] {
   ;
 }
 
-.nav-tabs .nav-link:focus,
+/* .nav-tabs .nav-link:focus,
 .nav-tabs .nav-link:hover {
   color: var(--bs-nav-tabs-link-active-color) !important;
   background-color: #91969E !important;
   color: white !important;
-}
+} */
 
 .filter-section .nav-link {
   color: white !important
@@ -997,10 +1022,10 @@ textarea.form-control[required] {
 }
 
 /* changes 03 oct 2024 */
-.nav-tabs .nav-link.active {
+/* .nav-tabs .nav-link.active {
   background-color: white !important;
   color: black !important;
-}
+} */
 
 /* .nav-link:hover, .nav-link:focus{
   color: #fff !important;
