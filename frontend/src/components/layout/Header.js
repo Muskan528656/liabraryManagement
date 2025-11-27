@@ -727,7 +727,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 style={{
                   width: "40px",
                   height: "40px",
-                  background: "#6f42c1",
+                  background: "var(--primary-color)",
                   color: "white",
                   fontWeight: "600",
                   fontSize: "14px",
@@ -748,7 +748,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     style={{
                       width: "60px",
                       height: "60px",
-                      background: "#6f42c1",
+                      background: "var(--primary-color)",
                       color: "white",
                       fontWeight: "600",
                       fontSize: "20px",

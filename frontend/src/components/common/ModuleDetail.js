@@ -193,7 +193,7 @@ const ModuleDetail = ({
           <span
             className="fw-medium"
             style={{
-              color: clickable ? '#6f42c1' : '#495057',
+              color: clickable ? 'var(--primary-color)' : '#495057',
               textDecoration: clickable ? 'none' : 'none'
             }}
             onMouseEnter={(e) => {
@@ -546,7 +546,7 @@ const ModuleDetail = ({
             href="#"
             onClick={(e) => handleLookupNavigation(lookupConfig, data, e)}
             style={{
-              color: "#6f42c1",
+              color: "var(--primary-color)",
               textDecoration: "none",
               fontWeight: "500",
               cursor: "pointer",
@@ -949,7 +949,7 @@ const ModuleDetail = ({
               <Card.Body>
 
                 <div
-                  className="d-flex justify-content-between align-items-center mb-4 p-3"
+                  className="d-flex justify-content-between align-items-center mb-4 p-2"
                   style={{
                     color: "var(--primary-color)",
                     background: "var(--primary-background-color)",
@@ -960,31 +960,7 @@ const ModuleDetail = ({
                   <div className="d-flex align-items-center gap-3">
                     <button
                       onClick={handleBack}
-                      className="shadow-sm d-flex align-items-center justify-content-center"
-                      style={{
-                        border: '1px solid var(--primary-color)',
-                        borderRadius: '50%',
-                        padding: '20px',
-                        background: 'white',
-                        transition: 'all 0.3s ease',
-                        color: 'var(--primary-color)',
-                        width: '40px',
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '26px'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'var(--primary-color)';
-                        e.target.style.color = 'white';
-                        e.target.style.transform = 'translateX(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'white';
-                        e.target.style.color = 'var(--primary-color)';
-                        e.target.style.transform = 'translateX(0)';
-                      }}
+                      className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back" 
                     >
                       <i className="fa-solid fa-arrow-left"></i>
                     </button>
@@ -1003,7 +979,7 @@ const ModuleDetail = ({
                           <i className="fa-solid fa-edit me-2"></i>
                           Edit {moduleLabel}
                         </button>
-                        <button className="custom-btn-secondary" onClick={handleDelete}>
+                        <button className="custom-btn-delete-detail" onClick={handleDelete}>
                           <i className="fa-solid fa-trash me-2"></i>
                           Delete
                         </button>
@@ -1125,7 +1101,7 @@ const ModuleDetail = ({
                           }}>
                             <h6 style={{
                               margin: 0,
-                              color: "#6f42c1",
+                              color: "var(--primary-color)",
                               fontSize: "16px",
                               fontWeight: "700",
                               display: "flex",
