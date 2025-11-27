@@ -449,7 +449,7 @@ const User = () => {
           <a
             href={`/user/${userId}`}
             style={{
-              color: "#6f42c1",
+              color: "var(--primary-color)",
               textDecoration: "none",
               fontWeight: "500",
               cursor: "pointer"

@@ -113,7 +113,7 @@ const LibraryCardDetail = ({
           <span
             className="fw-medium"
             style={{
-              color: clickable ? '#6f42c1' : '#495057',
+              color: clickable ? 'var(--primary-color)' : '#495057',
               textDecoration: clickable ? 'none' : 'none'
             }}
             onMouseEnter={(e) => {
@@ -320,7 +320,7 @@ const LibraryCardDetail = ({
               style={{
                 maxWidth: "400px",
                 margin: "0 auto",
-                border: "2px solid #6f42c1",
+                border: "2px solid var(--primary-color)",
                 borderRadius: "15px",
                 overflow: "hidden",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
@@ -330,7 +330,7 @@ const LibraryCardDetail = ({
               <div
                 style={{
                   background:
-                    "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                    "var(--primary-color)",
                   color: "white",
                   padding: "20px",
                   textAlign: "center",
@@ -349,7 +349,7 @@ const LibraryCardDetail = ({
                         height: "120px",
                         borderRadius: "50%",
                         objectFit: "cover",
-                        border: "4px solid #6f42c1",
+                        border: "4px solid var(--primary-color)",
                         marginBottom: "10px",
                       }}
                       onError={(e) => {
@@ -368,12 +368,12 @@ const LibraryCardDetail = ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        border: "4px solid #6f42c1",
+                        border: "4px solid var(--primary-color)",
                       }}
                     >
                       <i
                         className="fa-solid fa-user"
-                        style={{ fontSize: "48px", color: "#6f42c1" }}
+                        style={{ fontSize: "48px", color: "var(--primary-color)" }}
                       ></i>
                     </div>
                   )}
@@ -410,7 +410,7 @@ const LibraryCardDetail = ({
                   <h5
                     style={{
                       margin: "5px 0",
-                      color: "#6f42c1",
+                      color: "var(--primary-color)",
                       fontWeight: "bold",
                     }}
                   >
@@ -479,7 +479,7 @@ const LibraryCardDetail = ({
               style={{
                 maxWidth: "400px",
                 margin: "0 auto",
-                border: "2px solid #6f42c1",
+                border: "2px solid var(--primary-color)",
                 borderRadius: "15px",
                 overflow: "hidden",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
@@ -487,8 +487,7 @@ const LibraryCardDetail = ({
             >
               <div
                 style={{
-                  background:
-                    "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                  background: "var(--primary-color)",
                   color: "white",
                   padding: "20px",
                   textAlign: "center",
@@ -522,7 +521,7 @@ const LibraryCardDetail = ({
                 >
                   <h6
                     style={{
-                      color: "#6f42c1",
+                      color: "var(--primary-color)",
                       marginBottom: "10px",
                       fontWeight: "bold",
                     }}
@@ -1352,36 +1351,11 @@ const LibraryCardDetail = ({
                 }}
               >
 
-                <button
-                  onClick={handleBack}
-                  className="shadow-sm d-flex align-items-center justify-content-center"
-                  style={{
-                    border: '1px solid var(--primary-color)',
-                    borderRadius: '50%',
-                    padding: '24px',
-                    background: 'white',
-                    transition: 'all 0.3s ease',
-                    color: 'var(--primary-color)',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '26px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'var(--primary-color)';
-                    e.target.style.color = 'white';
-                    e.target.style.transform = 'translateX(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'white';
-                    e.target.style.color = 'var(--primary-color)';
-                    e.target.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <i className="fa-solid fa-arrow-left"></i>
-                </button>
+                
+                <div className="d-flex align-items-center gap-3">
+                    <button onClick={handleBack} className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back">
+                      <i className="fa-solid fa-arrow-left"></i>
+                    </button>
                 <h5
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
@@ -1389,6 +1363,7 @@ const LibraryCardDetail = ({
                   <i className="fa-solid fa-id-card me-2"></i>
                   Library Members
                 </h5>
+                </div>
                 <div>
                   {!isEditing ? (
                     <button
@@ -1421,7 +1396,7 @@ const LibraryCardDetail = ({
                   {!isEditing && (
                     <button
                       onClick={handleDelete}
-                      className="ms-2 custom-btn-secondary"
+                      className="ms-2 custom-btn-delete-detail"
                     >
                       <i className="fa-solid fa-trash me-2"></i>
                       Delete

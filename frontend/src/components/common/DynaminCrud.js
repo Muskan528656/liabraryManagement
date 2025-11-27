@@ -233,7 +233,7 @@ const DynamicCRUD = ({
                 href="#"
                 onClick={(e) => handleLookupNavigation(lookupConfig, record, e)}
                 style={{
-                    color: "#6f42c1",
+                    color: "var(--primary-color)",
                     textDecoration: "none",
                     fontWeight: "500",
                     cursor: "pointer"
@@ -278,7 +278,7 @@ const DynamicCRUD = ({
                                 handleNameClick(record);
                             }}
                             style={{
-                                color: "#6f42c1",
+                                color: "var(--primary-color)",
                                 textDecoration: "none",
                                 fontWeight: "500",
                                 cursor: "pointer"
@@ -743,7 +743,7 @@ const DynamicCRUD = ({
                 label: `Add ${moduleLabel}`,
                 onClick: handleAdd,
                 style: {
-                    background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                    background: "var(--primary-color)",
                     border: "none",
                 },
             });

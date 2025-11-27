@@ -25,7 +25,7 @@ const Footer = () => {
             <a
               href="#"
               className="text-decoration-none"
-              style={{ color: "#6f42c1" }}
+              style={{ color: "var(--primary-color)" }}
               title="Facebook"
             >
               <i className="fs-7 fa-brands fa-facebook-f"></i>
@@ -33,7 +33,7 @@ const Footer = () => {
             <a
               href="#"
               className="text-decoration-none"
-              style={{ color: "#6f42c1" }}
+              style={{ color: "var(--primary-color)" }}
               title="Twitter"
             >
               <i className="fs-7 fa-brands fa-twitter"></i>
@@ -41,7 +41,7 @@ const Footer = () => {
             <a
               href="#"
               className="text-decoration-none"
-              style={{ color: "#6f42c1" }}
+              style={{ color: "var(--primary-color)" }}
               title="LinkedIn"
             >
               <i className="fs-7 fa-brands fa-linkedin"></i>
@@ -49,7 +49,7 @@ const Footer = () => {
             <a
               href="#"
               className="text-decoration-none"
-              style={{ color: "#6f42c1" }}
+              style={{ color: "var(--primary-color)" }}
               title="Instagram"
             >
               <i className="fs-7 fa-brands fa-instagram"></i>
