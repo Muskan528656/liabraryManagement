@@ -343,10 +343,17 @@ const DynamicCRUD = ({
             const api = new DataApi(apiEndpoint);
             const response = await api.fetchAll();
             if (response.data) {
-                setData(response.data);
+                // Handle both array responses and wrapped {success, data} responses
+                let responseData = response.data;
+                if (responseData.data && Array.isArray(responseData.data)) {
+                    responseData = responseData.data;
+                } else if (!Array.isArray(responseData)) {
+                    responseData = [];
+                }
+                setData(responseData);
 
                 if (customHandlers.onDataLoad) {
-                    customHandlers.onDataLoad(response.data);
+                    customHandlers.onDataLoad(responseData);
                 }
             }
         } catch (error) {

@@ -504,7 +504,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                     </Card.Header>
                     <Card.Body style={styles.cardBody}>
                         {cardDetails.length > 0 ? (
-                            <BarChart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
+                            <Chart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
                         ) : (
                             <div className="text-center py-5 text-muted">No active data available</div>
                         )}

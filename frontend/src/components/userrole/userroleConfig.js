@@ -1,3 +1,5 @@
+import Switch from "@mui/material/Switch";
+import moment from 'moment';
 // config/userRoleConfig.js
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     return {
@@ -15,19 +17,24 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "role_name",
                 label: "Role Name",
             },
-            {
+         {
                 field: "is_active",
                 label: "Active",
                 render: (value) => (
-                    <span style={{ color: value ? "green" : "red" }}>
-                        {value ? "Active" : "Inactive"}
-                    </span>
+                    // Renders a visual toggle switch
+                    <Switch checked={value} readOnly />
                 ),
             },
-            {
+
+          {
                 field: "createddate",
                 label: "Created Date",
-            }
+                // Use the render function to format the date
+                render: (value) => {
+                    return moment(value).format('DD/MM/YYYY');
+                
+                },
+            },
         ],
 
         formFields: [
@@ -41,9 +48,10 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             },
             {
                 name: "is_active",
-                label: "Is Active?",
-                type: "checkbox",
+                label: "is_Active",
+                type: "toggle",
                 colSize: 12,
+                helpText: "Toggle to enable or disable this role"
             }
         ],
 
@@ -76,12 +84,12 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             allowDelete: true
         },
 
-        details: [
-            { key: "role_name", label: "Role Name", type: "text" },
-            { key: "is_active", label: "Active Status", type: "text" },
-            { key: "createddate", label: "Created At", type: "date" },
-            { key: "lastmodifieddate", label: "Updated At", type: "date" },
-        ],
+        // details: [
+        //     { key: "role_name", label: "Role Name", type: "text" },
+        //     { key: "is_active", label: "Active Status", type: "text"  },
+        //     { key: "createddate", label: "Created At", type: "date"  },
+        //     { key: "lastmodifieddate", label: "Updated At", type: "date" },
+        // ],
 
         customHandlers: {
             beforeSave: (formData, editingItem) => {
