@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const Auth = require("../models/auth.model.js");
 
 const fetchUser = async (req, res, next) => {
-  console.log("Inside fetchUser middleware");
   var token = req.headers.authorization;
   if (!token) {
     return res.status(401).send({ errors: "Please authenticate" });
@@ -200,4 +199,4 @@ const fetchUser = async (req, res, next) => {
 //   };
 // };
 
-module.exports = { fetchUser};
+module.exports = { fetchUser };

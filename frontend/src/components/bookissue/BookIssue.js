@@ -2049,18 +2049,6 @@ const BookIssue = () => {
                         </span>
                       )}
                     </div>
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={() => {
-                        fetchIssuedBooks();
-                        setCurrentPage(1);
-                      }}
-                      disabled={loadingIssuedBooks}
-                    >
-                      <i className="fa-solid fa-sync me-2"></i>
-                      Refresh
-                    </Button>
                   </div>
                 </Card.Footer>
               )}

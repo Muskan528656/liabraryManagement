@@ -24,7 +24,8 @@ const CategoryDetail = () => {
     <ModuleDetail
       moduleName="category"
       moduleApi="category"
-      moduleLabel="Category"
+      moduleLabel="Category Management"
+      icon="fa-solid fa-tags"
       fields={fields}
     />
   );

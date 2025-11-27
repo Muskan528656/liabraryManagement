@@ -23,7 +23,8 @@ const AuthorDetail = () => {
     <ModuleDetail
       moduleName="author"
       moduleApi="author"
-      moduleLabel="Author"
+      moduleLabel="Author Management"
+      icon="fa-solid fa-user-pen"
       fields={fields}
     />
   );

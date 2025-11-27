@@ -42,7 +42,7 @@ const Author = (props) => {
 
   const finalConfig = getAuthorConfig(allData);
 
-  return <DynamicCRUD {...finalConfig} />;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-user-pen"/>;
 };
 
 export default Author;

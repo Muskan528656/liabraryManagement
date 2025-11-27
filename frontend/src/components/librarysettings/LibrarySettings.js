@@ -167,7 +167,7 @@ const Settings = () => {
   };
 
   return (
-    <Container fluid className="py-4 ">
+    <Container fluid className="py-4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
 
@@ -185,6 +185,7 @@ const Settings = () => {
                   className="fw-bold mb-1"
                   style={{ color: "var(--primary-color)" }}
                 >
+                  <i className="fa-solid fa-id-card me-2"></i>
                   Settings
                 </h2>
                 {!isEditingSettings ? (

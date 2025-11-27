@@ -19,6 +19,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [overdueCount, setOverdueCount] = useState(0);
   const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
   const [damagedCount, setDamagedCount] = useState(0);
+  const [totalBooks, setTotalBooks] = useState(0);
 
   useEffect(() => {
     let currentUserInfo = propUserInfo;
@@ -60,6 +61,10 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const fetchSubmissionAndIssueMetrics = async () => {
     try {
       const resp = await DashboardApi.fetchAll(); // this now returns the query result
+      // fetchStats
+      const respStats = await DashboardApi.fetchStats();
+      console.log('conl', respStats?.data);
+      setTotalBooks(respStats?.data);
       const data = resp?.data || [];
       console.log('dashbard data', data);
       
@@ -104,28 +109,28 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     ? [
       {
         title: "Total Books",
-        value: formatNumber(dashboardData.summary.totalBooks),
+        value: formatNumber(totalBooks.total_books),
         icon: "fa-book",
         color: "#6f42c1",
         bgColor: "#f3e9fc",
       },
       {
         title: "Available Books",
-        value: formatNumber(dashboardData.summary.availableBooks),
+        value: formatNumber(totalBooks.available_books),
         icon: "fa-book-open",
         color: "#6f42c1",
         bgColor: "#f3e9fc",
       },
       {
-        title: "Total Authors",
-        value: formatNumber(dashboardData.summary.totalAuthors),
+        title: "Issued Books",
+        value: formatNumber(totalBooks.issued_books),
         icon: "fa-user-pen",
         color: "#6f42c1",
         bgColor: "#f3e9fc",
       },
       {
-        title: "Total Categories",
-        value: formatNumber(dashboardData.summary.totalCategories),
+        title: "Total Submissons",
+        value: formatNumber(totalBooks.total_submission),
         icon: "fa-tags",
         color: "#6f42c1",
         bgColor: "#f3e9fc",
@@ -147,14 +152,14 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         bgColor: "#f3e9fc",
       },
       {
-        title: "Total Authors",
+        title: "Issued Books",
         value: "0",
         icon: "fa-user-pen",
         color: "#6f42c1",
         bgColor: "#f3e9fc",
       },
       {
-        title: "Total Categories",
+        title: "Total Submissons",
         value: "0",
         icon: "fa-tags",
         color: "#6f42c1",

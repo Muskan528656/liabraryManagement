@@ -10,6 +10,8 @@ import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import { FaGalacticSenate } from "react-icons/fa";
 
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import the eye icons
+
 const User = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -20,6 +22,7 @@ const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [roleOptions, setRoleOptions] = useState([]);
   const recordsPerPage = 10;
 
   const [formData, setFormData] = useState({
@@ -47,8 +50,30 @@ const User = () => {
   });
   const [selectedItems, setSelectedItems] = useState([]);
 
+  // Password visibility state
+  const [passwordVisible, setPasswordVisible] = useState(false);  // Add state to toggle visibility
+
+  // get all user roles
+  const fetchUserRoles = async () => {
+    try {
+      const userRoleApi = new DataApi("user-role");
+      const response = await userRoleApi.fetchAll();
+      console.log("user roles response ", response)
+      if (response.data && Array.isArray(response.data)) {
+        setRoleOptions(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching user roles:", error);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: "Failed to fetch user roles",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchUserRoles();
   }, []);
   const fetchUsers = async () => {
     try {
@@ -207,11 +232,13 @@ const User = () => {
         email: formData.email || null,
         userrole: formData.userrole,
         phone: formData.phone || null,
-        whatsapp_number: formData.whatsapp_number || null,
+        // whatsapp_number: formData.whatsapp_number || "null",
         country_code: formData.country_code || null,
         isactive: formData.isactive,
         blocked: formData.blocked,
       };
+
+      console.log("userdatais ", userData)
 
       // Only include password if it's provided (for new users or password change)
       if (formData.password) {
@@ -226,6 +253,7 @@ const User = () => {
             title: "Success",
             message: "User updated successfully",
           });
+          console.log("res" + response)
           fetchUsers();
           setShowModal(false);
           setEditingUser(null);
@@ -305,7 +333,7 @@ const User = () => {
         "Email": user.email || "",
         "Role": user.userrole || "",
         "Phone": user.phone || "",
-        "WhatsApp": user.whatsapp_number || "",
+        // "WhatsApp": user.whatsapp_number || "",
         "Status": user.isactive ? "Active" : "Inactive",
         "Blocked": user.blocked ? "Yes" : "No",
       }));
@@ -316,7 +344,7 @@ const User = () => {
         { key: 'Email', header: 'Email', width: 30 },
         { key: 'Role', header: 'Role', width: 15 },
         { key: 'Phone', header: 'Phone', width: 18 },
-        { key: 'WhatsApp', header: 'WhatsApp', width: 18 },
+        // { key: 'WhatsApp', header: 'WhatsApp', width: 18 },
         { key: 'Status', header: 'Status', width: 12 },
         { key: 'Blocked', header: 'Blocked', width: 12 }
       ];
@@ -345,6 +373,29 @@ const User = () => {
       String(user.phone || "").toLowerCase().includes(searchLower)
     );
   });
+
+  const handleNameClick = (e, record, navigate, isRightClick = false, isEdit) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userId = record.id;
+
+    try {
+      localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
+    } catch (err) { }
+
+    if (isRightClick) {
+      window.open(`/user/${userId}`, "_blank");
+    } else {
+      if (isEdit) {
+        navigate(`/user/${userId}`, { state: { isEdit: true, rowData: record }, });
+      } else {
+        navigate(`/user/${userId}`, { state: record });
+      }
+
+    }
+  };
+
 
   const allColumns = [
     {
@@ -377,7 +428,7 @@ const User = () => {
     },
     {
       field: "sr_no",
-      label: "SR.NO",
+      label: "Sr.No",
       render: (value, record) => {
         const idx = filteredUsers.findIndex(r => r.id === record.id);
         return idx >= 0 ? idx + 1 : "";
@@ -393,26 +444,18 @@ const User = () => {
       render: (value, record) => {
         const userId = record.id;
         const userName = value || record.lastname || "N/A";
+
         return (
           <a
             href={`/user/${userId}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) {}
-              navigate(`/user/${userId}`, { state: record });
+            style={{
+              color: "#6f42c1",
+              textDecoration: "none",
+              fontWeight: "500",
+              cursor: "pointer"
             }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              try {
-                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-              } catch (err) {}
-              window.open(`/user/${userId}`, '_blank');
-            }}
-            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: "500", cursor: "pointer" }}
+            onClick={(e) => handleNameClick(e, record, navigate, false)}
+            onContextMenu={(e) => handleNameClick(e, record, navigate, true)}
             onMouseEnter={(e) => {
               e.target.style.textDecoration = "underline";
             }}
@@ -423,6 +466,7 @@ const User = () => {
         );
       },
     },
+
     { field: "lastname", label: "Last Name", sortable: true },
     { field: "email", label: "Email", sortable: true },
     { field: "userrole", label: "Role", sortable: true },
@@ -472,97 +516,107 @@ const User = () => {
 
   const actionsRenderer = (user) => (
     <>
-      <Button
-        variant="link"
-        size="sm"
+      <button
+        // variant="link"
+        // size="sm"
+        className="custom-btn-edit"
+        // onClick={(e) => {
+        //   e.stopPropagation();
+        //   handleEdit(user);
+        // }}
         onClick={(e) => {
-          e.stopPropagation();
-          handleEdit(user);
+          handleNameClick(e, user, navigate, false, true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+      // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-edit text-primary"></i>
-      </Button>
-      <Button
-        variant="link"
-        size="sm"
+        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+      </button>
+      <button
+        // variant="link"
+        // size="sm"
+        className="custom-btn-delete"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete(user.id);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+      // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fas fa-trash text-danger"></i>
-      </Button>
+        <i className="fs-5 fa-solid fa-trash"></i>
+      </button>
     </>
   );
 
+
+  // Toggle password visibility
+  const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+
   return (
-    <Container fluid>
+    <Container fluid className="py-4">
       <ScrollToTop />
       {/* User Management Header - Top Position */}
-      <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
-        <Col>
-          <TableHeader
-            title="User Management"
-            icon="fa-solid fa-users"
-            totalCount={filteredUsers.length}
-            totalLabel={filteredUsers.length === 1 ? "User" : "Users"}
-            filteredCount={filteredUsers.length}
-            showFiltered={!!searchTerm}
-            searchPlaceholder="Search users..."
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            showColumnVisibility={true}
-            allColumns={columnsForVisibilityToggle}
-            visibleColumns={visibleColumns}
-            onToggleColumnVisibility={toggleColumnVisibility}
-            actionButtons={[
-              {
-                variant: "outline-success",
-                size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
-                onClick: handleExport,
-              },
-              {
-                size: "sm",
-                icon: "fa-solid fa-plus",
-                label: "Add User",
-                onClick: handleAdd,
-              },
-            ]}
-          />
-        </Col>
-      </Row>
-
-      <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-        <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
-          <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
-            <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+      <Row className="justify-content-center">
+        <Col lg={12} xl={12}>
+          <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+            <Card.Body className="">
               {loading ? (
                 <Loader />
               ) : (
-                <ResizableTable
-                  data={filteredUsers}
-                  columns={columns}
-                  loading={loading}
-                  currentPage={currentPage}
-                  totalRecords={filteredUsers.length}
-                  recordsPerPage={recordsPerPage}
-                  onPageChange={setCurrentPage}
-                  showSerialNumber={false}
-                  showCheckbox={false}
-                  showActions={true}
-                  actionsRenderer={actionsRenderer}
-                  showSearch={false}
-                  emptyMessage="No users found"
-                />
+                <>
+                  <TableHeader
+                    title="User Management"
+                    icon="fa-solid fa-users"
+                    totalCount={filteredUsers.length}
+                    totalLabel={filteredUsers.length === 1 ? "User" : "Users"}
+                    filteredCount={filteredUsers.length}
+                    showFiltered={!!searchTerm}
+                    searchPlaceholder="Search users..."
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    showColumnVisibility={true}
+                    allColumns={columnsForVisibilityToggle}
+                    visibleColumns={visibleColumns}
+                    onToggleColumnVisibility={toggleColumnVisibility}
+                    actionButtons={[
+                      {
+                        variant: "outline-success",
+                        size: "sm",
+                        icon: "fa-solid fa-download",
+                        label: "Export",
+                        onClick: handleExport,
+                      },
+                      {
+                        size: "sm",
+                        icon: "fa-solid fa-plus",
+                        label: "Add User",
+                        onClick: handleAdd,
+                      },
+                    ]}
+                  />
+                  <ResizableTable
+                    data={filteredUsers}
+                    columns={columns}
+                    loading={loading}
+                    currentPage={currentPage}
+                    totalRecords={filteredUsers.length}
+                    recordsPerPage={recordsPerPage}
+                    onPageChange={setCurrentPage}
+                    showSerialNumber={false}
+                    showCheckbox={false}
+                    showActions={true}
+                    actionsRenderer={actionsRenderer}
+                    showSearch={false}
+                    emptyMessage="No users found"
+                  />
+                </>
+
               )}
+
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+
 
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
@@ -578,6 +632,7 @@ const User = () => {
                   <Form.Control
                     type="text"
                     name="firstname"
+                    placeholder="Enter The First Name"
                     value={formData.firstname}
                     onChange={handleInputChange}
                     required
@@ -591,6 +646,7 @@ const User = () => {
                     type="text"
                     name="lastname"
                     value={formData.lastname}
+                    placeholder="Enter The Last Name"
                     onChange={handleInputChange}
                     required
                   />
@@ -605,6 +661,7 @@ const User = () => {
                     type="email"
                     name="email"
                     value={formData.email}
+                    placeholder="Enter The Email"
                     onChange={handleInputChange}
                   />
                 </Form.Group>
@@ -612,14 +669,30 @@ const User = () => {
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Password {!editingUser && <span className="text-danger">*</span>}</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
-                    required={!editingUser}
-                  />
+                  <InputGroup className="mb-3">
+                    <Form.Control
+                      type={passwordVisible ? "text" : "password"} // Toggle between text and password type
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder={editingUser ? "Leave blank to keep current password" : "Enter password"}
+                      required={!editingUser}
+                    />
+                    <InputGroup.Text
+                      // style={{
+                      //   cursor: "pointer",
+                      //   border: "none",
+                      //   backgroundColor: "transparent",
+                      //   position: "absolute",
+                      //   right: "10px",
+                      //   top: "10px",
+                      //   padding: "0",
+                      // }}
+                      onClick={togglePasswordVisibility}
+                    >
+                      {passwordVisible ? <FaEyeSlash /> : <FaEye />}  {/* Switch between Eye and EyeSlash */}
+                    </InputGroup.Text>
+                  </InputGroup>
                 </Form.Group>
               </Col>
             </Row>
@@ -628,12 +701,17 @@ const User = () => {
                 <Form.Group className="mb-3">
                   <Form.Label>Role</Form.Label>
                   <Form.Select
+                    required
                     name="userrole"
                     value={formData.userrole}
                     onChange={handleInputChange}
                   >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="STUDENT">STUDENT</option>
+                    <option value="">Select Role</option>
+                    {roleOptions.map((role) => (
+                      <option key={role.id} value={role.role_name}>
+                        {role.role_name}
+                      </option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -643,6 +721,7 @@ const User = () => {
                   <Form.Control
                     type="text"
                     name="phone"
+                    placeholder="Enter the phone number"
                     value={formData.phone}
                     onChange={handleInputChange}
                   />
@@ -650,7 +729,7 @@ const User = () => {
               </Col>
             </Row>
             <Row>
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>WhatsApp Number</Form.Label>
                   <Form.Control
@@ -660,7 +739,7 @@ const User = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-              </Col>
+              </Col> */}
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Country Code</Form.Label>
@@ -686,7 +765,7 @@ const User = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Check
                     type="checkbox"
@@ -696,7 +775,7 @@ const User = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-              </Col>
+              </Col> */}
             </Row>
           </Form>
         </Modal.Body>

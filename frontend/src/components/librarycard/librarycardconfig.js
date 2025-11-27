@@ -107,7 +107,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 </Badge>
             )
         },
-
     ];
 
     return {
@@ -265,7 +264,14 @@ export const getLibraryCardConfig = (externalData = {}) => {
         dataDependencies: {
             users: "user"
         },
-
+        lookupNavigation: {
+            user_id: {
+                path: "user",
+                idField: "id",
+                labelField: "name"
+            }
+        }
+        ,
         features: {
             showImportExport: true,
             showDetailView: true,
@@ -274,17 +280,33 @@ export const getLibraryCardConfig = (externalData = {}) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: false,
+            allowEdit: true,
             allowDelete: true
         },
 
         details: [
             { key: "card_number", label: "Card Number", type: "text" },
             { key: "user_name", label: "User Name", type: "text" },
-            { key: "user_email", label: "Email", type: "text" },
+            {
+                key: "user_email",
+                label: "Email",
+                type: "select",
+                options: "users",
+                displayKey: "user_email"
+            },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
-            { key: "is_active", label: "Status", type: "badge" },
+            {
+                key: "is_active",
+                label: "Status",
+                type: "badge",
+                badgeConfig: {
+                    true: "success",
+                    false: "secondary",
+                    true_label: "Active",
+                    false_label: "Inactive",
+                }
+            },
         ],
 
         customHandlers: {
@@ -304,7 +326,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 errors.push("Issue date is required");
             }
 
-            // File size validation
+   
             if (formData.image && formData.image.size > 2 * 1024 * 1024) {
                 errors.push("Image size must be less than 2MB");
             }

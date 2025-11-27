@@ -23,20 +23,71 @@ const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../../uploads/librarycards');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const rootDir = path.resolve(__dirname, "../../..");
+const frontendPublicDir = path.join(rootDir, "frontend", "public");
+const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
+const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
+const legacyUploadDir = path.join(__dirname, "../../uploads/librarycards");
+
+const ensureDirectory = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
+
+const sanitizeRelativePath = (filePath = "") => {
+  if (!filePath || typeof filePath !== "string") return null;
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    return null;
+  }
+  let normalized = filePath.replace(/\\/g, "/");
+  if (normalized.startsWith("/")) {
+    normalized = normalized.slice(1);
+  }
+  if (!normalized.startsWith("uploads/")) {
+    normalized = path.join("uploads", "librarycards", normalized).replace(/\\/g, "/");
+  }
+  return normalized;
+};
+
+const deleteFileIfExists = (filePath = "") => {
+  const relativePath = sanitizeRelativePath(filePath);
+  if (!relativePath) return;
+
+  const candidatePaths = [
+    path.join(frontendPublicDir, relativePath),
+    path.join(__dirname, "../../", relativePath),
+    path.join(legacyUploadDir, path.basename(relativePath)),
+  ];
+
+  const visited = new Set();
+
+  candidatePaths.forEach((absolutePath) => {
+    if (!absolutePath || visited.has(absolutePath)) {
+      return;
+    }
+    visited.add(absolutePath);
+
+    try {
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    } catch (err) {
+      console.error("Error removing stale library card image:", absolutePath, err.message);
+    }
+  });
+};
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // Ensure directory exists before saving
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!fs.existsSync(libraryCardUploadDir)) {
+      fs.mkdirSync(libraryCardUploadDir, { recursive: true });
     }
-    cb(null, uploadDir);
+    cb(null, libraryCardUploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -160,7 +211,6 @@ module.exports = (app) => {
         // Handle file upload
         const cardData = { ...req.body };
         if (req.file) {
-          // Store file path or URL - use relative path from public/uploads
           const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
@@ -195,8 +245,9 @@ module.exports = (app) => {
 
         // Handle file upload
         const cardData = { ...req.body };
+        let previousImagePath = existingCard.image;
+
         if (req.file) {
-          // Store file path or URL - use relative path from public/uploads
           const fileUrl = `/uploads/librarycards/${req.file.filename}`;
           cardData.image = fileUrl;
         }
@@ -205,6 +256,11 @@ module.exports = (app) => {
         if (!card) {
           return res.status(400).json({ errors: "Failed to update library card" });
         }
+
+        if (req.file && previousImagePath && previousImagePath !== cardData.image) {
+          deleteFileIfExists(previousImagePath);
+        }
+
         return res.status(200).json({ success: true, data: card });
       } catch (error) {
         console.error("Error updating library card:", error);

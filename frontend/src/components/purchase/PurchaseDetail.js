@@ -14,10 +14,10 @@ const PurchaseDetail = () => {
     //   { key: "total_amount", label: "Total Amount", type: "currency" },
     // ],
     details: [
-      { key: "vendor_name", label: "Vendor", type: "text" },
-      { key: "book_title", label: "Book", type: "text" },
-      { key: "book_isbn", label: "ISBN", type: "text" },
-      { key: "quantity", label: "Quantity", type: "number" },
+      { key: "vendor_name", label: "Vendor Name", type: "text" },
+      // { key: "book_title", label: "Book", type: "text" },
+      // { key: "book_isbn", label: "ISBN", type: "text" },
+      // { key: "quantity", label: "Quantity", type: "number" },
       { key: "unit_price", label: "Unit Price", type: "currency" },
       { key: "total_amount", label: "Total Amount", type: "currency" },
       { key: "purchase_date", label: "Purchase Date", type: "date" },
@@ -30,8 +30,8 @@ const PurchaseDetail = () => {
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-      
-     ],
+
+    ],
     detailsLayout: "grid",
   };
 
@@ -39,7 +39,8 @@ const PurchaseDetail = () => {
     <ModuleDetail
       moduleName="purchase"
       moduleApi="purchase"
-      moduleLabel="Purchase"
+      moduleLabel="Purchase Management"
+      icon="fa-solid fa-shopping-cart"
       fields={fields}
       relatedModules={[]}
       customHeader={(data) => (

@@ -64,9 +64,9 @@ const Purchase = () => {
   // Column visibility state
   const [visibleColumns, setVisibleColumns] = useState({
     vendor_name: true,
-    book_title: true,
-    book_isbn: true,
-    quantity: true,
+    book_title: false,
+    book_isbn: false,
+    quantity: false,
     unit_price: true,
     total_amount: true,
     purchase_date: true,
@@ -92,13 +92,10 @@ const Purchase = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-    // Clear selection when search changes
     setSelectedItems([]);
   }, [searchTerm]);
 
-  // Clear selection when purchases data changes
   useEffect(() => {
-    // Keep only selected items that still exist in the data
     const validIds = purchases.map(p => p.id);
     setSelectedItems(prev => prev.filter(id => validIds.includes(id)));
   }, [purchases]);
@@ -191,12 +188,12 @@ const Purchase = () => {
       vendor_id: selectedOption ? selectedOption.value : "",
     }));
   };
-console.log("Vendors:", vendors);
+  console.log("Vendors:", vendors);
   const vendorOptions = vendors.map((vendor) => ({
     value: vendor.id,
     label: vendor.name,
   }));
-console.log("Vendor Options:", vendorOptions);
+  console.log("Vendor Options:", vendorOptions);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const updatedData = { ...formData, [name]: value };
@@ -375,7 +372,7 @@ console.log("Vendor Options:", vendorOptions);
 
     try {
       setLoading(true);
-      const vendorApi = new DataApi("purchasevendor");
+      const vendorApi = new DataApi("vendor");
       const response = await vendorApi.create(vendorFormData);
 
       if (response.data) {
@@ -750,114 +747,127 @@ console.log("Vendor Options:", vendorOptions);
     }));
   };
 
+  const handleNameClick = (e, record, navigate, isRightClick = false, isEdit) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const purchaseId = record.id;
+
+    if (isRightClick) {
+      window.open(`/purchase/${purchaseId}`, "_blank");
+    } else {
+      if (isEdit) {
+        navigate(`/purchase/${purchaseId}`, { state: { isEdit: true, rowData: record }, });
+      } else {
+        navigate(`/purchase/${purchaseId}`, { state: record });
+      }
+
+    }
+  };
+
   const actionsRenderer = (purchase) => (
     <>
-      <Button
-        variant="link"
-        size="sm"
+      <button
+        // variant="link"
+        // size="sm"
+        // onClick={(e) => {
+        //   e.stopPropagation();
+        //   handleEdit(purchase);
+        // }}
         onClick={(e) => {
-          e.stopPropagation();
-          handleEdit(purchase);
+          handleNameClick(e, purchase, navigate, false, true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+        className="custom-btn-edit"
+        // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className=" fs-5 fas fa-edit text-primary"></i>
-      </Button>
-      <Button
-        variant="link"
-        size="sm"
+        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+      </button>
+      <button
+        // variant="link"
+        // size="sm"
         onClick={(e) => {
           e.stopPropagation();
           setDeleteId(purchase.id);
           setShowDeleteModal(true);
         }}
-        style={{ padding: "0.25rem 0.5rem" }}
+        className="custom-btn-delete"
+        // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className=" fs-5 fas fa-trash text-danger"></i>
-      </Button>
+        <i className="fs-5 fa-solid fa-trash"></i>
+      </button>
     </>
   );
 
   return (
-    <Container fluid >
+    <Container fluid className="py-4">
       <ScrollToTop />
-      <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
-        <Col>
-          <TableHeader
-            title="Purchase Management"
-            icon="fa-solid fa-shopping-cart"
-            totalCount={filteredPurchases.length}
-            totalLabel={filteredPurchases.length === 1 ? "Purchase" : "Purchases"}
-            searchPlaceholder="Search purchases..."
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            showColumnVisibility={true}
-            allColumns={allColumns}
-            visibleColumns={visibleColumns}
-            onToggleColumnVisibility={toggleColumnVisibility}
-            actionButtons={[
-              {
-                variant: "outline-success",
-                size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
-                onClick: handleExport,
-              },
-              {
-                size: "sm",
-                icon: "fa-solid fa-layer-group",
-                label: "Add Purchase",
-                onClick: handleBulkInsert,
-                style: {
-                  background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                  border: "none",
-                },
-              },
-            ]}
-          />
+      <Row className="justify-content-center">
+        <Col lg={12} xl={12}>
+          <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+            <Card.Body className="">
+              {loading ? (
+                <Loader />
+              ) : (
+                <>
+                  <TableHeader
+                    title="Purchase Management"
+                    icon="fa-solid fa-shopping-cart"
+                    totalCount={filteredPurchases.length}
+                    totalLabel={filteredPurchases.length === 1 ? "Purchase" : "Purchases"}
+                    searchPlaceholder="Search purchases..."
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    showColumnVisibility={true}
+                    allColumns={allColumns}
+                    visibleColumns={visibleColumns}
+                    onToggleColumnVisibility={toggleColumnVisibility}
+                    actionButtons={[
+                      {
+                        variant: "outline-success",
+                        size: "sm",
+                        icon: "fa-solid fa-download",
+                        label: "Export",
+                        onClick: handleExport,
+                      },
+                      {
+                        size: "sm",
+                        icon: "fa-solid fa-layer-group",
+                        label: "Add Purchase",
+                        onClick: handleBulkInsert,
+                        style: {
+                          background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                          border: "none",
+                        },
+                      },
+                    ]}
+                  />
+
+                  <ResizableTable
+                    data={filteredPurchases}
+                    columns={columns}
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    currentPage={currentPage}
+                    totalRecords={filteredPurchases.length}
+                    recordsPerPage={recordsPerPage}
+                    onPageChange={setCurrentPage}
+                    headerActions={[]}
+                    actionsRenderer={actionsRenderer}
+                    loading={loading}
+                    showSerialNumber={true}
+                    showActions={true}
+                    showCheckbox={true}
+                    selectedItems={selectedItems}
+                    onSelectionChange={setSelectedItems}
+                    showSearch={false}
+                    emptyMessage="No purchases found"
+                  />
+                </>
+              )}
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
-      {loading && purchases.length === 0 ? (
-        <Loader />
-      ) : (
-        <>
-
-          <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-            <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
-              <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden", width: "100%", maxWidth: "100%" }}>
-                <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
-                  {loading ? (
-                    <Loader />
-                  ) : (
-                    <ResizableTable
-                      data={filteredPurchases}
-                      columns={columns}
-                      searchTerm={searchTerm}
-                      onSearchChange={setSearchTerm}
-                      currentPage={currentPage}
-                      totalRecords={filteredPurchases.length}
-                      recordsPerPage={recordsPerPage}
-                      onPageChange={setCurrentPage}
-                      headerActions={[]}
-                      actionsRenderer={actionsRenderer}
-                      loading={loading}
-                      showSerialNumber={true}
-                      showActions={true}
-                      showCheckbox={true}
-                      selectedItems={selectedItems}
-                      onSelectionChange={setSelectedItems}
-                      showSearch={false}
-                      emptyMessage="No purchases found"
-                    />
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-        </>
-      )}
-
 
       {/* Add/Edit Modal */}
       < Modal show={showModal} onHide={() => { setShowModal(false); resetForm(); }} size="lg" >

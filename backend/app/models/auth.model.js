@@ -442,12 +442,10 @@ async function findByEmail(email) {
 
 async function findById(id) {
   console.log("Finding user by ID:", id, "in schema:", this.schema);
-
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-
     const query = `
       SELECT 
         u.id,

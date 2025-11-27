@@ -34,6 +34,7 @@ const DynamicCRUD = ({
     enablePrefetch = true,
     autoFetchRelated = true,
     recordsPerPage = 10,
+    icon
 }) => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -96,25 +97,32 @@ const DynamicCRUD = ({
         );
     }, []);
 
-    const handleNameClick = useCallback((item) => {
-        console.log("handleNameClick", item);
-        console.log("apiEndpoint", apiEndpoint);
+    const handleNameClick = useCallback((item , isEdit) => {
+
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
         }
-        console.log('apiEndpoint', apiEndpoint)
+
         navigate(`/${apiEndpoint}/${item.id}`, {
-            state: { type: apiEndpoint, rowData: item },
+            state: { type: apiEndpoint, rowData: item},
         });
-        console.log('item', item)
+       
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
 
             if (enablePrefetch) {
                 try {
-                    navigate(`/${apiEndpoint}/${item.id}`);
+                    // navigate(`/${apiEndpoint}/${item.id}`);
+                    if(isEdit){
+                        navigate(`/${apiEndpoint}/${item.id}`, {
+                            state: { isEdit: true, rowData: item},
+                        });
+                    }else{
+                        navigate(`/${apiEndpoint}/${item.id}`);
+                    }
+                     
                     // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
@@ -466,25 +474,11 @@ const DynamicCRUD = ({
 
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
-        setEditingItem(item);
-
-        const formattedItem = { ...item };
-        if (formattedItem.issue_date) {
-            const issueDate = new Date(formattedItem.issue_date);
-            if (!isNaN(issueDate.getTime())) {
-                formattedItem.issue_date = issueDate.toISOString().split('T')[0];
-            }
-        }
-        if (formattedItem.expiry_date) {
-            const expiryDate = new Date(formattedItem.expiry_date);
-            if (!isNaN(expiryDate.getTime())) {
-                formattedItem.expiry_date = expiryDate.toISOString().split('T')[0];
-            }
-        }
-
-        setFormData({ ...initialFormData, ...formattedItem });
-        setShowModal(true);
-    }, [allowEdit, initialFormData]);
+        // Navigate to detail page instead of opening modal
+        navigate(`/${apiEndpoint}/${item.id}`, {
+            state: { type: apiEndpoint, rowData: item },
+        });
+    }, [allowEdit, apiEndpoint, navigate]);
 
     const handleDelete = useCallback((id) => {
         if (!allowDelete) return;
@@ -548,31 +542,25 @@ const DynamicCRUD = ({
 
                 Object.keys(formData).forEach(key => {
                     if (formData[key] !== null && formData[key] !== undefined) {
-                        // File field check karen
                         const fieldConfig = formFields.find(f => f && f.name === key);
                         if (fieldConfig && fieldConfig.type === 'file') {
-                            // File object directly append karen
                             if (formData[key] instanceof File) {
                                 submitData.append(key, formData[key]);
                             } else if (formData[key]) {
-                                // Agar string hai (existing image URL), toh usko bhi append karen
                                 submitData.append(key, formData[key]);
                             }
                         } else {
-                            // Regular fields
                             submitData.append(key, formData[key]);
                         }
                     }
                 });
 
-                // API call with FormData
                 if (editingItem) {
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);
                 }
             } else {
-                // Normal JSON data
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
@@ -781,15 +769,16 @@ const DynamicCRUD = ({
                     prefetchData={selectedItem}
                     lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
+                    
                 />
             </Container>
         );
     }
 
     return (
-        <Container fluid>
+        <Container fluid className="py-4">
             <ScrollToTop />
-
+{/* 
             <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
                 <Col>
                     <TableHeader
@@ -807,15 +796,30 @@ const DynamicCRUD = ({
                         actionButtons={actionButtons}
                     />
                 </Col>
-            </Row>
+            </Row> */}
 
-            <Row style={{ margin: 0, width: "100%", maxWidth: "100%" }}>
-                <Col style={{ padding: 0, width: "100%", maxWidth: "100%" }}>
+            <Row className="justify-content-center">
+                    <Col lg={12} xl={12}>
                     <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
-                        <Card.Body className="p-0">
+                        <Card.Body className="">
                             {loading ? (
                                 <Loader />
                             ) : (
+                                <>
+                                <TableHeader
+                        title={`${moduleLabel} Management`}
+                        icon={icon}
+                        totalCount={filteredData.length}
+                        totalLabel={moduleLabel}
+                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                        searchValue={searchTerm}
+                        onSearchChange={showSearch ? setSearchTerm : null}
+                        showColumnVisibility={showColumnVisibility}
+                        allColumns={columns}
+                        visibleColumns={visibleColumns}
+                        onToggleColumnVisibility={toggleColumnVisibility}
+                        actionButtons={actionButtons}
+                    />
                                 <ResizableTable
                                     data={filteredData}
                                     columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
@@ -832,51 +836,57 @@ const DynamicCRUD = ({
                                     showSerialNumber={true}
                                     showActions={showActions}
                                     actionsRenderer={showActions ? (item) => (
-                                        <div className="d-flex gap-2">
+                                        <div className="d-flex gap-2 justify-content-center">
                                             {allowEdit && (
-                                                <Button
-                                                    variant="link"
-                                                    onClick={() => handleEdit(item)}
+                                                <button
+                                                    // variant="link"
+                                                    onClick={() => handleNameClick(item , true)}
                                                     title="Edit"
-                                                    style={{
-                                                        padding: "4px 6px",
-                                                        color: "#0d6efd",
-                                                        textDecoration: "none"
-                                                    }}
+                                                    className="custom-btn-edit"
+                                                    // style={{
+                                                    //     padding: "4px 6px",
+                                                    //     color: "#0d6efd",
+                                                    //     textDecoration: "none"
+                                                    // }}
                                                 >
                                                     <i className="fs-5 fa-solid fa-pen-to-square"></i>
-                                                </Button>
+                                                </button>
                                             )}
                                             {allowDelete && (
-                                                <Button
-                                                    variant="link"
+                                                <button
+                                                    // variant="link"
                                                     onClick={() => handleDelete(item.id)}
                                                     title="Delete"
-                                                    style={{
-                                                        padding: "4px 6px",
-                                                        color: "#dc3545",
-                                                        textDecoration: "none"
-                                                    }}
+                                                    className="custom-btn-delete"
+                                                    // style={{
+                                                    //     padding: "4px 6px",
+                                                    //     color: "#dc3545",
+                                                    //     textDecoration: "none"
+                                                    // }}
                                                 >
                                                     <i className="fs-5 fa-solid fa-trash"></i>
-                                                </Button>
+                                                </button>
                                             )}
                                             {customHandlers?.handleBarcodePreview && (
-                                                <Button
-                                                    variant="info"
-                                                    size="sm"
+                                                <button
+                                                    // variant="info"
+                                                    className="custom-btn-edit"
+                                                    // size="sm"
                                                     onClick={() => customHandlers.handleBarcodePreview(item)}
                                                     title="View Barcode"
                                                 >
-                                                    <i className="fa-solid fa-barcode me-1"></i>
-                                                    Preview
-                                                </Button>
+                                                    <i className="fs-5 fa-solid fa-eye me-1"></i>
+                                                    {/* Preview */}
+                                                </button>
                                             )}
                                         </div>
                                     ) : null}
                                     emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
                                 />
+                                </>
+                                
                             )}
+                            
                         </Card.Body>
                     </Card>
                 </Col>
