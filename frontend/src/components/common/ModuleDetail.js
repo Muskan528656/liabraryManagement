@@ -127,6 +127,13 @@ const ModuleDetail = ({
 
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
 
+  // List of non-editable fields (system fields)
+  const nonEditableFields = useMemo(() => [
+    'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
+    'created_by', 'created_at', 'modified_by', 'modified_at',
+    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat'
+  ], []);
+
   const allFieldGroups = useMemo(() => {
     const groups = [];
     const appendFields = (list) => {
@@ -203,13 +210,11 @@ const ModuleDetail = ({
     );
   };
 
-
   const fetchUserNames = async (userIds) => {
     try {
       const userApi = new DataApi("user");
       const names = {};
       const avatars = {};
-
 
       const uniqueUserIds = [...new Set(userIds.filter(id => id && id !== ''))];
 
@@ -219,15 +224,12 @@ const ModuleDetail = ({
           if (response && response.data) {
             const user = response.data.success ? response.data.data : response.data;
             if (user) {
-
               const fullName = `${user.firstname || ''} ${user.lastname || ''}`.trim();
               names[userId] = fullName || user.email || `User ${userId}`;
-
 
               if (user.profile_picture) {
                 avatars[userId] = user.profile_picture;
               } else {
-
                 const initials = fullName
                   ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
                   : 'U';
@@ -271,7 +273,6 @@ const ModuleDetail = ({
         } else if (Array.isArray(responseData) && responseData.length > 0) {
           setData(responseData[0]);
         } else {
-
           setData(responseData);
         }
       } else {
@@ -363,12 +364,10 @@ const ModuleDetail = ({
     if (data) {
       const userIds = [];
 
-
       if (data.createdbyid) userIds.push(data.createdbyid);
       if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
       if (data.created_by) userIds.push(data.created_by);
       if (data.modified_by) userIds.push(data.modified_by);
-
 
       Object.keys(data).forEach(key => {
         if (key.includes('user') || key.includes('byid') || key.includes('by_id')) {
@@ -749,12 +748,10 @@ const ModuleDetail = ({
     navigate(`/${moduleName}`);
   };
 
-
   if (loading) {
     return (
       <Container fluid>
         <ScrollToTop />
-
       </Container>
     );
   }
@@ -808,13 +805,15 @@ const ModuleDetail = ({
   };
 
   const [col1, col2, col3] = splitInto3(normalizedFields.details);
-
   const [colother1, colother2, colother3] = splitInto3(normalizedOtherFields.other);
-
   const [coladd1, coladd2, coladd3] = splitInto3(normalizedAddressFields?.address);
 
   const renderField = (field, index, currentData) => {
-    if (!isEditing && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
+    const isNonEditableField = nonEditableFields.includes(field.key);
+
+    const shouldShowAsReadOnly = isEditing && isNonEditableField;
+
+    if ((!isEditing || shouldShowAsReadOnly) && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
       const userId = currentData ? currentData[field.key] : null;
       if (userId) {
         return (
@@ -845,7 +844,7 @@ const ModuleDetail = ({
           <Form.Label className="fw-semibold">
             {field.label}
           </Form.Label>
-          {isEditing ? (
+          {isEditing && !isNonEditableField ? (
             <Form.Select
               value={currentValue}
               onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
@@ -881,7 +880,7 @@ const ModuleDetail = ({
 
     const fieldValue = getFieldValue(field, currentData);
     const isElementValue = React.isValidElement(fieldValue);
-    const controlType = isEditing
+    const controlType = (isEditing && !isNonEditableField)
       ? field.type === "number"
         ? "number"
         : field.type === "date"
@@ -891,7 +890,7 @@ const ModuleDetail = ({
             : "text"
       : "text";
 
-    if (!isEditing && isElementValue) {
+    if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
       return (
         <Form.Group key={index} className="mb-3">
           <Form.Label className="fw-semibold">
@@ -912,9 +911,9 @@ const ModuleDetail = ({
         <Form.Control
           type={controlType}
           value={isElementValue ? "" : fieldValue ?? ""}
-          readOnly={!isEditing}
+          readOnly={!isEditing || isNonEditableField}
           onChange={(e) => {
-            if (!isEditing) return;
+            if (!isEditing || isNonEditableField) return;
 
             let newValue = e.target.value;
             if (field.type === "number")
@@ -925,10 +924,16 @@ const ModuleDetail = ({
             handleFieldChange(field.key, newValue);
           }}
           style={{
-            pointerEvents: isEditing ? "auto" : "none",
-            opacity: isEditing ? 1 : 0.9,
+            pointerEvents: (isEditing && !isNonEditableField) ? "auto" : "none",
+            opacity: (isEditing && !isNonEditableField) ? 1 : 0.9,
+            backgroundColor: isNonEditableField && isEditing ? '#f8f9fa' : 'white',
           }}
         />
+        {isNonEditableField && isEditing && (
+          <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>
+            This field cannot be edited
+          </Form.Text>
+        )}
       </Form.Group>
     );
   };
@@ -942,7 +947,7 @@ const ModuleDetail = ({
           <Col lg={12} xl={12}>
             <Card className="border-0 shadow-sm detail-h4">
               <Card.Body>
-             
+
                 <div
                   className="d-flex justify-content-between align-items-center mb-4 p-3"
                   style={{
@@ -951,7 +956,7 @@ const ModuleDetail = ({
                     borderRadius: "10px",
                   }}
                 >
-               
+
                   <div className="d-flex align-items-center gap-3">
                     <button
                       onClick={handleBack}

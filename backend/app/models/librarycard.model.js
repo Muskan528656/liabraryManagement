@@ -17,7 +17,7 @@ async function findAll() {
                     lc.*,
                     u.firstname || ' ' || u.lastname AS user_name,
                     u.email AS user_email
-                   FROM ${schema}.id_cards lc
+                   FROM ${schema}.library_members lc
                    LEFT JOIN ${schema}."user" u ON lc.user_id = u.id
                    ORDER BY lc.createddate DESC`;
     const result = await sql.query(query);
@@ -35,7 +35,7 @@ async function findById(id) {
                     lc.*,
                     u.firstname || ' ' || u.lastname AS user_name,
                     u.email AS user_email
-                   FROM ${schema}.id_cards lc
+                   FROM ${schema}.library_members lc
                    LEFT JOIN ${schema}."user" u ON lc.user_id = u.id
                    WHERE lc.id = $1`;
     const result = await sql.query(query, [id]);
@@ -56,7 +56,7 @@ async function findByCardNumber(cardNumber) {
                     lc.*,
                     u.firstname || ' ' || u.lastname AS user_name,
                     u.email AS user_email
-                   FROM ${schema}.id_cards lc
+                   FROM ${schema}.library_members lc
                    LEFT JOIN ${schema}."user" u ON lc.user_id = u.id
                    WHERE lc.card_number = $1`;
     const result = await sql.query(query, [cardNumber]);
@@ -78,7 +78,7 @@ async function findByUserId(userId) {
                     lc.*,
                     u.firstname || ' ' || u.lastname AS user_name,
                     u.email AS user_email
-                   FROM ${schema}.id_cards lc
+                   FROM ${schema}.library_members lc
                    LEFT JOIN ${schema}."user" u ON lc.user_id = u.id
                    WHERE lc.user_id = $1`;
     const result = await sql.query(query, [userId]);
@@ -102,7 +102,7 @@ async function generateCardNumber() {
   try {
     const prefix = "LIB";
     const year = new Date().getFullYear();
-    const query = `SELECT COUNT(*) as count FROM ${schema}.id_cards WHERE card_number LIKE $1`;
+    const query = `SELECT COUNT(*) as count FROM ${schema}.library_members WHERE card_number LIKE $1`;
     const result = await sql.query(query, [`${prefix}${year}%`]);
     const count = parseInt(result.rows[0]?.count || 0) + 1;
     return `${prefix}${year}${String(count).padStart(6, '0')}`;
@@ -130,7 +130,7 @@ async function create(cardData, userId) {
       cardNumber = await generateCardNumber();
     }
 
-    const query = `INSERT INTO ${schema}.id_cards 
+    const query = `INSERT INTO ${schema}.library_members 
                    (user_id, card_number, issue_date, expiry_date, is_active, image, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
                    VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7, $7) 
                    RETURNING *`;
@@ -200,7 +200,7 @@ async function updateById(id, cardData, userId) {
     
     values.push(id); // For WHERE clause
     
-    const query = `UPDATE ${schema}.id_cards 
+    const query = `UPDATE ${schema}.library_members 
                    SET ${updates.join(', ')}
                    WHERE id = $${paramIndex} 
                    RETURNING *`;
@@ -218,7 +218,7 @@ async function updateById(id, cardData, userId) {
 // Delete library card by ID
 async function deleteById(id) {
   try {
-    const query = `DELETE FROM ${schema}.id_cards WHERE id = $1 RETURNING *`;
+    const query = `DELETE FROM ${schema}.library_members WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
       return { success: true, message: "Library card deleted successfully" };

@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/librarycard endpoint
- * DB table for this demo.id_cards
+ * DB table for this demo.library_members
  * Model used here is librarycard.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/librarycard

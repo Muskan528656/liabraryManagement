@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
@@ -11,7 +10,7 @@ import Loader from '../common/Loader';
 import { toast } from "react-toastify";
 import BarcodeScanPurchase from "../common/BarcodeScanPurchase";
 import PurchaseDataImport from "../common/PurchaseDataImport";
-import PubSub from 'pubsub-js';
+import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
@@ -60,6 +59,7 @@ const BulkPurchasePage = () => {
     });
     const [authors, setAuthors] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [autoLookupTimeout, setAutoLookupTimeout] = useState(null);
 
     const handleFileChange = (file) => {
         if (file) {
@@ -68,52 +68,97 @@ const BulkPurchasePage = () => {
             setSelectedFile(null);
         }
     };
+
+    // FIXED: Improved barcode lookup to properly handle author and category data
     const handleBarcodeLookup = async (barcode) => {
-        if (!barcode.trim()) return;
+        if (!barcode.trim()) {
+            toast.error("Please enter a barcode/ISBN");
+            return;
+        }
 
         try {
             setLoading(true);
             const api = new DataApi('book');
-            const response = await api.fetchByBarcode(barcode);
+            const allBooks = await api.fetchAll();
+            const bookData = allBooks?.data || allBooks || [];
 
-            if (response.data && response.data.success) {
-                const bookData = response.data.data;
+            const cleanBarcode = barcode.trim().replace(/[-\s]/g, '');
+
+            let foundBook = bookData.find(book =>
+                book.isbn && book.isbn.replace(/[-\s]/g, '') === cleanBarcode
+            );
+
+            if (!foundBook) {
+                foundBook = bookData.find(book =>
+                    book.isbn && (
+                        book.isbn.includes(barcode.trim()) ||
+                        barcode.trim().includes(book.isbn)
+                    )
+                );
+            }
+
+            if (foundBook) {
+                console.log('Found book:', foundBook);
+
+                // Get author and category names for display
+                const authorName = foundBook.author_name ||
+                    (foundBook.author_id && authors.find(a => a.id === foundBook.author_id)?.name) ||
+                    '';
+
+                const categoryName = foundBook.category_name ||
+                    (foundBook.category_id && categories.find(c => c.id === foundBook.category_id)?.name) ||
+                    '';
+
                 setBookFormData({
-                    title: bookData.title || '',
-                    author_id: bookData.author_id || '',
-                    category_id: bookData.category_id || '',
-                    isbn: bookData.isbn || barcode,
-                    language: bookData.language || '',
-                    total_copies: bookData.total_copies || 1,
-                    available_copies: bookData.available_copies || 1
+                    title: foundBook.title || '',
+                    author_id: foundBook.author_id || '',
+                    category_id: foundBook.category_id || '',
+                    isbn: foundBook.isbn || barcode,
+                    language: foundBook.language || '',
+                    total_copies: foundBook.total_copies || 1,
+                    available_copies: foundBook.available_copies || 1
                 });
 
-                PubSub.publish("RECORD_SAVED_TOAST", {
-                    title: "Success",
-                    message: "Book details auto-filled from barcode",
-                });
+                setBarcodeInput(foundBook.isbn || barcode);
+
+                toast.success(`Book found: ${foundBook.title}`);
+
+                // Log for debugging
+                console.log('Author ID:', foundBook.author_id);
+                console.log('Category ID:', foundBook.category_id);
+                console.log('Available authors:', authors);
+                console.log('Available categories:', categories);
+
             } else {
                 setBookFormData(prev => ({
                     ...prev,
                     isbn: barcode
                 }));
-
-                PubSub.publish("RECORD_ERROR_TOAST", {
-                    title: "Info",
-                    message: "Book not found in database. Please fill details manually.",
-                });
+                toast.info("Book not found in database. Please fill details manually.");
             }
         } catch (error) {
             console.error('Barcode lookup error:', error);
-
             setBookFormData(prev => ({
                 ...prev,
                 isbn: barcode
             }));
+            toast.error("Failed to lookup book. Please check the ISBN and try again.");
         } finally {
             setLoading(false);
         }
     };
+
+    // NEW: Handle barcode scan from UniversalBarcodeScanner
+    const handleBarcodeScanned = (barcode) => {
+        console.log('Barcode scanned:', barcode);
+        setBarcodeInput(barcode);
+
+        // Auto-trigger lookup when barcode is scanned
+        setTimeout(() => {
+            handleBarcodeLookup(barcode);
+        }, 500);
+    };
+
     const handleBarcodeScan = async (barcode) => {
         if (!barcode || barcode.trim().length < 10) {
             toast.error("Please enter a valid barcode/ISBN (minimum 10 characters)");
@@ -150,12 +195,28 @@ const BulkPurchasePage = () => {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         fetchVendors();
         fetchBooks();
         fetchAuthors();
         fetchCategories();
     }, []);
+
+    // Reset book form when modal opens
+    useEffect(() => {
+        if (showAddBookModal) {
+            setBookFormData({
+                title: "",
+                author_id: "",
+                category_id: "",
+                isbn: barcodeInput || "",
+                language: "",
+                total_copies: 1,
+                available_copies: 1,
+            });
+        }
+    }, [showAddBookModal]);
 
     const fetchVendors = async () => {
         try {
@@ -168,6 +229,7 @@ const BulkPurchasePage = () => {
             console.error("Error fetching vendors:", error);
         }
     };
+
     const fetchBooks = async () => {
         try {
             const bookApi = new DataApi("book");
@@ -179,6 +241,7 @@ const BulkPurchasePage = () => {
             console.error("Error fetching books:", error);
         }
     };
+
     const fetchAuthors = async () => {
         try {
             const authorApi = new DataApi("author");
@@ -190,6 +253,7 @@ const BulkPurchasePage = () => {
             console.error("Error fetching authors:", error);
         }
     };
+
     const fetchCategories = async () => {
         try {
             const categoryApi = new DataApi("category");
@@ -211,6 +275,28 @@ const BulkPurchasePage = () => {
         value: book.id,
         label: `${book.title}${book.isbn ? ` (${book.isbn})` : ''}`
     }));
+
+    // FIXED: Get author and category options with proper formatting
+    const authorOptions = authors.map((author) => ({
+        value: author.id,
+        label: author.name
+    }));
+
+    const categoryOptions = categories.map((category) => ({
+        value: category.id,
+        label: category.name
+    }));
+
+    // FIXED: Get current selected author and category for dropdowns
+    const getSelectedAuthor = () => {
+        if (!bookFormData.author_id) return null;
+        return authorOptions.find(option => option.value === bookFormData.author_id) || null;
+    };
+
+    const getSelectedCategory = () => {
+        if (!bookFormData.category_id) return null;
+        return categoryOptions.find(option => option.value === bookFormData.category_id) || null;
+    };
 
     const handleMultiRowChange = (index, field, value) => {
         const updatedRows = [...multiInsertRows];
@@ -296,7 +382,7 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // Handle Add Book
+    // Handle Add Book - FIXED FUNCTION
     const handleAddBook = async () => {
         if (!bookFormData.title || !bookFormData.title.trim()) {
             toast.error("Book title is required");
@@ -318,8 +404,27 @@ const BulkPurchasePage = () => {
             const bookApi = new DataApi("book");
             const response = await bookApi.create(bookFormData);
 
-            if (response.data) {
+            if (response && response.data) {
                 toast.success("Book added successfully");
+
+                // Refresh books list first
+                await fetchBooks();
+
+                // Get the new book ID from response
+                const newBook = response.data;
+                const newBookId = newBook.id || newBook._id;
+
+                if (newBookId) {
+                    // Update the current row with the new book
+                    const updatedRows = [...multiInsertRows];
+                    updatedRows[currentRowIndex] = {
+                        ...updatedRows[currentRowIndex],
+                        book_id: newBookId
+                    };
+                    setMultiInsertRows(updatedRows);
+                }
+
+                // Close modal and reset form
                 setShowAddBookModal(false);
                 setBookFormData({
                     title: "",
@@ -330,7 +435,7 @@ const BulkPurchasePage = () => {
                     total_copies: 1,
                     available_copies: 1,
                 });
-                await fetchBooks();
+                setBarcodeInput("");
             }
         } catch (error) {
             console.error("Error adding book:", error);
@@ -486,7 +591,6 @@ const BulkPurchasePage = () => {
                                 </Button>
                             </Col>
                         </Row>
-
 
                         {/* Purchase Entries for Single Vendor */}
                         {renderPurchaseEntries("single")}
@@ -675,7 +779,10 @@ const BulkPurchasePage = () => {
                                                     <Button
                                                         variant="outline-success"
                                                         size="sm"
-                                                        onClick={() => setShowAddBookModal(true)}
+                                                        onClick={() => {
+                                                            setCurrentRowIndex(index);
+                                                            setShowAddBookModal(true);
+                                                        }}
                                                     >
                                                         <i className="fa-solid fa-plus"></i>
                                                     </Button>
@@ -736,30 +843,6 @@ const BulkPurchasePage = () => {
                                 </tbody>
                             </Table>
                         </div>
-
-                        {/* Summary Section */}
-                        {/* {multiInsertRows.length > 0 && (
-                            <Card className={`mt-3 ${tabType === "single" ? "border-success" : "border-info"}`}>
-                                <Card.Body>
-                                    <Row className="align-items-center">
-                                        <Col>
-                                            <h6 className="mb-1">Summary</h6>
-                                            <p className="mb-0 text-muted">
-                                                {multiInsertRows.length} entr{multiInsertRows.length !== 1 ? 'ies' : 'y'} •
-                                                {tabType === "multiple" && ` ${uniqueVendors.length} vendor${uniqueVendors.length !== 1 ? 's' : ''}`} •
-                                                {` ${totalBooks} book${totalBooks !== 1 ? 's' : ''}`}
-                                            </p>
-                                        </Col>
-                                        <Col xs="auto">
-                                            <h4 className={`mb-0 ${tabType === "single" ? "text-success" : "text-info"}`}>
-                                                ₹{totalAmount.toFixed(2)}
-                                            </h4>
-                                            <small className="text-muted">Total Amount</small>
-                                        </Col>
-                                    </Row>
-                                </Card.Body>
-                            </Card>
-                        )} */}
 
                         {/* Action Buttons */}
                         <div className="d-flex justify-content-between mt-4">
@@ -840,7 +923,6 @@ const BulkPurchasePage = () => {
                         </Card.Header>
                     </Card>
                 </Col>
-
             </Row>
 
             <Row>
@@ -987,8 +1069,11 @@ const BulkPurchasePage = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Book Modal with Barcode Scan */}
-            <Modal show={showAddBookModal} onHide={() => setShowAddBookModal(false)} size="lg" centered>
+            {/* Add Book Modal with Barcode Scan - FIXED */}
+            <Modal show={showAddBookModal} onHide={() => {
+                setShowAddBookModal(false);
+                setBarcodeInput("");
+            }} size="lg" centered>
                 <Modal.Header closeButton className="border-bottom-0 pb-0">
                     <Modal.Title className="fw-bold">
                         <i className="fa-solid fa-book me-2 text-success"></i>
@@ -1005,46 +1090,71 @@ const BulkPurchasePage = () => {
                                         <i className="fa-solid fa-barcode me-2"></i>
                                         Scan Barcode
                                     </h6>
-                                    <p className="mb-0 text-muted small">Scan book barcode to auto-fill details</p>
+                                    <p className="mb-0 text-muted small">Enter ISBN to auto-fill details</p>
                                 </div>
-                                <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={handleBarcodeScan}
-                                >
-                                    <i className="fa-solid fa-camera me-2"></i>
-                                    Scan Barcode
-                                </Button>
                             </div>
 
-                            {/* Barcode Input Field */}
+                            {/* Barcode Input Field - FIXED: Added manual input and scanner */}
                             <Form.Group className="mt-3">
-                                <Form.Label className="small fw-semibold">Or Enter Barcode Manually</Form.Label>
-                                <div className="d-flex gap-2">
+                                <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
+
+                                {/* Manual Input */}
+                                <div className="mb-2">
                                     <Form.Control
                                         type="text"
                                         value={barcodeInput}
-                                        onChange={(e) => setBarcodeInput(e.target.value)}
-                                        placeholder="Enter barcode number"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setBarcodeInput(value);
+
+                                            // Clear previous timeout
+                                            if (autoLookupTimeout) {
+                                                clearTimeout(autoLookupTimeout);
+                                            }
+
+                                            // Set new timeout for auto-lookup
+                                            if (value.length >= 10) {
+                                                const timeout = setTimeout(() => {
+                                                    handleBarcodeLookup(value);
+                                                }, 1500);
+                                                setAutoLookupTimeout(timeout);
+                                            }
+                                        }}
+                                        placeholder="Enter ISBN or barcode number"
                                         onKeyPress={(e) => {
                                             if (e.key === 'Enter') {
                                                 handleBarcodeLookup(barcodeInput);
                                             }
                                         }}
                                     />
+                                </div>
+
+                                {/* Scanner Section */}
+                                <div className="d-flex gap-2 align-items-center">
+                                    <div className="flex-grow-1">
+                                        <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
+                                    </div>
                                     <Button
                                         variant="primary"
                                         onClick={() => handleBarcodeLookup(barcodeInput)}
-                                        disabled={!barcodeInput.trim()}
+                                        disabled={!barcodeInput.trim() || loading}
                                     >
-                                        <i className="fa-solid fa-search"></i>
+                                        {loading ? (
+                                            <i className="fa-solid fa-spinner fa-spin"></i>
+                                        ) : (
+                                            <i className="fa-solid fa-search"></i>
+                                        )}
                                     </Button>
                                 </div>
+
+                                <Form.Text className="text-muted">
+                                    Enter 10 or 13 digit ISBN to auto-fill book details
+                                </Form.Text>
                             </Form.Group>
                         </Card.Body>
                     </Card>
 
-                    {/* Book Form */}
+                    {/* Book Form - FIXED: Updated dropdown handling */}
                     <Form>
                         <Row>
                             <Col md={12}>
@@ -1063,13 +1173,21 @@ const BulkPurchasePage = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Author <span className="text-danger">*</span></Form.Label>
                                     <Select
-                                        value={authors.find((a) => a.id === bookFormData.author_id) ?
-                                            { value: bookFormData.author_id, label: authors.find((a) => a.id === bookFormData.author_id).name } : null}
-                                        onChange={(selectedOption) => setBookFormData({ ...bookFormData, author_id: selectedOption ? selectedOption.value : "" })}
-                                        options={authors.map((a) => ({ value: a.id, label: a.name }))}
+                                        value={getSelectedAuthor()}
+                                        onChange={(selectedOption) => setBookFormData({
+                                            ...bookFormData,
+                                            author_id: selectedOption ? selectedOption.value : ""
+                                        })}
+                                        options={authorOptions}
                                         placeholder="Select Author"
                                         isClearable
                                         isSearchable
+                                        styles={{
+                                            menu: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            })
+                                        }}
                                     />
                                 </Form.Group>
                             </Col>
@@ -1077,13 +1195,21 @@ const BulkPurchasePage = () => {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Category <span className="text-danger">*</span></Form.Label>
                                     <Select
-                                        value={categories.find((c) => c.id === bookFormData.category_id) ?
-                                            { value: bookFormData.category_id, label: categories.find((c) => c.id === bookFormData.category_id).name } : null}
-                                        onChange={(selectedOption) => setBookFormData({ ...bookFormData, category_id: selectedOption ? selectedOption.value : "" })}
-                                        options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                                        value={getSelectedCategory()}
+                                        onChange={(selectedOption) => setBookFormData({
+                                            ...bookFormData,
+                                            category_id: selectedOption ? selectedOption.value : ""
+                                        })}
+                                        options={categoryOptions}
                                         placeholder="Select Category"
                                         isClearable
                                         isSearchable
+                                        styles={{
+                                            menu: (base) => ({
+                                                ...base,
+                                                zIndex: 9999,
+                                            })
+                                        }}
                                     />
                                 </Form.Group>
                             </Col>
@@ -1135,7 +1261,10 @@ const BulkPurchasePage = () => {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer className="border-top-0">
-                    <Button variant="outline-secondary" onClick={() => setShowAddBookModal(false)}>
+                    <Button variant="outline-secondary" onClick={() => {
+                        setShowAddBookModal(false);
+                        setBarcodeInput("");
+                    }}>
                         Cancel
                     </Button>
                     <Button variant="success" onClick={handleAddBook} disabled={loading}>
