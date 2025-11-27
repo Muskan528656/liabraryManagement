@@ -63,8 +63,11 @@ const User = () => {
       const userRoleApi = new DataApi("user-role");
       const response = await userRoleApi.fetchAll();
       console.log("user roles response ", response)
-      if (response.data && Array.isArray(response.data)) {
-        setRoleOptions(response.data);
+      const normalizedData = Array.isArray(response.data) ? response.data : 
+                            (response.data?.data && Array.isArray(response.data.data) ? response.data.data : 
+                            (response.data?.records && Array.isArray(response.data.records) ? response.data.records : []));
+      if (normalizedData.length > 0) {
+        setRoleOptions(normalizedData);
       }
     } catch (error) {
       console.error("Error fetching user roles:", error);
@@ -709,11 +712,13 @@ const User = () => {
                     onChange={handleInputChange}
                   >
                     <option value="">Select Role</option>
-                    {roleOptions.map((role) => (
-                      <option key={role.id} value={role.role_name}>
-                        {role.role_name}
+                    {roleOptions && roleOptions.length > 0 ? roleOptions.map((role) => (
+                      <option key={role.id || role.role_name} value={role.role_name || role.name}>
+                        {role.role_name || role.name}
                       </option>
-                    ))}
+                    )) : (
+                      <option value="" disabled>Loading roles...</option>
+                    )}
                   </Form.Select>
                 </Form.Group>
               </Col>

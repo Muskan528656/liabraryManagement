@@ -305,5 +305,5 @@ module.exports = app => {
 
     // Delete all Tutorials
     //router.delete("/", files.deleteAll);
-    app.use(process.env.BASE_API_URL + '/api/files', router);
+    app.use(process.env.BASE_API_URL+ '/api/files', router);
 };

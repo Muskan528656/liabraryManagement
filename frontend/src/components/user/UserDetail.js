@@ -5,7 +5,7 @@ const UserDetail = () => {
   const fields = {
     title: "firstname",
     subtitle: "email",
-    status: "isactive",
+    status: "status",
     // overview: [
     //   { key: "firstname", label: "First Name", type: "text" },
     //   { key: "lastname", label: "Last Name", type: "text" },
@@ -17,8 +17,14 @@ const UserDetail = () => {
       { key: "lastname", label: "Last Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
       { key: "phone", label: "Phone", type: "text" },
-      { key: "user_role", label: "user", type: "text", Option: "userroles " },
-      { key: "isactive", label: "Status", type: "badge" },
+      { 
+        key: "userrole", 
+        label: "Role", 
+        type: "select", 
+        options: "user-role",
+        displayKey: "role_name"
+      },
+      { key: "status", label: "Status", type: "badge" },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },

@@ -12,6 +12,17 @@ import { exportToExcel } from "../../utils/excelExport";
 import jwt_decode from "jwt-decode";
 import ModuleDetail from "./ModuleDetail";
 
+const normalizeListResponse = (payload) => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (payload.data && Array.isArray(payload.data.data)) return payload.data.data;
+    if (Array.isArray(payload.records)) return payload.records;
+    if (Array.isArray(payload.rows)) return payload.rows;
+    if (payload.results && Array.isArray(payload.results)) return payload.results;
+    return [];
+};
+
 const DynamicCRUD = ({
     moduleName,
     moduleLabel,
@@ -267,7 +278,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -345,11 +356,12 @@ const DynamicCRUD = ({
             const api = new DataApi(apiEndpoint);
             console.log("Fetching data from API endpoint:", apiEndpoint);
             const response = await api.fetchAll();
-            if (response.data) {
-                setData(response.data);
+            if (response.data !== undefined) {
+                const normalizedData = normalizeListResponse(response.data);
+                setData(normalizedData);
 
                 if (customHandlers.onDataLoad) {
-                    customHandlers.onDataLoad(response.data);
+                    customHandlers.onDataLoad(normalizedData, response.data);
                 }
             }
         } catch (error) {
@@ -361,7 +373,7 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [apiEndpoint, moduleLabel, customHandlers]);
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
@@ -381,7 +393,12 @@ const DynamicCRUD = ({
                 category: "category",
                 users: "user",
                 vendor: "vendor",
-
+                "user-role": "user-role",
+                "userroles": "user-role",
+                subscriptions: "subscriptions",
+                subscription: "subscriptions",
+                modules: "module",
+                module: "module",
                 departments: "department"
             };
 
@@ -393,7 +410,7 @@ const DynamicCRUD = ({
                     const api = new DataApi(endpoint);
                     const response = await api.fetchAll();
 
-                    relatedApis[option] = Array.isArray(response.data) ? response.data : [];
+                    relatedApis[option] = normalizeListResponse(response.data);
                 } catch (error) {
                     console.error(`Error fetching ${option}:`, error);
                     relatedApis[option] = [];
@@ -430,8 +447,8 @@ const DynamicCRUD = ({
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
-                            value: item.id?.toString() || '',
-                            label: item.name || item.title || item.email || `Item ${item.id}`
+                            value: item.id?.toString() || item.role_name?.toString() || '',
+                            label: item.name || item.title || item.role_name || item.email || item.plan_name || `Item ${item.id}`
                         }));
                     } else {
                         optionsArray = [];

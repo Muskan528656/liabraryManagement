@@ -23,7 +23,7 @@ const Submodule = () => {
         }
       }
 
-      const api = new DataApi("whatsapp/module");
+      const api = new DataApi("module");
       const resp = await api.fetchAll();
       const result = resp?.data;
       let modules = [];

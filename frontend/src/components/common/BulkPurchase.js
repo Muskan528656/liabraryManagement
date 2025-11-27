@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import BarcodeScanPurchase from "../common/BarcodeScanPurchase";
 import PurchaseDataImport from "../common/PurchaseDataImport";
 import UniversalBarcodeScanner from './UniversalBarcodeScanner';
-
+import PubSub from 'pubsub-js';
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
     const [multiInsertRows, setMultiInsertRows] = useState([{
@@ -60,6 +60,8 @@ const BulkPurchasePage = () => {
     const [authors, setAuthors] = useState([]);
     const [categories, setCategories] = useState([]);
     const [autoLookupTimeout, setAutoLookupTimeout] = useState(null);
+    const [barcodeProcessing, setBarcodeProcessing] = useState(false);
+    const [newlyAddedBookId, setNewlyAddedBookId] = useState(null);
 
     const handleFileChange = (file) => {
         if (file) {
@@ -69,7 +71,377 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // FIXED: Improved barcode lookup to properly handle author and category data
+    const isValidISBN = (isbn) => {
+        if (!isbn) return false;
+
+        const cleanIsbn = isbn.replace(/[^\dX]/gi, '').toUpperCase();
+
+        if (cleanIsbn.length === 10) {
+            const isbn10Regex = /^[\d]{9}[\dX]$/;
+            if (isbn10Regex.test(cleanIsbn)) {
+                return { type: 'isbn10', value: cleanIsbn };
+            }
+        }
+
+        if (cleanIsbn.length === 13) {
+            const isbn13Regex = /^[\d]{13}$/;
+            if (isbn13Regex.test(cleanIsbn)) {
+                return { type: 'isbn13', value: cleanIsbn };
+            }
+        }
+
+        return false;
+    };
+
+    const fetchBookByISBN = async (isbn) => {
+        console.log("Fetching book data for ISBN:", isbn);
+
+       
+        const bookData = {
+            isbn: isbn,
+            title: "",
+            total_copies: 1,
+            available_copies: 1,
+        };
+
+        try {
+          
+            const openLibraryUrl = `https://openlibrary.org/isbn/${isbn}.json`;
+            console.log("Trying Open Library API:", openLibraryUrl);
+
+            const openLibraryResponse = await fetch(openLibraryUrl);
+
+            if (openLibraryResponse.ok) {
+                const data = await openLibraryResponse.json();
+                console.log("Open Library response:", data);
+
+                bookData.title = data.title || "";
+
+        
+                if (data.authors && data.authors.length > 0) {
+                    try {
+                        const authorPromises = data.authors.slice(0, 3).map(async (author) => {
+                            const authorKey = author.key || author;
+                            const authorUrl = `https://openlibrary.org${authorKey}.json`;
+                            const authorResponse = await fetch(authorUrl);
+                            if (authorResponse.ok) {
+                                const authorData = await authorResponse.json();
+                                return {
+                                    name: authorData.name || "",
+                                    bio: authorData.bio ? (typeof authorData.bio === "string" ? authorData.bio : authorData.bio.value || "") : "",
+                                    email: authorData.email || "",
+                                    fullData: authorData
+                                };
+                            }
+                            return { name: "", bio: "", email: "", fullData: null };
+                        });
+                        const authorDetails = await Promise.all(authorPromises);
+                        const validAuthors = authorDetails.filter(a => a.name);
+                        if (validAuthors.length > 0) {
+                            bookData.author_name = validAuthors.map(a => a.name).join(", ");
+                            bookData.author_details = validAuthors[0];
+                        }
+                    } catch (e) {
+                        console.log("Could not fetch author details:", e);
+                    }
+                }
+
+              
+                if (data.subjects && data.subjects.length > 0) {
+                    const subject = data.subjects[0];
+                    const categoryName = subject
+                        .replace(/^Fiction\s*[-–—]\s*/i, "")
+                        .replace(/^Non-fiction\s*[-–—]\s*/i, "")
+                        .split(",")[0]
+                        .trim();
+                    bookData.category_name = categoryName;
+                    bookData.category_description = subject;
+                }
+
+                if (!bookData.category_name && data.subject_places && data.subject_places.length > 0) {
+                    bookData.category_name = data.subject_places[0];
+                    bookData.category_description = data.subject_places.join(", ");
+                }
+
+                if (!bookData.category_name && data.subject_people && data.subject_people.length > 0) {
+                    bookData.category_name = data.subject_people[0];
+                    bookData.category_description = data.subject_people.join(", ");
+                }
+
+                console.log("Final book data from Open Library:", bookData);
+                return bookData;
+            }
+        } catch (error) {
+            console.log("Open Library API failed:", error);
+        }
+
+        // Fallback to Google Books API
+        try {
+            const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
+            console.log("Trying Google Books API:", googleBooksUrl);
+
+            const googleResponse = await fetch(googleBooksUrl);
+
+            if (googleResponse.ok) {
+                const data = await googleResponse.json();
+                console.log("Google Books response:", data);
+
+                if (data.items && data.items.length > 0) {
+                    const volumeInfo = data.items[0].volumeInfo;
+                    bookData.title = volumeInfo.title || "";
+
+                    // Get authors
+                    if (volumeInfo.authors && volumeInfo.authors.length > 0) {
+                        bookData.author_name = volumeInfo.authors.join(", ");
+                        bookData.author_details = {
+                            name: volumeInfo.authors[0],
+                            bio: "",
+                            email: "",
+                            fullData: null
+                        };
+                    }
+
+                    // Get categories
+                    if (volumeInfo.categories && volumeInfo.categories.length > 0) {
+                        const category = volumeInfo.categories[0];
+                        const categoryName = category
+                            .split("/")[0]
+                            .split(",")[0]
+                            .trim();
+                        bookData.category_name = categoryName;
+                        bookData.category_description = category;
+                    }
+
+                    // Get description
+                    if (volumeInfo.description) {
+                        bookData.description = volumeInfo.description;
+                    }
+
+                    console.log("Final book data from Google Books:", bookData);
+                    return bookData;
+                }
+            }
+        } catch (error) {
+            console.log("Google Books API also failed:", error);
+        }
+
+        console.log("Both APIs failed, returning basic data");
+        return bookData;
+    };
+
+    const findOrCreateAuthor = async (authorName, authorDetails = null) => {
+        try {
+            const authorApi = new DataApi("author");
+            const authorsResponse = await authorApi.fetchAll();
+
+            if (authorsResponse.data && Array.isArray(authorsResponse.data)) {
+                const authorNames = authorName.split(",").map(a => a.trim());
+                const primaryAuthorName = authorNames[0];
+
+                let foundAuthor = authorsResponse.data.find(a =>
+                    a.name && a.name.toLowerCase() === primaryAuthorName.toLowerCase()
+                );
+
+                if (!foundAuthor) {
+                    const authorData = {
+                        name: primaryAuthorName,
+                        email: authorDetails?.email || "",
+                        bio: authorDetails?.bio || (authorDetails?.fullData?.bio ?
+                            (typeof authorDetails.fullData.bio === "string"
+                                ? authorDetails.fullData.bio
+                                : authorDetails.fullData.bio.value || "")
+                            : "")
+                    };
+
+                    const newAuthorResponse = await authorApi.create(authorData);
+                    if (newAuthorResponse.data && newAuthorResponse.data.success) {
+                        foundAuthor = newAuthorResponse.data.data;
+                        toast.success(`Author "${primaryAuthorName}" created successfully`);
+                        // Refresh authors list
+                        await fetchAuthors();
+                    }
+                } else {
+                    if (authorDetails && (authorDetails.email || authorDetails.bio)) {
+                        const updateData = {};
+                        if (authorDetails.email && !foundAuthor.email) {
+                            updateData.email = authorDetails.email;
+                        }
+                        if (authorDetails.bio && !foundAuthor.bio) {
+                            updateData.bio = authorDetails.bio;
+                        }
+                        if (Object.keys(updateData).length > 0) {
+                            try {
+                                await authorApi.update({ ...foundAuthor, ...updateData }, foundAuthor.id);
+                            } catch (e) {
+                                console.log("Could not update author details:", e);
+                            }
+                        }
+                    }
+                }
+
+                if (foundAuthor) {
+                    return foundAuthor.id;
+                }
+            }
+        } catch (error) {
+            console.error("Error finding/creating author:", error);
+            toast.error("Error creating author");
+        }
+        return null;
+    };
+
+    const findOrCreateCategory = async (categoryName, categoryDescription = null) => {
+        try {
+            const categoryApi = new DataApi("category");
+            const categoriesResponse = await categoryApi.fetchAll();
+
+            if (categoriesResponse.data && Array.isArray(categoriesResponse.data)) {
+              
+                let foundCategory = categoriesResponse.data.find(c =>
+                    c.name && c.name.toLowerCase() === categoryName.toLowerCase()
+                );
+
+                if (!foundCategory) {
+                  
+                    const categoryData = {
+                        name: categoryName,
+                        description: categoryDescription || ""
+                    };
+
+                    const newCategoryResponse = await categoryApi.create(categoryData);
+                    if (newCategoryResponse.data && newCategoryResponse.data.success) {
+                        foundCategory = newCategoryResponse.data.data;
+                        toast.success(`Category "${categoryName}" created successfully`);
+                        // Refresh categories list
+                        await fetchCategories();
+                    }
+                } else {
+                  if (categoryDescription && !foundCategory.description) {
+                        try {
+                            await categoryApi.update({ ...foundCategory, description: categoryDescription }, foundCategory.id);
+                        } catch (e) {
+                            console.log("Could not update category description:", e);
+                        }
+                    }
+                }
+
+                if (foundCategory) {
+                    return foundCategory.id;
+                }
+            }
+        } catch (error) {
+            console.error("Error finding/creating category:", error);
+            toast.error("Error creating category");
+        }
+        return null;
+    };
+
+    const processBarcodeData = async (barcode) => {
+        if (!barcode || barcode.trim().length === 0) return null;
+
+        setBarcodeProcessing(true);
+        try {
+            console.log("Processing barcode:", barcode);
+
+            const isbnCheck = isValidISBN(barcode);
+            if (isbnCheck) {
+                console.log("Valid ISBN detected:", isbnCheck);
+                const isbn = isbnCheck.value;
+
+               
+                const bookData = await fetchBookByISBN(isbn);
+                console.log("Fetched book data:", bookData);
+  if (bookData.author_name) {
+                    const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
+                    if (authorId) {
+                        bookData.author_id = authorId;
+                    }
+                }
+
+                if (bookData.category_name) {
+                    const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
+                    if (categoryId) {
+                        bookData.category_id = categoryId;
+                    }
+                }
+
+                return {
+                    title: bookData.title || "",
+                    author_id: bookData.author_id || "",
+                    category_id: bookData.category_id || "",
+                    isbn: bookData.isbn || isbn,
+                    language: bookData.language || "",
+                    total_copies: bookData.total_copies || 1,
+                    available_copies: bookData.available_copies || 1
+                };
+            }
+
+            if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
+                const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
+                if (possibleIsbns) {
+                    for (const possibleIsbn of possibleIsbns) {
+                        const isbnCheck = isValidISBN(possibleIsbn);
+                        if (isbnCheck) {
+                            const isbn = isbnCheck.value;
+                            const title = barcode.replace(possibleIsbn, "").trim();
+
+                            const bookData = await fetchBookByISBN(isbn);
+
+                            if (title && !bookData.title) {
+                                bookData.title = title;
+                            }
+
+                            if (bookData.author_name) {
+                                const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
+                                if (authorId) {
+                                    bookData.author_id = authorId;
+                                }
+                            }
+
+                            if (bookData.category_name) {
+                                const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
+                                if (categoryId) {
+                                    bookData.category_id = categoryId;
+                                }
+                            }
+
+                            return {
+                                title: bookData.title || title || "",
+                                author_id: bookData.author_id || "",
+                                category_id: bookData.category_id || "",
+                                isbn: bookData.isbn || isbn,
+                                language: bookData.language || "",
+                                total_copies: bookData.total_copies || 1,
+                                available_copies: bookData.available_copies || 1
+                            };
+                        }
+                    }
+                }
+            }
+
+          
+            if (barcode.length > 3) {
+                return {
+                    title: barcode.trim(),
+                    author_id: "",
+                    category_id: "",
+                    isbn: barcode,
+                    language: "",
+                    total_copies: 1,
+                    available_copies: 1
+                };
+            }
+
+            return null;
+        } catch (error) {
+            console.error("Error processing barcode data:", error);
+            toast.error("Failed to process barcode data");
+            return null;
+        } finally {
+            setBarcodeProcessing(false);
+        }
+    };
+
     const handleBarcodeLookup = async (barcode) => {
         if (!barcode.trim()) {
             toast.error("Please enter a barcode/ISBN");
@@ -78,63 +450,30 @@ const BulkPurchasePage = () => {
 
         try {
             setLoading(true);
-            const api = new DataApi('book');
-            const allBooks = await api.fetchAll();
-            const bookData = allBooks?.data || allBooks || [];
 
-            const cleanBarcode = barcode.trim().replace(/[-\s]/g, '');
+            const processedData = await processBarcodeData(barcode.trim());
 
-            let foundBook = bookData.find(book =>
-                book.isbn && book.isbn.replace(/[-\s]/g, '') === cleanBarcode
-            );
+            if (processedData) {
+                setBookFormData(prev => ({
+                    ...prev,
+                    ...processedData
+                }));
 
-            if (!foundBook) {
-                foundBook = bookData.find(book =>
-                    book.isbn && (
-                        book.isbn.includes(barcode.trim()) ||
-                        barcode.trim().includes(book.isbn)
-                    )
-                );
-            }
+                setBarcodeInput(processedData.isbn || barcode);
 
-            if (foundBook) {
-                console.log('Found book:', foundBook);
+                if (processedData.title) {
+                    toast.success(`Book data loaded: ${processedData.title}`);
+                } else {
+                    toast.info("Basic book data prepared. Please fill remaining details.");
+                }
 
-                // Get author and category names for display
-                const authorName = foundBook.author_name ||
-                    (foundBook.author_id && authors.find(a => a.id === foundBook.author_id)?.name) ||
-                    '';
-
-                const categoryName = foundBook.category_name ||
-                    (foundBook.category_id && categories.find(c => c.id === foundBook.category_id)?.name) ||
-                    '';
-
-                setBookFormData({
-                    title: foundBook.title || '',
-                    author_id: foundBook.author_id || '',
-                    category_id: foundBook.category_id || '',
-                    isbn: foundBook.isbn || barcode,
-                    language: foundBook.language || '',
-                    total_copies: foundBook.total_copies || 1,
-                    available_copies: foundBook.available_copies || 1
-                });
-
-                setBarcodeInput(foundBook.isbn || barcode);
-
-                toast.success(`Book found: ${foundBook.title}`);
-
-                // Log for debugging
-                console.log('Author ID:', foundBook.author_id);
-                console.log('Category ID:', foundBook.category_id);
-                console.log('Available authors:', authors);
-                console.log('Available categories:', categories);
-
+           
             } else {
                 setBookFormData(prev => ({
                     ...prev,
                     isbn: barcode
                 }));
-                toast.info("Book not found in database. Please fill details manually.");
+                toast.info("Could not auto-detect book details. Please fill manually.");
             }
         } catch (error) {
             console.error('Barcode lookup error:', error);
@@ -142,18 +481,16 @@ const BulkPurchasePage = () => {
                 ...prev,
                 isbn: barcode
             }));
-            toast.error("Failed to lookup book. Please check the ISBN and try again.");
+            toast.error("Failed to process barcode. Please check the format and try again.");
         } finally {
             setLoading(false);
         }
     };
 
-    // NEW: Handle barcode scan from UniversalBarcodeScanner
     const handleBarcodeScanned = (barcode) => {
         console.log('Barcode scanned:', barcode);
         setBarcodeInput(barcode);
 
-        // Auto-trigger lookup when barcode is scanned
         setTimeout(() => {
             handleBarcodeLookup(barcode);
         }, 500);
@@ -203,7 +540,23 @@ const BulkPurchasePage = () => {
         fetchCategories();
     }, []);
 
-    // Reset book form when modal opens
+    useEffect(() => {
+        if (newlyAddedBookId && books.length > 0) {
+            const newBook = books.find(book => book.id === newlyAddedBookId);
+            if (newBook) {
+                const updatedRows = [...multiInsertRows];
+                updatedRows[currentRowIndex] = {
+                    ...updatedRows[currentRowIndex],
+                    book_id: newlyAddedBookId
+                };
+                setMultiInsertRows(updatedRows);
+
+                toast.success(`Book "${newBook.title}" added and selected successfully`);
+                setNewlyAddedBookId(null); 
+            }
+        }
+    }, [newlyAddedBookId, books, currentRowIndex, multiInsertRows]);
+
     useEffect(() => {
         if (showAddBookModal) {
             setBookFormData({
@@ -276,7 +629,6 @@ const BulkPurchasePage = () => {
         label: `${book.title}${book.isbn ? ` (${book.isbn})` : ''}`
     }));
 
-    // FIXED: Get author and category options with proper formatting
     const authorOptions = authors.map((author) => ({
         value: author.id,
         label: author.name
@@ -287,7 +639,6 @@ const BulkPurchasePage = () => {
         label: category.name
     }));
 
-    // FIXED: Get current selected author and category for dropdowns
     const getSelectedAuthor = () => {
         if (!bookFormData.author_id) return null;
         return authorOptions.find(option => option.value === bookFormData.author_id) || null;
@@ -296,6 +647,12 @@ const BulkPurchasePage = () => {
     const getSelectedCategory = () => {
         if (!bookFormData.category_id) return null;
         return categoryOptions.find(option => option.value === bookFormData.category_id) || null;
+    };
+
+    const getSelectedBook = (rowIndex) => {
+        const row = multiInsertRows[rowIndex];
+        if (!row.book_id) return null;
+        return bookOptions.find(option => option.value === row.book_id) || null;
     };
 
     const handleMultiRowChange = (index, field, value) => {
@@ -345,7 +702,6 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // Handle Add Vendor
     const handleAddVendor = async () => {
         if (!vendorFormData.name || !vendorFormData.name.trim()) {
             toast.error("Vendor name is required");
@@ -382,7 +738,6 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // Handle Add Book - FIXED FUNCTION
     const handleAddBook = async () => {
         if (!bookFormData.title || !bookFormData.title.trim()) {
             toast.error("Book title is required");
@@ -405,37 +760,28 @@ const BulkPurchasePage = () => {
             const response = await bookApi.create(bookFormData);
 
             if (response && response.data) {
-                toast.success("Book added successfully");
-
-                // Refresh books list first
-                await fetchBooks();
-
-                // Get the new book ID from response
                 const newBook = response.data;
                 const newBookId = newBook.id || newBook._id;
 
                 if (newBookId) {
-                    // Update the current row with the new book
-                    const updatedRows = [...multiInsertRows];
-                    updatedRows[currentRowIndex] = {
-                        ...updatedRows[currentRowIndex],
-                        book_id: newBookId
-                    };
-                    setMultiInsertRows(updatedRows);
-                }
+                    setNewlyAddedBookId(newBookId);
 
-                // Close modal and reset form
-                setShowAddBookModal(false);
-                setBookFormData({
-                    title: "",
-                    author_id: "",
-                    category_id: "",
-                    isbn: "",
-                    language: "",
-                    total_copies: 1,
-                    available_copies: 1,
-                });
-                setBarcodeInput("");
+                    await fetchBooks();
+
+                    toast.success("Book added successfully");
+
+                    setShowAddBookModal(false);
+                    setBookFormData({
+                        title: "",
+                        author_id: "",
+                        category_id: "",
+                        isbn: "",
+                        language: "",
+                        total_copies: 1,
+                        available_copies: 1,
+                    });
+                    setBarcodeInput("");
+                }
             }
         } catch (error) {
             console.error("Error adding book:", error);
@@ -445,7 +791,6 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // Save purchases
     const handleSavePurchases = async () => {
         const partiallyFilledRows = [];
         multiInsertRows.forEach((row, index) => {
@@ -497,6 +842,11 @@ const BulkPurchasePage = () => {
                 } catch (error) {
                     console.error("Error creating purchase:", error);
                     failCount++;
+                    const errorMsg = error.response?.data?.error || error.response?.data?.errors || error.message || "Failed to create purchase";
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "Purchase Error",
+                        message: errorMsg
+                    });
                 }
             }
 
@@ -519,13 +869,16 @@ const BulkPurchasePage = () => {
             }
         } catch (error) {
             console.error("Error in bulk insert:", error);
-            toast.error("Failed to save purchases");
+            const errorMsg = error.response?.data?.error || error.response?.data?.errors || error.message || "Failed to save purchases";
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: errorMsg
+            });
         } finally {
             setSaving(false);
         }
     };
 
-    // Calculate totals
     const totalAmount = multiInsertRows.reduce((sum, row) => sum + ((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)), 0);
     const uniqueVendors = [...new Set(multiInsertRows.map(row => row.vendor_id).filter(Boolean))];
     const totalBooks = multiInsertRows.reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
@@ -534,7 +887,6 @@ const BulkPurchasePage = () => {
         return <Loader />;
     }
 
-    // Render content based on active tab
     const renderTabContent = () => {
         switch (activeTab) {
             case "single":
@@ -592,7 +944,6 @@ const BulkPurchasePage = () => {
                             </Col>
                         </Row>
 
-                        {/* Purchase Entries for Single Vendor */}
                         {renderPurchaseEntries("single")}
                     </>
                 );
@@ -617,7 +968,7 @@ const BulkPurchasePage = () => {
                         setScanningBook={setScanningBook}
                         multiInsertRows={multiInsertRows}
                         setMultiInsertRows={setMultiInsertRows}
-                        currentRowIndex={currentRowIndex}
+                        currentRowIndex={setCurrentRowIndex}
                         setCurrentRowIndex={setCurrentRowIndex}
                         setActiveTab={setActiveTab}
                         onBarcodeScan={handleBarcodeScan}
@@ -639,7 +990,6 @@ const BulkPurchasePage = () => {
         }
     };
 
-    // Render purchase entries table for single and multiple vendors
     const renderPurchaseEntries = (tabType) => {
         return (
             <>
@@ -679,51 +1029,87 @@ const BulkPurchasePage = () => {
                         <p className="text-muted">Choose a vendor above to start adding books for purchase</p>
                     </div>
                 ) : (
-                    <>
-                        <div className="table-responsive" style={{ position: 'relative', zIndex: 5 }}>
-                            <Table bordered hover>
-                                <thead className="table-light">
-                                    <tr>
-                                        {tabType === "multiple" && (
-                                            <th width="20%">
-                                                Vendor <span className="text-danger">*</span>
-                                            </th>
-                                        )}
-                                        <th width={tabType === "multiple" ? "20%" : "25%"}>
-                                            Book <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="8%">
-                                            Qty <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="10%">
-                                            Unit Price <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="12%">
-                                            Total Amount
-                                        </th>
-                                        <th width="12%">
-                                            Purchase Date
-                                        </th>
-                                        <th width={tabType === "multiple" ? "12%" : "15%"}>
-                                            Notes
-                                        </th>
-                                        <th width="5%" className="text-center">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {multiInsertRows.map((row, index) => (
-                                        <tr key={index}>
+                    <Row className="g-4">
+                        <Col lg={6}>
+                            <div className="table-responsive" style={{ position: 'relative', zIndex: 5, maxHeight: '65vh', overflowY: 'auto' }}>
+                                <Table bordered hover>
+                                    <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 6 }}>
+                                        <tr>
                                             {tabType === "multiple" && (
+                                                <th width="20%">
+                                                    Vendor <span className="text-danger">*</span>
+                                                </th>
+                                            )}
+                                            <th width={tabType === "multiple" ? "20%" : "25%"}>
+                                                Book <span className="text-danger">*</span>
+                                            </th>
+                                            <th width="8%">
+                                                Qty <span className="text-danger">*</span>
+                                            </th>
+                                            <th width="10%">
+                                                Unit Price <span className="text-danger">*</span>
+                                            </th>
+                                            <th width="12%">
+                                                Total Amount
+                                            </th>
+                                            <th width="12%">
+                                                Purchase Date
+                                            </th>
+                                            <th width={tabType === "multiple" ? "12%" : "15%"}>
+                                                Notes
+                                            </th>
+                                            <th width="5%" className="text-center">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {multiInsertRows.map((row, index) => (
+                                            <tr key={index}>
+                                                {tabType === "multiple" && (
+                                                    <td>
+                                                        <div className="d-flex gap-1">
+                                                            <div className="flex-grow-1">
+                                                                <Select
+                                                                    value={vendorOptions.find((v) => v.value === row.vendor_id) || null}
+                                                                    onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                                    options={vendorOptions}
+                                                                    placeholder="Select Vendor"
+                                                                    isClearable
+                                                                    isSearchable
+                                                                    menuPlacement="auto"
+                                                                    styles={{
+                                                                        menu: (base) => ({
+                                                                            ...base,
+                                                                            zIndex: 9999,
+                                                                            position: 'absolute'
+                                                                        }),
+                                                                        menuPortal: (base) => ({
+                                                                            ...base,
+                                                                            zIndex: 9999
+                                                                        })
+                                                                    }}
+                                                                    menuPortalTarget={document.body}
+                                                                />
+                                                            </div>
+                                                            <Button
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                onClick={() => setShowAddVendorModal(true)}
+                                                            >
+                                                                <i className="fa-solid fa-plus"></i>
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                )}
                                                 <td>
                                                     <div className="d-flex gap-1">
                                                         <div className="flex-grow-1">
                                                             <Select
-                                                                value={vendorOptions.find((v) => v.value === row.vendor_id) || null}
-                                                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
-                                                                options={vendorOptions}
-                                                                placeholder="Select Vendor"
+                                                                value={getSelectedBook(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                                                options={bookOptions}
+                                                                placeholder="Select Book"
                                                                 isClearable
                                                                 isSearchable
                                                                 menuPlacement="auto"
@@ -742,136 +1128,125 @@ const BulkPurchasePage = () => {
                                                             />
                                                         </div>
                                                         <Button
-                                                            variant="outline-primary"
+                                                            variant="outline-success"
                                                             size="sm"
-                                                            onClick={() => setShowAddVendorModal(true)}
+                                                            onClick={() => {
+                                                                setCurrentRowIndex(index);
+                                                                setShowAddBookModal(true);
+                                                            }}
                                                         >
                                                             <i className="fa-solid fa-plus"></i>
                                                         </Button>
                                                     </div>
                                                 </td>
-                                            )}
-                                            <td>
-                                                <div className="d-flex gap-1">
-                                                    <div className="flex-grow-1">
-                                                        <Select
-                                                            value={bookOptions.find((b) => b.value === row.book_id) || null}
-                                                            onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
-                                                            options={bookOptions}
-                                                            placeholder="Select Book"
-                                                            isClearable
-                                                            isSearchable
-                                                            menuPlacement="auto"
-                                                            styles={{
-                                                                menu: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999,
-                                                                    position: 'absolute'
-                                                                }),
-                                                                menuPortal: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999
-                                                                })
-                                                            }}
-                                                            menuPortalTarget={document.body}
-                                                        />
-                                                    </div>
+                                                <td>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.quantity}
+                                                        onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                                                        min="1"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.unit_price}
+                                                        onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                                                        min="0"
+                                                        step="0.01"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
+                                                        readOnly
+                                                        className="bg-light"
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={row.purchase_date}
+                                                        onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                                                    />
+                                                </td>
+                                                <td>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={row.notes}
+                                                        onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                                                        placeholder="Notes..."
+                                                    />
+                                                </td>
+                                                <td className="text-center">
                                                     <Button
-                                                        variant="outline-success"
+                                                        variant="outline-danger"
                                                         size="sm"
-                                                        onClick={() => {
-                                                            setCurrentRowIndex(index);
-                                                            setShowAddBookModal(true);
-                                                        }}
+                                                        onClick={() => handleRemoveRow(index)}
+                                                        disabled={multiInsertRows.length === 1}
                                                     >
-                                                        <i className="fa-solid fa-plus"></i>
+                                                        <i className="fa-solid fa-trash"></i>
                                                     </Button>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="number"
-                                                    value={row.quantity}
-                                                    onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
-                                                    min="1"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="number"
-                                                    value={row.unit_price}
-                                                    onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
-                                                    min="0"
-                                                    step="0.01"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
-                                                    readOnly
-                                                    className="bg-light"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="date"
-                                                    value={row.purchase_date}
-                                                    onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={row.notes}
-                                                    onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
-                                                    placeholder="Notes..."
-                                                />
-                                            </td>
-                                            <td className="text-center">
-                                                <Button
-                                                    variant="outline-danger"
-                                                    size="sm"
-                                                    onClick={() => handleRemoveRow(index)}
-                                                    disabled={multiInsertRows.length === 1}
-                                                >
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="d-flex justify-content-between mt-4">
-                            <Button
-                                variant="outline-secondary"
-                                onClick={() => navigate('/purchase')}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={handleSavePurchases}
-                                disabled={saving || multiInsertRows.length === 0}
-                                size="lg"
-                            >
-                                {saving ? (
-                                    <>
-                                        <i className="fa-solid fa-spinner fa-spin me-2"></i>
-                                        Saving Purchases...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="fa-solid fa-save me-2"></i>
-                                        Save {multiInsertRows.length} Purchase{multiInsertRows.length !== 1 ? 's' : ''}
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    </>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
+                        </Col>
+                        <Col lg={6}>
+                            <Card className="shadow-sm sticky-top" style={{ top: '90px' }}>
+                                <Card.Body>
+                                    <h5 className="fw-bold mb-3">
+                                        <i className="fa-solid fa-clipboard-check me-2 text-primary"></i>
+                                        Purchase Summary
+                                    </h5>
+                                    <div className="d-flex justify-content-between mb-2">
+                                        <span className="text-muted">Entries</span>
+                                        <span className="fw-semibold">{multiInsertRows.length}</span>
+                                    </div>
+                                    <div className="d-flex justify-content-between mb-2">
+                                        <span className="text-muted">Vendors</span>
+                                        <span className="fw-semibold">{uniqueVendors.length}</span>
+                                    </div>
+                                    <div className="d-flex justify-content-between mb-3">
+                                        <span className="text-muted">Books</span>
+                                        <span className="fw-semibold">{totalBooks}</span>
+                                    </div>
+                                    <div className="p-3 rounded bg-light mb-4">
+                                        <small className="text-muted text-uppercase">Total Value</small>
+                                        <div className="h4 mb-0">₹{totalAmount.toFixed(2)}</div>
+                                    </div>
+                                    <Button
+                                        variant="primary"
+                                        className="w-100 mb-2"
+                                        onClick={handleSavePurchases}
+                                        disabled={saving || multiInsertRows.length === 0}
+                                    >
+                                        {saving ? (
+                                            <>
+                                                <i className="fa-solid fa-spinner fa-spin me-2"></i>
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fa-solid fa-save me-2"></i>
+                                                Save Purchases
+                                            </>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        className="w-100"
+                                        onClick={() => navigate('/purchase')}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
                 )}
             </>
         );
@@ -1069,7 +1444,7 @@ const BulkPurchasePage = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Book Modal with Barcode Scan - FIXED */}
+            {/* Add Book Modal with Barcode Scan - ENHANCED */}
             <Modal show={showAddBookModal} onHide={() => {
                 setShowAddBookModal(false);
                 setBarcodeInput("");
@@ -1090,15 +1465,18 @@ const BulkPurchasePage = () => {
                                         <i className="fa-solid fa-barcode me-2"></i>
                                         Scan Barcode
                                     </h6>
-                                    <p className="mb-0 text-muted small">Enter ISBN to auto-fill details</p>
+                                    <p className="mb-0 text-muted small">Enter ISBN to auto-fill details and auto-create author/category</p>
                                 </div>
+                                {(loading || barcodeProcessing) && (
+                                    <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Barcode Input Field - FIXED: Added manual input and scanner */}
                             <Form.Group className="mt-3">
                                 <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
 
-                                {/* Manual Input */}
                                 <div className="mb-2">
                                     <Form.Control
                                         type="text"
@@ -1107,12 +1485,10 @@ const BulkPurchasePage = () => {
                                             const value = e.target.value;
                                             setBarcodeInput(value);
 
-                                            // Clear previous timeout
                                             if (autoLookupTimeout) {
                                                 clearTimeout(autoLookupTimeout);
                                             }
 
-                                            // Set new timeout for auto-lookup
                                             if (value.length >= 10) {
                                                 const timeout = setTimeout(() => {
                                                     handleBarcodeLookup(value);
@@ -1137,9 +1513,9 @@ const BulkPurchasePage = () => {
                                     <Button
                                         variant="primary"
                                         onClick={() => handleBarcodeLookup(barcodeInput)}
-                                        disabled={!barcodeInput.trim() || loading}
+                                        disabled={!barcodeInput.trim() || loading || barcodeProcessing}
                                     >
-                                        {loading ? (
+                                        {loading || barcodeProcessing ? (
                                             <i className="fa-solid fa-spinner fa-spin"></i>
                                         ) : (
                                             <i className="fa-solid fa-search"></i>
@@ -1148,13 +1524,12 @@ const BulkPurchasePage = () => {
                                 </div>
 
                                 <Form.Text className="text-muted">
-                                    Enter 10 or 13 digit ISBN to auto-fill book details
+                                    Enter 10 or 13 digit ISBN to auto-fill book details, create authors and categories automatically
                                 </Form.Text>
                             </Form.Group>
                         </Card.Body>
                     </Card>
 
-                    {/* Book Form - FIXED: Updated dropdown handling */}
                     <Form>
                         <Row>
                             <Col md={12}>

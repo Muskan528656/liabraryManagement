@@ -32,12 +32,15 @@ const LOOKUP_ENDPOINT_MAP = {
   vendor: "vendor",
   roles: "user-role",
   "user-role": "user-role",
+  "userroles": "user-role",
   modules: "module",
   module: "module",
   departments: "department",
   department: "department",
   libraries: "library",
   library: "library",
+  subscriptions: "subscriptions",
+  subscription: "subscriptions",
 };
 
 const normalizeListResponse = (payload) => {
@@ -127,7 +130,6 @@ const ModuleDetail = ({
 
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
 
-  // List of non-editable fields (system fields)
   const nonEditableFields = useMemo(() => [
     'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
     'created_by', 'created_at', 'modified_by', 'modified_at',
@@ -676,7 +678,7 @@ const ModuleDetail = ({
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
-          return date.toISOString().split("T")[0]; // YYYY-MM-DD format
+          return date.toISOString().split("T")[0]; 
         } catch {
           return value;
         }
@@ -684,7 +686,6 @@ const ModuleDetail = ({
       if (field.type === "datetime" && value) {
         try {
           const date = new Date(value);
-          // Convert to datetime-local format (YYYY-MM-DDTHH:mm)
           const year = date.getFullYear();
           const month = String(date.getMonth() + 1).padStart(2, "0");
           const day = String(date.getDate()).padStart(2, "0");
@@ -697,7 +698,6 @@ const ModuleDetail = ({
       }
       return value || "";
     } else {
-      // For display mode, use formatValue
       return formatValue(value, field) || "—";
     }
   };
@@ -776,7 +776,6 @@ const ModuleDetail = ({
     );
   }
 
-  // Normalize fields - handle both array and object format
   console.log("Fields before normalization:", fields);
   const normalizedFields = {
     details: fields?.details || [],
@@ -850,11 +849,15 @@ const ModuleDetail = ({
               onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
             >
               <option value="">Select {field.label}</option>
-              {options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name || option.title || option.email}
-                </option>
-              ))}
+              {options.map((option) => {
+                const optionId = getOptionValue(option);
+                const optionLabel = getOptionDisplayLabel(option);
+                return (
+                  <option key={optionId} value={optionId}>
+                    {optionLabel}
+                  </option>
+                );
+              })}
             </Form.Select>
           ) : (
             <Form.Control
@@ -864,9 +867,10 @@ const ModuleDetail = ({
                 if (field.displayKey && data) return data[field.displayKey] || "—";
                 const selected = options.find((opt) => {
                   const optionValue = toStringSafe(getOptionValue(opt));
-                  return optionValue === currentValue;
+                  const optValue = opt.id || opt.value || opt.role_name || opt.name;
+                  return optionValue === currentValue || toStringSafe(optValue) === currentValue;
                 });
-                return selected ? getOptionDisplayLabel(selected) : "—";
+                return selected ? getOptionDisplayLabel(selected) : (field.displayKey && data ? (data[field.displayKey] || "—") : "—");
               })()}
               style={{
                 pointerEvents: "none",
@@ -960,7 +964,7 @@ const ModuleDetail = ({
                   <div className="d-flex align-items-center gap-3">
                     <button
                       onClick={handleBack}
-                      className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back" 
+                      className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
                     >
                       <i className="fa-solid fa-arrow-left"></i>
                     </button>

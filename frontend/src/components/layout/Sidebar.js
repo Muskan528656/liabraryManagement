@@ -32,7 +32,7 @@ export default function Sidebar({ open, handleDrawerClose }) {
 
   const fetchModulesFromDB = async () => {
     try {
-      const api = new DataApi("whatsapp/module");
+      const api = new DataApi("module");
       const resp = await api.fetchAll();
       console.log("Modules fetched from DB:", resp);
       const result = resp?.data;

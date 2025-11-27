@@ -16,6 +16,7 @@ const fs = require("fs");
 
 
 module.exports = (app) => {
+
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
@@ -412,6 +413,8 @@ module.exports = (app) => {
         .json({ success: false, error: "Invalid or expired refresh token." });
     }
   });
-  app.use(process.env.BASE_API_URL + "/api/auth", router);
+
+  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/auth", router);
+  app.use(process.env.BASE_API_URL + "/api/auth" , router);
 
 };

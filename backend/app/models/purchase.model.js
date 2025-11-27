@@ -4,6 +4,7 @@
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
+const { getNextAutoNumber } = require("../utils/autoNumber.helper.js");
 let schema = "";
 
 function init(schema_name) {
@@ -125,7 +126,9 @@ async function findBySerialNo(serialNo) {
   }
 }
 
-// Create a new purchase
+
+
+
 async function create(purchaseData, userId) {
   try {
     if (!this.schema) {
@@ -136,7 +139,8 @@ async function create(purchaseData, userId) {
       throw new Error("Vendor ID is required for purchase");
     }
 
-    const purchaseSerialNo = await this.generatePurchaseSerialNo();
+
+    const purchaseSerialNo = await generateAutoNumberSafe('purchases', userId);
 
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
                    (purchase_serial_no, vendor_id, book_id, quantity, unit_price, purchase_date, notes,
@@ -153,6 +157,7 @@ async function create(purchaseData, userId) {
       purchaseData.notes || null,
       userId || null,
     ];
+
     const purchaseResult = await sql.query(purchaseQuery, purchaseValues);
     const purchase = purchaseResult.rows[0];
 
@@ -164,12 +169,20 @@ async function create(purchaseData, userId) {
     await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
 
     return purchase;
+
   } catch (error) {
     console.error("Error in create:", error);
     throw error;
   }
 }
 
+async function generateAutoNumberSafe(tableName, userId) {
+  try {
+    return await getNextAutoNumber(tableName, { prefix: "PUR-", digit_count: 5 }, userId);
+  } catch (error) {
+    throw error;
+  }
+}
 // Update purchase by ID
 async function updateById(id, purchaseData, userId) {
   try {

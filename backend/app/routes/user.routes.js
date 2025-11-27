@@ -294,6 +294,6 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/user", router);
+  app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/user", router);
 };
 

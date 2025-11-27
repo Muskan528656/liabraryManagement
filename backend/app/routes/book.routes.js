@@ -79,16 +79,16 @@ module.exports = (app) => {
         return value.trim().length > 0;
       }).withMessage("Title is required"),
       body("author_id").optional().custom((value) => {
-        // Allow null, undefined, or empty string for barcode scans
+          
         return true;
       }),
       body("category_id").optional().custom((value) => {
-        // Allow null, undefined, or empty string for barcode scans
+          
         return true;
       }),
       body("isbn").optional().custom((value) => {
         if (value === null || value === undefined || value === "") {
-          return true; // Allow empty for barcode scans
+          return true;        
         }
         return value.trim().length > 0;
       }).withMessage("ISBN is required"),
@@ -102,7 +102,7 @@ module.exports = (app) => {
 
         Book.init(req.userinfo.tenantcode);
 
-        // Only check for duplicate ISBN if ISBN is provided
+    
         if (req.body.isbn && req.body.isbn.trim()) {
           const existingBook = await Book.findByISBN(req.body.isbn);
           if (existingBook) {
@@ -190,6 +190,7 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/book", router);
+  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/book", router);
+  app.use(process.env.BASE_API_URL+"/api/book", router);
 };
 

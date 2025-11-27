@@ -98,14 +98,47 @@ export const getLibraryCardConfig = (externalData = {}) => {
             render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
         },
         {
-            field: "is_active",
+            field: "name",
+            label: "Name",
+            sortable: true,
+        },
+        {
+            field: "first_name",
+            label: "First Name",
+            sortable: true,
+        },
+        {
+            field: "last_name",
+            label: "Last Name",
+            sortable: true,
+        },
+        {
+            field: "email",
+            label: "Email",
+            sortable: true,
+        },
+        {
+            field: "phone_number",
+            label: "Phone Number",
+            sortable: true,
+        },
+        {
+            field: "card_number",
+            label: "Card Number",
+            sortable: true,
+        },
+        {
+            field: "status",
             label: "Status",
             sortable: true,
-            render: (value) => (
-                <Badge bg={value ? "success" : "secondary"}>
-                    {value ? "Active" : "Inactive"}
-                </Badge>
-            )
+            render: (value) => {
+                const statusValue = value || (typeof value === 'boolean' ? (value ? 'active' : 'inactive') : 'inactive');
+                return (
+                    <Badge bg={statusValue === 'active' || statusValue === true ? "success" : "secondary"}>
+                        {statusValue === 'active' || statusValue === true ? "Active" : "Inactive"}
+                    </Badge>
+                );
+            }
         },
     ];
 
@@ -116,38 +149,93 @@ export const getLibraryCardConfig = (externalData = {}) => {
         columns: defaultColumns,
         initialFormData: {
             user_id: "",
+            first_name: "",
+            last_name: "",
+            name: "",
+            email: "",
+            phone_number: "",
+            registration_date: new Date().toISOString().split('T')[0],
+            type: "",
+            renewal: "",
+            subscription_id: "",
             issue_date: new Date().toISOString().split('T')[0],
             expiry_date: "",
-            is_active: true,
+            status: "active",
             image: null
         },
 
         formFields: [
+
             {
-                name: "user_id",
-                label: "Member", // Changed from "User" to "Member"
+                name: "first_name",
+                label: "First Name",
+                type: "text",
+                required: false,
+                placeholder: "Enter first name",
+                colSize: 6
+            },
+            {
+                name: "last_name",
+                label: "Last Name",
+                type: "text",
+                required: false,
+                placeholder: "Enter last name",
+                colSize: 6
+            },
+            
+            {
+                name: "email",
+                label: "Email",
+                type: "email",
+                required: false,
+                placeholder: "Enter email address",
+                colSize: 6
+            },
+            {
+                name: "phone_number",
+                label: "Phone Number",
+                type: "tel",
+                required: false,
+                placeholder: "Enter phone number",
+                colSize: 6
+            },
+            {
+                name: "registration_date",
+                label: "Registration Date",
+                type: "date",
+                required: false,
+                colSize: 6
+            },
+            {
+                name: "type",
+                label: "Type",
                 type: "select",
-                options: "users", // This should match your API endpoint for users
-                required: true,
-                placeholder: "Select member",
-                colSize: 12,
-                optionConfig: {
-                    valueKey: "id",
-                    labelKey: "name", // Make sure your user API returns 'name' field
-                    // If your API returns different field names, adjust accordingly:
-                    // valueKey: "user_id",
-                    // labelKey: "user_name"
-                },
-                // Add this to ensure proper data loading
-                loadOptions: async (api) => {
-                    try {
-                        const response = await api.get("/user"); // Adjust endpoint as needed
-                        return response.data || [];
-                    } catch (error) {
-                        console.error("Error loading users:", error);
-                        return [];
-                    }
-                }
+                required: false,
+                options: [
+                    { value: "student", label: "Student" },
+                    { value: "faculty", label: "Faculty" },
+                    { value: "staff", label: "Staff" },
+                    { value: "guest", label: "Guest" }
+                ],
+                placeholder: "Select type",
+                colSize: 6
+            },
+            {
+                name: "subscription_id",
+                label: "Subscription",
+                type: "select",
+                required: false,
+                options: "subscriptions",
+                placeholder: "Select subscription plan",
+                colSize: 6
+            },
+            {
+                name: "renewal",
+                label: "Renewal",
+                type: "text",
+                required: false,
+                placeholder: "Enter renewal information",
+                colSize: 6
             },
             {
                 name: "image",
@@ -169,81 +257,86 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     }
                 }
             },
+            // {
+            //     name: "issue_date",
+            //     label: "Issue Date",
+            //     type: "date",
+            //     required: true,
+            //     colSize: 6,
+            //     onChange: (value, formData, setFormData) => {
+            //         if (value) {
+            //             // Use dynamic import for DataApi
+            //             import("../../api/dataApi").then(({ default: DataApi }) => {
+            //                 const settingsApi = new DataApi("librarysettings");
+            //                 settingsApi.get("/all").then(response => {
+            //                     let durationDays = 365; // Default to 1 year
+
+            //                     if (response.data && response.data.success && response.data.data) {
+            //                         durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
+            //                     } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
+            //                         durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
+            //                     }
+
+            //                     // Calculate submission date
+            //                     const issueDate = new Date(value);
+            //                     const submissionDate = new Date(issueDate);
+            //                     submissionDate.setDate(submissionDate.getDate() + durationDays);
+
+            //                     setFormData(prev => ({
+            //                         ...prev,
+            //                         issue_date: value,
+            //                         expiry_date: submissionDate.toISOString().split('T')[0]
+            //                     }));
+            //                 }).catch(error => {
+            //                     console.error("Error fetching settings:", error);
+            //                     // If settings fetch fails, use default 365 days
+            //                     const issueDate = new Date(value);
+            //                     const submissionDate = new Date(issueDate);
+            //                     submissionDate.setDate(submissionDate.getDate() + 365);
+
+            //                     setFormData(prev => ({
+            //                         ...prev,
+            //                         issue_date: value,
+            //                         expiry_date: submissionDate.toISOString().split('T')[0]
+            //                     }));
+            //                 });
+            //             }).catch(error => {
+            //                 console.error("Error importing DataApi:", error);
+            //                 // If import fails, use default 365 days
+            //                 const issueDate = new Date(value);
+            //                 const submissionDate = new Date(issueDate);
+            //                 submissionDate.setDate(submissionDate.getDate() + 365);
+
+            //                 setFormData(prev => ({
+            //                     ...prev,
+            //                     issue_date: value,
+            //                     expiry_date: submissionDate.toISOString().split('T')[0]
+            //                 }));
+            //             });
+            //         } else {
+            //             setFormData(prev => ({
+            //                 ...prev,
+            //                 issue_date: value
+            //             }));
+            //         }
+            //     }
+            // },
+            // {
+            //     name: "expiry_date",
+            //     label: "Submission Date",
+            //     type: "date",
+            //     colSize: 6,
+            // },
             {
-                name: "issue_date",
-                label: "Issue Date",
-                type: "date",
+                name: "status",
+                label: "Status",
+                type: "select",
                 required: true,
+                options: [
+                    { value: "active", label: "Active" },
+                    { value: "inactive", label: "Inactive" }
+                ],
                 colSize: 6,
-                onChange: (value, formData, setFormData) => {
-                    if (value) {
-                        // Use dynamic import for DataApi
-                        import("../../api/dataApi").then(({ default: DataApi }) => {
-                            const settingsApi = new DataApi("librarysettings");
-                            settingsApi.get("/all").then(response => {
-                                let durationDays = 365; // Default to 1 year
-
-                                if (response.data && response.data.success && response.data.data) {
-                                    durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
-                                } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
-                                    durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
-                                }
-
-                                // Calculate submission date
-                                const issueDate = new Date(value);
-                                const submissionDate = new Date(issueDate);
-                                submissionDate.setDate(submissionDate.getDate() + durationDays);
-
-                                setFormData(prev => ({
-                                    ...prev,
-                                    issue_date: value,
-                                    expiry_date: submissionDate.toISOString().split('T')[0]
-                                }));
-                            }).catch(error => {
-                                console.error("Error fetching settings:", error);
-                                // If settings fetch fails, use default 365 days
-                                const issueDate = new Date(value);
-                                const submissionDate = new Date(issueDate);
-                                submissionDate.setDate(submissionDate.getDate() + 365);
-
-                                setFormData(prev => ({
-                                    ...prev,
-                                    issue_date: value,
-                                    expiry_date: submissionDate.toISOString().split('T')[0]
-                                }));
-                            });
-                        }).catch(error => {
-                            console.error("Error importing DataApi:", error);
-                            // If import fails, use default 365 days
-                            const issueDate = new Date(value);
-                            const submissionDate = new Date(issueDate);
-                            submissionDate.setDate(submissionDate.getDate() + 365);
-
-                            setFormData(prev => ({
-                                ...prev,
-                                issue_date: value,
-                                expiry_date: submissionDate.toISOString().split('T')[0]
-                            }));
-                        });
-                    } else {
-                        setFormData(prev => ({
-                            ...prev,
-                            issue_date: value
-                        }));
-                    }
-                }
-            },
-            {
-                name: "expiry_date",
-                label: "Submission Date",
-                type: "date",
-                colSize: 6,
-            },
-            {
-                name: "is_active",
-                label: "Active Status",
-                type: "checkbox",
-                colSize: 12,
             },
         ],
 
@@ -272,7 +365,8 @@ export const getLibraryCardConfig = (externalData = {}) => {
         },
 
         dataDependencies: {
-            users: "user"
+            users: "user",
+            subscriptions: "subscriptions"
         },
 
         lookupNavigation: {
@@ -297,19 +391,24 @@ export const getLibraryCardConfig = (externalData = {}) => {
 
         details: [
             { key: "card_number", label: "Card Number", type: "text" },
-            { key: "user_name", label: "Member Name", type: "text" },
-            {
-                key: "user_email",
-                label: "Email",
-                type: "text"
-            },
+            { key: "name", label: "Full Name", type: "text" },
+            { key: "first_name", label: "First Name", type: "text" },
+            { key: "last_name", label: "Last Name", type: "text" },
+            { key: "user_name", label: "Linked User", type: "text" },
+            { key: "email", label: "Email", type: "text" },
+            { key: "phone_number", label: "Phone Number", type: "text" },
+            { key: "registration_date", label: "Registration Date", type: "date" },
+            { key: "type", label: "Type", type: "text" },
+            { key: "renewal", label: "Renewal", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
             {
-                key: "is_active",
+                key: "status",
                 label: "Status",
                 type: "badge",
                 badgeConfig: {
+                    active: "success",
+                    inactive: "secondary",
                     true: "success",
                     false: "secondary",
                     true_label: "Active",
@@ -323,7 +422,37 @@ export const getLibraryCardConfig = (externalData = {}) => {
             generateISBN13Number,
             calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
-            handleBarcodePreview
+            handleBarcodePreview,
+            beforeSave: (formData) => {
+                // Convert status to is_active for backend
+                if (formData.status) {
+                    formData.is_active = formData.status === "active";
+                    delete formData.status;
+                }
+                // Ensure empty strings are null
+                if (formData.first_name === "") formData.first_name = null;
+                if (formData.last_name === "") formData.last_name = null;
+                if (formData.name === "") formData.name = null;
+                if (formData.email === "") formData.email = null;
+                if (formData.phone_number === "") formData.phone_number = null;
+                if (formData.registration_date === "") formData.registration_date = null;
+                if (formData.type === "") formData.type = null;
+                if (formData.renewal === "") formData.renewal = null;
+                if (formData.subscription_id === "") formData.subscription_id = null;
+                if (formData.user_id === "") formData.user_id = null;
+                if (formData.expiry_date === "") formData.expiry_date = null;
+                return true;
+            },
+            onDataLoad: (data) => {
+                // Convert is_active to status for display
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        if (item.hasOwnProperty('is_active')) {
+                            item.status = item.is_active ? 'active' : 'inactive';
+                        }
+                    });
+                }
+            }
         },
 
         beforeSubmit: (formData, isEditing) => {
