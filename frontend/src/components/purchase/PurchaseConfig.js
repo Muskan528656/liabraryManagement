@@ -6,7 +6,6 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             field: "purchase_serial_no",
             label: "Purchase Serial No",
             sortable: true,
-
         },
         {
             field: "vendor_name",
@@ -48,57 +47,88 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
         },
     ];
 
-    // const formFields = [
-    //     {
-    //         name: "vendor_id",
-    //         label: "Vendor",
-    //         type: "select",
-    //         required: true,
-    //         options: vendors.map(vendor => ({
-    //             value: vendor.id,
-    //             label: vendor.name
-    //         }))
-    //     },
-    //     {
-    //         name: "book_id",
-    //         label: "Book",
-    //         type: "select",
-    //         required: true,
-    //         options: books.map(book => ({
-    //             value: book.id,
-    //             label: book.title
-    //         }))
-    //     },
-    //     {
-    //         name: "quantity",
-    //         label: "Quantity",
-    //         type: "number",
-    //         required: true
-    //     },
-    //     {
-    //         name: "unit_price",
-    //         label: "Unit Price",
-    //         type: "number",
-    //         required: true
-    //     },
-    //     {
-    //         name: "purchase_date",
-    //         label: "Purchase Date",
-    //         type: "date",
-    //         required: true
-    //     },
-    //     {
-    //         name: "notes",
-    //         label: "Notes",
-    //         type: "textarea"
-    //     }
-    // ];
+    const formFields = [
+        {
+            name: "purchase_serial_no",
+            label: "Purchase Serial No",
+            type: "text",
+            required: true,
+            disabled: true,
+            readOnly: true
+        },
+        {
+            name: "vendor_id",
+            label: "Vendor",
+            type: "select",
+            required: true,
+            options: vendors.map(vendor => ({
+                value: vendor.id,
+                label: vendor.name
+            }))
+        },
+        {
+            name: "book_id",
+            label: "Book",
+            type: "select",
+            required: true,
+            options: books.map(book => ({
+                value: book.id,
+                label: book.title
+            }))
+        },
+        {
+            name: "quantity",
+            label: "Quantity",
+            type: "number",
+            required: true,
+            props: {
+                min: 1
+            }
+        },
+        {
+            name: "unit_price",
+            label: "Unit Price",
+            type: "number",
+            required: true,
+            props: {
+                min: 0,
+                step: 0.01
+            }
+        },
+        {
+            name: "total_amount",
+            label: "Total Amount",
+            type: "number",
+            required: true,
+            disabled: true, // ✅ Total amount calculated - disabled
+            readOnly: true,
+            calculateValue: (formData) => {
+                // ✅ Auto calculate total amount
+                const quantity = parseFloat(formData.quantity) || 0;
+                const unitPrice = parseFloat(formData.unit_price) || 0;
+                return (quantity * unitPrice).toFixed(2);
+            }
+        },
+        {
+            name: "purchase_date",
+            label: "Purchase Date",
+            type: "date",
+            required: true
+        },
+        {
+            name: "notes",
+            label: "Notes",
+            type: "textarea"
+        }
+    ];
 
     return {
         moduleName: "purchase",
         moduleLabel: "Purchase",
         apiEndpoint: "purchase",
         columns: allColumns,
+        field: { details: formFields },
+        formFields: formFields,
 
         features: {
             showBulkInsert: false,
@@ -124,9 +154,21 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             },
             handleAdd: (navigate) => {
                 navigate('/purchase/bulk');
+            },
+            // ✅ Auto calculate total amount when quantity or unit price changes
+            onFormDataChange: (formData, setFormData) => {
+                const quantity = parseFloat(formData.quantity) || 0;
+                const unitPrice = parseFloat(formData.unit_price) || 0;
+                const totalAmount = quantity * unitPrice;
+
+                if (formData.total_amount !== totalAmount) {
+                    setFormData(prev => ({
+                        ...prev,
+                        total_amount: totalAmount.toFixed(2)
+                    }));
+                }
             }
-        }
-        ,
+        },
         exportColumns: [
             { key: "vendor_name", header: "Vendor", width: 20 },
             { key: "book_title", header: "Book", width: 20 },

@@ -1,4 +1,3 @@
-// components/common/DynamicCRUD.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Table } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -52,7 +51,7 @@ const DynamicCRUD = ({
         allowDelete = true
     } = features;
 
-    // State Management
+
     const [selectedItem, setSelectedItem] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [data, setData] = useState([]);
@@ -294,7 +293,7 @@ const DynamicCRUD = ({
             }
 
             return col;
-        }).filter(Boolean); // Remove null values
+        }).filter(Boolean);
     }, [columns, customHandlers.columnRenderers, lookupNavigation, renderLookupLink, showDetailView, moduleName, handleNameClick]);
 
     const enhancedColumns = useMemo(() => getEnhancedColumns(), [getEnhancedColumns]);
@@ -381,6 +380,8 @@ const DynamicCRUD = ({
                 categories: "category",
                 category: "category",
                 users: "user",
+                vendor: "vendor",
+
                 departments: "department"
             };
 

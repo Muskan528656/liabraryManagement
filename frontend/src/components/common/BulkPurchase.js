@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
-    Tabs, Tab, Alert, Breadcrumb, Modal
+    Tabs, Tab, Alert, Modal
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -11,7 +11,7 @@ import Loader from '../common/Loader';
 import { toast } from "react-toastify";
 import BarcodeScanPurchase from "../common/BarcodeScanPurchase";
 import PurchaseDataImport from "../common/PurchaseDataImport";
-
+import PubSub from 'pubsub-js';
 
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
@@ -68,7 +68,52 @@ const BulkPurchasePage = () => {
             setSelectedFile(null);
         }
     };
+    const handleBarcodeLookup = async (barcode) => {
+        if (!barcode.trim()) return;
 
+        try {
+            setLoading(true);
+            const api = new DataApi('book');
+            const response = await api.fetchByBarcode(barcode);
+
+            if (response.data && response.data.success) {
+                const bookData = response.data.data;
+                setBookFormData({
+                    title: bookData.title || '',
+                    author_id: bookData.author_id || '',
+                    category_id: bookData.category_id || '',
+                    isbn: bookData.isbn || barcode,
+                    language: bookData.language || '',
+                    total_copies: bookData.total_copies || 1,
+                    available_copies: bookData.available_copies || 1
+                });
+
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Success",
+                    message: "Book details auto-filled from barcode",
+                });
+            } else {
+                setBookFormData(prev => ({
+                    ...prev,
+                    isbn: barcode
+                }));
+
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Info",
+                    message: "Book not found in database. Please fill details manually.",
+                });
+            }
+        } catch (error) {
+            console.error('Barcode lookup error:', error);
+
+            setBookFormData(prev => ({
+                ...prev,
+                isbn: barcode
+            }));
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleBarcodeScan = async (barcode) => {
         if (!barcode || barcode.trim().length < 10) {
             toast.error("Please enter a valid barcode/ISBN (minimum 10 characters)");
@@ -105,8 +150,6 @@ const BulkPurchasePage = () => {
             setLoading(false);
         }
     };
-
-    // Fetch data on component mount
     useEffect(() => {
         fetchVendors();
         fetchBooks();
@@ -125,7 +168,6 @@ const BulkPurchasePage = () => {
             console.error("Error fetching vendors:", error);
         }
     };
-
     const fetchBooks = async () => {
         try {
             const bookApi = new DataApi("book");
@@ -137,7 +179,6 @@ const BulkPurchasePage = () => {
             console.error("Error fetching books:", error);
         }
     };
-
     const fetchAuthors = async () => {
         try {
             const authorApi = new DataApi("author");
@@ -149,7 +190,6 @@ const BulkPurchasePage = () => {
             console.error("Error fetching authors:", error);
         }
     };
-
     const fetchCategories = async () => {
         try {
             const categoryApi = new DataApi("category");
@@ -756,48 +796,77 @@ const BulkPurchasePage = () => {
 
     return (
         <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1 }}>
-            {/* Page Header */}
             <Row className="mb-4">
                 <Col>
-                    <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1 className="h3 fw-bold mb-1">
-                                <i className="fa-solid fa-layer-group me-2 text-purple"></i>
-                                Purchase Management
-                            </h1>
+                    <Card>
+                        <Card.Header style={{ background: "var(--primary-background-color)" }}>
+                            <div className="d-flex align-items-center">
+                                <button
+                                    onClick={() => navigate('/purchase')}
+                                    style={{
+                                        border: '2px solid var(--primary-color)',
+                                        borderRadius: '50%',
+                                        background: 'transparent',
+                                        color: 'var(--primary-color)',
+                                        width: '40px',
+                                        height: '40px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '16px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        marginRight: '15px'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.background = 'var(--primary-color)';
+                                        e.target.style.color = 'white';
+                                        e.target.style.transform = 'translateX(-3px)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.background = 'transparent';
+                                        e.target.style.color = 'var(--primary-color)';
+                                        e.target.style.transform = 'translateX(0)';
+                                    }}
+                                >
+                                    <i className="fa-solid fa-arrow-left"></i>
+                                </button>
 
-                        </div>
-                        <div className="d-flex gap-2">
-                            <Button
-                                variant="outline-secondary"
-                                onClick={() => navigate('/purchase')}
-                            >
-                                <i className="fa-solid fa-arrow-left me-2"></i>
-                                Back to Purchases
-                            </Button>
-                        </div>
-                    </div>
+                                <h1 className="h3 fw-bold mb-0" style={{ color: "var(--primary-color)" }}>
+                                    <i className="fa-solid fa-layer-group me-2"></i>
+                                    Purchase Management
+                                </h1>
+                            </div>
+                        </Card.Header>
+                    </Card>
                 </Col>
+
             </Row>
 
-            {/* Main Content */}
             <Row>
                 <Col lg={12}>
-                    <Card style={{ position: 'relative', zIndex: 10 }}>
-                        <Card.Body style={{ position: 'relative', zIndex: 100 }}>
-                            {/* Mode Selection Tabs */}
+                    <Card className="shadow-sm border-0">
+                        <Card.Header className="bg-white border-bottom-0 py-3">
                             <Tabs
                                 activeKey={activeTab}
                                 onSelect={(k) => setActiveTab(k)}
-                                className="mb-4"
+                                className="border-0"
                             >
-                                <Tab eventKey="single" title={<span><i className="fa-solid fa-user me-2"></i>Single Vendor</span>} />
-                                <Tab eventKey="multiple" title={<span><i className="fa-solid fa-users me-2"></i>Multiple Vendors</span>} />
-                                <Tab eventKey="scan" title="Scan Barcode" />
+                                <Tab
+                                    eventKey="single"
+                                    title={
+                                        <span className="d-flex align-items-center">
+                                            <i className="fa-solid fa-user me-2"></i>
+                                            Single Vendor
+                                        </span>
+                                    }
+                                />
                                 <Tab eventKey="import" title="Import File" />
                             </Tabs>
+                        </Card.Header>
 
-                            {/* Render Tab Specific Content */}
+                        {/* Card Body */}
+                        <Card.Body className="p-4">
                             {renderTabContent()}
                         </Card.Body>
                     </Card>
@@ -805,14 +874,14 @@ const BulkPurchasePage = () => {
             </Row>
 
             {/* Add Vendor Modal */}
-            <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
+            <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
+                <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Title className="fw-bold">
                         <i className="fa-solid fa-user-tie me-2 text-primary"></i>
                         Add New Vendor
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className="pt-0">
                     <Form>
                         <Row>
                             <Col md={6}>
@@ -908,8 +977,8 @@ const BulkPurchasePage = () => {
                         </Row>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowAddVendorModal(false)}>
+                <Modal.Footer className="border-top-0">
+                    <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)}>
                         Cancel
                     </Button>
                     <Button variant="primary" onClick={handleAddVendor} disabled={loading}>
@@ -918,15 +987,64 @@ const BulkPurchasePage = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Book Modal */}
-            <Modal show={showAddBookModal} onHide={() => setShowAddBookModal(false)} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
+            {/* Add Book Modal with Barcode Scan */}
+            <Modal show={showAddBookModal} onHide={() => setShowAddBookModal(false)} size="lg" centered>
+                <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Title className="fw-bold">
                         <i className="fa-solid fa-book me-2 text-success"></i>
                         Add New Book
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className="pt-0">
+                    {/* Barcode Scan Section */}
+                    <Card className="mb-4 border-0 bg-light">
+                        <Card.Body className="p-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 className="mb-1 fw-semibold">
+                                        <i className="fa-solid fa-barcode me-2"></i>
+                                        Scan Barcode
+                                    </h6>
+                                    <p className="mb-0 text-muted small">Scan book barcode to auto-fill details</p>
+                                </div>
+                                <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={handleBarcodeScan}
+                                >
+                                    <i className="fa-solid fa-camera me-2"></i>
+                                    Scan Barcode
+                                </Button>
+                            </div>
+
+                            {/* Barcode Input Field */}
+                            <Form.Group className="mt-3">
+                                <Form.Label className="small fw-semibold">Or Enter Barcode Manually</Form.Label>
+                                <div className="d-flex gap-2">
+                                    <Form.Control
+                                        type="text"
+                                        value={barcodeInput}
+                                        onChange={(e) => setBarcodeInput(e.target.value)}
+                                        placeholder="Enter barcode number"
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleBarcodeLookup(barcodeInput);
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => handleBarcodeLookup(barcodeInput)}
+                                        disabled={!barcodeInput.trim()}
+                                    >
+                                        <i className="fa-solid fa-search"></i>
+                                    </Button>
+                                </div>
+                            </Form.Group>
+                        </Card.Body>
+                    </Card>
+
+                    {/* Book Form */}
                     <Form>
                         <Row>
                             <Col md={12}>
@@ -971,12 +1089,12 @@ const BulkPurchasePage = () => {
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>ISBN</Form.Label>
+                                    <Form.Label>ISBN/Barcode</Form.Label>
                                     <Form.Control
                                         type="text"
                                         value={bookFormData.isbn}
                                         onChange={(e) => setBookFormData({ ...bookFormData, isbn: e.target.value })}
-                                        placeholder="Enter ISBN number"
+                                        placeholder="Enter ISBN or barcode number"
                                     />
                                 </Form.Group>
                             </Col>
@@ -1016,12 +1134,22 @@ const BulkPurchasePage = () => {
                         </Row>
                     </Form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowAddBookModal(false)}>
+                <Modal.Footer className="border-top-0">
+                    <Button variant="outline-secondary" onClick={() => setShowAddBookModal(false)}>
                         Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleAddBook} disabled={loading}>
-                        {loading ? 'Adding...' : 'Add Book'}
+                    <Button variant="success" onClick={handleAddBook} disabled={loading}>
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Adding...
+                            </>
+                        ) : (
+                            <>
+                                <i className="fa-solid fa-plus me-2"></i>
+                                Add Book
+                            </>
+                        )}
                     </Button>
                 </Modal.Footer>
             </Modal>

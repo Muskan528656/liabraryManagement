@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -108,15 +106,11 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
-  isEditablee,
 }) => {
-
-  console.log("ModuleDetail props:", isEditablee);
-
   const location = useLocation();
-
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
@@ -128,8 +122,11 @@ const ModuleDetail = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [userNames, setUserNames] = useState({});
+  const [userAvatars, setUserAvatars] = useState({});
 
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
+
   const allFieldGroups = useMemo(() => {
     const groups = [];
     const appendFields = (list) => {
@@ -154,36 +151,103 @@ const ModuleDetail = ({
     return Array.from(keys);
   }, [allFieldGroups]);
 
-  useEffect(() => {
-    console.log("ModuleDetail useEffect running with:", {
-      id,
-      moduleApi,
-      moduleName,
-    });
+  const UserAvatar = ({ userId, size = 32, showName = true, clickable = true }) => {
+    const userName = userNames[userId] || `User ${userId}`;
+    const userAvatar = userAvatars[userId] || `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
 
-    const loadData = async () => {
-      try {
-        setLoading(true);
-
-        await fetchData();
-
-        if (relatedModules.length > 0) {
-          await fetchRelatedData();
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
+    const handleUserClick = () => {
+      if (clickable && userId) {
+        navigate(`/user/${userId}`);
       }
     };
 
-    if (id && moduleApi) {
-      loadData();
-    } else {
-      console.error("Missing id or moduleApi:", { id, moduleApi });
-      setLoading(false);
+    return (
+      <div
+        className={`d-flex align-items-center ${clickable ? 'cursor-pointer' : ''}`}
+        onClick={handleUserClick}
+        style={{
+          cursor: clickable ? 'pointer' : 'default',
+          textDecoration: 'none',
+          gap: '8px'
+        }}
+      >
+        <img
+          src={userAvatar}
+          alt={userName}
+          className="rounded-circle"
+          style={{
+            width: size,
+            height: size,
+            objectFit: 'cover',
+            border: '2px solid #e9ecef'
+          }}
+        />
+        {showName && (
+          <span
+            className="fw-medium"
+            style={{
+              color: clickable ? '#6f42c1' : '#495057',
+              textDecoration: clickable ? 'none' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (clickable) e.target.style.textDecoration = 'underline';
+            }}
+            onMouseLeave={(e) => {
+              if (clickable) e.target.style.textDecoration = 'none';
+            }}
+          >
+            {userName}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+
+  const fetchUserNames = async (userIds) => {
+    try {
+      const userApi = new DataApi("user");
+      const names = {};
+      const avatars = {};
+
+
+      const uniqueUserIds = [...new Set(userIds.filter(id => id && id !== ''))];
+
+      for (const userId of uniqueUserIds) {
+        try {
+          const response = await userApi.fetchById(userId);
+          if (response && response.data) {
+            const user = response.data.success ? response.data.data : response.data;
+            if (user) {
+
+              const fullName = `${user.firstname || ''} ${user.lastname || ''}`.trim();
+              names[userId] = fullName || user.email || `User ${userId}`;
+
+
+              if (user.profile_picture) {
+                avatars[userId] = user.profile_picture;
+              } else {
+
+                const initials = fullName
+                  ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
+                  : 'U';
+                avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=6f42c1&color=fff&size=32`;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching user ${userId}:`, error);
+          names[userId] = `User ${userId}`;
+          avatars[userId] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
+        }
+      }
+
+      setUserNames(prev => ({ ...prev, ...names }));
+      setUserAvatars(prev => ({ ...prev, ...avatars }));
+    } catch (error) {
+      console.error("Error fetching user names:", error);
     }
-  }, [id, moduleApi, moduleLabel]);
+  };
 
   const fetchData = async () => {
     try {
@@ -207,7 +271,7 @@ const ModuleDetail = ({
         } else if (Array.isArray(responseData) && responseData.length > 0) {
           setData(responseData[0]);
         } else {
-          // Direct data object
+
           setData(responseData);
         }
       } else {
@@ -253,8 +317,7 @@ const ModuleDetail = ({
           }
         } catch (error) {
           console.error(
-            `Error fetching related ${relatedModule.label || relatedModule.key
-            }:`,
+            `Error fetching related ${relatedModule.label || relatedModule.key}:`,
             error
           );
           relatedDataObj[relatedModule.key] = [];
@@ -267,6 +330,62 @@ const ModuleDetail = ({
   };
 
   useEffect(() => {
+    console.log("ModuleDetail useEffect running with:", {
+      id,
+      moduleApi,
+      moduleName,
+    });
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        await fetchData();
+
+        if (relatedModules.length > 0) {
+          await fetchRelatedData();
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id && moduleApi) {
+      loadData();
+    } else {
+      console.error("Missing id or moduleApi:", { id, moduleApi });
+      setLoading(false);
+    }
+  }, [id, moduleApi, moduleLabel]);
+
+  useEffect(() => {
+    if (data) {
+      const userIds = [];
+
+
+      if (data.createdbyid) userIds.push(data.createdbyid);
+      if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
+      if (data.created_by) userIds.push(data.created_by);
+      if (data.modified_by) userIds.push(data.modified_by);
+
+
+      Object.keys(data).forEach(key => {
+        if (key.includes('user') || key.includes('byid') || key.includes('by_id')) {
+          const value = data[key];
+          if (value && typeof value === 'string' && value.trim() !== '') {
+            userIds.push(value);
+          }
+        }
+      });
+
+      if (userIds.length > 0) {
+        fetchUserNames(userIds);
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const loadLookupData = async () => {
@@ -276,7 +395,6 @@ const ModuleDetail = ({
 
       const fetchedOptions = {};
       for (const key of selectOptionKeys) {
-        // Skip if externalData already provides options
         if (externalData && Array.isArray(externalData[key])) {
           continue;
         }
@@ -405,7 +523,20 @@ const ModuleDetail = ({
       field.type
     );
 
-    // Check if this field has lookup navigation configured
+    if (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id')) {
+      const userId = value;
+      if (userId && userNames[userId]) {
+        return (
+          <UserAvatar
+            userId={userId}
+            size={32}
+            showName={true}
+            clickable={true}
+          />
+        );
+      }
+    }
+
     const lookupConfig = lookupNavigation && lookupNavigation[field.key];
     if (lookupConfig && data) {
       const targetId = getLookupTargetId(lookupConfig, data);
@@ -468,9 +599,9 @@ const ModuleDetail = ({
     }
     return String(value);
   };
+
   console.log("Location state:", location?.state);
   useEffect(() => {
-
     setTempData(location?.state?.rowData);
   }, [location?.state?.isEdit]);
 
@@ -519,10 +650,22 @@ const ModuleDetail = ({
 
   const handleFieldChange = (fieldKey, value) => {
     if (isEditing && tempData) {
-      setTempData({
+      let updatedData = {
         ...tempData,
         [fieldKey]: value,
-      });
+      };
+
+      if (moduleName === 'purchase') {
+        if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
+          const quantity = parseFloat(updatedData.quantity) || 0;
+          const unitPrice = parseFloat(updatedData.unit_price) || 0;
+          const totalAmount = quantity * unitPrice;
+
+          updatedData.total_amount = totalAmount.toFixed(2);
+        }
+      }
+
+      setTempData(updatedData);
     }
   };
 
@@ -602,16 +745,16 @@ const ModuleDetail = ({
       setShowDeleteModal(false);
     }
   };
+  const handleBack = () => {
+    navigate(`/${moduleName}`);
+  };
+
+
   if (loading) {
     return (
       <Container fluid>
         <ScrollToTop />
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ minHeight: "60vh" }}
-        >
-          <Loader />
-        </div>
+
       </Container>
     );
   }
@@ -664,99 +807,225 @@ const ModuleDetail = ({
     return [col1, col2, col3];
   };
 
-  // 👉 Details fields
   const [col1, col2, col3] = splitInto3(normalizedFields.details);
 
-  // 👉 Other fields
-  const [colother1, colother2, colother3] =
-    splitInto3(normalizedOtherFields.other);
+  const [colother1, colother2, colother3] = splitInto3(normalizedOtherFields.other);
 
-  // 👉 Address fields
-  const [coladd1, coladd2, coladd3] =
-    splitInto3(normalizedAddressFields?.address);
+  const [coladd1, coladd2, coladd3] = splitInto3(normalizedAddressFields?.address);
+
+  const renderField = (field, index, currentData) => {
+    if (!isEditing && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
+      const userId = currentData ? currentData[field.key] : null;
+      if (userId) {
+        return (
+          <Form.Group key={index} className="mb-3">
+            <Form.Label className="fw-semibold">
+              {field.label}
+            </Form.Label>
+            <div className="form-control-plaintext p-0 border-0">
+              <UserAvatar
+                userId={userId}
+                size={36}
+                showName={true}
+                clickable={true}
+              />
+            </div>
+          </Form.Group>
+        );
+      }
+    }
+
+    if (field.type === "select" && field.options) {
+      const options = getSelectOptions(field);
+      const rawValue = currentData ? currentData[field.key] : null;
+      const currentValue = rawValue === undefined || rawValue === null ? "" : rawValue.toString();
+
+      return (
+        <Form.Group key={index} className="mb-3">
+          <Form.Label className="fw-semibold">
+            {field.label}
+          </Form.Label>
+          {isEditing ? (
+            <Form.Select
+              value={currentValue}
+              onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+            >
+              <option value="">Select {field.label}</option>
+              {options.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name || option.title || option.email}
+                </option>
+              ))}
+            </Form.Select>
+          ) : (
+            <Form.Control
+              type="text"
+              readOnly
+              value={(() => {
+                if (field.displayKey && data) return data[field.displayKey] || "—";
+                const selected = options.find((opt) => {
+                  const optionValue = toStringSafe(getOptionValue(opt));
+                  return optionValue === currentValue;
+                });
+                return selected ? getOptionDisplayLabel(selected) : "—";
+              })()}
+              style={{
+                pointerEvents: "none",
+                opacity: 0.9,
+              }}
+            />
+          )}
+        </Form.Group>
+      );
+    }
+
+    const fieldValue = getFieldValue(field, currentData);
+    const isElementValue = React.isValidElement(fieldValue);
+    const controlType = isEditing
+      ? field.type === "number"
+        ? "number"
+        : field.type === "date"
+          ? "date"
+          : field.type === "datetime"
+            ? "datetime-local"
+            : "text"
+      : "text";
+
+    if (!isEditing && isElementValue) {
+      return (
+        <Form.Group key={index} className="mb-3">
+          <Form.Label className="fw-semibold">
+            {field.label}
+          </Form.Label>
+          <div className="form-control-plaintext">
+            {fieldValue}
+          </div>
+        </Form.Group>
+      );
+    }
+
+    return (
+      <Form.Group key={index} className="mb-3">
+        <Form.Label className="fw-semibold">
+          {field.label}
+        </Form.Label>
+        <Form.Control
+          type={controlType}
+          value={isElementValue ? "" : fieldValue ?? ""}
+          readOnly={!isEditing}
+          onChange={(e) => {
+            if (!isEditing) return;
+
+            let newValue = e.target.value;
+            if (field.type === "number")
+              newValue = newValue ? parseFloat(newValue) : null;
+            if (field.type === "datetime")
+              newValue = new Date(newValue).toISOString();
+
+            handleFieldChange(field.key, newValue);
+          }}
+          style={{
+            pointerEvents: isEditing ? "auto" : "none",
+            opacity: isEditing ? 1 : 0.9,
+          }}
+        />
+      </Form.Group>
+    );
+  };
 
   return (
     <>
       <Container fluid className="py-4">
         <ScrollToTop />
+
         <Row className="justify-content-center">
           <Col lg={12} xl={12}>
             <Card className="border-0 shadow-sm detail-h4">
               <Card.Body>
+             
                 <div
-                  className="d-flex justify-content-between align-items-center mb-4 p-2"
+                  className="d-flex justify-content-between align-items-center mb-4 p-3"
                   style={{
                     color: "var(--primary-color)",
                     background: "var(--primary-background-color)",
                     borderRadius: "10px",
                   }}
                 >
-                  <h5
-                    className="fw-bold mb-1"
-                    style={{ color: "var(--primary-color)" }}
-                  >
-                    {icon && <i className={`${icon} me-2 fs-6`}></i>}
-                    {moduleLabel}
-                  </h5>
-                  <div>
+               
+                  <div className="d-flex align-items-center gap-3">
+                    <button
+                      onClick={handleBack}
+                      className="shadow-sm d-flex align-items-center justify-content-center"
+                      style={{
+                        border: '1px solid var(--primary-color)',
+                        borderRadius: '50%',
+                        padding: '24px',
+                        background: 'white',
+                        transition: 'all 0.3s ease',
+                        color: 'var(--primary-color)',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '26px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'var(--primary-color)';
+                        e.target.style.color = 'white';
+                        e.target.style.transform = 'translateX(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'white';
+                        e.target.style.color = 'var(--primary-color)';
+                        e.target.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <i className="fa-solid fa-arrow-left"></i>
+                    </button>
+
+                    <h5 className="fw-bold mb-0" style={{ color: "var(--primary-color)" }}>
+                      {icon && <i className={`${icon} me-2 fs-6`}></i>}
+                      {moduleLabel} Details
+                    </h5>
+                  </div>
+
+                  {/* Right Side - Action Buttons */}
+                  <div className="d-flex gap-2">
                     {!isEditing ? (
-                      <button
-                        // variant="outline-primary"
-                        onClick={handleEdit}
-                        // style={{
-                        //   border: "2px solid var(--primary-color, #6f42c1)",
-                        //   color: "var(--primary-color, #6f42c1)",
-                        //   borderRadius: "8px",
-                        //   padding: "8px 20px",
-                        //   fontWeight: "600",
-                        // }}
-                        className="custom-btn-primary"
-                      >
-                        <i className="fa-solid fa-edit me-2"></i>
-                        Edit {moduleLabel}
-                      </button>
+                      <>
+                        <button className="custom-btn-primary" onClick={handleEdit}>
+                          <i className="fa-solid fa-edit me-2"></i>
+                          Edit {moduleLabel}
+                        </button>
+                        <button className="custom-btn-secondary" onClick={handleDelete}>
+                          <i className="fa-solid fa-trash me-2"></i>
+                          Delete
+                        </button>
+                      </>
                     ) : (
                       <div className="d-flex gap-2">
-                        <button
-                          className="custom-btn-primary"
-                          onClick={handleSave}
-                          disabled={saving}
-                        >
+                        <button className="custom-btn-primary" onClick={handleSave} disabled={saving}>
                           <i className="fa-solid fa-check me-2"></i>
                           {saving ? "Saving..." : "Save"}
                         </button>
-                        <button
-                          className="custom-btn-secondary"
-                          onClick={handleCancel}
-                          disabled={saving}
-                        >
+                        <button className="custom-btn-secondary" onClick={handleCancel} disabled={saving}>
                           <i className="fa-solid fa-times me-2"></i>
                           Cancel
                         </button>
                       </div>
                     )}
-                    {!isEditing && (
-                      <button
-                        // variant="outline-danger"
-                        onClick={handleDelete}
-                        className="custom-btn-secondary ms-2"
-                      >
-                        <i className="fa-solid fa-trash me-2"></i>
-                        Delete
-                      </button>
-                    )}
                   </div>
                 </div>
+                {/* Details Section */}
                 <Row className="mt-4">
                   <Col md={12} className="mb-4">
-                    <h6
-                      className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                    <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                       style={{
                         color: "var(--primary-color)",
                         background: "var(--header-highlighter-color)",
                         borderRadius: "10px",
-                      }}
-                    >
+                      }}>
                       {moduleLabel} Information
                     </h6>
                   </Col>
@@ -765,357 +1034,26 @@ const ModuleDetail = ({
                       <Row>
                         {[col1, col2, col3].map((columnFields, colIndex) => (
                           <Col md={4} key={colIndex}>
-                            {columnFields.map((field, index) => {
-                              const currentData = isEditing ? tempData : data;
-                              if (field.type === "select" && field.options) {
-                                const options = getSelectOptions(field);
-                                const rawValue = currentData
-                                  ? currentData[field.key]
-                                  : null;
-                                const currentValue =
-                                  rawValue === undefined || rawValue === null
-                                    ? ""
-                                    : rawValue.toString();
-
-                                return (
-                                  <Form.Group key={index} className="mb-3">
-                                    <Form.Label className="fw-semibold">
-                                      {field.label}
-                                    </Form.Label>
-                                    {isEditing ? (
-                                      <Form.Select
-                                        value={currentValue}
-                                        onChange={(e) =>
-                                          handleFieldChange(
-                                            field.key,
-                                            e.target.value || null
-                                          )
-                                        }
-                                      >
-                                        <option value="">
-                                          Select {field.label}
-                                        </option>
-                                        {options.map((option) => (
-                                          <option
-                                            key={option.id}
-                                            value={option.id}
-                                          >
-                                            {option.name ||
-                                              option.title ||
-                                              option.email}
-                                          </option>
-                                        ))}
-                                      </Form.Select>
-                                    ) : (
-                                      <Form.Control
-                                        type="text"
-                                        readOnly
-                                        value={(() => {
-                                          if (field.displayKey && data)
-                                            return data[field.displayKey] || "—";
-                                          const selected = options.find((opt) => {
-                                            const optionValue = toStringSafe(
-                                              getOptionValue(opt)
-                                            );
-                                            return optionValue === currentValue;
-                                          });
-                                          return selected
-                                            ? getOptionDisplayLabel(selected)
-                                            : "—";
-                                        })()}
-                                        style={{
-                                          // background:
-                                          //   "var(--header-highlighter-color, #f8f9fa)",
-                                          pointerEvents: "none",
-                                          opacity: 0.9,
-                                        }}
-                                      />
-                                    )}
-                                  </Form.Group>
-                                );
-                              }
-
-                              const fieldValue = getFieldValue(field, currentData);
-                              const isElementValue = React.isValidElement(fieldValue);
-                              const controlType = isEditing
-                                ? field.type === "number"
-                                  ? "number"
-                                  : field.type === "date"
-                                    ? "date"
-                                    : field.type === "datetime"
-                                      ? "datetime-local"
-                                      : "text"
-                                : "text";
-
-                              if (!isEditing && isElementValue) {
-                                return (
-                                  <Form.Group key={index} className="mb-3">
-                                    <Form.Label className="fw-semibold">
-                                      {field.label}
-                                    </Form.Label>
-                                    <div className="form-control-plaintext">
-                                      {fieldValue}
-                                    </div>
-                                  </Form.Group>
-                                );
-                              }
-
-                              return (
-                                <Form.Group key={index} className="mb-3">
-                                  <Form.Label className="fw-semibold">
-                                    {field.label}
-                                  </Form.Label>
-                                  <Form.Control
-                                    type={controlType}
-                                    value={isElementValue ? "" : fieldValue ?? ""}
-                                    readOnly={!isEditing}
-                                    onChange={(e) => {
-                                      if (!isEditing) return;
-
-                                      let newValue = e.target.value;
-                                      if (field.type === "number")
-                                        newValue = newValue
-                                          ? parseFloat(newValue)
-                                          : null;
-                                      if (field.type === "datetime")
-                                        newValue = new Date(
-                                          newValue
-                                        ).toISOString();
-
-                                      handleFieldChange(field.key, newValue);
-                                    }}
-                                    style={{
-                                      // background: !isEditing
-                                      //   ? "var(--header-highlighter-color, #f8f9fa)"
-                                      //   : "white",
-                                      pointerEvents: isEditing ? "auto" : "none",
-                                      opacity: isEditing ? 1 : 0.9,
-                                    }}
-                                  />
-                                </Form.Group>
-                              );
-                            })}
+                            {columnFields.map((field, index) =>
+                              renderField(field, index, isEditing ? tempData : data)
+                            )}
                           </Col>
                         ))}
                       </Row>
                     )}
-                    {relatedModules.length > 0 && (
-                      <Row className="mb-4">
-                        <Col>
-                          <Card
-                            style={{
-                              border: "none",
-                              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                              borderRadius: "12px",
-                              overflow: "hidden",
-                            }}
-                          >
-                            <Card.Body style={{ padding: 0 }}>
-                              <div
-                                style={{
-                                  padding: "20px 24px",
-                                  borderBottom: "1px solid #e9ecef",
-                                  background:
-                                    "linear-gradient(to right, #f8f9fa, #ffffff)",
-                                }}
-                              >
-                                <h6
-                                  style={{
-                                    margin: 0,
-                                    color: "#6f42c1",
-                                    fontSize: "16px",
-                                    fontWeight: "700",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                  }}
-                                >
-                                  <i className="fa-solid fa-link"></i>
-                                  Related Records
-                                </h6>
-                              </div>
-
-                              <div style={{ padding: "24px" }}>
-                                {relatedModules.map((relatedModule, idx) => {
-                                  // Normalize relatedModule - handle both string and object
-                                  const normalizedModule =
-                                    typeof relatedModule === "string"
-                                      ? {
-                                        key: relatedModule,
-                                        label:
-                                          relatedModule
-                                            .charAt(0)
-                                            .toUpperCase() +
-                                          relatedModule.slice(1),
-                                      }
-                                      : relatedModule;
-
-                                  const moduleKey =
-                                    normalizedModule.key || normalizedModule;
-                                  const moduleLabel =
-                                    normalizedModule.label ||
-                                    (typeof normalizedModule === "string"
-                                      ? normalizedModule.charAt(0).toUpperCase() +
-                                      normalizedModule.slice(1)
-                                      : "Related");
-
-                                  return (
-                                    <div
-                                      key={idx}
-                                      className={idx > 0 ? "mt-4 pt-4" : ""}
-                                      style={
-                                        idx > 0
-                                          ? { borderTop: "1px solid #e9ecef" }
-                                          : {}
-                                      }
-                                    >
-                                      <h6
-                                        style={{
-                                          marginBottom: "16px",
-                                          color: "#495057",
-                                          fontSize: "14px",
-                                          fontWeight: "600",
-                                          textTransform: "uppercase",
-                                          letterSpacing: "0.5px",
-                                        }}
-                                      >
-                                        {moduleLabel}
-                                      </h6>
-                                      {relatedData[moduleKey] &&
-                                        relatedData[moduleKey].length > 0 ? (
-                                        normalizedModule.render ? (
-                                          normalizedModule.render(
-                                            relatedData[moduleKey],
-                                            data
-                                          )
-                                        ) : (
-                                          <div className="table-responsive">
-                                            <table
-                                              style={{
-                                                width: "100%",
-                                                fontSize: "14px",
-                                                borderCollapse: "collapse",
-                                              }}
-                                            >
-                                              <thead>
-                                                <tr
-                                                  style={{
-                                                    background: "#f8f9fa",
-                                                    borderBottom:
-                                                      "2px solid #e9ecef",
-                                                  }}
-                                                >
-                                                  {normalizedModule.columns?.map(
-                                                    (col, colIdx) => (
-                                                      <th
-                                                        key={colIdx}
-                                                        style={{
-                                                          padding: "12px 16px",
-                                                          textAlign: "left",
-                                                          fontWeight: "600",
-                                                          color: "#495057",
-                                                        }}
-                                                      >
-                                                        {col.label}
-                                                      </th>
-                                                    )
-                                                  )}
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {relatedData[moduleKey].map(
-                                                  (item, itemIdx) => (
-                                                    <tr
-                                                      key={itemIdx}
-                                                      style={{
-                                                        borderBottom:
-                                                          "1px solid #e9ecef",
-                                                        transition:
-                                                          "background-color 0.2s",
-                                                      }}
-                                                      onMouseEnter={(e) =>
-                                                      (e.target.parentElement.style.background =
-                                                        "#f8f9fa")
-                                                      }
-                                                      onMouseLeave={(e) =>
-                                                      (e.target.parentElement.style.background =
-                                                        "transparent")
-                                                      }
-                                                    >
-                                                      {normalizedModule.columns?.map(
-                                                        (col, colIdx) => (
-                                                          <td
-                                                            key={colIdx}
-                                                            style={{
-                                                              padding:
-                                                                "12px 16px",
-                                                              color: "#6c757d",
-                                                            }}
-                                                          >
-                                                            {item[col.key] ||
-                                                              "N/A"}
-                                                          </td>
-                                                        )
-                                                      )}
-                                                    </tr>
-                                                  )
-                                                )}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                        )
-                                      ) : (
-                                        <div
-                                          style={{
-                                            padding: "32px 16px",
-                                            textAlign: "center",
-                                            background: "#f8f9fa",
-                                            borderRadius: "8px",
-                                            border: "1px dashed #dee2e6",
-                                          }}
-                                        >
-                                          <i
-                                            className="fa-solid fa-inbox"
-                                            style={{
-                                              fontSize: "32px",
-                                              color: "#adb5bd",
-                                              marginBottom: "8px",
-                                              display: "block",
-                                            }}
-                                          ></i>
-                                          <p
-                                            style={{
-                                              color: "#6c757d",
-                                              margin: 0,
-                                              fontSize: "14px",
-                                            }}
-                                          >
-                                            No {moduleLabel.toLowerCase()} found.
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      </Row>
-                    )}
                   </Row>
                 </Row>
+
+                {/* Address Section */}
                 {normalizedAddressFields && normalizedAddressFields?.address?.length > 0 && (
                   <Row className="mt-4">
                     <Col md={12} className="mb-4">
-                      <h6
-                        className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                      <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
                           background: "var(--header-highlighter-color)",
                           borderRadius: "10px",
-                        }}
-                      >
+                        }}>
                         Address Information
                       </h6>
                     </Col>
@@ -1124,360 +1062,27 @@ const ModuleDetail = ({
                         <Row>
                           {[coladd1, coladd2, coladd3].map((columnFields, colIndex) => (
                             <Col md={4} key={colIndex}>
-                              {columnFields.map((field, index) => {
-                                const currentData = isEditing ? tempData : data;
-                                if (field.type === "select" && field.options) {
-                                  const options = getSelectOptions(field);
-                                  const rawValue = currentData
-                                    ? currentData[field.key]
-                                    : null;
-                                  const currentValue =
-                                    rawValue === undefined || rawValue === null
-                                      ? ""
-                                      : rawValue.toString();
-
-                                  return (
-                                    <Form.Group key={index} className="mb-3">
-                                      <Form.Label className="fw-semibold">
-                                        {field.label}
-                                      </Form.Label>
-                                      {isEditing ? (
-                                        <Form.Select
-                                          value={currentValue}
-                                          onChange={(e) =>
-                                            handleFieldChange(
-                                              field.key,
-                                              e.target.value || null
-                                            )
-                                          }
-                                        >
-                                          <option value="">
-                                            Select {field.label}
-                                          </option>
-                                          {options.map((option) => (
-                                            <option
-                                              key={option.id}
-                                              value={option.id}
-                                            >
-                                              {option.name ||
-                                                option.title ||
-                                                option.email}
-                                            </option>
-                                          ))}
-                                        </Form.Select>
-                                      ) : (
-                                        <Form.Control
-                                          type="text"
-                                          readOnly
-                                          value={(() => {
-                                            if (field.displayKey && data)
-                                              return data[field.displayKey] || "—";
-                                            const selected = options.find((opt) => {
-                                              const optionValue = toStringSafe(
-                                                getOptionValue(opt)
-                                              );
-                                              return optionValue === currentValue;
-                                            });
-                                            return selected
-                                              ? getOptionDisplayLabel(selected)
-                                              : "—";
-                                          })()}
-                                          style={{
-                                            // background:
-                                            //   "var(--header-highlighter-color, #f8f9fa)",
-                                            pointerEvents: "none",
-                                            opacity: 0.9,
-                                          }}
-                                        />
-                                      )}
-                                    </Form.Group>
-                                  );
-                                }
-
-                                const fieldValue = getFieldValue(field, currentData);
-                                const isElementValue = React.isValidElement(fieldValue);
-                                const controlType = isEditing
-                                  ? field.type === "number"
-                                    ? "number"
-                                    : field.type === "date"
-                                      ? "date"
-                                      : field.type === "datetime"
-                                        ? "datetime-local"
-                                        : "text"
-                                  : "text";
-
-                                if (!isEditing && isElementValue) {
-                                  return (
-                                    <Form.Group key={index} className="mb-3">
-                                      <Form.Label className="fw-semibold">
-                                        {field.label}
-                                      </Form.Label>
-                                      <div className="form-control-plaintext">
-                                        {fieldValue}
-                                      </div>
-                                    </Form.Group>
-                                  );
-                                }
-
-                                return (
-                                  <Form.Group key={index} className="mb-3">
-                                    <Form.Label className="fw-semibold">
-                                      {field.label}
-                                    </Form.Label>
-                                    <Form.Control
-                                      type={controlType}
-                                      value={
-                                        isElementValue ? "" : fieldValue ?? ""
-                                      }
-                                      readOnly={!isEditing}
-                                      onChange={(e) => {
-                                        if (!isEditing) return;
-
-                                        let newValue = e.target.value;
-                                        if (field.type === "number")
-                                          newValue = newValue
-                                            ? parseFloat(newValue)
-                                            : null;
-                                        if (field.type === "datetime")
-                                          newValue = new Date(
-                                            newValue
-                                          ).toISOString();
-
-                                        handleFieldChange(field.key, newValue);
-                                      }}
-                                      style={{
-                                        // background: !isEditing
-                                        //   ? "var(--header-highlighter-color, #f8f9fa)"
-                                        //   : "white",
-                                        pointerEvents: isEditing ? "auto" : "none",
-                                        opacity: isEditing ? 1 : 0.9,
-                                      }}
-                                    />
-                                  </Form.Group>
-                                );
-                              })}
+                              {columnFields.map((field, index) =>
+                                renderField(field, index, isEditing ? tempData : data)
+                              )}
                             </Col>
                           ))}
-                        </Row>
-                      )}
-                      {relatedModules.length > 0 && (
-                        <Row className="mb-4">
-                          <Col>
-                            <Card
-                              style={{
-                                border: "none",
-                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                                borderRadius: "12px",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <Card.Body style={{ padding: 0 }}>
-                                <div
-                                  style={{
-                                    padding: "20px 24px",
-                                    borderBottom: "1px solid #e9ecef",
-                                    background:
-                                      "linear-gradient(to right, #f8f9fa, #ffffff)",
-                                  }}
-                                >
-                                  <h6
-                                    style={{
-                                      margin: 0,
-                                      color: "#6f42c1",
-                                      fontSize: "16px",
-                                      fontWeight: "700",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <i className="fa-solid fa-link"></i>
-                                    Related Records
-                                  </h6>
-                                </div>
-
-                                <div style={{ padding: "24px" }}>
-                                  {relatedModules.map((relatedModule, idx) => {
-                                    // Normalize relatedModule - handle both string and object
-                                    const normalizedModule =
-                                      typeof relatedModule === "string"
-                                        ? {
-                                          key: relatedModule,
-                                          label:
-                                            relatedModule
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            relatedModule.slice(1),
-                                        }
-                                        : relatedModule;
-
-                                    const moduleKey =
-                                      normalizedModule.key || normalizedModule;
-                                    const moduleLabel =
-                                      normalizedModule.label ||
-                                      (typeof normalizedModule === "string"
-                                        ? normalizedModule.charAt(0).toUpperCase() +
-                                        normalizedModule.slice(1)
-                                        : "Related");
-
-                                    return (
-                                      <div
-                                        key={idx}
-                                        className={idx > 0 ? "mt-4 pt-4" : ""}
-                                        style={
-                                          idx > 0
-                                            ? { borderTop: "1px solid #e9ecef" }
-                                            : {}
-                                        }
-                                      >
-                                        <h6
-                                          style={{
-                                            marginBottom: "16px",
-                                            color: "#495057",
-                                            fontSize: "14px",
-                                            fontWeight: "600",
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.5px",
-                                          }}
-                                        >
-                                          {moduleLabel}
-                                        </h6>
-                                        {relatedData[moduleKey] &&
-                                          relatedData[moduleKey].length > 0 ? (
-                                          normalizedModule.render ? (
-                                            normalizedModule.render(
-                                              relatedData[moduleKey],
-                                              data
-                                            )
-                                          ) : (
-                                            <div className="table-responsive">
-                                              <table
-                                                style={{
-                                                  width: "100%",
-                                                  fontSize: "14px",
-                                                  borderCollapse: "collapse",
-                                                }}
-                                              >
-                                                <thead>
-                                                  <tr
-                                                    style={{
-                                                      background: "#f8f9fa",
-                                                      borderBottom:
-                                                        "2px solid #e9ecef",
-                                                    }}
-                                                  >
-                                                    {normalizedModule.columns?.map(
-                                                      (col, colIdx) => (
-                                                        <th
-                                                          key={colIdx}
-                                                          style={{
-                                                            padding: "12px 16px",
-                                                            textAlign: "left",
-                                                            fontWeight: "600",
-                                                            color: "#495057",
-                                                          }}
-                                                        >
-                                                          {col.label}
-                                                        </th>
-                                                      )
-                                                    )}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {relatedData[moduleKey].map(
-                                                    (item, itemIdx) => (
-                                                      <tr
-                                                        key={itemIdx}
-                                                        style={{
-                                                          borderBottom:
-                                                            "1px solid #e9ecef",
-                                                          transition:
-                                                            "background-color 0.2s",
-                                                        }}
-                                                        onMouseEnter={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "#f8f9fa")
-                                                        }
-                                                        onMouseLeave={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "transparent")
-                                                        }
-                                                      >
-                                                        {normalizedModule.columns?.map(
-                                                          (col, colIdx) => (
-                                                            <td
-                                                              key={colIdx}
-                                                              style={{
-                                                                padding:
-                                                                  "12px 16px",
-                                                                color: "#6c757d",
-                                                              }}
-                                                            >
-                                                              {item[col.key] ||
-                                                                "N/A"}
-                                                            </td>
-                                                          )
-                                                        )}
-                                                      </tr>
-                                                    )
-                                                  )}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          )
-                                        ) : (
-                                          <div
-                                            style={{
-                                              padding: "32px 16px",
-                                              textAlign: "center",
-                                              background: "#f8f9fa",
-                                              borderRadius: "8px",
-                                              border: "1px dashed #dee2e6",
-                                            }}
-                                          >
-                                            <i
-                                              className="fa-solid fa-inbox"
-                                              style={{
-                                                fontSize: "32px",
-                                                color: "#adb5bd",
-                                                marginBottom: "8px",
-                                                display: "block",
-                                              }}
-                                            ></i>
-                                            <p
-                                              style={{
-                                                color: "#6c757d",
-                                                margin: 0,
-                                                fontSize: "14px",
-                                              }}
-                                            >
-                                              No {moduleLabel.toLowerCase()} found.
-                                            </p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </Card.Body>
-                            </Card>
-                          </Col>
                         </Row>
                       )}
                     </Row>
                   </Row>
                 )}
-                {normalizedOtherFields.other.length > 0 &&
+
+                {/* Other Section */}
+                {normalizedOtherFields.other.length > 0 && (
                   <Row className="mt-4">
                     <Col md={12} className="mb-4">
-                      <h6
-                        className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                      <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
                           background: "var(--header-highlighter-color)",
                           borderRadius: "10px",
-                        }}
-                      >
+                        }}>
                         Others
                       </h6>
                     </Col>
@@ -1486,355 +1091,154 @@ const ModuleDetail = ({
                         <Row>
                           {[colother1, colother2, colother3].map((columnFields, colIndex) => (
                             <Col md={4} key={colIndex}>
-                              {columnFields.map((field, index) => {
-                                const currentData = isEditing ? tempData : data;
-                                if (field.type === "select" && field.options) {
-                                  const options = getSelectOptions(field);
-                                  const rawValue = currentData
-                                    ? currentData[field.key]
-                                    : null;
-                                  const currentValue =
-                                    rawValue === undefined || rawValue === null
-                                      ? ""
-                                      : rawValue.toString();
-
-                                  return (
-                                    <Form.Group key={index} className="mb-3">
-                                      <Form.Label className="fw-semibold">
-                                        {field.label}
-                                      </Form.Label>
-                                      {isEditing ? (
-                                        <Form.Select
-                                          value={currentValue}
-                                          onChange={(e) =>
-                                            handleFieldChange(
-                                              field.key,
-                                              e.target.value || null
-                                            )
-                                          }
-                                        >
-                                          <option value="">
-                                            Select {field.label}
-                                          </option>
-                                          {options.map((option) => (
-                                            <option
-                                              key={option.id}
-                                              value={option.id}
-                                            >
-                                              {option.name ||
-                                                option.title ||
-                                                option.email}
-                                            </option>
-                                          ))}
-                                        </Form.Select>
-                                      ) : (
-                                        <Form.Control
-                                          type="text"
-                                          readOnly
-                                          value={(() => {
-                                            if (field.displayKey && data)
-                                              return data[field.displayKey] || "—";
-                                            const selected = options.find((opt) => {
-                                              const optionValue = toStringSafe(
-                                                getOptionValue(opt)
-                                              );
-                                              return optionValue === currentValue;
-                                            });
-                                            return selected
-                                              ? getOptionDisplayLabel(selected)
-                                              : "—";
-                                          })()}
-                                          style={{
-                                            // background:
-                                            //   "var(--header-highlighter-color, #f8f9fa)",
-                                            pointerEvents: "none",
-                                            opacity: 0.9,
-                                          }}
-                                        />
-                                      )}
-                                    </Form.Group>
-                                  );
-                                }
-                                return (
-                                  (() => {
-                                    const fieldValue = getFieldValue(field, currentData);
-                                    const isElementValue = React.isValidElement(fieldValue);
-                                    const controlType = isEditing
-                                      ? field.type === "number"
-                                        ? "number"
-                                        : field.type === "date"
-                                          ? "date"
-                                          : field.type === "datetime"
-                                            ? "datetime-local"
-                                            : "text"
-                                      : "text";
-
-                                    if (!isEditing && isElementValue) {
-                                      return (
-                                        <Form.Group key={index} className="mb-3">
-                                          <Form.Label className="fw-semibold">
-                                            {field.label}
-                                          </Form.Label>
-                                          <div className="form-control-plaintext">
-                                            {fieldValue}
-                                          </div>
-                                        </Form.Group>
-                                      );
-                                    }
-
-                                    return (
-                                      <Form.Group key={index} className="mb-3">
-                                        <Form.Label className="fw-semibold">
-                                          {field.label}
-                                        </Form.Label>
-                                        <Form.Control
-                                          type={controlType}
-                                          value={
-                                            isElementValue ? "" : fieldValue ?? ""
-                                          }
-                                          readOnly={!isEditing}
-                                          onChange={(e) => {
-                                            if (!isEditing) return;
-
-                                            let newValue = e.target.value;
-                                            if (field.type === "number")
-                                              newValue = newValue
-                                                ? parseFloat(newValue)
-                                                : null;
-                                            if (field.type === "datetime")
-                                              newValue = new Date(
-                                                newValue
-                                              ).toISOString();
-
-                                            handleFieldChange(field.key, newValue);
-                                          }}
-                                          style={{
-                                            // background: !isEditing
-                                            //   ? "var(--header-highlighter-color, #f8f9fa)"
-                                            //   : "white",
-                                            pointerEvents: isEditing ? "auto" : "none",
-                                            opacity: isEditing ? 1 : 0.9,
-                                          }}
-                                        />
-                                      </Form.Group>
-                                    );
-                                  })()
-                                );
-                              })}
+                              {columnFields.map((field, index) =>
+                                renderField(field, index, isEditing ? tempData : data)
+                              )}
                             </Col>
                           ))}
                         </Row>
                       )}
-                      {relatedModules.length > 0 && (
-                        <Row className="mb-4">
-                          <Col>
-                            <Card
-                              style={{
-                                border: "none",
-                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                                borderRadius: "12px",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <Card.Body style={{ padding: 0 }}>
-                                <div
-                                  style={{
-                                    padding: "20px 24px",
-                                    borderBottom: "1px solid #e9ecef",
-                                    background:
-                                      "linear-gradient(to right, #f8f9fa, #ffffff)",
-                                  }}
-                                >
-                                  <h5
-                                    style={{
-                                      margin: 0,
-                                      color: "#6f42c1",
-                                      fontSize: "16px",
-                                      fontWeight: "700",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <i className="fa-solid fa-link"></i>
-                                    Related Records
-                                  </h5>
-                                </div>
-
-                                <div style={{ padding: "24px" }}>
-                                  {relatedModules.map((relatedModule, idx) => {
-                                    // Normalize relatedModule - handle both string and object
-                                    const normalizedModule =
-                                      typeof relatedModule === "string"
-                                        ? {
-                                          key: relatedModule,
-                                          label:
-                                            relatedModule
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            relatedModule.slice(1),
-                                        }
-                                        : relatedModule;
-
-                                    const moduleKey =
-                                      normalizedModule.key || normalizedModule;
-                                    const moduleLabel =
-                                      normalizedModule.label ||
-                                      (typeof normalizedModule === "string"
-                                        ? normalizedModule.charAt(0).toUpperCase() +
-                                        normalizedModule.slice(1)
-                                        : "Related");
-
-                                    return (
-                                      <div
-                                        key={idx}
-                                        className={idx > 0 ? "mt-4 pt-4" : ""}
-                                        style={
-                                          idx > 0
-                                            ? { borderTop: "1px solid #e9ecef" }
-                                            : {}
-                                        }
-                                      >
-                                        <h6
-                                          style={{
-                                            marginBottom: "16px",
-                                            color: "#495057",
-                                            fontSize: "14px",
-                                            fontWeight: "600",
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.5px",
-                                          }}
-                                        >
-                                          {moduleLabel}
-                                        </h6>
-                                        {relatedData[moduleKey] &&
-                                          relatedData[moduleKey].length > 0 ? (
-                                          normalizedModule.render ? (
-                                            normalizedModule.render(
-                                              relatedData[moduleKey],
-                                              data
-                                            )
-                                          ) : (
-                                            <div className="table-responsive">
-                                              <table
-                                                style={{
-                                                  width: "100%",
-                                                  fontSize: "14px",
-                                                  borderCollapse: "collapse",
-                                                }}
-                                              >
-                                                <thead>
-                                                  <tr
-                                                    style={{
-                                                      background: "#f8f9fa",
-                                                      borderBottom:
-                                                        "2px solid #e9ecef",
-                                                    }}
-                                                  >
-                                                    {normalizedModule.columns?.map(
-                                                      (col, colIdx) => (
-                                                        <th
-                                                          key={colIdx}
-                                                          style={{
-                                                            padding: "12px 16px",
-                                                            textAlign: "left",
-                                                            fontWeight: "600",
-                                                            color: "#495057",
-                                                          }}
-                                                        >
-                                                          {col.label}
-                                                        </th>
-                                                      )
-                                                    )}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {relatedData[moduleKey].map(
-                                                    (item, itemIdx) => (
-                                                      <tr
-                                                        key={itemIdx}
-                                                        style={{
-                                                          borderBottom:
-                                                            "1px solid #e9ecef",
-                                                          transition:
-                                                            "background-color 0.2s",
-                                                        }}
-                                                        onMouseEnter={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "#f8f9fa")
-                                                        }
-                                                        onMouseLeave={(e) =>
-                                                        (e.target.parentElement.style.background =
-                                                          "transparent")
-                                                        }
-                                                      >
-                                                        {normalizedModule.columns?.map(
-                                                          (col, colIdx) => (
-                                                            <td
-                                                              key={colIdx}
-                                                              style={{
-                                                                padding:
-                                                                  "12px 16px",
-                                                                color: "#6c757d",
-                                                              }}
-                                                            >
-                                                              {item[col.key] ||
-                                                                "N/A"}
-                                                            </td>
-                                                          )
-                                                        )}
-                                                      </tr>
-                                                    )
-                                                  )}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          )
-                                        ) : (
-                                          <div
-                                            style={{
-                                              padding: "32px 16px",
-                                              textAlign: "center",
-                                              background: "#f8f9fa",
-                                              borderRadius: "8px",
-                                              border: "1px dashed #dee2e6",
-                                            }}
-                                          >
-                                            <i
-                                              className="fa-solid fa-inbox"
-                                              style={{
-                                                fontSize: "32px",
-                                                color: "#adb5bd",
-                                                marginBottom: "8px",
-                                                display: "block",
-                                              }}
-                                            ></i>
-                                            <p
-                                              style={{
-                                                color: "#6c757d",
-                                                margin: 0,
-                                                fontSize: "14px",
-                                              }}
-                                            >
-                                              No {moduleLabel.toLowerCase()} found.
-                                            </p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        </Row>
-                      )}
                     </Row>
-                  </Row>}
+                  </Row>
+                )}
+
+                {/* Related Modules */}
+                {relatedModules.length > 0 && (
+                  <Row className="mb-4">
+                    <Col>
+                      <Card style={{
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                      }}>
+                        <Card.Body style={{ padding: 0 }}>
+                          <div style={{
+                            padding: "20px 24px",
+                            borderBottom: "1px solid #e9ecef",
+                            background: "linear-gradient(to right, #f8f9fa, #ffffff)",
+                          }}>
+                            <h6 style={{
+                              margin: 0,
+                              color: "#6f42c1",
+                              fontSize: "16px",
+                              fontWeight: "700",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}>
+                              <i className="fa-solid fa-link"></i>
+                              Related Records
+                            </h6>
+                          </div>
+
+                          <div style={{ padding: "24px" }}>
+                            {relatedModules.map((relatedModule, idx) => {
+                              const normalizedModule = typeof relatedModule === "string"
+                                ? {
+                                  key: relatedModule,
+                                  label: relatedModule.charAt(0).toUpperCase() + relatedModule.slice(1),
+                                }
+                                : relatedModule;
+
+                              const moduleKey = normalizedModule.key || normalizedModule;
+                              const moduleLabel = normalizedModule.label ||
+                                (typeof normalizedModule === "string"
+                                  ? normalizedModule.charAt(0).toUpperCase() + normalizedModule.slice(1)
+                                  : "Related");
+
+                              return (
+                                <div key={idx} className={idx > 0 ? "mt-4 pt-4" : ""}
+                                  style={idx > 0 ? { borderTop: "1px solid #e9ecef" } : {}}>
+                                  <h6 style={{
+                                    marginBottom: "16px",
+                                    color: "#495057",
+                                    fontSize: "14px",
+                                    fontWeight: "600",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                  }}>
+                                    {moduleLabel}
+                                  </h6>
+                                  {relatedData[moduleKey] && relatedData[moduleKey].length > 0 ? (
+                                    normalizedModule.render ? (
+                                      normalizedModule.render(relatedData[moduleKey], data)
+                                    ) : (
+                                      <div className="table-responsive">
+                                        <table style={{
+                                          width: "100%",
+                                          fontSize: "14px",
+                                          borderCollapse: "collapse",
+                                        }}>
+                                          <thead>
+                                            <tr style={{
+                                              background: "#f8f9fa",
+                                              borderBottom: "2px solid #e9ecef",
+                                            }}>
+                                              {normalizedModule.columns?.map((col, colIdx) => (
+                                                <th key={colIdx} style={{
+                                                  padding: "12px 16px",
+                                                  textAlign: "left",
+                                                  fontWeight: "600",
+                                                  color: "#495057",
+                                                }}>
+                                                  {col.label}
+                                                </th>
+                                              ))}
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {relatedData[moduleKey].map((item, itemIdx) => (
+                                              <tr key={itemIdx} style={{
+                                                borderBottom: "1px solid #e9ecef",
+                                                transition: "background-color 0.2s",
+                                              }}
+                                                onMouseEnter={(e) => e.target.parentElement.style.background = "#f8f9fa"}
+                                                onMouseLeave={(e) => e.target.parentElement.style.background = "transparent"}>
+                                                {normalizedModule.columns?.map((col, colIdx) => (
+                                                  <td key={colIdx} style={{ padding: "12px 16px", color: "#6c757d" }}>
+                                                    {item[col.key] || "N/A"}
+                                                  </td>
+                                                ))}
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )
+                                  ) : (
+                                    <div style={{
+                                      padding: "32px 16px",
+                                      textAlign: "center",
+                                      background: "#f8f9fa",
+                                      borderRadius: "8px",
+                                      border: "1px dashed #dee2e6",
+                                    }}>
+                                      <i className="fa-solid fa-inbox" style={{
+                                        fontSize: "32px",
+                                        color: "#adb5bd",
+                                        marginBottom: "8px",
+                                        display: "block",
+                                      }}></i>
+                                      <p style={{ color: "#6c757d", margin: 0, fontSize: "14px" }}>
+                                        No {moduleLabel.toLowerCase()} found.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                )}
               </Card.Body>
             </Card>
           </Col>
         </Row>
+
         <ConfirmationModal
           show={showConfirmModal}
           onHide={() => setShowConfirmModal(false)}
@@ -1844,106 +1248,7 @@ const ModuleDetail = ({
           confirmText="Delete"
           cancelText="Cancel"
         />
-        <style jsx>{`
-        .detail-section {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 0;
-        }
-
-        .detail-row {
-          display: flex;
-          border-bottom: 1px solid #e9ecef;
-          min-height: 56px;
-          align-items: center;
-          transition: background-color 0.2s;
-        }
-
-        .detail-row:hover {
-          background-color: #f8f9fa;
-        }
-
-        .detail-row:last-child {
-          border-bottom: none;
-        }
-
-        .detail-label {
-          width: 35%;
-          padding: 12px 16px;
-          font-weight: 600;
-          background: linear-gradient(to right, #f8f9fa, #ffffff);
-          border-right: 1px solid #e9ecef;
-          color: #495057;
-          font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-        }
-
-        .detail-value {
-          flex: 1;
-          padding: 12px 16px;
-          background: white;
-          display: flex;
-          align-items: center;
-          color: #212529;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-          .detail-row {
-            flex-direction: column;
-            align-items: flex-start;
-            min-height: auto;
-          }
-
-          .detail-label {
-            width: 100%;
-            border-right: none;
-            border-bottom: 1px solid #e9ecef;
-            padding: 8px 12px;
-          }
-
-          .detail-value {
-            width: 100%;
-            padding: 8px 12px;
-          }
-        }
-      `}</style>
       </Container>
-      <Modal
-        show={showDeleteModal}
-        onHide={() => {
-          if (!deleteLoading) {
-            setShowDeleteModal(false);
-          }
-        }}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete this {moduleLabel.toLowerCase()}? This action cannot be
-          undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="outline-secondary"
-            onClick={() => setShowDeleteModal(false)}
-            disabled={deleteLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="danger"
-            onClick={confirmDeleteRecord}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? "Deleting..." : "Delete"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   );
 };
