@@ -1,13 +1,88 @@
 import React, { useState, useEffect } from "react";
-import { Card, Col, Container, Row, Badge, Button } from "react-bootstrap";
+import { Card, Col, Container, Row, Badge } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
 import Loader from "./common/Loader";
 import { useNavigate } from "react-router-dom";
 import jwt_decode from "jwt-decode";
-
 import DashboardApi from "../api/dashboardApi";
+import { BarChart } from '@mui/x-charts/BarChart';
+
+// --- ULTIMATE ENHANCED MODERN STYLES & COLOR PALETTE ---
+const PRIMARY_COLOR = "#4338ca"; // Deep Indigo-800 for strong primary action
+const ACCENT_COLOR = "#6366f1"; // Lighter Indigo-500
+const SUCCESS_COLOR = "#059669"; // Deeper Green for success
+const WARNING_COLOR = "#f59e0b"; // Amber for warnings
+const DANGER_COLOR = "#dc2626"; // Stronger Red for immediate attention
+const INFO_COLOR = "#8b5cf6"; // Purple for secondary/info
+
+const styles = {
+  // Ultra Modern Card Style with Hover Effect
+  card: {
+    border: "1px solid #e2e8f0",
+    borderRadius: "20px", // More rounded corners
+    boxShadow: "0 20px 50px rgba(0, 0, 0, 0.08)", // Softer, deeper shadow
+    background: "#fff",
+    height: "100%",
+    transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)", // Smooth animation curve
+    overflow: "hidden",
+  },
+  interactiveCard: {
+    // Style for cards that should respond to user interaction (e.g., Alerts)
+    cursor: "pointer",
+  },
+  cardHeader: {
+    background: "transparent",
+    borderBottom: "1px solid #f1f5f9",
+    padding: "24px 30px",
+    borderRadius: "20px 20px 0 0"
+  },
+  cardBody: {
+    padding: "30px"
+  },
+  sectionTitle: {
+    fontSize: "22px", // Larger title
+    fontWeight: "800",
+    color: "#0f172a", // Very dark text for headings
+    marginBottom: "25px",
+    marginTop: "30px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    paddingLeft: "5px"
+  }
+};
+
+// CSS-in-JS for a hover effect on alert cards
+const AlertCardHoverStyle = (baseStyle) => ({
+    ...baseStyle,
+    "&:hover": {
+        transform: "translateY(-5px) scale(1.01)", // Slight lift and scale
+        boxShadow: "0 25px 60px rgba(0, 0, 0, 0.15)",
+    }
+});
+
+// Helper component to apply the hover effect
+const InteractiveCard = ({ children, style, ...props }) => {
+    const [hover, setHover] = useState(false);
+    return (
+        <Card
+            {...props}
+            style={{
+                ...styles.card,
+                ...styles.interactiveCard,
+                ...style,
+                ...(hover ? AlertCardHoverStyle(style)["&:hover"] : {}),
+            }}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+        >
+            {children}
+        </Card>
+    );
+};
+
 
 const Dashboard = ({ userInfo: propUserInfo }) => {
   const navigate = useNavigate();
@@ -15,11 +90,17 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
+    
+  // Stats
   const [dueSoonCount, setDueSoonCount] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
   const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
   const [damagedCount, setDamagedCount] = useState(0);
   const [totalBooks, setTotalBooks] = useState(0);
+    
+  // Card Details
+  const [cardDetails, setCardDetails] = useState([]);
+  const [cardLimitSetting, setCardLimitSetting] = useState(6);
 
   useEffect(() => {
     let currentUserInfo = propUserInfo;
@@ -35,8 +116,10 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
     setUserInfo(currentUserInfo);
     setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
+    
     fetchDashboardData();
-    fetchSubmissionAndIssueMetrics()
+    fetchSubmissionAndIssueMetrics();
+    fetchLibraryCounts();
   }, [propUserInfo]);
 
   const fetchDashboardData = async () => {
@@ -46,7 +129,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const response = await libraryApi.get("/dashboard");
       if (response.data && response.data.success) {
         setDashboardData(response.data.data);
-        // Update role if returned from API
         if (response.data.role) {
           setUserRole(response.data.role === "student" ? "STUDENT" : "ADMIN");
         }
@@ -60,1194 +142,472 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   const fetchSubmissionAndIssueMetrics = async () => {
     try {
-      const resp = await DashboardApi.fetchAll(); // this now returns the query result
-      // fetchStats
+      const resp = await DashboardApi.fetchAll();
       const respStats = await DashboardApi.fetchStats();
-      console.log('conl', respStats?.data);
       setTotalBooks(respStats?.data);
       const data = resp?.data || [];
-      console.log('dashbard data', data);
-      
-      console.log('data ',data.length);
-      if (!Array.isArray(data) || data.length === 0) {
-        console.warn("No data received from API");
-        return;
-      }
+        
+      if (!Array.isArray(data) || data.length === 0) return;
 
       const metrics = data[0];
-
-      console.log( 'metrics ',metrics );
-      
-      // Set counts directly
       setDueSoonCount(metrics.total_due_soon || 0);
       setOverdueCount(metrics.overdue_books || 0);
       setFineCollectedThisMonth(metrics.fine_collected_this_month || 0);
       setDamagedCount(metrics.damaged_missing_books || 0);
 
     } catch (err) {
-      console.error("Error fetching submission/issue metrics:", err);
+      console.error("Error fetching submission metrics:", err);
     }
   };
 
+  const fetchLibraryCounts = async () => {
+    try {
+      const bookApi = new DataApi("book");
+      const issueApi = new DataApi("bookissue");
+      const settingsApi = new DataApi("librarysettings");
 
-  // Format number with commas
+      const booksResp = await bookApi.fetchAll();
+      const books = Array.isArray(booksResp?.data) ? booksResp.data : (booksResp?.data?.rows || booksResp || []);
+      let totalCopies = 0;
+      let availableCopies = 0;
+      if (Array.isArray(books)) {
+        books.forEach((b) => {
+          const t = Number(b.total_copies ?? b.totalCopies ?? 0) || 0;
+          const a = Number(b.available_copies ?? b.availableCopies ?? t) || t;
+          totalCopies += t;
+          availableCopies += a;
+        });
+      }
+
+      const issuesResp = await issueApi.get("/active");
+      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data : (issuesResp?.data?.rows || issuesResp || []);
+      const issuedCount = Array.isArray(activeIssues) ? activeIssues.length : 0;
+
+      let cardLimit = 6;
+      try {
+        const settingsResp = await settingsApi.get("/all");
+        const settingsData = settingsResp?.data?.data || settingsResp?.data || settingsResp;
+        if (settingsData) {
+          cardLimit = Number(settingsData.max_books_per_card ?? settingsData.max_books ?? settingsData.max_books_per_card?.setting_value) || cardLimit;
+        }
+      } catch (err) { }
+
+      setTotalBooks(prev => ({ ...prev, total_books: totalCopies, available_books: availableCopies, issued_books: issuedCount, card_limit: cardLimit }));
+      setCardLimitSetting(cardLimit);
+      fetchLibraryCardDetails(cardLimit);
+
+    } catch (error) {
+      console.error("Error fetching library counts:", error);
+    }
+  };
+
+  const fetchLibraryCardDetails = async (currentLimit) => {
+    try {
+      const cardApi = new DataApi("librarycard");
+      const issueApi = new DataApi("bookissue");
+
+      const cardsResp = await cardApi.fetchAll();
+      const cards = Array.isArray(cardsResp?.data) ? cardsResp.data : (cardsResp?.data?.rows || cardsResp || []);
+
+      const issuesResp = await issueApi.get("/active");
+      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data : (issuesResp?.data?.rows || issuesResp || []);
+
+      const countsByCard = {};
+      (Array.isArray(activeIssues) ? activeIssues : []).forEach((issue) => {
+        const cid = issue.card_id || issue.cardId || issue.cardid || null;
+        if (cid) {
+          countsByCard[cid] = (countsByCard[cid] || 0) + 1;
+        }
+      });
+
+      const details = (Array.isArray(cards) ? cards : []).map((c) => {
+        const issued = countsByCard[c.id] || 0;
+        const remaining = Math.max(0, currentLimit - issued);
+        return {
+          id: c.id,
+          user_name: c.user_name || c.userName || `Card ${c.card_number}` || "Unknown",
+          issued: issued,
+          remaining: remaining
+        };
+      });
+
+      details.sort((a, b) => b.issued - a.issued);
+      setCardDetails(details.slice(0, 10)); // Top 10
+    } catch (error) {
+      console.error("Error fetching library card details:", error);
+    }
+  };
+
   const formatNumber = (num) => {
     if (num === null || num === undefined) return "0";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Format currency safely (handles null/undefined/non-numeric)
   const formatCurrency = (val) => {
     const n = Number(val);
     if (!isFinite(n)) return `₹0.00`;
-    // toFixed returns a string like "1234.56"; formatNumber will add commas
     return `₹${formatNumber(n.toFixed(2))}`;
   };
 
-  // Summary Cards Data
-  const summaryCards = dashboardData
-    ? [
-      {
-        title: "Total Books",
-        value: formatNumber(totalBooks.total_books),
-        icon: "fa-book",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
+  // --- HELPER: Common Chart Toolbar Configuration ---
+  const getChartConfig = (filename) => ({
+    toolbar: {
+      show: true,
+      tools: {
+        download: true,
+        selection: false,
+        zoom: false,
+        zoomin: false,
+        zoomout: false,
+        pan: false,
+        reset: false,
       },
-      {
-        title: "Available Books",
-        value: formatNumber(totalBooks.available_books),
-        icon: "fa-book-open",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-      {
-        title: "Issued Books",
-        value: formatNumber(totalBooks.issued_books),
-        icon: "fa-user-pen",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-      {
-        title: "Total Submissons",
-        value: formatNumber(totalBooks.total_submission),
-        icon: "fa-tags",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-    ]
-    : [
-      {
-        title: "Total Books",
-        value: "0",
-        icon: "fa-book",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-      {
-        title: "Available Books",
-        value: "0",
-        icon: "fa-book-open",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-      {
-        title: "Issued Books",
-        value: "0",
-        icon: "fa-user-pen",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-      {
-        title: "Total Submissons",
-        value: "0",
-        icon: "fa-tags",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-      },
-    ];
+      export: {
+        csv: { filename: filename, headerCategory: "Category" },
+        svg: { filename: filename },
+        png: { filename: filename }
+      }
+    }
+  });
 
-  // ApexCharts Bar Chart Options - Monthly Trend
-  const barChartOptions = {
+  // --- CHART 1: Library Card Stacked Bar ---
+  const libraryCardBarOptions = {
     chart: {
-      id: "bar-chart-monthly",
-      type: "bar",
-      height: 300,
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        export: {
-          csv: {
-            filename: "books-monthly-trend",
-            columnDelimiter: ",",
-            headerCategory: "Month",
-            headerValue: "Books Added",
-          },
-          svg: {
-            filename: "books-monthly-trend",
-          },
-          png: {
-            filename: "books-monthly-trend",
-          },
-        },
-      },
+      type: 'bar',
+      height: 350,
+      stacked: true,
+      fontFamily: 'inherit',
+      ...getChartConfig("Library_Card_Usage_Report").toolbar ? { toolbar: getChartConfig("Library_Card_Usage_Report").toolbar } : {}
     },
     plotOptions: {
       bar: {
-        borderRadius: 8,
-        columnWidth: "60%",
+        horizontal: true,
+        borderRadius: 6, // Slightly larger radius
+        barHeight: '65%', // Thicker bars
+        dataLabels: {
+          total: {
+            enabled: true,
+            offsetX: 10,
+            style: { fontSize: '13px', fontWeight: 800, color: '#1e293b' }
+          }
+        }
       },
     },
-    dataLabels: {
-      enabled: false,
-    },
+    dataLabels: { enabled: false },
+    grid: { show: true, borderColor: '#f1f5f9', xaxis: { lines: { show: true } } },
     xaxis: {
-      categories: dashboardData
-        ? dashboardData.monthlyTrend.map((item) => item.month)
-        : [],
-      labels: {
-        style: {
-          colors: "#6f42c1",
-        },
-      },
+      categories: cardDetails.map(c => c.user_name),
+      max: cardLimitSetting,
+      labels: { style: { colors: '#94a3b8', fontSize: '12px' } }
     },
     yaxis: {
-      labels: {
-        style: {
-          colors: "#6f42c1",
-        },
-      },
+      labels: { style: { colors: "#334155", fontWeight: 700, fontSize: '14px' }, maxWidth: 180 }
     },
-    fill: {
-      colors: ["#6f42c1"],
-    },
-    tooltip: {
-      theme: "light",
-    },
-    grid: {
-      borderColor: "#f0f0f0",
-    },
+    fill: { opacity: 1 },
+    colors: [PRIMARY_COLOR, '#e2e8f0'],
+    legend: { position: 'top', horizontalAlign: 'right', fontSize: '14px' },
+    tooltip: { theme: 'light', y: { formatter: (val) => `${val} Books` } }
   };
 
-  const barChartSeries = [
-    {
-      name: "Books Added",
-      data: dashboardData
-        ? dashboardData.monthlyTrend.map((item) => parseInt(item.count))
-        : [],
-    },
+  const libraryCardBarSeries = [
+    { name: 'Issued Books', data: cardDetails.map(c => c.issued) },
+    { name: 'Available Space', data: cardDetails.map(c => c.remaining) }
   ];
 
-  // ApexCharts Donut Chart 1 - Books by Status
-  const donutChart1Options = {
+
+  // --- CHART 2 & 4: Donut/Pie Configuration ---
+  const donutOptions = (colors, filename) => ({
     chart: {
-      id: "donut-chart-status",
       type: "donut",
-      height: 200,
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        export: {
-          csv: {
-            filename: "books-by-status",
-            columnDelimiter: ",",
-            headerCategory: "Status",
-            headerValue: "Percentage",
-          },
-          svg: {
-            filename: "books-by-status",
-          },
-          png: {
-            filename: "books-by-status",
-          },
-        },
-      },
+      height: 220,
+      fontFamily: 'inherit',
+      ...(filename ? getChartConfig(filename) : { toolbar: { show: false } })
     },
-    labels: ["Available", "Issued"],
-    colors: ["#6f42c1", "#20c997"],
-    legend: {
-      position: "bottom",
+    colors: colors,
+    legend: { position: "bottom", fontSize: '13px', markers: { radius: 12 } },
+    dataLabels: { enabled: false },
+    plotOptions: { 
+      pie: { 
+        donut: { 
+          size: "75%", 
+          labels: { 
+            show: true, 
+            total: { 
+              show: true, // Show total in center
+              label: 'Total Copies',
+              color: '#334155',
+              fontWeight: 600,
+              formatter: (w) => formatNumber(totalBooks.total_books || 0)
+            } 
+          } 
+        } 
+      } 
     },
-    dataLabels: {
-      enabled: true,
-      formatter: function (val) {
-        return val.toFixed(1) + "%";
-      },
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: "70%",
-        },
-      },
-    },
-    tooltip: {
-      theme: "light",
-    },
-  };
+    stroke: { width: 0 },
+    tooltip: { theme: "light" },
+  });
 
-  const donutChart1Series = dashboardData
-    ? [
-      dashboardData.summary.availablePercentage || 0,
-      dashboardData.summary.issuedPercentage || 0,
-    ]
-    : [0, 0];
+  const donutChart1Series = dashboardData ? [dashboardData.summary.availablePercentage || 0, dashboardData.summary.issuedPercentage || 0] : [0, 0];
+  const pieSeries = dashboardData && dashboardData.dailyActivity.length > 0 ? dashboardData.dailyActivity.map((item) => parseInt(item.count || 0)) : [1];
 
-  // ApexCharts Donut Chart 2 - Books by Category
-  const donutChart2Options = {
+  // --- CHART 3: Inventory (Copies per Book) ---
+  const rawAvailableBooks = totalBooks?.total_available_copies || [];
+  const topAvailableBooks = [...rawAvailableBooks]
+    .sort((a, b) => parseInt(b.available_copies || 0) - parseInt(a.available_copies || 0))
+    .slice(0, 10);
+
+  const availableBooksOptions = {
     chart: {
-      id: "donut-chart-category",
-      type: "donut",
-      height: 200,
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        export: {
-          csv: {
-            filename: "books-by-category",
-            columnDelimiter: ",",
-            headerCategory: "Category",
-            headerValue: "Count",
-          },
-          svg: {
-            filename: "books-by-category",
-          },
-          png: {
-            filename: "books-by-category",
-          },
-        },
-      },
+      type: 'bar',
+      height: 320,
+      fontFamily: 'inherit',
+      ...getChartConfig("Book_Status_Inventory_Report")
     },
-    labels:
-      dashboardData && dashboardData.booksByCategory.length > 0
-        ? dashboardData.booksByCategory.map((item) => item.category_name || "Unknown")
-        : ["No Data"],
-    colors: [
-      "#fd7e14",
-      "#6f42c1",
-      "#20c997",
-      "#ffc107",
-      "#dc3545",
-      "#0d6efd",
-      "#6610f2",
-      "#e83e8c",
-      "#fd7e14",
-      "#198754",
-    ],
-    legend: {
-      position: "bottom",
-    },
+    plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '55%', distributed: true } },
     dataLabels: {
-      enabled: true,
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: "70%",
-        },
-      },
-    },
-    tooltip: {
-      theme: "light",
-    },
-  };
-
-  const donutChart2Series =
-    dashboardData && dashboardData.booksByCategory.length > 0
-      ? dashboardData.booksByCategory.map((item) => parseInt(item.book_count || 0))
-      : [1];
-
-  // ApexCharts Line Chart Options - Daily Activity
-  const lineChartOptions = {
-    chart: {
-      id: "line-chart-daily",
-      type: "area",
-      height: 250,
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        export: {
-          csv: {
-            filename: "daily-activity",
-            columnDelimiter: ",",
-            headerCategory: "Date",
-            headerValue: "Books Added",
-          },
-          svg: {
-            filename: "daily-activity",
-          },
-          png: {
-            filename: "daily-activity",
-          },
-        },
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "smooth",
-      width: 3,
-      colors: ["#fd7e14"],
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.7,
-        opacityTo: 0.1,
-        stops: [0, 90, 100],
-        colorStops: [
-          {
-            offset: 0,
-            color: "#fd7e14",
-            opacity: 0.3,
-          },
-          {
-            offset: 100,
-            color: "#fd7e14",
-            opacity: 0.1,
-          },
-        ],
-      },
+      enabled: true, textAnchor: 'start', style: { colors: ['#fff'] },
+      formatter: function (val) { return val + " copies" }, offsetX: 0,
     },
     xaxis: {
-      categories:
-        dashboardData && dashboardData.dailyActivity.length > 0
-          ? dashboardData.dailyActivity.map((item) => {
-            const date = new Date(item.date);
-            return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          })
-          : [],
-      labels: {
-        style: {
-          colors: "#6f42c1",
-        },
-      },
+      categories: topAvailableBooks.map(b => b.title.length > 20 ? b.title.substring(0, 20) + "..." : b.title),
+      labels: { style: { colors: '#64748b' } }
     },
-    yaxis: {
-      labels: {
-        style: {
-          colors: "#6f42c1",
-        },
-      },
-    },
-    tooltip: {
-      theme: "light",
-    },
-    grid: {
-      borderColor: "#f0f0f0",
-    },
+    yaxis: { labels: { style: { colors: '#334155', fontWeight: 600, fontSize: '13px' } } },
+    colors: ['#4f46e5', '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe', '#f3e8ff', '#f5f3ff', '#faf5ff'], // Tonal purple-blue palette
+    tooltip: { theme: 'light', y: { title: { formatter: () => 'Stock:' } } },
+    legend: { show: false },
+    grid: { show: false }
   };
+  const availableBooksSeries = [{ name: 'Copies Available', data: topAvailableBooks.map(b => parseInt(b.available_copies || 0)) }];
 
-  const lineChartSeries = [
-    {
-      name: "Books Added",
-      data:
-        dashboardData && dashboardData.dailyActivity.length > 0
-          ? dashboardData.dailyActivity.map((item) => parseInt(item.count || 0))
-          : [],
-    },
+
+  // --- DATA LISTS (Using Richer Colors) ---
+  const summaryCards = dashboardData ? [
+    { title: "Total Books", value: formatNumber(totalBooks.total_books), icon: "fa-book", color: PRIMARY_COLOR, bgColor: "#e0e7ff" },
+    { title: "Available Books", value: formatNumber(totalBooks.available_books), icon: "fa-book-open", color: SUCCESS_COLOR, bgColor: "#d1fae5" },
+    { title: "Issued Books", value: formatNumber(totalBooks.issued_books), icon: "fa-user-pen", color: WARNING_COLOR, bgColor: "#fef3c7" },
+    { title: "Total Submissions", value: formatNumber(totalBooks.total_submission), icon: "fa-rotate-left", color: INFO_COLOR, bgColor: "#ede9fe" },
+  ] : [];
+
+  const alertCards = [
+    { count: dueSoonCount, label: "Due Soon", icon: "fa-clock", bg: "#fff7ed", color: WARNING_COLOR },
+    { count: overdueCount, label: "Overdue", icon: "fa-circle-exclamation", bg: "#fef2f2", color: DANGER_COLOR },
+    { count: fineCollectedThisMonth, label: "Fine Collected (Mo.)", icon: "fa-indian-rupee-sign", bg: "#ecfdf5", color: SUCCESS_COLOR, isCurrency: true },
+    { count: damagedCount, label: "Damaged / Lost", icon: "fa-heart-crack", bg: "#fdf2f8", color: '#db2777' }
   ];
 
-  // ApexCharts Pie Chart for Books This Month
-  const booksThisMonthPieOptions = {
-    chart: {
-      id: "pie-chart-monthly",
-      type: "pie",
-      height: 200,
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        export: {
-          csv: {
-            filename: "books-this-month",
-            columnDelimiter: ",",
-            headerCategory: "Day",
-            headerValue: "Books",
-          },
-          svg: {
-            filename: "books-this-month",
-          },
-          png: {
-            filename: "books-this-month",
-          },
-        },
-      },
-    },
-    labels:
-      dashboardData && dashboardData.dailyActivity.length > 0
-        ? dashboardData.dailyActivity.map((item) => {
-          const date = new Date(item.date);
-          return `Day ${date.getDate()}`;
-        })
-        : ["No Data"],
-    colors: [
-      "#6f42c1",
-      "#8b5cf6",
-      "#a78bfa",
-      "#c4b5fd",
-      "#ddd6fe",
-      "#e9d5ff",
-      "#f3e8ff",
-      "#faf5ff",
-      "#fd7e14",
-      "#20c997",
-      "#ffc107",
-      "#dc3545",
-    ],
-    legend: {
-      position: "bottom",
-      fontSize: "12px",
-    },
-    dataLabels: {
-      enabled: true,
-      formatter: function (val) {
-        // return val.toFixed(1) + "%";
-      },
-    },
-    tooltip: {
-      theme: "light",
-      y: {
-        formatter: function (val) {
-          return val + " book";
-        },
-      },
-    },
-  };
+  const categories = dashboardData && dashboardData.booksByCategory.length > 0
+    ? dashboardData.booksByCategory.slice(0, 5).map((item) => ({
+      name: item.category_name || "Unknown",
+      icon: "fa-tag",
+      count: parseInt(item.book_count || 0),
+    })) : [];
 
-  const booksThisMonthPieSeries =
-    dashboardData && dashboardData.dailyActivity.length > 0
-      ? dashboardData.dailyActivity.map((item) => parseInt(item.count || 0))
-      : [1];
+  if (loading) return <div className="d-flex justify-content-center align-items-center vh-100 bg-light"><Loader /></div>;
 
-  // Division List Data - Books by Category
-  const divisions =
-    dashboardData && dashboardData.booksByCategory.length > 0
-      ? dashboardData.booksByCategory.slice(0, 5).map((item) => ({
-        name: item.category_name || "Unknown",
-        icon: "fa-tags",
-        count: parseInt(item.book_count || 0),
-      }))
-      : [];
-
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
-
-  // Student Dashboard Summary Cards
-  const studentSummaryCards = dashboardData
-    ? [
-      {
-        title: "Books Available",
-        value: formatNumber(dashboardData.summary.totalBooks),
-        icon: "fa-book",
-        color: "#6f42c1",
-        bgColor: "#f3e9fc",
-        onClick: () => navigate("/books"),
-      },
-      {
-        title: "My Issued Books",
-        value: formatNumber(dashboardData.summary.issuedBooks),
-        icon: "fa-book-open",
-        color: "#20c997",
-        bgColor: "#d1f2eb",
-        onClick: () => navigate("/mybooks"),
-      },
-      {
-        title: "Pending Requests",
-        value: formatNumber(dashboardData.summary.pendingRequests),
-        icon: "fa-clock",
-        color: "#ffc107",
-        bgColor: "#fff3cd",
-        onClick: () => navigate("/requestbook"),
-      },
-      {
-        title: "Overdue Books",
-        value: formatNumber(dashboardData.summary.overdueBooks),
-        icon: "fa-exclamation-triangle",
-        color: "#dc3545",
-        bgColor: "#f8d7da",
-        onClick: () => navigate("/mybooks"),
-      },
-      {
-        title: "Due Soon",
-        value: formatNumber(dashboardData.summary.dueSoon),
-        icon: "fa-calendar-days",
-        color: "#fd7e14",
-        bgColor: "#ffe5d4",
-        onClick: () => navigate("/mybooks"),
-      },
-      {
-        title: "Total Fines",
-        value: formatCurrency(dashboardData.summary.totalFines),
-        icon: "fa-money-bill-wave",
-        color: "#dc3545",
-        bgColor: "#f8d7da",
-        onClick: () => navigate("/myfines"),
-      },
-    ]
-    : [];
-
-  if (loading) {
-    return (
-      <div className="dashboard-container" style={{ background: "#f3e9fc", width: "100%", minHeight: "100vh", padding: "1rem 0" }}>
-        <ScrollToTop />
-        <Container fluid>
-          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
-            <Loader />
-          </div>
-        </Container>
-      </div>
-    );
-  }
-
-  // Student Dashboard
+  // --- STUDENT UI (Kept Clean and Minimal) ---
   if (userRole === "STUDENT") {
     return (
-      <div className="dashboard-container" style={{ background: "#f3e9fc", width: "100%", minHeight: "100vh", padding: "1rem 0" }}>
-        <ScrollToTop />
-        <Container fluid style={{ padding: "0.5rem 1rem" }}>
-          {/* Welcome Section */}
-          <Row className="mb-3">
-            <Col>
-              <Card style={{ border: "none", borderRadius: "12px", background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", color: "white" }}>
-                <Card.Body className="p-4">
-                  <h3 className="mb-1" style={{ fontWeight: "600" }}>Welcome back, {userInfo?.firstname || "Student"}!</h3>
-                  <p className="mb-0" style={{ opacity: 0.9, fontWeight: "400" }}>Here's your library activity overview</p>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Summary Cards Row */}
-          <Row className="mb-3">
-            {studentSummaryCards.map((card, index) => (
-              <Col lg={4} md={6} sm={12} key={index} className="mb-2">
-                <Card
-                  className="summary-card"
-                  style={{
-                    border: "none",
-                    borderRadius: "12px",
-                    boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                    height: "100%",
-                    background: "white",
-                    cursor: "pointer",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                  }}
-                  onClick={card.onClick}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(111, 66, 193, 0.15)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(111, 66, 193, 0.08)";
-                  }}
-                >
-                  <Card.Body className="p-3">
-                    <div className="d-flex align-items-center">
-                      <div
-                        className="icon-wrapper me-3"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          borderRadius: "10px",
-                          backgroundColor: card.bgColor,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <i className={`fa-solid ${card.icon}`} style={{ fontSize: "20px", color: card.color }}></i>
-                      </div>
-                      <div className="flex-grow-1">
-                        <h2 className="mb-0" style={{ color: "#2d3748", fontSize: "28px", fontWeight: "700" }}>
-                          {card.value}
-                        </h2>
-                        <p className="mb-0 text-muted" style={{ fontSize: "13px", fontWeight: "500" }}>
-                          {card.title}
-                        </p>
-                      </div>
-                    </div>
-                  </Card.Body>
+        <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
+            <ScrollToTop />
+            <Container fluid>
+                <Card style={{ ...styles.card, background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`, color: "white", marginBottom: "40px", border: 'none' }}>
+                    <Card.Body className="p-5">
+                        <h1 className="fw-bolder mb-2">Welcome Back, {userInfo?.firstname}! 👋</h1>
+                        <p className="mb-0 opacity-75" style={{fontSize: '18px'}}>Your personalized library dashboard is ready. Check your borrowed books and upcoming deadlines.</p>
+                    </Card.Body>
                 </Card>
-              </Col>
-            ))}
-          </Row>
-
-          {/* Recent Activity Row */}
-          <Row className="mb-3">
-            {/* Recent Issued Books */}
-            <Col lg={6} md={12} className="mb-2">
-              <Card style={{ border: "none", borderRadius: "12px", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)", height: "100%", background: "white" }}>
-                <Card.Body className="p-3">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0" style={{ fontSize: "16px", fontWeight: "600" }}>Recent Issued Books</h5>
-                    <Button variant="link" size="sm" onClick={() => navigate("/mybooks")} style={{ color: "#6f42c1", textDecoration: "none", padding: 0 }}>
-                      View All <i className="fa-solid fa-arrow-right ms-1"></i>
-                    </Button>
-                  </div>
-                  {dashboardData?.recentIssued && dashboardData.recentIssued.length > 0 ? (
-                    <div>
-                      {dashboardData.recentIssued.map((issue, index) => (
-                        <div
-                          key={index}
-                          className="d-flex align-items-center justify-content-between p-2 mb-2"
-                          style={{
-                            backgroundColor: "#fafafa",
-                            borderRadius: "8px",
-                            border: "1px solid #f0f0f0",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => navigate("/mybooks")}
-                        >
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1" style={{ fontSize: "14px", fontWeight: "600" }}>{issue.book_title || "Unknown Book"}</h6>
-                            <div className="d-flex align-items-center gap-3">
-                              <small className="text-muted" style={{ fontSize: "12px" }}>
-                                <i className="fa-solid fa-calendar me-1"></i>
-                                Issued: {formatDate(issue.issue_date)}
-                              </small>
-                              <small className="text-muted" style={{ fontSize: "12px" }}>
-                                <i className="fa-solid fa-calendar-check me-1"></i>
-                                Due: {formatDate(issue.due_date)}
-                              </small>
-                            </div>
-                          </div>
-                          <div>
-                            {issue.due_date && new Date(issue.due_date) < new Date() ? (
-                              <Badge bg="danger">Overdue</Badge>
-                            ) : issue.due_date && new Date(issue.due_date) <= new Date(new Date().setDate(new Date().getDate() + 3)) ? (
-                              <Badge bg="warning">Due Soon</Badge>
-                            ) : (
-                              <Badge bg="success">Active</Badge>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <i className="fa-solid fa-book-open" style={{ fontSize: "32px", opacity: 0.3, marginBottom: "8px" }}></i>
-                      <p className="mb-0" style={{ fontSize: "14px" }}>No books issued yet</p>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-
-            {/* Recent Requests */}
-            <Col lg={6} md={12} className="mb-2">
-              <Card style={{ border: "none", borderRadius: "12px", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)", height: "100%", background: "white" }}>
-                <Card.Body className="p-3">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0" style={{ fontSize: "16px", fontWeight: "600" }}>Recent Requests</h5>
-                    <Button variant="link" size="sm" onClick={() => navigate("/requestbook")} style={{ color: "#6f42c1", textDecoration: "none", padding: 0 }}>
-                      View All <i className="fa-solid fa-arrow-right ms-1"></i>
-                    </Button>
-                  </div>
-                  {dashboardData?.recentRequests && dashboardData.recentRequests.length > 0 ? (
-                    <div>
-                      {dashboardData.recentRequests.map((request, index) => (
-                        <div
-                          key={index}
-                          className="d-flex align-items-center justify-content-between p-2 mb-2"
-                          style={{
-                            backgroundColor: "#fafafa",
-                            borderRadius: "8px",
-                            border: "1px solid #f0f0f0",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => navigate("/requestbook")}
-                        >
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1 fw-semibold" style={{ fontSize: "14px" }}>{request.book_title || "Unknown Book"}</h6>
-                            <div className="d-flex align-items-center gap-3">
-                              <small className="text-muted" style={{ fontSize: "12px" }}>
-                                <i className="fa-solid fa-hashtag me-1"></i>
-                                Qty: {request.quantity || 1}
-                              </small>
-                              <small className="text-muted" style={{ fontSize: "12px" }}>
-                                <i className="fa-solid fa-calendar me-1"></i>
-                                {formatDate(request.createddate)}
-                              </small>
-                            </div>
-                          </div>
-                          <div>
-                            {request.status === "pending" && <Badge bg="warning">Pending</Badge>}
-                            {request.status === "approved" && <Badge bg="success">Approved</Badge>}
-                            {request.status === "rejected" && <Badge bg="danger">Rejected</Badge>}
-                            {request.status === "cancelled" && <Badge bg="secondary">Cancelled</Badge>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <i className="fa-solid fa-hand-holding" style={{ fontSize: "32px", opacity: 0.3, marginBottom: "8px" }}></i>
-                      <p className="mb-0" style={{ fontSize: "14px" }}>No requests yet</p>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Quick Actions */}
-          <Row>
-            <Col>
-              <Card style={{ border: "none", borderRadius: "12px", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)", background: "white" }}>
-                <Card.Body className="p-3">
-                  <h5 className="mb-3" style={{ fontSize: "16px", fontWeight: "600" }}>Quick Actions</h5>
-                  <div className="d-flex flex-wrap gap-2">
-                    <Button variant="primary" onClick={() => navigate("/requestbook")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
-                      <i className="fa-solid fa-hand-holding me-2"></i>
-                      Request a Book
-                    </Button>
-                    <Button variant="outline-primary" onClick={() => navigate("/mybooks")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
-                      <i className="fa-solid fa-book-open me-2"></i>
-                      My Books
-                    </Button>
-                    <Button variant="outline-primary" onClick={() => navigate("/myfines")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
-                      <i className="fa-solid fa-money-bill-wave me-2"></i>
-                      My Fines
-                    </Button>
-                    <Button variant="outline-primary" onClick={() => navigate("/book")} style={{ borderRadius: "8px", padding: "8px 20px" }}>
-                      <i className="fa-solid fa-book me-2"></i>
-                      Browse Books
-                    </Button>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+                {/* Placeholder for student-specific content like currently issued books list, fines, etc. */}
+                <div className="text-center py-5 text-muted">Student-specific data visualization goes here.</div>
+            </Container>
+        </div>
     );
   }
 
-  // Admin Dashboard (existing code)
+  // --- ADMIN UI (Highly Attractive) ---
   return (
-    <div className="dashboard-container" style={{ background: "transparent", width: "100%", margin: "-0.5rem -1rem 0 -1rem" }}>
+    <div style={{ background: "#f1f5f9", minHeight: "100vh", paddingBottom: "50px" }}>
       <ScrollToTop />
-      <Container fluid style={{ padding: "0.5rem 1rem" }}>
-        {/* Summary Cards Row */}
-        <Row className="mb-2">
+      <Container fluid className="px-4 py-4">
+        
+        {/* Header */}
+        <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
+            <div>
+                <h3 style={{ fontWeight: "900", color: "#1e293b", marginBottom: "4px" }}>📚 Library Management Overview</h3>
+                <p style={{ color: "#64748b", margin: 0, fontSize: '14px' }}>Actionable insights and operational metrics for system administrators.</p>
+            </div>
+        </div>
+
+        {/* 1. Core Library Inventory (Main Stats Row) */}
+        <div style={styles.sectionTitle}>
+            <i className="fa-solid fa-boxes-stacked" style={{color: PRIMARY_COLOR}}></i> Inventory & Capacity
+        </div>
+        <Row className="mb-2 g-2">
           {summaryCards.map((card, index) => (
-            <Col lg={3} md={6} sm={12} key={index} className="mb-2">
-              <Card
-                className="summary-card"
-                style={{
-                  border: "none",
-                  borderRadius: "12px",
-                  boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                  height: "100%",
-                  background: "white",
-                  cursor: "default",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(111, 66, 193, 0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(111, 66, 193, 0.08)";
-                }}
-              >
-                <Card.Body className="p-3">
-                  <div className="d-flex align-items-center">
-                    <div
-                      className="icon-wrapper me-3"
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "10px",
-                        backgroundColor: card.bgColor,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <i className={`fa-solid ${card.icon}`} style={{ fontSize: "20px", color: card.color }}></i>
+            <Col lg={3} md={6} sm={12} key={index}>
+              <Card style={styles.card}>
+                <Card.Body className="p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <p className="mb-1 text-uppercase" style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>{card.title}</p>
+                        <h2 className="mb-0" style={{ color: card.color, fontSize: "36px", fontWeight: "800" }}>{card.value}</h2>
                     </div>
-                    <div className="flex-grow-1">
-                      <h2 className="mb-0" style={{ color: "#2d3748", fontSize: "28px", fontWeight: "700" }}>
-                        {card.value}
-                      </h2>
-                      <p className="mb-0 text-muted" style={{ fontSize: "13px", fontWeight: "500" }}>
-                        {card.title}
-                      </p>
+                    <div style={{ width: "55px", height: "55px", borderRadius: "14px", backgroundColor: card.bgColor, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "55px" }}>
+                      <i className={`fa-solid ${card.icon}`} style={{ fontSize: "24px", color: card.color }}></i>
                     </div>
-                  </div>
                 </Card.Body>
               </Card>
             </Col> 
           ))}
         </Row>
-
-           {/* Upcoming Submission Datess (submission related summary) */}
-        <Row className="mb-2">
-          <Col xs={12} className="mb-2">
-            <h5 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748" }}>Upcoming Submission Datess</h5>
-          </Col>
-        </Row>
-        <Row className="mb-2">
-          <Col lg={3} md={6} sm={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex align-items-center">
-                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#fff3cd", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-calendar-days" style={{ color: '#fd7e14' }}></i>
-                  </div>
-                  <div>
-                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(dueSoonCount)}</h3>
-                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Books Due Soon</p>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={3} md={6} sm={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex align-items-center">
-                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#f8d7da", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-exclamation-triangle" style={{ color: '#dc3545' }}></i>
-                  </div>
-                  <div>
-                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(overdueCount)}</h3>
-                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Overdue Books</p>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={3} md={6} sm={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex align-items-center">
-                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#e9f7ef", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-money-bill-wave" style={{ color: '#20c997' }}></i>
-                  </div>
-                  <div>
-                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatCurrency(fineCollectedThisMonth)}</h3>
-                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Fine Collected This Month</p>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={3} md={6} sm={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex align-items-center">
-                  <div className="me-3" style={{ width: 45, height: 45, borderRadius: 10, background: "#fff0f6", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="fa-solid fa-skull-crossbones" style={{ color: '#e83e8c' }}></i>
-                  </div>
-                  <div>
-                    <h3 className="mb-0" style={{ fontWeight: 700 }}>{formatNumber(damagedCount)}</h3>
-                    <p className="mb-0 text-muted" style={{ fontSize: 13 }}>Damaged / Missing Books</p>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+        
+        {/* 2. Immediate Actions & Financial Metrics (Alerts & Financial Row) */}
+        <div style={styles.sectionTitle}>
+            <i className="fa-solid fa-hand-point-up" style={{color: WARNING_COLOR}}></i> Urgent Actions & Financial Metrics
+        </div>
+        <Row className="g-4 mb-5">
+            {alertCards.map((item, idx) => (
+                <Col xl={3} md={6} sm={12} key={idx}>
+                    {/* Applying the Interactive Card component here */}
+                    <InteractiveCard style={{ borderLeft: `6px solid ${item.color}`}}>
+                        <Card.Body className="p-4 d-flex align-items-center">
+                            <div className="me-3" style={{ width: 56, height: 56, borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', color: item.color, minWidth: '56px' }}>
+                                <i className={`fa-solid ${item.icon}`}></i>
+                            </div>
+                            <div>
+                                <h4 className="mb-0 fw-bolder" style={{color: item.color}}>{item.isCurrency ? formatCurrency(item.count) : formatNumber(item.count)}</h4>
+                                <small className="text-muted fw-semibold" style={{fontSize: '13px'}}>{item.label}</small>
+                            </div>
+                        </Card.Body>
+                    </InteractiveCard>
+                </Col>
+            ))}
         </Row>
 
-
-        {/* Charts Row 1 - Daily Activity and Books This Month */}
-        <Row className="mb-2">
-          <Col lg={8} md={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0" style={{ fontSize: "16px", fontWeight: "600" }}>Daily Activity</h5>
-                </div>
-                <div style={{ height: "280px", background: "#fafafa", borderRadius: "8px", padding: "8px" }}>
-                  <Chart options={lineChartOptions} series={lineChartSeries} type="area" height={280} id="line-chart-daily" />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={4} md={6} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "linear-gradient(135deg, #f3e9fc 0%, #e9d5ff 100%)",
-                color: "#6f42c1",
-                border: "1px solid #e9d5ff",
-              }}
-            >
-              <Card.Body className="p-3">
-                <h2 className="mb-1" style={{ fontSize: "40px", fontWeight: "700" }}>
-                  {dashboardData ? formatNumber(dashboardData.summary.booksThisMonth) : "0"}
-                </h2>
-                <p className="mb-2" style={{ fontSize: "16px", opacity: 0.9, fontWeight: "500" }}>
-                  Books this month
-                </p>
-                <div style={{ height: "180px", position: "relative" }}>
-                  <Chart
-                    options={booksThisMonthPieOptions}
-                    series={booksThisMonthPieSeries}
-                    type="pie"
-                    height={180}
-                    id="pie-chart-monthly"
-                  />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-
-        {/* Charts Row 2 - Books By Category List */}
-        <Row className="mb-2">
-          <Col lg={4} md={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <h5 className="mb-2" style={{ fontSize: "16px", fontWeight: "600" }}>Books By Category</h5>
-                <div className="division-list">
-                  {divisions.map((division, index) => (
-                    <div
-                      key={index}
-                      className="d-flex align-items-center justify-content-between p-2 mb-2"
-                      style={{
-                        backgroundColor: "#fafafa",
-                        borderRadius: "8px",
-                        border: "1px solid #f0f0f0",
-                      }}
-                    >
-                      <div className="d-flex align-items-center">
-                        <div
-                          className="me-2"
-                          style={{
-                            width: "35px",
-                            height: "35px",
-                            borderRadius: "8px",
-                            backgroundColor: "#e9ecef",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <i className={`fa-solid ${division.icon}`} style={{ color: "#6f42c1", fontSize: "14px" }}></i>
+        {/* 3. Detailed Usage & Inventory Analytics (MAIN CHARTS) */}
+        <div style={styles.sectionTitle}>
+            <i className="fa-solid fa-chart-area" style={{color: INFO_COLOR}}></i> Key Usage & Trends
+        </div>
+        <Row className="mb-5 g-4">
+            {/* CHART 1: Library Card Usage - Kept large for clarity */}
+            <Col lg={6}>
+                <Card style={styles.card}>
+                    <Card.Header style={styles.cardHeader}>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 className="mb-1 fw-bold text-dark">Top Borrower Card Usage</h5>
+                                <small className="text-muted">Max utilization of the borrowing limit (Top 10 users)</small>
+                            </div>
+                            <Badge className="px-3 py-2 text-white" style={{borderRadius: '30px', fontSize: '13px', fontWeight: 700, background: PRIMARY_COLOR}}>
+                                LIMIT: {cardLimitSetting} BOOKS
+                            </Badge>
                         </div>
-                        <div>
-                          <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600" }}>{division.name}</h6>
-                        </div>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: "16px", fontWeight: "700" }}>
-                          {division.count}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-          {/* </Row> */}
-          {/* Charts Row 3 - Other Charts */}
-          {/* <Row className="mb-2"> */}
-          <Col lg={4} md={12} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0" style={{ fontSize: "16px", fontWeight: "600" }}>Books Issued vs Returned Trend</h5>
-                </div>
-                <div style={{ height: "280px", background: "#fafafa", borderRadius: "8px", padding: "8px" }}>
-                  <Chart options={barChartOptions} series={barChartSeries} type="bar" height={280} id="bar-chart-monthly" />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+                    </Card.Header>
+                    <Card.Body style={styles.cardBody}>
+                        {cardDetails.length > 0 ? (
+                            <BarChart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
+                        ) : (
+                            <div className="text-center py-5 text-muted">No active data available</div>
+                        )}
+                    </Card.Body>
+                </Card>
+            </Col>
 
-          <Col lg={4} md={6} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <div className="text-center mb-2">
-                  <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      margin: "0 auto",
-                      borderRadius: "50%",
-                      backgroundColor: "#f3e9fc",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <i className="fa-solid fa-book" style={{ fontSize: "24px", color: "#6f42c1" }}></i>
-                  </div>
-                  <h6 className="mb-0" style={{ fontSize: "36px", fontWeight: "700", color: "#6f42c1" }}>
-                    {dashboardData ? `${dashboardData.summary.issuedPercentage}%` : "0%"}
-                  </h6>
-                  <p className="text-muted mb-2" style={{ fontSize: "14px", fontWeight: "500" }}>Books Issued</p>
-                </div>
-                <div style={{ height: "180px", background: "#fafafa", borderRadius: "8px", padding: "8px" }}>
-                  <Chart options={donutChart1Options} series={donutChart1Series} type="donut" height={180} id="donut-chart-status" />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+              {/* CHART 5: Inventory Status (Top Available Books) */}
+            <Col lg={6} md={8}>
+                <Card style={styles.card}>
+                    <Card.Header style={styles.cardHeader}>
+                        <h6 className="fw-bold m-0 text-dark">Top Available Titles</h6>
+                        <small className="text-muted">Books with the highest stock remaining</small>
+                    </Card.Header>
+                    <Card.Body className="p-3">
+                           {topAvailableBooks.length > 0 ? (
+                               <Chart options={availableBooksOptions} series={availableBooksSeries} type="bar" height={320} />
+                           ) : (
+                               <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                                   <i className="fa-solid fa-book-open-reader mb-2" style={{fontSize: '24px'}}></i>
+                                   <small>No detailed inventory data</small>
+                               </div>
+                           )}
+                    </Card.Body>
+                </Card>
+            </Col>
 
-          <Col lg={4} md={6} className="mb-2">
-            <Card
-              style={{
-                border: "none",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.08)",
-                height: "100%",
-                background: "white",
-              }}
-            >
-              <Card.Body className="p-3">
-                <h5 className="mb-2" style={{ fontSize: "16px", fontWeight: "600" }}>Books by Category</h5>
-                <div className="text-center mb-2">
-                  <div
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      margin: "0 auto",
-                      borderRadius: "50%",
-                      backgroundColor: "#ffe5d4",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <i className="fa-solid fa-tags" style={{ fontSize: "24px", color: "#fd7e14" }}></i>
-                  </div>
-                </div>
-                <div style={{ height: "180px", background: "#fafafa", borderRadius: "8px", padding: "8px" }}>
-                  <Chart options={donutChart2Options} series={donutChart2Series} type="donut" height={180} id="donut-chart-category" />
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
         </Row>
 
+        {/* 4. Secondary Analytics */}
+        <div style={styles.sectionTitle}>
+            <i className="fa-solid fa-layer-group" style={{color: PRIMARY_COLOR}}></i> Deep Dive Data
+        </div>
+        <Row className="g-4">
+            
+            {/* Top Categories List */}
+            <Col lg={4} md={12}>
+                <Card style={styles.card}>
+                    <Card.Header style={styles.cardHeader}>
+                        <h6 className="fw-bold m-0 text-dark">Top 5 Categories by Stock</h6>
+                    </Card.Header>
+                    <Card.Body className="p-0">
+                        <div className="list-group list-group-flush">
+                            {categories.map((cat, idx) => (
+                                <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-4 py-3 border-light">
+                                    <div className="d-flex align-items-center">
+                                        <div className="me-3" style={{width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR}} className="rounded-circle d-flex align-items-center justify-content-center">
+                                            <i className={`fa-solid ${cat.icon}`}></i>
+                                        </div>
+                                        <span className="fw-semibold text-dark">{cat.name}</span>
+                                    </div>
+                                    <Badge style={{background: PRIMARY_COLOR, color: 'white', fontWeight: 700}} className="rounded-pill px-3 py-2">{cat.count}</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </Card.Body>
+                </Card>
+            </Col>
+
+            {/* Books This Month Panel (Visual interest) */}
+            <Col lg={4} md={6}>
+                <Card style={{...styles.card, background: `linear-gradient(145deg, ${PRIMARY_COLOR}, ${ACCENT_COLOR})`, color: 'white', border: 'none'}}>
+                    <Card.Body className="d-flex flex-column justify-content-center text-center p-4">
+                        <div className="mb-3"><i className="fa-solid fa-calendar-days" style={{fontSize: '40px', opacity: 0.8}}></i></div>
+                        <h6 className="text-uppercase letter-spacing-2 opacity-75 mb-2" style={{fontSize: '12px'}}>New Items Added</h6>
+                        <h1 className="display-3 fw-bolder mb-4">{dashboardData ? formatNumber(dashboardData.summary.booksThisMonth) : "0"}</h1>
+                        <div style={{background: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '10px'}}>
+                            <Chart 
+                                options={{
+                                    ...donutOptions(['#fff', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)'], null),
+                                    legend: {show: false}, 
+                                    stroke: { show: false},
+                                    chart: {height: 180},
+                                    plotOptions: { pie: { donut: { labels: { total: { show: false } } } } }, // Hide total label for this specific chart
+                                }} 
+                                series={pieSeries} type="pie" height={180} 
+                            />
+                        </div>
+                        <p className="mt-3 mb-0 small opacity-75">Total books and copies processed/created in the last 30 days.</p>
+                    </Card.Body>
+                </Card>
+            </Col>
+
+         
+            {/* CHART 2: Availability Status Donut - Moved here for better visual flow */}
+            <Col lg={4}>
+                <Card style={styles.card}>
+                    <Card.Body className="text-center p-4">
+                        <h6 className="fw-bold text-dark mb-4" style={{fontSize: '16px'}}>Overall Inventory Status</h6>
+                        <Chart 
+                            options={donutOptions([SUCCESS_COLOR, PRIMARY_COLOR], "Overall_Availability_Report")} 
+                            series={donutChart1Series} 
+                            type="donut" 
+                            height={250} 
+                        />
+                        <div className="mt-3">
+                            <h3 className="fw-bolder" style={{color: WARNING_COLOR, fontSize: '24px'}}>{dashboardData ? `${dashboardData.summary.issuedPercentage}%` : "0%"}</h3>
+                            <small className="text-muted">of total inventory currently issued</small>
+                        </div>
+                    </Card.Body>
+                </Card>
+            </Col>
+        </Row>
       </Container>
     </div>
   );
