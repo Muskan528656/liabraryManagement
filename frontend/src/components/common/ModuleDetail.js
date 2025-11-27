@@ -959,7 +959,7 @@ const ModuleDetail = ({
                       style={{
                         border: '1px solid var(--primary-color)',
                         borderRadius: '50%',
-                        padding: '24px',
+                        padding: '20px',
                         background: 'white',
                         transition: 'all 0.3s ease',
                         color: 'var(--primary-color)',
