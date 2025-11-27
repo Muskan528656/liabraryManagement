@@ -18,10 +18,10 @@ module.exports = (app) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
             const roles = await UserRole.findAll();
-            return res.status(200).json(roles);
+            return res.status(200).json({ success: true, data: roles });
         } catch (error) {
             console.error("Error fetching user roles:", error);
-            return res.status(500).json({ errors: "Internal server error" });
+            return res.status(500).json({ success: false, errors: "Internal server error" });
         }
     });
 
@@ -45,6 +45,8 @@ module.exports = (app) => {
         fetchUser,
         [body("role_name", "Role name is required").notEmpty()],
         async (req, res) => {
+            
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -55,12 +57,12 @@ module.exports = (app) => {
                     createdbyid: req.userinfo.userid,
                     lastmodifiedbyid: req.userinfo.userid,
                 };
-
+                console.log('user role', data);
                 const newRole = await UserRole.create(data);
-                return res.status(201).json(newRole);
+                return res.status(201).json({ success: true, data: newRole });
             } catch (error) {
                 console.error("Error creating role:", error);
-                return res.status(500).json({ errors: "Internal server error" });
+                return res.status(500).json({ success: false, errors: error.message });
             }
         }
     );
@@ -83,12 +85,12 @@ module.exports = (app) => {
                 };
 
                 const updated = await UserRole.update(req.params.id, data);
-                if (!updated) return res.status(404).json({ msg: "Role not found" });
+                if (!updated) return res.status(404).json({ success: false, msg: "Role not found" });
 
-                return res.status(200).json(updated);
+                return res.status(200).json({ success: true, data: updated });
             } catch (error) {
                 console.error("Error updating role:", error);
-                return res.status(500).json({ errors: "Internal server error" });
+                return res.status(500).json({ success: false, errors: error.message });
             }
         }
     );
@@ -99,9 +101,9 @@ module.exports = (app) => {
             UserRole.init(req.userinfo.tenantcode);
 
             const deleted = await UserRole.remove(req.params.id);
-            if (!deleted) return res.status(404).json({ msg: "Role not found" });
+            if (!deleted) return res.status(404).json({ success: false, msg: "Role not found" });
 
-            return res.status(200).json({ msg: "Role deleted successfully" });
+            return res.status(200).json({ success: true, msg: "Role deleted successfully" });
         } catch (error) {
             console.error("Error deleting role:", error);
             return res.status(500).json({ errors: "Internal server error" });

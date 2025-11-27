@@ -7,15 +7,15 @@ const sql = require("./db.js");
 let schema = "";
 
 function init(schema_name) {
-  this.schema = schema_name;
+  schema = schema_name;
 }
 
 // Get all user roles
 async function findAll() {
   try {
-    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `SELECT * FROM ${this.schema}.user_role ORDER BY createddate DESC`;
+    const query = `SELECT * FROM ${schema}.user_role ORDER BY createddate DESC`;
     const result = await sql.query(query);
 
     return result.rows.length > 0 ? result.rows : [];
@@ -28,7 +28,8 @@ async function findAll() {
 // Get one role by id
 async function findById(id) {
   try {
-    const query = `SELECT * FROM ${this.schema}.user_role WHERE id = $1`;
+    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    const query = `SELECT * FROM ${schema}.user_role WHERE id = $1`;
     const result = await sql.query(query, [id]);
     return result.rows[0] || null;
   } catch (error) {
@@ -41,9 +42,9 @@ async function findById(id) {
 async function create(data) {
   try {
     const query = `
-      INSERT INTO ${this.schema}.user_role 
-      (role_name, is_active, createdbyid, lastmodifiedbyid)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO ${schema}.user_role 
+      (role_name, is_active, createdbyid, lastmodifiedbyid, createddate, lastmodifieddate)
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *;
     `;
 
@@ -66,7 +67,7 @@ async function create(data) {
 async function update(id, data) {
   try {
     const query = `
-      UPDATE ${this.schema}.user_role
+      UPDATE ${schema}.user_role
       SET 
         role_name = $1,
         is_active = $2,
@@ -94,7 +95,8 @@ async function update(id, data) {
 // Delete role
 async function remove(id) {
   try {
-    const query = `DELETE FROM ${this.schema}.user_role WHERE id = $1 RETURNING *`;
+    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    const query = `DELETE FROM ${schema}.user_role WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);
     return result.rows[0];
   } catch (error) {
