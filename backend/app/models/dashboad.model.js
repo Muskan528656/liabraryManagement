@@ -73,6 +73,17 @@ const getDashboardStats = async () => {
 
 
     stats.available_books = stats.total_books - stats.issued_books;
+
+    // give total library cards
+    const totalCardsResult = await sql.query(`SELECT COUNT(*) FROM demo.id_cards`);
+    stats.total_cards = totalCardsResult.rows[0].count;
+
+    //give me totalavailabe copies per books
+    const totalAvailableCopiesResult = await sql.query(`SELECT title, available_copies FROM demo.books`);
+    // console.log('totalAvailableCopiesResult', totalAvailableCopiesResult);
+    
+    stats.total_available_copies = totalAvailableCopiesResult.rows;
+
     return stats;
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
