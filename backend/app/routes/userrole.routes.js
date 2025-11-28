@@ -43,7 +43,6 @@ module.exports = (app) => {
     router.post(
         "/",
         fetchUser,
-        [body("role_name", "Role name is required").notEmpty()],
         async (req, res) => {
             
             
@@ -54,8 +53,9 @@ module.exports = (app) => {
                 UserRole.init(req.userinfo.tenantcode);
                 const data = {
                     ...req.body,
-                    createdbyid: req.userinfo.userid,
-                    lastmodifiedbyid: req.userinfo.userid,
+                    createdbyid: req.userinfo.id,
+                    lastmodifiedbyid: req.userinfo.id,
+                    country_code: req.body.country_code || null,
                 };
                 console.log('user role', data);
                 const newRole = await UserRole.create(data);
@@ -71,7 +71,7 @@ module.exports = (app) => {
     router.put(
         "/:id",
         fetchUser,
-        [body("role_name", "Role name is required").notEmpty()],
+        [],
         async (req, res) => {
             const errors = validationResult(req);
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -82,6 +82,7 @@ module.exports = (app) => {
                 const data = {
                     ...req.body,
                     lastmodifiedbyid: req.userinfo.userid,
+                    country_code: req.body.country_code || null,
                 };
 
                 const updated = await UserRole.update(req.params.id, data);
@@ -110,6 +111,6 @@ module.exports = (app) => {
         }
     });
 
-    app.use(process.env.BASE_API_URL + "/api/user-role", router);
+     app.use( "/api/user-role", router);
 
 };

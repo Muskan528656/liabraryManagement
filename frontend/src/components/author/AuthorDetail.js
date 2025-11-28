@@ -9,14 +9,14 @@ const AuthorDetail = () => {
       { key: "name", label: "Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
       { key: "bio", label: "Bio", type: "text" },
-      
+
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
-      // { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-     ],
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+    ],
   };
 
   return (

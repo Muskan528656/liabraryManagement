@@ -41,11 +41,8 @@ module.exports = (app) => {
 
   router.get("/due_notifications", fetchUser, async (req, res) => {
 
-  // console.log("Fetching notifications for book submissions nearing due date...");
-  // res.send('Notifications endpoint hit')
     try {
       const notifications = await BookSubmission.checkbeforeDue();
-      // console.log('notification ', notifications);
       
       return res.status(200).json({
         success: true,
@@ -137,7 +134,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        const userId = req.user?.id || req.userinfo?.id || null;
+        const userId = req.userinfo?.id || req.userinfo?.id || null;
         if (!userId) {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }
@@ -146,7 +143,6 @@ module.exports = (app) => {
 
         const submission = await BookSubmission.create(req.body, userId);
 
-        // Create notification for student about book return
         if (submission && submission.issued_to) {
           try {
             Notification.init(req.userinfo.tenantcode);
@@ -160,7 +156,7 @@ module.exports = (app) => {
               related_type: "book_submission"
             });
 
-            // Send real-time notification via socket
+        
             if (req.app.get('io')) {
               const io = req.app.get('io');
               io.to(`user_${submission.issued_to}`).emit("new_notification", notification);
@@ -168,7 +164,7 @@ module.exports = (app) => {
             }
           } catch (notifError) {
             console.error("Error creating notification for book submission:", notifError);
-            // Don't fail the submission if notification fails
+            
           }
         }
 
@@ -204,5 +200,5 @@ module.exports = (app) => {
 
 
 
-  app.use(process.env.BASE_API_URL + "/api/book_submissions", router);
+   app.use( "/api/book_submissions", router);
 };

@@ -56,31 +56,31 @@ const styles = {
 
 // CSS-in-JS for a hover effect on alert cards
 const AlertCardHoverStyle = (baseStyle) => ({
-    ...baseStyle,
-    "&:hover": {
-        transform: "translateY(-5px) scale(1.01)", // Slight lift and scale
-        boxShadow: "0 25px 60px rgba(0, 0, 0, 0.15)",
-    }
+  ...baseStyle,
+  "&:hover": {
+    transform: "translateY(-5px) scale(1.01)", // Slight lift and scale
+    boxShadow: "0 25px 60px rgba(0, 0, 0, 0.15)",
+  }
 });
 
 // Helper component to apply the hover effect
 const InteractiveCard = ({ children, style, ...props }) => {
-    const [hover, setHover] = useState(false);
-    return (
-        <Card
-            {...props}
-            style={{
-                ...styles.card,
-                ...styles.interactiveCard,
-                ...style,
-                ...(hover ? AlertCardHoverStyle(style)["&:hover"] : {}),
-            }}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-        >
-            {children}
-        </Card>
-    );
+  const [hover, setHover] = useState(false);
+  return (
+    <Card
+      {...props}
+      style={{
+        ...styles.card,
+        ...styles.interactiveCard,
+        ...style,
+        ...(hover ? AlertCardHoverStyle(style)["&:hover"] : {}),
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {children}
+    </Card>
+  );
 };
 
 
@@ -90,14 +90,12 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
-    
   // Stats
   const [dueSoonCount, setDueSoonCount] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
   const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
   const [damagedCount, setDamagedCount] = useState(0);
   const [totalBooks, setTotalBooks] = useState(0);
-    
   // Card Details
   const [cardDetails, setCardDetails] = useState([]);
   const [cardLimitSetting, setCardLimitSetting] = useState(6);
@@ -116,7 +114,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
     setUserInfo(currentUserInfo);
     setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
-    
     fetchDashboardData();
     fetchSubmissionAndIssueMetrics();
     fetchLibraryCounts();
@@ -146,7 +143,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const respStats = await DashboardApi.fetchStats();
       setTotalBooks(respStats?.data);
       const data = resp?.data || [];
-        
       if (!Array.isArray(data) || data.length === 0) return;
 
       const metrics = data[0];
@@ -326,22 +322,22 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     colors: colors,
     legend: { position: "bottom", fontSize: '13px', markers: { radius: 12 } },
     dataLabels: { enabled: false },
-    plotOptions: { 
-      pie: { 
-        donut: { 
-          size: "75%", 
-          labels: { 
-            show: true, 
-            total: { 
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "75%",
+          labels: {
+            show: true,
+            total: {
               show: true, // Show total in center
               label: 'Total Copies',
               color: '#334155',
               fontWeight: 600,
               formatter: (w) => formatNumber(totalBooks.total_books || 0)
-            } 
-          } 
-        } 
-      } 
+            }
+          }
+        }
+      }
     },
     stroke: { width: 0 },
     tooltip: { theme: "light" },
@@ -408,19 +404,19 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   // --- STUDENT UI (Kept Clean and Minimal) ---
   if (userRole === "STUDENT") {
     return (
-        <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
-            <ScrollToTop />
-            <Container fluid>
-                <Card style={{ ...styles.card, background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`, color: "white", marginBottom: "40px", border: 'none' }}>
-                    <Card.Body className="p-5">
-                        <h1 className="fw-bolder mb-2">Welcome Back, {userInfo?.firstname}! 👋</h1>
-                        <p className="mb-0 opacity-75" style={{fontSize: '18px'}}>Your personalized library dashboard is ready. Check your borrowed books and upcoming deadlines.</p>
-                    </Card.Body>
-                </Card>
-                {/* Placeholder for student-specific content like currently issued books list, fines, etc. */}
-                <div className="text-center py-5 text-muted">Student-specific data visualization goes here.</div>
-            </Container>
-        </div>
+      <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
+        <ScrollToTop />
+        <Container fluid>
+          <Card style={{ ...styles.card, background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`, color: "white", marginBottom: "40px", border: 'none' }}>
+            <Card.Body className="p-5">
+              <h1 className="fw-bolder mb-2">Welcome Back, {userInfo?.firstname}! 👋</h1>
+              <p className="mb-0 opacity-75" style={{ fontSize: '18px' }}>Your personalized library dashboard is ready. Check your borrowed books and upcoming deadlines.</p>
+            </Card.Body>
+          </Card>
+          {/* Placeholder for student-specific content like currently issued books list, fines, etc. */}
+          <div className="text-center py-5 text-muted">Student-specific data visualization goes here.</div>
+        </Container>
+      </div>
     );
   }
 
@@ -429,184 +425,184 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     <div style={{ background: "#f1f5f9", minHeight: "100vh", paddingBottom: "50px" }}>
       <ScrollToTop />
       <Container fluid className="px-4 py-4">
-        
+
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
-            <div>
-                <h3 style={{ fontWeight: "900", color: "#1e293b", marginBottom: "4px" }}>📚 Library Management Overview</h3>
-                <p style={{ color: "#64748b", margin: 0, fontSize: '14px' }}>Actionable insights and operational metrics for system administrators.</p>
-            </div>
+          <div>
+            <h3 style={{ fontWeight: "900", color: "#1e293b", marginBottom: "4px" }}>📚 Library Management Overview</h3>
+            <p style={{ color: "#64748b", margin: 0, fontSize: '14px' }}>Actionable insights and operational metrics for system administrators.</p>
+          </div>
         </div>
 
         {/* 1. Core Library Inventory (Main Stats Row) */}
         <div style={styles.sectionTitle}>
-            <i className="fa-solid fa-boxes-stacked" style={{color: PRIMARY_COLOR}}></i> Inventory & Capacity
+          <i className="fa-solid fa-boxes-stacked" style={{ color: PRIMARY_COLOR }}></i> Inventory & Capacity
         </div>
         <Row className="mb-2 g-2">
           {summaryCards.map((card, index) => (
             <Col lg={3} md={6} sm={12} key={index}>
               <Card style={styles.card}>
                 <Card.Body className="p-4 d-flex align-items-center justify-content-between">
-                    <div>
-                        <p className="mb-1 text-uppercase" style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>{card.title}</p>
-                        <h2 className="mb-0" style={{ color: card.color, fontSize: "36px", fontWeight: "800" }}>{card.value}</h2>
-                    </div>
-                    <div style={{ width: "55px", height: "55px", borderRadius: "14px", backgroundColor: card.bgColor, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "55px" }}>
-                      <i className={`fa-solid ${card.icon}`} style={{ fontSize: "24px", color: card.color }}></i>
-                    </div>
+                  <div>
+                    <p className="mb-1 text-uppercase" style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>{card.title}</p>
+                    <h2 className="mb-0" style={{ color: card.color, fontSize: "36px", fontWeight: "800" }}>{card.value}</h2>
+                  </div>
+                  <div style={{ width: "55px", height: "55px", borderRadius: "14px", backgroundColor: card.bgColor, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "55px" }}>
+                    <i className={`fa-solid ${card.icon}`} style={{ fontSize: "24px", color: card.color }}></i>
+                  </div>
                 </Card.Body>
               </Card>
-            </Col> 
+            </Col>
           ))}
         </Row>
-        
+
         {/* 2. Immediate Actions & Financial Metrics (Alerts & Financial Row) */}
         <div style={styles.sectionTitle}>
-            <i className="fa-solid fa-hand-point-up" style={{color: WARNING_COLOR}}></i> Urgent Actions & Financial Metrics
+          <i className="fa-solid fa-hand-point-up" style={{ color: WARNING_COLOR }}></i> Urgent Actions & Financial Metrics
         </div>
         <Row className="g-4 mb-5">
-            {alertCards.map((item, idx) => (
-                <Col xl={3} md={6} sm={12} key={idx}>
-                    {/* Applying the Interactive Card component here */}
-                    <InteractiveCard style={{ borderLeft: `6px solid ${item.color}`}}>
-                        <Card.Body className="p-4 d-flex align-items-center">
-                            <div className="me-3" style={{ width: 56, height: 56, borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', color: item.color, minWidth: '56px' }}>
-                                <i className={`fa-solid ${item.icon}`}></i>
-                            </div>
-                            <div>
-                                <h4 className="mb-0 fw-bolder" style={{color: item.color}}>{item.isCurrency ? formatCurrency(item.count) : formatNumber(item.count)}</h4>
-                                <small className="text-muted fw-semibold" style={{fontSize: '13px'}}>{item.label}</small>
-                            </div>
-                        </Card.Body>
-                    </InteractiveCard>
-                </Col>
-            ))}
+          {alertCards.map((item, idx) => (
+            <Col xl={3} md={6} sm={12} key={idx}>
+              {/* Applying the Interactive Card component here */}
+              <InteractiveCard style={{ borderLeft: `6px solid ${item.color}` }}>
+                <Card.Body className="p-4 d-flex align-items-center">
+                  <div className="me-3" style={{ width: 56, height: 56, borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', color: item.color, minWidth: '56px' }}>
+                    <i className={`fa-solid ${item.icon}`}></i>
+                  </div>
+                  <div>
+                    <h4 className="mb-0 fw-bolder" style={{ color: item.color }}>{item.isCurrency ? formatCurrency(item.count) : formatNumber(item.count)}</h4>
+                    <small className="text-muted fw-semibold" style={{ fontSize: '13px' }}>{item.label}</small>
+                  </div>
+                </Card.Body>
+              </InteractiveCard>
+            </Col>
+          ))}
         </Row>
 
         {/* 3. Detailed Usage & Inventory Analytics (MAIN CHARTS) */}
         <div style={styles.sectionTitle}>
-            <i className="fa-solid fa-chart-area" style={{color: INFO_COLOR}}></i> Key Usage & Trends
+          <i className="fa-solid fa-chart-area" style={{ color: INFO_COLOR }}></i> Key Usage & Trends
         </div>
         <Row className="mb-5 g-4">
-            {/* CHART 1: Library Card Usage - Kept large for clarity */}
-            <Col lg={6}>
-                <Card style={styles.card}>
-                    <Card.Header style={styles.cardHeader}>
-                        <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 className="mb-1 fw-bold text-dark">Top Borrower Card Usage</h5>
-                                <small className="text-muted">Max utilization of the borrowing limit (Top 10 users)</small>
-                            </div>
-                            <Badge className="px-3 py-2 text-white" style={{borderRadius: '30px', fontSize: '13px', fontWeight: 700, background: PRIMARY_COLOR}}>
-                                LIMIT: {cardLimitSetting} BOOKS
-                            </Badge>
-                        </div>
-                    </Card.Header>
-                    <Card.Body style={styles.cardBody}>
-                        {cardDetails.length > 0 ? (
-                            <Chart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
-                        ) : (
-                            <div className="text-center py-5 text-muted">No active data available</div>
-                        )}
-                    </Card.Body>
-                </Card>
-            </Col>
+          {/* CHART 1: Library Card Usage - Kept large for clarity */}
+          <Col lg={6}>
+            <Card style={styles.card}>
+              <Card.Header style={styles.cardHeader}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="mb-1 fw-bold text-dark">Top Borrower Card Usage</h5>
+                    <small className="text-muted">Max utilization of the borrowing limit (Top 10 users)</small>
+                  </div>
+                  <Badge className="px-3 py-2 text-white" style={{ borderRadius: '30px', fontSize: '13px', fontWeight: 700, background: PRIMARY_COLOR }}>
+                    LIMIT: {cardLimitSetting} BOOKS
+                  </Badge>
+                </div>
+              </Card.Header>
+              <Card.Body style={styles.cardBody}>
+                {cardDetails.length > 0 ? (
+                  <Chart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
+                ) : (
+                  <div className="text-center py-5 text-muted">No active data available</div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
 
-              {/* CHART 5: Inventory Status (Top Available Books) */}
-            <Col lg={6} md={8}>
-                <Card style={styles.card}>
-                    <Card.Header style={styles.cardHeader}>
-                        <h6 className="fw-bold m-0 text-dark">Top Available Titles</h6>
-                        <small className="text-muted">Books with the highest stock remaining</small>
-                    </Card.Header>
-                    <Card.Body className="p-3">
-                           {topAvailableBooks.length > 0 ? (
-                               <Chart options={availableBooksOptions} series={availableBooksSeries} type="bar" height={320} />
-                           ) : (
-                               <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                                   <i className="fa-solid fa-book-open-reader mb-2" style={{fontSize: '24px'}}></i>
-                                   <small>No detailed inventory data</small>
-                               </div>
-                           )}
-                    </Card.Body>
-                </Card>
-            </Col>
+          {/* CHART 5: Inventory Status (Top Available Books) */}
+          <Col lg={6} md={8}>
+            <Card style={styles.card}>
+              <Card.Header style={styles.cardHeader}>
+                <h6 className="fw-bold m-0 text-dark">Top Available Titles</h6>
+                <small className="text-muted">Books with the highest stock remaining</small>
+              </Card.Header>
+              <Card.Body className="p-3">
+                {topAvailableBooks.length > 0 ? (
+                  <Chart options={availableBooksOptions} series={availableBooksSeries} type="bar" height={320} />
+                ) : (
+                  <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                    <i className="fa-solid fa-book-open-reader mb-2" style={{ fontSize: '24px' }}></i>
+                    <small>No detailed inventory data</small>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
 
         </Row>
 
         {/* 4. Secondary Analytics */}
         <div style={styles.sectionTitle}>
-            <i className="fa-solid fa-layer-group" style={{color: PRIMARY_COLOR}}></i> Deep Dive Data
+          <i className="fa-solid fa-layer-group" style={{ color: PRIMARY_COLOR }}></i> Deep Dive Data
         </div>
         <Row className="g-4">
-            
-            {/* Top Categories List */}
-            <Col lg={4} md={12}>
-                <Card style={styles.card}>
-                    <Card.Header style={styles.cardHeader}>
-                        <h6 className="fw-bold m-0 text-dark">Top 5 Categories by Stock</h6>
-                    </Card.Header>
-                    <Card.Body className="p-0">
-                        <div className="list-group list-group-flush">
-                            {categories.map((cat, idx) => (
-                                <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-4 py-3 border-light">
-                                    <div className="d-flex align-items-center">
-                                        <div className="me-3" style={{width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR}} className="rounded-circle d-flex align-items-center justify-content-center">
-                                            <i className={`fa-solid ${cat.icon}`}></i>
-                                        </div>
-                                        <span className="fw-semibold text-dark">{cat.name}</span>
-                                    </div>
-                                    <Badge style={{background: PRIMARY_COLOR, color: 'white', fontWeight: 700}} className="rounded-pill px-3 py-2">{cat.count}</Badge>
-                                </div>
-                            ))}
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
 
-            {/* Books This Month Panel (Visual interest) */}
-            <Col lg={4} md={6}>
-                <Card style={{...styles.card, background: `linear-gradient(145deg, ${PRIMARY_COLOR}, ${ACCENT_COLOR})`, color: 'white', border: 'none'}}>
-                    <Card.Body className="d-flex flex-column justify-content-center text-center p-4">
-                        <div className="mb-3"><i className="fa-solid fa-calendar-days" style={{fontSize: '40px', opacity: 0.8}}></i></div>
-                        <h6 className="text-uppercase letter-spacing-2 opacity-75 mb-2" style={{fontSize: '12px'}}>New Items Added</h6>
-                        <h1 className="display-3 fw-bolder mb-4">{dashboardData ? formatNumber(dashboardData.summary.booksThisMonth) : "0"}</h1>
-                        <div style={{background: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '10px'}}>
-                            <Chart 
-                                options={{
-                                    ...donutOptions(['#fff', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)'], null),
-                                    legend: {show: false}, 
-                                    stroke: { show: false},
-                                    chart: {height: 180},
-                                    plotOptions: { pie: { donut: { labels: { total: { show: false } } } } }, // Hide total label for this specific chart
-                                }} 
-                                series={pieSeries} type="pie" height={180} 
-                            />
+          {/* Top Categories List */}
+          <Col lg={4} md={12}>
+            <Card style={styles.card}>
+              <Card.Header style={styles.cardHeader}>
+                <h6 className="fw-bold m-0 text-dark">Top 5 Categories by Stock</h6>
+              </Card.Header>
+              <Card.Body className="p-0">
+                <div className="list-group list-group-flush">
+                  {categories.map((cat, idx) => (
+                    <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-4 py-3 border-light">
+                      <div className="d-flex align-items-center">
+                        <div className="me-3" style={{ width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR }} className="rounded-circle d-flex align-items-center justify-content-center">
+                          <i className={`fa-solid ${cat.icon}`}></i>
                         </div>
-                        <p className="mt-3 mb-0 small opacity-75">Total books and copies processed/created in the last 30 days.</p>
-                    </Card.Body>
-                </Card>
-            </Col>
+                        <span className="fw-semibold text-dark">{cat.name}</span>
+                      </div>
+                      <Badge style={{ background: PRIMARY_COLOR, color: 'white', fontWeight: 700 }} className="rounded-pill px-3 py-2">{cat.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
 
-         
-            {/* CHART 2: Availability Status Donut - Moved here for better visual flow */}
-            <Col lg={4}>
-                <Card style={styles.card}>
-                    <Card.Body className="text-center p-4">
-                        <h6 className="fw-bold text-dark mb-4" style={{fontSize: '16px'}}>Overall Inventory Status</h6>
-                        <Chart 
-                            options={donutOptions([SUCCESS_COLOR, PRIMARY_COLOR], "Overall_Availability_Report")} 
-                            series={donutChart1Series} 
-                            type="donut" 
-                            height={250} 
-                        />
-                        <div className="mt-3">
-                            <h3 className="fw-bolder" style={{color: WARNING_COLOR, fontSize: '24px'}}>{dashboardData ? `${dashboardData.summary.issuedPercentage}%` : "0%"}</h3>
-                            <small className="text-muted">of total inventory currently issued</small>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
+          {/* Books This Month Panel (Visual interest) */}
+          <Col lg={4} md={6}>
+            <Card style={{ ...styles.card, background: `linear-gradient(145deg, ${PRIMARY_COLOR}, ${ACCENT_COLOR})`, color: 'white', border: 'none' }}>
+              <Card.Body className="d-flex flex-column justify-content-center text-center p-4">
+                <div className="mb-3"><i className="fa-solid fa-calendar-days" style={{ fontSize: '40px', opacity: 0.8 }}></i></div>
+                <h6 className="text-uppercase letter-spacing-2 opacity-75 mb-2" style={{ fontSize: '12px' }}>New Items Added</h6>
+                <h1 className="display-3 fw-bolder mb-4">{dashboardData ? formatNumber(dashboardData.summary.booksThisMonth) : "0"}</h1>
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '10px' }}>
+                  <Chart
+                    options={{
+                      ...donutOptions(['#fff', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)'], null),
+                      legend: { show: false },
+                      stroke: { show: false },
+                      chart: { height: 180 },
+                      plotOptions: { pie: { donut: { labels: { total: { show: false } } } } }, // Hide total label for this specific chart
+                    }}
+                    series={pieSeries} type="pie" height={180}
+                  />
+                </div>
+                <p className="mt-3 mb-0 small opacity-75">Total books and copies processed/created in the last 30 days.</p>
+              </Card.Body>
+            </Card>
+          </Col>
+
+
+          {/* CHART 2: Availability Status Donut - Moved here for better visual flow */}
+          <Col lg={4}>
+            <Card style={styles.card}>
+              <Card.Body className="text-center p-4">
+                <h6 className="fw-bold text-dark mb-4" style={{ fontSize: '16px' }}>Overall Inventory Status</h6>
+                <Chart
+                  options={donutOptions([SUCCESS_COLOR, PRIMARY_COLOR], "Overall_Availability_Report")}
+                  series={donutChart1Series}
+                  type="donut"
+                  height={250}
+                />
+                <div className="mt-3">
+                  <h3 className="fw-bolder" style={{ color: WARNING_COLOR, fontSize: '24px' }}>{dashboardData ? `${dashboardData.summary.issuedPercentage}%` : "0%"}</h3>
+                  <small className="text-muted">of total inventory currently issued</small>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
       </Container>
     </div>

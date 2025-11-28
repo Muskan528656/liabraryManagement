@@ -77,7 +77,7 @@ async function findByEmail(email) {
 // =======================================================
 // Create User
 // =======================================================
-async function create(userData) {
+async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
@@ -90,7 +90,6 @@ async function create(userData) {
       throw new Error("Company ID is required for user creation.");
     }
 
-    // INSERT (No WhatsApp fields)
     const query = `
       INSERT INTO ${this.schema}."user"
       (
@@ -102,9 +101,11 @@ async function create(userData) {
         phone,
         country_code,
         isactive,
-        companyid
+        companyid,
+        createdbyid,
+        lastmodifiedbyid
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING
         id,
         firstname,
@@ -114,7 +115,9 @@ async function create(userData) {
         phone,
         country_code,
         isactive,
-        companyid
+        companyid,
+        createdbyid,
+        lastmodifiedbyid
     `;
 
     const values = [
@@ -127,6 +130,8 @@ async function create(userData) {
       userData.country_code || null,
       userData.isactive !== undefined ? userData.isactive : true,
       userData.companyid,
+      userId,
+      userId,
     ];
 
     const result = await sql.query(query, values);

@@ -465,7 +465,7 @@ Issued Books: ${decodedData.issuedBooks || 0}
 Submitted Books: ${decodedData.submittedBooks || 0}
       `.trim();
 
-      alert(`Barcode Scan Test Successful!\n\n${dataString}`);
+      
     } else {
       alert("Failed to decode barcode data. Please ensure the barcode is valid.");
     }

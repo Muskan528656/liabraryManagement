@@ -10,10 +10,8 @@ import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
 
 const Category = (props) => {
-  // Get config structure first
   const baseConfig = getCategoryConfig();
 
-  // Fetch data if needed (though categories don't have dependencies)
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
     props

@@ -1,5 +1,7 @@
+import { Badge } from "react-bootstrap";
 import Switch from "@mui/material/Switch";
-import moment from 'moment';
+import CountryCode from '../../constants/CountryCode.json';
+
 // config/userRoleConfig.js
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     return {
@@ -10,6 +12,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         initialFormData: {
             role_name: "",
             is_active: true,
+            country_code: "",
         },
 
         columns: [
@@ -17,24 +20,25 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "role_name",
                 label: "Role Name",
             },
+            {
+                field: "country_code",
+                label: "Country Code",
+                render: (value) => {
+                    if (!value) return "—";
+                    const country = CountryCode.find(c => c.country_code === value);
+                    return country ? `${country.country} (${country.country_code})` : value;
+                }
+            },
          {
                 field: "is_active",
                 label: "Active",
                 render: (value) => (
-                    // Renders a visual toggle switch
-                    <Switch checked={value} readOnly />
-                ),
-            },
+                    <Badge bg={value ? "success" : "secondary"}>
+                        {value ? "Active" : "Inactive"}
+                    </Badge>
+                )
 
-          {
-                field: "createddate",
-                label: "Created Date",
-                // Use the render function to format the date
-                render: (value) => {
-                    return moment(value).format('DD/MM/YYYY');
-                
-                },
-            },
+            }
         ],
 
         formFields: [
@@ -45,6 +49,18 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 required: true,
                 placeholder: "Enter role name",
                 colSize: 12,
+            },
+            {
+                name: "country_code",
+                label: "Country Code",
+                type: "select",
+                required: false,
+                placeholder: "Select country code",
+                colSize: 12,
+                options: CountryCode.map(item => ({
+                    value: item.country_code,
+                    label: `${item.country} (${item.country_code})`
+                }))
             },
             {
                 name: "is_active",

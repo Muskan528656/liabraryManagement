@@ -198,7 +198,7 @@ async function getStudentDashboardStats(userId) {
         lc.card_number
       FROM ${this.schema}.book_issues bi
       LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-      LEFT JOIN ${this.schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+      LEFT JOIN ${this.schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
       WHERE bi.issued_to = $1
       ORDER BY bi.issue_date DESC
       LIMIT 5

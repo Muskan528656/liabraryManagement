@@ -86,7 +86,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       }
 
       // Then fetch fresh data from API
-      const api = new DataApi("whatsapp/module");
+      const api = new DataApi("module");
       const resp = await api.fetchAll();
       const result = resp?.data;
       let modules = [];
@@ -727,7 +727,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 style={{
                   width: "40px",
                   height: "40px",
-                  background: "#6f42c1",
+                  background: "var(--primary-color)",
                   color: "white",
                   fontWeight: "600",
                   fontSize: "14px",
@@ -748,7 +748,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     style={{
                       width: "60px",
                       height: "60px",
-                      background: "#6f42c1",
+                      background: "var(--primary-color)",
                       color: "white",
                       fontWeight: "600",
                       fontSize: "20px",

@@ -31,7 +31,7 @@ async function findAll() {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    ORDER BY bi.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -62,7 +62,7 @@ async function findById(id) {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    WHERE bi.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
@@ -96,7 +96,7 @@ async function findActive() {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    WHERE bi.return_date IS NULL AND bi.status = 'issued'
                    ORDER BY bi.issue_date DESC`;
     const result = await sql.query(query);
@@ -128,7 +128,7 @@ async function findByBookId(bookId) {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    WHERE bi.book_id = $1 AND bi.return_date IS NULL AND bi.status = 'issued'`;
     const result = await sql.query(query, [bookId]);
     return result.rows.length > 0 ? result.rows : [];
@@ -159,7 +159,7 @@ async function findByUserId(userId) {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued'`;
     const result = await sql.query(query, [userId]);
     return result.rows.length > 0 ? result.rows : [];
@@ -174,7 +174,7 @@ async function findByCardId(cardId) {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const cardQuery = `SELECT user_id FROM ${schema}.id_cards WHERE id = $1`;
+    const cardQuery = `SELECT user_id FROM ${schema}.library_members WHERE id = $1`;
     const cardResult = await sql.query(cardQuery, [cardId]);
     if (cardResult.rows.length === 0) {
       return [];
@@ -205,7 +205,7 @@ async function issueBook(issueData, userId) {
     // Get user_id from card_id if provided, otherwise use issued_to directly
     let issued_to = issueData.issued_to || issueData.issuedTo;
     if (!issued_to && (issueData.card_id || issueData.cardId)) {
-      const cardQuery = `SELECT user_id FROM ${schema}.id_cards WHERE id = $1`;
+      const cardQuery = `SELECT user_id FROM ${schema}.library_members WHERE id = $1`;
       const cardResult = await sql.query(cardQuery, [issueData.card_id || issueData.cardId]);
       if (cardResult.rows.length === 0) {
         throw new Error("Library card not found");

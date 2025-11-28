@@ -51,7 +51,7 @@ const User = () => {
   const [selectedItems, setSelectedItems] = useState([]);
 
   // Password visibility state
-  const [passwordVisible, setPasswordVisible] = useState(false);  // Add state to toggle visibility
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   // get all user roles
   const fetchUserRoles = async () => {
@@ -75,11 +75,32 @@ const User = () => {
     fetchUsers();
     fetchUserRoles();
   }, []);
+ 
+  // const fetchUserRoles = async () => {
+  //   try {
+  //     const userRoleApi = new DataApi("user-role");
+  //     const response = await userRoleApi.fetchAll();
+  //     console.log("user roles response ", response)
+  //     const normalizedData = Array.isArray(response.data) ? response.data : 
+  //                           (response.data?.data && Array.isArray(response.data.data) ? response.data.data : 
+  //                           (response.data?.records && Array.isArray(response.data.records) ? response.data.records : []));
+  //     if (normalizedData.length > 0) {
+  //       setRoleOptions(normalizedData);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching user roles:", error);
+  //     PubSub.publish("RECORD_ERROR_TOAST", {
+  //       title: "Error",
+  //       message: "Failed to fetch user roles",
+  //     });
+  //   }
+  // };
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
+
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
       }
@@ -449,7 +470,7 @@ const User = () => {
           <a
             href={`/user/${userId}`}
             style={{
-              color: "#6f42c1",
+              color: "var(--primary-color)",
               textDecoration: "none",
               fontWeight: "500",
               cursor: "pointer"
@@ -529,7 +550,7 @@ const User = () => {
         }}
       // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fs-5 fa-solid fa-pen-to-square"></i>
+        <i className="fs-7 fa-solid fa-pen-to-square"></i>
       </button>
       <button
         // variant="link"
@@ -541,7 +562,7 @@ const User = () => {
         }}
       // style={{ padding: "0.25rem 0.5rem" }}
       >
-        <i className="fs-5 fa-solid fa-trash"></i>
+        <i className="fs-7 fa-solid fa-trash"></i>
       </button>
     </>
   );
@@ -697,6 +718,8 @@ const User = () => {
               </Col>
             </Row>
             <Row>
+
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Role</Form.Label>
@@ -707,11 +730,13 @@ const User = () => {
                     onChange={handleInputChange}
                   >
                     <option value="">Select Role</option>
-                    {roleOptions.map((role) => (
-                      <option key={role.id} value={role.role_name}>
-                        {role.role_name}
+                    {roleOptions && roleOptions.length > 0 ? roleOptions.map((role) => (
+                      <option key={role.id || role.role_name} value={role.role_name || role.name}>
+                        {role.role_name || role.name}
                       </option>
-                    ))}
+                    )) : (
+                      <option value="" disabled>Loading roles...</option>
+                    )}
                   </Form.Select>
                 </Form.Group>
               </Col>

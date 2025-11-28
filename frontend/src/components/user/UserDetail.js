@@ -43,7 +43,7 @@ const UserDetail = () => {
   const fields = {
     title: "firstname",
     subtitle: "email",
-    status: "isactive",
+    status: "status",
     // overview: [
     //   { key: "firstname", label: "First Name", type: "text" },
     //   { key: "lastname", label: "Last Name", type: "text" },
@@ -55,10 +55,14 @@ const UserDetail = () => {
       { key: "lastname", label: "Last Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
       { key: "phone", label: "Phone", type: "text" },
-      { key: "userrole", label: "Role", type: "select", options: "roles" },
-      { key: "isactive", label: "Status", type: "toggle" }
-    
-
+      { 
+        key: "userrole", 
+        label: "Role", 
+        type: "select", 
+        options: "user-role",
+        displayKey: "role_name"
+      },
+      { key: "status", label: "Status", type: "badge" },
     ],
 
     other: [
@@ -66,7 +70,8 @@ const UserDetail = () => {
       { key: "lastmodifiedbyname", label: "Last Modified By", type: "select", options: "users", displayKey: "lastmodifiedbyname" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-     ],
+
+    ],
   };
 
 

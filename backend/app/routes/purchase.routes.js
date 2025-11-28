@@ -24,7 +24,6 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all purchases (ADMIN and ADMIN)
   router.get("/", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
@@ -36,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get purchase statistics (ADMIN and ADMIN)
+
   router.get("/stats", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
@@ -48,8 +47,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get purchase by ID (ADMIN and ADMIN)
-  router.get("/:id", fetchUser,  async (req, res) => {
+  router.get("/:id", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
       const purchase = await Purchase.findById(req.params.id);
@@ -63,11 +61,10 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new purchase (ADMIN and ADMIN)
   router.post(
     "/",
     fetchUser,
- 
+
     [
       body("vendor_id").notEmpty().isUUID().withMessage("Vendor ID is required and must be a valid UUID"),
       body("book_id").notEmpty().isUUID().withMessage("Book ID is required and must be a valid UUID"),
@@ -134,7 +131,7 @@ module.exports = (app) => {
   );
 
   // Delete purchase by ID (ADMIN and ADMIN)
-  router.delete("/:id", fetchUser,  async (req, res) => {
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
       const result = await Purchase.deleteById(req.params.id);
@@ -148,6 +145,7 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/purchase", router);
+  //  app.use(process.env.BASE_API_URL + "/api/purchase", router);
+  app.use("/api/purchase", router);
 };
 

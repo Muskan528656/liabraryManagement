@@ -23,11 +23,8 @@ const VendorDetail = () => {
       {
         key: "status",
         label: "Status",
-        // type: "badge",
-        // badgeConfig: statusBadges
       },
-      { key: "created_at", label: "Created At", type: "datetime" },
-      { key: "updated_at", label: "Updated At", type: "datetime" },
+
     ],
     address: [
       { key: "country", label: "Country", type: "text" },

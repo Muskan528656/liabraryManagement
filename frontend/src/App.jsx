@@ -44,6 +44,13 @@ import CategoryDetail from "./components/category/CategoryDetail";
 import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import UserRole from "./components/userrole/userrole";
 import UserRoleDetail from "./components/userrole/userroleDetail";
+import BulkPurchasePage from "./components/common/BulkPurchase";
+import AutoConfig from "./components/autoconfig/AutoConfig";
+import AutoConfigDetail from "./components/autoconfig/AutoConfigDetail";
+import Subscription from "./components/subscription/Subscription";
+import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
+import Permission from "./components/Permission/permission";
+import PermissionDetail from "./components/Permission/PermissionDetail";
 // import Settings from "./components/librarycardtype/LibraryCardType";
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -155,6 +162,8 @@ function App() {
 
             <Route path="userroles" element={<UserRole />} />
             <Route path="user-role/:id" element={<UserRoleDetail />} />
+            <Route path="autoconfig" element={<AutoConfig />} />
+            <Route path="auto-config/:id" element={<AutoConfigDetail />} />
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="book" element={<Books />} />
@@ -165,6 +174,11 @@ function App() {
             <Route path="vendor/:id" element={<VendorDetail />} />
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
+            <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
+            <Route path="subscriptions" element={<Subscription />} />
+            <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+            <Route path="permissions" element={<Permission />} />
+            <Route path="permissions/:id" element={<PermissionDetail />} />
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />

@@ -1,4 +1,3 @@
-// components/common/DynamicCRUD.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Table } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,6 +11,17 @@ import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import jwt_decode from "jwt-decode";
 import ModuleDetail from "./ModuleDetail";
+
+const normalizeListResponse = (payload) => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (payload.data && Array.isArray(payload.data.data)) return payload.data.data;
+    if (Array.isArray(payload.records)) return payload.records;
+    if (Array.isArray(payload.rows)) return payload.rows;
+    if (payload.results && Array.isArray(payload.results)) return payload.results;
+    return [];
+};
 
 const DynamicCRUD = ({
     moduleName,
@@ -52,7 +62,7 @@ const DynamicCRUD = ({
         allowDelete = true
     } = features;
 
-    // State Management
+
     const [selectedItem, setSelectedItem] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [data, setData] = useState([]);
@@ -70,6 +80,7 @@ const DynamicCRUD = ({
     const [formData, setFormData] = useState(initialFormData);
     const [visibleColumns, setVisibleColumns] = useState({});
     const [relatedData, setRelatedData] = useState({});
+    const [isEditable, setIsEditable] = useState(false);
 
 
 
@@ -97,17 +108,19 @@ const DynamicCRUD = ({
         );
     }, []);
 
-    const handleNameClick = useCallback((item , isEdit) => {
-
+    const handleNameClick = useCallback((item, isEdit) => {
+        console.log("handleNameClick called with isEdit:", isEdit);
+        setIsEditable(isEdit)
+        console.log("isEditable in DynamicCRUD:", isEditable);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
         }
 
         navigate(`/${apiEndpoint}/${item.id}`, {
-            state: { type: apiEndpoint, rowData: item},
+            state: { type: apiEndpoint, rowData: item },
         });
-       
+
         if (showDetailView) {
             setSelectedItem(item);
             setShowDetail(true);
@@ -115,14 +128,14 @@ const DynamicCRUD = ({
             if (enablePrefetch) {
                 try {
                     // navigate(`/${apiEndpoint}/${item.id}`);
-                    if(isEdit){
+                    if (isEdit) {
                         navigate(`/${apiEndpoint}/${item.id}`, {
-                            state: { isEdit: true, rowData: item},
+                            state: { isEdit: true, rowData: item },
                         });
-                    }else{
+                    } else {
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
-                     
+
                     // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
@@ -231,7 +244,7 @@ const DynamicCRUD = ({
                 href="#"
                 onClick={(e) => handleLookupNavigation(lookupConfig, record, e)}
                 style={{
-                    color: "#6f42c1",
+                    color: "var(--primary-color)",
                     textDecoration: "none",
                     fontWeight: "500",
                     cursor: "pointer"
@@ -265,7 +278,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -276,7 +289,7 @@ const DynamicCRUD = ({
                                 handleNameClick(record);
                             }}
                             style={{
-                                color: "#6f42c1",
+                                color: "var(--primary-color)",
                                 textDecoration: "none",
                                 fontWeight: "500",
                                 cursor: "pointer"
@@ -291,7 +304,7 @@ const DynamicCRUD = ({
             }
 
             return col;
-        }).filter(Boolean); // Remove null values
+        }).filter(Boolean);
     }, [columns, customHandlers.columnRenderers, lookupNavigation, renderLookupLink, showDetailView, moduleName, handleNameClick]);
 
     const enhancedColumns = useMemo(() => getEnhancedColumns(), [getEnhancedColumns]);
@@ -341,19 +354,14 @@ const DynamicCRUD = ({
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
+            console.log("Fetching data from API endpoint:", apiEndpoint);
             const response = await api.fetchAll();
-            if (response.data) {
-                // Handle both array responses and wrapped {success, data} responses
-                let responseData = response.data;
-                if (responseData.data && Array.isArray(responseData.data)) {
-                    responseData = responseData.data;
-                } else if (!Array.isArray(responseData)) {
-                    responseData = [];
-                }
-                setData(responseData);
+            if (response.data !== undefined) {
+                const normalizedData = normalizeListResponse(response.data);
+                setData(normalizedData);
 
                 if (customHandlers.onDataLoad) {
-                    customHandlers.onDataLoad(responseData);
+                    customHandlers.onDataLoad(normalizedData, response.data);
                 }
             }
         } catch (error) {
@@ -365,7 +373,7 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [apiEndpoint, moduleLabel, customHandlers]);
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
@@ -384,6 +392,13 @@ const DynamicCRUD = ({
                 categories: "category",
                 category: "category",
                 users: "user",
+                vendor: "vendor",
+                "user-role": "user-role",
+                "userroles": "user-role",
+                subscriptions: "subscriptions",
+                subscription: "subscriptions",
+                modules: "module",
+                module: "module",
                 departments: "department"
             };
 
@@ -395,7 +410,7 @@ const DynamicCRUD = ({
                     const api = new DataApi(endpoint);
                     const response = await api.fetchAll();
 
-                    relatedApis[option] = Array.isArray(response.data) ? response.data : [];
+                    relatedApis[option] = normalizeListResponse(response.data);
                 } catch (error) {
                     console.error(`Error fetching ${option}:`, error);
                     relatedApis[option] = [];
@@ -415,7 +430,7 @@ const DynamicCRUD = ({
                 fetchRelatedData();
             }
         }
-    }, [userInfo, fetchData, autoFetchRelated, fetchRelatedData]);
+    }, [userInfo]);
 
     const getProcessedFormFields = useCallback(() => {
         return formFields.map(field => {
@@ -432,8 +447,8 @@ const DynamicCRUD = ({
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
-                            value: item.id?.toString() || '',
-                            label: item.name || item.title || item.email || `Item ${item.id}`
+                            value: item.id?.toString() || item.role_name?.toString() || '',
+                            label: item.name || item.title || item.role_name || item.email || item.plan_name || `Item ${item.id}`
                         }));
                     } else {
                         optionsArray = [];
@@ -473,15 +488,25 @@ const DynamicCRUD = ({
         });
     }, [formFields, relatedData]);
 
+    // const handleAdd = useCallback(() => {
+    //     setEditingItem(null);
+    //     setFormData(initialFormData);
+    //     setShowModal(true);
+    // }, [initialFormData]);
+
     const handleAdd = useCallback(() => {
+        if (customHandlers?.handleAdd) {
+            customHandlers.handleAdd(navigate);
+            return;
+        }
         setEditingItem(null);
         setFormData(initialFormData);
         setShowModal(true);
-    }, [initialFormData]);
+    }, [initialFormData, navigate]);
+
 
     const handleEdit = useCallback((item) => {
         if (!allowEdit) return;
-        // Navigate to detail page instead of opening modal
         navigate(`/${apiEndpoint}/${item.id}`, {
             state: { type: apiEndpoint, rowData: item },
         });
@@ -735,7 +760,7 @@ const DynamicCRUD = ({
                 label: `Add ${moduleLabel}`,
                 onClick: handleAdd,
                 style: {
-                    background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                    background: "var(--primary-color)",
                     border: "none",
                 },
             });
@@ -776,7 +801,9 @@ const DynamicCRUD = ({
                     prefetchData={selectedItem}
                     lookupNavigation={lookupNavigation}
                     {...finalDetailConfig}
-                    
+                    setIsEditable={isEditable}
+                    isEditablee={isEditable}
+
                 />
             </Container>
         );
@@ -785,7 +812,7 @@ const DynamicCRUD = ({
     return (
         <Container fluid className="py-4">
             <ScrollToTop />
-{/* 
+            {/* 
             <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
                 <Col>
                     <TableHeader
@@ -806,94 +833,94 @@ const DynamicCRUD = ({
             </Row> */}
 
             <Row className="justify-content-center">
-                    <Col lg={12} xl={12}>
+                <Col lg={12} xl={12}>
                     <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
                                 <Loader />
                             ) : (
                                 <>
-                                <TableHeader
-                        title={`${moduleLabel} Management`}
-                        icon={icon}
-                        totalCount={filteredData.length}
-                        totalLabel={moduleLabel}
-                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
-                        searchValue={searchTerm}
-                        onSearchChange={showSearch ? setSearchTerm : null}
-                        showColumnVisibility={showColumnVisibility}
-                        allColumns={columns}
-                        visibleColumns={visibleColumns}
-                        onToggleColumnVisibility={toggleColumnVisibility}
-                        actionButtons={actionButtons}
-                    />
-                                <ResizableTable
-                                    data={filteredData}
-                                    columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
-                                    loading={loading}
-                                    showCheckbox={showCheckbox}
-                                    selectedItems={selectedItems}
-                                    onSelectionChange={setSelectedItems}
-                                    searchTerm={searchTerm}
-                                    onSearchChange={showSearch ? setSearchTerm : null}
-                                    currentPage={currentPage}
-                                    totalRecords={filteredData.length}
-                                    recordsPerPage={recordsPerPage}
-                                    onPageChange={setCurrentPage}
-                                    showSerialNumber={true}
-                                    showActions={showActions}
-                                    actionsRenderer={showActions ? (item) => (
-                                        <div className="d-flex gap-2 justify-content-center">
-                                            {allowEdit && (
-                                                <button
-                                                    // variant="link"
-                                                    onClick={() => handleNameClick(item , true)}
-                                                    title="Edit"
-                                                    className="custom-btn-edit"
+                                    <TableHeader
+                                        title={`${moduleLabel}`}
+                                        icon={icon}
+                                        totalCount={filteredData.length}
+                                        totalLabel={moduleLabel}
+                                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                                        searchValue={searchTerm}
+                                        onSearchChange={showSearch ? setSearchTerm : null}
+                                        showColumnVisibility={showColumnVisibility}
+                                        allColumns={columns}
+                                        visibleColumns={visibleColumns}
+                                        onToggleColumnVisibility={toggleColumnVisibility}
+                                        actionButtons={actionButtons}
+                                    />
+                                    <ResizableTable
+                                        data={filteredData}
+                                        columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
+                                        loading={loading}
+                                        showCheckbox={showCheckbox}
+                                        selectedItems={selectedItems}
+                                        onSelectionChange={setSelectedItems}
+                                        searchTerm={searchTerm}
+                                        onSearchChange={showSearch ? setSearchTerm : null}
+                                        currentPage={currentPage}
+                                        totalRecords={filteredData.length}
+                                        recordsPerPage={recordsPerPage}
+                                        onPageChange={setCurrentPage}
+                                        showSerialNumber={true}
+                                        showActions={showActions}
+                                        actionsRenderer={showActions ? (item) => (
+                                            <div className="d-flex gap-2 justify-content-center">
+                                                {allowEdit && (
+                                                    <button
+                                                        // variant="link"
+                                                        onClick={() => handleNameClick(item, true)}
+                                                        title="Edit"
+                                                        className="custom-btn-edit"
                                                     // style={{
                                                     //     padding: "4px 6px",
                                                     //     color: "#0d6efd",
                                                     //     textDecoration: "none"
                                                     // }}
-                                                >
-                                                    <i className="fs-5 fa-solid fa-pen-to-square"></i>
-                                                </button>
-                                            )}
-                                            {allowDelete && (
-                                                <button
-                                                    // variant="link"
-                                                    onClick={() => handleDelete(item.id)}
-                                                    title="Delete"
-                                                    className="custom-btn-delete"
+                                                    >
+                                                        <i className="fs-7 fa-solid fa-pen-to-square"></i>
+                                                    </button>
+                                                )}
+                                                {allowDelete && (
+                                                    <button
+                                                        // variant="link"
+                                                        onClick={() => handleDelete(item.id)}
+                                                        title="Delete"
+                                                        className="custom-btn-delete"
                                                     // style={{
                                                     //     padding: "4px 6px",
                                                     //     color: "#dc3545",
                                                     //     textDecoration: "none"
                                                     // }}
-                                                >
-                                                    <i className="fs-5 fa-solid fa-trash"></i>
-                                                </button>
-                                            )}
-                                            {customHandlers?.handleBarcodePreview && (
-                                                <button
-                                                    // variant="info"
-                                                    className="custom-btn-edit"
-                                                    // size="sm"
-                                                    onClick={() => customHandlers.handleBarcodePreview(item)}
-                                                    title="View Barcode"
-                                                >
-                                                    <i className="fs-5 fa-solid fa-eye me-1"></i>
-                                                    {/* Preview */}
-                                                </button>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                    emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
-                                />
+                                                    >
+                                                        <i className="fs-7 fa-solid fa-trash"></i>
+                                                    </button>
+                                                )}
+                                                {customHandlers?.handleBarcodePreview && (
+                                                    <button
+                                                        // variant="info"
+                                                        className="custom-btn-edit"
+                                                        // size="sm"
+                                                        onClick={() => customHandlers.handleBarcodePreview(item)}
+                                                        title="View Barcode"
+                                                    >
+                                                        <i className="fs-7 fa-solid fa-eye me-1"></i>
+                                                        {/* Preview */}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
+                                    />
                                 </>
-                                
+
                             )}
-                            
+
                         </Card.Body>
                     </Card>
                 </Col>

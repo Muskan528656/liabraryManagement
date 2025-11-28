@@ -108,13 +108,13 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check if category exists
+    
         const existingCategory = await Category.findById(req.params.id);
         if (!existingCategory) {
           return res.status(404).json({ errors: "Category not found" });
         }
 
-        // Check for duplicate name (excluding current category)
+ 
         const duplicateCategory = await Category.findByName(
           req.body.name,
           req.params.id
@@ -152,6 +152,7 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/category", router);
+  //  app.use(process.env.BASE_API_URL + "/api/category", router);
+   app.use("/api/category", router);
 };
 

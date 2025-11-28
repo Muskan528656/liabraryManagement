@@ -1,38 +1,80 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import DataApi from "../../api/dataApi";
 
 const PurchaseDetail = () => {
+  const [externalData, setExternalData] = useState({ vendors: [], books: [] });
+
+  useEffect(() => {
+    const fetchExternalData = async () => {
+      try {
+        // Fetch vendors
+        const vendorApi = new DataApi("vendor");
+        const vendorsResponse = await vendorApi.fetchAll();
+        const vendors = vendorsResponse?.data?.data || vendorsResponse?.data || [];
+
+        // Fetch books
+        const bookApi = new DataApi("book");
+        const booksResponse = await bookApi.fetchAll();
+        const books = booksResponse?.data?.data || booksResponse?.data || [];
+
+        setExternalData({
+          vendors: Array.isArray(vendors) ? vendors : [],
+          books: Array.isArray(books) ? books : [],
+        });
+      } catch (error) {
+        console.error("Error fetching external data:", error);
+      }
+    };
+
+    fetchExternalData();
+  }, []);
+
   const fields = {
-    title: "id",
-    subtitle: null,
-    status: null,
-    // overview: [
-    //   { key: "vendor_name", label: "Vendor", type: "text" },
-    //   { key: "book_title", label: "Book", type: "text" },
-    //   { key: "quantity", label: "Quantity", type: "number" },
-    //   { key: "unit_price", label: "Unit Price", type: "currency" },
-    //   { key: "total_amount", label: "Total Amount", type: "currency" },
-    // ],
+    title: "purchase_serial_no",
+    subtitle: "book_title",
+
     details: [
-      { key: "vendor_name", label: "Vendor Name", type: "text" },
-      // { key: "book_title", label: "Book", type: "text" },
-      // { key: "book_isbn", label: "ISBN", type: "text" },
-      // { key: "quantity", label: "Quantity", type: "number" },
-      { key: "unit_price", label: "Unit Price", type: "currency" },
-      { key: "total_amount", label: "Total Amount", type: "currency" },
+      { key: "purchase_serial_no", label: "Purchase Serial No", type: "text" },
+      {
+        key: "vendor_id",
+        label: "Vendor",
+        type: "select",
+        options: "vendors",
+        displayKey: "vendor_name"
+      },
+      {
+        key: "book_id",
+        label: "Book",
+        type: "select",
+        options: "books",
+        displayKey: "book_title"
+      },
+      { key: "quantity", label: "Quantity", type: "number" },
+      { key: "unit_price", label: "Unit Price", type: "number" },
+      { key: "total_amount", label: "Total Amount", type: "number" },
       { key: "purchase_date", label: "Purchase Date", type: "date" },
-      { key: "notes", label: "Notes", type: "text" },
-      { key: "created_at", label: "Created At", type: "datetime" },
-      { key: "updated_at", label: "Updated At", type: "datetime" },
+      { key: "notes", label: "Notes", type: "textarea" },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-
     ],
-    detailsLayout: "grid",
+  };
+
+  const lookupNavigation = {
+    vendor_name: {
+      path: "vendor",
+      idField: "vendor_id",
+      labelField: "vendor_name"
+    },
+    book_title: {
+      path: "book",
+      idField: "book_id",
+      labelField: "book_title"
+    }
   };
 
   return (
@@ -42,20 +84,8 @@ const PurchaseDetail = () => {
       moduleLabel="Purchase Management"
       icon="fa-solid fa-shopping-cart"
       fields={fields}
-      relatedModules={[]}
-      customHeader={(data) => (
-        <div className="d-flex justify-content-between align-items-start">
-          <div>
-            <h2 className="mb-2 fw-bold" style={{ color: "#6f42c1" }}>
-              Purchase #{data.id}
-            </h2>
-            <div className="text-muted">
-              {data.vendor_name && <div>Vendor: {data.vendor_name}</div>}
-              {data.book_title && <div>Book: {data.book_title}</div>}
-            </div>
-          </div>
-        </div>
-      )}
+      lookupNavigation={lookupNavigation}
+      externalData={externalData}
     />
   );
 };

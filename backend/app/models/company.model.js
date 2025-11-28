@@ -60,8 +60,8 @@ async function create(companyData, userId) {
     const query = `INSERT INTO public.company 
                    (name, tenantcode, userlicenses, isactive, systememail, adminemail, 
                     logourl, sidebarbgurl, sourceschema, city, street, pincode, state, 
-                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+                    country, country_code, platform_name, platform_api_endpoint, is_external, has_wallet, currency) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
                    RETURNING *`;
     
     const values = [
@@ -79,6 +79,7 @@ async function create(companyData, userId) {
       companyData.pincode || null,
       companyData.state || null,
       companyData.country || null,
+      companyData.country_code || null,
       companyData.platform_name || null,
       companyData.platform_api_endpoint || null,
       companyData.is_external !== undefined ? companyData.is_external : false,
@@ -113,9 +114,9 @@ async function updateById(id, companyData, userId) {
                    SET name = $2, tenantcode = $3, userlicenses = $4, isactive = $5, 
                        systememail = $6, adminemail = $7, logourl = $8, sidebarbgurl = $9, 
                        sourceschema = $10, city = $11, street = $12, pincode = $13, 
-                       state = $14, country = $15, platform_name = $16, 
-                       platform_api_endpoint = $17, is_external = $18, has_wallet = $19,
-                       currency = $20
+                       state = $14, country = $15, country_code = $16, platform_name = $17, 
+                       platform_api_endpoint = $18, is_external = $19, has_wallet = $20,
+                       currency = $21
                    WHERE id = $1 
                    RETURNING *`;
     
@@ -135,6 +136,7 @@ async function updateById(id, companyData, userId) {
       companyData.pincode !== undefined ? companyData.pincode : currentCompany.pincode,
       companyData.state !== undefined ? companyData.state : currentCompany.state,
       companyData.country !== undefined ? companyData.country : currentCompany.country,
+      companyData.country_code !== undefined ? companyData.country_code : currentCompany.country_code,
       companyData.platform_name !== undefined ? companyData.platform_name : currentCompany.platform_name,
       companyData.platform_api_endpoint !== undefined ? companyData.platform_api_endpoint : currentCompany.platform_api_endpoint,
       companyData.is_external !== undefined ? companyData.is_external : currentCompany.is_external,

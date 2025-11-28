@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
+import CountryCode from '../../constants/CountryCode.json';
 
 const Company = () => {
   const [Company, setCompany] = useState({
@@ -19,6 +20,7 @@ const Company = () => {
     pincode: "",
     state: "",
     country: "",
+    country_code: "",
     platform_name: "",
     platform_api_endpoint: "",
     is_external: false,
@@ -116,35 +118,36 @@ const Company = () => {
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
               <div
-                className="d-flex justify-content-between align-items-center mb-4 p-4"
+                className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
                   color: "var(--primary-color)",
                   background: "var(--primary-background-color)",
                   borderRadius: "10px",
                 }}
               >
-                <h2 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
+                <h5 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
                   <i className="fa-solid fa-store me-2"></i>
                   Company
-                </h2>
+                </h5>
                 {!isEditingCompany ? (
-                  <Button
-                    variant="outline-primary"
+                  <button
+                    // variant="outline-primary"
+                    className="custom-btn-primary"
                     onClick={handleCompanyEdit}
-                    style={{
-                      border: "2px solid var(--primary-color)",
-                      color: "var(--primary-color)",
-                      borderRadius: "8px",
-                      padding: "8px 20px",
-                      fontWeight: "600",
-                    }}
+                    // style={{
+                    //   border: "2px solid var(--primary-color)",
+                    //   color: "var(--primary-color)",
+                    //   borderRadius: "8px",
+                    //   padding: "8px 20px",
+                    //   fontWeight: "600",
+                    // }}
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Company
-                  </Button>
+                  </button>
                 ) : (
                   <div className="d-flex gap-2">
                     <button
@@ -166,7 +169,7 @@ const Company = () => {
               </div>
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
-                  <h5
+                  <h6
                     className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                     style={{
                       color: "var(--primary-color)",
@@ -175,7 +178,7 @@ const Company = () => {
                     }}
                   >
                     Company Information
-                  </h5>
+                  </h6>
                 </Col>
                 <Row className="px-5">
                   <Col md={9}>
@@ -192,7 +195,7 @@ const Company = () => {
                               handleCompanyChange("name", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -215,7 +218,7 @@ const Company = () => {
                               handleCompanyChange("tenantcode", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -238,7 +241,7 @@ const Company = () => {
                               handleCompanyChange("userlicenses", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -261,7 +264,7 @@ const Company = () => {
                               handleCompanyChange("systememail", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -284,7 +287,7 @@ const Company = () => {
                               handleCompanyChange("adminemail", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -296,7 +299,7 @@ const Company = () => {
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
-                            background: "var(--header-highlighter-color)",
+                            // background: "var(--header-highlighter-color)",
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -332,7 +335,7 @@ const Company = () => {
                               handleCompanyChange("currency", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -355,7 +358,7 @@ const Company = () => {
                               handleCompanyChange("time_zone", e.target.value)
                             }
                             style={{
-                              background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -424,7 +427,7 @@ const Company = () => {
 
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
-                  <h5
+                  <h6
                     className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                     style={{
                       color: "var(--primary-color)",
@@ -433,7 +436,7 @@ const Company = () => {
                     }}
                   >
                     Address Information
-                  </h5>
+                  </h6>
                 </Col>
                 <Row className="px-5">
                   <Col md={4}>
@@ -450,7 +453,7 @@ const Company = () => {
                           handleCompanyChange("country", e.target.value)
                         }
                         style={{
-                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -471,7 +474,7 @@ const Company = () => {
                           handleCompanyChange("state", e.target.value)
                         }
                         style={{
-                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -490,7 +493,7 @@ const Company = () => {
                           handleCompanyChange("city", e.target.value)
                         }
                         style={{
-                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -511,11 +514,49 @@ const Company = () => {
                           handleCompanyChange("pincode", e.target.value)
                         }
                         style={{
-                          background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Country Code</Form.Label>
+                      {isEditingCompany ? (
+                        <Form.Select
+                          value={tempCompany.country_code || ""}
+                          onChange={(e) =>
+                            handleCompanyChange("country_code", e.target.value)
+                          }
+                          style={{
+                            pointerEvents: isEditingCompany ? "auto" : "none",
+                            opacity: isEditingCompany ? 1 : 0.9,
+                          }}
+                        >
+                          <option value="">Select Country Code</option>
+                          {CountryCode.map((item) => (
+                            <option key={item.country_code} value={item.country_code}>
+                              {item.country} ({item.country_code})
+                            </option>
+                          ))}
+                        </Form.Select>
+                      ) : (
+                        <Form.Control
+                          type="text"
+                          value={
+                            Company.country_code
+                              ? `${CountryCode.find(c => c.country_code === Company.country_code)?.country} (${Company.country_code})` || Company.country_code
+                              : ""
+                          }
+                          readOnly
+                          style={{
+                            pointerEvents: "none",
+                            opacity: 0.9,
+                          }}
+                        />
+                      )}
                     </Form.Group>
                   </Col>
                 </Row>

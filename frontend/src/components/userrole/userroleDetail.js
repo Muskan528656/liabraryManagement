@@ -1,11 +1,21 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import CountryCode from '../../constants/CountryCode.json';
 
 const UserRoleDetail = () => {
     const fields = {
         title: "role_name",
         details: [
             { key: "role_name", label: "Role Name", type: "text" },
+            {
+                key: "country_code",
+                label: "Country Code",
+                type: "select",
+                options: CountryCode.map(item => ({
+                    id: item.country_code,
+                    name: `${item.country} (${item.country_code})`
+                }))
+            },
             {
                 key: "is_active",
                 type: "toggle",

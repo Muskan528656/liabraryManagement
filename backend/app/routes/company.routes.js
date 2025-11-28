@@ -171,5 +171,5 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/company", router);
+   app.use( "/api/company", router);
 };

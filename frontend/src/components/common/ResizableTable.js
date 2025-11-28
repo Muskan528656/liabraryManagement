@@ -240,7 +240,7 @@ const ResizableTable = ({
                         width: "50px",
                         height: "50px",
                         borderWidth: "4px",
-                        borderColor: "#6f42c1",
+                        borderColor: "var(--primary-color)",
                         borderRightColor: "transparent",
                     }}
                 >
@@ -285,21 +285,21 @@ const ResizableTable = ({
                             border: "1px solid #ffffffff",
                         }}
                     >
-                        <thead>
+                        <thead className="detail-h2">
                             <tr>
                                 {showCheckbox && (
                                     <th
                                         style={{
-                                            width: columnWidths["checkbox"] || "50px",
+                                            width: columnWidths["checkbox"] || "0px",
                                             textAlign: "center",
                                             position: "relative",
                                             userSelect: "none",
                                             background: "#201c24ff !important",
                                             fontWeight: "600",
-                                            color: "#6f42c1",
+                                            color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             // padding: "12px 8px",
-                                            fontSize: "13px",
+                                            // fontSize: "13px",
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -322,7 +322,7 @@ const ResizableTable = ({
                                                 bottom: 0,
                                                 width: "4px",
                                                 cursor: "col-resize",
-                                                backgroundColor: isResizing && resizeColumn === "checkbox" ? "#6f42c1" : "transparent",
+                                                backgroundColor: isResizing && resizeColumn === "checkbox" ? "var(--primary-color)" : "transparent",
                                                 zIndex: 10
                                             }}
                                         />
@@ -337,10 +337,10 @@ const ResizableTable = ({
                                             userSelect: "none",
                                             background: "#f3e9fc",
                                             fontWeight: "600",
-                                            color: "#6f42c1",
+                                            color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
-                                            fontSize: "13px",
+                                            // fontSize: "13px",
                                             // textTransform: "uppercase",
                                             letterSpacing: "0.5px"
                                         }}
@@ -356,7 +356,7 @@ const ResizableTable = ({
                                                 bottom: 0,
                                                 width: "4px",
                                                 cursor: "col-resize",
-                                                backgroundColor: isResizing && resizeColumn === 0 ? "#6f42c1" : "transparent",
+                                                backgroundColor: isResizing && resizeColumn === 0 ? "var(--primary-color)" : "transparent",
                                                 zIndex: 10
                                             }}
                                         />
@@ -381,10 +381,10 @@ const ResizableTable = ({
                                                 userSelect: "none",
                                                 background: "#f3e9fc",
                                                 fontWeight: "600",
-                                                color: "#6f42c1",
+                                                color: "var(--primary-color)",
                                                 borderBottom: "2px solid #e9d5ff",
                                                 padding: "12px 8px",
-                                                fontSize: "13px",
+                                                // fontSize: "13px",
                                                 // textTransform: "uppercase",
                                                 letterSpacing: "0.5px"
                                             }}
@@ -400,7 +400,7 @@ const ResizableTable = ({
                                                     bottom: 0,
                                                     width: "4px",
                                                     cursor: "col-resize",
-                                                    backgroundColor: isResizing && resizeColumn === colIndex ? "#6f42c1" : "transparent",
+                                                    backgroundColor: isResizing && resizeColumn === colIndex ? "var(--primary-color)" : "transparent",
                                                     zIndex: 10
                                                 }}
                                             />
@@ -416,10 +416,10 @@ const ResizableTable = ({
                                             userSelect: "none",
                                             background: "#f3e9fc",
                                             fontWeight: "600",
-                                            color: "#6f42c1",
+                                            color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
-                                            fontSize: "13px",
+                                            // fontSize: "13px",
                                             // textTransform: "uppercase",
                                             letterSpacing: "0.5px"
                                         }}
@@ -435,7 +435,7 @@ const ResizableTable = ({
                                                 bottom: 0,
                                                 width: "4px",
                                                 cursor: "col-resize",
-                                                backgroundColor: isResizing && resizeColumn === "actions" ? "#6f42c1" : "transparent",
+                                                backgroundColor: isResizing && resizeColumn === "actions" ? "var(--primary-color)" : "transparent",
                                                 zIndex: 10
                                             }}
                                         />
@@ -443,7 +443,7 @@ const ResizableTable = ({
                                 )}
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="detail-h4">
                             {paginatedData.length === 0 ? (
                                 <tr>
                                     <td
@@ -452,11 +452,11 @@ const ResizableTable = ({
                                         }
                                         className="text-center py-5 text-muted"
                                         style={{
-                                            fontSize: "14px",
+                                            // fontSize: "14px",
                                             color: "#6c757d"
                                         }}
                                     >
-                                        <i className="fa-solid fa-inbox me-2" style={{ fontSize: "20px", opacity: 0.5 }}></i>
+                                        <i className="fa-solid fa-inbox me-2" style={{ opacity: 0.5 }}></i>
                                         {emptyMessage}
                                     </td>
                                 </tr>
@@ -506,7 +506,7 @@ const ResizableTable = ({
                                                         width: columnWidths[colIndexForWidth] || column.width || column.minWidth || "150px",
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
-                                                        // whiteSpace: "nowrap"
+                                                        whiteSpace: "nowrap"
                                                     }}
                                                 >
                                                     {column.render
@@ -531,13 +531,13 @@ const ResizableTable = ({
                                                                 // size="sm"
                                                                 className="custom-btn-edit"
                                                                 // style={{
-                                                                //     color: "#6f42c1",
+                                                                //     color: "var(--primary-color)",
                                                                 //     padding: "4px 8px",
                                                                 //     textDecoration: "none"
                                                                 // }}
                                                                 title="Edit"
                                                             >
-                                                                <i className="fs-5 fa-solid fa-edit"></i>
+                                                                <i className="fs-7 fa-solid fa-edit"></i>
                                                             </button>
                                                             <button
                                                                 // variant="link"
@@ -550,7 +550,7 @@ const ResizableTable = ({
                                                                 // }}
                                                                 title="Delete"
                                                             >
-                                                                <i className="fs-5 fa-solid fa-trash"></i>
+                                                                <i className="fs-7 fa-solid fa-trash"></i>
                                                             </button>
                                                         </div>
                                                     )}
@@ -578,13 +578,13 @@ const ResizableTable = ({
                                                         width: "20px",
                                                         height: "20px",
                                                         borderWidth: "2px",
-                                                        borderColor: "#6f42c1",
+                                                        borderColor: "var(--primary-color)",
                                                         borderRightColor: "transparent",
                                                     }}
                                                 >
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
-                                                <span className="ms-2 text-muted" style={{ fontSize: "12px" }}>
+                                                <span className="ms-2 text-muted" >
                                                     Loading more...
                                                 </span>
                                             </div>
@@ -600,7 +600,7 @@ const ResizableTable = ({
             {/* Pagination */}
             {totalPages > 1 && (
                 <div
-                    className="d-flex justify-content-between align-items-center mt-3 detail-h2"
+                    className="d-flex justify-content-between align-items-center mt-3 detail-h3"
                     style={{
                         padding: "12px 16px",
                         background: "#fafbfc",
@@ -619,7 +619,7 @@ const ResizableTable = ({
                             disabled={currentPage === 1}
                             style={{
                                 borderColor: "#e2e8f0",
-                                color: currentPage === 1 ? "#9ca3af" : "#6f42c1"
+                                color: currentPage === 1 ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
                         <Pagination.Prev
@@ -627,7 +627,7 @@ const ResizableTable = ({
                             disabled={currentPage === 1}
                             style={{
                                 borderColor: "#e2e8f0",
-                                color: currentPage === 1 ? "#9ca3af" : "#6f42c1"
+                                color: currentPage === 1 ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
                         {renderPaginationItems()}
@@ -636,7 +636,7 @@ const ResizableTable = ({
                             disabled={currentPage === totalPages}
                             style={{
                                 borderColor: "#e2e8f0",
-                                color: currentPage === totalPages ? "#9ca3af" : "#6f42c1"
+                                color: currentPage === totalPages ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
                         <Pagination.Last
@@ -644,7 +644,7 @@ const ResizableTable = ({
                             disabled={currentPage === totalPages}
                             style={{
                                 borderColor: "#e2e8f0",
-                                color: currentPage === totalPages ? "#9ca3af" : "#6f42c1"
+                                color: currentPage === totalPages ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
                     </Pagination>

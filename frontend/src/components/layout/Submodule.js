@@ -23,7 +23,7 @@ const Submodule = () => {
         }
       }
 
-      const api = new DataApi("whatsapp/module");
+      const api = new DataApi("module");
       const resp = await api.fetchAll();
       const result = resp?.data;
       let modules = [];
@@ -228,7 +228,7 @@ const Submodule = () => {
                   }
                 }}
               >
-                <i className={`fa-solid fs-5 ${item.icon} me-1`}></i>
+                <i className={`fa-solid fs-7 ${item.icon} me-1`}></i>
                 {item.label}
               </Nav.Link>
             ))}
@@ -239,7 +239,7 @@ const Submodule = () => {
               <NavDropdown
                 title={
                   <>
-                    <i className="fs-5 fa-solid fa-ellipsis"></i>
+                    <i className="fs-7 fa-solid fa-ellipsis"></i>
                     <span className="ms-1">More</span>
                   </>
                 }
@@ -282,7 +282,7 @@ const Submodule = () => {
                     }}
                   >
                     <i
-                      className={`fs-5 fa-solid ${item.icon} me-2`}
+                      className={`fs-7 fa-solid ${item.icon} me-2`}
                       style={{ color: "var(--header-list-item-color)" }}
                     ></i>
                     {item.label}

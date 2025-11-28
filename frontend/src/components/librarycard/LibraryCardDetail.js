@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import {
   Card,
@@ -16,6 +15,7 @@ import JsBarcode from "jsbarcode";
 import ScrollToTop from "../common/ScrollToTop";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { API_BASE_URL } from "../../constants/CONSTANT";
+
 const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
@@ -24,27 +24,30 @@ const LibraryCardDetail = ({
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [cardData, setCardData] = useState(null);
   const [issuedCount, setIssuedCount] = useState(0);
   const [submittedCount, setSubmittedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  // const [isEditing, setIsEditing] = useState(false);
   const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
   const [tempData, setTempData] = useState(null);
   const [data, setData] = useState(null);
   const [originalData, setOriginalData] = useState(null);
-  const [relatedData, setRelatedData] = useState({});
   const [saving, setSaving] = useState(false);
   const [userNames, setUserNames] = useState({});
+  const [userAvatars, setUserAvatars] = useState({});
   const [lookupData, setLookupData] = useState({});
   const [deleteId, setDeleteId] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [imagePreview, setImagePreview] = useState("/default-user.png");
   const [selectedImageFile, setSelectedImageFile] = useState(null);
-  const imageObjectUrlRef = useRef(null);
-  const moduleNameFromUrl = window.location.pathname.split("/")[1];
+  const [showBack, setShowBack] = useState(false);
 
-  const moduleName = "librarycards";
+  const imageObjectUrlRef = useRef(null);
+  const frontBarcodeRef = useRef(null);
+  const backBarcodeRef = useRef(null);
+
+  const moduleName = "librarycard";
   const moduleApi = "librarycard";
   const moduleLabel = "Library Card";
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
@@ -74,6 +77,58 @@ const LibraryCardDetail = ({
     [normalizedFileHost]
   );
 
+  const UserAvatar = ({ userId, size = 32, showName = true, clickable = true }) => {
+    const userName = userNames[userId] || `User ${userId}`;
+    const userAvatar = userAvatars[userId] || `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+
+    const handleUserClick = () => {
+      if (clickable && userId) {
+        navigate(`/user/${userId}`);
+      }
+    };
+
+    return (
+      <div
+        className={`d-flex align-items-center ${clickable ? 'cursor-pointer' : ''}`}
+        onClick={handleUserClick}
+        style={{
+          cursor: clickable ? 'pointer' : 'default',
+          textDecoration: 'none',
+          gap: '8px'
+        }}
+      >
+        <img
+          src={userAvatar}
+          alt={userName}
+          className="rounded-circle"
+          style={{
+            width: size,
+            height: size,
+            objectFit: 'cover',
+            border: '2px solid #e9ecef'
+          }}
+        />
+        {showName && (
+          <span
+            className="fw-medium"
+            style={{
+              color: clickable ? 'var(--primary-color)' : '#495057',
+              textDecoration: clickable ? 'none' : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (clickable) e.target.style.textDecoration = 'underline';
+            }}
+            onMouseLeave={(e) => {
+              if (clickable) e.target.style.textDecoration = 'none';
+            }}
+          >
+            {userName}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (selectedImageFile) {
       return;
@@ -99,6 +154,41 @@ const LibraryCardDetail = ({
   useEffect(() => {
     fetchCardData();
   }, [id]);
+
+  useEffect(() => {
+    if (cardData && frontBarcodeRef.current) {
+      const cardNumber = cardData.card_number || cardData.id;
+      try {
+        JsBarcode(frontBarcodeRef.current, cardNumber, {
+          format: "CODE128",
+          width: 2,
+          height: 60,
+          displayValue: true,
+          text: cardNumber,
+          fontSize: 12,
+          margin: 5,
+        });
+      } catch (error) {
+        console.error("Error generating front barcode:", error);
+      }
+    }
+    if (cardData && backBarcodeRef.current) {
+      const cardNumber = cardData.card_number || cardData.id;
+      try {
+        JsBarcode(backBarcodeRef.current, cardNumber, {
+          format: "CODE128",
+          width: 2,
+          height: 60,
+          displayValue: true,
+          text: cardNumber,
+          fontSize: 12,
+          margin: 5,
+        });
+      } catch (error) {
+        console.error("Error generating back barcode:", error);
+      }
+    }
+  }, [cardData, showBack]);
 
   const fetchCardData = async () => {
     try {
@@ -157,7 +247,6 @@ const LibraryCardDetail = ({
           ? submissionsResponse.data
           : submissionsResponse.data?.data || [];
 
-        // Filter by user_id or card_id
         const cardSubmissions = submissions.filter((submission) => {
           const matchesCard =
             submission.card_id === cardId ||
@@ -187,9 +276,12 @@ const LibraryCardDetail = ({
         displayKey: "user_name",
       },
       { key: "card_number", label: "Card Number", type: "text" },
-      { key: "user_email", label: "Email", type: "text" },
-      { key: "issue_date", label: "Issue Date", type: "date" },
-      { key: "expiry_date", label: "Submission Date", type: "date" },
+      { key: "first_name", label: "First Name", type: "text" },
+      { key: "last_name", label: "Lastname", type: "text" },
+      { key: "email", label: "Email", type: "text" },
+      { key: "phone_number", label: "Card Number", },
+      { key: "registration_date", label: "Registraion Date", },
+
       {
         key: "is_active",
         label: "Status",
@@ -207,48 +299,8 @@ const LibraryCardDetail = ({
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date" },
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
-
     ],
   };
-
-  const [showBack, setShowBack] = useState(false);
-  const frontBarcodeRef = useRef(null);
-  const backBarcodeRef = useRef(null);
-
-  useEffect(() => {
-    if (cardData && frontBarcodeRef.current) {
-      const cardNumber = cardData.card_number || cardData.id;
-      try {
-        JsBarcode(frontBarcodeRef.current, cardNumber, {
-          format: "CODE128",
-          width: 2,
-          height: 60,
-          displayValue: true,
-          text: cardNumber,
-          fontSize: 12,
-          margin: 5,
-        });
-      } catch (error) {
-        console.error("Error generating front barcode:", error);
-      }
-    }
-    if (cardData && backBarcodeRef.current) {
-      const cardNumber = cardData.card_number || cardData.id;
-      try {
-        JsBarcode(backBarcodeRef.current, cardNumber, {
-          format: "CODE128",
-          width: 2,
-          height: 60,
-          displayValue: true,
-          text: cardNumber,
-          fontSize: 12,
-          margin: 5,
-        });
-      } catch (error) {
-        console.error("Error generating back barcode:", error);
-      }
-    }
-  }, [cardData, showBack]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -266,12 +318,11 @@ const LibraryCardDetail = ({
       render: (data) => (
         <div>
           {!showBack ? (
-            // Front Card View
             <Card
               style={{
                 maxWidth: "400px",
                 margin: "0 auto",
-                border: "2px solid #6f42c1",
+                border: "2px solid var(--primary-color)",
                 borderRadius: "15px",
                 overflow: "hidden",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
@@ -281,13 +332,13 @@ const LibraryCardDetail = ({
               <div
                 style={{
                   background:
-                    "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                    "var(--primary-color)",
                   color: "white",
                   padding: "20px",
                   textAlign: "center",
                 }}
               >
-                <h4 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h4>
+                <h5 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h5>
               </div>
               <Card.Body style={{ padding: "20px" }}>
                 <div className="text-center mb-3">
@@ -300,7 +351,7 @@ const LibraryCardDetail = ({
                         height: "120px",
                         borderRadius: "50%",
                         objectFit: "cover",
-                        border: "4px solid #6f42c1",
+                        border: "4px solid var(--primary-color)",
                         marginBottom: "10px",
                       }}
                       onError={(e) => {
@@ -319,12 +370,12 @@ const LibraryCardDetail = ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        border: "4px solid #6f42c1",
+                        border: "4px solid var(--primary-color)",
                       }}
                     >
                       <i
                         className="fa-solid fa-user"
-                        style={{ fontSize: "48px", color: "#6f42c1" }}
+                        style={{ fontSize: "48px", color: "var(--primary-color)" }}
                       ></i>
                     </div>
                   )}
@@ -361,7 +412,7 @@ const LibraryCardDetail = ({
                   <h5
                     style={{
                       margin: "5px 0",
-                      color: "#6f42c1",
+                      color: "var(--primary-color)",
                       fontWeight: "bold",
                     }}
                   >
@@ -426,12 +477,11 @@ const LibraryCardDetail = ({
               </Card.Body>
             </Card>
           ) : (
-            // Back Card View
             <Card
               style={{
                 maxWidth: "400px",
                 margin: "0 auto",
-                border: "2px solid #6f42c1",
+                border: "2px solid var(--primary-color)",
                 borderRadius: "15px",
                 overflow: "hidden",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
@@ -439,8 +489,7 @@ const LibraryCardDetail = ({
             >
               <div
                 style={{
-                  background:
-                    "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                  background: "var(--primary-color)",
                   color: "white",
                   padding: "20px",
                   textAlign: "center",
@@ -474,7 +523,7 @@ const LibraryCardDetail = ({
                 >
                   <h6
                     style={{
-                      color: "#6f42c1",
+                      color: "var(--primary-color)",
                       marginBottom: "10px",
                       fontWeight: "bold",
                     }}
@@ -588,8 +637,6 @@ const LibraryCardDetail = ({
     const loadData = async () => {
       try {
         setLoading(true);
-
-        // First try to fetch main data
         await fetchData();
       } catch (error) {
         console.error("Error loading data:", error);
@@ -604,7 +651,7 @@ const LibraryCardDetail = ({
       console.error("Missing id or moduleApi:", { id, moduleApi });
       setLoading(false);
     }
-  }, [id, moduleApi, moduleLabel]); // Add dependencies
+  }, [id, moduleApi, moduleLabel]);
 
   const fetchData = async () => {
     try {
@@ -628,7 +675,6 @@ const LibraryCardDetail = ({
         } else if (Array.isArray(responseData) && responseData.length > 0) {
           fetchedData = responseData[0];
         } else {
-          // Direct data object
           fetchedData = responseData;
         }
       } else {
@@ -639,7 +685,6 @@ const LibraryCardDetail = ({
         setData(fetchedData);
         setOriginalData(JSON.parse(JSON.stringify(fetchedData)));
 
-        // Fetch user names for createdbyid and lastmodifiedbyid
         const userIds = [];
         if (fetchedData.createdbyid) userIds.push(fetchedData.createdbyid);
         if (fetchedData.lastmodifiedbyid && fetchedData.lastmodifiedbyid !== fetchedData.createdbyid) {
@@ -663,21 +708,38 @@ const LibraryCardDetail = ({
     try {
       const userApi = new DataApi("user");
       const names = {};
-      for (const userId of userIds) {
+      const avatars = {};
+
+      const uniqueUserIds = [...new Set(userIds.filter(id => id && id !== ''))];
+
+      for (const userId of uniqueUserIds) {
         try {
           const response = await userApi.fetchById(userId);
           if (response && response.data) {
             const user = response.data.success ? response.data.data : response.data;
             if (user) {
-              names[userId] = `${user.firstname || ''} ${user.lastname || ''}`.trim() || user.email || `User ${userId}`;
+              const fullName = `${user.firstname || ''} ${user.lastname || ''}`.trim();
+              names[userId] = fullName || user.email || `User ${userId}`;
+
+              if (user.profile_picture) {
+                avatars[userId] = user.profile_picture;
+              } else {
+                const initials = fullName
+                  ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
+                  : 'U';
+                avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=6f42c1&color=fff&size=32`;
+              }
             }
           }
         } catch (error) {
           console.error(`Error fetching user ${userId}:`, error);
           names[userId] = `User ${userId}`;
+          avatars[userId] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
         }
       }
-      setUserNames(names);
+
+      setUserNames(prev => ({ ...prev, ...names }));
+      setUserAvatars(prev => ({ ...prev, ...avatars }));
     } catch (error) {
       console.error("Error fetching user names:", error);
     }
@@ -685,15 +747,6 @@ const LibraryCardDetail = ({
 
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
-
-    console.log(
-      `Formatting field: ${field.key}, value:`,
-      value,
-      "type:",
-      field.type
-    );
-
-    // Check if this field has lookup navigation configured
 
     if (field.type === "date") {
       try {
@@ -746,12 +799,9 @@ const LibraryCardDetail = ({
     if (onEdit) {
       onEdit(data);
     } else {
-      // Enable inline editing
       resetImageSelection();
       setIsEditing(true);
       setTempData({ ...data });
-
-      // Fetch lookup field data for dropdowns
       await fetchLookupData();
     }
   };
@@ -840,11 +890,10 @@ const LibraryCardDetail = ({
   };
 
   const handleSave = async () => {
-    // Check if data has changed
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
-      return; // No toast if no changes
+      return;
     }
 
     try {
@@ -1060,6 +1109,25 @@ const LibraryCardDetail = ({
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
     const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField;
 
+    if (!isEditing && (field.key === 'createdbyid' || field.key === 'lastmodifiedbyid')) {
+      const userId = currentData[field.key];
+      if (userId) {
+        return (
+          <Form.Group key={`${field.key}-${index}`} className="mb-3">
+            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+            <div className="form-control-plaintext p-0 border-0">
+              <UserAvatar
+                userId={userId}
+                size={36}
+                showName={true}
+                clickable={true}
+              />
+            </div>
+          </Form.Group>
+        );
+      }
+    }
+
     if (field.key === "is_active") {
       return (
         <Form.Group key={`${field.key}-${index}`} className="mb-3">
@@ -1136,7 +1204,6 @@ const LibraryCardDetail = ({
             value={displayValue || "—"}
             readOnly
             style={{
-              background: "var(--header-highlighter-color, #f8f9fa)",
               pointerEvents: "none",
               opacity: 0.9,
             }}
@@ -1196,9 +1263,6 @@ const LibraryCardDetail = ({
             handleFieldChange(field.key, newValue);
           }}
           style={{
-            background: !isEditing
-              ? "var(--header-highlighter-color, #f8f9fa)"
-              : "white",
             pointerEvents: isInputEditable ? "auto" : "none",
             opacity: isInputEditable ? 1 : 0.9,
           }}
@@ -1235,39 +1299,12 @@ const LibraryCardDetail = ({
       }
       return value || "";
     } else {
-      // For display mode, use formatValue
-      // Special handling for createdbyid and lastmodifiedbyid
       if ((field.key === "createdbyid" || field.key === "lastmodifiedbyid") && value) {
         return userNames[value] || value || "—";
       }
       return formatValue(value, field) || "—";
     }
   };
-
-  // const handleDelete = async () => {
-  //   if (onDelete) {
-  //     onDelete(data);
-  //   } else {
-  //     if (
-  //       window.confirm(`Are you sure you want to delete this ${moduleLabel}?`)
-  //     ) {
-  //       try {
-  //         const api = new DataApi(moduleApi);
-  //         await api.delete(id);
-  //         PubSub.publish("RECORD_SAVED_TOAST", {
-  //           title: "Success",
-  //           message: `${moduleLabel} deleted successfully`,
-  //         });
-  //         navigate(`/${moduleName}`);
-  //       } catch (error) {
-  //         PubSub.publish("RECORD_ERROR_TOAST", {
-  //           title: "Error",
-  //           message: `Failed to delete ${moduleLabel}`,
-  //         });
-  //       }
-  //     }
-  //   }
-  // };
 
   const handleDelete = (id) => {
     setDeleteId(id);
@@ -1294,53 +1331,50 @@ const LibraryCardDetail = ({
   const normalizedFields = Array.isArray(fields)
     ? { details: fields }
     : fields || {};
+  const handleBack = () => {
+    navigate(`/${moduleName}`);
+  };
+
 
   return (
-    // <ModuleDetail
-    //   moduleName="librarycards"
-    //   moduleApi="librarycard"
-    //   moduleLabel="Library Card"
-    //   fields={fields}
-    //   customSections={customSections}
-    //   bookStatistics={bookStatistics}
-    // />
     <Container fluid className="py-4">
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-          <Card className="border-0 shadow-sm">
+          <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
+
               <div
-                className="d-flex justify-content-between align-items-center mb-4 p-4"
+                className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
                   color: "var(--primary-color)",
                   background: "var(--primary-background-color)",
                   borderRadius: "10px",
                 }}
               >
-                <h2
-                  className="fw-bold mb-1"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="fa-solid fa-id-card me-2"></i>
-                  Library Card Management
-                </h2>
+
+
+                <div className="d-flex align-items-center gap-3">
+                  <button onClick={handleBack} className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back">
+                    <i className="fa-solid fa-arrow-left"></i>
+                  </button>
+                  <h5
+                    className="fw-bold mb-1"
+                    style={{ color: "var(--primary-color)" }}
+                  >
+                    <i className="fa-solid fa-id-card me-2"></i>
+                    Library Members
+                  </h5>
+                </div>
                 <div>
                   {!isEditing ? (
-                    <Button
-                      variant="outline-primary"
+                    <button
                       onClick={handleEdit}
-                      style={{
-                        border: "2px solid var(--primary-color, #6f42c1)",
-                        color: "var(--primary-color, #6f42c1)",
-                        borderRadius: "8px",
-                        padding: "8px 20px",
-                        fontWeight: "600",
-                      }}
+                      className="custom-btn-primary"
                     >
                       <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
-                    </Button>
+                    </button>
                   ) : (
                     <div className="d-flex gap-2">
                       <button
@@ -1352,7 +1386,7 @@ const LibraryCardDetail = ({
                         {saving ? "Saving..." : hasDataChanged() ? `Save - ${formatDateDDMMYYYY(new Date())}` : "Save"}
                       </button>
                       <button
-                        className="custom-btn-secondary "
+                        className="custom-btn-secondary"
                         onClick={handleCancel}
                         disabled={saving}
                       >
@@ -1362,25 +1396,23 @@ const LibraryCardDetail = ({
                     </div>
                   )}
                   {!isEditing && (
-                    <Button
-                      variant="outline-danger"
+                    <button
                       onClick={handleDelete}
-                      className="ms-2"
+                      className="ms-2 custom-btn-delete-detail"
                     >
                       <i className="fa-solid fa-trash me-2"></i>
                       Delete
-                    </Button>
+                    </button>
                   )}
                 </div>
               </div>
               <Row className="mt-4 pe-0">
-                {/* Overview Section */}
                 {normalizedFields &&
                   normalizedFields.details &&
-                  moduleName === "librarycards" && (
+                  moduleName === "librarycard" && (
                     <>
                       <Col md={9}>
-                        <h5
+                        <h6
                           className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                           style={{
                             color: "var(--primary-color)",
@@ -1389,7 +1421,7 @@ const LibraryCardDetail = ({
                           }}
                         >
                           {moduleLabel} Information
-                        </h5>
+                        </h6>
                         <Row className="px-5">
                           <Col md={6}>
                             {normalizedFields.details
@@ -1416,7 +1448,7 @@ const LibraryCardDetail = ({
                           </Col>
                         </Row>
                         <Col className="pt-4">
-                          <h5
+                          <h6
                             className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                             style={{
                               color: "var(--primary-color)",
@@ -1425,7 +1457,7 @@ const LibraryCardDetail = ({
                             }}
                           >
                             Others
-                          </h5>
+                          </h6>
                           <Row className="px-5">
                             <Col md={6}>
                               {normalizedFields.other
@@ -1457,7 +1489,7 @@ const LibraryCardDetail = ({
                         {customSections.length > 0 &&
                           customSections.map((section, idx) => (
                             <>
-                              <h5
+                              <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
@@ -1467,7 +1499,7 @@ const LibraryCardDetail = ({
                                 }}
                               >
                                 {section.title}
-                              </h5>
+                              </h6>
                               <Col md={section.colSize || 12}>
                                 {section.render
                                   ? section.render(data)
@@ -1479,7 +1511,7 @@ const LibraryCardDetail = ({
                       {bookStatistics.length > 0 &&
                         bookStatistics.map((section, idx) => (
                           <Col md={section.colSize || 12} key={idx} className="mt-5">
-                            <h5
+                            <h6
                               className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                               style={{
                                 color: "var(--primary-color)",
@@ -1489,7 +1521,7 @@ const LibraryCardDetail = ({
                               }}
                             >
                               {section.title}
-                            </h5>
+                            </h6>
                             {section.render
                               ? section.render(data)
                               : section.content}
@@ -1511,72 +1543,6 @@ const LibraryCardDetail = ({
         confirmText="Delete"
         cancelText="Cancel"
       />
-      <style jsx>{`
-        .detail-section {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 0;
-        }
-
-        .detail-row {
-          display: flex;
-          border-bottom: 1px solid #e9ecef;
-          min-height: 56px;
-          align-items: center;
-          transition: background-color 0.2s;
-        }
-
-        .detail-row:hover {
-          background-color: #f8f9fa;
-        }
-
-        .detail-row:last-child {
-          border-bottom: none;
-        }
-
-        .detail-label {
-          width: 35%;
-          padding: 12px 16px;
-          font-weight: 600;
-          background: linear-gradient(to right, #f8f9fa, #ffffff);
-          border-right: 1px solid #e9ecef;
-          color: #495057;
-          font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-        }
-
-        .detail-value {
-          flex: 1;
-          padding: 12px 16px;
-          background: white;
-          display: flex;
-          align-items: center;
-          color: #212529;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        @media (max-width: 768px) {
-          .detail-row {
-            flex-direction: column;
-            align-items: flex-start;
-            min-height: auto;
-          }
-
-          .detail-label {
-            width: 100%;
-            border-right: none;
-            border-bottom: 1px solid #e9ecef;
-            padding: 8px 12px;
-          }
-
-          .detail-value {
-            width: 100%;
-            padding: 8px 12px;
-          }
-        }
-      `}</style>
     </Container>
   );
 };

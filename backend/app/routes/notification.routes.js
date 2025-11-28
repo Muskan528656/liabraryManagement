@@ -252,6 +252,6 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/notifications", router);
+   app.use( "/api/notifications", router);
 };
 

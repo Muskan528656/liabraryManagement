@@ -43,19 +43,21 @@ async function create(data) {
   try {
     const query = `
       INSERT INTO ${schema}.user_role 
-      (role_name, is_active, createdbyid, lastmodifiedbyid, createddate, lastmodifieddate)
-      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      (role_name, is_active, country_code, createdbyid, lastmodifiedbyid, createddate, lastmodifieddate)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *;
     `;
 
     const values = [
       data.role_name,
       data.is_active ?? true,
+      data.country_code || null,
       data.createdbyid,
       data.lastmodifiedbyid,
     ];
 
     const result = await sql.query(query, values);
+    console.log('New Role Created:', result.rows[0]);
     return result.rows[0];
   } catch (error) {
     console.error("Error in UserRole.create:", error);
@@ -71,15 +73,17 @@ async function update(id, data) {
       SET 
         role_name = $1,
         is_active = $2,
-        lastmodifiedbyid = $3,
+        country_code = $3,
+        lastmodifiedbyid = $4,
         lastmodifieddate = CURRENT_TIMESTAMP
-      WHERE id = $4
+      WHERE id = $5
       RETURNING *;
     `;
 
     const values = [
       data.role_name,
       data.is_active,
+      data.country_code || null,
       data.lastmodifiedbyid,
       id,
     ];
