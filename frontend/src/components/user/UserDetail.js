@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import ModuleDetail from "../common/ModuleDetail";
+import DataApi from "../../api/dataApi";
 
 const UserDetail = () => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
     try {
@@ -15,6 +17,27 @@ const UserDetail = () => {
     } catch (error) {
       console.error("Error decoding token:", error);
     }
+  }, []);
+
+  useEffect(() => {
+    // Fetch all roles and keep as externalData so select shows role_name
+    const loadRoles = async () => {
+      try {
+        const api = new DataApi("user-role");
+        const response = await api.fetchAll();
+        const payload = response?.data ?? [];
+        let list = [];
+        if (Array.isArray(payload)) list = payload;
+        else if (payload && payload.success && Array.isArray(payload.data)) list = payload.data;
+        else if (payload && Array.isArray(payload.data)) list = payload.data;
+        setRoles(list || []);
+      } catch (err) {
+        console.error("Error loading roles:", err);
+        setRoles([]);
+      }
+    };
+
+    loadRoles();
   }, []);
 
   const fields = {
@@ -56,6 +79,11 @@ const UserDetail = () => {
     createdbyid: currentUser.id,
     lastmodifiedbyid: currentUser.id
   } : {};
+
+  // attach roles array so ModuleDetail's select can use externalData.roles
+  if (roles && roles.length > 0) {
+    externalData.roles = roles;
+  }
 
   return (
     <ModuleDetail

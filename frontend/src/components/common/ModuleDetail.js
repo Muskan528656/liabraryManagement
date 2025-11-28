@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -41,6 +39,8 @@ const LOOKUP_ENDPOINT_MAP = {
   libraries: "library",
   library: "library",
 };
+
+
 
 const normalizeListResponse = (payload) => {
   if (!payload) return [];
@@ -111,6 +111,7 @@ const ModuleDetail = ({
   imageUrl = null,
   lookupNavigation = {},
   externalData = {},
+  LookupNavigation = {},
 
 }) => {
   
@@ -164,9 +165,7 @@ const ModuleDetail = ({
     const loadData = async () => {
       try {
         setLoading(true);
-
         await fetchData();
-
         if (relatedModules.length > 0) {
           await fetchRelatedData();
         }
@@ -192,24 +191,37 @@ const ModuleDetail = ({
       console.log(`Fetched `, response);
       if (response && response.data) {
         const responseData = response.data;
-        if (responseData.success && responseData.data) {
-          setData(responseData.data);
+        // determine finalData from multiple possible response shapes
+        let finalData = null;
+        if (responseData && responseData.success && responseData.data) {
+          finalData = responseData.data;
         } else if (
+          responseData &&
           responseData.data &&
           responseData.data.success &&
           responseData.data.data
         ) {
-          setData(responseData.data.data);
-        } else if (responseData.data) {
-          setData(responseData.data);
-        } else if (responseData.id) {
-          setData(responseData);
+          finalData = responseData.data.data;
+        } else if (responseData && responseData.data) {
+          finalData = responseData.data;
+        } else if (responseData && responseData.id) {
+          finalData = responseData;
         } else if (Array.isArray(responseData) && responseData.length > 0) {
-          console.log("response data ", responseData[0]);
-          setData(responseData[0]);
+          finalData = responseData[0];
         } else {
-          // Direct data object
-          setData(responseData);
+          finalData = responseData;
+        }
+
+        setData(finalData);
+
+        // If the route opened with an intent to edit, initialize editing state with the fetched record
+        try {
+          if (location?.state?.isEdit) {
+            setIsEditing(true);
+            setTempData({ ...(finalData || {}), ...(externalData || {}) });
+          }
+        } catch (e) {
+          // ignore
         }
       } else {
         throw new Error("No response received from API");
@@ -303,6 +315,10 @@ const ModuleDetail = ({
       isMounted = false;
     };
   }, []);
+
+
+
+
 
   const normalizeLookupPath = (path = "") => {
     return path.replace(/^\/+|\/+$/g, "");
@@ -469,9 +485,15 @@ const ModuleDetail = ({
     return String(value);
   };
   useEffect(() => {
-    
-   setTempData(location?.state?.rowData ? { ...location?.state?.rowData, ...externalData } : null);
-  }, [location?.state?.isEdit, location?.state?.rowData, externalData]);
+    // Only initialize tempData from location state when rowData is provided.
+    // Avoid resetting tempData to null (which clears the edit form) when there is no rowData
+    // — fetchData will initialize tempData from the server response instead.
+    if (location?.state?.rowData) {
+      setTempData({ ...location.state.rowData, ...externalData });
+      // If route explicitly asked to open in edit mode, reflect that as well
+      if (location.state.isEdit) setIsEditing(true);
+    }
+  }, [location?.state?.rowData, location?.state?.isEdit, externalData]);
 
   const handleEdit = () => {
     // let Id = location?.state.id; 
@@ -481,6 +503,7 @@ const ModuleDetail = ({
     } else {
       setIsEditing(true);
       setTempData({ ...data, ...externalData });
+      console.log("data.....1",data);
     }
   };
 
@@ -489,14 +512,33 @@ const ModuleDetail = ({
       setSaving(true);
       const api = new DataApi(moduleApi);
       const response = await api.update(tempData, id);
+      console.log("Update response:", response);
 
+      // Normalize various response shapes
+      let updatedRecord = null;
       if (response && response.data) {
+        const payload = response.data;
+        if (payload.success && payload.data) updatedRecord = payload.data;
+        else if (payload.data && (payload.data.id || typeof payload.data === "object")) updatedRecord = payload.data;
+        else if (payload.id || payload.uuid) updatedRecord = payload;
+      }
+
+      if (updatedRecord) {
+        // Update local state optimistically
+        setData((prev) => ({ ...(prev || {}), ...(updatedRecord || {}) }));
+        PubSub.publish("RECORD_SAVED_TOAST", {
+          title: "Success",
+          message: `${moduleLabel} updated successfully`,
+        });
+        setIsEditing(false);
+        setTempData(null);
+      } else if (response && (response.status === 200 || response.status === 201)) {
+        // Fallback: re-fetch from server if update returned no usable payload but HTTP status OK
         await fetchData();
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
         });
-
         setIsEditing(false);
         setTempData(null);
       } else {
@@ -529,7 +571,24 @@ const ModuleDetail = ({
 
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
-    const value = currentData[field.key];
+    // Try to resolve the value from multiple possible keys so we tolerate different API shapes
+    const resolveFieldValue = (obj, key) => {
+      if (!obj) return undefined;
+      if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
+      // common alternatives
+      const camel = key.replace(/_([a-z])/g, (m, p1) => p1.toUpperCase());
+      if (Object.prototype.hasOwnProperty.call(obj, camel)) return obj[camel];
+      const noscore = key.replace(/_/g, "");
+      if (Object.prototype.hasOwnProperty.call(obj, noscore)) return obj[noscore];
+      // generic fallbacks
+      if (key.toLowerCase().includes("role") && Object.prototype.hasOwnProperty.call(obj, "role_name")) return obj["role_name"];
+      if (key.toLowerCase().includes("role") && Object.prototype.hasOwnProperty.call(obj, "role")) return obj["role"];
+      if ((key.toLowerCase().includes("name") || key.toLowerCase().includes("title")) && Object.prototype.hasOwnProperty.call(obj, "name")) return obj["name"];
+      if (Object.prototype.hasOwnProperty.call(obj, "id")) return obj["id"];
+      return obj[key];
+    };
+
+    const value = resolveFieldValue(currentData, field.key);
 
     if (isEditing) {
       if (field.type === "date" && value) {
@@ -570,11 +629,16 @@ const ModuleDetail = ({
       try {
         const api = new DataApi(moduleApi);
         await api.delete(id);
-            PubSub.publish("RECORD_SAVED_TOAST", {
-              title: "Success",
-              message: `${moduleLabel} deleted successfully`,
-            });
-            navigate(`/${moduleName}`);
+              PubSub.publish("RECORD_SAVED_TOAST", {
+                title: "Success",
+                message: `${moduleLabel} deleted successfully`,
+              });
+              // Resolve list route: some modules use a different UI route than API endpoint
+              const API_TO_ROUTE = {
+                "user-role": "userroles",
+              };
+              const listPath = API_TO_ROUTE[moduleApi] || moduleApi;
+              navigate(`/${listPath}`);
         } catch (error) {
           PubSub.publish("RECORD_ERROR_TOAST", {
             title: "Error",
@@ -592,7 +656,12 @@ const ModuleDetail = ({
         title: "Success",
         message: `${moduleLabel} deleted successfully`,
       });
-      navigate(`/${moduleName}`);
+      // Resolve list route for navigation back to list view
+      const API_TO_ROUTE = {
+        "user-role": "userroles",
+      };
+      const listPath = API_TO_ROUTE[moduleApi] || moduleApi;
+      navigate(`/${listPath}`);
     } catch (error) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Error",
@@ -832,6 +901,35 @@ const ModuleDetail = ({
                                         opacity: 0.9,
                                       }}
                                     />
+                                  )}
+                                </Form.Group>
+                              );
+                            }
+
+                            // Special rendering for is_active: show switch + live badge when editing, badge when viewing
+                            if (field.key === "is_active") {
+                              return (
+                                <Form.Group key={index} className="mb-3">
+                                  <Form.Label className="fw-semibold">
+                                    {field.label}
+                                  </Form.Label>
+                                  {isEditing ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                      <Form.Check
+                                        type="switch"
+                                        id={`field-switch-${field.key}-${index}`}
+                                        checked={Boolean(tempData?.[field.key])}
+                                        onChange={(e) => handleFieldChange(field.key, e.target.checked)}
+                                        // label={tempData?.[field.key] ? "Active" : "Inactive"}
+                                      />
+                                      <Badge bg={tempData?.[field.key] ? (field.badgeConfig?.true || "success") : (field.badgeConfig?.false || "secondary")}>
+                                        {tempData?.[field.key] ? (field.badgeConfig?.true_label || "Active") : (field.badgeConfig?.false_label || "Inactive")}
+                                      </Badge>
+                                    </div>
+                                  ) : (
+                                    <Badge bg={currentData?.[field.key] ? (field.badgeConfig?.true || "success") : (field.badgeConfig?.false || "secondary")}>
+                                      {currentData?.[field.key] ? (field.badgeConfig?.true_label || "Active") : (field.badgeConfig?.false_label || "Inactive")}
+                                    </Badge>
                                   )}
                                 </Form.Group>
                               );

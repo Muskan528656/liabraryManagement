@@ -11,11 +11,9 @@ export default class DataApi {
     fetchAll(queryString = '') {
         const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
         console.log('fetchAll url: ', url);
-        return axios.get(url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = {};
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.get(url, { headers });
     }
 
     // Fetch a single record
@@ -31,65 +29,48 @@ export default class DataApi {
     // Create a record
     create(data) {
         console.log('data', data);
-        return axios.post(this.baseUrl, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.post(this.baseUrl, data, { headers });
     }
 
     post(url, data) {
-        return axios.post(this.baseUrl + url, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.post(this.baseUrl + url, data, { headers });
     }
 
     put(url, data) {
-        return axios.put(this.baseUrl + url, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.put(this.baseUrl + url, data, { headers });
     }
 
     get(url, config = {}) {
-        return axios.get(this.baseUrl + url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-            ...config, // Allow passing additional config like responseType
-        });
+        const headers = {};
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.get(this.baseUrl + url, { headers, ...config });
     }
 
     // Update a record
     update(data, id) {
         console.log(`Update Method: ${this.baseUrl}/${id}`);
-        return axios.put(`${this.baseUrl}/${id}`, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        }); // Update
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.put(`${this.baseUrl}/${id}`, data, { headers }); // Update
     }
     // Delete a record
     delete(id) {
-        return axios.delete(`${this.baseUrl}/${id}`, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = {};
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.delete(`${this.baseUrl}/${id}`, { headers });
     }
 
     // Delete with data in body (for bulk operations)
     deleteWithBody(url, data) {
-        return axios.delete(this.baseUrl + url, {
-            data: data,
-            headers: {
-                Authorization: `${this.token}`,
-                'Content-Type': 'application/json',
-            },
-        });
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.delete(this.baseUrl + url, { data: data, headers });
     }
 
     async search(params = {}) {
@@ -100,12 +81,9 @@ export default class DataApi {
             ...(display_fields && { display_fields }),
         };
 
-        const res = await axios.get(this.baseUrl, {
-            params: queryParams,
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = {};
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        const res = await axios.get(this.baseUrl, { params: queryParams, headers });
 
         return res.data;
     }
@@ -113,10 +91,8 @@ export default class DataApi {
     // Bulk upsert records
     upsert(data) {
         console.log('upsert payload data: ', data);
-        return axios.post(this.baseUrl, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
+        return axios.post(this.baseUrl, data, { headers });
     }
 }
