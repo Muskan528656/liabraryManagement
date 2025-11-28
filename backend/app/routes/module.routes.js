@@ -206,5 +206,5 @@ module.exports = (app) => {
     res.status(400).json({ success: false, message: "Bad request." });
   });
 
-  app.use(process.env.BASE_API_URL + "/api/whatsapp/module", router);
+  app.use(process.env.BASE_API_URL+"/api/module", router);
 };

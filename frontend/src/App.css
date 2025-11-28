@@ -82,7 +82,7 @@
 
 .custom-btn-table-header {
   background-color: var(--primary-background-color) !important;
-  border: 1px solid  var(--primary-color) !important;
+  border: 1px solid var(--primary-color) !important;
   font-weight: 600;
   border-radius: 5px;
   color: var(--primary-color);
@@ -1618,8 +1618,8 @@ textarea.form-control[required] {
 }
 
 /* Pagination styling - Using Sidebar Purple Colors */
-.pagination li{
-      --bs-pagination-font-size: 0.8rem !important;
+.pagination li {
+  --bs-pagination-font-size: 0.8rem !important;
 }
 
 .pagination-container .pagination,

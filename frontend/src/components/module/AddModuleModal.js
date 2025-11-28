@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Col, Form, Modal, Row } from "react-bootstrap";
-import { ToastContainer, toast } from "react-toastify"; // npm i react-toastify --force
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import WhatsAppAPI from "../../api/WhatsAppAPI";
 import PubSub from "pubsub-js";

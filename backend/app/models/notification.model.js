@@ -201,7 +201,7 @@ const Notification = {
                    LEFT JOIN demo.books b ON bi.book_id = b.id
                    LEFT JOIN demo."user" issued_to_user ON bi.issued_to = issued_to_user.id
                    LEFT JOIN demo."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN demo.id_cards lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   LEFT JOIN demo.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    ORDER BY bi.createddate DESC`;
     const result = await sql.query(query);
 

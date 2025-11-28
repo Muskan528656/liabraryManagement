@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import {
   Card,
@@ -277,9 +276,12 @@ const LibraryCardDetail = ({
         displayKey: "user_name",
       },
       { key: "card_number", label: "Card Number", type: "text" },
-      { key: "user_email", label: "Email", type: "text" },
-      { key: "issue_date", label: "Issue Date", type: "date" },
-      { key: "expiry_date", label: "Submission Date", type: "date" },
+      { key: "first_name", label: "First Name", type: "text" },
+      { key: "last_name", label: "Lastname", type: "text" },
+      { key: "email", label: "Email", type: "text" },
+      { key: "phone_number", label: "Card Number", },
+      { key: "registration_date", label: "Registraion Date", },
+
       {
         key: "is_active",
         label: "Status",
@@ -1351,18 +1353,18 @@ const LibraryCardDetail = ({
                 }}
               >
 
-                
+
                 <div className="d-flex align-items-center gap-3">
-                    <button onClick={handleBack} className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back">
-                      <i className="fa-solid fa-arrow-left"></i>
-                    </button>
-                <h5
-                  className="fw-bold mb-1"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="fa-solid fa-id-card me-2"></i>
-                  Library Members
-                </h5>
+                  <button onClick={handleBack} className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back">
+                    <i className="fa-solid fa-arrow-left"></i>
+                  </button>
+                  <h5
+                    className="fw-bold mb-1"
+                    style={{ color: "var(--primary-color)" }}
+                  >
+                    <i className="fa-solid fa-id-card me-2"></i>
+                    Library Members
+                  </h5>
                 </div>
                 <div>
                   {!isEditing ? (

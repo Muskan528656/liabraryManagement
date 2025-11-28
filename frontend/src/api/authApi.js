@@ -18,7 +18,7 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
-
+debugger
       const result = await response.json();
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);

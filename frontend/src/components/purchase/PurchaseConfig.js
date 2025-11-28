@@ -100,10 +100,10 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             label: "Total Amount",
             type: "number",
             required: true,
-            disabled: true, // ✅ Total amount calculated - disabled
+            disabled: true, 
             readOnly: true,
             calculateValue: (formData) => {
-                // ✅ Auto calculate total amount
+               
                 const quantity = parseFloat(formData.quantity) || 0;
                 const unitPrice = parseFloat(formData.unit_price) || 0;
                 return (quantity * unitPrice).toFixed(2);
@@ -155,7 +155,7 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             handleAdd: (navigate) => {
                 navigate('/purchase/bulk');
             },
-            // ✅ Auto calculate total amount when quantity or unit price changes
+       
             onFormDataChange: (formData, setFormData) => {
                 const quantity = parseFloat(formData.quantity) || 0;
                 const unitPrice = parseFloat(formData.unit_price) || 0;

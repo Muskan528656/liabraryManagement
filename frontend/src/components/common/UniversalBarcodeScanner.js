@@ -74,7 +74,7 @@ const UniversalBarcodeScanner = () => {
             // Try to detect what type of data this is
             const detectedType = await detectDataType(barcode.trim());
             console.log("Detected data type:", detectedType);
-            
+
             // If it's a library card with navigate flag, navigate directly
             if (detectedType && detectedType.type === "librarycard" && detectedType.navigate) {
                 setLoading(false);
@@ -82,7 +82,7 @@ const UniversalBarcodeScanner = () => {
                 navigate(detectedType.module);
                 return;
             }
-            
+
             setDetectedData(detectedType);
         } catch (error) {
             console.error("Error detecting barcode data:", error);
@@ -117,7 +117,7 @@ const UniversalBarcodeScanner = () => {
                             barcodeTrimmed.toUpperCase().includes(card.card_number.toUpperCase())) return true;
                         return false;
                     });
-                    
+
                     if (foundCard) {
                         return {
                             type: "librarycard",

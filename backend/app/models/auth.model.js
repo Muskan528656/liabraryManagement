@@ -148,10 +148,8 @@ async function findByEmail(email) {
 }
 
 async function findById(id) {
-  console.log("Finding user by ID:", id, "in schema:", this.schema);
   try {
     let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM ${this.schema}.user u`;
-    // Removed manager related joins as managerid doesn't exist in table
     query += ` WHERE u.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) return result.rows[0];

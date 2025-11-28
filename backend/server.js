@@ -50,34 +50,34 @@ app.set('io', io);
 
 io.on("connection", (socket) => {
 
-  console.log("✅ New socket connected:", socket.id);
+  console.log(" New socket connected:", socket.id);
 
   socket.on("setup", (userData) => {
-    console.log("📥 Setup event received:", userData);
+    console.log(" Setup event received:", userData);
 
     const userId = userData.id || userData.userId;
 
     if (userId) {
       socket.join(userId);
-      socket.join(`user_${userId}`); // join user notification room
+      socket.join(`user_${userId}`);
       socket.data.userId = userId;
-      socket.data.deviceId = userData.deviceId; // store device id
+      socket.data.deviceId = userData.deviceId;
 
-      console.log(`🟢 User ${userId} connected to rooms: ${userId}, user_${userId}`);
+      console.log(`User ${userId} connected to rooms: ${userId}, user_${userId}`);
       console.log(`   Device ID: ${socket.data.deviceId}`);
     } else {
-      console.warn("⚠️ No user ID found in setup data:", userData);
+      console.warn(" No user ID found in setup data:", userData);
     }
 
     socket.emit("connected");
   });
 
   socket.on("notification_read", (data) => {
-    console.log("📬 Notification read:", data);
+    console.log(" Notification read:", data);
   });
 
   socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
+    console.log(` User disconnected: ${socket.id}`);
   });
 });
 
@@ -97,6 +97,10 @@ require("./app/routes/notification.routes.js")(app);
 require("./app/routes/module.routes.js")(app);
 require("./app/routes/company.routes.js")(app);
 require("./app/routes/userrole.routes.js")(app);
+require("./app/routes/autoconfig.route.js")(app);
+require("./app/routes/subscription.routes.js")(app);
+require("./app/routes/rolepermission.routes.js")(app);
+require("./app/routes/permission.route.js")(app);
 
 //added dashboard route --Aabid
 require("./app/routes/dashbard.router.js")(app);

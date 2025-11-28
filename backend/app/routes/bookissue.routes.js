@@ -131,20 +131,18 @@ module.exports = (app) => {
         BookIssue.init(req.userinfo.tenantcode);
         const issue = await BookIssue.issueBook(req.body, userId);
         
-        // Create notification for the user who received the book
+      
         if (issue && issue.issued_to) {
           try {
             Notification.init(req.userinfo.tenantcode);
-            
-            // Fetch book details to get title
-            const sql = require("../models/db.js");
+              const sql = require("../models/db.js");
             const bookQuery = await sql.query(
               `SELECT title FROM ${req.userinfo.tenantcode}.books WHERE id = $1`,
               [issue.book_id]
             );
             const bookTitle = bookQuery.rows.length > 0 ? bookQuery.rows[0].title : "Book";
             
-            // Format due date
+          
             const dueDate = issue.due_date ? new Date(issue.due_date).toLocaleDateString('en-IN', {
               year: 'numeric',
               month: 'long',
@@ -341,7 +339,7 @@ module.exports = (app) => {
   });
 
   
-
-  app.use(process.env.BASE_API_URL + "/api/bookissue", router);
+app.use(process.env.BASE_API_URL+ "/api/bookissue", router);
+  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/bookissue", router);
 };
 

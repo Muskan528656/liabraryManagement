@@ -26,12 +26,12 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                     </span>
                 ),
 
-                  render: (value) => (
-                <Badge bg={value ? "success" : "secondary"}>
-                    {value ? "Active" : "Inactive"}
-                </Badge>
-            )
-            
+                render: (value) => (
+                    <Badge bg={value ? "success" : "secondary"}>
+                        {value ? "Active" : "Inactive"}
+                    </Badge>
+                )
+
             }
         ],
 

@@ -1,6 +1,6 @@
 export const API_BASE_URL =
   window.location.hostname === "localhost"
-    ? "http://localhost:3003/ibs"
+    ? "http://localhost:3003"
     : `${window.location.protocol}//${window.location.hostname}/ibs`;
 
 export const FRONTEND_URL = `${window.location.protocol}//${window.location.hostname}`;

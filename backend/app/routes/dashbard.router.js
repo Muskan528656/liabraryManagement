@@ -17,14 +17,9 @@ console.log('connect dashbard');
 
 module.exports = (app) => {
     var router = require("express").Router();
-
-
-
-
-
-    router.get("/",  fetchUser, async (req, res) => {
+    router.get("/", fetchUser, async (req, res) => {
         try {
-            
+
             const result = await Dashboard.fetchAll();
             console.log('dashboard fetch all result', result);
             res.status(200).json({ success: true, data: result });
@@ -38,16 +33,16 @@ module.exports = (app) => {
     router.get("/stats", async (req, res) => {
         try {
             console.log('stats router connect');
-            
+
             const result = await Dashboard.getDashboardStats();
             res.status(200).json({ success: true, data: result });
 
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
             res.status(500).json({ success: false, message: "Internal server error" });
-        } 
+        }
     });
-    
+
 
     // Get other metrics
     router.get("/other-metrics", fetchUser, async (req, res) => {
@@ -59,7 +54,7 @@ module.exports = (app) => {
             console.error("Error fetching other metrics:", error);
             res.status(500).json({ success: false, message: "Internal server error" });
         }
-        
+
     });
 
 
