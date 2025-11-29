@@ -11,7 +11,7 @@ function init(schema_name) {
     this.schema = schema_name;
 }
 
-// Find all permissions
+ 
 async function findAll() {
     const query = `
         SELECT p.*, m.name AS module_name, m.api_name AS module_api_name
@@ -23,7 +23,7 @@ async function findAll() {
     return result.rows.length ? result.rows : [];
 }
 
-// Find permission by ID
+ 
 async function findById(id) {
     const query = `
         SELECT p.*, m.name AS module_name, m.api_name AS module_api_name
@@ -35,7 +35,7 @@ async function findById(id) {
     return result.rows.length ? result.rows[0] : null;
 }
 
-// Create a new permission
+ 
 async function create(data, userId) {
     const query = `
         INSERT INTO demo.permissions
@@ -55,7 +55,7 @@ async function create(data, userId) {
     return result.rows[0] || null;
 }
 
-// Update permission by ID
+ 
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Permission not found");
@@ -85,7 +85,7 @@ async function updateById(id, data, userId) {
     return result.rows.length ? result.rows[0] : null;
 }
 
-// Delete permission by ID
+ 
 async function deleteById(id) {
     const query = `DELETE FROM demo.permissions WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);

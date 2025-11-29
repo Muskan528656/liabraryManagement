@@ -1,4 +1,4 @@
-// import "./Sidebar.css";
+ 
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-date-range/dist/styles.css";
@@ -15,24 +15,24 @@ import Main from "./components/layout/Main";
 import EditProfile from "./components/EditProfile";
 import Books from "./components/books/Books";
 import BookDetail from "./components/books/BookDetail";
-// import BookDetail from "./components/books/BookDetail";
+ 
 import Author from "./components/author/Author";
-// import AuthorDetail from "./components/author/AuthorDetail";
+ 
 import Category from "./components/category/Category";
-// import CategoryDetail from "./components/category/CategoryDetail";
+ 
 import Vendor from "./components/Vendor/Vendor";
 import VendorDetail from "./components/Vendor/VendorDetail";
-// import VendorDetail from "./components/Vendor/VendorDetail";
+ 
 import Purchase from "./components/purchase/Purchase";
 import User from "./components/user/User";
 import UserDetail from "./components/user/UserDetail";
 import LibraryCard from "./components/librarycard/LibraryCard";
-// import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
+ 
 import BookIssue from "./components/bookissue/BookIssue";
 import BookSubmit from "./components/booksubmit/BookSubmit";
 import LibrarySettings from "./components/librarysettings/LibrarySettings";
-// import MemberPortal from "./components/memberportal/MemberPortal";
-// import RequestBook from "./components/bookrequest/RequestBook";
+ 
+ 
 import ToastManager from "./components/common/ToastManager";
 import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
@@ -50,8 +50,7 @@ import AutoConfigDetail from "./components/autoconfig/AutoConfigDetail";
 import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
-import PermissionDetail from "./components/Permission/PermissionDetail";
-// import Settings from "./components/librarycardtype/LibraryCardType";
+ 
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
   const [userInfo, setUserInfo] = useState(null); // null = not yet loaded
@@ -96,20 +95,20 @@ function App() {
           setConnectedSocket(socket);
         });
 
-        // socket.on("connected", () => {
-        // });
+ 
+ 
 
-        // socket.on("receivedwhatsappmessage", (item) => {
+ 
 
-        // });
+ 
 
-        // socket.on("disconnect", (reason) => {
-        //   // console.log('Socket disconnected:', reason);
-        // });
+ 
+ 
+ 
 
-        // socket.on("connect_error", (err) => {
-        //   // console.error('Connection error:', err);
-        // });
+ 
+ 
+ 
 
         setConnectedSocket(socket);
 
@@ -133,7 +132,7 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  // If user is not logged in, show only login page
+ 
   if (userInfo === false) {
     return (
       <>
@@ -162,8 +161,8 @@ function App() {
 
             <Route path="userroles" element={<UserRole />} />
             <Route path="user-role/:id" element={<UserRoleDetail />} />
-            <Route path="autoconfig" element={<AutoConfig />} />
-            <Route path="auto-config/:id" element={<AutoConfigDetail />} />
+            {/* <Route path="autoconfig" element={<AutoConfig />} /> */}
+            {/* <Route path="auto-config/:id" element={<AutoConfigDetail />} /> */}
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="book" element={<Books />} />
@@ -175,10 +174,10 @@ function App() {
             <Route path="purchase" element={<Purchase />} />
             <Route path="purchase/:id" element={<PurchaseDetail />} />
             <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
-            <Route path="subscription" element={<Subscription />} />
-            <Route path="subscription/:id" element={<SubscriptionDetail />} />
+            <Route path="subscriptions" element={<Subscription />} />
+            <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="permissions" element={<Permission />} />
-            <Route path="permissions/:id" element={<PermissionDetail />} />
+            {/* <Route path="permissions/:id" element={<PermissionDetail />} /> */}
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />

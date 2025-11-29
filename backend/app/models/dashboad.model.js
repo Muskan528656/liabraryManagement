@@ -15,7 +15,7 @@ const getDashboardStats = async () => {
   try {
     console.log('bookCountResult ');
     const stats = {};
-    // Example queries to fetch stats from different tables
+ 
     const bookCountResult = await sql.query(`SELECT COUNT(*) FROM demo.books`);
     stats.total_books = bookCountResult.rows[0].count;
     const booksubmission = await sql.query(`SELECT COUNT(*) FROM demo.book_submissions`);
@@ -25,7 +25,7 @@ const getDashboardStats = async () => {
 
     const dailyActivityResult = await sql.query(`SELECT COUNT(*) AS dailyActivity FROM demo.books WHERE DATE(createddate) = CURRENT_DATE`);
     stats.dailyActivity = dailyActivityResult.rows[0].dailyActivity;
-   // books by category by month also add
+ 
     const booksByCategoryResult = await sql.query(`    
         SELECT 
             c.name AS category,
@@ -38,7 +38,7 @@ const getDashboardStats = async () => {
     `);
     stats.booksByCategory = booksByCategoryResult.rows;
 
-    //recentIssued
+ 
 
     const recentIssuedResult = await sql.query(`    
         SELECT 
@@ -77,24 +77,24 @@ const getDashboardStats = async () => {
   }
 };
 
-// Get other metrics
+ 
 const getOtherMetrics = async () => {
-//   try {
-//     const metrics = {};
-//     // Example additional metrics
-//     const overdueBooksResult = await sql.query(`SELECT COUNT(*) FROM ${this.schema}.book_issues WHERE due_date < NOW() AND status = 'issued'`);
-//     metrics.overdue_books = overdueBooksResult.rows[0].count;
-//     res.status(200).json({ success: true, data: metrics });
-//   }
-//     catch (error) {
-//     console.error("Error fetching other metrics:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 };
 
 
   
-// Fetch all dashboard data
+ 
 const fetchAll = async () => {
     try {
         const result = await sql.query(`         

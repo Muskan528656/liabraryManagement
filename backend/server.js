@@ -102,7 +102,7 @@ require("./app/routes/subscription.routes.js")(app);
 require("./app/routes/rolepermission.routes.js")(app);
 require("./app/routes/permission.route.js")(app);
 
-//added dashboard route --Aabid
+ 
 require("./app/routes/dashbard.router.js")(app);
 
 server.listen(PORT, () => {
@@ -111,42 +111,42 @@ server.listen(PORT, () => {
 });
 
 
-// cron.schedule("0 */20 * * *", async function () {
-//   console.log("Public Leads");
-//   try {
-//     const res = await Publicleads.getOpenLeads();
+ 
+ 
+ 
+ 
 
-//     res.map((data, idx) => {
-//       let subject = "Unlock the Power of WhatsApp Business for Your Business";
-//       Mailer.sendEmail(data.email, data, subject, "public_lead");
-//     });
-//   } catch (error) {
-//     console.error("Error running scheduled task:", error);
-//   }
-// });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
-// cron.schedule("30 9 */2 * *", async () => {
-//   // cron.schedule("0 23 * * *", async () => {
-//   const today = moment().format("YYYY-MM-DD");
-//   const endDate = moment().add(7, "days").format("YYYY-MM-DD");
-//   console.log("endDate,today", endDate, today);
-//   const subscriptions = await Invoice.findSubscriptionsForRenewal(
-//     today,
-//     endDate
-//   );
-//   console.log("subscriptions", subscriptions);
-//   for (const sub of subscriptions) {
-//     const emailData = {
-//       name: `${sub.firstname} ${sub.lastname}`,
-//       end_date: moment(sub.end_date).format("DD-MM-YYYY"),
-//     };
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-//     const template =
-//       sub.plan_name.toLowerCase() === "free"
-//         ? "free_subscription_expire"
-//         : "subscription_expire";
-//     await Mailer.sendEmail(sub.email, emailData, "", template);
-//     console.log(`Reminder sent to ${sub.email}`);
-//   }
-// });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

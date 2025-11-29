@@ -22,7 +22,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all companies
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -34,7 +34,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get company by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -49,7 +49,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get company by name
+ 
   router.get("/name/:name", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -65,7 +65,7 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new company
+ 
   router.post(
     "/",
     fetchUser,
@@ -85,7 +85,7 @@ module.exports = (app) => {
 
         Company.init(req.userinfo.tenantcode);
 
-        // Check for duplicate company name
+ 
         const existingCompany = await Company.findByName(req.body.name);
         if (existingCompany) {
           return res
@@ -106,7 +106,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update company by ID
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -126,13 +126,13 @@ module.exports = (app) => {
 
         Company.init(req.userinfo.tenantcode);
 
-        // Check if company exists
+ 
         const existingCompany = await Company.findById(req.params.id);
         if (!existingCompany) {
           return res.status(404).json({ errors: "Company not found" });
         }
 
-        // Check for duplicate company name (excluding current company)
+ 
         const duplicateCompany = await Company.findByName(
           req.body.name,
           req.params.id
@@ -156,7 +156,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete company by ID
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);

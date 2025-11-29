@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all vendors
+ 
 async function findAll() {
   try {
     if (!this.schema) {
@@ -25,7 +25,7 @@ async function findAll() {
   }
 }
 
-// Find vendor by ID
+ 
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -43,7 +43,7 @@ async function findById(id) {
   }
 }
 
-// Create a new vendor
+ 
 async function create(vendorData, userId) {
   try {
     if (!this.schema) {
@@ -80,14 +80,14 @@ async function create(vendorData, userId) {
   }
 }
 
-// Update vendor by ID
+ 
 async function updateById(id, vendorData, userId) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    // Build dynamic UPDATE query based on provided fields
+ 
     const updateFields = [];
     const values = [id];
     let paramIndex = 2;
@@ -145,7 +145,7 @@ async function updateById(id, vendorData, userId) {
       values.push(vendorData.company_id || vendorData.companyId || null);
     }
 
-    // Always update lastmodifieddate and lastmodifiedbyid
+ 
     updateFields.push(`lastmodifieddate = NOW()`);
     updateFields.push(`lastmodifiedbyid = $${paramIndex++}`);
     values.push(userId || null);
@@ -170,7 +170,7 @@ async function updateById(id, vendorData, userId) {
   }
 }
 
-// Delete vendor by ID
+ 
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -188,7 +188,7 @@ async function deleteById(id) {
   }
 }
 
-// Check if vendor name already exists (for duplicate check)
+ 
 async function findByName(name, excludeId = null) {
   try {
     if (!this.schema) {

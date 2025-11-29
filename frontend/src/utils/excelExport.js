@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 
-// Purple theme colors matching sidebar
+ 
 const PURPLE_PRIMARY = '6f42c1'; // Main purple
 const PURPLE_LIGHT = 'E9D5FF'; // Light purple matching sidebar (#e9d5ff)
 const PURPLE_DARK = '8b5cf6'; // Lighter purple for borders
@@ -19,7 +19,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(sheetName);
 
-    // If columns are provided, use them; otherwise infer from data
+ 
     let headers = [];
     if (columns && columns.length > 0) {
       headers = columns.map(col => ({
@@ -28,7 +28,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
         width: col.width || 15
       }));
     } else if (data.length > 0) {
-      // Infer headers from first data object
+ 
       headers = Object.keys(data[0]).map(key => ({
         key: key,
         header: key.split(/(?=[A-Z])/).join(' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -36,10 +36,10 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
       }));
     }
 
-    // Set column definitions
+ 
     worksheet.columns = headers;
 
-    // Style header row
+ 
     const headerRow = worksheet.getRow(1);
     headerRow.height = 25;
     headerRow.font = {
@@ -64,12 +64,12 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
       right: { style: 'thin', color: { argb: PURPLE_DARK } }
     };
 
-    // Add data rows
+ 
     data.forEach((row, index) => {
       const dataRow = worksheet.addRow(row);
       dataRow.height = 20;
 
-      // Alternate row colors
+ 
       if (index % 2 === 0) {
         dataRow.fill = {
           type: 'pattern',
@@ -84,7 +84,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
         };
       }
 
-      // Style cells
+ 
       dataRow.eachCell((cell, colNumber) => {
         cell.alignment = {
           vertical: 'middle',
@@ -104,7 +104,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
       });
     });
 
-    // Freeze header row
+ 
     worksheet.views = [
       {
         state: 'frozen',
@@ -112,7 +112,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
       }
     ];
 
-    // Auto-fit columns (with max width limit)
+ 
     worksheet.columns.forEach(column => {
       let maxLength = 0;
       column.eachCell({ includeEmpty: false }, (cell) => {
@@ -124,7 +124,7 @@ export const exportToExcel = async (data, filename, sheetName = 'Sheet1', column
       column.width = Math.min(Math.max(maxLength + 2, 10), column.width || 15);
     });
 
-    // Generate buffer and download
+ 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = window.URL.createObjectURL(blob);

@@ -12,6 +12,7 @@ export const getSubscriptionConfig = () => {
         moduleLabel: "Subscription",
         apiEndpoint: "subscriptions",
         initialFormData: {
+            renewal : "",
             plan_name: "",
             start_date: "",
             end_date: "",
@@ -20,6 +21,7 @@ export const getSubscriptionConfig = () => {
         },
         columns: [
             { field: "plan_name", label: "Plan Name" },
+            { field: "renewal", label: "Renewal" },
             { field: "start_date", label: "Start Date", type: "date" },
             { field: "end_date", label: "End Date", type: "date" },
             {
@@ -64,6 +66,13 @@ export const getSubscriptionConfig = () => {
                 name: "end_date",
                 label: "End Date",
                 type: "date",
+                colSize: 6,
+                helpText: "Keep empty for never ending plans"
+            },
+             {
+                name: "renewal",
+                label: "Renewal",
+                type: "text",
                 colSize: 6,
                 helpText: "Keep empty for never ending plans"
             },
@@ -114,6 +123,10 @@ export const getSubscriptionConfig = () => {
         ],
         customHandlers: {
             beforeSave: (formData) => {
+                if (formData.plan_name === "") {
+                    formData.plan_name = null;
+                }
+
                 if (formData.allowed_books === "") {
                     formData.allowed_books = null;
                 }
@@ -126,7 +139,7 @@ export const getSubscriptionConfig = () => {
                 return true;
             },
             onDataLoad: (data) => {
-            
+           
                 if (Array.isArray(data)) {
                     data.forEach(item => {
                         if (item.hasOwnProperty('is_active')) {
@@ -134,7 +147,19 @@ export const getSubscriptionConfig = () => {
                         }
                     });
                 }
+              
+                else if (data && typeof data === "object") {
+                    if (data.hasOwnProperty('is_active')) {
+                        data.status = data.is_active ? "active" : "inactive";
+                    }
+
+                    if (!data.plan_name) data.plan_name = "";
+                    if (!data.allowed_books) data.allowed_books = "";
+                    if (!data.start_date) data.start_date = "";
+                    if (!data.end_date) data.end_date = "";
+                }
             }
+
         }
     };
 };

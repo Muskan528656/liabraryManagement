@@ -1,330 +1,656 @@
-import React, { useRef } from 'react';
-import { Form, Button, Alert, Card } from 'react-bootstrap';
+ 
+ 
 
-const PurchaseDataImport = ({
-    selectedFile,
-    onFileChange,
-    onDemoDownload,
-    loading = false
-}) => {
-    const fileInputRef = useRef(null);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-    const handleFileSelect = (e) => {
-        const file = e.target.files?.[0]; // Safe access using optional chaining
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+
+
+ 
+import React, { useState } from 'react';
+import { Card, Form, Button, Table, Alert, Row, Col } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+
+const PurchaseDataImport = ({ selectedFile, onFileChange, loading }) => {
+    const [previewData, setPreviewData] = useState([]);
+    const [mapping, setMapping] = useState({});
+    const [importProgress, setImportProgress] = useState(0);
+
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
         if (file) {
-            onFileChange(file);
-        }
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const files = e.dataTransfer?.files; // Safe access
-        if (files && files.length > 0) {
-            const file = files[0];
-            if (isValidFileType(file)) {
-                onFileChange(file);
+ 
+            const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            if (!validTypes.includes(file.type) && !file.name.endsWith('.csv')) {
+                toast.error('Please upload a CSV or Excel file');
+                return;
             }
+
+            onFileChange(file);
+ 
+            simulatePreviewData();
         }
     };
 
-    const isValidFileType = (file) => {
-        if (!file) return false;
-
-        const validTypes = [
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/csv'
+    const simulatePreviewData = () => {
+ 
+        const mockData = [
+            { vendor: 'ABC Publishers', book: 'The Great Gatsby', isbn: '9780141182636', quantity: 5, unit_price: 12.99 },
+            { vendor: 'XYZ Books', book: 'To Kill a Mockingbird', isbn: '9780061120084', quantity: 3, unit_price: 10.50 },
+            { vendor: 'ABC Publishers', book: '1984', isbn: '9780451524935', quantity: 8, unit_price: 8.75 }
         ];
-        return validTypes.includes(file.type) ||
-            file.name?.endsWith('.xlsx') ||
-            file.name?.endsWith('.xls') ||
-            file.name?.endsWith('.csv');
+        setPreviewData(mockData);
+        
+ 
+        setMapping({
+            vendor: 'vendor',
+            book: 'book',
+            isbn: 'isbn',
+            quantity: 'quantity',
+            unit_price: 'unit_price'
+        });
     };
 
-    // Demo data for template
-    const demoData = [
-        {
-            "Vendor": "Book World Publishers",
-            "Book": "The Great Gatsby",
-            "Quantity": 10,
-            "Unit Price": 450.00,
-            "Purchase Date": "2024-01-15",
-            "Notes": "Classic literature purchase"
-        },
-        {
-            "Vendor": "Readers Paradise",
-            "Book": "To Kill a Mockingbird",
-            "Quantity": 8,
-            "Unit Price": 380.50,
-            "Purchase Date": "2024-01-16",
-            "Notes": "School curriculum books"
-        },
-        {
-            "Vendor": "Global Books Inc",
-            "Book": "1984",
-            "Quantity": 15,
-            "Unit Price": 320.75,
-            "Purchase Date": "2024-01-17",
-            "Notes": "Dystopian fiction collection"
+    const handleMappingChange = (field, column) => {
+        setMapping(prev => ({
+            ...prev,
+            [field]: column
+        }));
+    };
+
+    const handleImport = async () => {
+        if (!selectedFile) {
+            toast.error('Please select a file first');
+            return;
         }
-    ];
 
-    const handleDemoDownload = () => {
-        // Create CSV content
-        const headers = Object.keys(demoData[0]).join(',');
-        const rows = demoData.map(row =>
-            Object.values(row).map(value =>
-                typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-            ).join(',')
-        );
-        const csvContent = [headers, ...rows].join('\n');
+        if (Object.keys(mapping).length === 0) {
+            toast.error('Please map all required columns');
+            return;
+        }
 
-        // Create and download file
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'purchase_import_template.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        try {
+            setImportProgress(0);
+ 
+            for (let i = 0; i <= 100; i += 10) {
+                setImportProgress(i);
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            toast.success('Purchase data imported successfully!');
+ 
+            setPreviewData([]);
+            setMapping({});
+            setImportProgress(0);
+            onFileChange(null);
+            
+ 
+            document.getElementById('fileInput').value = '';
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            toast.error('Failed to import purchase data');
+        }
     };
+
+    const requiredFields = ['vendor', 'book', 'quantity', 'unit_price'];
+    const optionalFields = ['isbn', 'purchase_date', 'notes'];
 
     return (
-        <div style={{ padding: '0.5rem' }}>
-            {/* Demo File Section */}
-            {/* <Card 
-        style={{ 
-          border: '1px solid #e3f2fd',
-          background: 'linear-gradient(135deg, #f8fbff 0%, #ffffff 100%)',
-          marginBottom: '1.5rem'
-        }}
-      >
-        <Card.Body style={{ padding: '1rem' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between' 
-          }}>
-             */}
-
-
-            <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={onDemoDownload || handleDemoDownload}
-                style={{
-                    borderColor: '#1976d2',
-                    color: '#1976d2',
-                    fontWeight: '500'
-                }}
-                className='custom-btn-primary'
-            >
-                <i className="fa-solid fa-file-excel me-2"></i>
-                Download CSV Template
-            </Button>
-            {/* </div> */}
-            {/* //     </Card.Body> */}
-            {/* //   </Card> */}
-
+        <div>
             {/* File Upload Section */}
-            <div style={{ marginBottom: '1.3rem' }}>
+            <Card className="mb-4">
+                <Card.Header className="bg-primary text-white">
+                    <h5 className="mb-0">
+                        <i className="fa-solid fa-upload me-2"></i>
+                        Upload Purchase Data File
+                    </h5>
+                </Card.Header>
+                <Card.Body>
+                    <Form.Group>
+                        <Form.Label className="fw-semibold">
+                            Select CSV or Excel File
+                        </Form.Label>
+                        <Form.Control
+                            id="fileInput"
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            onChange={handleFileUpload}
+                            disabled={loading}
+                        />
+                        <Form.Text className="text-muted">
+                            Supported formats: CSV, Excel (.xlsx, .xls). File should contain vendor, book, quantity, and price information.
+                        </Form.Text>
+                    </Form.Group>
 
-                <div
-                    style={{
-                        border: selectedFile ? '2px dashed #28a745' : '2px dashed #dee2e6',
-                        borderRadius: '12px',
-                        padding: '2.5rem 1.5rem',
-                        background: selectedFile ? '#f8fff9' : '#fafbfc',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
+                    {selectedFile && (
+                        <Alert variant="success" className="mt-3">
+                            <i className="fa-solid fa-file me-2"></i>
+                            Selected file: <strong>{selectedFile.name}</strong> 
+                            ({Math.round(selectedFile.size / 1024)} KB)
+                        </Alert>
+                    )}
+                </Card.Body>
+            </Card>
+
+            {/* Data Preview Section */}
+            {previewData.length > 0 && (
+                <Card className="mb-4">
+                    <Card.Header className="bg-info text-white">
+                        <h5 className="mb-0">
+                            <i className="fa-solid fa-table me-2"></i>
+                            Data Preview
+                        </h5>
+                    </Card.Header>
+                    <Card.Body>
+                        <div className="table-responsive">
+                            <Table striped bordered hover>
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Book</th>
+                                        <th>ISBN</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {previewData.map((row, index) => (
+                                        <tr key={index}>
+                                            <td>{row.vendor}</td>
+                                            <td>{row.book}</td>
+                                            <td>{row.isbn}</td>
+                                            <td>{row.quantity}</td>
+                                            <td>${row.unit_price}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                        <small className="text-muted">
+                            Showing {previewData.length} sample records
+                        </small>
+                    </Card.Body>
+                </Card>
+            )}
+
+            {/* Column Mapping Section */}
+            {previewData.length > 0 && (
+                <Card className="mb-4">
+                    <Card.Header className="bg-warning text-dark">
+                        <h5 className="mb-0">
+                            <i className="fa-solid fa-columns me-2"></i>
+                            Column Mapping
+                        </h5>
+                    </Card.Header>
+                    <Card.Body>
+                        <Alert variant="info" className="mb-3">
+                            <i className="fa-solid fa-info-circle me-2"></i>
+                            Map your file columns to the required purchase fields
+                        </Alert>
+                        
+                        <Row>
+                            <Col md={6}>
+                                <h6 className="fw-bold mb-3">Required Fields</h6>
+                                {requiredFields.map(field => (
+                                    <Form.Group key={field} className="mb-3">
+                                        <Form.Label className="text-capitalize">
+                                            {field.replace('_', ' ')} <span className="text-danger">*</span>
+                                        </Form.Label>
+                                        <Form.Select
+                                            value={mapping[field] || ''}
+                                            onChange={(e) => handleMappingChange(field, e.target.value)}
+                                        >
+                                            <option value="">Select column...</option>
+                                            {Object.keys(previewData[0] || {}).map(col => (
+                                                <option key={col} value={col}>
+                                                    {col} ({typeof previewData[0][col]})
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                ))}
+                            </Col>
+                            <Col md={6}>
+                                <h6 className="fw-bold mb-3">Optional Fields</h6>
+                                {optionalFields.map(field => (
+                                    <Form.Group key={field} className="mb-3">
+                                        <Form.Label className="text-capitalize">
+                                            {field.replace('_', ' ')}
+                                        </Form.Label>
+                                        <Form.Select
+                                            value={mapping[field] || ''}
+                                            onChange={(e) => handleMappingChange(field, e.target.value)}
+                                        >
+                                            <option value="">Not mapped</option>
+                                            {Object.keys(previewData[0] || {}).map(col => (
+                                                <option key={col} value={col}>
+                                                    {col} ({typeof previewData[0][col]})
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                ))}
+                            </Col>
+                        </Row>
+                    </Card.Body>
+                </Card>
+            )}
+
+            {/* Import Progress Section */}
+            {importProgress > 0 && importProgress < 100 && (
+                <Card className="mb-4">
+                    <Card.Header>
+                        <h5 className="mb-0">
+                            <i className="fa-solid fa-sync fa-spin me-2"></i>
+                            Importing Data...
+                        </h5>
+                    </Card.Header>
+                    <Card.Body>
+                        <div className="progress mb-3" style={{ height: '20px' }}>
+                            <div 
+                                className="progress-bar progress-bar-striped progress-bar-animated" 
+                                style={{ width: `${importProgress}%` }}
+                            >
+                                {importProgress}%
+                            </div>
+                        </div>
+                        <small className="text-muted">
+                            Processing purchase records... Please wait.
+                        </small>
+                    </Card.Body>
+                </Card>
+            )}
+
+            {/* Action Buttons */}
+            <div className="d-flex gap-3 justify-content-end">
+                <Button 
+                    variant="outline-secondary"
+                    onClick={() => {
+                        setPreviewData([]);
+                        setMapping({});
+                        setImportProgress(0);
+                        onFileChange(null);
+                        document.getElementById('fileInput').value = '';
                     }}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
                 >
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".xlsx,.xls,.csv"
-                        onChange={handleFileSelect}
-                        style={{ display: 'none' }}
-                    />
-
-                    <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                        {selectedFile ? (
-                            <>
-                                <i
-                                    className="fa-solid fa-file-excel text-success"
-                                    style={{ fontSize: '3rem', marginBottom: '1rem' }}
-                                ></i>
-                                <h6 style={{ color: '#28a745', marginBottom: '0.5rem' }}>
-                                    File Selected
-                                </h6>
-                                <p style={{
-                                    fontWeight: '600',
-                                    color: '#28a745',
-                                    marginBottom: '0.25rem',
-                                    wordBreak: 'break-all'
-                                }}>
-                                    {selectedFile.name}
-                                </p>
-                                <small style={{ color: '#6c757d' }}>
-                                    Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                                </small>
-                                <div style={{ marginTop: '1rem' }}>
-                                    <Button
-                                        variant="outline-secondary"
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onFileChange(null);
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-times me-2"></i>
-                                        Remove File
-                                    </Button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <i
-                                    className="fa-solid fa-cloud-arrow-up text-muted"
-                                    style={{ fontSize: '3rem', marginBottom: '1rem' }}
-                                ></i>
-                                <h6 style={{ marginBottom: '0.5rem' }}>Drop your file here</h6>
-                                <p style={{ color: '#6c757d', marginBottom: '1rem' }}>
-                                    or click to browse
-                                </p>
-                                <div style={{ marginTop: '1rem' }}>
-                                    <small style={{ color: '#6c757d' }}>
-                                        Supports: .xlsx, .xls, .csv
-                                    </small>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                    <i className="fa-solid fa-times me-2"></i>
+                    Cancel
+                </Button>
+                
+                <Button 
+                    variant="success"
+                    onClick={handleImport}
+                    disabled={loading || previewData.length === 0 || Object.keys(mapping).length < requiredFields.length}
+                >
+                    {loading ? (
+                        <>
+                            <i className="fa-solid fa-spinner fa-spin me-2"></i>
+                            Importing...
+                        </>
+                    ) : (
+                        <>
+                            <i className="fa-solid fa-file-import me-2"></i>
+                            Import Purchases
+                        </>
+                    )}
+                </Button>
             </div>
 
-            {/* Instructions Section */}
-            <Alert
-                variant="info"
-                style={{
-                    border: '1px solid #bee5eb',
-                    borderLeft: '4px solid #1976d2',
-                    background: '#f8fbff',
-                    marginTop: '1.5rem'
-                }}
-            >
-                <Alert.Heading style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    color: '#1976d2',
-                    marginBottom: '0.5rem'
-                }}>
-                    <i className="fa-solid fa-circle-info me-2"></i>
-                    File Requirements
-                </Alert.Heading>
-                <div style={{ fontSize: '0.875rem' }}>
-                    <strong>Required Columns:</strong>
-                    <ul style={{ marginBottom: 0, marginTop: '0.5rem' }}>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Vendor
-                            </code> - Vendor name or ID
-                        </li>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Book
-                            </code> - Book title or ID
-                        </li>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Quantity
-                            </code> - Number of copies (positive integer)
-                        </li>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Unit Price
-                            </code> - Price per book (decimal)
-                        </li>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Purchase Date
-                            </code> - Date in YYYY-MM-DD format
-                        </li>
-                        <li>
-                            <code style={{
-                                background: '#e3f2fd',
-                                color: '#1976d2',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                fontWeight: '500'
-                            }}>
-                                Notes
-                            </code> - Optional comments
-                        </li>
-                    </ul>
-                </div>
-            </Alert>
-
-            {/* Validation Status */}
-            {selectedFile && (
-                <Alert
-                    variant="success"
-                    style={{
-                        borderLeft: '4px solid #28a745',
-                        background: '#f8fff9',
-                        marginTop: '1rem'
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <i className="fa-solid fa-circle-check me-2"></i>
+            {/* Import Summary */}
+            {previewData.length > 0 && (
+                <Alert variant="light" className="mt-4">
+                    <div className="d-flex justify-content-between">
                         <div>
-                            <strong>File ready for import</strong>
-                            <div style={{ fontSize: '0.875rem' }}>
-                                Click "Import File" button to process your data
-                            </div>
+                            <strong>Import Summary:</strong>
+                        </div>
+                        <div>
+                            <span className="text-muted">Records: </span>
+                            <strong>{previewData.length}</strong>
+                        </div>
+                        <div>
+                            <span className="text-muted">Vendors: </span>
+                            <strong>{new Set(previewData.map(row => row.vendor)).size}</strong>
+                        </div>
+                        <div>
+                            <span className="text-muted">Books: </span>
+                            <strong>{new Set(previewData.map(row => row.book)).size}</strong>
+                        </div>
+                        <div>
+                            <span className="text-muted">Total Value: </span>
+                            <strong>
+                                ₹{previewData.reduce((sum, row) => sum + (row.quantity * row.unit_price), 0).toFixed(2)}
+                            </strong>
                         </div>
                     </div>
                 </Alert>

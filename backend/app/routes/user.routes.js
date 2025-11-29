@@ -98,7 +98,7 @@ module.exports = (app) => {
           });
         }
 
-        // Fetch company ID from tenantcode if not already available
+ 
         let finalCompanyId = companyid;
         if (!finalCompanyId) {
           try {
@@ -127,7 +127,7 @@ module.exports = (app) => {
         User.init(tenantcode);
         const userId = req.userinfo?.id || null;
 
-        // Hash password if provided
+ 
         let hashedPassword = req.body.password;
         if (req.body.password) {
           const salt = bcrypt.genSaltSync(10);
@@ -136,7 +136,7 @@ module.exports = (app) => {
 
 
 
-        // Prepare user data with hashed password and company ID
+ 
         const userData = {
           ...req.body,
           password: hashedPassword,
@@ -155,7 +155,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update user by ID
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -173,16 +173,16 @@ module.exports = (app) => {
         }
 
         User.init(req.userinfo.tenantcode);
-        // Check if user exists
+ 
         const existingUser = await User.findById(req.params.id);
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
 
-        // Hash password if provided and not already hashed
+ 
         const updateData = { ...req.body };
         if (updateData.password) {
-          // Check if password is already hashed (bcrypt hash starts with $2a$ or $2b$)
+ 
           if (!updateData.password.startsWith('$2a$') && !updateData.password.startsWith('$2b$')) {
             const salt = bcrypt.genSaltSync(10);
             updateData.password = bcrypt.hashSync(updateData.password, salt);
@@ -202,7 +202,7 @@ module.exports = (app) => {
     }
   );
 
-  // Upload user profile image
+ 
   router.post("/:id/upload-image", fetchUser, async (req, res) => {
     try {
       if (!req.files || !req.files.file) {
@@ -212,19 +212,19 @@ module.exports = (app) => {
       const userId = req.params.id;
       const file = req.files.file;
 
-      // Validate file type
+ 
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({ errors: "Invalid file type. Only JPEG, PNG, and GIF images are allowed." });
       }
 
-      // Validate file size (max 5MB)
+ 
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
         return res.status(400).json({ errors: "File size too large. Maximum size is 5MB." });
       }
 
-      // Create upload directory for users
+ 
       const uploadPath = path.join(
         process.env.FILE_UPLOAD_PATH || './public',
         req.userinfo.tenantcode,
@@ -232,20 +232,20 @@ module.exports = (app) => {
         userId
       );
 
-      // Ensure upload directory exists
+ 
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
 
-      // Get file extension
+ 
       const fileExtension = path.extname(file.name) || '.jpg';
       const fileName = `profile${fileExtension}`;
       const filePath = path.join(uploadPath, fileName);
 
-      // Save file - handle both express-fileupload and multer formats
+ 
       try {
         if (file.mv) {
-          // express-fileupload format
+ 
           await new Promise((resolve, reject) => {
             file.mv(filePath, (err) => {
               if (err) reject(err);
@@ -253,16 +253,16 @@ module.exports = (app) => {
             });
           });
         } else if (file.data) {
-          // multer format or buffer
+ 
           fs.writeFileSync(filePath, file.data);
         } else if (Buffer.isBuffer(file)) {
-          // Direct buffer
+ 
           fs.writeFileSync(filePath, file);
         } else {
           return res.status(400).json({ errors: "Invalid file format" });
         }
 
-        // Return success with file path
+ 
         const relativePath = `/public/${req.userinfo.tenantcode}/users/${userId}/${fileName}`;
         return res.status(200).json({
           success: true,
@@ -279,7 +279,7 @@ module.exports = (app) => {
     }
   });
 
-  // Delete user by ID
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);

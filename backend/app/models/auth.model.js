@@ -53,7 +53,7 @@ async function createUser(newUser) {
 
   console.log("Creating user with companyId:", finalCompanyId, "in schema:", this.schema);
 
-  // Final validation before query
+ 
   if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
     console.error("Error: Invalid schema name:", this.schema);
     throw new Error(`Invalid schema name: ${this.schema}. Cannot create user.`);
@@ -245,7 +245,7 @@ async function checkForDuplicate(email, phone, userId = null) {
   return null;
 }
 
-// Updated getAllManager to remove manager references
+ 
 async function getAllManager(role) {
   try {
     var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM ${this.schema}.user WHERE `;
@@ -259,7 +259,7 @@ async function getAllManager(role) {
   }
 }
 
-// Other functions remain the same as they don't reference missing columns
+ 
 async function updateRecById(id, userRec, userid) {
   try {
     delete userRec.id;

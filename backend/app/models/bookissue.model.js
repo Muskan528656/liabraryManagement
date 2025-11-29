@@ -10,7 +10,7 @@ function init(schema_name) {
   schema = schema_name;
 }
 
-// Find all book issues
+ 
 async function findAll() {
   try {
     if (!schema) {
@@ -41,7 +41,7 @@ async function findAll() {
   }
 }
 
-// Find book issue by ID
+ 
 async function findById(id) {
   try {
     if (!schema) {
@@ -75,7 +75,7 @@ async function findById(id) {
   }
 }
 
-// Find active issues (not returned)
+ 
 async function findActive() {
   try {
     if (!schema) {
@@ -107,7 +107,7 @@ async function findActive() {
   }
 }
 
-// Find issues by book ID
+ 
 async function findByBookId(bookId) {
   try {
     if (!schema) {
@@ -138,7 +138,7 @@ async function findByBookId(bookId) {
   }
 }
 
-// Find issues by user ID (issued_to)
+ 
 async function findByUserId(userId) {
   try {
     if (!schema) {
@@ -187,13 +187,13 @@ async function findByCardId(cardId) {
   }
 }
 
-// Issue a book (checkout)
+ 
 async function issueBook(issueData, userId) {
-  // const sql = await sql.connect();
+ 
   try {
-    //   await sql.query("BEGIN");
+ 
 
-    // Check if book is available
+ 
     const bookCheck = await sql.query(`SELECT available_copies FROM ${schema}.books WHERE id = $1`, [issueData.book_id]);
     if (bookCheck.rows.length === 0) {
       throw new Error("Book not found");
@@ -202,7 +202,7 @@ async function issueBook(issueData, userId) {
       throw new Error("Book is not available");
     }
 
-    // Get user_id from card_id if provided, otherwise use issued_to directly
+ 
     let issued_to = issueData.issued_to || issueData.issuedTo;
     if (!issued_to && (issueData.card_id || issueData.cardId)) {
       const cardQuery = `SELECT user_id FROM ${schema}.library_members WHERE id = $1`;
@@ -217,25 +217,25 @@ async function issueBook(issueData, userId) {
       throw new Error("User ID (issued_to) is required");
     }
 
-    // Fetch library settings
+ 
     const LibrarySettings = require("./librarysettings.model.js");
     LibrarySettings.init(schema);
     const settings = await LibrarySettings.getAllSettings();
     const maxBooksPerCard = parseInt(settings.max_books_per_card || 1);
     const durationDays = parseInt(settings.duration_days || 15);
 
-    // Check how many books are currently issued to this user
+ 
     const activeIssuesQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
                                WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`;
     const activeIssuesResult = await sql.query(activeIssuesQuery, [issued_to]);
     const activeIssuesCount = parseInt(activeIssuesResult.rows[0].count || 0);
 
-    // Check if user has reached maximum books per card limit
+ 
     if (activeIssuesCount >= maxBooksPerCard) {
       throw new Error(`Maximum ${maxBooksPerCard} book(s) can be issued per user. User already has ${activeIssuesCount} book(s) issued.`);
     }
 
-    // **NEW LOGIC: Check if user already got the SAME book today**
+ 
     const sameBookTodayQuery = `SELECT COUNT(*) as count FROM ${schema}.book_issues 
                                 WHERE issued_to = $1 
                                 AND book_id = $2 
@@ -249,13 +249,13 @@ async function issueBook(issueData, userId) {
       throw new Error(`User can only get 1 copy of the same book per day. This book has already been issued to the user today.`);
     }
 
-    // Calculate due date from settings
+ 
     const issueDate = issueData.issue_date || new Date().toISOString().split('T')[0];
     const issueDateObj = new Date(issueDate);
     issueDateObj.setDate(issueDateObj.getDate() + durationDays);
     const dueDate = issueData.due_date || issueDateObj.toISOString().split('T')[0];
 
-    // Create issue record
+ 
     const issueQuery = `INSERT INTO ${schema}.book_issues 
                        (book_id, issued_to, issued_by, issue_date, due_date, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
                        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7, $7) 
@@ -271,27 +271,27 @@ async function issueBook(issueData, userId) {
     ];
     const issueResult = await sql.query(issueQuery, issueValues);
 
-    // Update book available copies
+ 
     await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies - 1 WHERE id = $1`, [issueData.book_id]);
 
-    // await sql.query("COMMIT");
+ 
     return issueResult.rows[0];
   } catch (error) {
-    // await sql.query("ROLLBACK");
+ 
     console.error("Error in issueBook:", error);
     throw error;
   } finally {
-    // sql.release();
+ 
   }
 }
 
-// Return a book (checkin)
+ 
 async function returnBook(issueId, returnData, userId) {
-  // const sql = await sql.connect();
+ 
   try {
-    // await sql.query("BEGIN");
+ 
 
-    // Get issue record
+ 
     const issueCheck = await sql.query(`SELECT * FROM ${schema}.book_issues WHERE id = $1`, [issueId]);
     if (issueCheck.rows.length === 0) {
       throw new Error("Issue record not found");
@@ -305,13 +305,13 @@ async function returnBook(issueId, returnData, userId) {
     const returnDate = returnData.return_date || new Date().toISOString().split('T')[0];
     const status = returnData.status || 'returned';
 
-    // Validate status
+ 
     const validStatuses = ['issued', 'returned', 'lost', 'damaged'];
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
 
-    // Update issue record
+ 
     const updateQuery = `UPDATE ${schema}.book_issues 
                         SET return_date = $2, status = $3, 
                             lastmodifieddate = CURRENT_TIMESTAMP, lastmodifiedbyid = $4
@@ -324,23 +324,23 @@ async function returnBook(issueId, returnData, userId) {
       userId || null,
     ]);
 
-    // Update book available copies only if status is 'returned'
+ 
     if (status === 'returned') {
       await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies + 1 WHERE id = $1`, [issue.book_id]);
     }
 
-    // await sql.query("COMMIT");
+ 
     return updateResult.rows[0];
   } catch (error) {
-    // await sql.query("ROLLBACK");
+ 
     console.error("Error in returnBook:", error);
     throw error;
   } finally {
-    // sql.release();
+ 
   }
 }
 
-// Calculate penalty for overdue book
+ 
 async function calculatePenalty(issueId) {
   try {
     const issue = await findById(issueId);
@@ -356,13 +356,13 @@ async function calculatePenalty(issueId) {
       return { penalty: 0, daysOverdue };
     }
 
-    // Fetch library settings for fine calculation
+ 
     const LibrarySettings = require("./librarysettings.model.js");
     LibrarySettings.init(schema);
     const settings = await LibrarySettings.getAllSettings();
     const finePerDay = parseFloat(settings.fine_per_day || 10);
 
-    // Calculate penalty based on fine_per_day setting
+ 
     const penalty = finePerDay * daysOverdue;
 
     return { penalty: Math.round(penalty * 100) / 100, daysOverdue };
@@ -372,7 +372,7 @@ async function calculatePenalty(issueId) {
   }
 }
 
-// Delete book issue by ID
+ 
 async function deleteById(id) {
   try {
     const query = `DELETE FROM ${schema}.book_issues WHERE id = $1 RETURNING *`;

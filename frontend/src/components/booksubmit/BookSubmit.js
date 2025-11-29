@@ -38,12 +38,12 @@ const BookSubmit = () => {
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
-    // ✅ Fetch all issued books on component mount
+ 
     useEffect(() => {
         fetchAllIssuedBooks();
     }, []);
 
-    // ✅ Function to fetch all issued books
+ 
     const fetchAllIssuedBooks = async () => {
         try {
             setLoading(true);
@@ -69,7 +69,7 @@ const BookSubmit = () => {
         }
     };
 
-    // ✅ Update displayed books when bookIssues or allIssuedBooks change
+ 
     useEffect(() => {
         if (bookIssues && bookIssues.length > 0) {
             setDisplayedIssuedBooks(bookIssues);
@@ -96,7 +96,7 @@ const BookSubmit = () => {
         }
     };
 
-    // Navigate to user detail page
+ 
     const handleNameClick = (userId, userName, issueData, e) => {
         if (e) {
             e.preventDefault();
@@ -121,7 +121,7 @@ const BookSubmit = () => {
         }
     };
 
-    // Fetch submitted books
+ 
     useEffect(() => {
         if (activeTab === "submitted") {
             fetchSubmittedBooks();
@@ -152,7 +152,7 @@ const BookSubmit = () => {
         }
     };
 
-    // Perform search with ISBN or Library Card
+ 
     const performSearch = async (value, mode = null) => {
         const searchType = mode || searchMode;
         console.log("Performing search with:", value, "mode:", searchType);
@@ -175,7 +175,7 @@ const BookSubmit = () => {
             setLoading(true);
 
             if (searchType === "card") {
-                // Search by library card number
+ 
                 const cardResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(value.trim().toUpperCase())}`, "GET");
                 if (!cardResp.ok) {
                     const err = await cardResp.json().catch(() => ({}));
@@ -191,7 +191,7 @@ const BookSubmit = () => {
                 const cardData = await cardResp.json();
                 setLibraryCard(cardData);
 
-                // Find active issues for this card
+ 
                 const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/card/${cardData.id}`, "GET");
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
@@ -215,7 +215,7 @@ const BookSubmit = () => {
                 setBookIssues([]);
 
             } else {
-                // Search book by ISBN
+ 
                 const bookResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(value.trim())}`, "GET");
                 if (!bookResp.ok) {
                     const err = await bookResp.json().catch(() => ({}));
@@ -230,7 +230,7 @@ const BookSubmit = () => {
                 const bookData = await bookResp.json();
                 setBook(bookData);
 
-                // Find active issues for this book
+ 
                 const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/book/${bookData.id}`, "GET");
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
@@ -255,7 +255,7 @@ const BookSubmit = () => {
                 const activeIssue = issues[0];
                 setIssue(activeIssue);
 
-                // Fetch penalty info
+ 
                 const penaltyResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/penalty/${activeIssue.id}`, "GET");
                 if (penaltyResp.ok) {
                     const penaltyData = await penaltyResp.json();
@@ -270,7 +270,7 @@ const BookSubmit = () => {
                     setPenalty({ penalty: 0, daysOverdue: 0 });
                 }
 
-                // Clear library card data when searching by ISBN
+ 
                 setLibraryCard(null);
                 setCardIssues([]);
             }
@@ -298,7 +298,7 @@ const BookSubmit = () => {
         const value = e.target.value;
         setIsbn(value);
 
-        // Auto-search when user types (with debounce)
+ 
         if (value.trim().length >= 3) {
             if (isbnInputRef.current?.timer) {
                 clearTimeout(isbnInputRef.current.timer);
@@ -322,7 +322,7 @@ const BookSubmit = () => {
         const value = e.target.value;
         setCardNumber(value);
 
-        // Auto-search when user types (with debounce)
+ 
         if (value.trim().length >= 3) {
             if (cardInputRef.current?.timer) {
                 clearTimeout(cardInputRef.current.timer);
@@ -364,7 +364,7 @@ const BookSubmit = () => {
         }
     };
 
-    // ✅ Clear search and show all books
+ 
     const handleClearSearch = () => {
         if (searchMode === "isbn") {
             if (isbnInputRef.current?.timer) {
@@ -389,12 +389,12 @@ const BookSubmit = () => {
         }
     };
 
-    // ✅ Handle search mode change
+ 
     const handleSearchModeChange = (e) => {
         const newMode = e.target.value;
         setSearchMode(newMode);
 
-        // Clear all previous data
+ 
         setIsbn("");
         setCardNumber("");
         setBook(null);
@@ -403,7 +403,7 @@ const BookSubmit = () => {
         setCardIssues([]);
         setDisplayedIssuedBooks(allIssuedBooks);
 
-        // Focus on the appropriate input
+ 
         setTimeout(() => {
             if (newMode === "isbn") {
                 isbnInputRef.current?.focus();
@@ -413,13 +413,13 @@ const BookSubmit = () => {
         }, 100);
     };
 
-    // ✅ Handle scan button click
+ 
     const handleScanButtonClick = () => {
         setScanMethod(searchMode); // Use current search mode
         setShowScanModal(true);
     };
 
-    // ✅ Handle scan submit
+ 
     const handleScanSubmit = async () => {
         const value = searchMode === "isbn" ? isbn : cardNumber;
         if (value.trim()) {
@@ -428,7 +428,7 @@ const BookSubmit = () => {
         }
     };
 
-    // ✅ Handle scan input change in modal
+ 
     const handleScanInputChange = (e) => {
         const value = e.target.value;
         if (searchMode === "isbn") {
@@ -437,16 +437,16 @@ const BookSubmit = () => {
             setCardNumber(value);
         }
 
-        // Auto-submit when barcode is scanned (usually barcode scanners send Enter key)
+ 
         if (value.length >= 8) { // Typical barcode length
-            // Small delay to capture the complete barcode
+ 
             setTimeout(() => {
                 handleScanSubmit();
             }, 100);
         }
     };
 
-    // ✅ Handle scan input key down
+ 
     const handleScanInputKeyDown = async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -493,16 +493,16 @@ const BookSubmit = () => {
                     message: `Book submitted successfully for ${selectedIssue.issued_to_name || selectedIssue.student_name || selectedIssue.issued_to}`
                 });
 
-                // Remove the issue from lists
+ 
                 setBookIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setCardIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setAllIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setDisplayedIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
 
-                // Close modal and reset form
+ 
                 handleModalClose();
 
-                // Clear main data if this was the last issue
+ 
                 if (bookIssues.length === 1 && cardIssues.length === 0) {
                     setIsbn("");
                     setBook(null);
@@ -528,7 +528,7 @@ const BookSubmit = () => {
         }
     };
 
-    // ✅ Filter displayed issued books based on search term
+ 
     const filteredIssuedBooks = displayedIssuedBooks.filter(issue => {
         if (!searchTerm) return true;
         const query = searchTerm.toLowerCase();
@@ -694,7 +694,7 @@ const BookSubmit = () => {
         }
     ];
 
-    // ✅ Define columns for submitted books table
+ 
     const submittedBooksColumns = [
         {
             field: "book_title",

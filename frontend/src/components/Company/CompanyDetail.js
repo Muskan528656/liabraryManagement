@@ -1,5 +1,6 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import CountryCode from '../../constants/CountryCode.json';
 
 const CompanyDetail = () => {
   const fields = {
@@ -28,6 +29,15 @@ const CompanyDetail = () => {
       { key: "pincode", label: "Pincode", type: "text" },
       { key: "state", label: "State", type: "text" },
       { key: "country", label: "Country", type: "text" },
+      {
+        key: "country_code",
+        label: "Country Code",
+        type: "select",
+        options: CountryCode.map(item => ({
+          id: item.country_code,
+          name: `${item.country} (${item.country_code})`
+        }))
+      },
       { key: "platform_name", label: "Platform Name", type: "text" },
       {
         key: "platform_api_endpoint",
@@ -46,6 +56,15 @@ const CompanyDetail = () => {
       { key: "state", label: "State", type: "text" },
       { key: "country", label: "Country", type: "text" },
       { key: "pincode", label: "Pincode", type: "text" },
+      {
+        key: "country_code",
+        label: "Country Code",
+        type: "select",
+        options: CountryCode.map(item => ({
+          id: item.country_code,
+          name: `${item.country} (${item.country_code})`
+        }))
+      },
     ],
     contact: [
       { key: "systememail", label: "System Email", type: "email" },

@@ -132,16 +132,16 @@ const Company = () => {
                 </h5>
                 {!isEditingCompany ? (
                   <button
-                    // variant="outline-primary"
+ 
                     className="custom-btn-primary"
                     onClick={handleCompanyEdit}
-                    // style={{
-                    //   border: "2px solid var(--primary-color)",
-                    //   color: "var(--primary-color)",
-                    //   borderRadius: "8px",
-                    //   padding: "8px 20px",
-                    //   fontWeight: "600",
-                    // }}
+ 
+ 
+ 
+ 
+ 
+ 
+ 
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Company
@@ -193,7 +193,7 @@ const Company = () => {
                               handleCompanyChange("name", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -216,7 +216,7 @@ const Company = () => {
                               handleCompanyChange("tenantcode", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -239,7 +239,7 @@ const Company = () => {
                               handleCompanyChange("userlicenses", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -262,7 +262,7 @@ const Company = () => {
                               handleCompanyChange("systememail", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -285,7 +285,7 @@ const Company = () => {
                               handleCompanyChange("adminemail", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -297,7 +297,7 @@ const Company = () => {
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
-                            // background: "var(--header-highlighter-color)",
+ 
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -333,7 +333,7 @@ const Company = () => {
                               handleCompanyChange("currency", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -356,7 +356,7 @@ const Company = () => {
                               handleCompanyChange("time_zone", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -451,7 +451,7 @@ const Company = () => {
                           handleCompanyChange("country", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -472,7 +472,7 @@ const Company = () => {
                           handleCompanyChange("state", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -491,7 +491,7 @@ const Company = () => {
                           handleCompanyChange("city", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -512,7 +512,7 @@ const Company = () => {
                           handleCompanyChange("pincode", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+ 
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}

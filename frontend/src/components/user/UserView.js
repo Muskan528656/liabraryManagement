@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-// import WhatsAppAPI from "../../api/WhatsAppAPI";
+ 
 import {
   Button,
   Card,
@@ -21,7 +21,7 @@ const UserView = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(location.state ? location.state : {});
-  // console.log("🚀 ~ UserView ~ user:", user);
+ 
   const [locationHistorysTab, setLocationHistorysTab] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
@@ -74,22 +74,22 @@ const UserView = () => {
     navigate(`/users/${row.user.id}/e`, { state: row.user });
   };
 
-  // const handleChangeSubmit = async (e) => {
-  //   e.preventDefault();
+ 
+ 
 
-  //   let newUser = { id: user.id, password: password };
-  //   try {
-  //     const result = await WhatsAppAPI.saveUser(newUser);
-  //     setShowPasswordModal(false);
-  //         PubSub.publish("RECORD_SAVED_TOAST", {
-  //         title: "Success",
-  //         message: "Record saved successfully",
-  //       });
-  //   } catch (error) {
-  //     toast.error("Failed to update password.", error);
-  //     //    console.log('API error:', error);
-  //   }
-  // };
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
   const handleClose = () => {
     setShowPasswordModal(false);
@@ -101,12 +101,12 @@ const UserView = () => {
   const handleBack = () => {
     navigate("/users");
   };
-  // const handleSelect = (key) => {
-  //   if (key === 'login history') {
-  //     setLocationHistorysTab(true);
+ 
+ 
+ 
 
-  //   }
-  // }
+ 
+ 
   const handleSelect = (key) => {
     if (key === "login history") {
       setLocationHistorysTab(true);
@@ -355,7 +355,7 @@ const UserView = () => {
                 className="ms-2"
                 variant="outline-secondary"
                 disabled={isSubmitDisabled()}
-              // onClick={handleChangeSubmit}
+ 
               >
                 Save
               </Button>

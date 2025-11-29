@@ -27,7 +27,7 @@ const EditProfile = ({ userId }) => {
   const [user, setUser] = useState({ password: "", confirmpassword: "" });
   const [selectedFiles, setSelectedFiles] = useState(null);
 
-  // Safely decode token with error handling
+ 
   let tenantcode = "";
   try {
     const token = sessionStorage.getItem("token");
@@ -37,7 +37,7 @@ const EditProfile = ({ userId }) => {
     }
   } catch (error) {
     console.error("Error decoding token:", error);
-    // Redirect to login if token is invalid
+ 
     sessionStorage.removeItem("token");
     window.location.href = "/login";
   }
@@ -61,7 +61,7 @@ const EditProfile = ({ userId }) => {
   useEffect(() => {
     async function init() {
       try {
-        // Get user ID from JWT token
+ 
         const token = sessionStorage.getItem("token");
         if (!token) {
           console.error("No token found");
@@ -76,14 +76,14 @@ const EditProfile = ({ userId }) => {
           return;
         }
 
-        // Fetch user data
+ 
         const userApi = new DataApi("user");
         const userResponse = await userApi.fetchById(userId);
 
         if (userResponse && userResponse.data) {
           let result = userResponse.data;
 
-          // Format whatsapp number if needed
+ 
           if (result.whatsapp_number) {
             result.whatsapp_number =
               result.whatsapp_number.length === 12 &&
@@ -92,7 +92,7 @@ const EditProfile = ({ userId }) => {
                 : result.whatsapp_number;
           }
 
-          // Set profile data
+ 
           setProfile({
             id: result.id,
             firstname: result.firstname || "",
@@ -220,7 +220,7 @@ const EditProfile = ({ userId }) => {
         return;
       }
 
-      // Format country code
+ 
       profile.country_code = profile.country_code
         ? String(profile.country_code).trim()
         : "+91";
@@ -229,7 +229,7 @@ const EditProfile = ({ userId }) => {
       }
 
       if (selectedFiles === null) {
-        // Update profile without image
+ 
         const userApi = new DataApi("user");
         const updateData = {
           firstname: profile.firstname,
@@ -258,15 +258,15 @@ const EditProfile = ({ userId }) => {
           toast.error(result.data?.errors || "Failed to update profile");
         }
       } else {
-        // Upload image first, then update profile
+ 
         try {
-          // Upload image using FormData and axios directly
+ 
           const formData = new FormData();
           formData.append('file', selectedFiles);
 
           const token = sessionStorage.getItem('token');
 
-          // Upload image to user profile image endpoint
+ 
           const uploadResponse = await axios.post(
             `${constants.API_BASE_URL}/api/user/${profile.id}/upload-image`,
             formData,
@@ -279,7 +279,7 @@ const EditProfile = ({ userId }) => {
           );
 
           if (uploadResponse.data && uploadResponse.data.success) {
-            // Image uploaded successfully, now update profile
+ 
             const userApi = new DataApi("user");
             const updateData = {
               firstname: profile.firstname,
@@ -292,11 +292,11 @@ const EditProfile = ({ userId }) => {
             const result = await userApi.update(updateData, profile.id);
 
             if (result.data && result.data.success !== false) {
-              // Update the image path in session storage
+ 
               const imagePath = `${profileImg}/${profile.id}`;
               sessionStorage.setItem("myimage", imagePath);
 
-              // Refresh the page to show new image
+ 
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -315,7 +315,7 @@ const EditProfile = ({ userId }) => {
           console.error("Error uploading image:", uploadError);
           toast.error("Failed to upload image. Please try again.");
 
-          // Still update profile data even if image upload fails
+ 
           const userApi = new DataApi("user");
           const updateData = {
             firstname: profile.firstname,
@@ -370,7 +370,7 @@ const EditProfile = ({ userId }) => {
         setShowPasswordModal(false);
         setPassword("");
         setConfirmPassword("");
-        // Logout user after password change
+ 
         setTimeout(() => {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("user");

@@ -1,4 +1,4 @@
-// config/booksConfig.js
+ 
 export const getBooksConfig = (externalData = {}, props = {}) => {
     const authors =
         props.authors ||

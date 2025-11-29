@@ -6,6 +6,14 @@
  */
 
 const AutoConfig = require("../models/autoconfig.model.js");
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 async function getNextAutoNumber(tableName, defaults = {}, userId = null) {
     if (!tableName) {
         throw new Error("tableName is required for auto number generation");
@@ -32,7 +40,24 @@ async function getNextAutoNumber(tableName, defaults = {}, userId = null) {
     return formattedNumber;
 }
 
-module.exports = {
-    getNextAutoNumber
-};
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+async function generateAutoNumberSafe(tableName, userId, prefix = "GEN-", digitCount = 5) {
+  try {
+    return await getNextAutoNumber(tableName, { prefix: prefix, digit_count: digitCount }, userId);
+  } catch (error) {
+    console.error("Error generating auto number:", error);
+    throw error;
+  }
+}
 
+module.exports = {
+    getNextAutoNumber,
+    generateAutoNumberSafe
+};

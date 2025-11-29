@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all books
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -35,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get book by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -50,7 +50,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get book by ISBN
+ 
   router.get("/isbn/:isbn", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -66,7 +66,7 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new book
+ 
   router.post(
     "/",
     fetchUser,
@@ -125,7 +125,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update book by ID
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -145,13 +145,13 @@ module.exports = (app) => {
 
         Book.init(req.userinfo.tenantcode);
 
-        // Check if book exists
+ 
         const existingBook = await Book.findById(req.params.id);
         if (!existingBook) {
           return res.status(404).json({ errors: "Book not found" });
         }
 
-        // Check for duplicate ISBN (excluding current book)
+ 
         const duplicateBook = await Book.findByISBN(
           req.body.isbn,
           req.params.id
@@ -175,7 +175,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete book by ID
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -190,7 +190,7 @@ module.exports = (app) => {
     }
   });
 
-  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/book", router);
+ 
   app.use(process.env.BASE_API_URL+"/api/book", router);
 };
 

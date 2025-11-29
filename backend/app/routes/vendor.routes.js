@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all vendors (ADMIN and ADMIN)
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -35,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get vendor by ID (ADMIN and ADMIN)
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -50,13 +50,13 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new vendor (ADMIN and ADMIN)
+ 
   router.post(
     "/",
     fetchUser,
 
     [
-      // Allow empty name for barcode scanning - will use default in model
+ 
       body("name").optional().custom((value) => {
         return true;
       }),
@@ -70,7 +70,7 @@ module.exports = (app) => {
 
         Vendor.init(req.userinfo.tenantcode);
 
-        // Check for duplicate name
+ 
         if (req.body.name) {
           const existingVendor = await Vendor.findByName(req.body.name);
           if (existingVendor) {
@@ -93,7 +93,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update vendor by ID (ADMIN and ADMIN)
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -110,13 +110,13 @@ module.exports = (app) => {
 
         Vendor.init(req.userinfo.tenantcode);
 
-        // Check if vendor exists
+ 
         const existingVendor = await Vendor.findById(req.params.id);
         if (!existingVendor) {
           return res.status(404).json({ errors: "Vendor not found" });
         }
 
-        // Check for duplicate name (excluding current vendor)
+ 
         const duplicateVendor = await Vendor.findByName(
           req.body.name,
           req.params.id
@@ -140,7 +140,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete vendor by ID (ADMIN and ADMIN)
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -155,7 +155,7 @@ module.exports = (app) => {
     }
   });
 
-  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/vendor", router);
+ 
   app.use(process.env.BASE_API_URL+"/api/vendor", router);
 
 };

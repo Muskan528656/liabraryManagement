@@ -9,7 +9,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all companies
+ 
 async function findAll() {
   try {
     if (!this.schema) {
@@ -24,7 +24,7 @@ async function findAll() {
   }
 }
 
-// Find company by ID
+ 
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -42,14 +42,14 @@ async function findById(id) {
   }
 }
 
-// Create a new company
+ 
 async function create(companyData, userId) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    // Validate required fields
+ 
     if (!companyData.name) {
       throw new Error("Company name is required");
     }
@@ -97,7 +97,7 @@ async function create(companyData, userId) {
   }
 }
 
-// Update company by ID
+ 
 async function updateById(id, companyData, userId) {
   try {
     if (!this.schema) {
@@ -153,7 +153,7 @@ async function updateById(id, companyData, userId) {
   }
 }
 
-// Delete company by ID
+ 
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -171,7 +171,7 @@ async function deleteById(id) {
   }
 }
 
-// Find company by tenant code
+ 
 async function findByTenantCode(tenantCode) {
   try {
     if (!this.schema) {
@@ -186,7 +186,7 @@ async function findByTenantCode(tenantCode) {
   }
 }
 
-// Find company by name
+ 
 async function findByName(name, excludeId = null) {
   try {
     if (!this.schema) {
@@ -208,7 +208,7 @@ async function findByName(name, excludeId = null) {
   }
 }
 
-// Get active companies only
+ 
 async function findActive() {
   try {
     if (!this.schema) {
@@ -223,7 +223,7 @@ async function findActive() {
   }
 }
 
-// Check if tenant code already exists
+ 
 async function isTenantCodeExists(tenantCode, excludeId = null) {
   try {
     if (!this.schema) {
@@ -245,7 +245,7 @@ async function isTenantCodeExists(tenantCode, excludeId = null) {
   }
 }
 
-// Get companies with wallet enabled
+ 
 async function findWithWallet() {
   try {
     if (!this.schema) {
@@ -260,7 +260,7 @@ async function findWithWallet() {
   }
 }
 
-// Get external companies
+ 
 async function findExternal() {
   try {
     if (!this.schema) {

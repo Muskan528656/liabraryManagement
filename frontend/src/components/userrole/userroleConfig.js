@@ -1,6 +1,6 @@
-import { Badge } from "react-bootstrap";
-
-// config/userRoleConfig.js
+import Switch from "@mui/material/Switch";
+import moment from 'moment';
+ 
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     return {
         moduleName: "user_roles",
@@ -21,18 +21,20 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "is_active",
                 label: "Active",
                 render: (value) => (
-                    <span style={{ color: value ? "green" : "red" }}>
-                        {value ? "Active" : "Inactive"}
-                    </span>
+ 
+                    <Switch checked={value} readOnly />
                 ),
+            },
 
-                render: (value) => (
-                    <Badge bg={value ? "success" : "secondary"}>
-                        {value ? "Active" : "Inactive"}
-                    </Badge>
-                )
+            {
+                field: "createddate",
+                label: "Created Date",
+ 
+                render: (value) => {
+                    return moment(value).format('DD/MM/YYYY');
 
-            }
+                },
+            },
         ],
 
         formFields: [
@@ -44,12 +46,18 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 placeholder: "Enter role name",
                 colSize: 12,
             },
+
             {
-                name: "is_active",
-                label: "Is Active?",
-                type: "checkbox",
-                colSize: 12,
-            }
+                key: "is_active",
+                label: "Status",
+                type: "badge",
+                badgeConfig: {
+                    true: "success",
+                    false: "secondary",
+                    true_label: "Active",
+                    false_label: "Inactive",
+                },
+            },
         ],
 
         validationRules: (formData, allRoles, editingRole) => {
@@ -81,12 +89,12 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             allowDelete: true
         },
 
-        details: [
-            { key: "role_name", label: "Role Name", type: "text" },
-            { key: "is_active", label: "Active Status", type: "text" },
-            { key: "createddate", label: "Created At", type: "date" },
-            { key: "lastmodifieddate", label: "Updated At", type: "date" },
-        ],
+ 
+ 
+ 
+ 
+ 
+ 
 
         customHandlers: {
             beforeSave: (formData, editingItem) => {

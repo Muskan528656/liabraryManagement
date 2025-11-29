@@ -25,7 +25,7 @@ export const DELETE_ACCOUNT = "DELETE_ACCOUNT";
 export const VIEW_BUSINESS = "VIEW_BUSINESS";
 export const EDIT_BUSINESS = "EDIT_BUSINESS";
 export const DELETE_BUSINESS = "DELETE_BUSINESS";
-//FILE TYPES
+ 
 export const PDF = "pdf";
 export const DOC = "doc";
 export const DOCX = "docx";

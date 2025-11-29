@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Col, Row, Card, Table, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { ShimmerTable } from "react-shimmer-effects";
-// import WhatsAppAPI from "../../api/WhatsAppAPI";
+ 
 import {
   DatatableWrapper,
   Filter,
@@ -19,12 +19,12 @@ import { NameInitialsAvatar } from "react-name-initials-avatar"; // npm install 
 const UserList = () => {
   const navigate = useNavigate();
   const [body, setBody] = useState([]);
-  // console.log("🚀 ~ UserList ~ body:", body);
+ 
   const [userInfo, setUserInfo] = useState(
     jwt_decode(sessionStorage.getItem("token"))
   );
   const [lead, setLead] = useState();
-  // const profileImage = '/user_images/users';
+ 
   const profileImage = `/public/${userInfo.tenantcode}/users`;
 
   const [bgColors, setBgColors] = useState([
@@ -39,29 +39,29 @@ const UserList = () => {
   const [brokenImages, setBrokenImages] = useState([]);
   let colIndex = 0;
 
-  // useEffect(() => {
-  //   async function init() {
-  //     // const users = await WhatsAppAPI.fetchUsers();
-  //     let resultWithoutSuperAdmin = [];
-  //     //    console.log("userInfo users",users)
-  //     if (userInfo.userrole === "ADMIN" || userInfo.userrole === "USER") {
-  //       resultWithoutSuperAdmin = users.filter(
-  //         (value, index, array) => value.userrole !== "ADMIN"
-  //       );
-  //       //    console.log("resultWithoutSuperAdmin")
-  //       setBody(resultWithoutSuperAdmin);
-  //     } else {
-  //       setBody(users);
-  //     }
-  //     if (users) {
-  //       setLead(users);
-  //     } else {
-  //       setBody([]);
-  //       setLead([]);
-  //     }
-  //   }
-  //   init();
-  // }, []);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
   const fillBgBolor = () => {
     colIndex += 1;
@@ -117,7 +117,7 @@ const UserList = () => {
         ]
       : []),
     { title: "Role", prop: "userrole", isFilterable: true },
-    // { title: "Phone", prop: "phone", isFilterable: true },
+ 
     { title: "Email", prop: "email", isFilterable: true },
     {
       title: "WhatsApp Number",

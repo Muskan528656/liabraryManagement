@@ -28,7 +28,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all book issues
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -40,7 +40,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get active issues (not returned)
+ 
   router.get("/active", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -52,7 +52,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by book ID
+ 
   router.get("/book/:bookId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -64,7 +64,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by user ID (issued_to)
+ 
   router.get("/user/:userId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -76,7 +76,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by card ID (for backward compatibility)
+ 
   router.get("/card/:cardId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -88,7 +88,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get book issue by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -103,7 +103,7 @@ module.exports = (app) => {
     }
   });
 
-  // Issue a book (checkout)
+ 
   router.post(
     "/issue",
     fetchUser,
@@ -122,7 +122,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Validate that either issued_to or card_id is provided
+ 
         if (!req.body.issued_to && !req.body.issuedTo && !req.body.card_id && !req.body.cardId) {
           return res.status(400).json({ errors: "Either issued_to (user ID) or card_id is required" });
         }
@@ -168,7 +168,7 @@ module.exports = (app) => {
             }
           } catch (notifError) {
             console.error("Error creating notification for book issue:", notifError);
-            // Don't fail the book issue if notification fails
+ 
           }
         }
         
@@ -180,7 +180,7 @@ module.exports = (app) => {
     }
   );
 
-  // Return a book (checkin)
+ 
   router.post(
     "/return/:id",
     fetchUser,
@@ -304,7 +304,7 @@ module.exports = (app) => {
         }
       } catch (notifError) {
         console.error("Error creating payment notification:", notifError);
-        // Don't fail payment if notification fails
+ 
       }
 
       return res.status(200).json({
@@ -323,7 +323,7 @@ module.exports = (app) => {
     }
   });
 
-  // Delete book issue by ID
+ 
   router.delete("/:id", fetchUser,  async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -340,6 +340,6 @@ module.exports = (app) => {
 
   
 app.use(process.env.BASE_API_URL+ "/api/bookissue", router);
-  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/bookissue", router);
+ 
 };
 

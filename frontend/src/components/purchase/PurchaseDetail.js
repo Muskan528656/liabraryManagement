@@ -8,12 +8,12 @@ const PurchaseDetail = () => {
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
-        // Fetch vendors
+ 
         const vendorApi = new DataApi("vendor");
         const vendorsResponse = await vendorApi.fetchAll();
         const vendors = vendorsResponse?.data?.data || vendorsResponse?.data || [];
 
-        // Fetch books
+ 
         const bookApi = new DataApi("book");
         const booksResponse = await bookApi.fetchAll();
         const books = booksResponse?.data?.data || booksResponse?.data || [];

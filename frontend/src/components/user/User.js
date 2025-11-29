@@ -39,7 +39,7 @@ const User = () => {
     blocked: false,
   });
 
-  // Column visibility state
+ 
   const [visibleColumns, setVisibleColumns] = useState({
     id: true,
     firstname: true,
@@ -51,7 +51,7 @@ const User = () => {
   });
   const [selectedItems, setSelectedItems] = useState([]);
 
-  // Password visibility state
+ 
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   useEffect(() => {
@@ -191,7 +191,7 @@ const User = () => {
       return;
     }
 
-    // Check for duplicate email
+ 
     if (formData.email && formData.email.trim()) {
       const duplicateEmail = users.find(
         (user) =>
@@ -208,7 +208,7 @@ const User = () => {
       }
     }
 
-    // Check for duplicate phone
+ 
     if (formData.phone && formData.phone.trim()) {
       const duplicatePhone = users.find(
         (user) =>
@@ -235,7 +235,7 @@ const User = () => {
         email: formData.email || null,
         userrole: formData.userrole,
         phone: formData.phone || null,
-        // whatsapp_number: formData.whatsapp_number || "null",
+ 
         country_code: formData.country_code || null,
         isactive: formData.isactive,
         blocked: formData.blocked,
@@ -243,7 +243,7 @@ const User = () => {
 
       console.log("userdatais ", userData)
 
-      // Only include password if it's provided (for new users or password change)
+ 
       if (formData.password) {
         userData.password = formData.password;
       }
@@ -336,7 +336,7 @@ const User = () => {
         "Email": user.email || "",
         "Role": user.userrole || "",
         "Phone": user.phone || "",
-        // "WhatsApp": user.whatsapp_number || "",
+ 
         "Status": user.isactive ? "Active" : "Inactive",
         "Blocked": user.blocked ? "Yes" : "No",
       }));
@@ -347,7 +347,7 @@ const User = () => {
         { key: 'Email', header: 'Email', width: 30 },
         { key: 'Role', header: 'Role', width: 15 },
         { key: 'Phone', header: 'Phone', width: 18 },
-        // { key: 'WhatsApp', header: 'WhatsApp', width: 18 },
+ 
         { key: 'Status', header: 'Status', width: 12 },
         { key: 'Blocked', header: 'Blocked', width: 12 }
       ];
@@ -439,7 +439,7 @@ const User = () => {
       sortable: false,
       width: 80,
     },
-    // { field: "id", label: "User ID", sortable: true },
+ 
     {
       field: "firstname",
       label: "First Name",
@@ -486,7 +486,7 @@ const User = () => {
     },
   ];
 
-  // Filter columns based on visibility (always include checkbox and SR.NO)
+ 
   const columns = [
     allColumns[0], // Always include checkbox
     allColumns[1], // Always include SR.NO
@@ -494,7 +494,7 @@ const User = () => {
   ];
   const columnsForVisibilityToggle = allColumns.slice(2);
 
-  // Toggle column visibility
+ 
   const toggleColumnVisibility = (field) => {
     setVisibleColumns(prev => ({
       ...prev,
@@ -520,29 +520,29 @@ const User = () => {
   const actionsRenderer = (user) => (
     <>
       <button
-        // variant="link"
-        // size="sm"
+ 
+ 
         className="custom-btn-edit"
-        // onClick={(e) => {
-        //   e.stopPropagation();
-        //   handleEdit(user);
-        // }}
+ 
+ 
+ 
+ 
         onClick={(e) => {
           handleNameClick(e, user, navigate, false, true);
         }}
-      // style={{ padding: "0.25rem 0.5rem" }}
+ 
       >
         <i className="fs-7 fa-solid fa-pen-to-square"></i>
       </button>
       <button
-        // variant="link"
-        // size="sm"
+ 
+ 
         className="custom-btn-delete"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete(user.id);
         }}
-      // style={{ padding: "0.25rem 0.5rem" }}
+ 
       >
         <i className="fs-7 fa-solid fa-trash"></i>
       </button>
@@ -550,7 +550,7 @@ const User = () => {
   );
 
 
-  // Toggle password visibility
+ 
   const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
 
   return (
@@ -682,15 +682,15 @@ const User = () => {
                       required={!editingUser}
                     />
                     <InputGroup.Text
-                      // style={{
-                      //   cursor: "pointer",
-                      //   border: "none",
-                      //   backgroundColor: "transparent",
-                      //   position: "absolute",
-                      //   right: "10px",
-                      //   top: "10px",
-                      //   padding: "0",
-                      // }}
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
                       onClick={togglePasswordVisibility}
                     >
                       {passwordVisible ? <FaEyeSlash /> : <FaEye />}  {/* Switch between Eye and EyeSlash */}

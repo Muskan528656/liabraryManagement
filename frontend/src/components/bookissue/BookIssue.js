@@ -83,7 +83,7 @@ const BookIssue = () => {
     email: true,
   });
 
-  // User search field checkboxes
+ 
   const [userSearchFields, setUserSearchFields] = useState({
     firstname: true,
     lastname: true,
@@ -91,14 +91,14 @@ const BookIssue = () => {
     phone: true,
   });
 
-  // Refs for inputs
+ 
   const bookInputRef = useRef(null);
   const cardInputRef = useRef(null);
   const userInputRef = useRef(null);
   const bookSearchInputRef = useRef(null);
   const cardSearchInputRef = useRef(null);
 
-  // Barcode detection
+ 
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
   const lastBookInputTime = useRef(0);
@@ -111,7 +111,7 @@ const BookIssue = () => {
     fetchIssuedBooks();
     fetchLibrarySettings();
 
-    // Auto-focus on book input when component mounts
+ 
     setTimeout(() => {
       const bookSelect = bookInputRef.current?.querySelector("input");
       if (bookSelect) {
@@ -120,7 +120,7 @@ const BookIssue = () => {
       }
     }, 300);
 
-    // Listen for quick action trigger
+ 
     const token = PubSub.subscribe("OPEN_ADD_BOOK_ISSUE_MODAL", () => {
       resetForm();
       setActiveTab("issue");
@@ -140,14 +140,14 @@ const BookIssue = () => {
     };
   }, []);
 
-  // Fetch library settings
+ 
   const fetchLibrarySettings = async () => {
     try {
       const settingsApi = new DataApi("librarysettings");
-      // Use /all endpoint to get key-value pairs
+ 
       const response = await settingsApi.get("/all");
       if (response.data && response.data.success && response.data.data) {
-        // Response format: { success: true, data: { duration_days: "15", ... } }
+ 
         const duration = parseInt(response.data.data.duration_days) || 7;
         const maxBooks = parseInt(response.data.data.max_books_per_card) || 1;
         setDurationDays(duration);
@@ -157,7 +157,7 @@ const BookIssue = () => {
         typeof response.data === "object" &&
         !Array.isArray(response.data)
       ) {
-        // Direct object response
+ 
         const duration = parseInt(response.data.duration_days) || 7;
         const maxBooks = parseInt(response.data.max_books_per_card) || 1;
         setDurationDays(duration);
@@ -165,11 +165,11 @@ const BookIssue = () => {
       }
     } catch (error) {
       console.error("Error fetching library settings:", error);
-      // Keep default 7 days on error
+ 
     }
   };
 
-  // Calculate default due date based on library settings
+ 
   useEffect(() => {
     if (!formData.due_date && durationDays) {
       const dueDate = new Date();
@@ -181,7 +181,7 @@ const BookIssue = () => {
     }
   }, [durationDays]);
 
-  // Update user details when library card or user is selected
+ 
   useEffect(() => {
     if (selectedLibraryCard && selectedLibraryCard.data) {
       setUserDetails(selectedLibraryCard.data);
@@ -207,7 +207,7 @@ const BookIssue = () => {
     }
   }, [selectedLibraryCard, selectedUser]);
 
-  // Update form when book is selected
+ 
   useEffect(() => {
     if (selectedBook && selectedBook.data) {
       setFormData((prev) => ({
@@ -223,23 +223,23 @@ const BookIssue = () => {
       const bookApi = new DataApi("book");
       const response = await bookApi.fetchAll();
 
-      // Handle different response structures
+ 
       let booksData = [];
       if (Array.isArray(response.data)) {
-        // If response.data is directly an array
+ 
         booksData = response.data;
       } else if (response.data && Array.isArray(response.data.data)) {
-        // If response.data.data is the array
+ 
         booksData = response.data.data;
       } else if (Array.isArray(response)) {
-        // If response itself is the array
+ 
         booksData = response;
       }
 
       console.log("Total books fetched:", booksData.length);
       console.log("Sample book data:", booksData[0]);
 
-      // Store ALL books (don't filter here - filter in search/display logic)
+ 
       setBooks(booksData);
     } catch (error) {
       console.error("Error fetching books:", error);
@@ -285,7 +285,7 @@ const BookIssue = () => {
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
       if (response.data && Array.isArray(response.data)) {
-        // Filter only active/issued books (not returned)
+ 
         const activeIssues = response.data.filter(
           (issue) =>
             issue.status === "issued" ||
@@ -306,7 +306,7 @@ const BookIssue = () => {
     }
   };
 
-  // Handle book search
+ 
   const handleBookSearch = async () => {
     if (!bookSearchInput.trim()) return;
 
@@ -314,7 +314,7 @@ const BookIssue = () => {
     const cleanInput = query.replace(/[-\s]/g, "");
     const isBarcode = /^\d{10,13}$/.test(cleanInput);
 
-    // If barcode detected, search by ISBN
+ 
     if (isBarcode) {
       const results = await loadBookOptionsByField(cleanInput, "isbn");
       if (results && results.length > 0) {
@@ -326,7 +326,7 @@ const BookIssue = () => {
         bookSearchField
       );
       if (results && results.length > 0) {
-        // If only one result, auto-select it
+ 
         if (results.length === 1) {
           setSelectedBook(results[0]);
         }
@@ -334,10 +334,8 @@ const BookIssue = () => {
     }
   };
 
-  // Load book options by specific field
   const loadBookOptionsByField = async (inputValue, fieldType = "all") => {
     if (!inputValue || inputValue.length < 1) {
-      // Show ALL books (not just available ones) - user can see all data
       return books.slice(0, 50).map((book) => ({
         value: book.id,
         label: `${book.title}${book.isbn ? ` (ISBN: ${book.isbn})` : ""}${book.available_copies !== undefined
@@ -353,7 +351,6 @@ const BookIssue = () => {
     const isBarcode = /^\d{10,13}$/.test(cleanInput);
 
     if (isBarcode || fieldType === "isbn") {
-      // Try to find by ISBN directly
       const foundBook = books.find(
         (book) =>
           book.isbn &&
@@ -362,7 +359,6 @@ const BookIssue = () => {
       );
 
       if (foundBook) {
-        // Return ALL books, not just available ones
         return [
           {
             value: foundBook.id,
@@ -375,7 +371,7 @@ const BookIssue = () => {
         ];
       }
 
-      // If not found locally, search via API
+ 
       try {
         setSearchingBooks(true);
         const bookResp = await helper.fetchWithAuth(
@@ -387,7 +383,7 @@ const BookIssue = () => {
 
         if (bookResp.ok) {
           const bookData = await bookResp.json();
-          // Return ALL books, not just available ones
+ 
           if (!books.find((b) => b.id === bookData.id)) {
             setBooks((prev) => [...prev, bookData]);
           }
@@ -409,17 +405,15 @@ const BookIssue = () => {
       }
     }
 
-    // Regular text search - search only in selected fields based on checkboxes
-    // Show ALL books, not just available ones
     const filtered = books.filter((book) => {
-      // Remove the available_copies filter to show all books
+ 
 
-      // Get all searchable fields
+ 
       const title = (book.title || "").toLowerCase();
       const isbn = (book.isbn || "").replace(/[-\s]/g, "").toLowerCase();
       const author = (book.author_name || "").toLowerCase();
       const category = (book.category_name || "").toLowerCase();
-      const publisher = (book.publisher || "").toLowerCase();
+      const publisher = (book.publisher || "").toLowerCase(); 
       const language = (book.language || "").toLowerCase();
       const edition = (book.edition || "").toString().toLowerCase();
       const description = (book.description || "").toLowerCase();
@@ -427,12 +421,12 @@ const BookIssue = () => {
       const searchTerm = query.replace(/[-\s]/g, "");
       const queryNumbers = query.replace(/\D/g, "");
 
-      // Check if at least one field is selected
+ 
       const hasSelectedFields = Object.values(bookSearchFields).some(
         (val) => val === true
       );
 
-      // If no fields selected, search all fields (fallback)
+ 
       if (!hasSelectedFields) {
         return (
           title.includes(query) ||
@@ -449,7 +443,7 @@ const BookIssue = () => {
         );
       }
 
-      // Search only in selected fields
+ 
       let matches = false;
       if (bookSearchFields.title && title.includes(query)) matches = true;
       if (
@@ -464,7 +458,7 @@ const BookIssue = () => {
         matches = true;
       if (bookSearchFields.language && language.includes(query)) matches = true;
 
-      // Also check ISBN for numeric queries if ISBN is selected
+ 
       if (
         bookSearchFields.isbn &&
         queryNumbers.length > 0 &&
@@ -483,28 +477,28 @@ const BookIssue = () => {
     }));
   };
 
-  // Load book options with search - always search all fields in dropdown
   const loadBookOptions = async (inputValue) => {
-    // When typing in dropdown, always search all fields for better UX
+    console.log("input value", inputValue)
     return loadBookOptionsByField(inputValue, "all");
   };
 
-  // Handle card search
+ 
   const handleCardSearch = async () => {
     if (!cardSearchInput.trim()) return;
 
     const query = cardSearchInput.trim();
     const results = await loadCardOptionsByField(query, cardSearchField);
     if (results && results.length > 0) {
-      // If only one result, auto-select it
+ 
       if (results.length === 1) {
         setSelectedLibraryCard(results[0]);
       }
     }
   };
 
-  // Load card options by specific field
+ 
   const loadCardOptionsByField = async (inputValue, fieldType = "all") => {
+    console.log("libr", libraryCards)
     if (!inputValue || inputValue.length < 1) {
       return libraryCards.slice(0, 50).map((card) => ({
         value: card.id,
@@ -518,13 +512,13 @@ const BookIssue = () => {
     const queryLower = query.toLowerCase();
     const queryNumbers = query.replace(/\D/g, "");
 
-    // Check if it's a barcode scan (card number format)
+ 
     const isBarcode =
       query.length >= 3 &&
       (query.match(/^[A-Z]{2,}/i) || /^\d{6,}$/.test(query));
 
     if (isBarcode || fieldType === "card_number") {
-      // Try to find by card number directly
+ 
       const foundCard = libraryCards.find(
         (card) =>
           card.card_number &&
@@ -548,7 +542,7 @@ const BookIssue = () => {
         ];
       }
 
-      // If not found locally, search via API
+ 
       try {
         setSearchingCards(true);
         const cardResp = await helper.fetchWithAuth(
@@ -585,7 +579,7 @@ const BookIssue = () => {
       }
     }
 
-    // Regular text search based on selected checkboxes
+ 
     const filtered = libraryCards.filter((card) => {
       const userName = (card.user_name || "").toLowerCase();
       const studentName = (card.student_name || "").toLowerCase();
@@ -596,12 +590,12 @@ const BookIssue = () => {
       );
       const email = (card.user_email || card.email || "").toLowerCase();
 
-      // Check if at least one field is selected
+ 
       const hasSelectedFields = Object.values(cardSearchFields).some(
         (val) => val === true
       );
 
-      // If no fields selected, search all fields (fallback)
+ 
       if (!hasSelectedFields) {
         return (
           userName.includes(queryLower) ||
@@ -612,7 +606,7 @@ const BookIssue = () => {
         );
       }
 
-      // Search only in selected fields
+ 
       let matches = false;
       if (cardSearchFields.card_number && cardNumber.includes(queryLower))
         matches = true;
@@ -635,12 +629,12 @@ const BookIssue = () => {
     }));
   };
 
-  // Load library card options with search
+ 
   const loadCardOptions = async (inputValue) => {
     return loadCardOptionsByField(inputValue, cardSearchField);
   };
 
-  // Load user options with search
+ 
   const loadUserOptions = async (inputValue) => {
     if (!inputValue || inputValue.length < 1) {
       return users.slice(0, 50).map((user) => ({
@@ -665,12 +659,12 @@ const BookIssue = () => {
         ""
       );
 
-      // Check if at least one field is selected
+ 
       const hasSelectedFields = Object.values(userSearchFields).some(
         (val) => val === true
       );
 
-      // If no fields selected, search all fields (fallback)
+ 
       if (!hasSelectedFields) {
         return (
           firstName.includes(query) ||
@@ -681,7 +675,7 @@ const BookIssue = () => {
         );
       }
 
-      // Search only in selected fields
+ 
       let matches = false;
       if (userSearchFields.firstname && firstName.includes(query))
         matches = true;
@@ -709,11 +703,11 @@ const BookIssue = () => {
     }));
   };
 
-  // Handle book selection change
+ 
   const handleBookChange = (selectedOption) => {
     setSelectedBook(selectedOption);
     if (selectedOption) {
-      // Auto-focus on card input after book selection
+ 
       setTimeout(() => {
         const cardSelect = cardInputRef.current?.querySelector("input");
         if (cardSelect) {
@@ -724,31 +718,32 @@ const BookIssue = () => {
     }
   };
 
-  // Handle library card selection change
+ 
   const handleCardChange = (selectedOption) => {
+    console.log("SLELELLLE", selectedOption)
     setSelectedLibraryCard(selectedOption);
     if (selectedOption) {
-      // Auto-focus on due date after card selection
+ 
       setTimeout(() => {
         document.getElementById("due_date")?.focus();
       }, 200);
     }
   };
 
-  // Handle user selection change
+ 
   const handleUserChange = (selectedOption) => {
     setSelectedUser(selectedOption);
     if (selectedOption) {
-      // Auto-focus on due date after user selection
+ 
       setTimeout(() => {
         document.getElementById("due_date")?.focus();
       }, 200);
     }
   };
 
-  // Handle form submission
+ 
   const handleIssueBook = async () => {
-    // Validation
+ 
     if (!formData.book_id) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Validation Error",
@@ -784,7 +779,7 @@ const BookIssue = () => {
         remarks: formData.remarks || "",
       };
 
-      // Add either card_id or issued_to
+ 
       if (formData.card_id) {
         issueData.card_id = formData.card_id;
       } else if (formData.issued_to) {
@@ -807,9 +802,9 @@ const BookIssue = () => {
               }`,
           });
           resetForm();
-          // Refresh books to update available copies
+ 
           fetchBooks();
-          // Refresh issued books list
+ 
           fetchIssuedBooks();
         } else {
           PubSub.publish("RECORD_ERROR_TOAST", {
@@ -855,7 +850,7 @@ const BookIssue = () => {
       condition_before: "Good",
       remarks: "",
     });
-    // Auto-focus on book search input after reset
+ 
     setTimeout(() => {
       if (bookSearchInputRef.current) {
         bookSearchInputRef.current.focus();
@@ -863,7 +858,7 @@ const BookIssue = () => {
     }, 200);
   };
 
-  // Custom styles for react-select
+ 
   const customSelectStyles = {
     control: (base, state) => ({
       ...base,
@@ -928,7 +923,7 @@ const BookIssue = () => {
     }
   };
 
-  // Filter issued books based on search term
+ 
   const filteredIssuedBooks = issuedBooks.filter((issue) => {
     if (!searchTerm) return true;
     const query = searchTerm.toLowerCase();
@@ -950,7 +945,7 @@ const BookIssue = () => {
     );
   });
 
-  // Calculate days remaining
+ 
   const getDaysRemaining = (dueDate) => {
     if (!dueDate) return null;
     try {
@@ -966,7 +961,7 @@ const BookIssue = () => {
     }
   };
 
-  // Compute issued books for currently selected card
+ 
   const issuedListForSelected = selectedLibraryCard
     ? issuedBooks.filter((issue) => {
       try {
@@ -987,7 +982,7 @@ const BookIssue = () => {
     ? parseInt(selectedLibraryCard.data.issued_count) || issuedListForSelected.length
     : 0;
 
-  // Handle export to Excel
+ 
   const handleExport = async () => {
     try {
       const exportData = filteredIssuedBooks.map((issue) => {
@@ -1646,7 +1641,7 @@ const BookIssue = () => {
                                 <Col lg={12}>
                                   <div className="d-flex gap-3">
                                     <Button
-                                      // variant="outline-secondary"
+ 
                                       onClick={resetForm}
                                       disabled={loading}
                                       className="btn-cancel"
@@ -1989,7 +1984,7 @@ const BookIssue = () => {
                           : "No books have been issued yet"
                       }
                       onRowClick={(issue) => {
-                        // Optional: Navigate to issue details or show more info
+ 
                         console.log("Issue clicked:", issue);
                       }}
                     />

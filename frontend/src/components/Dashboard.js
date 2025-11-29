@@ -9,7 +9,7 @@ import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 import { BarChart } from '@mui/x-charts/BarChart';
 
-// --- ULTIMATE ENHANCED MODERN STYLES & COLOR PALETTE ---
+ 
 const PRIMARY_COLOR = "#4338ca"; // Deep Indigo-800 for strong primary action
 const ACCENT_COLOR = "#6366f1"; // Lighter Indigo-500
 const SUCCESS_COLOR = "#059669"; // Deeper Green for success
@@ -18,7 +18,7 @@ const DANGER_COLOR = "#dc2626"; // Stronger Red for immediate attention
 const INFO_COLOR = "#8b5cf6"; // Purple for secondary/info
 
 const styles = {
-  // Ultra Modern Card Style with Hover Effect
+ 
   card: {
     border: "1px solid #e2e8f0",
     borderRadius: "20px", // More rounded corners
@@ -29,7 +29,7 @@ const styles = {
     overflow: "hidden",
   },
   interactiveCard: {
-    // Style for cards that should respond to user interaction (e.g., Alerts)
+ 
     cursor: "pointer",
   },
   cardHeader: {
@@ -54,7 +54,7 @@ const styles = {
   }
 };
 
-// CSS-in-JS for a hover effect on alert cards
+ 
 const AlertCardHoverStyle = (baseStyle) => ({
   ...baseStyle,
   "&:hover": {
@@ -63,7 +63,7 @@ const AlertCardHoverStyle = (baseStyle) => ({
   }
 });
 
-// Helper component to apply the hover effect
+ 
 const InteractiveCard = ({ children, style, ...props }) => {
   const [hover, setHover] = useState(false);
   return (
@@ -91,14 +91,14 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Stats
+ 
   const [dueSoonCount, setDueSoonCount] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
   const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
   const [damagedCount, setDamagedCount] = useState(0);
   const [totalBooks, setTotalBooks] = useState(0);
 
-  // Card Details
+ 
   const [cardDetails, setCardDetails] = useState([]);
   const [cardLimitSetting, setCardLimitSetting] = useState(6);
 
@@ -249,7 +249,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     return `₹${formatNumber(n.toFixed(2))}`;
   };
 
-  // --- HELPER: Common Chart Toolbar Configuration ---
+ 
   const getChartConfig = (filename) => ({
     toolbar: {
       show: true,
@@ -270,7 +270,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   });
 
-  // --- CHART 1: Library Card Stacked Bar ---
+ 
   const libraryCardBarOptions = {
     chart: {
       type: 'bar',
@@ -315,7 +315,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   ];
 
 
-  // --- CHART 2 & 4: Donut/Pie Configuration ---
+ 
   const donutOptions = (colors, filename) => ({
     chart: {
       type: "donut",
@@ -350,7 +350,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const donutChart1Series = dashboardData ? [dashboardData.summary.availablePercentage || 0, dashboardData.summary.issuedPercentage || 0] : [0, 0];
   const pieSeries = dashboardData && dashboardData.dailyActivity.length > 0 ? dashboardData.dailyActivity.map((item) => parseInt(item.count || 0)) : [1];
 
-  // --- CHART 3: Inventory (Copies per Book) ---
+ 
   const rawAvailableBooks = totalBooks?.total_available_copies || [];
   const topAvailableBooks = [...rawAvailableBooks]
     .sort((a, b) => parseInt(b.available_copies || 0) - parseInt(a.available_copies || 0))
@@ -381,7 +381,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const availableBooksSeries = [{ name: 'Copies Available', data: topAvailableBooks.map(b => parseInt(b.available_copies || 0)) }];
 
 
-  // --- DATA LISTS (Using Richer Colors) ---
+ 
   const summaryCards = dashboardData ? [
     { title: "Total Books", value: formatNumber(totalBooks.total_books), icon: "fa-book", color: PRIMARY_COLOR, bgColor: "#e0e7ff" },
     { title: "Available Books", value: formatNumber(totalBooks.available_books), icon: "fa-book-open", color: SUCCESS_COLOR, bgColor: "#d1fae5" },
@@ -405,7 +405,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   if (loading) return <div className="d-flex justify-content-center align-items-center vh-100 bg-light"><Loader /></div>;
 
-  // --- STUDENT UI (Kept Clean and Minimal) ---
+ 
   if (userRole === "STUDENT") {
     return (
       <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
@@ -424,7 +424,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     );
   }
 
-  // --- ADMIN UI (Highly Attractive) ---
+ 
   return (
     <div style={{ background: "#f1f5f9", minHeight: "100vh", paddingBottom: "50px" }}>
       <ScrollToTop />

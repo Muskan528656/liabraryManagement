@@ -3,7 +3,7 @@ import Dashboard from "./Dashboard";
 import jwt_decode from "jwt-decode";
 
 const Home = ({ userInfo }) => {
-  // Get user info from token if not passed as prop
+ 
   let currentUserInfo = userInfo;
   if (!currentUserInfo) {
     try {

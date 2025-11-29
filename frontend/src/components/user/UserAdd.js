@@ -5,7 +5,7 @@ import Form from "react-bootstrap/Form";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "react-bootstrap-typeahead/css/Typeahead.css";
-// import WhatsAppAPI from "../../api/WhatsAppAPI";
+ 
 import Select from "react-select";
 import jwt_decode from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify"; // npm i react-toastify --force
@@ -15,12 +15,12 @@ import CountryCode from "../../constants/CountryCode.json";
 const UserAdd = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  //const [user, setuser] = useState(location.state);
+ 
   const [user, setUser] = useState(location.state ? location.state : {});
   let name = user.firstname;
   const [optionUsers, setOptionUsers] = useState([]);
   const [option, setoption] = useState();
-  // const [selectedUser, setSelectedUser] = useState('');
+ 
   const [passwordError, setPasswordError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
@@ -33,24 +33,24 @@ const UserAdd = () => {
   const [userPlan, setUserPlan] = useState(null); // Plan information from token
 
   useEffect(() => {
-    // fetchWhatsAppSetting();
+ 
 
-    // Get logged in user info
+ 
     let userInfo = jwt_decode(sessionStorage.getItem("token"));
     setLoginUserRole(userInfo.userrole);
-    // Store plan information for WhatsApp setting validation
+ 
     if (userInfo.plan) {
       setUserPlan(userInfo.plan);
     }
 
     if (user.id) {
-      // Edit mode
+ 
       let temp = {};
       temp.value = user.managerid;
       temp.label = user.managername;
       setoption(temp);
     } else {
-      // Create mode
+ 
       let temp = {};
       temp.value = userInfo.id;
       temp.label = userInfo.username;
@@ -62,44 +62,44 @@ const UserAdd = () => {
         managername: userInfo.username,
       });
     }
-    // async function init() {
-    //   // const result = await WhatsAppAPI.fetchUsers();
+ 
+ 
 
-    //   if (result) {
-    //     let ar = [];
-    //     var obj = {};
-    //     obj.value = null;
-    //     obj.label = "--Select--";
-    //     ar.push(obj);
-    //     result.map((item) => {
-    //       if (item.userrole !== "USER") {
-    //         var obj = {};
-    //         obj.value = item.id;
-    //         obj.label = item.username;
-    //         ar.push(obj);
-    //       }
-    //     });
-    //     setOptionUsers(ar);
-    //   } else {
-    //     setOptionUsers([]);
-    //   }
-    // }
-    // init();
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
   }, [user.id]);
 
-  // const fetchWhatsAppSetting = async () => {
-  //   try {
-  //     // const response = await WhatsAppAPI.getWhatsAppSettingRecord();
-  //     if (response.success) {
-  //       setWhatsappSetting(response.record);
-  //     } else {
-  //       setWhatsappSetting([]);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching WhatsApp settings:", error);
-  //     setWhatsappSetting([]);
-  //   }
-  // };
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isFormValid = () => {
     const isWhatsAppSettingsValid =
@@ -145,16 +145,16 @@ const UserAdd = () => {
 
       let result = {};
       if (finalUser.id) {
-        // result = await WhatsAppAPI.saveUser(finalUser);
+ 
       } else {
-        // result = await WhatsAppAPI.createUser(finalUser);
+ 
       }
 
       if (result.success) {
-        //     PubSub.publish("RECORD_SAVED_TOAST", {
-        //   title: "Success",
-        //   message: "Record saved successfully",
-        // });
+ 
+ 
+ 
+ 
         const userId = finalUser.id ? finalUser.id : result.id;
         navigate(`/users`);
       } else {
@@ -171,7 +171,7 @@ const UserAdd = () => {
       }
     } catch (error) {
       toast.error("An error occurred while saving the record.");
-      //    console.log("Unexpected error during API call:", error);
+ 
     } finally {
       setIsSending(false);
     }
@@ -196,29 +196,29 @@ const UserAdd = () => {
       }
     }
 
-    //if (name === "phone") {
-    //    if (!phoneRegex.test(value)) {
-    //        setPhoneError("Phone number must be exactly 10 digits");
-    //    } else {
-    //        setPhoneError("");
-    //    }
-    //}
-    // if (name === "whatsapp_number" && value.length === 0) {
-    //     setWhatsappError();
-    // }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-    // if (name === "whatsapp_number") {
-    //     if (value) {
-    //         if (!phoneRegex.test(value)) {
-    //             setWhatsappError("Phone number must be exactly 10 digits");
-    //         } else {
-    //             setWhatsappError();
-    //         }
-    //     } else {
-    //         setWhatsappError();
-    //     }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-    // }
+ 
 
     if (name === "email") {
       setEmailError(!emailRegex.test(value) ? "Invalid email format." : "");
@@ -231,7 +231,7 @@ const UserAdd = () => {
 
   const handleUsers = (event) => {
     setoption(event);
-    // setSelectedUser(event)
+ 
     setUser({ ...user, managerid: event.value, managername: event.label });
   };
 
@@ -514,7 +514,7 @@ const UserAdd = () => {
                               (option) => option.value
                             );
 
-                            // Check plan limit for WhatsApp settings
+ 
                             if (userPlan && userPlan.number_of_whatsapp_setting) {
                               const limit = userPlan.number_of_whatsapp_setting;
                               if (selectedPhones.length > limit) {

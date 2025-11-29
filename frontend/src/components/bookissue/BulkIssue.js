@@ -38,7 +38,7 @@ const BulkIssue = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // --- Effects ---
+ 
   useEffect(() => {
     fetchAll();
   }, []);
@@ -52,7 +52,7 @@ const BulkIssue = () => {
     }
   }, [issueDate, durationDays]);
 
-  // --- Data Fetching ---
+ 
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -71,7 +71,7 @@ const BulkIssue = () => {
           settingsRespTry(settingsApi),
         ]);
 
-      // Normalize responses
+ 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
@@ -125,7 +125,7 @@ const BulkIssue = () => {
     }
   };
 
-  // --- Logic Helpers ---
+ 
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
@@ -217,7 +217,7 @@ const BulkIssue = () => {
     }
   };
 
-  // --- Calculated Values ---
+ 
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
@@ -226,7 +226,7 @@ const BulkIssue = () => {
     (parseInt(maxBooksPerCard) || 1) - issuedCountForSelectedCard
   );
 
-  // React Select Options
+ 
   const bookOptions = books.map((b) => ({
     value: b.id,
     label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
@@ -241,7 +241,7 @@ const BulkIssue = () => {
     data: c,
   }));
 
-  // --- Custom Styles for React Select to match theme ---
+ 
   const customSelectStyles = {
     control: (base) => ({
       ...base,
@@ -430,7 +430,7 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        // Validation Logic
+ 
                         const invalid = v.find((sel) => {
                           const b = sel.data;
                           return issuedBooks.some(
@@ -454,7 +454,7 @@ const BulkIssue = () => {
                       }
                       setSelectedBooks(v || []);
                     }}
-                    // Hide default dropdown when selected to use custom grid below
+ 
                     controlShouldRenderValue={false}
                     placeholder={
                       !selectedCard

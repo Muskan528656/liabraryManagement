@@ -1,4 +1,4 @@
-// hooks/useDataManager.js
+ 
 import { useState, useEffect } from 'react';
 import DataApi from '../../api/dataApi';
 

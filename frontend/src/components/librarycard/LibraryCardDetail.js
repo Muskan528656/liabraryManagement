@@ -42,6 +42,8 @@ const LibraryCardDetail = ({
   const [imagePreview, setImagePreview] = useState("/default-user.png");
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [showBack, setShowBack] = useState(false);
+  const [subscriptionProgress, setSubscriptionProgress] = useState(0);
+  const [daysRemaining, setDaysRemaining] = useState(0);
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -51,8 +53,14 @@ const LibraryCardDetail = ({
   const moduleApi = "librarycard";
   const moduleLabel = "Library Card";
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
   const DISABLED_FIELDS_ON_EDIT = useMemo(() => new Set(), []);
-  const READONLY_FIELDS_ON_EDIT = useMemo(() => new Set(["user_email"]), []);
+  const READONLY_FIELDS_ON_EDIT = useMemo(() => new Set(["user_email", "card_number"]), []);
+
+  const EDITABLE_FIELDS = useMemo(() => [
+    "first_name", "last_name", "email", "phone_number",
+    "registration_date", "subscription_id", "is_active"
+  ], []);
 
   const normalizedFileHost = useMemo(() => {
     if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
@@ -76,6 +84,89 @@ const LibraryCardDetail = ({
     },
     [normalizedFileHost]
   );
+
+ 
+  const CircularProgressBar = ({ progress, daysRemaining, size = 120 }) => {
+    const strokeWidth = 8;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    const getProgressColor = (progress) => {
+      if (progress > 70) return "#28a745";
+      if (progress > 30) return "#ffc107";
+      return "#dc3545";
+    };
+
+    return (
+      <div className="text-center">
+        <div className="position-relative d-inline-block">
+          <svg width={size} height={size} className="progress-ring">
+            <circle
+              stroke="#e9ecef"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              r={radius}
+              cx={size / 2}
+              cy={size / 2}
+            />
+            <circle
+              stroke={getProgressColor(progress)}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              fill="transparent"
+              r={radius}
+              cx={size / 2}
+              cy={size / 2}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            />
+          </svg>
+          <div
+            className="position-absolute top-50 start-50 translate-middle text-center"
+            style={{ width: "80px" }}
+          >
+            <div className="fw-bold" style={{ fontSize: "24px", color: getProgressColor(progress) }}>
+              {daysRemaining}
+            </div>
+            <div className="small text-muted">Days Left</div>
+          </div>
+        </div>
+        <div className="mt-2">
+          <Badge bg={progress > 70 ? "success" : progress > 30 ? "warning" : "danger"}>
+            {progress > 70 ? "Good" : progress > 30 ? "Warning" : "Expiring Soon"}
+          </Badge>
+        </div>
+      </div>
+    );
+  };
+
+ 
+  const calculateSubscriptionProgress = useCallback((subscriptionData) => {
+    if (!subscriptionData || !subscriptionData.start_date || !subscriptionData.end_date) {
+      return { progress: 0, daysRemaining: 0 };
+    }
+
+    const startDate = new Date(subscriptionData.start_date);
+    const endDate = new Date(subscriptionData.end_date);
+    const today = new Date();
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return { progress: 0, daysRemaining: 0 };
+    }
+
+    const totalDuration = endDate - startDate;
+    const elapsedDuration = today - startDate;
+    const remainingDuration = endDate - today;
+
+    let progress = (elapsedDuration / totalDuration) * 100;
+    progress = Math.max(0, Math.min(100, progress));
+
+    const daysRemaining = Math.ceil(remainingDuration / (1000 * 60 * 60 * 24));
+
+    return { progress: Math.round(progress), daysRemaining: Math.max(0, daysRemaining) };
+  }, []);
 
   const UserAvatar = ({ userId, size = 32, showName = true, clickable = true }) => {
     const userName = userNames[userId] || `User ${userId}`;
@@ -190,6 +281,33 @@ const LibraryCardDetail = ({
     }
   }, [cardData, showBack]);
 
+ 
+  useEffect(() => {
+    const fetchSubscriptionProgress = async () => {
+      if (data?.subscription_id) {
+        try {
+          const api = new DataApi("subscriptions");
+          const response = await api.fetchById(data.subscription_id);
+          if (response && response.data) {
+            const subscriptionData = response.data.success ? response.data.data : response.data;
+            const { progress, daysRemaining } = calculateSubscriptionProgress(subscriptionData);
+            setSubscriptionProgress(progress);
+            setDaysRemaining(daysRemaining);
+          }
+        } catch (error) {
+          console.error("Error fetching subscription details:", error);
+          setSubscriptionProgress(0);
+          setDaysRemaining(0);
+        }
+      } else {
+        setSubscriptionProgress(0);
+        setDaysRemaining(0);
+      }
+    };
+
+    fetchSubscriptionProgress();
+  }, [data, calculateSubscriptionProgress]);
+
   const fetchCardData = async () => {
     try {
       const api = new DataApi("librarycard");
@@ -265,23 +383,24 @@ const LibraryCardDetail = ({
   };
 
   const fields = {
-    title: "card_number",
-    subtitle: "user_email",
     details: [
       {
-        key: "user_id",
-        label: "Member",
-        type: "select",
-        options: "users",
-        displayKey: "user_name",
+        key: "card_number",
+        label: "Card Number",
+        type: "text",
       },
-      { key: "card_number", label: "Card Number", type: "text" },
       { key: "first_name", label: "First Name", type: "text" },
-      { key: "last_name", label: "Lastname", type: "text" },
+      { key: "last_name", label: "Last Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
-      { key: "phone_number", label: "Card Number", },
-      { key: "registration_date", label: "Registraion Date", },
+      { key: "phone_number", label: "Phone", type: "text" },
+      { key: "registration_date", label: "Registration Date", type: "date" },
 
+      {
+        key: "subscription_id",
+        label: "Subscription",
+        type: "select",
+        options: "subscriptions"
+      },
       {
         key: "is_active",
         label: "Status",
@@ -331,8 +450,7 @@ const LibraryCardDetail = ({
             >
               <div
                 style={{
-                  background:
-                    "var(--primary-color)",
+                  background: "var(--primary-color)",
                   color: "white",
                   padding: "20px",
                   textAlign: "center",
@@ -345,7 +463,7 @@ const LibraryCardDetail = ({
                   {imagePreview ? (
                     <img
                       src={imagePreview}
-                      alt={data?.user_name || "User"}
+                      alt={data?.first_name || "User"}
                       style={{
                         width: "120px",
                         height: "120px",
@@ -416,7 +534,7 @@ const LibraryCardDetail = ({
                       fontWeight: "bold",
                     }}
                   >
-                    {data?.user_name || "N/A"}
+                    {data?.first_name || "N/A"}
                   </h5>
                   <p
                     style={{
@@ -425,7 +543,7 @@ const LibraryCardDetail = ({
                       fontSize: "14px",
                     }}
                   >
-                    {data?.user_email || "N/A"}
+                    {data?.email || "N/A"}
                   </p>
                   <p
                     style={{
@@ -464,15 +582,7 @@ const LibraryCardDetail = ({
                     textAlign: "center",
                   }}
                 >
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Issue Date:</strong> {formatDate(data?.issue_date)}
-                  </p>
-                  {data?.expiry_date && (
-                    <p style={{ margin: "5px 0" }}>
-                      <strong>Submission Date:</strong>{" "}
-                      {formatDate(data?.expiry_date)}
-                    </p>
-                  )}
+
                 </div>
               </Card.Body>
             </Card>
@@ -534,20 +644,14 @@ const LibraryCardDetail = ({
                     <strong>Card Number:</strong> {data?.card_number || "N/A"}
                   </p>
                   <p style={{ margin: "5px 0" }}>
-                    <strong>Member Name:</strong> {data?.user_name || "N/A"}
+                    <strong>First Name:</strong> {data?.first_name || "N/A"}
                   </p>
                   <p style={{ margin: "5px 0" }}>
-                    <strong>Email:</strong> {data?.user_email || "N/A"}
+                    <strong>Email:</strong> {data?.email || "N/A"}
                   </p>
                   <p style={{ margin: "5px 0" }}>
-                    <strong>Issue Date:</strong> {formatDate(data?.issue_date)}
+                    <strong>Registration Date:</strong> {formatDate(data?.registration_date)}
                   </p>
-                  {data?.expiry_date && (
-                    <p style={{ margin: "5px 0" }}>
-                      <strong>Submission Date:</strong>{" "}
-                      {formatDate(data?.expiry_date)}
-                    </p>
-                  )}
                   <p style={{ margin: "5px 0" }}>
                     <strong>Status:</strong>{" "}
                     <Badge bg={data?.is_active ? "success" : "secondary"}>
@@ -596,6 +700,40 @@ const LibraryCardDetail = ({
         </div>
       ),
     },
+    {
+      title: "Subscription Status",
+      colSize: 12,
+      render: (data) => (
+        <Card className="mt-3">
+          <Card.Body className="text-center">
+            {data?.subscription_id ? (
+              <>
+                <CircularProgressBar
+                  progress={subscriptionProgress}
+                  daysRemaining={daysRemaining}
+                  size={120}
+                />
+                <div className="mt-3">
+                  <p className="mb-1">
+                    <strong>Subscription Progress:</strong> {subscriptionProgress}%
+                  </p>
+                  <p className="mb-1 text-muted small">
+                    {daysRemaining > 0
+                      ? `${daysRemaining} days remaining`
+                      : "Subscription expired"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="py-4">
+                <i className="fa-solid fa-clock text-muted" style={{ fontSize: "48px" }}></i>
+                <p className="mt-2 text-muted">No Active Subscription</p>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      ),
+    },
   ];
 
   const bookStatistics = [
@@ -638,6 +776,7 @@ const LibraryCardDetail = ({
       try {
         setLoading(true);
         await fetchData();
+        await fetchLookupData();
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -806,6 +945,7 @@ const LibraryCardDetail = ({
     }
   };
 
+ 
   const fetchLookupData = async () => {
     try {
       const normalizedFields = {
@@ -815,18 +955,13 @@ const LibraryCardDetail = ({
 
       const allFields = [...(normalizedFields.details || []), ...(normalizedFields.other || [])];
       const lookupFields = allFields.filter(field =>
-        field.type === "select" && field.options && typeof field.options === "string"
+        field.type === "select" && field.options
       );
 
       const lookupDataObj = {};
       const endpointMap = {
-        authors: "author",
-        author: "author",
-        categories: "category",
-        category: "category",
-        users: "user",
-        user: "user",
-        departments: "department"
+        subscriptions: "subscriptions",
+        subscription: "subscriptions"
       };
 
       for (const field of lookupFields) {
@@ -836,7 +971,35 @@ const LibraryCardDetail = ({
             const api = new DataApi(endpoint);
             const response = await api.fetchAll();
             if (response && response.data) {
-              lookupDataObj[field.options] = Array.isArray(response.data) ? response.data : [];
+              let data = response.data;
+
+ 
+              if (data.data && Array.isArray(data.data)) {
+                data = data.data;
+              } else if (data.success && data.data) {
+                data = data.data;
+              } else if (Array.isArray(data)) {
+                data = data;
+              }
+
+ 
+              if (field.options === "subscriptions" && Array.isArray(data)) {
+                const transformedData = data.map(item => {
+ 
+                  const displayName = item.plan_name || item.name || item.title ||
+                    item.subscription_name || `Subscription ${item.id}`;
+                  return {
+                    ...item,
+                    label: displayName,
+                    name: displayName
+                  };
+                });
+                lookupDataObj[field.options] = transformedData;
+              } else {
+                lookupDataObj[field.options] = Array.isArray(data) ? data : [data];
+              }
+
+              console.log(`Fetched ${field.options}:`, lookupDataObj[field.options]);
             }
           } catch (error) {
             console.error(`Error fetching lookup data for ${field.options}:`, error);
@@ -854,26 +1017,22 @@ const LibraryCardDetail = ({
   const hasDataChanged = () => {
     if (!originalData || !tempData) return false;
 
-    const trackableFields = ["user_id", "issue_date", "expiry_date", "is_active"];
+    const dataChanged = EDITABLE_FIELDS.some((field) => {
+      const originalValue = originalData[field];
+      const tempValue = tempData[field];
 
-    const coreFieldChanged = trackableFields.some((field) => {
       if (field === "is_active") {
-        return Boolean(originalData[field]) !== Boolean(tempData[field]);
+        return Boolean(originalValue) !== Boolean(tempValue);
       }
 
-      const originalValue =
-        originalData[field] === undefined || originalData[field] === null
-          ? ""
-          : String(originalData[field]);
-      const tempValue =
-        tempData[field] === undefined || tempData[field] === null
-          ? ""
-          : String(tempData[field]);
+      if (field.includes("date") && originalValue && tempValue) {
+        return new Date(originalValue).getTime() !== new Date(tempValue).getTime();
+      }
 
-      return originalValue !== tempValue;
+      return String(originalValue || "") !== String(tempValue || "");
     });
 
-    return coreFieldChanged || Boolean(selectedImageFile);
+    return dataChanged || Boolean(selectedImageFile);
   };
 
   const formatDateDDMMYYYY = (dateString) => {
@@ -899,20 +1058,33 @@ const LibraryCardDetail = ({
     try {
       setSaving(true);
       const api = new DataApi(moduleApi);
-      const editableFields = ["user_id", "issue_date", "expiry_date", "is_active"];
-      const payload = {};
 
-      editableFields.forEach((field) => {
+      const payload = {};
+      EDITABLE_FIELDS.forEach((field) => {
         if (tempData[field] !== undefined) {
-          const value = tempData[field];
-          payload[field] =
-            value === "" || value === undefined ? null : value;
+          let value = tempData[field];
+
+          if (value === "" || value === undefined || value === null) {
+            value = null;
+          }
+
+          if (field.includes("date") && value) {
+            try {
+              value = new Date(value).toISOString();
+            } catch (error) {
+              console.error(`Error formatting date field ${field}:`, error);
+            }
+          }
+
+          payload[field] = value;
         }
       });
 
+      console.log("Saving payload:", payload);
+
       let response;
 
-      if (selectedImageFile || tempData.image instanceof File) {
+      if (selectedImageFile) {
         const formData = new FormData();
 
         Object.entries(payload).forEach(([key, value]) => {
@@ -921,12 +1093,7 @@ const LibraryCardDetail = ({
           }
         });
 
-        if (selectedImageFile) {
-          formData.append("image", selectedImageFile);
-        } else if (tempData.image instanceof File) {
-          formData.append("image", tempData.image);
-        }
-
+        formData.append("image", selectedImageFile);
         response = await api.update(formData, id);
       } else {
         response = await api.update(payload, id);
@@ -935,6 +1102,7 @@ const LibraryCardDetail = ({
       if (response && response.data) {
         const responseData = response.data;
         let updatedData = null;
+
         if (responseData.success && responseData.data) {
           updatedData = responseData.data;
         } else if (responseData.data) {
@@ -958,7 +1126,7 @@ const LibraryCardDetail = ({
         setIsEditing(false);
         setTempData(null);
       } else {
-        throw new Error("Failed to update");
+        throw new Error("Failed to update - No response data");
       }
     } catch (error) {
       console.error(`Error updating ${moduleLabel}:`, error);
@@ -991,41 +1159,6 @@ const LibraryCardDetail = ({
       });
     }
   };
-
-  const handleMemberSelect = useCallback(
-    (value, options = []) => {
-      const normalizedValue = value || null;
-      handleFieldChange("user_id", normalizedValue);
-
-      if (!normalizedValue) {
-        handleFieldChange("user_email", "");
-        handleFieldChange("user_name", "");
-        return;
-      }
-
-      const selected = options.find((option) => {
-        const optionValue = normalizeOptionValue(extractOptionValue(option));
-        return optionValue === normalizedValue;
-      });
-
-      if (selected) {
-        const selectedEmail =
-          selected.email || selected.user_email || selected.primary_email || "";
-        handleFieldChange("user_email", selectedEmail);
-
-        const selectedName =
-          selected.user_name ||
-          selected.name ||
-          `${selected.firstname || ""} ${selected.lastname || ""}`.trim() ||
-          selectedEmail ||
-          "";
-        if (selectedName) {
-          handleFieldChange("user_name", selectedName);
-        }
-      }
-    },
-    [handleFieldChange]
-  );
 
   const resetImageSelection = () => {
     if (imageObjectUrlRef.current) {
@@ -1087,8 +1220,12 @@ const LibraryCardDetail = ({
   const normalizeOptionValue = (value) =>
     value === undefined || value === null ? "" : value.toString();
 
+ 
   const getOptionLabel = (option = {}) => {
+ 
     if (option.label) return option.label;
+    if (option.plan_name) return option.plan_name;
+    if (option.subscription_name) return option.subscription_name;
     if (option.name) return option.name;
     if (option.title) return option.title;
     if (option.firstname || option.lastname) {
@@ -1097,8 +1234,8 @@ const LibraryCardDetail = ({
     }
     if (option.email) return option.email;
     if (option.value) return option.value;
-    if (option.id) return option.id;
-    return "Item";
+    if (option.id) return `ID: ${option.id}`;
+    return "Unknown Item";
   };
 
   const renderFieldGroup = (field, index) => {
@@ -1160,11 +1297,7 @@ const LibraryCardDetail = ({
               value={currentValue}
               onChange={(e) => {
                 const nextValue = e.target.value || "";
-                if (field.key === "user_id") {
-                  handleMemberSelect(nextValue, options);
-                } else {
-                  handleFieldChange(field.key, nextValue || null);
-                }
+                handleFieldChange(field.key, nextValue || null);
               }}
               style={{ background: "white" }}
             >
@@ -1335,7 +1468,6 @@ const LibraryCardDetail = ({
     navigate(`/${moduleName}`);
   };
 
-
   return (
     <Container fluid className="py-4">
       <ScrollToTop />
@@ -1488,7 +1620,7 @@ const LibraryCardDetail = ({
                       <Col md={3}>
                         {customSections.length > 0 &&
                           customSections.map((section, idx) => (
-                            <>
+                            <div key={idx}>
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
@@ -1505,7 +1637,7 @@ const LibraryCardDetail = ({
                                   ? section.render(data)
                                   : section.content}
                               </Col>
-                            </>
+                            </div>
                           ))}
                       </Col>
                       {bookStatistics.length > 0 &&

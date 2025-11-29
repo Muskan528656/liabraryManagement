@@ -24,7 +24,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all book submissions
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       console.log("Fetching all book submissions for tenant:", req.userinfo.tenantcode);
@@ -61,7 +61,7 @@ module.exports = (app) => {
   });
 
 
-  // Get book submission by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
@@ -76,7 +76,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get submissions by issue ID
+ 
   router.get("/issue/:issueId", fetchUser, async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
@@ -88,7 +88,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get submissions by date range
+ 
   router.get(
     "/date-range",
     fetchUser,
@@ -115,7 +115,7 @@ module.exports = (app) => {
 
   
 
-  // Submit/return a book with before/after condition and remarks
+ 
   router.post(
     "/",
     fetchUser,
@@ -176,7 +176,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete book submission by ID
+ 
   router.delete(
     "/:id",
     fetchUser,

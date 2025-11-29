@@ -6,7 +6,16 @@ const UserRoleDetail = () => {
         title: "role_name",
         details: [
             { key: "role_name", label: "Role Name", type: "text" },
-            { key: "is_active", label: "Active Status", type: "text" },
+            {
+                key: "is_active",
+                type: "toggle",
+                badgeConfig: {
+                    true: "success",
+                    false: "secondary",
+                    true_label: "Active",
+                    false_label: "Inactive",
+                },
+            },
             { key: "createddate", label: "Created At", type: "date" },
             { key: "lastmodifieddate", label: "Updated At", type: "date" },
         ],
@@ -14,7 +23,7 @@ const UserRoleDetail = () => {
 
     return (
         <ModuleDetail
-            moduleName="user-role"
+            moduleName="userroles"
             moduleApi="user-role"
             moduleLabel="User Role Management"
             icon="fas fa-chalkboard-teacher"

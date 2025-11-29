@@ -7,14 +7,14 @@
 const sql = require("./db.js");
 let schema = "";
 
-// Initialize schema
+ 
 function init(schema_name) {
   this.schema = schema_name;
 }
 
-// =======================================================
-// Find all users
-// =======================================================
+ 
+ 
+ 
 async function findAll() {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -42,9 +42,9 @@ async function findAll() {
   }
 }
 
-// =======================================================
-// Find user by ID
-// =======================================================
+ 
+ 
+ 
 async function findById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -58,9 +58,9 @@ async function findById(id) {
   }
 }
 
-// =======================================================
-// Find user by email
-// =======================================================
+ 
+ 
+ 
 async function findByEmail(email) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -74,9 +74,9 @@ async function findByEmail(email) {
   }
 }
 
-// =======================================================
-// Create User
-// =======================================================
+ 
+ 
+ 
 async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -144,14 +144,14 @@ async function create(userData, userId) {
 }
 
 
-// =======================================================
-// Update User
-// =======================================================
+ 
+ 
+ 
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    // Check email duplication
+ 
     if (userData.email) {
       const existing = await this.findByEmail(userData.email);
       if (existing && existing.id !== id) {
@@ -211,9 +211,9 @@ async function updateById(id, userData) {
   }
 }
 
-// =======================================================
-// Delete User
-// =======================================================
+ 
+ 
+ 
 async function deleteById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -230,7 +230,7 @@ async function deleteById(id) {
   }
 }
 
-// =======================================================
+ 
 module.exports = {
   init,
   findAll,

@@ -13,7 +13,7 @@ module.exports = (app) => {
     const router = require("express").Router();
     const { body, validationResult } = require("express-validator");
 
-    // GET all roles
+ 
     router.get("/", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -25,7 +25,7 @@ module.exports = (app) => {
         }
     });
 
-    // GET role by id
+ 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -39,7 +39,7 @@ module.exports = (app) => {
         }
     });
 
-    // POST create role
+ 
     router.post(
         "/",
         fetchUser,
@@ -64,7 +64,7 @@ module.exports = (app) => {
         }
     );
 
-    // PUT update role
+ 
     router.put(
         "/:id",
         fetchUser,
@@ -92,7 +92,7 @@ module.exports = (app) => {
         }
     );
 
-    // DELETE role
+ 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);

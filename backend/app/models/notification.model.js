@@ -17,7 +17,7 @@ const Notification = {
     schema = schema_name;
   },
 
-  // Get all notifications for a user
+ 
   findAll: async function (userId, isRead = null) {
     let query = `
       SELECT * FROM ${schema}.notifications 
@@ -43,7 +43,7 @@ const Notification = {
 
   
 
-  // Get unread notification count
+ 
   getUnreadCount: async function (userId) {
     try {
       const result = await sql.query(
@@ -58,7 +58,7 @@ const Notification = {
     }
   },
 
-  // Create a new notification
+ 
   create: async function (notification) {
     const { user_id, title, message, type, related_id, related_type } = notification;
 
@@ -77,7 +77,7 @@ const Notification = {
     }
   },
 
-  // Mark notification as read
+ 
   markAsRead: async function (notificationId, userId) {
     try {
       const result = await sql.query(
@@ -94,7 +94,7 @@ const Notification = {
     }
   },
 
-  // Mark all notifications as read for a user
+ 
   markAllAsRead: async function (userId) {
     try {
       const result = await sql.query(
@@ -111,7 +111,7 @@ const Notification = {
     }
   },
 
-  // Delete a notification
+ 
   delete: async function (notificationId, userId) {
     try {
       const result = await sql.query(
@@ -127,7 +127,7 @@ const Notification = {
     }
   },
 
-  // Create notification for multiple users (broadcast)
+ 
   createBroadcast: async function (userIds, notification) {
     const { title, message, type, related_id, related_type } = notification;
     const values = userIds.map((userId, index) =>
@@ -154,7 +154,7 @@ const Notification = {
     }
   },
 
-  // Get overdue book notifications (for cron job)
+ 
   getOverdueBooks: async function () {
     try {
       const result = await sql.query(
@@ -221,7 +221,7 @@ checkbeforeDue: async function () {
   let notifications = [];
   try {
     const response = await getAllBooks();
-    // console.log(response.data);
+ 
 
     const submittedBooks = response.data;
 
@@ -233,7 +233,7 @@ checkbeforeDue: async function () {
 
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
-      // console.log('book title ',book.book_title,);
+ 
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
@@ -252,14 +252,14 @@ checkbeforeDue: async function () {
       }
     });
 
-    // console.log("🔔 Notifications updated:", notifications);
+ 
     return notifications;
     
   } catch (error) {
     console.error("❌ Error:", error);
   }
-  // Schedule the cron job to run every day at midnight
-  // cron.schedule("* * * * *", checkbeforeDue);
+ 
+ 
 }
 
 

@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all authors
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       const authors = await Author.findAll();
@@ -34,7 +34,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get author by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       const author = await Author.findById(req.params.id);
@@ -49,15 +49,15 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new author
+ 
   router.post(
     "/",
     fetchUser,
   
     [
-      // Allow empty name for barcode scanning - will use default in model
+ 
       body("name").optional().custom((value) => {
-        // Allow null, undefined, or empty string for barcode scans
+ 
         return true;
       }),
     ],
@@ -68,7 +68,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check for duplicate email if provided
+ 
         if (req.body.email) {
           const existingAuthor = await Author.findByEmail(req.body.email);
           if (existingAuthor) {
@@ -91,7 +91,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update author by ID
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -106,13 +106,13 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check if author exists
+ 
         const existingAuthor = await Author.findById(req.params.id);
         if (!existingAuthor) {
           return res.status(404).json({ errors: "Author not found" });
         }
 
-        // Check for duplicate email (excluding current author)
+ 
         if (req.body.email) {
           const duplicateAuthor = await Author.findByEmail(
             req.body.email,
@@ -138,7 +138,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete author by ID
+ 
   router.delete("/:id", fetchUser,  async (req, res) => {
     try {
       const result = await Author.deleteById(req.params.id);
@@ -152,7 +152,7 @@ module.exports = (app) => {
     }
   });
 
-  // app.use(process.env.BASE_API_URL+process.env.BASE_API_URL + "/api/author", router);
+ 
   app.use(process.env.BASE_API_URL+"/api/author", router);
 };
 

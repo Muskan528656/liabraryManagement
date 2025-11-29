@@ -13,7 +13,7 @@ const UniversalBarcodeScanner = () => {
     const navigate = useNavigate();
     const inputRef = useRef(null);
 
-    // Listen for global scan trigger
+ 
     useEffect(() => {
         const token = PubSub.subscribe("OPEN_BARCODE_SCANNER", () => {
             setShowModal(true);
@@ -26,7 +26,7 @@ const UniversalBarcodeScanner = () => {
         };
     }, []);
 
-    // Focus input when modal opens
+ 
     useEffect(() => {
         if (showModal && inputRef.current) {
             setTimeout(() => {
@@ -37,17 +37,17 @@ const UniversalBarcodeScanner = () => {
 
     const handleBarcodeInput = (value) => {
         setBarcodeInput(value);
-        // Remove auto-detect on input to prevent premature detection
+ 
     };
 
-    // Improved ISBN validation function
+ 
     const isValidISBN = (isbn) => {
         if (!isbn) return false;
 
-        // Clean the ISBN - remove all non-digit characters except X (for ISBN-10)
+ 
         const cleanIsbn = isbn.replace(/[^\dX]/gi, '').toUpperCase();
 
-        // Check for ISBN-10 (10 digits, last character can be X)
+ 
         if (cleanIsbn.length === 10) {
             const isbn10Regex = /^[\d]{9}[\dX]$/;
             if (isbn10Regex.test(cleanIsbn)) {
@@ -55,7 +55,7 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // Check for ISBN-13 (exactly 13 digits)
+ 
         if (cleanIsbn.length === 13) {
             const isbn13Regex = /^[\d]{13}$/;
             if (isbn13Regex.test(cleanIsbn)) {
@@ -71,11 +71,11 @@ const UniversalBarcodeScanner = () => {
 
         setLoading(true);
         try {
-            // Try to detect what type of data this is
+ 
             const detectedType = await detectDataType(barcode.trim());
             console.log("Detected data type:", detectedType);
 
-            // If it's a library card with navigate flag, navigate directly
+ 
             if (detectedType && detectedType.type === "librarycard" && detectedType.navigate) {
                 setLoading(false);
                 setShowModal(false);
@@ -97,22 +97,22 @@ const UniversalBarcodeScanner = () => {
     const detectDataType = async (barcode) => {
         console.log("Processing barcode:", barcode);
 
-        // Check if it's a library card number (before ISBN check)
-        // Library card numbers can be: LIB2025000003, LIB123456, LC-123456, or numeric 13-digit ISBN-like
+ 
+ 
         const cardNumberPattern = /^(LIB|LC-?)?[A-Z0-9]{6,20}$/i;
         const barcodeTrimmed = barcode.trim();
         if (cardNumberPattern.test(barcodeTrimmed)) {
             try {
                 const cardApi = new DataApi("librarycard");
-                // Try to find by card_number
+ 
                 const allCards = await cardApi.fetchAll();
                 if (allCards && allCards.data) {
                     const cards = Array.isArray(allCards.data) ? allCards.data : (allCards.data.data || []);
                     const foundCard = cards.find(card => {
                         if (!card.card_number) return false;
-                        // Exact match (case insensitive)
+ 
                         if (card.card_number.toUpperCase() === barcodeTrimmed.toUpperCase()) return true;
-                        // Partial match (if barcode is part of card_number or vice versa)
+ 
                         if (card.card_number.toUpperCase().includes(barcodeTrimmed.toUpperCase()) ||
                             barcodeTrimmed.toUpperCase().includes(card.card_number.toUpperCase())) return true;
                         return false;
@@ -132,17 +132,17 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // First, check if it's a valid ISBN (highest priority)
+ 
         const isbnCheck = isValidISBN(barcode);
         if (isbnCheck) {
             console.log("Valid ISBN detected:", isbnCheck);
             const isbn = isbnCheck.value;
 
-            // Fetch book data from external API
+ 
             const bookData = await fetchBookByISBN(isbn);
             console.log("Fetched book data:", bookData);
 
-            // Create author and category if they exist, and get their IDs
+ 
             if (bookData.author_name) {
                 const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
                 if (authorId) {
@@ -157,7 +157,7 @@ const UniversalBarcodeScanner = () => {
                 }
             }
 
-            // Clean up temporary fields before setting in detectedData
+ 
             const cleanedBookData = { ...bookData };
             delete cleanedBookData.author_details;
             delete cleanedBookData.category_description;
@@ -170,16 +170,16 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // Try to parse as JSON first
+ 
         try {
             const jsonData = JSON.parse(barcode);
             const result = await analyzeJsonData(jsonData);
             if (result) return result;
         } catch (e) {
-            // Not JSON, try other formats
+ 
         }
 
-        // Check if it contains email (supplier data)
+ 
         if (barcode.includes("@") && barcode.includes(".")) {
             const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
             const emailMatch = barcode.match(emailRegex);
@@ -197,7 +197,7 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // Check for phone number pattern (supplier)
+ 
         if (/^\+?[\d\s-()]{10,}$/.test(barcode) && barcode.length >= 10) {
             return {
                 type: "supplier",
@@ -206,9 +206,9 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // Try to check if it's an author name (text only, 2+ words or single word 3+ chars)
+ 
         if (/^[A-Za-z\s.]+$/.test(barcode) && (barcode.split(/\s+/).length >= 2 || barcode.length >= 3)) {
-            // Check if it looks like a name (has spaces or is capitalized)
+ 
             const words = barcode.trim().split(/\s+/);
             if (words.length >= 1 && words.every(w => w.length >= 2)) {
                 return {
@@ -219,7 +219,7 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // Try to check if it's a category (single word, 3+ chars, no numbers)
+ 
         if (/^[A-Za-z]+$/.test(barcode) && barcode.length >= 3 && barcode.length <= 30) {
             return {
                 type: "category",
@@ -228,9 +228,9 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // Try to check if it's a supplier name (contains alphanumeric, may have special chars)
+ 
         if (/^[A-Za-z0-9\s&.,-]+$/.test(barcode) && barcode.length > 2) {
-            // Check if it contains supplier keywords
+ 
             const supplierKeywords = ["supplier", "vendor", "distributor", "company", "ltd", "inc", "corp"];
             const lowerBarcode = barcode.toLowerCase();
             if (supplierKeywords.some((keyword) => lowerBarcode.includes(keyword))) {
@@ -242,9 +242,9 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // If contains numbers and text, might be book title with embedded ISBN
+ 
         if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
-            // Try to extract ISBN using improved validation
+ 
             const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
             if (possibleIsbns) {
                 for (const possibleIsbn of possibleIsbns) {
@@ -253,15 +253,15 @@ const UniversalBarcodeScanner = () => {
                         const isbn = isbnCheck.value;
                         const title = barcode.replace(possibleIsbn, "").trim();
 
-                        // Fetch book data from external API
+ 
                         const bookData = await fetchBookByISBN(isbn);
 
-                        // Merge with extracted title if available
+ 
                         if (title && !bookData.title) {
                             bookData.title = title;
                         }
 
-                        // Create author and category if they exist, and get their IDs
+ 
                         if (bookData.author_name) {
                             const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
                             if (authorId) {
@@ -276,7 +276,7 @@ const UniversalBarcodeScanner = () => {
                             }
                         }
 
-                        // Clean up temporary fields before setting in detectedData
+ 
                         const cleanedBookData = { ...bookData };
                         delete cleanedBookData.author_details;
                         delete cleanedBookData.category_description;
@@ -292,7 +292,7 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // Default: try as book (might be title)
+ 
         if (barcode.length > 3) {
             return {
                 type: "book",
@@ -304,24 +304,24 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-    // Find or create author and return its ID
+ 
     const findOrCreateAuthor = async (authorName, authorDetails = null) => {
         try {
             const authorApi = new DataApi("author");
             const authorsResponse = await authorApi.fetchAll();
 
             if (authorsResponse.data && Array.isArray(authorsResponse.data)) {
-                // Split multiple authors (comma-separated) and use first one
+ 
                 const authorNames = authorName.split(",").map(a => a.trim());
                 const primaryAuthorName = authorNames[0];
 
-                // Try to find existing author by name
+ 
                 let foundAuthor = authorsResponse.data.find(a =>
                     a.name && a.name.toLowerCase() === primaryAuthorName.toLowerCase()
                 );
 
                 if (!foundAuthor) {
-                    // Create new author with all available details
+ 
                     const authorData = {
                         name: primaryAuthorName,
                         email: authorDetails?.email || "",
@@ -340,7 +340,7 @@ const UniversalBarcodeScanner = () => {
                         });
                     }
                 } else {
-                    // Update existing author if we have more details
+ 
                     if (authorDetails && (authorDetails.email || authorDetails.bio)) {
                         const updateData = {};
                         if (authorDetails.email && !foundAuthor.email) {
@@ -369,20 +369,20 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-    // Find or create category and return its ID
+ 
     const findOrCreateCategory = async (categoryName, categoryDescription = null) => {
         try {
             const categoryApi = new DataApi("category");
             const categoriesResponse = await categoryApi.fetchAll();
 
             if (categoriesResponse.data && Array.isArray(categoriesResponse.data)) {
-                // Try to find existing category by name
+ 
                 let foundCategory = categoriesResponse.data.find(c =>
                     c.name && c.name.toLowerCase() === categoryName.toLowerCase()
                 );
 
                 if (!foundCategory) {
-                    // Create new category with description if available
+ 
                     const categoryData = {
                         name: categoryName,
                         description: categoryDescription || ""
@@ -396,7 +396,7 @@ const UniversalBarcodeScanner = () => {
                         });
                     }
                 } else {
-                    // Update existing category if we have description and it's missing
+ 
                     if (categoryDescription && !foundCategory.description) {
                         try {
                             await categoryApi.update({ ...foundCategory, description: categoryDescription }, foundCategory.id);
@@ -416,11 +416,11 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-    // Enhanced ISBN fetching with better error handling
+ 
     const fetchBookByISBN = async (isbn) => {
         console.log("Fetching book data for ISBN:", isbn);
 
-        // Basic book data structure
+ 
         const bookData = {
             isbn: isbn,
             title: "",
@@ -429,7 +429,7 @@ const UniversalBarcodeScanner = () => {
         };
 
         try {
-            // Try Open Library API first
+ 
             const openLibraryUrl = `https://openlibrary.org/isbn/${isbn}.json`;
             console.log("Trying Open Library API:", openLibraryUrl);
 
@@ -441,7 +441,7 @@ const UniversalBarcodeScanner = () => {
 
                 bookData.title = data.title || "";
 
-                // Try to get author names and details
+ 
                 if (data.authors && data.authors.length > 0) {
                     try {
                         const authorPromises = data.authors.slice(0, 3).map(async (author) => {
@@ -470,7 +470,7 @@ const UniversalBarcodeScanner = () => {
                     }
                 }
 
-                // Try to get subject/category from Open Library
+ 
                 if (data.subjects && data.subjects.length > 0) {
                     const subject = data.subjects[0];
                     const categoryName = subject
@@ -482,7 +482,7 @@ const UniversalBarcodeScanner = () => {
                     bookData.category_description = subject;
                 }
 
-                // Also try to get from subject_places or subject_people if available
+ 
                 if (!bookData.category_name && data.subject_places && data.subject_places.length > 0) {
                     bookData.category_name = data.subject_places[0];
                     bookData.category_description = data.subject_places.join(", ");
@@ -500,7 +500,7 @@ const UniversalBarcodeScanner = () => {
             console.log("Open Library API failed:", error);
         }
 
-        // Fallback to Google Books API
+ 
         try {
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
             console.log("Trying Google Books API:", googleBooksUrl);
@@ -515,7 +515,7 @@ const UniversalBarcodeScanner = () => {
                     const volumeInfo = data.items[0].volumeInfo;
                     bookData.title = volumeInfo.title || "";
 
-                    // Get authors
+ 
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
                         bookData.author_details = {
@@ -526,7 +526,7 @@ const UniversalBarcodeScanner = () => {
                         };
                     }
 
-                    // Get categories
+ 
                     if (volumeInfo.categories && volumeInfo.categories.length > 0) {
                         const category = volumeInfo.categories[0];
                         const categoryName = category
@@ -537,7 +537,7 @@ const UniversalBarcodeScanner = () => {
                         bookData.category_description = category;
                     }
 
-                    // Get description
+ 
                     if (volumeInfo.description) {
                         bookData.description = volumeInfo.description;
                     }
@@ -550,7 +550,7 @@ const UniversalBarcodeScanner = () => {
             console.log("Google Books API also failed:", error);
         }
 
-        // If both APIs fail, return basic data with ISBN
+ 
         console.log("Both APIs failed, returning basic data");
         return bookData;
     };
@@ -558,7 +558,7 @@ const UniversalBarcodeScanner = () => {
     const analyzeJsonData = async (data) => {
         if (!data || typeof data !== "object") return null;
 
-        // Check for book data (highest priority if has ISBN or title)
+ 
         if (data.isbn || data.title || data.bookTitle || data.book_title) {
             let bookData = {
                 title: data.title || data.bookTitle || data.book_title || "",
@@ -569,7 +569,7 @@ const UniversalBarcodeScanner = () => {
                 available_copies: data.available_copies || data.availableCopies || 1,
             };
 
-            // If ISBN is provided but no title, try to fetch from API
+ 
             if (bookData.isbn && !bookData.title) {
                 const fetchedData = await fetchBookByISBN(bookData.isbn);
                 bookData = { ...fetchedData, ...bookData };
@@ -582,7 +582,7 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // Check for author data
+ 
         if (data.authorName || data.author_name || (data.name && !data.email && !data.phone)) {
             if (!data.email && !data.phone && !data.address) {
                 return {
@@ -595,7 +595,7 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-        // Check for supplier data (has email or phone)
+ 
         if (data.supplierName || data.supplier_name || data.supplier || (data.name && (data.email || data.phone))) {
             return {
                 type: "supplier",
@@ -609,7 +609,7 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // Check for category data
+ 
         if (data.category || data.categoryName || data.category_name) {
             return {
                 type: "category",
@@ -620,7 +620,7 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-        // If just has name, try to determine by context
+ 
         if (data.name) {
             if (data.name.split(/\s+/).length === 1 && data.name.length <= 30) {
                 return {
@@ -649,10 +649,10 @@ const UniversalBarcodeScanner = () => {
 
         setLoading(true);
         try {
-            // Prepare data with defaults for missing required fields
+ 
             let dataToInsert = { ...detectedData.data };
 
-            // Add default values for missing required fields based on type
+ 
             if (detectedData.type === "book") {
                 if (!dataToInsert.title) {
                     dataToInsert.title = dataToInsert.isbn ? "" : "Scanned Book";
@@ -665,7 +665,7 @@ const UniversalBarcodeScanner = () => {
                 if (!dataToInsert.total_copies) dataToInsert.total_copies = 1;
                 if (!dataToInsert.available_copies) dataToInsert.available_copies = 1;
 
-                // Remove temporary fields
+ 
                 delete dataToInsert.author_name;
                 delete dataToInsert.category_name;
                 delete dataToInsert.description;

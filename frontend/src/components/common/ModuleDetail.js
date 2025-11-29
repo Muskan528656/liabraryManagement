@@ -41,6 +41,7 @@ const LOOKUP_ENDPOINT_MAP = {
   library: "library",
   subscriptions: "subscriptions",
   subscription: "subscriptions",
+
 };
 
 const normalizeListResponse = (payload) => {
@@ -470,15 +471,21 @@ const ModuleDetail = ({
 
     return value ?? "—";
   };
-
   const getSelectOptions = useCallback(
     (field) => {
-      if (!field || field.type !== "select" || !field.options) {
-        return [];
-      }
+      if (!field) return [];
+
+
+      if (field.type === "toggle-view") return [];
+
+
+      if (field.type !== "select") return [];
+
       if (Array.isArray(field.options)) {
         return field.options;
       }
+
+
       return (
         externalData?.[field.options] ||
         lookupOptions?.[field.options] ||
@@ -678,7 +685,7 @@ const ModuleDetail = ({
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
-          return date.toISOString().split("T")[0]; 
+          return date.toISOString().split("T")[0];
         } catch {
           return value;
         }

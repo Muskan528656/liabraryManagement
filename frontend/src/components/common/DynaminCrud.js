@@ -127,7 +127,7 @@ const DynamicCRUD = ({
 
             if (enablePrefetch) {
                 try {
-                    // navigate(`/${apiEndpoint}/${item.id}`);
+ 
                     if (isEdit) {
                         navigate(`/${apiEndpoint}/${item.id}`, {
                             state: { isEdit: true, rowData: item },
@@ -136,7 +136,7 @@ const DynamicCRUD = ({
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
 
-                    // localStorage.setItem(`prefetch:${apiEndpoint}:${item.id}`, JSON.stringify(item));
+ 
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -151,7 +151,7 @@ const DynamicCRUD = ({
         setSelectedItem(null);
     }, []);
 
-    // Fixed getAutoDetailConfig function
+ 
     const getAutoDetailConfig = useCallback(() => {
         if (detailConfig) return detailConfig;
 
@@ -488,11 +488,11 @@ const DynamicCRUD = ({
         });
     }, [formFields, relatedData]);
 
-    // const handleAdd = useCallback(() => {
-    //     setEditingItem(null);
-    //     setFormData(initialFormData);
-    //     setShowModal(true);
-    // }, [initialFormData]);
+ 
+ 
+ 
+ 
+ 
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {
@@ -547,6 +547,11 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
+ 
+ 
+ 
+ 
+        console.log("onSubmitonSubmitonSubmitonSubmit,", formData)
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
             if (customResult === false) return;
@@ -590,7 +595,9 @@ const DynamicCRUD = ({
                 if (editingItem) {
                     response = await api.update(submitData, editingItem.id);
                 } else {
+                    console.log("submitDatasubmitData", submitData)
                     response = await api.create(submitData);
+                    console.log("Respinse", response)
                 }
             } else {
                 const submitData = { ...formData };
@@ -846,6 +853,7 @@ const DynamicCRUD = ({
                                         totalCount={filteredData.length}
                                         totalLabel={moduleLabel}
                                         searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                                        
                                         searchValue={searchTerm}
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         showColumnVisibility={showColumnVisibility}
@@ -873,39 +881,39 @@ const DynamicCRUD = ({
                                             <div className="d-flex gap-2 justify-content-center">
                                                 {allowEdit && (
                                                     <button
-                                                        // variant="link"
+ 
                                                         onClick={() => handleNameClick(item, true)}
                                                         title="Edit"
                                                         className="custom-btn-edit"
-                                                    // style={{
-                                                    //     padding: "4px 6px",
-                                                    //     color: "#0d6efd",
-                                                    //     textDecoration: "none"
-                                                    // }}
+ 
+ 
+ 
+ 
+ 
                                                     >
                                                         <i className="fs-7 fa-solid fa-pen-to-square"></i>
                                                     </button>
                                                 )}
                                                 {allowDelete && (
                                                     <button
-                                                        // variant="link"
+ 
                                                         onClick={() => handleDelete(item.id)}
                                                         title="Delete"
                                                         className="custom-btn-delete"
-                                                    // style={{
-                                                    //     padding: "4px 6px",
-                                                    //     color: "#dc3545",
-                                                    //     textDecoration: "none"
-                                                    // }}
+ 
+ 
+ 
+ 
+ 
                                                     >
                                                         <i className="fs-7 fa-solid fa-trash"></i>
                                                     </button>
                                                 )}
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
-                                                        // variant="info"
+ 
                                                         className="custom-btn-edit"
-                                                        // size="sm"
+ 
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >

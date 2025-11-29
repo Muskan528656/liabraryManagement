@@ -18,7 +18,6 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
-debugger
       const result = await response.json();
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);
@@ -62,7 +61,7 @@ debugger
   async refreshToken() {
     const refreshToken = sessionStorage.getItem("r-t");
     if (!refreshToken) {
-      // console.error("No refresh token found in localStorage.");
+ 
       this.logout();
       return;
     }

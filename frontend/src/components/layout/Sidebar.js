@@ -18,9 +18,9 @@ export default function Sidebar({ open, handleDrawerClose }) {
       if (token) {
         const user = jwt_decode(token);
         setUserInfo(user);
-        // if (user.userrole) {
-        //   fetchRolePermissions(user.userrole);
-        // }
+ 
+ 
+ 
         fetchModulesFromDB();
       }
     } catch (error) {

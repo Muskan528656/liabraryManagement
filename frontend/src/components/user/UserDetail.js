@@ -6,12 +6,12 @@ const UserDetail = () => {
     title: "firstname",
     subtitle: "email",
     status: "status",
-    // overview: [
-    //   { key: "firstname", label: "First Name", type: "text" },
-    //   { key: "lastname", label: "Last Name", type: "text" },
-    //   { key: "email", label: "Email", type: "text" },
-    //   { key: "phone", label: "Phone", type: "text" },
-    // ],
+ 
+ 
+ 
+ 
+ 
+ 
     details: [
       { key: "firstname", label: "First Name", type: "text" },
       { key: "lastname", label: "Last Name", type: "text" },

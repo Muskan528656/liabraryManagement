@@ -1,4 +1,4 @@
-// config/vendorConfig.js
+ 
 export const getVendorConfig = (externalData = {}, props = {}) => {
     const { CityState = [], CityPincode = [] } = externalData;
 
@@ -43,35 +43,35 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-                // render: (value, record) => (
-                //     <div className="d-flex align-items-center">
-                //         <div
-                //             className="rounded-circle d-flex align-items-center justify-content-center me-2"
-                //             style={{
-                //                 width: "32px",
-                //                 height: "32px",
-                //                 background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                //                 color: "white",
-                //                 fontSize: "14px",
-                //             }}
-                //         >
-                //             <i className="fa-solid fa-store"></i>
-                //         </div>
-                //         <a
-                //             href={`/vendor/${record.id}`}
-                //             onClick={(e) => {
-                //                 e.preventDefault();
-                //             }}
-                //             style={{
-                //                 color: "#6f42c1",
-                //                 textDecoration: "none",
-                //                 fontWeight: "500"
-                //             }}
-                //         >
-                //             {value || "N/A"}
-                //         </a>
-                //     </div>
-                // ),
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             },
             {
                 field: "company_name",
@@ -127,7 +127,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             }
         ],
         formFields: [
-            // Section 1: Company Information
+ 
             {
                 name: "company_name",
                 label: "Company Name",
@@ -273,7 +273,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 ],
                 defaultValue: "active"
             },
-            // Section 2: Contact Person Information
+ 
             {
                 name: "name",
                 label: "Contact Person Name",

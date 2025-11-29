@@ -3,7 +3,7 @@ import ModuleDetail from "../common/ModuleDetail";
 
 const AutoConfigDetail = () => {
     const fields = {
-        overview: [
+        details: [
             { key: "table_name", label: "Table", type: "text" },
             { key: "prefix", label: "Prefix", type: "text" },
             { key: "digit_count", label: "Digit Count", type: "number" },

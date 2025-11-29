@@ -1,4 +1,5 @@
 import { Badge, Button } from "react-bootstrap";
+import { API_BASE_URL } from "../../constants/CONSTANT";
 
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return '';
@@ -9,51 +10,7 @@ const formatDateToDDMMYYYY = (dateString) => {
     return `${day}-${month}-${year}`;
 };
 
-const calculateISBN13CheckDigit = (first12Digits) => {
-    if (first12Digits.length !== 12) {
-        throw new Error("ISBN-13 requires exactly 12 digits for check digit calculation");
-    }
-
-    let sum = 0;
-    for (let i = 0; i < 12; i++) {
-        const digit = parseInt(first12Digits[i], 10);
-        sum += (i % 2 === 0) ? digit : digit * 3;
-    }
-
-    const remainder = sum % 10;
-    const checkDigit = remainder === 0 ? 0 : 10 - remainder;
-    return checkDigit.toString();
-};
-
-const generateISBN13Number = (card) => {
-    const prefix = "978";
-    const uuidPart = card.id?.replace(/-/g, '').substring(0, 8) || '00000000';
-    let numericPart = '';
-
-    for (let i = 0; i < uuidPart.length; i++) {
-        const charCode = uuidPart.charCodeAt(i);
-        numericPart += (charCode % 10).toString();
-    }
-
-    const cardIdNumeric = numericPart.padEnd(6, '0').substring(0, 6);
-    const timestamp = Date.now().toString().slice(-4);
-    const base12Digits = prefix + cardIdNumeric + timestamp;
-    const final12Digits = base12Digits.slice(0, 12);
-    const checkDigit = calculateISBN13CheckDigit(final12Digits);
-
-    return final12Digits + checkDigit;
-};
-
 const generateCardNumber = (card) => {
-    try {
-        const isbn13Number = generateISBN13Number(card);
-        if (/^\d+$/.test(isbn13Number) && isbn13Number.length === 13) {
-            return isbn13Number;
-        }
-    } catch (error) {
-        console.warn("Error generating ISBN for card number, using fallback");
-    }
-
     const uuidPart = card.id?.replace(/-/g, '').substring(0, 8).toUpperCase() || 'LIB00000';
     return `LIB${uuidPart}`;
 };
@@ -63,83 +20,95 @@ export const getLibraryCardConfig = (externalData = {}) => {
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
 
+ 
+    const safeSubscriptions = Array.isArray(externalData.subscriptions)
+        ? externalData.subscriptions
+        : [];
+
     const defaultColumns = [
         {
-            name: "user_image",
-            label: "Photo",
+            field: "image",
+            label: "Image",
             type: "image",
             width: "80px",
             render: (value, row) => {
-                if (value) {
-                    return `<img src="${value}" alt="${row.user_name}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />`;
+                const imagePath = value;
+                if (imagePath) {
+                    const imgSrc = imagePath.startsWith("http")
+                        ? imagePath
+                        : `${API_BASE_URL}${imagePath}`;
+
+                    return (
+                        <img
+                            src={imgSrc}
+                            alt={row.first_name || "User"}
+                            style={{
+                                width: 50,
+                                height: 50,
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "2px solid #6f42c1"
+                            }}
+                        />
+                    );
                 }
-                return `<div style="width: 50px; height: 50px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                  <i class="fa-solid fa-user"></i>
-              </div>`;
+
+                return (
+                    <div
+                        style={{
+                            width: 50,
+                            height: 50,
+                            borderRadius: "50%",
+                            background: "#f0f0f0",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "2px solid #6f42c1"
+                        }}
+                    >
+                        <i className="fa-solid fa-user"></i>
+                    </div>
+                );
             }
         },
+
+        { field: "card_number", label: "Card Number", sortable: true },
+        { field: "first_name", label: "First Name", sortable: true },
+        { field: "last_name", label: "Last Name", sortable: true },
+        { field: "email", label: "Email", sortable: true },
+        { field: "phone_number", label: "Phone Number", sortable: true },
+      
+
         {
-            field: "card_number",
-            label: "Card Number",
+            field: "subscription_id",
+            label: "Subscription",
             sortable: true,
+            render: (value, row) => {
+                const subscriptionName = row.subscription_name ||
+                    row.subscription?.name ||
+                    row.subscription?.plan_name ||
+                    row.subscription_title ||
+                    "No Subscription";
+
+                return subscriptionName;
+            }
         },
-        { field: "user_name", label: "User Name", sortable: true },
-        { field: "user_email", label: "Email", sortable: true },
-        {
-            field: "issue_date",
-            label: "Issue Date",
-            sortable: true,
-            render: (value) => formatDateToDDMMYYYY(value)
-        },
-        {
-            field: "expiry_date",
-            label: "Submission Date",
-            sortable: true,
-            render: (value) => value ? formatDateToDDMMYYYY(value) : '-'
-        },
-        {
-            field: "name",
-            label: "Name",
-            sortable: true,
-        },
-        {
-            field: "first_name",
-            label: "First Name",
-            sortable: true,
-        },
-        {
-            field: "last_name",
-            label: "Last Name",
-            sortable: true,
-        },
-        {
-            field: "email",
-            label: "Email",
-            sortable: true,
-        },
-        {
-            field: "phone_number",
-            label: "Phone Number",
-            sortable: true,
-        },
-        {
-            field: "card_number",
-            label: "Card Number",
-            sortable: true,
-        },
+
         {
             field: "status",
             label: "Status",
             sortable: true,
             render: (value) => {
-                const statusValue = value || (typeof value === 'boolean' ? (value ? 'active' : 'inactive') : 'inactive');
+                const statusValue =
+                    value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
+
                 return (
-                    <Badge bg={statusValue === 'active' || statusValue === true ? "success" : "secondary"}>
-                        {statusValue === 'active' || statusValue === true ? "Active" : "Inactive"}
+                    <Badge bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                        {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
                     </Badge>
                 );
             }
-        },
+        }
     ];
 
     return {
@@ -148,7 +117,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
         apiEndpoint: "librarycard",
         columns: defaultColumns,
         initialFormData: {
-            user_id: "",
+            card_number: "",
             first_name: "",
             last_name: "",
             name: "",
@@ -159,13 +128,11 @@ export const getLibraryCardConfig = (externalData = {}) => {
             renewal: "",
             subscription_id: "",
             issue_date: new Date().toISOString().split('T')[0],
-            expiry_date: "",
             status: "active",
             image: null
         },
 
         formFields: [
-
             {
                 name: "first_name",
                 label: "First Name",
@@ -182,7 +149,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 placeholder: "Enter last name",
                 colSize: 6
             },
-            
             {
                 name: "email",
                 label: "Email",
@@ -227,7 +193,8 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 required: false,
                 options: "subscriptions",
                 placeholder: "Select subscription plan",
-                colSize: 6
+                colSize: 6,
+                displayKey: "plan_name"
             },
             {
                 name: "renewal",
@@ -257,76 +224,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     }
                 }
             },
-            // {
-            //     name: "issue_date",
-            //     label: "Issue Date",
-            //     type: "date",
-            //     required: true,
-            //     colSize: 6,
-            //     onChange: (value, formData, setFormData) => {
-            //         if (value) {
-            //             // Use dynamic import for DataApi
-            //             import("../../api/dataApi").then(({ default: DataApi }) => {
-            //                 const settingsApi = new DataApi("librarysettings");
-            //                 settingsApi.get("/all").then(response => {
-            //                     let durationDays = 365; // Default to 1 year
-
-            //                     if (response.data && response.data.success && response.data.data) {
-            //                         durationDays = parseInt(response.data.data.membership_validity_days || response.data.data.duration_days || 365);
-            //                     } else if (response.data && typeof response.data === "object" && !Array.isArray(response.data)) {
-            //                         durationDays = parseInt(response.data.membership_validity_days || response.data.duration_days || 365);
-            //                     }
-
-            //                     // Calculate submission date
-            //                     const issueDate = new Date(value);
-            //                     const submissionDate = new Date(issueDate);
-            //                     submissionDate.setDate(submissionDate.getDate() + durationDays);
-
-            //                     setFormData(prev => ({
-            //                         ...prev,
-            //                         issue_date: value,
-            //                         expiry_date: submissionDate.toISOString().split('T')[0]
-            //                     }));
-            //                 }).catch(error => {
-            //                     console.error("Error fetching settings:", error);
-            //                     // If settings fetch fails, use default 365 days
-            //                     const issueDate = new Date(value);
-            //                     const submissionDate = new Date(issueDate);
-            //                     submissionDate.setDate(submissionDate.getDate() + 365);
-
-            //                     setFormData(prev => ({
-            //                         ...prev,
-            //                         issue_date: value,
-            //                         expiry_date: submissionDate.toISOString().split('T')[0]
-            //                     }));
-            //                 });
-            //             }).catch(error => {
-            //                 console.error("Error importing DataApi:", error);
-            //                 // If import fails, use default 365 days
-            //                 const issueDate = new Date(value);
-            //                 const submissionDate = new Date(issueDate);
-            //                 submissionDate.setDate(submissionDate.getDate() + 365);
-
-            //                 setFormData(prev => ({
-            //                     ...prev,
-            //                     issue_date: value,
-            //                     expiry_date: submissionDate.toISOString().split('T')[0]
-            //                 }));
-            //             });
-            //         } else {
-            //             setFormData(prev => ({
-            //                 ...prev,
-            //                 issue_date: value
-            //             }));
-            //         }
-            //     }
-            // },
-            // {
-            //     name: "expiry_date",
-            //     label: "Submission Date",
-            //     type: "date",
-            //     colSize: 6,
-            // },
             {
                 name: "status",
                 label: "Status",
@@ -341,6 +238,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
+            console.log("FormData", formData)
             const errors = {};
 
             if (!formData.user_id) {
@@ -374,6 +272,11 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 path: "user",
                 idField: "id",
                 labelField: "name"
+            },
+            subscription_id: {
+                path: "subscriptions",
+                idField: "id",
+                labelField: "plan_name"
             }
         },
 
@@ -400,6 +303,17 @@ export const getLibraryCardConfig = (externalData = {}) => {
             { key: "registration_date", label: "Registration Date", type: "date" },
             { key: "type", label: "Type", type: "text" },
             { key: "renewal", label: "Renewal", type: "text" },
+            {
+                key: "subscription_id",
+                label: "Subscription",
+                type: "text",
+                render: (value, data) => {
+                    return data.subscription_name ||
+                        data.subscription?.name ||
+                        data.subscription?.plan_name ||
+                        "No Subscription";
+                }
+            },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
             {
@@ -417,41 +331,38 @@ export const getLibraryCardConfig = (externalData = {}) => {
             },
         ],
 
+ 
         customHandlers: {
             generateCardNumber,
-            generateISBN13Number,
-            calculateISBN13CheckDigit,
             formatDateToDDMMYYYY,
             handleBarcodePreview,
-            beforeSave: (formData) => {
-                // Convert status to is_active for backend
-                if (formData.status) {
-                    formData.is_active = formData.status === "active";
-                    delete formData.status;
-                }
-                // Ensure empty strings are null
-                if (formData.first_name === "") formData.first_name = null;
-                if (formData.last_name === "") formData.last_name = null;
-                if (formData.name === "") formData.name = null;
-                if (formData.email === "") formData.email = null;
-                if (formData.phone_number === "") formData.phone_number = null;
-                if (formData.registration_date === "") formData.registration_date = null;
-                if (formData.type === "") formData.type = null;
-                if (formData.renewal === "") formData.renewal = null;
-                if (formData.subscription_id === "") formData.subscription_id = null;
-                if (formData.user_id === "") formData.user_id = null;
-                if (formData.expiry_date === "") formData.expiry_date = null;
-                return true;
-            },
+
             onDataLoad: (data) => {
-                // Convert is_active to status for display
                 if (Array.isArray(data)) {
                     data.forEach(item => {
                         if (item.hasOwnProperty('is_active')) {
                             item.status = item.is_active ? 'active' : 'inactive';
                         }
+
+ 
+                        if (item.subscription_id && safeSubscriptions.length > 0) {
+                            const subscription = safeSubscriptions.find(
+                                sub => sub.id === item.subscription_id
+                            );
+                            if (subscription) {
+                                item.subscription_name = subscription.plan_name || subscription.name;
+                            }
+                        }
                     });
                 }
+            },
+
+ 
+            getSubscriptionOptions: () => {
+                return safeSubscriptions.map(sub => ({
+                    value: sub.id,
+                    label: sub.plan_name || sub.name || `Subscription ${sub.id}`
+                }));
             }
         },
 
@@ -471,6 +382,41 @@ export const getLibraryCardConfig = (externalData = {}) => {
             }
 
             return errors;
+        },
+
+ 
+        transformResponse: (response) => {
+            if (response && response.data) {
+                let data = response.data;
+
+ 
+                if (data.data && Array.isArray(data.data)) {
+                    data = data.data;
+                } else if (data.success && data.data) {
+                    data = data.data;
+                }
+
+ 
+                if (Array.isArray(data) && safeSubscriptions.length > 0) {
+                    data = data.map(item => {
+                        if (item.subscription_id) {
+                            const subscription = safeSubscriptions.find(
+                                sub => sub.id === item.subscription_id
+                            );
+                            if (subscription) {
+                                return {
+                                    ...item,
+                                    subscription_name: subscription.plan_name || subscription.name
+                                };
+                            }
+                        }
+                        return item;
+                    });
+                }
+
+                return data;
+            }
+            return response;
         }
     };
 };

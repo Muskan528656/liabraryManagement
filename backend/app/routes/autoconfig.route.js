@@ -17,7 +17,7 @@ module.exports = (app) => {
         next();
     });
 
-    // Get all auto-configs
+ 
     router.get("/", fetchUser, async (req, res) => {
         try {
             const configs = await AutoConfig.findAll();
@@ -36,7 +36,7 @@ module.exports = (app) => {
         }
     });
 
-    // Get auto-config by ID
+ 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             const { id } = req.params;
@@ -71,7 +71,7 @@ module.exports = (app) => {
         }
     });
 
-    // Create new auto-config
+ 
     router.post(
         "/",
         fetchUser,
@@ -141,7 +141,7 @@ module.exports = (app) => {
         }
     );
 
-    // Update auto-config by ID
+ 
     router.put(
         "/:id",
         fetchUser,
@@ -213,7 +213,7 @@ module.exports = (app) => {
             } catch (error) {
                 console.error("Error updating auto config:", error);
 
-                // Handle duplicate table_name error
+ 
                 if (error.message && error.message.includes("duplicate key")) {
                     return res.status(409).json({
                         success: false,
@@ -230,7 +230,7 @@ module.exports = (app) => {
         }
     );
 
-    // Delete auto-config by ID
+ 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             const { id } = req.params;
@@ -265,7 +265,7 @@ module.exports = (app) => {
         }
     });
 
-    // Get auto-config by table name (new endpoint for internal use)
+ 
     router.get("/table/:tableName", fetchUser, async (req, res) => {
         try {
             const { tableName } = req.params;

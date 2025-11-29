@@ -8,12 +8,12 @@ const BookDetail = () => {
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
-        // Fetch authors
+ 
         const authorApi = new DataApi("author");
         const authorsResponse = await authorApi.fetchAll();
         const authors = authorsResponse?.data?.data || authorsResponse?.data || [];
 
-        // Fetch categories
+ 
         const categoryApi = new DataApi("category");
         const categoriesResponse = await categoryApi.fetchAll();
         const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];

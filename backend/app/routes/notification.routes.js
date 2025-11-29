@@ -12,7 +12,7 @@ const Notification = require("../models/notification.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {
-  // Get all notifications for logged-in user
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
@@ -36,14 +36,14 @@ module.exports = (app) => {
   });
 
 
-  // Get book submission due notifications
+ 
     router.get("/due_notifications", fetchUser, async (req, res) => {
   
-    // console.log("Fetching notifications for book submissions nearing due date...");
-    // res.send('Notifications endpoint hit')
+ 
+ 
       try {
         const notifications = await BookSubmission.checkbeforeDue();
-        // console.log('notification ', notifications);
+ 
         
         return res.status(200).json({
           success: true,
@@ -61,7 +61,7 @@ module.exports = (app) => {
       }
     });
 
-  // Get unread notification count
+ 
   router.get("/unread-count", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
@@ -81,7 +81,7 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new notification (for admins/librarians)
+ 
   router.post("/", fetchUser, async (req, res) => {
     try {
       const { user_id, title, message, type, related_id, related_type } = req.body;
@@ -103,7 +103,7 @@ module.exports = (app) => {
         related_type
       });
 
-      // Emit socket event for real-time notification
+ 
       if (req.app.get('io')) {
         req.app.get('io').to(`user_${user_id}`).emit('new_notification', notification);
       }
@@ -122,7 +122,7 @@ module.exports = (app) => {
     }
   });
 
-  // Mark notification as read
+ 
   router.put("/:id/read", fetchUser, async (req, res) => {
     try {
       const { id } = req.params;
@@ -151,7 +151,7 @@ module.exports = (app) => {
     }
   });
 
-  // Mark all notifications as read
+ 
   router.put("/read-all", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
@@ -172,7 +172,7 @@ module.exports = (app) => {
     }
   });
 
-  // Delete a notification
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const { id } = req.params;
@@ -201,7 +201,7 @@ module.exports = (app) => {
     }
   });
 
-  // Broadcast notification to multiple users (for admins)
+ 
   router.post("/broadcast", fetchUser, async (req, res) => {
     try {
       const { user_ids, title, message, type, related_id, related_type } = req.body;
@@ -229,7 +229,7 @@ module.exports = (app) => {
         related_type
       });
 
-      // Emit socket events for real-time notifications
+ 
       if (req.app.get('io')) {
         const io = req.app.get('io');
         notifications.forEach(notification => {
