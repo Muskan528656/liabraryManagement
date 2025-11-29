@@ -20,7 +20,6 @@ import * as constants from "../../constants/CONSTANT";
 const BulkIssue = () => {
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
-  const [users, setUsers] = useState([]);
   const [issuedBooks, setIssuedBooks] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
@@ -74,14 +73,12 @@ const BulkIssue = () => {
  
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
-      const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
 
       setBooks(booksList);
       setLibraryCards(
         cardsList.filter((c) => c.is_active === true || c.is_active === "true")
       );
-      setUsers(usersList);
 
       const activeIssues = issuesList.filter(
         (issue) =>
@@ -267,12 +264,12 @@ const BulkIssue = () => {
       style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
     >
       {/* Header Section */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h3 className="fw-bold text-dark mb-1">Bulk Books Issue Process... </h3>
         <p className="text-muted">
           Streamline the book issuing process for library members.
         </p>
-      </div>
+      </div> */}
 
       {loading ? (
         <div
