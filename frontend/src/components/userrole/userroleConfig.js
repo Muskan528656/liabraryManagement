@@ -4,6 +4,17 @@ import CountryCode from '../../constants/CountryCode.json';
 
 // config/userRoleConfig.js
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
+    // Get country code options from props or fallback to local JSON
+    const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0 
+        ? externalData.countryCodeList.map(item => ({
+            value: item.id,
+            label: item.name
+          }))
+        : CountryCode.map(item => ({
+            value: item.country_code,
+            label: `${item.country} (${item.country_code})`
+          }));
+
     return {
         moduleName: "user_roles",
         moduleLabel: "User Role",
@@ -57,10 +68,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 required: false,
                 placeholder: "Select country code",
                 colSize: 12,
-                options: CountryCode.map(item => ({
-                    value: item.country_code,
-                    label: `${item.country} (${item.country_code})`
-                }))
+                options: countryCodeOptions
             },
             {
                 name: "is_active",

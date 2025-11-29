@@ -2,25 +2,24 @@ import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import InputGroup from "react-bootstrap/InputGroup";
+import { useLocation, useNavigate } from "react-router-dom";
 import "react-bootstrap-typeahead/css/Typeahead.css";
-// import WhatsAppAPI from "../../api/WhatsAppAPI";
 import Select from "react-select";
 import jwt_decode from "jwt-decode";
-import { ToastContainer, toast } from "react-toastify"; // npm i react-toastify --force
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CountryCode from "../../constants/CountryCode.json";
+import DataApi from "../../api/dataApi";
 
 const UserAdd = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  //const [user, setuser] = useState(location.state);
+
   const [user, setUser] = useState(location.state ? location.state : {});
   let name = user.firstname;
   const [optionUsers, setOptionUsers] = useState([]);
   const [option, setoption] = useState();
-  // const [selectedUser, setSelectedUser] = useState('');
   const [passwordError, setPasswordError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
@@ -31,17 +30,20 @@ const UserAdd = () => {
   const [loginUserRole, setLoginUserRole] = useState("");
   const [whatsappSetting, setWhatsappSetting] = useState([]);
   const [userPlan, setUserPlan] = useState(null); // Plan information from token
+  const [companyCountryCode, setCompanyCountryCode] = useState("+91"); // Company default country code
 
   useEffect(() => {
-    // fetchWhatsAppSetting();
-
     // Get logged in user info
     let userInfo = jwt_decode(sessionStorage.getItem("token"));
     setLoginUserRole(userInfo.userrole);
+
     // Store plan information for WhatsApp setting validation
     if (userInfo.plan) {
       setUserPlan(userInfo.plan);
     }
+
+    // Fetch company's country code
+    fetchCompanyCountryCode();
 
     if (user.id) {
       // Edit mode
@@ -62,50 +64,36 @@ const UserAdd = () => {
         managername: userInfo.username,
       });
     }
-    // async function init() {
-    //   // const result = await WhatsAppAPI.fetchUsers();
-
-    //   if (result) {
-    //     let ar = [];
-    //     var obj = {};
-    //     obj.value = null;
-    //     obj.label = "--Select--";
-    //     ar.push(obj);
-    //     result.map((item) => {
-    //       if (item.userrole !== "USER") {
-    //         var obj = {};
-    //         obj.value = item.id;
-    //         obj.label = item.username;
-    //         ar.push(obj);
-    //       }
-    //     });
-    //     setOptionUsers(ar);
-    //   } else {
-    //     setOptionUsers([]);
-    //   }
-    // }
-    // init();
   }, [user.id]);
 
-  // const fetchWhatsAppSetting = async () => {
-  //   try {
-  //     // const response = await WhatsAppAPI.getWhatsAppSettingRecord();
-  //     if (response.success) {
-  //       setWhatsappSetting(response.record);
-  //     } else {
-  //       setWhatsappSetting([]);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching WhatsApp settings:", error);
-  //     setWhatsappSetting([]);
-  //   }
-  // };
+  // Fetch company's country code
+  const fetchCompanyCountryCode = async () => {
+    try {
+      const response = await DataApi.fetchAll("/company"); 
+      if (response && response.country_code) {
+        setCompanyCountryCode(response.country_code);
+        // Set default country code for user if not already set
+        if (!user.country_code) {
+          setUser((prevUser) => ({
+            ...prevUser,
+            country_code: response.country_code,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching company country code:", error);
+      // Default to +91 if fetch fails
+      setCompanyCountryCode("+91");
+    }
+  };
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const isFormValid = () => {
     const isWhatsAppSettingsValid =
       user.userrole === "USER"
         ? Array.isArray(user.whatsapp_settings) &&
-        user.whatsapp_settings.length > 0
+          user.whatsapp_settings.length > 0
         : true;
 
     return (
@@ -128,7 +116,6 @@ const UserAdd = () => {
       ...user,
       isactive: user.isactive !== undefined ? user.isactive : false,
       whatsapp_settings: user.whatsapp_settings || [],
-
     };
 
     try {
@@ -151,10 +138,6 @@ const UserAdd = () => {
       }
 
       if (result.success) {
-        //     PubSub.publish("RECORD_SAVED_TOAST", {
-        //   title: "Success",
-        //   message: "Record saved successfully",
-        // });
         const userId = finalUser.id ? finalUser.id : result.id;
         navigate(`/users`);
       } else {
@@ -171,7 +154,6 @@ const UserAdd = () => {
       }
     } catch (error) {
       toast.error("An error occurred while saving the record.");
-      //    console.log("Unexpected error during API call:", error);
     } finally {
       setIsSending(false);
     }
@@ -196,30 +178,6 @@ const UserAdd = () => {
       }
     }
 
-    //if (name === "phone") {
-    //    if (!phoneRegex.test(value)) {
-    //        setPhoneError("Phone number must be exactly 10 digits");
-    //    } else {
-    //        setPhoneError("");
-    //    }
-    //}
-    // if (name === "whatsapp_number" && value.length === 0) {
-    //     setWhatsappError();
-    // }
-
-    // if (name === "whatsapp_number") {
-    //     if (value) {
-    //         if (!phoneRegex.test(value)) {
-    //             setWhatsappError("Phone number must be exactly 10 digits");
-    //         } else {
-    //             setWhatsappError();
-    //         }
-    //     } else {
-    //         setWhatsappError();
-    //     }
-
-    // }
-
     if (name === "email") {
       setEmailError(!emailRegex.test(value) ? "Invalid email format." : "");
     }
@@ -231,14 +189,12 @@ const UserAdd = () => {
 
   const handleUsers = (event) => {
     setoption(event);
-    // setSelectedUser(event)
     setUser({ ...user, managerid: event.value, managername: event.label });
   };
 
   const handleTextOnlyChange = (e) => {
     const { name } = e.target;
     const value = e.target.value.replace(/[^A-Za-z ]/g, "");
-
     setUser({ ...user, [name]: value });
   };
 
@@ -247,6 +203,7 @@ const UserAdd = () => {
   const handleSettingChange = (e) => {
     const selectedId = e.target.value;
   };
+
   return (
     <>
       <Container className="mt-5">
@@ -276,6 +233,7 @@ const UserAdd = () => {
           <Col lg={12} sm={12} xs={12} className="mb-2">
             <Card className="h-100" style={{ border: "none" }}>
               <Card.Body>
+                {/* First / Last name */}
                 <Row className="mb-3">
                   <Col lg={6} sm={12} xs={12}>
                     <Form.Group className="ms-3">
@@ -307,72 +265,71 @@ const UserAdd = () => {
                   </Col>
                 </Row>
 
+                {/* PHONE (country select + phone input in one field) + WhatsApp + Email */}
                 <Row className="mb-3">
-                  {/*<Col lg={6} sm={12} xs={12}>
-                                        <Form.Group className="ms-3">
-                                            <Form.Label htmlFor="phone">Phone</Form.Label>
-                                            <Form.Control
-                                                style={{ height: "36px" }}
-                                                required
-                                                type="text"
-                                                name="phone"
-                                                placeholder="Enter phone"
-                                                value={user.phone}
-                                                onChange={handleChange}
-                                            />
-                                            {phoneError && (
-                                                <small className="text-danger"> {phoneError}</small>
-                                            )}
-                                        </Form.Group>
-                                    </Col>*/}
-                  <Col lg={2} sm={12} xs={12}>
+                  <Col lg={4} sm={12} xs={12}>
                     <Form.Group className="ms-3">
-                      <Form.Label htmlFor="country_code">
-                        Country Code
-                      </Form.Label>
-                      <Form.Select
-                        name="country_code"
-                        value={user.country_code || "+91"}
-                        onChange={(e) => handleChange(e)}
-                        style={{ height: "36px" }}
-                      >
-                        {CountryCode.map((country, index) => (
-                          <option key={index} value={country.country_code}>
-                            {country.country} ({country.country_code})
-                          </option>
-                        ))}
-                      </Form.Select>
+                      <Form.Label htmlFor="phone_number">Phone Number</Form.Label>
+                      <InputGroup>
+                        <Form.Select
+                          name="country_code"
+                          value={user.country_code || companyCountryCode}
+                          onChange={handleChange}
+                          style={{
+                            height: "38px",
+                            maxWidth: "150px",
+                            borderTopRightRadius: 0,
+                            borderBottomRightRadius: 0,
+                          }}
+                        >
+                          {CountryCode.map((country, index) => (
+                            <option key={index} value={country.country_code}>
+                              {country.country} ({country.country_code})
+                            </option>
+                          ))}
+                        </Form.Select>
+                        <Form.Control
+                          style={{ height: "38px" }}
+                          type="text"
+                          name="phone_number"
+                          placeholder="Phone Number"
+                          value={user.phone_number || ""}
+                          onChange={handleChange}
+                        />
+                      </InputGroup>
                     </Form.Group>
                   </Col>
+
                   <Col lg={4} sm={12} xs={12}>
                     <Form.Group className="">
-                      <Form.Label htmlFor="phone">Whatsapp Number</Form.Label>
+                      <Form.Label htmlFor="whatsapp_number">
+                        Whatsapp Number
+                      </Form.Label>
                       <Form.Control
                         required
-                        style={{ height: "36px" }}
+                        style={{ height: "38px" }}
                         type="text"
                         name="whatsapp_number"
                         placeholder="Enter Whatsapp Number"
-                        value={user.whatsapp_number}
+                        value={user.whatsapp_number || ""}
                         onChange={handleChange}
                       />
-                      {whatsappError ? (
-                        <small className="text-danger"> {whatsappError}</small>
-                      ) : (
-                        ""
+                      {whatsappError && (
+                        <small className="text-danger">{whatsappError}</small>
                       )}
                     </Form.Group>
                   </Col>
-                  <Col lg={6} sm={12} xs={12}>
+
+                  <Col lg={4} sm={12} xs={12}>
                     <Form.Group className="ms-3">
                       <Form.Label htmlFor="email">Email</Form.Label>
                       <Form.Control
-                        style={{ height: "36px" }}
+                        style={{ height: "38px" }}
                         type="email"
                         required
                         name="email"
                         placeholder="Enter email"
-                        value={user.email}
+                        value={user.email || ""}
                         onChange={handleChange}
                       />
                       {emailError && (
@@ -382,6 +339,7 @@ const UserAdd = () => {
                   </Col>
                 </Row>
 
+                {/* Role + Password */}
                 {!user.id ? (
                   <>
                     <Row className="mb-3">
@@ -394,9 +352,7 @@ const UserAdd = () => {
                             value={user.userrole}
                             onChange={handleChange}
                             required
-                          >
-
-                          </Form.Select>
+                          ></Form.Select>
                         </Form.Group>
                       </Col>
                       <Col lg={6} sm={12} xs={12}>
@@ -418,7 +374,9 @@ const UserAdd = () => {
                             >
                               <i
                                 className={
-                                  !showPassword ? "fa fa-eye-slash" : "fa fa-eye"
+                                  !showPassword
+                                    ? "fa fa-eye-slash"
+                                    : "fa fa-eye"
                                 }
                                 aria-hidden="true"
                                 style={{ cursor: "pointer" }}
@@ -428,7 +386,6 @@ const UserAdd = () => {
 
                           {passwordError && (
                             <small className="text-danger">
-                              {" "}
                               {passwordError}
                             </small>
                           )}
@@ -468,6 +425,8 @@ const UserAdd = () => {
                     </Col>
                   </Row>
                 )}
+
+                {/* Active */}
                 <Row className="mb-3">
                   <Col lg={6} sm={12} xs={12}>
                     <Form.Group className="ms-3">
@@ -483,17 +442,28 @@ const UserAdd = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+
+                {/* WhatsApp setting */}
                 <Row>
                   {user.userrole !== "ADMIN" && (
                     <Col lg={6} sm={12} xs={12}>
                       <Form.Group className="ms-3 mb-2">
                         <Form.Label htmlFor="userrole">
                           Assign WhatsApp Setting
-                          {userPlan && userPlan.number_of_whatsapp_setting !== undefined && (
-                            <span className="text-muted" style={{ fontSize: "12px", marginLeft: "8px" }}>
-                              (Plan Limit: {userPlan.number_of_whatsapp_setting})
-                            </span>
-                          )}
+                          {userPlan &&
+                            userPlan.number_of_whatsapp_setting !==
+                              undefined && (
+                              <span
+                                className="text-muted"
+                                style={{
+                                  fontSize: "12px",
+                                  marginLeft: "8px",
+                                }}
+                              >
+                                (Plan Limit:{" "}
+                                {userPlan.number_of_whatsapp_setting})
+                              </span>
+                            )}
                         </Form.Label>
                         <Select
                           isMulti
@@ -515,11 +485,18 @@ const UserAdd = () => {
                             );
 
                             // Check plan limit for WhatsApp settings
-                            if (userPlan && userPlan.number_of_whatsapp_setting) {
-                              const limit = userPlan.number_of_whatsapp_setting;
+                            if (
+                              userPlan &&
+                              userPlan.number_of_whatsapp_setting
+                            ) {
+                              const limit =
+                                userPlan.number_of_whatsapp_setting;
                               if (selectedPhones.length > limit) {
-                                toast.warning(`Plan allows maximum ${limit} WhatsApp setting(s). Only first ${limit} will be selected.`);
-                                const limitedPhones = selectedPhones.slice(0, limit);
+                                toast.warning(
+                                  `Plan allows maximum ${limit} WhatsApp setting(s). Only first ${limit} will be selected.`
+                                );
+                                const limitedPhones =
+                                  selectedPhones.slice(0, limit);
                                 setUser({
                                   ...user,
                                   whatsapp_settings: limitedPhones,
@@ -534,7 +511,8 @@ const UserAdd = () => {
                             });
                           }}
                           isDisabled={
-                            userPlan && userPlan.number_of_whatsapp_setting === 0
+                            userPlan &&
+                            userPlan.number_of_whatsapp_setting === 0
                           }
                         />
                       </Form.Group>
@@ -544,12 +522,18 @@ const UserAdd = () => {
 
                 <Row>
                   <Col lg={12} sm={12} xs={12}>
-                    <hr></hr>
+                    <hr />
                   </Col>
                 </Row>
 
+                {/* Buttons */}
                 <Row className="g-0 mb-2">
-                  <Col lg={12} sm={12} xs={12} className="text-end mt-1">
+                  <Col
+                    lg={12}
+                    sm={12}
+                    xs={12}
+                    className="text-end mt-1"
+                  >
                     <Button
                       className="mx-2"
                       variant="light"

@@ -58,10 +58,10 @@ async function create(companyData, userId) {
     }
 
     const query = `INSERT INTO public.company 
-                   (name, tenantcode, userlicenses, isactive, systememail, adminemail, 
+                   (name, tenantcode, userlicenses, isactive, systememail, adminemail, phone_number,
                     logourl, sidebarbgurl, sourceschema, city, street, pincode, state, 
                     country, country_code, platform_name, platform_api_endpoint, is_external, has_wallet, currency) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) 
                    RETURNING *`;
     
     const values = [
@@ -71,6 +71,7 @@ async function create(companyData, userId) {
       companyData.isactive !== undefined ? companyData.isactive : true,
       companyData.systememail || 'admin@spark.indicrm.io',
       companyData.adminemail || 'admin@spark.indicrm.io',
+      companyData.phone_number || null,
       companyData.logourl || 'https://spark.indicrm.io/logos/client_logo.png',
       companyData.sidebarbgurl || 'https://spark.indicrm.io/logos/sidebar_background.jpg',
       companyData.sourceschema || null,
@@ -112,11 +113,11 @@ async function updateById(id, companyData, userId) {
 
     const query = `UPDATE public.company 
                    SET name = $2, tenantcode = $3, userlicenses = $4, isactive = $5, 
-                       systememail = $6, adminemail = $7, logourl = $8, sidebarbgurl = $9, 
-                       sourceschema = $10, city = $11, street = $12, pincode = $13, 
-                       state = $14, country = $15, country_code = $16, platform_name = $17, 
-                       platform_api_endpoint = $18, is_external = $19, has_wallet = $20,
-                       currency = $21
+                       systememail = $6, adminemail = $7, phone_number = $8, logourl = $9, sidebarbgurl = $10, 
+                       sourceschema = $11, city = $12, street = $13, pincode = $14, 
+                       state = $15, country = $16, country_code = $17, platform_name = $18, 
+                       platform_api_endpoint = $19, is_external = $20, has_wallet = $21,
+                       currency = $22
                    WHERE id = $1 
                    RETURNING *`;
     
@@ -128,6 +129,7 @@ async function updateById(id, companyData, userId) {
       companyData.isactive !== undefined ? companyData.isactive : currentCompany.isactive,
       companyData.systememail !== undefined ? companyData.systememail : currentCompany.systememail,
       companyData.adminemail !== undefined ? companyData.adminemail : currentCompany.adminemail,
+      companyData.phone_number !== undefined ? companyData.phone_number : currentCompany.phone_number,
       companyData.logourl !== undefined ? companyData.logourl : currentCompany.logourl,
       companyData.sidebarbgurl !== undefined ? companyData.sidebarbgurl : currentCompany.sidebarbgurl,
       companyData.sourceschema !== undefined ? companyData.sourceschema : currentCompany.sourceschema,

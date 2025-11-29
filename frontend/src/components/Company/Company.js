@@ -12,6 +12,7 @@ const Company = () => {
     isactive: false,
     systememail: "",
     adminemail: "",
+    phone_number: "",
     logourl: "",
     sidebarbgurl: "",
     sourceschema: "",
@@ -33,9 +34,13 @@ const Company = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
+  const [countryCodeList, setCountryCodeList] = useState([]);
+  const [countryCodeDisplay, setCountryCodeDisplay] = useState("");
+  const [combinedPhone, setCombinedPhone] = useState("");
 
   useEffect(() => {
     fetchCompany();
+    fetchCountryCodesList();
   }, []);
 
   function getCompanyIdFromToken() {
@@ -45,6 +50,30 @@ const Company = () => {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.companyid || payload.companyid || null;
   }
+
+  const fetchCountryCodesList = async () => {
+    try {
+      const companyApi = new DataApi("company");
+      // Call the picklist endpoint
+      const response = await companyApi.fetchAll("picklist/country-codes");
+      
+      if (response.data) {
+        setCountryCodeList(response.data);
+        console.log("Country Codes List:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching country codes list:", error);
+      // Fallback to local JSON if API fails
+      setCountryCodeList(
+        CountryCode.map((item) => ({
+          id: item.country_code,
+          name: `${item.country} (${item.country_code})`,
+          country: item.country,
+          country_code: item.country_code
+        }))
+      );
+    }
+  };
 
   const fetchCompany = async () => {
     try {
@@ -60,6 +89,24 @@ const Company = () => {
 
       if (response.data) {
         setCompany(response.data);
+        
+        // Set country code display from API response
+        if (response.data.country_code_display) {
+          setCountryCodeDisplay(response.data.country_code_display);
+        } else if (response.data.country_code) {
+          const countryInfo = CountryCode.find(c => c.country_code === response.data.country_code);
+          if (countryInfo) {
+            setCountryCodeDisplay(`${countryInfo.country} (${countryInfo.country_code})`);
+          }
+        }
+        
+        // Set combined phone number (country code + phone)
+        if (response.data.country_code && response.data.phone_number) {
+          setCombinedPhone(`${response.data.country_code}${response.data.phone_number}`);
+        } else if (response.data.phone_number) {
+          setCombinedPhone(response.data.phone_number);
+        }
+        
         console.log("Company:", response.data);
       }
     } catch (error) {
@@ -111,6 +158,20 @@ const Company = () => {
       ...prev,
       [key]: value,
     }));
+    
+    // Update combined phone when country code or phone number changes
+    if (key === "country_code" || key === "phone_number") {
+      const countryCode = key === "country_code" ? value : tempCompany.country_code;
+      const phoneNumber = key === "phone_number" ? value : tempCompany.phone_number;
+      
+      if (countryCode && phoneNumber) {
+        setCombinedPhone(`${countryCode}${phoneNumber}`);
+      } else if (phoneNumber) {
+        setCombinedPhone(phoneNumber);
+      } else {
+        setCombinedPhone("");
+      }
+    }
   };
 
   return (
@@ -288,6 +349,29 @@ const Company = () => {
                             }
                             style={{
                               // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Phone Number</Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter phone number (without country code)"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.phone_number || ""
+                                : Company.phone_number || ""
+                            }
+                            readOnly={!isEditingCompany}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("phone_number", e.target.value)
+                            }
+                            style={{
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -559,6 +643,7 @@ const Company = () => {
                       )}
                     </Form.Group>
                   </Col>
+                 
                 </Row>
               </Row>
             </Card.Body>

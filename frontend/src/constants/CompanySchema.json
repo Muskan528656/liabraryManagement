@@ -1,0 +1,89 @@
+{
+  "company": {
+    "id": "number",
+    "name": "string (required)",
+    "tenantcode": "string (required)",
+    "userlicenses": "number",
+    "isactive": "boolean",
+    "systememail": "string (email)",
+    "adminemail": "string (email)",
+    "logourl": "string (URL)",
+    "sidebarbgurl": "string (URL)",
+    "sourceschema": "string",
+    "city": "string",
+    "street": "string",
+    "pincode": "string",
+    "state": "string",
+    "country": "string",
+    "country_code": "string (country code with +)",
+    "platform_name": "string",
+    "platform_api_endpoint": "object/JSON",
+    "is_external": "boolean",
+    "has_wallet": "boolean",
+    "currency": "string",
+    "time_zone": "string",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+  },
+  "fields": {
+    "overview": [
+      "name",
+      "systememail",
+      "adminemail",
+      "userlicenses",
+      "currency"
+    ],
+    "details": [
+      "name",
+      "tenantcode",
+      "userlicenses",
+      "isactive",
+      "systememail",
+      "adminemail",
+      "logourl",
+      "sidebarbgurl",
+      "sourceschema",
+      "city",
+      "street",
+      "pincode",
+      "state",
+      "country",
+      "country_code",
+      "platform_name",
+      "platform_api_endpoint",
+      "is_external",
+      "has_wallet",
+      "currency",
+      "created_at",
+      "updated_at"
+    ],
+    "address": [
+      "street",
+      "city",
+      "state",
+      "country",
+      "pincode",
+      "country_code"
+    ],
+    "contact": [
+      "systememail",
+      "adminemail"
+    ],
+    "settings": [
+      "userlicenses",
+      "isactive",
+      "is_external",
+      "has_wallet",
+      "currency",
+      "platform_name",
+      "time_zone"
+    ]
+  },
+  "endpoints": {
+    "list": "GET /api/company",
+    "detail": "GET /api/company/:id",
+    "create": "POST /api/company",
+    "update": "PUT /api/company/:id",
+    "delete": "DELETE /api/company/:id"
+  }
+}

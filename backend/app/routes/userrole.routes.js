@@ -32,9 +32,35 @@ module.exports = (app) => {
             const role = await UserRole.findById(req.params.id);
             if (!role) return res.status(404).json({ msg: "Role not found" });
 
+            // Add country code display
+            if (role.country_code) {
+                const CountryCode = require('../../constants/CountryCode.json');
+                const countryInfo = CountryCode.find(c => c.country_code === role.country_code);
+                if (countryInfo) {
+                    role.country_code_display = `${countryInfo.country} (${countryInfo.country_code})`;
+                }
+            }
+
             res.status(200).json(role);
         } catch (error) {
             console.error("Error fetching role:", error);
+            return res.status(500).json({ errors: "Internal server error" });
+        }
+    });
+
+    // GET country codes as picklist
+    router.get("/picklist/country-codes", fetchUser, async (req, res) => {
+        try {
+            const CountryCode = require('../../constants/CountryCode.json');
+            const picklist = CountryCode.map((item) => ({
+                id: item.country_code,
+                name: `${item.country} (${item.country_code})`,
+                country: item.country,
+                country_code: item.country_code
+            }));
+            return res.status(200).json(picklist);
+        } catch (error) {
+            console.error("Error fetching country codes:", error);
             return res.status(500).json({ errors: "Internal server error" });
         }
     });
