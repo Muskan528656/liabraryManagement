@@ -19,11 +19,17 @@ const VendorDetail = () => {
       { key: "phone", label: "Phone", type: "text" },
       { key: "gst_number", label: "GST Number", type: "text" },
       { key: "pan_number", label: "PAN Number", type: "text" },
-
       {
         key: "status",
         label: "Status",
+        type: "toggle",
+        badgeConfig: {
+
+          true_label: "Active",
+          false_label: "Inactive",
+        },
       },
+
 
     ],
     address: [

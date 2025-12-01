@@ -12,7 +12,7 @@ function normalizeSubscriptionRow(row) {
 
     const normalized = { ...row };
 
- 
+
     if (Object.prototype.hasOwnProperty.call(normalized, "allowed books")) {
         normalized.allowed_books = normalized["allowed books"];
         delete normalized["allowed books"];
@@ -25,9 +25,9 @@ function init(schema_name) {
     this.schema = schema_name;
 }
 
- 
- 
- 
+
+
+
 async function findAll() {
     const query = `
         SELECT * 
@@ -38,18 +38,18 @@ async function findAll() {
     return result.rows.length ? result.rows.map(normalizeSubscriptionRow) : [];
 }
 
- 
- 
- 
+
+
+
 async function findById(id) {
     const query = `SELECT * FROM demo.subscriptions WHERE id = $1`;
     const result = await sql.query(query, [id]);
     return result.rows.length ? normalizeSubscriptionRow(result.rows[0]) : null;
 }
 
- 
- 
- 
+
+
+
 async function create(data, userId) {
     const query = `
         INSERT INTO demo.subscriptions
@@ -73,9 +73,9 @@ async function create(data, userId) {
     return normalizeSubscriptionRow(result.rows[0] || null);
 }
 
- 
- 
- 
+
+
+
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Subscription not found");
@@ -109,9 +109,9 @@ async function updateById(id, data, userId) {
     return result.rows.length ? normalizeSubscriptionRow(result.rows[0]) : null;
 }
 
- 
- 
- 
+
+
+
 async function deleteById(id) {
     const query = `DELETE FROM demo.subscriptions WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);

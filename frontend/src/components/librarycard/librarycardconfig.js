@@ -20,7 +20,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
 
- 
+
     const safeSubscriptions = Array.isArray(externalData.subscriptions)
         ? externalData.subscriptions
         : [];
@@ -42,42 +42,25 @@ export const getLibraryCardConfig = (externalData = {}) => {
                         <img
                             src={imgSrc}
                             alt={row.first_name || "User"}
-                            style={{
-                                width: 50,
-                                height: 50,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                border: "2px solid #6f42c1"
-                            }}
+                            className="table-user-image"
                         />
                     );
                 }
 
                 return (
-                    <div
-                        style={{
-                            width: 50,
-                            height: 50,
-                            borderRadius: "50%",
-                            background: "#f0f0f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: "2px solid #6f42c1"
-                        }}
-                    >
+                    <div className="table-user-placeholder">
                         <i className="fa-solid fa-user"></i>
                     </div>
                 );
             }
-        },
-
+        }
+        ,
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
         { field: "last_name", label: "Last Name", sortable: true },
         { field: "email", label: "Email", sortable: true },
         { field: "phone_number", label: "Phone Number", sortable: true },
-      
+
 
         {
             field: "subscription_id",
@@ -99,12 +82,9 @@ export const getLibraryCardConfig = (externalData = {}) => {
             label: "Status",
             sortable: true,
             render: (value) => {
-                const statusValue =
-                    value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
-
                 return (
-                    <Badge bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
-                        {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
+                    <Badge bg={value === true || value === "active" ? "success" : "secondary"}>
+                        {value === true || value === "active" ? "Active" : "Inactive"}
                     </Badge>
                 );
             }
@@ -224,17 +204,17 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     }
                 }
             },
+
             {
                 name: "status",
                 label: "Status",
-                type: "select",
-                required: true,
+                type: "toggle",
                 options: [
-                    { value: "active", label: "Active" },
-                    { value: "inactive", label: "Inactive" }
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
                 ],
                 colSize: 6,
-            },
+            }
         ],
 
         validationRules: (formData, allCards, editingCard) => {
@@ -331,7 +311,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             },
         ],
 
- 
+
         customHandlers: {
             generateCardNumber,
             formatDateToDDMMYYYY,
@@ -340,24 +320,27 @@ export const getLibraryCardConfig = (externalData = {}) => {
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
                     data.forEach(item => {
+
                         if (item.hasOwnProperty('is_active')) {
                             item.status = item.is_active ? 'active' : 'inactive';
                         }
 
- 
-                        if (item.subscription_id && safeSubscriptions.length > 0) {
+                        if (item.subscription_id) {
                             const subscription = safeSubscriptions.find(
                                 sub => sub.id === item.subscription_id
                             );
-                            if (subscription) {
-                                item.subscription_name = subscription.plan_name || subscription.name;
-                            }
+                            item.subscription_name = subscription?.plan_name || subscription?.name || '';
                         }
+
+
+                        if (!item.first_name) item.first_name = '-';
+                        if (!item.last_name) item.last_name = '-';
                     });
                 }
             },
 
- 
+
+
             getSubscriptionOptions: () => {
                 return safeSubscriptions.map(sub => ({
                     value: sub.id,
@@ -384,19 +367,19 @@ export const getLibraryCardConfig = (externalData = {}) => {
             return errors;
         },
 
- 
+
         transformResponse: (response) => {
             if (response && response.data) {
                 let data = response.data;
 
- 
+
                 if (data.data && Array.isArray(data.data)) {
                     data = data.data;
                 } else if (data.success && data.data) {
                     data = data.data;
                 }
 
- 
+
                 if (Array.isArray(data) && safeSubscriptions.length > 0) {
                     data = data.map(item => {
                         if (item.subscription_id) {

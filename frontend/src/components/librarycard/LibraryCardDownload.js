@@ -70,7 +70,7 @@ export const handleDownloadBarcode = (
             }
 
             const drawDetailsAndBarcode = () => {
-              
+
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#000";
                 ctx.font = "16px Arial";
@@ -81,13 +81,9 @@ export const handleDownloadBarcode = (
                 ctx.fillText(`Card Number: ${cardNumber}`, startX, y); y += 25;
                 ctx.fillText(`Name: ${card.user_name || "N/A"}`, startX, y); y += 25;
                 ctx.fillText(`Email: ${card.user_email || "N/A"}`, startX, y); y += 25;
-                ctx.fillText(`Issue Date: ${formatDate(card.issue_date)}`, startX, y); y += 25;
-                ctx.fillText(`Expiry Date: ${formatDate(card.expiry_date)}`, startX, y); y += 25;
-
+                ctx.fillText(`Registration Date: ${formatDate(card.registration_date)}`, startX, y); y += 25;
                 ctx.fillStyle = card.is_active ? "green" : "red";
                 ctx.fillText(`Status: ${card.is_active ? "Active" : "Inactive"}`, startX, y);
-
-
                 ctx.drawImage(img, 100, 280, 400, 120);
 
 

@@ -25,7 +25,7 @@ const EditProfile = ({ userId }) => {
   const [user, setUser] = useState({ password: "", confirmpassword: "" });
   const [selectedFiles, setSelectedFiles] = useState(null);
 
- 
+
   let tenantcode = "";
   try {
     const token = sessionStorage.getItem("token");
@@ -35,7 +35,7 @@ const EditProfile = ({ userId }) => {
     }
   } catch (error) {
     console.error("Error decoding token:", error);
- 
+
     sessionStorage.removeItem("token");
     window.location.href = "/login";
   }
@@ -59,7 +59,7 @@ const EditProfile = ({ userId }) => {
   useEffect(() => {
     async function init() {
       try {
- 
+
         const token = sessionStorage.getItem("token");
         if (!token) {
           console.error("No token found");
@@ -74,14 +74,14 @@ const EditProfile = ({ userId }) => {
           return;
         }
 
- 
+
         const userApi = new DataApi("user");
         const userResponse = await userApi.fetchById(userId);
 
         if (userResponse && userResponse.data) {
           let result = userResponse.data;
 
- 
+
           if (result.whatsapp_number) {
             result.whatsapp_number =
               result.whatsapp_number.length === 12 &&
@@ -90,7 +90,7 @@ const EditProfile = ({ userId }) => {
                 : result.whatsapp_number;
           }
 
- 
+
           setProfile({
             id: result.id,
             firstname: result.firstname || "",
@@ -218,7 +218,7 @@ const EditProfile = ({ userId }) => {
         return;
       }
 
- 
+
       profile.country_code = profile.country_code
         ? String(profile.country_code).trim()
         : "+91";
@@ -227,7 +227,7 @@ const EditProfile = ({ userId }) => {
       }
 
       if (selectedFiles === null) {
- 
+
         const userApi = new DataApi("user");
         const updateData = {
           firstname: profile.firstname,
@@ -256,15 +256,15 @@ const EditProfile = ({ userId }) => {
           toast.error(result.data?.errors || "Failed to update profile");
         }
       } else {
- 
+
         try {
- 
+
           const formData = new FormData();
           formData.append('file', selectedFiles);
 
           const token = sessionStorage.getItem('token');
 
- 
+
           const uploadResponse = await axios.post(
             `${COUNTRY_CODES.API_BASE_URL}/api/user/${profile.id}/upload-image`,
             formData,
@@ -277,7 +277,7 @@ const EditProfile = ({ userId }) => {
           );
 
           if (uploadResponse.data && uploadResponse.data.success) {
- 
+
             const userApi = new DataApi("user");
             const updateData = {
               firstname: profile.firstname,
@@ -290,11 +290,11 @@ const EditProfile = ({ userId }) => {
             const result = await userApi.update(updateData, profile.id);
 
             if (result.data && result.data.success !== false) {
- 
+
               const imagePath = `${profileImg}/${profile.id}`;
               sessionStorage.setItem("myimage", imagePath);
 
- 
+
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -313,7 +313,7 @@ const EditProfile = ({ userId }) => {
           console.error("Error uploading image:", uploadError);
           toast.error("Failed to upload image. Please try again.");
 
- 
+
           const userApi = new DataApi("user");
           const updateData = {
             firstname: profile.firstname,
@@ -368,7 +368,7 @@ const EditProfile = ({ userId }) => {
         setShowPasswordModal(false);
         setPassword("");
         setConfirmPassword("");
- 
+
         setTimeout(() => {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("user");

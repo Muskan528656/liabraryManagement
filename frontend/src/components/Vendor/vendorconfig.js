@@ -78,7 +78,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                         </Badge>
                     );
                 }
-            },
+            }
         ],
         formFields: [
 
@@ -334,13 +334,15 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { key: "pincode", label: "Pincode", type: "text" },
             { key: "country", label: "Country", type: "text" },
             {
-                key: "status",
+                field: "isactive",
                 label: "Status",
-                type: "badge",
-                badgeConfig: {
-                    active: { variant: "success", label: "Active" },
-                    inactive: { variant: "secondary", label: "Inactive" },
-                    suspended: { variant: "warning", label: "Suspended" }
+                sortable: true,
+                render: (value) => {
+                    return (
+                        <Badge bg={value === true || value === "active" ? "success" : "secondary"}>
+                            {value === true || value === "active" ? "Active" : "Inactive"}
+                        </Badge>
+                    );
                 }
             },
             { key: "created_at", label: "Created At", type: "date" },

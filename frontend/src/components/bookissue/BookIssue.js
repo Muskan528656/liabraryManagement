@@ -45,7 +45,7 @@ const BookIssue = () => {
   useEffect(() => {
     fetchIssuedBooks();
     fetchLibrarySettings();
-    // Auto-focus on book input when component mounts
+ 
     setTimeout(() => {
       const bookSelect = bookInputRef.current?.querySelector("input");
       if (bookSelect) {
@@ -54,7 +54,7 @@ const BookIssue = () => {
       }
     }, 300);
 
- 
+
     const token = PubSub.subscribe("OPEN_ADD_BOOK_ISSUE_MODAL", () => {
       resetForm();
       setActiveTab("issue");
@@ -74,30 +74,30 @@ const BookIssue = () => {
     };
   }, []);
 
- 
+
   const fetchLibrarySettings = async () => {
     try {
       const settingsApi = new DataApi("librarysettings");
- 
+
       const response = await settingsApi.get("/all");
       if (response.data && response.data.success && response.data.data) {
-        // Response format: { success: true, data: { duration_days: "15", ... } }
+ 
       } else if (
         response.data &&
         typeof response.data === "object" &&
         !Array.isArray(response.data)
       ) {
- 
+
         const duration = parseInt(response.data.duration_days) || 7;
         setDurationDays(duration);
       }
     } catch (error) {
       console.error("Error fetching library settings:", error);
- 
+
     }
   };
 
- 
+
   useEffect(() => {
     if (!formData.due_date && durationDays) {
       const dueDate = new Date();
@@ -109,7 +109,7 @@ const BookIssue = () => {
     }
   }, [durationDays]);
 
- 
+
   useEffect(() => {
     if (selectedLibraryCard && selectedLibraryCard.data) {
       setFormData((prev) => ({
@@ -131,7 +131,7 @@ const BookIssue = () => {
     }
   }, [selectedLibraryCard, selectedUser]);
 
- 
+
   useEffect(() => {
     if (selectedBook && selectedBook.data) {
       setFormData((prev) => ({
@@ -147,8 +147,9 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
+
       if (response.data && Array.isArray(response.data)) {
- 
+
         const activeIssues = response.data.filter(
           (issue) =>
             issue.status === "issued" ||
@@ -186,7 +187,7 @@ const BookIssue = () => {
       condition_before: "Good",
       remarks: "",
     });
- 
+
     setTimeout(() => {
       if (bookSearchInputRef.current) {
         bookSearchInputRef.current.focus();
@@ -208,7 +209,7 @@ const BookIssue = () => {
     }
   };
 
- 
+
   const filteredIssuedBooks = issuedBooks.filter((issue) => {
     if (!searchTerm) return true;
     const query = searchTerm.toLowerCase();
@@ -230,7 +231,7 @@ const BookIssue = () => {
     );
   });
 
- 
+
   const getDaysRemaining = (dueDate) => {
     if (!dueDate) return null;
     try {
@@ -305,12 +306,65 @@ const BookIssue = () => {
       label: "Issued To",
       width: 200,
       render: (value, record) => {
-        const userId = record.user_id || record.student_id || record.issued_to;
-        const displayName =
-          record.issued_to_name ||
-          record.student_name ||
-          record.issued_to ||
-          "N/A";
+        const userId = record.card_id
+        const displayName = record.member_name || "N/A";
+
+        if (userId) {
+          return (
+            <a
+              href={`/librarycard/${userId}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  localStorage.setItem(
+                    `prefetch:user:${userId}`,
+                    JSON.stringify(record)
+                  );
+                } catch (err) { }
+                navigate(`/librarycard/${userId}`, { state: record });
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  localStorage.setItem(
+                    `prefetch:user:${userId}`,
+                    JSON.stringify(record)
+                  );
+                } catch (err) { }
+                window.open(`/librarycard/${userId}`, "_blank");
+              }}
+              style={{
+                color: "#6f42c1",
+                textDecoration: "none",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.textDecoration = "none";
+              }}
+              title="Click to view library card details (Right-click to open in new tab)"
+            >
+              {displayName}
+            </a>
+          );
+        }
+
+        return displayName;
+      },
+    },
+    {
+      field: "issued_by",
+      label: "Issued By",
+      width: 200,
+      render: (value, record) => {
+        const userId = record.issued_by;
+        const displayName = record.issued_by_name || "N/A";
+
         if (userId) {
           return (
             <a
@@ -355,9 +409,12 @@ const BookIssue = () => {
             </a>
           );
         }
+
         return displayName;
       },
     },
+
+
     {
       field: "card_number",
       label: "Card Number",
@@ -509,11 +566,11 @@ const BookIssue = () => {
                       <Row>
                         <Col lg={12}>
                           <Card className="shadow-sm h-100">
-                           
+
                             <Card.Body className="p-0" style={{ overflow: "hidden" }}>
                               <BulkIssue />
                             </Card.Body>
-                           
+
                           </Card>
                         </Col>
                       </Row>
@@ -548,7 +605,7 @@ const BookIssue = () => {
                           : "No books have been issued yet"
                       }
                       onRowClick={(issue) => {
- 
+
                         console.log("Issue clicked:", issue);
                       }}
                     />

@@ -99,12 +99,6 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         },
 
 
-
-
-
-
-
-
         customHandlers: {
             beforeSave: (formData, editingItem) => {
                 return true;
