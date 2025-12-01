@@ -16,6 +16,7 @@ import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";
 import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -81,6 +82,13 @@ const getOptionDisplayLabel = (option = {}) => {
   if (option.email) return option.email;
   if (option.value) return option.value;
   if (option.id) return option.id;
+  if (option.role_name) return option.role_name; if (option.firstname || option.lastname) {
+    const composed = `${option.firstname || ""} ${option.lastname || ""
+      }`.trim();
+    if (composed) return composed;
+  }
+
+
   return "Item";
 };
 

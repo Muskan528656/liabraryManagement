@@ -1,11 +1,16 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },
   suspended: { variant: "warning", label: "Suspended" },
 };
+ const countryCodeOptions = COUNTRY_CODES.map((country) => ({
+    value: country.country_code,
+    label: `${country.country_code} - ${country.country}`,
+  }));
 
 const VendorDetail = () => {
   const fields = {
@@ -24,13 +29,22 @@ const VendorDetail = () => {
         label: "Status",
         type: "toggle",
         badgeConfig: {
-
           true_label: "Active",
           false_label: "Inactive",
         },
       },
 
-
+      {
+        key: "country_code",
+        label: "Country Code",
+        type: "select", // Changed from "text" to "select"
+        options: countryCodeOptions, // Added options
+        render: (value) => {
+          const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
+          const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
+          return country ? `${country.country_code} (${country.country})` : value || 'N/A';
+        },
+      },
     ],
     address: [
       { key: "country", label: "Country", type: "text" },

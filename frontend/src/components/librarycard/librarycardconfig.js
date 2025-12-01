@@ -19,12 +19,13 @@ export const getLibraryCardConfig = (externalData = {}) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview = customHandlers.handleBarcodePreview ||
         ((card) => console.warn('Barcode preview handler not provided', card));
+    console.log("externalDataexternalData", externalData)
 
 
-    const safeSubscriptions = Array.isArray(externalData.subscriptions)
-        ? externalData.subscriptions
+    const safeSubscriptions = Array.isArray(externalData.subscriptions?.data)
+        ? externalData.subscriptions.data
         : [];
-
+    console.log("Safe subs", safeSubscriptions)
     const defaultColumns = [
         {
             field: "image",
@@ -43,6 +44,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                             src={imgSrc}
                             alt={row.first_name || "User"}
                             className="table-user-image"
+
                         />
                     );
                 }
@@ -60,23 +62,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
         { field: "last_name", label: "Last Name", sortable: true },
         { field: "email", label: "Email", sortable: true },
         { field: "phone_number", label: "Phone Number", sortable: true },
-
-
         {
             field: "subscription_id",
             label: "Subscription",
             sortable: true,
             render: (value, row) => {
-                const subscriptionName = row.subscription_name ||
-                    row.subscription?.name ||
-                    row.subscription?.plan_name ||
-                    row.subscription_title ||
-                    "No Subscription";
-
-                return subscriptionName;
+                const subscription = safeSubscriptions.find(sub => sub.id === value);
+                return subscription ? subscription.plan_name || subscription.name : "No Subscription";
             }
         },
-
         {
             field: "status",
             label: "Status",

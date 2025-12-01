@@ -123,7 +123,7 @@ const LibraryCard = (props) => {
 
   const allData = { ...(data || {}), ...props };
 
- 
+
   const finalConfig = {
     ...getLibraryCardConfig(allData),
     onSubmit: async (formData, setFormData) => {
@@ -132,17 +132,17 @@ const LibraryCard = (props) => {
         return false;
       }
 
- 
+
       if (!formData.card_number) {
         const cardNumber = await handleAutoConfig(setFormData);
         if (!cardNumber) return false;
       }
 
- 
+
       formData.isbn_code = generateDefaultISBN({ id: formData.card_number });
 
       try {
- 
+
         const response = await DataApi.createLibraryCard(formData);
 
         if (!response?.data?.success || !response.data.data) {
@@ -152,10 +152,10 @@ const LibraryCard = (props) => {
 
         const newCard = response.data.data;
 
- 
+
         handleModalOpen(newCard);
 
- 
+
         if (setFormData) setFormData({});
 
         return true;

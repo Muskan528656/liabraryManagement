@@ -9,7 +9,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
- 
+
 async function findAll() {
   try {
     if (!this.schema) {
@@ -24,7 +24,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -42,14 +42,15 @@ async function findById(id) {
   }
 }
 
- 
+
 async function create(companyData, userId) {
+  console.log("Comapny data->>>", companyData)
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
- 
+
     if (!companyData.name) {
       throw new Error("Company name is required");
     }
@@ -60,10 +61,10 @@ async function create(companyData, userId) {
     const query = `INSERT INTO public.company 
                    (name, tenantcode, userlicenses, isactive, systememail, adminemail, 
                     logourl, sidebarbgurl, sourceschema, city, street, pincode, state, 
-                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency , country_code) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19 , $20) 
                    RETURNING *`;
-    
+
     const values = [
       companyData.name,
       companyData.tenantcode,
@@ -84,6 +85,7 @@ async function create(companyData, userId) {
       companyData.is_external !== undefined ? companyData.is_external : false,
       companyData.has_wallet !== undefined ? companyData.has_wallet : false,
       companyData.currency || null,
+      companyData.country_code
     ];
 
     const result = await sql.query(query, values);
@@ -97,7 +99,6 @@ async function create(companyData, userId) {
   }
 }
 
- 
 async function updateById(id, companyData, userId) {
   try {
     if (!this.schema) {
@@ -115,31 +116,33 @@ async function updateById(id, companyData, userId) {
                        sourceschema = $10, city = $11, street = $12, pincode = $13, 
                        state = $14, country = $15, platform_name = $16, 
                        platform_api_endpoint = $17, is_external = $18, has_wallet = $19,
-                       currency = $20
+                       currency = $20, country_code = $21, time_zone = $22
                    WHERE id = $1 
                    RETURNING *`;
-    
+
     const values = [
       id,
-      companyData.name !== undefined ? companyData.name : currentCompany.name,
-      companyData.tenantcode !== undefined ? companyData.tenantcode : currentCompany.tenantcode,
-      companyData.userlicenses !== undefined ? companyData.userlicenses : currentCompany.userlicenses,
-      companyData.isactive !== undefined ? companyData.isactive : currentCompany.isactive,
-      companyData.systememail !== undefined ? companyData.systememail : currentCompany.systememail,
-      companyData.adminemail !== undefined ? companyData.adminemail : currentCompany.adminemail,
-      companyData.logourl !== undefined ? companyData.logourl : currentCompany.logourl,
-      companyData.sidebarbgurl !== undefined ? companyData.sidebarbgurl : currentCompany.sidebarbgurl,
-      companyData.sourceschema !== undefined ? companyData.sourceschema : currentCompany.sourceschema,
-      companyData.city !== undefined ? companyData.city : currentCompany.city,
-      companyData.street !== undefined ? companyData.street : currentCompany.street,
-      companyData.pincode !== undefined ? companyData.pincode : currentCompany.pincode,
-      companyData.state !== undefined ? companyData.state : currentCompany.state,
-      companyData.country !== undefined ? companyData.country : currentCompany.country,
-      companyData.platform_name !== undefined ? companyData.platform_name : currentCompany.platform_name,
-      companyData.platform_api_endpoint !== undefined ? companyData.platform_api_endpoint : currentCompany.platform_api_endpoint,
-      companyData.is_external !== undefined ? companyData.is_external : currentCompany.is_external,
-      companyData.has_wallet !== undefined ? companyData.has_wallet : currentCompany.has_wallet,
-      companyData.currency !== undefined ? companyData.currency : currentCompany.currency,
+      companyData.name ?? currentCompany.name,
+      companyData.tenantcode ?? currentCompany.tenantcode,
+      companyData.userlicenses ?? currentCompany.userlicenses,
+      companyData.isactive ?? currentCompany.isactive,
+      companyData.systememail ?? currentCompany.systememail,
+      companyData.adminemail ?? currentCompany.adminemail,
+      companyData.logourl ?? currentCompany.logourl,
+      companyData.sidebarbgurl ?? currentCompany.sidebarbgurl,
+      companyData.sourceschema ?? currentCompany.sourceschema,
+      companyData.city ?? currentCompany.city,
+      companyData.street ?? currentCompany.street,
+      companyData.pincode ?? currentCompany.pincode,
+      companyData.state ?? currentCompany.state,
+      companyData.country ?? currentCompany.country,
+      companyData.platform_name ?? currentCompany.platform_name,
+      companyData.platform_api_endpoint ?? currentCompany.platform_api_endpoint,
+      companyData.is_external ?? currentCompany.is_external,
+      companyData.has_wallet ?? currentCompany.has_wallet,
+      companyData.currency ?? currentCompany.currency,
+      companyData.country_code ?? currentCompany.country_code,
+      companyData.time_zone ?? currentCompany.time_zone
     ];
 
     const result = await sql.query(query, values);
@@ -147,13 +150,15 @@ async function updateById(id, companyData, userId) {
       return result.rows[0];
     }
     return null;
+
   } catch (error) {
     console.error("Error in updateById:", error);
     throw error;
   }
 }
 
- 
+
+
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -171,7 +176,7 @@ async function deleteById(id) {
   }
 }
 
- 
+
 async function findByTenantCode(tenantCode) {
   try {
     if (!this.schema) {
@@ -186,7 +191,7 @@ async function findByTenantCode(tenantCode) {
   }
 }
 
- 
+
 async function findByName(name, excludeId = null) {
   try {
     if (!this.schema) {
@@ -208,7 +213,7 @@ async function findByName(name, excludeId = null) {
   }
 }
 
- 
+
 async function findActive() {
   try {
     if (!this.schema) {
@@ -223,7 +228,7 @@ async function findActive() {
   }
 }
 
- 
+
 async function isTenantCodeExists(tenantCode, excludeId = null) {
   try {
     if (!this.schema) {
@@ -245,7 +250,7 @@ async function isTenantCodeExists(tenantCode, excludeId = null) {
   }
 }
 
- 
+
 async function findWithWallet() {
   try {
     if (!this.schema) {
@@ -260,7 +265,7 @@ async function findWithWallet() {
   }
 }
 
- 
+
 async function findExternal() {
   try {
     if (!this.schema) {

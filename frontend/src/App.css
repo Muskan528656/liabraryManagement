@@ -1918,8 +1918,3 @@ textarea.form-control[required] {
   transition: transform 0.3s ease;
   cursor: pointer;
 }
-
-.table-user-image:hover,
-.table-user-placeholder:hover {
-  transform: scale(2.2);
-}

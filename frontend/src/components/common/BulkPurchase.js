@@ -1258,9 +1258,9 @@ const BulkPurchasePage = () => {
     };
 
     return (
-        <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1, border: "1px solid red" }} >
+        <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1, }} >
             {/* Stats Cards Row */}
-            <Row className="mb-4" style={{ border: '1px solid green' }}>
+            <Row className="mb-4">
                 {/* Books Issued */}
                 <Col md={4}>
                     <Card style={{
@@ -1306,10 +1306,10 @@ const BulkPurchasePage = () => {
             </Row>
 
             {/* Main Card with Tabs */}
-            <Row style={{ border: '1px solid yellow' }}>
+            <Row >
                 <Col lg={12}>
                     <Card className="shadow-sm border-0" style={{ minHeight: '600px', }}>
-                        <Card.Header className="bg-white border-bottom-0 py-3" style={{ border: "8px solid blue" }}>
+                        <Card.Header className="bg-white border-bottom-0 py-3" >
                             <Tabs
                                 activeKey={activeTab}
                                 onSelect={(k) => setActiveTab(k)}

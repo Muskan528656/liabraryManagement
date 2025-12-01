@@ -38,12 +38,12 @@ const BookSubmit = () => {
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
- 
+
     useEffect(() => {
         fetchAllIssuedBooks();
     }, []);
 
- 
+
     const fetchAllIssuedBooks = async () => {
         try {
             setLoading(true);
@@ -69,7 +69,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     useEffect(() => {
         if (bookIssues && bookIssues.length > 0) {
             setDisplayedIssuedBooks(bookIssues);
@@ -96,7 +96,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const handleNameClick = (userId, userName, issueData, e) => {
         if (e) {
             e.preventDefault();
@@ -121,7 +121,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     useEffect(() => {
         if (activeTab === "submitted") {
             fetchSubmittedBooks();
@@ -152,7 +152,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const performSearch = async (value, mode = null) => {
         const searchType = mode || searchMode;
         console.log("Performing search with:", value, "mode:", searchType);
@@ -175,7 +175,7 @@ const BookSubmit = () => {
             setLoading(true);
 
             if (searchType === "card") {
- 
+
                 const cardResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(value.trim().toUpperCase())}`, "GET");
                 if (!cardResp.ok) {
                     const err = await cardResp.json().catch(() => ({}));
@@ -191,7 +191,7 @@ const BookSubmit = () => {
                 const cardData = await cardResp.json();
                 setLibraryCard(cardData);
 
- 
+
                 const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/card/${cardData.id}`, "GET");
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
@@ -215,7 +215,7 @@ const BookSubmit = () => {
                 setBookIssues([]);
 
             } else {
- 
+
                 const bookResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(value.trim())}`, "GET");
                 if (!bookResp.ok) {
                     const err = await bookResp.json().catch(() => ({}));
@@ -230,7 +230,7 @@ const BookSubmit = () => {
                 const bookData = await bookResp.json();
                 setBook(bookData);
 
- 
+
                 const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/book/${bookData.id}`, "GET");
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
@@ -255,7 +255,7 @@ const BookSubmit = () => {
                 const activeIssue = issues[0];
                 setIssue(activeIssue);
 
- 
+
                 const penaltyResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/penalty/${activeIssue.id}`, "GET");
                 if (penaltyResp.ok) {
                     const penaltyData = await penaltyResp.json();
@@ -270,7 +270,7 @@ const BookSubmit = () => {
                     setPenalty({ penalty: 0, daysOverdue: 0 });
                 }
 
- 
+
                 setLibraryCard(null);
                 setCardIssues([]);
             }
@@ -298,7 +298,7 @@ const BookSubmit = () => {
         const value = e.target.value;
         setIsbn(value);
 
- 
+
         if (value.trim().length >= 3) {
             if (isbnInputRef.current?.timer) {
                 clearTimeout(isbnInputRef.current.timer);
@@ -322,7 +322,7 @@ const BookSubmit = () => {
         const value = e.target.value;
         setCardNumber(value);
 
- 
+
         if (value.trim().length >= 3) {
             if (cardInputRef.current?.timer) {
                 clearTimeout(cardInputRef.current.timer);
@@ -364,7 +364,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const handleClearSearch = () => {
         if (searchMode === "isbn") {
             if (isbnInputRef.current?.timer) {
@@ -389,12 +389,12 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const handleSearchModeChange = (e) => {
         const newMode = e.target.value;
         setSearchMode(newMode);
 
- 
+
         setIsbn("");
         setCardNumber("");
         setBook(null);
@@ -403,7 +403,7 @@ const BookSubmit = () => {
         setCardIssues([]);
         setDisplayedIssuedBooks(allIssuedBooks);
 
- 
+
         setTimeout(() => {
             if (newMode === "isbn") {
                 isbnInputRef.current?.focus();
@@ -413,13 +413,13 @@ const BookSubmit = () => {
         }, 100);
     };
 
- 
+
     const handleScanButtonClick = () => {
-        setScanMethod(searchMode); // Use current search mode
+        setScanMethod(searchMode);
         setShowScanModal(true);
     };
 
- 
+
     const handleScanSubmit = async () => {
         const value = searchMode === "isbn" ? isbn : cardNumber;
         if (value.trim()) {
@@ -428,7 +428,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const handleScanInputChange = (e) => {
         const value = e.target.value;
         if (searchMode === "isbn") {
@@ -437,16 +437,16 @@ const BookSubmit = () => {
             setCardNumber(value);
         }
 
- 
-        if (value.length >= 8) { // Typical barcode length
- 
+
+        if (value.length >= 8) {
+
             setTimeout(() => {
                 handleScanSubmit();
             }, 100);
         }
     };
 
- 
+
     const handleScanInputKeyDown = async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -493,16 +493,16 @@ const BookSubmit = () => {
                     message: `Book submitted successfully for ${selectedIssue.issued_to_name || selectedIssue.student_name || selectedIssue.issued_to}`
                 });
 
- 
+
                 setBookIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setCardIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setAllIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
                 setDisplayedIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
 
- 
+
                 handleModalClose();
 
- 
+
                 if (bookIssues.length === 1 && cardIssues.length === 0) {
                     setIsbn("");
                     setBook(null);
@@ -528,7 +528,7 @@ const BookSubmit = () => {
         }
     };
 
- 
+
     const filteredIssuedBooks = displayedIssuedBooks.filter(issue => {
         if (!searchTerm) return true;
         const query = searchTerm.toLowerCase();
@@ -616,13 +616,17 @@ const BookSubmit = () => {
             label: "Issued To",
             width: 200,
             render: (value, record) => {
-                const userId = record.user_id || record.student_id;
-                const displayName = value || record.student_name || record.issued_to || "N/A";
+                const userId = record.issued_to;
+                const displayName = `${record.first_name || ""} ${record.last_name || ""}`.trim() || "N/A";
+
                 if (userId) {
                     return (
                         <a
-                            href={`/user/${userId}`}
-                            onClick={(e) => handleNameClick(userId, displayName, record, e)}
+                            href={`/librarycard/${userId}`}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleNameClick(userId, displayName, record, e);
+                            }}
                             onContextMenu={(e) => {
                                 e.preventDefault();
                                 handleNameClick(userId, displayName, record, { ...e, button: 2 });
@@ -633,22 +637,21 @@ const BookSubmit = () => {
                                 fontWeight: "500",
                                 cursor: "pointer"
                             }}
-                            onMouseEnter={(e) => {
-                                e.target.style.textDecoration = "underline";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.textDecoration = "none";
-                            }}
+                            onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+                            onMouseLeave={(e) => e.target.style.textDecoration = "none"}
                             title="Click to view user details (Right-click to open in new tab)"
                         >
-                            <i className="fa-solid fa-user me-1 text-primary"></i>
+
                             {displayName}
                         </a>
                     );
                 }
+
                 return displayName;
             }
-        },
+        }
+
+        ,
         {
             field: "card_number",
             label: "Card No",
@@ -694,7 +697,7 @@ const BookSubmit = () => {
         }
     ];
 
- 
+
     const submittedBooksColumns = [
         {
             field: "book_title",
@@ -1105,7 +1108,7 @@ const BookSubmit = () => {
                                         </Col>
 
                                         <Col lg={9} md={12}>
-                                            {/* ✅ All Issued Books Card */}
+
                                             <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
                                                     background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
@@ -1127,23 +1130,7 @@ const BookSubmit = () => {
                                                             </h5>
                                                         </Col>
                                                         <Col xs="auto">
-                                                            {/* <InputGroup style={{ maxWidth: "300px" }}>
-                                                                <InputGroup.Text style={{ backgroundColor: "#fff", border: "2px solid #8b5cf6", borderRight: "none" }}>
-                                                                    <i className="fa-solid fa-search" style={{ color: "#8b5cf6" }}></i>
-                                                                </InputGroup.Text>
-                                                                <Form.Control
-                                                                    type="text"
-                                                                    placeholder="Search by title, ISBN, name..."
-                                                                    value={searchTerm}
-                                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                                    style={{ border: "2px solid #8b5cf6", borderRadius: "8px" }}
-                                                                />
-                                                                {searchTerm && (
-                                                                    <Button variant="outline-secondary" onClick={() => setSearchTerm("")} style={{ border: "2px solid #8b5cf6" }}>
-                                                                        <i className="fa-solid fa-times"></i>
-                                                                    </Button>
-                                                                )}
-                                                            </InputGroup> */}
+
 
 
                                                             <InputGroup style={{ maxWidth: "250px" }}>

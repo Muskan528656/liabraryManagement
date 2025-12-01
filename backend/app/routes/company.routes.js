@@ -22,7 +22,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -34,7 +34,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -49,7 +49,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/name/:name", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -65,7 +65,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
@@ -85,7 +85,7 @@ module.exports = (app) => {
 
         Company.init(req.userinfo.tenantcode);
 
- 
+
         const existingCompany = await Company.findByName(req.body.name);
         if (existingCompany) {
           return res
@@ -94,6 +94,7 @@ module.exports = (app) => {
         }
 
         const userId = req.user?.id || null;
+        console.log("req.bodyreq.bodyreq.body", req.body)
         const company = await Company.create(req.body, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to create company" });
@@ -106,7 +107,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
@@ -126,13 +127,13 @@ module.exports = (app) => {
 
         Company.init(req.userinfo.tenantcode);
 
- 
+
         const existingCompany = await Company.findById(req.params.id);
         if (!existingCompany) {
           return res.status(404).json({ errors: "Company not found" });
         }
 
- 
+
         const duplicateCompany = await Company.findByName(
           req.body.name,
           req.params.id
@@ -143,7 +144,7 @@ module.exports = (app) => {
             .json({ errors: "Company with this name already exists" });
         }
 
-        const userId = req.user?.id || null;
+        const userId = req.userinfo?.id || null;
         const company = await Company.updateById(req.params.id, req.body, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to update company" });
@@ -156,7 +157,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
@@ -171,5 +172,5 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL+ "/api/company", router);
+  app.use(process.env.BASE_API_URL + "/api/company", router);
 };
