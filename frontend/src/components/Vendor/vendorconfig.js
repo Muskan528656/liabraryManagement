@@ -1,4 +1,6 @@
- 
+import { Badge } from "react-bootstrap";
+
+
 export const getVendorConfig = (externalData = {}, props = {}) => {
     const { CityState = [], CityPincode = [] } = externalData;
 
@@ -43,35 +45,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
             },
             {
                 field: "company_name",
@@ -96,38 +70,18 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 field: "status",
                 label: "Status",
+                sortable: true,
                 render: (value) => {
-                    const getBadgeVariant = (status) => {
-                        switch (status) {
-                            case 'active': return 'success';
-                            case 'inactive': return 'secondary';
-                            case 'suspended': return 'warning';
-                            default: return 'secondary';
-                        }
-                    };
-
-                    const getStatusLabel = (status) => {
-                        switch (status) {
-                            case 'active': return 'Active';
-                            case 'inactive': return 'Inactive';
-                            case 'suspended': return 'Suspended';
-                            default: return status;
-                        }
-                    };
-
                     return (
-                        <span
-                            className={`badge bg-${getBadgeVariant(value)}`}
-                            style={{ fontSize: '0.75em' }}
-                        >
-                            {getStatusLabel(value)}
-                        </span>
+                        <Badge bg={value === true || value === "active" ? "success" : "secondary"}>
+                            {value === true || value === "active" ? "Active" : "Inactive"}
+                        </Badge>
                     );
-                },
-            }
+                }
+            },
         ],
         formFields: [
- 
+
             {
                 name: "company_name",
                 label: "Company Name",
@@ -273,7 +227,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 ],
                 defaultValue: "active"
             },
- 
+
             {
                 name: "name",
                 label: "Contact Person Name",

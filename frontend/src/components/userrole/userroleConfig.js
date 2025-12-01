@@ -1,6 +1,7 @@
 import Switch from "@mui/material/Switch";
 import moment from 'moment';
- 
+import { Badge } from "react-bootstrap";
+
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     return {
         moduleName: "user_roles",
@@ -17,19 +18,27 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "role_name",
                 label: "Role Name",
             },
+
             {
                 field: "is_active",
-                label: "Active",
-                render: (value) => (
- 
-                    <Switch checked={value} readOnly />
-                ),
+                label: "Status",
+                sortable: true,
+                render: (value) => {
+                    const statusValue =
+                        value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
+
+                    return (
+                        <Badge bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                            {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
+                        </Badge>
+                    );
+                }
             },
 
             {
                 field: "createddate",
                 label: "Created Date",
- 
+
                 render: (value) => {
                     return moment(value).format('DD/MM/YYYY');
 
@@ -50,7 +59,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             {
                 key: "is_active",
                 label: "Status",
-                type: "badge",
+                type: "toggle",
                 badgeConfig: {
                     true: "success",
                     false: "secondary",
@@ -89,12 +98,12 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             allowDelete: true
         },
 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
 
         customHandlers: {
             beforeSave: (formData, editingItem) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
-
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 const Company = () => {
   const [Company, setCompany] = useState({
     name: "",
@@ -25,6 +25,7 @@ const Company = () => {
     has_wallet: false,
     currency: "",
     time_zone: "",
+    country_code: "",
   });
 
   const [showAlert, setShowAlert] = useState(false);
@@ -132,16 +133,16 @@ const Company = () => {
                 </h5>
                 {!isEditingCompany ? (
                   <button
- 
+
                     className="custom-btn-primary"
                     onClick={handleCompanyEdit}
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Company
@@ -193,7 +194,7 @@ const Company = () => {
                               handleCompanyChange("name", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -216,7 +217,7 @@ const Company = () => {
                               handleCompanyChange("tenantcode", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -239,7 +240,7 @@ const Company = () => {
                               handleCompanyChange("userlicenses", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -262,7 +263,7 @@ const Company = () => {
                               handleCompanyChange("systememail", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -285,7 +286,7 @@ const Company = () => {
                               handleCompanyChange("adminemail", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -297,7 +298,7 @@ const Company = () => {
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
- 
+
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -333,7 +334,7 @@ const Company = () => {
                               handleCompanyChange("currency", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -356,7 +357,7 @@ const Company = () => {
                               handleCompanyChange("time_zone", e.target.value)
                             }
                             style={{
- 
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -451,11 +452,35 @@ const Company = () => {
                           handleCompanyChange("country", e.target.value)
                         }
                         style={{
- 
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Country Code</Form.Label>
+                      <Form.Select
+                        value={isEditingCompany ? tempCompany.country_code : (Company.country_code || "")}
+                        onChange={(e) =>
+                          isEditingCompany && handleCompanyChange("country_code", e.target.value)
+                        }
+                        disabled={!isEditingCompany}
+                        style={{
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
+                        }}
+                      >
+                        <option value="">Select Country Code</option>
+
+                        {COUNTRY_CODES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.country_code} — {c.country}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -472,7 +497,7 @@ const Company = () => {
                           handleCompanyChange("state", e.target.value)
                         }
                         style={{
- 
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -491,7 +516,7 @@ const Company = () => {
                           handleCompanyChange("city", e.target.value)
                         }
                         style={{
- 
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -512,7 +537,7 @@ const Company = () => {
                           handleCompanyChange("pincode", e.target.value)
                         }
                         style={{
- 
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}

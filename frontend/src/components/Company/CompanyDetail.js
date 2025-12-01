@@ -1,6 +1,6 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
-import CountryCode from '../../constants/CountryCode.json';
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const CompanyDetail = () => {
   const fields = {
@@ -33,7 +33,7 @@ const CompanyDetail = () => {
         key: "country_code",
         label: "Country Code",
         type: "select",
-        options: CountryCode.map(item => ({
+        options: COUNTRY_CODES.map(item => ({
           id: item.country_code,
           name: `${item.country} (${item.country_code})`
         }))
@@ -60,9 +60,9 @@ const CompanyDetail = () => {
         key: "country_code",
         label: "Country Code",
         type: "select",
-        options: CountryCode.map(item => ({
-          id: item.country_code,
-          name: `${item.country} (${item.country_code})`
+        options: COUNTRY_CODES.map(item => ({
+          id: item.value,
+          name: `${item.label} (${item.value})`
         }))
       },
     ],

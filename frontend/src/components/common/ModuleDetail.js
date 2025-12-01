@@ -31,8 +31,6 @@ const LOOKUP_ENDPOINT_MAP = {
   vendors: "vendor",
   vendor: "vendor",
   roles: "user-role",
-  "user-role": "user-role",
-  "userroles": "user-role",
   modules: "module",
   module: "module",
   departments: "department",
@@ -41,7 +39,6 @@ const LOOKUP_ENDPOINT_MAP = {
   library: "library",
   subscriptions: "subscriptions",
   subscription: "subscriptions",
-
 };
 
 const normalizeListResponse = (payload) => {
@@ -471,21 +468,15 @@ const ModuleDetail = ({
 
     return value ?? "—";
   };
+
   const getSelectOptions = useCallback(
     (field) => {
-      if (!field) return [];
-
-
-      if (field.type === "toggle-view") return [];
-
-
-      if (field.type !== "select") return [];
-
+      if (!field || field.type !== "select" || !field.options) {
+        return [];
+      }
       if (Array.isArray(field.options)) {
         return field.options;
       }
-
-
       return (
         externalData?.[field.options] ||
         lookupOptions?.[field.options] ||
@@ -530,6 +521,16 @@ const ModuleDetail = ({
       "type:",
       field.type
     );
+
+
+    if (field.type === "toggle") {
+      const boolValue = Boolean(value);
+      return (
+        <Badge bg={boolValue ? "success" : "danger"}>
+          {boolValue ? "Active" : "Inactive"}
+        </Badge>
+      );
+    }
 
     if (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id')) {
       const userId = value;
@@ -618,7 +619,11 @@ const ModuleDetail = ({
       onEdit(data);
     } else {
       setIsEditing(true);
-      setTempData({ ...data });
+      setTempData({
+        ...data,
+
+        isactive: data.isactive !== undefined ? Boolean(data.isactive) : true
+      });
     }
   };
 
@@ -682,6 +687,11 @@ const ModuleDetail = ({
     const value = currentData[field.key];
 
     if (isEditing) {
+
+      if (field.type === "toggle") {
+        return Boolean(value);
+      }
+
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
@@ -731,26 +741,6 @@ const ModuleDetail = ({
     }
   };
 
-  const confirmDeleteRecord = async () => {
-    try {
-      setDeleteLoading(true);
-      const api = new DataApi(moduleApi);
-      await api.delete(id);
-      PubSub.publish("RECORD_SAVED_TOAST", {
-        title: "Success",
-        message: `${moduleLabel} deleted successfully`,
-      });
-      navigate(`/${moduleName}`);
-    } catch (error) {
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: `Failed to delete ${moduleLabel} ${error.message}`,
-      });
-    } finally {
-      setDeleteLoading(false);
-      setShowDeleteModal(false);
-    }
-  };
   const handleBack = () => {
     navigate(`/${moduleName}`);
   };
@@ -816,8 +806,80 @@ const ModuleDetail = ({
 
   const renderField = (field, index, currentData) => {
     const isNonEditableField = nonEditableFields.includes(field.key);
-
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
+
+
+    if (field.type === "toggle") {
+      console.log("Toggle Field Debug:", {
+        fieldName: field.key,
+        fieldLabel: field.label,
+        currentValue: currentData ? currentData[field.key] : "undefined",
+        isEditing: isEditing,
+        currentData: currentData
+      });
+    }
+
+
+    if (field.type === "toggle") {
+      const value = currentData ? Boolean(currentData[field.key]) : false;
+
+      return (
+        <Form.Group key={index} className="mb-3">
+          <Form.Label className="fw-semibold d-flex justify-content-between align-items-center">
+            <span>{field.label}</span>
+            {!isEditing && (
+              <span className={`badge ${value ? 'bg-success' : 'bg-danger'}`}>
+                {value ? 'Active' : 'Inactive'}
+              </span>
+            )}
+          </Form.Label>
+
+          {isEditing && !isNonEditableField ? (
+            <div
+              className="custom-toggle"
+              onClick={() => handleFieldChange(field.key, !value)}
+              style={{
+                width: "60px",
+                height: "30px",
+                borderRadius: "20px",
+                background: value ? "#6f42c1" : "#d1d5db",
+                position: "relative",
+                cursor: "pointer",
+                transition: "0.3s",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  background: "#fff",
+                  borderRadius: "50%",
+                  position: "absolute",
+                  top: "3px",
+                  left: value ? "33px" : "3px",
+                  transition: "0.3s",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                }}
+              ></div>
+            </div>
+          ) : (
+            <Form.Control
+              type="text"
+              readOnly
+              value={value ? "Active" : "Inactive"}
+              style={{
+                pointerEvents: "none",
+                opacity: 0.9,
+                backgroundColor: value ? '#d4edda' : '#f8d7da',
+                color: value ? '#155724' : '#721c24',
+                border: value ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
+              }}
+            />
+          )}
+        </Form.Group>
+      );
+    }
+
 
     if ((!isEditing || shouldShowAsReadOnly) && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
       const userId = currentData ? currentData[field.key] : null;

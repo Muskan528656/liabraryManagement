@@ -12,7 +12,7 @@ export const getSubscriptionConfig = () => {
         moduleLabel: "Subscription",
         apiEndpoint: "subscriptions",
         initialFormData: {
-            renewal : "",
+            renewal: "",
             plan_name: "",
             start_date: "",
             end_date: "",
@@ -69,7 +69,7 @@ export const getSubscriptionConfig = () => {
                 colSize: 6,
                 helpText: "Keep empty for never ending plans"
             },
-             {
+            {
                 name: "renewal",
                 label: "Renewal",
                 type: "text",
@@ -139,7 +139,7 @@ export const getSubscriptionConfig = () => {
                 return true;
             },
             onDataLoad: (data) => {
-           
+
                 if (Array.isArray(data)) {
                     data.forEach(item => {
                         if (item.hasOwnProperty('is_active')) {
@@ -147,7 +147,7 @@ export const getSubscriptionConfig = () => {
                         }
                     });
                 }
-              
+
                 else if (data && typeof data === "object") {
                     if (data.hasOwnProperty('is_active')) {
                         data.status = data.is_active ? "active" : "inactive";

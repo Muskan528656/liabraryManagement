@@ -8,13 +8,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { NameInitialsAvatar } from "react-name-initials-avatar"; // npm install react-name-initials-avatar --force
 import jwt_decode from "jwt-decode";
-import CountryCode from "../constants/CountryCode.json";
 import DataApi from "../api/dataApi";
 import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import axios from "axios";
-import * as constants from "../constants/CONSTANT";
-
+import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
 const EditProfile = ({ userId }) => {
   const fileInputRef = useRef();
   const [profile, setProfile] = useState({
@@ -268,7 +266,7 @@ const EditProfile = ({ userId }) => {
 
  
           const uploadResponse = await axios.post(
-            `${constants.API_BASE_URL}/api/user/${profile.id}/upload-image`,
+            `${COUNTRY_CODES.API_BASE_URL}/api/user/${profile.id}/upload-image`,
             formData,
             {
               headers: {
@@ -712,7 +710,7 @@ const EditProfile = ({ userId }) => {
                           onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
                           onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
                         >
-                          {CountryCode.map((country, index) => (
+                          {COUNTRY_CODES.map((country, index) => (
                             <option key={index} value={country.country_code}>
                               {country.country} ({country.country_code})
                             </option>

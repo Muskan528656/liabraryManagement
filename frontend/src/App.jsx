@@ -1,4 +1,4 @@
- 
+
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-date-range/dist/styles.css";
@@ -8,31 +8,30 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
 import Home from "./components/Home";
 import React, { useEffect, useState } from "react";
-import { UserAdd, UserList, UserView } from "./components/user";
 import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 import Main from "./components/layout/Main";
 import EditProfile from "./components/EditProfile";
 import Books from "./components/books/Books";
 import BookDetail from "./components/books/BookDetail";
- 
+
 import Author from "./components/author/Author";
- 
+
 import Category from "./components/category/Category";
- 
+
 import Vendor from "./components/Vendor/Vendor";
 import VendorDetail from "./components/Vendor/VendorDetail";
- 
+
 import Purchase from "./components/purchase/Purchase";
 import User from "./components/user/User";
 import UserDetail from "./components/user/UserDetail";
 import LibraryCard from "./components/librarycard/LibraryCard";
- 
+
 import BookIssue from "./components/bookissue/BookIssue";
 import BookSubmit from "./components/booksubmit/BookSubmit";
 import LibrarySettings from "./components/librarysettings/LibrarySettings";
- 
- 
+
+
 import ToastManager from "./components/common/ToastManager";
 import { v4 as uuidv4 } from "uuid";
 import Company from "./components/Company/Company";
@@ -50,7 +49,7 @@ import AutoConfigDetail from "./components/autoconfig/AutoConfigDetail";
 import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
- 
+
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
   const [userInfo, setUserInfo] = useState(null); // null = not yet loaded
@@ -95,20 +94,20 @@ function App() {
           setConnectedSocket(socket);
         });
 
- 
- 
 
- 
 
- 
 
- 
- 
- 
 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
 
         setConnectedSocket(socket);
 
@@ -132,7 +131,7 @@ function App() {
     return <div>Loading...</div>;
   }
 
- 
+
   if (userInfo === false) {
     return (
       <>
@@ -188,11 +187,7 @@ function App() {
             {/* <Route path="requestbook" element={<RequestBook />} /> */}
             <Route path="librarycardtype" element={<LibrarySettings />} />
             <Route path="booksubmit" element={<BookSubmit />} />
-            <Route path="users" element={<UserList />} />
-            <Route path="users/e" element={<UserAdd />} />
-            <Route path="users/:id/e" element={<UserAdd />} />
-            <Route path="users/:id" element={<UserView />} />
-            {/* <Route path="usertracking" element={<UserTracking />} /> */}
+        
             <Route path="myprofile" element={<EditProfile />} />
             <Route path="Company" element={<Company />} />
             <Route path="/company/:id" element={<CompanyDetail />} />
