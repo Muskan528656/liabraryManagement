@@ -112,9 +112,9 @@ const BookSubmit = () => {
             }
 
             if (e && (e.button === 2 || e.ctrlKey || e.metaKey)) {
-                window.open(`/user/${userId}`, '_blank');
+                window.open(`/librarycard/${userId}`, '_blank');
             } else {
-                navigate(`/user/${userId}`, {
+                navigate(`/librarycard/${userId}`, {
                     state: { userName: userName, ...issueData },
                 });
             }
@@ -761,14 +761,14 @@ const BookSubmit = () => {
                 if (userId) {
                     return (
                         <a
-                            href={`/user/${userId}`}
+                            href={`/librarycard/${userId}`}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 try {
                                     localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
                                 } catch (err) { }
-                                navigate(`/user/${userId}`, { state: record });
+                                navigate(`/librarycard/${userId}`, { state: record });
                             }}
                             onContextMenu={(e) => {
                                 e.preventDefault();
@@ -776,7 +776,7 @@ const BookSubmit = () => {
                                 try {
                                     localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
                                 } catch (err) { }
-                                window.open(`/user/${userId}`, '_blank');
+                                window.open(`/librarycard/${userId}`, '_blank');
                             }}
                             style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
                             onMouseEnter={(e) => {

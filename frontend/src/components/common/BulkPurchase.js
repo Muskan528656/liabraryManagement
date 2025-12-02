@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
-    Tabs, Tab, Alert, Modal
+    Tabs, Tab, Alert, Modal, Badge,
+    Nav
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -662,7 +663,7 @@ const BulkPurchasePage = () => {
         if (activeTab === "single") {
             const vendorId = selectedOption ? selectedOption.value : "";
 
-            // Only update rows that are currently empty (no vendor selected)
+
             const updatedRows = multiInsertRows.map(row => {
                 if (!row.vendor_id || row.vendor_id === "") {
                     return {
@@ -670,7 +671,7 @@ const BulkPurchasePage = () => {
                         vendor_id: vendorId
                     };
                 }
-                // If vendor is already selected in a row, keep it as is
+
                 return row;
             });
 
@@ -888,9 +889,9 @@ const BulkPurchasePage = () => {
                 return (
                     <>
                         <Row className="align-items-center mb-4">
-                            <Col md={6}>
+                            <Col lg={8}>
                                 <Form.Group>
-                                    <Form.Label className="fw-bold">
+                                    <Form.Label className="fw-bold mb-2">
                                         <i className="fa-solid fa-user-tie me-2 text-primary"></i>
                                         Select Default Vendor <span className="text-danger">*</span>
                                     </Form.Label>
@@ -898,7 +899,7 @@ const BulkPurchasePage = () => {
                                         value={selectedVendor}
                                         onChange={handleVendorChange}
                                         options={vendorOptions}
-                                        placeholder="Choose default vendor for new rows..."
+                                        placeholder="Choose default vendor for all rows..."
                                         isClearable
                                         isSearchable
                                         menuPlacement="auto"
@@ -925,9 +926,7 @@ const BulkPurchasePage = () => {
                                         }}
                                         menuPortalTarget={document.body}
                                     />
-                                    <Form.Text className="text-muted">
-                                        Selected vendor will be applied only to empty vendor rows
-                                    </Form.Text>
+
                                 </Form.Group>
                             </Col>
 
@@ -956,280 +955,314 @@ const BulkPurchasePage = () => {
     const renderPurchaseEntries = (tabType) => {
         return (
             <>
-                <div className="mb-3 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 className="mb-1">
-                            <i className="fa-solid fa-book me-2 text-success"></i>
-                            {tabType === "single" ? "Add Books for Purchase" : "Purchase Entries"}
-                        </h5>
-                        {tabType === "single" && selectedVendor && (
-                            <small className="text-muted">
-                                Default vendor: <strong>{selectedVendor.label}</strong>
-                                <br />
-                                <small className="text-info">
-                                    <i className="fa-solid fa-info-circle me-1"></i>
-                                    Default vendor will be applied to new rows and rows with empty vendor
-                                </small>
-                            </small>
-                        )}
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                        <span className="text-muted">
-                            Entries: {multiInsertRows.length}
-                        </span>
-                        <Button
-                            size='sm'
-                            variant={tabType === "single" ? "success" : "info"}
-                            onClick={handleAddBookRow}
-                        >
-                            <i className="fa-solid fa-plus me-1"></i>
-                            {tabType === "single" ? "Add Book" : "Add Entry"}
-                        </Button>
+                {/* Table Header with Add Button */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">
+                        <i className="fa-solid fa-table me-2 text-primary"></i>
+                        Purchase Items ({multiInsertRows.length})
+                    </h6>
+                    <Button
+                        size='sm'
+
+                        onClick={handleAddBookRow}
+                        style={{
+                            color: '#fff',
+                            backgroundColor: 'var(--primary-color, #6f42c1)',
+                            borderColor: 'var(--primary-color, #6f42c1)',
+                            fontWeight: '500'
+                        }}
+                    >
+                        <i className="fa-solid fa-plus me-1"></i>
+                        Add New Row
+                    </Button>
+                </div>
+
+                {/* Table with Horizontal and Vertical Scroll - FIXED */}
+                <div className="border rounded" style={{
+                    maxHeight: 'calc(100vh - 400px)',
+                    overflow: 'auto',
+                    backgroundColor: 'white',
+                    width: '100%'
+                }}>
+                    <div style={{ minWidth: '1200px', width: '100%' }}>
+                        <Table bordered hover className="mb-0" style={{ width: '100%', tableLayout: 'fixed' }}>
+                            <thead style={{
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 10,
+                                backgroundColor: '#f8f9fa'
+                            }}>
+                                <tr>
+                                    <th width="20%" className="border-end p-3">
+                                        <div className="d-flex align-items-center">
+                                            <span>Vendor</span>
+                                            <span className="text-danger ms-1">*</span>
+                                        </div>
+                                    </th>
+                                    <th width="25%" className="border-end p-3">
+                                        <div className="d-flex align-items-center">
+                                            <span>Book</span>
+                                            <span className="text-danger ms-1">*</span>
+                                        </div>
+                                    </th>
+                                    <th width="8%" className="border-end p-3">
+                                        <div className="d-flex align-items-center">
+                                            <span>Qty</span>
+                                            <span className="text-danger ms-1">*</span>
+                                        </div>
+                                    </th>
+                                    <th width="10%" className="border-end p-3">
+                                        <div className="d-flex align-items-center">
+                                            <span>Unit Price</span>
+                                            <span className="text-danger ms-1">*</span>
+                                        </div>
+                                    </th>
+                                    <th width="12%" className="border-end p-3">
+                                        <div>Total Amount</div>
+                                    </th>
+                                    <th width="12%" className="border-end p-3">
+                                        <div>Purchase Date</div>
+                                    </th>
+                                    <th width="15%" className="border-end p-3">
+                                        <div>Notes</div>
+                                    </th>
+                                    <th width="5%" className="text-center p-3">
+                                        <div>Actions</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {multiInsertRows.map((row, index) => (
+                                    <tr key={index} className={index % 2 === 0 ? 'table-row-light' : ''}>
+                                        <td className="border-end p-2" style={{ width: '20%' }}>
+                                            <div className="d-flex gap-1 align-items-center">
+                                                <div className="flex-grow-1">
+                                                    <Select
+                                                        value={getSelectedVendorForRow(index)}
+                                                        onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                        options={vendorOptions}
+                                                        placeholder="Select Vendor"
+                                                        isClearable
+                                                        isSearchable
+                                                        menuPlacement="auto"
+                                                        styles={{
+                                                            control: (base, state) => ({
+                                                                ...base,
+                                                                minHeight: "36px",
+                                                                fontSize: "14px",
+                                                                borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#dee2e6",
+                                                                backgroundColor: row.vendor_id ? "#f8fff9" : "white",
+                                                                "&:hover": {
+                                                                    borderColor: row.vendor_id ? "#28a745" : "#8b5cf6",
+                                                                },
+                                                            }),
+                                                            menu: (base) => ({
+                                                                ...base,
+                                                                zIndex: 9999,
+                                                            })
+                                                        }}
+                                                    />
+                                                </div>
+                                                <Button
+                                                    variant="link"
+                                                    size="sm"
+                                                    onClick={() => setShowAddVendorModal(true)}
+                                                    title="Add New Vendor"
+                                                    className="p-0 text-primary"
+                                                >
+                                                    <i className="fa-solid fa-plus-circle"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '25%' }}>
+                                            <div className="d-flex gap-1 align-items-center">
+                                                <div className="flex-grow-1">
+                                                    <Select
+                                                        value={getSelectedBook(index)}
+                                                        onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                                        options={bookOptions}
+                                                        placeholder="Select Book"
+                                                        isClearable
+                                                        isSearchable
+                                                        menuPlacement="auto"
+                                                        styles={{
+                                                            control: (base, state) => ({
+                                                                ...base,
+                                                                minHeight: "36px",
+                                                                fontSize: "14px",
+                                                                borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#dee2e6",
+                                                                backgroundColor: row.book_id ? "#f8fff9" : "white",
+                                                                "&:hover": {
+                                                                    borderColor: row.book_id ? "#28a745" : "#8b5cf6",
+                                                                },
+                                                            }),
+                                                            menu: (base) => ({
+                                                                ...base,
+                                                                zIndex: 9999,
+                                                            })
+                                                        }}
+                                                    />
+                                                </div>
+                                                <Button
+                                                    variant="link"
+                                                    size="sm"
+                                                    onClick={() => setShowAddBookModal(true)}
+                                                    title="Add New Book"
+                                                    className="p-0 text-success"
+                                                >
+                                                    <i className="fa-solid fa-plus-circle"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '8%' }}>
+                                            <Form.Control
+                                                type="number"
+                                                value={row.quantity}
+                                                onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                                                min="1"
+                                                className="border-0 p-2"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '10%' }}>
+                                            <Form.Control
+                                                type="number"
+                                                value={row.unit_price}
+                                                onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                                                min="0"
+                                                step="0.01"
+                                                className="border-0 p-2"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '12%' }}>
+                                            <div className="bg-light p-2 rounded text-center">
+                                                <span className="fw-semibold text-primary">
+                                                    ₹{((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '12%' }}>
+                                            <Form.Control
+                                                type="date"
+                                                value={row.purchase_date}
+                                                onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                                                className="border-0 p-2"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </td>
+                                        <td className="border-end p-2" style={{ width: '15%' }}>
+                                            <Form.Control
+                                                type="text"
+                                                value={row.notes}
+                                                onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                                                placeholder="Add notes..."
+                                                className="border-0 p-2"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </td>
+                                        <td className="text-center p-2" style={{ width: '5%' }}>
+                                            <Button
+                                                variant="link"
+                                                size="sm"
+                                                onClick={() => handleRemoveRow(index)}
+                                                disabled={multiInsertRows.length === 1}
+                                                title="Remove Row"
+                                                className="p-0 text-danger"
+                                            >
+                                                <i className="fa-solid fa-trash"></i>
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
                     </div>
                 </div>
 
-                <Row className="g-4">
-                    <Col lg={9}>
-                        <div className="table-responsive" style={{ position: 'relative', zIndex: 5, maxHeight: '65vh', overflowY: 'auto' }}>
-                            <Table bordered hover>
-                                <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 6 }}>
-                                    <tr>
-                                        <th width="20%">
-                                            Vendor <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="25%">
-                                            Book <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="8%">
-                                            Qty <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="10%">
-                                            Unit Price <span className="text-danger">*</span>
-                                        </th>
-                                        <th width="12%">
-                                            Total Amount
-                                        </th>
-                                        <th width="12%">
-                                            Purchase Date
-                                        </th>
-                                        <th width="15%">
-                                            Notes
-                                        </th>
-                                        <th width="5%" className="text-center">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {multiInsertRows.map((row, index) => (
-                                        <tr key={index}>
-                                            <td>
-                                                <div className="d-flex gap-1">
-                                                    <div className="flex-grow-1">
-                                                        <Select
-                                                            value={getSelectedVendorForRow(index)}
-                                                            onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
-                                                            options={vendorOptions}
-                                                            placeholder="Select Vendor"
-                                                            isClearable
-                                                            isSearchable
-                                                            menuPlacement="auto"
-                                                            styles={{
-                                                                control: (base, state) => ({
-                                                                    ...base,
-                                                                    minHeight: "38px",
-                                                                    borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#ced4da",
-                                                                    backgroundColor: row.vendor_id ? "#f8fff9" : "white",
-                                                                    "&:hover": {
-                                                                        borderColor: row.vendor_id ? "#28a745" : "#8b5cf6",
-                                                                    },
-                                                                }),
-                                                                menu: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999,
-                                                                    position: 'absolute'
-                                                                }),
-                                                                menuPortal: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999
-                                                                })
-                                                            }}
-                                                            menuPortalTarget={document.body}
-                                                        />
-                                                    </div>
-                                                    <Button
-                                                        variant="outline-primary"
-                                                        size="sm"
-                                                        onClick={() => setShowAddVendorModal(true)}
-                                                        title="Add New Vendor"
-                                                    >
-                                                        <i className="fa-solid fa-plus"></i>
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="d-flex gap-1">
-                                                    <div className="flex-grow-1">
-                                                        <Select
-                                                            value={getSelectedBook(index)}
-                                                            onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
-                                                            options={bookOptions}
-                                                            placeholder="Select Book"
-                                                            isClearable
-                                                            isSearchable
-                                                            menuPlacement="auto"
-                                                            styles={{
-                                                                control: (base, state) => ({
-                                                                    ...base,
-                                                                    minHeight: "38px",
-                                                                    borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#ced4da",
-                                                                    backgroundColor: row.book_id ? "#f8fff9" : "white",
-                                                                    "&:hover": {
-                                                                        borderColor: row.book_id ? "#28a745" : "#8b5cf6",
-                                                                    },
-                                                                }),
-                                                                menu: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999,
-                                                                    position: 'absolute'
-                                                                }),
-                                                                menuPortal: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999
-                                                                })
-                                                            }}
-                                                            menuPortalTarget={document.body}
-                                                        />
-                                                    </div>
-                                                    <Button
-                                                        variant="outline-success"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setShowAddBookModal(true);
-                                                        }}
-                                                        title="Add New Book"
-                                                    >
-                                                        <i className="fa-solid fa-plus"></i>
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="number"
-                                                    value={row.quantity}
-                                                    onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
-                                                    min="1"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="number"
-                                                    value={row.unit_price}
-                                                    onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
-                                                    min="0"
-                                                    step="0.01"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
-                                                    readOnly
-                                                    className="bg-light"
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="date"
-                                                    value={row.purchase_date}
-                                                    onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
-                                                />
-                                            </td>
-                                            <td>
-                                                <Form.Control
-                                                    type="text"
-                                                    value={row.notes}
-                                                    onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
-                                                    placeholder="Notes..."
-                                                />
-                                            </td>
-                                            <td className="text-center">
-                                                <Button
-                                                    variant="outline-danger"
-                                                    size="sm"
-                                                    onClick={() => handleRemoveRow(index)}
-                                                    disabled={multiInsertRows.length === 1}
-                                                    title="Remove Row"
-                                                >
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </div>
+                {/* Purchase Summary Card - Below Table */}
+                <Row className="mt-4">
+                    <Col lg={8}>
+                        {/* Empty column for alignment */}
                     </Col>
-                    <Col lg={3}>
-                        <Card className="shadow-sm" style={{
-                            position: 'sticky',
-                            top: '20px',
-                            height: 'fit-content',
-                            marginBottom: '20px'
+                    <Col lg={4}>
+                        <Card className="shadow-sm border-0" style={{
+                            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                            borderRadius: '12px'
                         }}>
-                            <Card.Body>
-                                <h5 className="fw-bold mb-3">
+                            <Card.Body className="p-4">
+                                <h6 className="fw-bold mb-3 d-flex align-items-center">
                                     <i className="fa-solid fa-clipboard-check me-2 text-primary"></i>
                                     Purchase Summary
-                                </h5>
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span className="text-muted">Entries</span>
-                                    <span className="fw-semibold">{multiInsertRows.length}</span>
+                                </h6>
+
+                                <div className="mb-3">
+                                    <div className="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
+                                        <span className="text-muted">Total Entries</span>
+                                        <Badge bg="primary" pill>{multiInsertRows.length}</Badge>
+                                    </div>
+
+                                    <div className="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
+                                        <span className="text-muted">Vendors</span>
+                                        <div className="d-flex align-items-center">
+                                            <Badge bg={uniqueVendors.length > 1 ? "warning" : "success"} pill>
+                                                {uniqueVendors.length}
+                                            </Badge>
+                                            {uniqueVendors.length > 1 && (
+                                                <i className="fa-solid fa-exclamation-triangle ms-2 text-warning small"
+                                                    title="Multiple vendors selected"></i>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex justify-content-between align-items-center p-2 bg-white rounded">
+                                        <span className="text-muted">Total Books</span>
+                                        <Badge bg="info" pill>{totalBooks}</Badge>
+                                    </div>
                                 </div>
-                                <div className="d-flex justify-content-between mb-2">
-                                    <span className="text-muted">Vendors</span>
-                                    <span className="fw-semibold">
-                                        {uniqueVendors.length}
-                                        {uniqueVendors.length > 1 && (
-                                            <span className="ms-1 text-warning small" title="Multiple vendors selected">
-                                                <i className="fa-solid fa-exclamation-triangle"></i>
-                                            </span>
+
+                                {/* Total Value Section */}
+                                <div className="p-3 rounded mb-3 text-center" style={{
+                                    background: 'linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)',
+                                    color: 'white'
+                                }}>
+                                    <small className="text-white-50 text-uppercase">Total Value</small>
+                                    <div className="h4 mb-0 fw-bold">₹{totalAmount.toFixed(2)}</div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="mt-3">
+                                    <Button
+                                        variant="primary"
+                                        className="w-100 mb-2 py-2 fw-bold"
+                                        onClick={handleSavePurchases}
+                                        disabled={saving || multiInsertRows.length === 0}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)',
+                                            border: 'none'
+                                        }}
+                                    >
+                                        {saving ? (
+                                            <>
+                                                <i className="fa-solid fa-spinner fa-spin me-2"></i>
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fa-solid fa-save me-2"></i>
+                                                Save Purchases
+                                            </>
                                         )}
-                                    </span>
+                                    </Button>
+                                    <Button
+                                        variant="outline-secondary"
+                                        className="w-100 py-2"
+                                        onClick={() => navigate('/purchase')}
+                                    >
+                                        <i className="fa-solid fa-arrow-left me-2"></i>
+                                        Back to List
+                                    </Button>
                                 </div>
-                                <div className="d-flex justify-content-between mb-3">
-                                    <span className="text-muted">Total Books</span>
-                                    <span className="fw-semibold">{totalBooks}</span>
-                                </div>
-                                <div className="p-3 rounded bg-light mb-4">
-                                    <small className="text-muted text-uppercase">Total Value</small>
-                                    <div className="h4 mb-0">₹{totalAmount.toFixed(2)}</div>
-                                </div>
-                                <Button
-                                    variant="primary"
-                                    className="w-100 mb-2"
-                                    onClick={handleSavePurchases}
-                                    disabled={saving || multiInsertRows.length === 0}
-                                >
-                                    {saving ? (
-                                        <>
-                                            <i className="fa-solid fa-spinner fa-spin me-2"></i>
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="fa-solid fa-save me-2"></i>
-                                            Save Purchases
-                                        </>
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline-secondary"
-                                    className="w-100"
-                                    onClick={() => navigate('/purchase')}
-                                >
-                                    Cancel
-                                </Button>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -1239,403 +1272,722 @@ const BulkPurchasePage = () => {
     };
 
     return (
-        <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1, }} >
-            <Row className="mb-4">
-                <Col md={4}>
-                    <Card style={{
-                        background: "#E0F2FF",
-                        color: "#0D6EFD",
-                        borderRadius: "10px"
-                    }}>
-                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
-                            <div>
-                                <p className="mb-1 text-uppercase">Books Issued</p>
-                                <h2 className="mb-0">{stats.issued}</h2>
-                            </div>
-                            <i className="fa-solid fa-book-open fa-3x opacity-50"></i>
-                        </Card.Body>
-                    </Card>
+        <>
+            <Row className="align-items-center">
+                <Col lg={6}>
+                    {/* Left side content - this will be empty or can be used for other content */}
                 </Col>
-                <Col md={4}>
-                    <Card className="shadow-sm bg-success text-white">
-                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
-                            <div>
-                                <p className="mb-1 text-uppercase">Books Purchased</p>
-                                <h2 className="mb-0">{stats.purchased}</h2>
-                            </div>
-                            <i className="fa-solid fa-cart-shopping fa-3x opacity-50"></i>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4}>
-                    <Card className="shadow-sm bg-warning text-dark">
-                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
-                            <div>
-                                <p className="mb-1 text-uppercase">Books Available</p>
-                                <h2 className="mb-0">{stats.available}</h2>
-                            </div>
-                            <i className="fa-solid fa-layer-group fa-3x opacity-50"></i>
-                        </Card.Body>
-                    </Card>
+
+                <Col lg={6}>
+                    <div className="d-flex gap-3 mb-3 justify-content-end">
+                        <Card className="shadow-sm border-0" style={{
+                            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                            borderRadius: "10px",
+                            border: 'none',
+                            width: '220px'
+                        }}>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center">
+                                    <div className="p-2 rounded-circle me-2" style={{
+                                        background: 'rgba(13, 110, 253, 0.15)'
+                                    }}>
+                                        <i className="fa-solid fa-book-open text-primary fa-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p className="mb-0 small text-muted">Issued</p>
+                                        <h5 className="mb-0 fw-bold text-primary">{stats.issued}</h5>
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+
+                        <Card className="shadow-sm border-0" style={{
+                            background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+                            borderRadius: "10px",
+                            border: 'none',
+                            width: '220px'
+                        }}>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center">
+                                    <div className="p-2 rounded-circle me-2" style={{
+                                        background: 'rgba(40, 167, 69, 0.15)'
+                                    }}>
+                                        <i className="fa-solid fa-cart-shopping text-success fa-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p className="mb-0 small text-muted">Purchased</p>
+                                        <h5 className="mb-0 fw-bold text-success">{stats.purchased}</h5>
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+
+                        <Card className="shadow-sm border-0" style={{
+                            background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
+                            borderRadius: "10px",
+                            border: 'none',
+                            width: '220px'
+                        }}>
+                            <Card.Body className="p-3">
+                                <div className="d-flex align-items-center">
+                                    <div className="p-2 rounded-circle me-2" style={{
+                                        background: 'rgba(255, 193, 7, 0.15)'
+                                    }}>
+                                        <i className="fa-solid fa-layer-group text-warning fa-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p className="mb-0 small text-muted">Available</p>
+                                        <h5 className="mb-0 fw-bold text-warning">{stats.available}</h5>
+                                    </div>
+                                </div>
+                            </Card.Body>
+                        </Card>
+                    </div>
                 </Col>
             </Row>
+            <Container fluid className="py-3" style={{
+                minHeight: '100vh',
+                backgroundColor: '#f5f7fb'
+            }}>
+                {/* Header with Stats Cards on Right Side */}
+                <Row className="mb-4">
 
-            <Row >
-                <Col lg={12}>
-                    <Card className="shadow-sm border-0" style={{ minHeight: '600px', }}>
-                        <Card.Header className="bg-white border-bottom-0 py-3" >
-                            <Tabs
-                                activeKey={activeTab}
-                                onSelect={(k) => setActiveTab(k)}
-                                className="border-0"
-                            >
-                                <Tab
-                                    eventKey="single"
-                                    title={
-                                        <span className="d-flex align-items-center">
-                                            <i className="fa-solid fa-user me-2"></i>
-                                            Single Vendor
-                                        </span>
-                                    }
-                                />
-                                <Tab eventKey="import" title="Import File" />
-                            </Tabs>
-                        </Card.Header>
+                    {/* <div className="text-end">
+                        <Badge bg="light" text="dark" className="px-3 py-2 border">
+                            <i className="fa-solid fa-table me-2"></i>
+                            {multiInsertRows.length} Items
+                        </Badge>
+                    </div>
+                    <Col lg={8}>
+                        <div className="mb-3">
+                            <h4 className="fw-bold text-dark mb-1">
+                                <i className="fa-solid fa-cart-plus me-2 text-primary"></i>
+                                Bulk Purchase Entry
+                            </h4>
+                            <p className="text-muted mb-0">
+                                Add multiple book purchases in one go. Start by selecting a vendor or importing from file.
+                            </p>
+                        </div>
+                    </Col> */}
 
-                        <Card.Body className="p-4" style={{ paddingBottom: '30px' }}>
-                            {renderTabContent()}
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+                    {/* Stats Cards on Right Side - Horizontal */}
 
-            <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
-                <Modal.Header closeButton className="border-bottom-0 pb-0">
-                    <Modal.Title className="fw-bold">
-                        <i className="fa-solid fa-user-tie me-2 text-primary"></i>
-                        Add New Vendor
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="pt-0">
-                    <Form>
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Name <span className="text-danger">*</span></Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={vendorFormData.name}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
-                                        placeholder="Enter vendor name"
-                                        required
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Company Name</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={vendorFormData.company_name}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, company_name: e.target.value })}
-                                        placeholder="Enter company name"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Email</Form.Label>
-                                    <Form.Control
-                                        type="email"
-                                        value={vendorFormData.email}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
-                                        placeholder="Enter email address"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Phone</Form.Label>
-                                    <Form.Control
-                                        type="tel"
-                                        value={vendorFormData.phone}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
-                                        placeholder="Enter phone number"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={12}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Address</Form.Label>
-                                    <Form.Control
-                                        as="textarea"
-                                        rows={3}
-                                        value={vendorFormData.address}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, address: e.target.value })}
-                                        placeholder="Enter address"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>City</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={vendorFormData.city}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, city: e.target.value })}
-                                        placeholder="Enter city"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>State</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={vendorFormData.state}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, state: e.target.value })}
-                                        placeholder="Enter state"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={4}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Pincode</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={vendorFormData.pincode}
-                                        onChange={(e) => setVendorFormData({ ...vendorFormData, pincode: e.target.value })}
-                                        placeholder="Enter pincode"
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer className="border-top-0">
-                    <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={handleAddVendor} disabled={loading}>
-                        {loading ? 'Adding...' : 'Add Vendor'}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                </Row>
 
-            <Modal show={showAddBookModal} onHide={() => {
-                setShowAddBookModal(false);
-                setBarcodeInput("");
-            }} size="lg" centered>
-                <Modal.Header closeButton className="border-bottom-0 pb-0">
-                    <Modal.Title className="fw-bold">
-                        <i className="fa-solid fa-book me-2 text-success"></i>
-                        Add New Book
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="pt-0">
-                    <Card className="mb-4 border-0 bg-light">
-                        <Card.Body className="p-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 className="mb-1 fw-semibold">
-                                        <i className="fa-solid fa-barcode me-2"></i>
-                                        Scan Barcode
-                                    </h6>
-                                    <p className="mb-0 text-muted small">
-                                        Enter ISBN to auto-fill details and auto-create author/category.
-                                        <strong> Book will be created only when you click "Add Book"</strong>
-                                    </p>
+                {/* Improved Styled Tabs */}
+                <div className="mb-1">
+                    <h4 className="fw-bold text-dark mb-1">
+                        <i className="fa-solid fa-cart-plus me-2" style={{ color: '#6f42c1' }}></i>
+                        Bulk Purchase Entry
+                    </h4>
+                    <Tabs
+                        activeKey={activeTab}
+                        onSelect={(k) => setActiveTab(k)}
+                        className="custom-tabs"
+                        id="purchase-tabs"
+                    >
+                        <Tab
+                            eventKey="single"
+                            title={
+                                <div className="d-flex align-items-center px-3 py-2">
+                                    <i className="fa-solid fa-user me-2"></i>
+                                    Single Vendor
                                 </div>
-                                {(loading || barcodeProcessing) && (
-                                    <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                )}
+                            }
+                            className="pt-3"
+                        />
+                        <Tab
+                            eventKey="import"
+                            title={
+                                <div className="d-flex align-items-center px-3 py-2">
+                                    <i className="fa-solid fa-file-import me-2"></i>
+                                    Import File
+                                </div>
+                            }
+                            className="pt-1"
+                        />
+                    </Tabs>
+                </div>
+
+                {/* Main Content Card */}
+                <Row>
+                    <Col lg={12}>
+                        <Card className="shadow-sm border-0" style={{
+                            background: 'white',
+                            borderRadius: '12px'
+                        }}>
+                            <Card.Body className="p-4">
+                                {renderTabContent()}
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+
+                {/* Modals remain the same */}
+                <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
+                    <Modal.Header closeButton className="border-bottom-0 pb-0" style={{ background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", color: "white" }}>
+                        <Modal.Title className="fw-bold">
+                            <i className="fa-solid fa-user-tie me-2"></i>
+                            Add New Vendor
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="pt-0">
+                        <Form>
+                            {/* Contact Person Information Section */}
+                            <div className="mb-4">
+                                <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+                                    <i className="fa-solid fa-user me-2 text-primary"></i>
+                                    <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>Contact Person Information</h6>
+                                </div>
+
+                                <Row>
+                                    <Col md={12}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Contact Person Name <span className="text-danger">*</span></Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="name"
+                                                value={vendorFormData.name}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
+                                                placeholder="Enter contact person name"
+                                                required
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    {/* <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Country Code <span className="text-danger">*</span></Form.Label>
+                                            <Form.Select
+                                                name="country_code"
+                                                value={vendorFormData.country_code || defaultCountryCode}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, country_code: e.target.value })}
+                                                required
+                                                style={{ borderColor: "#6f42c1" }}
+                                            >
+                                                <option value="">Select Code</option>
+                                                {COUNTRY_CODES.map((country, index) => (
+                                                    <option key={index} value={country.country_code}>
+                                                        {country.country_code} - {country.country}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col> */}
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Phone</Form.Label>
+                                            <Form.Control
+                                                type="tel"
+                                                name="phone"
+                                                value={vendorFormData.phone}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
+                                                placeholder="Enter phone number"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                            {vendorFormData.phone && !/^[0-9+\-\s()]{10,15}$/.test(vendorFormData.phone) && (
+                                                <small className="text-danger">Please enter a valid phone number</small>
+                                            )}
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Email</Form.Label>
+                                            <Form.Control
+                                                type="email"
+                                                name="email"
+                                                value={vendorFormData.email}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
+                                                placeholder="Enter email address"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                            {vendorFormData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vendorFormData.email) && (
+                                                <small className="text-danger">Please enter a valid email</small>
+                                            )}
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
                             </div>
 
-                            <Form.Group className="mt-3">
-                                <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
-
-                                <div className="mb-2">
-                                    <Form.Control
-                                        type="text"
-                                        value={barcodeInput}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setBarcodeInput(value);
-
-                                            if (autoLookupTimeout) {
-                                                clearTimeout(autoLookupTimeout);
-                                            }
-
-                                            if (value.length >= 10) {
-                                                const timeout = setTimeout(() => {
-                                                    handleBarcodeLookup(value);
-                                                }, 1500);
-                                                setAutoLookupTimeout(timeout);
-                                            }
-                                        }}
-                                        placeholder="Enter ISBN or barcode number"
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                handleBarcodeLookup(barcodeInput);
-                                            }
-                                        }}
-                                    />
+                            {/* Company Information Section */}
+                            <div className="mb-4">
+                                <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+                                    <i className="fa-solid fa-building me-2 text-primary"></i>
+                                    <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>Company Information</h6>
                                 </div>
 
-                                <div className="d-flex gap-2 align-items-center">
-                                    <div className="flex-grow-1">
-                                        <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
+                                <Row>
+                                    <Col md={12}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Company Name</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="company_name"
+                                                value={vendorFormData.company_name}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, company_name: e.target.value })}
+                                                placeholder="Enter company name"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>GST Number</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="gst_number"
+                                                value={vendorFormData.gst_number}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, gst_number: e.target.value })}
+                                                placeholder="Enter GST number"
+                                                style={{ borderColor: "#6f42c1" }}
+                                                maxLength={15}
+                                            />
+                                            {vendorFormData.gst_number && vendorFormData.gst_number.length !== 15 && (
+                                                <small className="text-warning">GST number must be 15 characters</small>
+                                            )}
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>PAN Number</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="pan_number"
+                                                value={vendorFormData.pan_number}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, pan_number: e.target.value.toUpperCase() })}
+                                                placeholder="Enter PAN number (e.g., ABCDE1234F)"
+                                                style={{ borderColor: "#6f42c1" }}
+                                                maxLength={10}
+                                            />
+                                            {vendorFormData.pan_number && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(vendorFormData.pan_number) && (
+                                                <small className="text-warning">PAN must be 10 characters (e.g., ABCDE1234F)</small>
+                                            )}
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={12}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Address</Form.Label>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                name="address"
+                                                value={vendorFormData.address}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, address: e.target.value })}
+                                                placeholder="Enter address"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Country</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="country"
+                                                value={vendorFormData.country || "India"}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, country: e.target.value })}
+                                                placeholder="Enter country"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    {/* <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>State</Form.Label>
+                                            <Form.Select
+                                                name="state"
+                                                value={vendorFormData.state}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, state: e.target.value, city: "" })}
+                                                style={{ border: "2px solid #c084fc", borderRadius: "8px" }}
+                                            >
+                                                <option value="">Select State</option>
+                                                {states.map(state => (
+                                                    <option key={state.value} value={state.value}>
+                                                        {state.label}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>City</Form.Label>
+                                            <select
+                                                className="form-control"
+                                                name="city"
+                                                value={vendorFormData.city || ''}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, city: e.target.value })}
+                                                disabled={!vendorFormData.state}
+                                                style={{
+                                                    border: "2px solid #c084fc",
+                                                    borderRadius: "8px",
+                                                    opacity: vendorFormData.state ? 1 : 0.6
+                                                }}
+                                            >
+                                                <option value="">Select City</option>
+                                                {allCities
+                                                    .filter(city => city.state === vendorFormData.state)
+                                                    .map(city => (
+                                                        <option key={city.value} value={city.value}>
+                                                            {city.label}
+                                                        </option>
+                                                    ))
+                                                }
+                                            </select>
+                                        </Form.Group>
+                                    </Col> */}
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Pincode</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="pincode"
+                                                value={vendorFormData.pincode}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                                                placeholder="Enter pincode"
+                                                style={{ borderColor: "#6f42c1" }}
+                                                maxLength={6}
+                                            />
+                                            {vendorFormData.pincode && vendorFormData.pincode.length !== 6 && (
+                                                <small className="text-warning">Pincode must be 6 digits</small>
+                                            )}
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={4}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Status</Form.Label>
+                                            <Form.Select
+                                                name="status"
+                                                value={vendorFormData.status || "active"}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, status: e.target.value })}
+                                                style={{ borderColor: "#6f42c1" }}
+                                            >
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="suspended">Suspended</option>
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            </div>
+
+                            {/* Additional Information Section (Optional) */}
+                            <div className="mb-3">
+                                <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
+                                    <i className="fa-solid fa-info-circle me-2 text-primary"></i>
+                                    <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>Additional Information (Optional)</h6>
+                                </div>
+
+                                <Row>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Website</Form.Label>
+                                            <Form.Control
+                                                type="url"
+                                                name="website"
+                                                value={vendorFormData.website}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, website: e.target.value })}
+                                                placeholder="https://example.com"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Payment Terms</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="payment_terms"
+                                                value={vendorFormData.payment_terms}
+                                                onChange={(e) => setVendorFormData({ ...vendorFormData, payment_terms: e.target.value })}
+                                                placeholder="e.g., Net 30 days"
+                                                style={{ borderColor: "#6f42c1" }}
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer className="border-top-0">
+                        <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)} style={{ borderColor: "#6f42c1", color: "#6f42c1" }}>
+                            <i className="fa-solid fa-times me-2"></i>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", border: "none" }}>
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Adding...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fa-solid fa-plus me-2"></i>
+                                    Add Vendor
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+                <Modal show={showAddBookModal} onHide={() => {
+                    setShowAddBookModal(false);
+                    setBarcodeInput("");
+                }} size="lg" centered>
+                    <Modal.Header closeButton className="border-bottom-0 pb-0">
+                        <Modal.Title className="fw-bold">
+                            <i className="fa-solid fa-book me-2 text-success"></i>
+                            Add New Book
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="pt-0">
+                        <Card className="mb-4 border-0 bg-light">
+                            <Card.Body className="p-3">
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 className="mb-1 fw-semibold">
+                                            <i className="fa-solid fa-barcode me-2"></i>
+                                            Scan Barcode
+                                        </h6>
+                                        <p className="mb-0 text-muted small">
+                                            Enter ISBN to auto-fill details and auto-create author/category.
+                                            <strong> Book will be created only when you click "Add Book"</strong>
+                                        </p>
                                     </div>
-                                    <Button
-                                        variant="primary"
-                                        onClick={() => handleBarcodeLookup(barcodeInput)}
-                                        disabled={!barcodeInput.trim() || loading || barcodeProcessing}
-                                    >
-                                        {loading || barcodeProcessing ? (
-                                            <i className="fa-solid fa-spinner fa-spin"></i>
-                                        ) : (
-                                            <i className="fa-solid fa-search"></i>
-                                        )}
-                                    </Button>
+                                    {(loading || barcodeProcessing) && (
+                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <Form.Text className="text-muted">
-                                    Enter 10 or 13 digit ISBN to auto-fill book details, create authors and categories automatically
-                                </Form.Text>
-                            </Form.Group>
-                        </Card.Body>
-                    </Card>
+                                <Form.Group className="mt-3">
+                                    <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
 
-                    <Form>
-                        <Row>
-                            <Col md={12}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Title <span className="text-danger">*</span></Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={bookFormData.title}
-                                        onChange={(e) => setBookFormData({ ...bookFormData, title: e.target.value })}
-                                        placeholder="Enter book title"
-                                        required
-                                    />
+                                    <div className="mb-2">
+                                        <Form.Control
+                                            type="text"
+                                            value={barcodeInput}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setBarcodeInput(value);
+
+                                                if (autoLookupTimeout) {
+                                                    clearTimeout(autoLookupTimeout);
+                                                }
+
+                                                if (value.length >= 10) {
+                                                    const timeout = setTimeout(() => {
+                                                        handleBarcodeLookup(value);
+                                                    }, 1500);
+                                                    setAutoLookupTimeout(timeout);
+                                                }
+                                            }}
+                                            placeholder="Enter ISBN or barcode number"
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleBarcodeLookup(barcodeInput);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="d-flex gap-2 align-items-center">
+                                        <div className="flex-grow-1">
+                                            <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
+                                        </div>
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => handleBarcodeLookup(barcodeInput)}
+                                            disabled={!barcodeInput.trim() || loading || barcodeProcessing}
+                                        >
+                                            {loading || barcodeProcessing ? (
+                                                <i className="fa-solid fa-spinner fa-spin"></i>
+                                            ) : (
+                                                <i className="fa-solid fa-search"></i>
+                                            )}
+                                        </Button>
+                                    </div>
+
+                                    <Form.Text className="text-muted">
+                                        Enter 10 or 13 digit ISBN to auto-fill book details, create authors and categories automatically
+                                    </Form.Text>
                                 </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Author <span className="text-danger">*</span></Form.Label>
-                                    <Select
-                                        value={getSelectedAuthor()}
-                                        onChange={(selectedOption) => setBookFormData({
-                                            ...bookFormData,
-                                            author_id: selectedOption ? selectedOption.value : ""
-                                        })}
-                                        options={authorOptions}
-                                        placeholder="Select Author"
-                                        isClearable
-                                        isSearchable
-                                        styles={{
-                                            menu: (base) => ({
-                                                ...base,
-                                                zIndex: 9999,
-                                            })
-                                        }}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Category <span className="text-danger">*</span></Form.Label>
-                                    <Select
-                                        value={getSelectedCategory()}
-                                        onChange={(selectedOption) => setBookFormData({
-                                            ...bookFormData,
-                                            category_id: selectedOption ? selectedOption.value : ""
-                                        })}
-                                        options={categoryOptions}
-                                        placeholder="Select Category"
-                                        isClearable
-                                        isSearchable
-                                        styles={{
-                                            menu: (base) => ({
-                                                ...base,
-                                                zIndex: 9999,
-                                            })
-                                        }}
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>ISBN/Barcode</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={bookFormData.isbn}
-                                        onChange={(e) => setBookFormData({ ...bookFormData, isbn: e.target.value })}
-                                        placeholder="Enter ISBN or barcode number"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Language</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={bookFormData.language}
-                                        onChange={(e) => setBookFormData({ ...bookFormData, language: e.target.value })}
-                                        placeholder="Enter language"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Total Copies</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={bookFormData.total_copies}
-                                        onChange={(e) => setBookFormData({ ...bookFormData, total_copies: parseInt(e.target.value) || 1 })}
-                                        min="1"
-                                    />
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Available Copies</Form.Label>
-                                    <Form.Control
-                                        type="number"
-                                        value={bookFormData.available_copies}
-                                        onChange={(e) => setBookFormData({ ...bookFormData, available_copies: parseInt(e.target.value) || 1 })}
-                                        min="1"
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer className="border-top-0">
-                    <Button variant="outline-secondary" onClick={() => {
-                        setShowAddBookModal(false);
-                        setBarcodeInput("");
-                    }}>
-                        Cancel
-                    </Button>
-                    <Button variant="success" onClick={handleAddBook} disabled={loading}>
-                        {loading ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                Adding...
-                            </>
-                        ) : (
-                            <>
-                                <i className="fa-solid fa-plus me-2"></i>
-                                Add Book
-                            </>
-                        )}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
+                            </Card.Body>
+                        </Card>
+
+                        <Form>
+                            <Row>
+                                <Col md={12}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Title <span className="text-danger">*</span></Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={bookFormData.title}
+                                            onChange={(e) => setBookFormData({ ...bookFormData, title: e.target.value })}
+                                            placeholder="Enter book title"
+                                            required
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Author <span className="text-danger">*</span></Form.Label>
+                                        <Select
+                                            value={getSelectedAuthor()}
+                                            onChange={(selectedOption) => setBookFormData({
+                                                ...bookFormData,
+                                                author_id: selectedOption ? selectedOption.value : ""
+                                            })}
+                                            options={authorOptions}
+                                            placeholder="Select Author"
+                                            isClearable
+                                            isSearchable
+                                            styles={{
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999,
+                                                })
+                                            }}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Category <span className="text-danger">*</span></Form.Label>
+                                        <Select
+                                            value={getSelectedCategory()}
+                                            onChange={(selectedOption) => setBookFormData({
+                                                ...bookFormData,
+                                                category_id: selectedOption ? selectedOption.value : ""
+                                            })}
+                                            options={categoryOptions}
+                                            placeholder="Select Category"
+                                            isClearable
+                                            isSearchable
+                                            styles={{
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999,
+                                                })
+                                            }}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>ISBN/Barcode</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={bookFormData.isbn}
+                                            onChange={(e) => setBookFormData({ ...bookFormData, isbn: e.target.value })}
+                                            placeholder="Enter ISBN or barcode number"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Language</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={bookFormData.language}
+                                            onChange={(e) => setBookFormData({ ...bookFormData, language: e.target.value })}
+                                            placeholder="Enter language"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Total Copies</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={bookFormData.total_copies}
+                                            onChange={(e) => setBookFormData({ ...bookFormData, total_copies: parseInt(e.target.value) || 1 })}
+                                            min="1"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>Available Copies</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            value={bookFormData.available_copies}
+                                            onChange={(e) => setBookFormData({ ...bookFormData, available_copies: parseInt(e.target.value) || 1 })}
+                                            min="1"
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </Row>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer className="border-top-0">
+                        <Button variant="outline-secondary" onClick={() => {
+                            setShowAddBookModal(false);
+                            setBarcodeInput("");
+                        }}>
+                            Cancel
+                        </Button>
+                        <Button variant="success" onClick={handleAddBook} disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Adding...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fa-solid fa-plus me-2"></i>
+                                    Add Book
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Add custom CSS for better tabs */}
+                <style>{`
+                .custom-tabs .nav-link {
+                    border: none;
+                    color: #6c757d;
+                    font-weight: 500;
+                    padding: 0.5rem 1rem;
+                    margin-right: 0.5rem;
+                    border-radius: 8px 8px 0 0;
+                    transition: all 0.3s ease;
+                }
+                .custom-tabs .nav-link:hover {
+                    color: #6f42c1;
+                    background-color: rgba(111, 66, 193, 0.1);
+                }
+                .custom-tabs .nav-link.active {
+                    color: #6f42c1;
+                    background-color: white;
+                    border-bottom: 3px solid #6f42c1;
+                    font-weight: 600;
+                }
+                .custom-tabs .nav-tabs {
+                    border-bottom: 1px solid #dee2e6;
+                }
+                .table-row-light {
+                    background-color: #fafafa;
+                }
+                .table-row-light:hover {
+                    background-color: #f0f0f0;
+                }
+            `}</style>
+            </Container>
+        </>
     );
 };
 

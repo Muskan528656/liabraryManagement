@@ -103,7 +103,6 @@ module.exports = (app) => {
     }
   });
 
-
   router.post(
     "/issue",
     fetchUser,
@@ -125,7 +124,6 @@ module.exports = (app) => {
     ],
     async (req, res) => {
       try {
-
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
@@ -137,6 +135,7 @@ module.exports = (app) => {
         if (!userId) {
           return res.status(401).json({ error: "User not authenticated" });
         }
+
 
         const bookRes = await sql.query(
           `SELECT id, title FROM ${tenantcode}.books WHERE id = $1`,
@@ -162,8 +161,9 @@ module.exports = (app) => {
           return res.status(400).json({ error: "Book is already issued" });
         }
 
+
         const cardRes = await sql.query(
-          `SELECT id, card_number 
+          `SELECT id, card_number, member_name, allowed_books 
          FROM ${tenantcode}.library_members 
          WHERE id = $1`,
           [req.body.card_id]
@@ -174,23 +174,49 @@ module.exports = (app) => {
         }
 
         const card = cardRes.rows[0];
+        const memberAllowedBooks = card.allowed_books || 6;
+        const currentIssuesRes = await sql.query(
+          `SELECT COUNT(*) as issued_count 
+         FROM ${tenantcode}.book_issues 
+         WHERE issued_to = $1 
+           AND status = 'issued' 
+           AND return_date IS NULL`,
+          [req.body.card_id]
+        );
 
+        const currentlyIssued = parseInt(currentIssuesRes.rows[0].issued_count) || 0;
+
+
+        if (currentlyIssued >= memberAllowedBooks) {
+          return res.status(400).json({
+            error: `Member has reached their allowed books limit (${memberAllowedBooks} books). Please return some books before issuing new ones.`,
+            details: {
+              currently_issued: currentlyIssued,
+              member_allowed: memberAllowedBooks
+            }
+          });
+        }
 
         const issueData = {
           book_id: req.body.book_id,
           issued_to: req.body.card_id,
-          issued_by: userId,
-          issue_date:
-            req.body.issue_date || new Date().toISOString().split("T")[0],
-          due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-          status: "issued",
+          issue_date: req.body.issue_date || new Date().toISOString().split("T")[0],
         };
-
 
         BookIssue.init(tenantcode);
         const issue = await BookIssue.issueBook(issueData, userId);
+
+      
+        const updatedIssuesRes = await sql.query(
+          `SELECT COUNT(*) as issued_count 
+         FROM ${tenantcode}.book_issues 
+         WHERE issued_to = $1 
+           AND status = 'issued' 
+           AND return_date IS NULL`,
+          [req.body.card_id]
+        );
+
+        const updatedIssuedCount = parseInt(updatedIssuesRes.rows[0].issued_count) || 0;
 
         return res.status(200).json({
           success: true,
@@ -200,6 +226,8 @@ module.exports = (app) => {
             member_name: card.member_name,
             book_title: bookTitle,
             card_number: card.card_number,
+            issued_count: updatedIssuedCount,
+            remaining_allowed: memberAllowedBooks - updatedIssuedCount
           },
         });
       } catch (error) {
@@ -211,7 +239,6 @@ module.exports = (app) => {
       }
     }
   );
-
 
 
   router.post(

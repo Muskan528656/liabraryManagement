@@ -157,7 +157,7 @@ async function updateById(id, cardData, userId) {
     const values = [];
     let idx = 1;
     console.log("cardDatacardData", cardData)
-    // Same field list jaisa pehle tha — bas allowed_book add kiya
+
     const fields = [
       "card_number",
       "is_active",
@@ -175,7 +175,7 @@ async function updateById(id, cardData, userId) {
       "allowed_book"
     ];
 
-    // Dynamically update only passed fields
+
     fields.forEach(f => {
       if (cardData[f] !== undefined) {
         updates.push(`${f} = $${idx}`);
@@ -184,13 +184,13 @@ async function updateById(id, cardData, userId) {
       }
     });
 
-    // Last modified fields
+
     updates.push(`lastmodifieddate = CURRENT_TIMESTAMP`);
     updates.push(`lastmodifiedbyid = $${idx}`);
     values.push(userId);
     idx++;
 
-    // WHERE id = ?
+
     values.push(id);
 
     const query = `

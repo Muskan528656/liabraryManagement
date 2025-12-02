@@ -320,7 +320,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 errors.user_id = "Member already has an active library card";
             }
 
-            // Validate allowed_books
+
             if (formData.allowed_books !== null && formData.allowed_books !== undefined) {
                 const allowedBooks = parseInt(formData.allowed_books);
                 if (isNaN(allowedBooks) || allowedBooks < 0) {
@@ -425,7 +425,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             generateCardNumber,
             formatDateToDDMMYYYY,
             handleBarcodePreview,
-            // calculateAllowedBooks,
+
 
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
@@ -440,8 +440,8 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                             );
                             item.subscription_name = subscription?.plan_name || subscription?.name || '';
 
-                            // // Calculate allowed books for display
-                            // item.allowed_books_display = calculateAllowedBooks(subscription, item);
+
+
                         }
 
                         if (!item.first_name) item.first_name = "-";
@@ -457,14 +457,14 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 }));
             },
 
-            // Helper to get the effective allowed books for a card
-            // getAllowedBooksForCard: (cardId, allCards, subscriptions) => {
-            //     const card = allCards.find(c => c.id === cardId);
-            //     if (!card) return 5;
 
-            //     const subscription = subscriptions.find(sub => sub.id === card.subscription_id);
-            //     // return calculateAllowedBooks(subscription, card);
-            // }
+
+
+
+
+
+
+
         },
 
         beforeSubmit: (formData, isEditing) => {

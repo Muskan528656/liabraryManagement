@@ -139,7 +139,7 @@ const ModuleDetail = ({
   const nonEditableFields = useMemo(() => [
     'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
     'created_by', 'created_at', 'modified_by', 'modified_at',
-    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat'
+    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat' , 'allowed_books',
   ], []);
 
   const allFieldGroups = useMemo(() => {

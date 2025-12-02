@@ -50,14 +50,12 @@ const LibraryCardDetail = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [imagePreview, setImagePreview] = useState("/default-user.png");
   const [selectedImageFile, setSelectedImageFile] = useState(null);
-  const [showBack, setShowBack] = useState(false);
   const [subscriptionProgress, setSubscriptionProgress] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [companyCountryCode, setCompanyCountryCode] = useState("");
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
-  const backBarcodeRef = useRef(null);
 
   const moduleName = "librarycard";
   const moduleApi = "librarycard";
@@ -108,8 +106,8 @@ const LibraryCardDetail = ({
     [normalizedFileHost]
   );
 
-  const CircularProgressBar = ({ progress, daysRemaining, size = 120 }) => {
-    const strokeWidth = 8;
+  const CircularProgressBar = ({ progress, daysRemaining, size = 100 }) => {
+    const strokeWidth = 6;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -147,15 +145,15 @@ const LibraryCardDetail = ({
           </svg>
           <div
             className="position-absolute top-50 start-50 translate-middle text-center"
-            style={{ width: "80px" }}
+            style={{ width: "70px" }}
           >
             <div
               className="fw-bold"
-              style={{ fontSize: "24px", color: getProgressColor(progress) }}
+              style={{ fontSize: "20px", color: getProgressColor(progress) }}
             >
               {daysRemaining}
             </div>
-            <div className="small text-muted">Days Left</div>
+            <div className="small text-muted" style={{ fontSize: "11px" }}>Days Left</div>
           </div>
         </div>
         <div className="mt-2">
@@ -163,6 +161,8 @@ const LibraryCardDetail = ({
             bg={
               progress > 70 ? "success" : progress > 30 ? "warning" : "danger"
             }
+            className="px-2 py-1"
+            style={{ fontSize: "12px" }}
           >
             {progress > 70
               ? "Good"
@@ -267,7 +267,6 @@ const LibraryCardDetail = ({
     );
   };
 
-  // Image preview handling
   useEffect(() => {
     if (selectedImageFile) {
       return;
@@ -290,7 +289,6 @@ const LibraryCardDetail = ({
     };
   }, []);
 
-  // Fetch company country code
   const fetCompanyCode = async () => {
     try {
       const companyApi = new DataApi("company");
@@ -315,7 +313,6 @@ const LibraryCardDetail = ({
           }
 
           setCompanyCountryCode(finalCode);
-          console.log("Company country code set to:", finalCode);
         }
       }
     } catch (error) {
@@ -327,7 +324,6 @@ const LibraryCardDetail = ({
     fetCompanyCode();
   }, []);
 
-  // Apply default country code into tempData when editing, if empty
   useEffect(() => {
     if (isEditing && companyCountryCode) {
       setTempData((prev) => {
@@ -351,7 +347,7 @@ const LibraryCardDetail = ({
         JsBarcode(frontBarcodeRef.current, cardNumber, {
           format: "CODE128",
           width: 2,
-          height: 60,
+          height: 50,
           displayValue: true,
           text: cardNumber,
           fontSize: 12,
@@ -361,23 +357,7 @@ const LibraryCardDetail = ({
         console.error("Error generating front barcode:", error);
       }
     }
-    if (cardData && backBarcodeRef.current) {
-      const cardNumber = cardData.card_number || cardData.id;
-      try {
-        JsBarcode(backBarcodeRef.current, cardNumber, {
-          format: "CODE128",
-          width: 2,
-          height: 60,
-          displayValue: true,
-          text: cardNumber,
-          fontSize: 12,
-          margin: 5,
-        });
-      } catch (error) {
-        console.error("Error generating back barcode:", error);
-      }
-    }
-  }, [cardData, showBack]);
+  }, [cardData]);
 
   useEffect(() => {
     const fetchSubscriptionProgress = async () => {
@@ -508,7 +488,6 @@ const LibraryCardDetail = ({
         type: "text",
         colSize: 3,
       },
-
       {
         key: "country_code",
         label: "Country Code",
@@ -519,21 +498,18 @@ const LibraryCardDetail = ({
         })),
         colSize: 3,
       },
-
       {
         key: "phone_number",
         label: "Phone",
         type: "text",
         colSize: 3,
       },
-
       {
         key: "registration_date",
         label: "Registration Date",
         type: "date",
         colSize: 3,
       },
-
       {
         key: "subscription_id",
         label: "Subscription",
@@ -541,7 +517,6 @@ const LibraryCardDetail = ({
         options: "subscriptions",
         colSize: 3,
       },
-
       {
         key: "is_active",
         label: "Status",
@@ -554,7 +529,6 @@ const LibraryCardDetail = ({
         },
         colSize: 3,
       },
-
       {
         key: "allowed_book",
         label: "Allowed Book",
@@ -574,326 +548,285 @@ const LibraryCardDetail = ({
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     try {
-      return new Date(dateString).toLocaleDateString("en-GB");
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     } catch {
       return "Invalid Date";
     }
   };
 
-  const customSections = [
-    {
-      title: "ID Card Preview",
-      colSize: 12,
-      render: (data) => (
-        <div>
-          {!showBack ? (
-            <Card
+  const IDCardPreview = () => {
+  const barcodeContainerRef = useRef(null);
+  
+
+  useEffect(() => {
+    if (barcodeContainerRef.current && data?.card_number) {
+      try {
+
+        barcodeContainerRef.current.innerHTML = '';
+        
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        barcodeContainerRef.current.appendChild(svg);
+        
+        JsBarcode(svg, data.card_number, {
+          format: "CODE128",
+          width: 2,
+          height: 50,
+          displayValue: true,
+          text: data.card_number,
+          fontSize: 12,
+          margin: 5,
+        });
+      } catch (error) {
+        console.error("Error generating barcode:", error);
+      }
+    }
+  }, [data?.card_number, barcodeContainerRef.current]);
+
+  return (
+    <Card
+      style={{
+        maxWidth: "400px",
+        margin: "0 auto",
+        border: "2px solid var(--primary-color)",
+        borderRadius: "15px",
+        overflow: "hidden",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        height: "580px",
+      }}
+    >
+      <div
+        style={{
+          background: "var(--primary-color)",
+          color: "white",
+          padding: "15px",
+          textAlign: "center",
+        }}
+      >
+        <h4 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h4>
+      </div>
+
+      <Card.Body style={{ padding: "20px" }}>
+        {/* User Image Section */}
+        <div className="text-center mb-3">
+          {imagePreview ? (
+            <img
+              src={imagePreview}
+              alt={data?.first_name || "User"}
               style={{
-                maxWidth: "400px",
-                margin: "0 auto",
-                border: "2px solid var(--primary-color)",
-                borderRadius: "15px",
-                overflow: "hidden",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                height: "520px",
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "4px solid var(--primary-color)",
+                marginBottom: "10px",
               }}
-            >
-              <div
-                style={{
-                  background: "var(--primary-color)",
-                  color: "white",
-                  padding: "20px",
-                  textAlign: "center",
-                }}
-              >
-                <h5 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h5>
-              </div>
-              <Card.Body style={{ padding: "20px" }}>
-                <div className="text-center mb-3">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt={data?.first_name || "User"}
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "4px solid var(--primary-color)",
-                        marginBottom: "10px",
-                      }}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/default-user.png";
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        background: "#f0f0f0",
-                        margin: "0 auto 10px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "4px solid var(--primary-color)",
-                      }}
-                    >
-                      <i
-                        className="fa-solid fa-user"
-                        style={{
-                          fontSize: "48px",
-                          color: "var(--primary-color)",
-                        }}
-                      ></i>
-                    </div>
-                  )}
-
-                  {isEditing && (
-                    <div className="mt-3">
-                      <Form.Group controlId="libraryCardImageUpload">
-                        <Form.Label className="w-100 mb-0">
-                          <span className="btn btn-outline-primary w-100">
-                            <i className="fa-solid fa-upload me-2"></i>
-                            {selectedImageFile
-                              ? "Change Photo"
-                              : "Upload Photo"}
-                          </span>
-                          <Form.Control
-                            type="file"
-                            accept="image/*"
-                            className="d-none"
-                            onChange={handleImageChange}
-                          />
-                        </Form.Label>
-                        <Form.Text className="text-muted d-block text-center">
-                          JPG or PNG, max 2MB
-                        </Form.Text>
-                        {selectedImageFile && (
-                          <div className="small text-center mt-1">
-                            Selected: {selectedImageFile.name}
-                          </div>
-                        )}
-                      </Form.Group>
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ textAlign: "center", marginBottom: "15px" }}>
-                  <h5
-                    style={{
-                      margin: "5px 0",
-                      color: "var(--primary-color)",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {data?.first_name || "N/A"}
-                  </h5>
-                  <p
-                    style={{
-                      margin: "5px 0",
-                      color: "#6c757d",
-                      fontSize: "14px",
-                    }}
-                  >
-                    {data?.email || "N/A"}
-                  </p>
-                  <p
-                    style={{
-                      margin: "5px 0",
-                      color: "#6c757d",
-                      fontSize: "12px",
-                    }}
-                  >
-                    Card: {data?.card_number || "N/A"}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    border: "1px solid #e9ecef",
-                    borderRadius: "8px",
-                    padding: "15px",
-                    background: "#f8f9fa",
-                    marginTop: "15px",
-                  }}
-                >
-                  <svg
-                    ref={frontBarcodeRef}
-                    style={{ width: "100%", height: "60px" }}
-                  ></svg>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "10px",
-                    background: "#f8f9fa",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    color: "#6c757d",
-                    textAlign: "center",
-                  }}
-                ></div>
-              </Card.Body>
-            </Card>
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/default-user.png";
+              }}
+            />
           ) : (
-            <Card
+            <div
               style={{
-                maxWidth: "400px",
-                margin: "0 auto",
-                border: "2px solid var(--primary-color)",
-                borderRadius: "15px",
-                overflow: "hidden",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                width: "120px",
+                height: "120px",
+                borderRadius: "50%",
+                background: "#f0f0f0",
+                margin: "0 auto 10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "4px solid var(--primary-color)",
               }}
             >
-              <div
+              <i
+                className="fa-solid fa-user"
                 style={{
-                  background: "var(--primary-color)",
-                  color: "white",
-                  padding: "20px",
-                  textAlign: "center",
+                  fontSize: "48px",
+                  color: "var(--primary-color)",
                 }}
-              >
-                <h4 style={{ margin: 0, fontWeight: "bold" }}>LIBRARY CARD</h4>
-              </div>
-              <Card.Body style={{ padding: "20px" }}>
-                <div
-                  style={{
-                    border: "1px solid #e9ecef",
-                    borderRadius: "8px",
-                    padding: "15px",
-                    background: "#f8f9fa",
-                    marginBottom: "15px",
-                  }}
-                >
-                  <svg
-                    ref={backBarcodeRef}
-                    style={{ width: "100%", height: "60px" }}
-                  ></svg>
-                </div>
-
-                <div
-                  style={{
-                    background: "#f8f9fa",
-                    padding: "15px",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                  }}
-                >
-                  <h6
-                    style={{
-                      color: "var(--primary-color)",
-                      marginBottom: "10px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Card Information
-                  </h6>
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Card Number:</strong> {data?.card_number || "N/A"}
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>First Name:</strong> {data?.first_name || "N/A"}
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Email:</strong> {data?.email || "N/A"}
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Registration Date:</strong>{" "}
-                    {formatDate(data?.registration_date)}
-                  </p>
-                  <p style={{ margin: "5px 0" }}>
-                    <strong>Status:</strong>{" "}
-                    <Badge bg={data?.is_active ? "success" : "secondary"}>
-                      {data?.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "10px",
-                    background: "#fff3cd",
-                    borderRadius: "8px",
-                    fontSize: "11px",
-                    color: "#856404",
-                    textAlign: "center",
-                    border: "1px solid #ffc107",
-                  }}
-                >
-                  <p style={{ margin: 0 }}>
-                    <i className="fa-solid fa-info-circle me-1"></i>
-                    Scan barcode to verify membership
-                  </p>
-                </div>
-              </Card.Body>
-            </Card>
+              ></i>
+            </div>
           )}
-          <div className="text-center mt-3">
-            <Button
-              variant={!showBack ? "primary" : "outline-primary"}
-              className="me-2"
-              onClick={() => setShowBack(false)}
-            >
-              <i className="fa-solid fa-id-card me-2"></i>
-              Front View
-            </Button>
-            <Button
-              variant={showBack ? "primary" : "outline-primary"}
-              onClick={() => setShowBack(true)}
-            >
-              <i className="fa-solid fa-id-card me-2"></i>
-              Back View
-            </Button>
+
+          {isEditing && (
+            <div className="mt-3">
+              <Form.Group controlId="libraryCardImageUpload">
+                <Form.Label className="w-100 mb-0">
+                  <span className="btn btn-outline-primary w-100">
+                    <i className="fa-solid fa-upload me-2"></i>
+                    {selectedImageFile ? "Change Photo" : "Upload Photo"}
+                  </span>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    className="d-none"
+                    onChange={handleImageChange}
+                  />
+                </Form.Label>
+                <Form.Text className="text-muted d-block text-center">
+                  JPG or PNG, max 2MB
+                </Form.Text>
+                {selectedImageFile && (
+                  <div className="small text-center mt-1">
+                    Selected: {selectedImageFile.name}
+                  </div>
+                )}
+              </Form.Group>
+            </div>
+          )}
+        </div>
+
+        {/* User Information */}
+        <div style={{ textAlign: "center", marginBottom: "15px" }}>
+          <h5
+            style={{
+              margin: "5px 0",
+              color: "var(--primary-color)",
+              fontWeight: "bold",
+              fontSize: "20px",
+            }}
+          >
+            {data?.first_name || "N/A"} {data?.last_name || ""}
+          </h5>
+          <p
+            style={{
+              margin: "5px 0",
+              color: "#6c757d",
+              fontSize: "14px",
+            }}
+          >
+            <i className="fa-solid fa-envelope me-2"></i>
+            {data?.email || "N/A"}
+          </p>
+          <p
+            style={{
+              margin: "5px 0",
+              color: "#6c757d",
+              fontSize: "13px",
+              fontFamily: "monospace",
+            }}
+          >
+            <i className="fa-solid fa-id-card me-2"></i>
+            Card: {data?.card_number || "N/A"}
+          </p>
+          <p
+            style={{
+              margin: "5px 0",
+              color: "#6c757d",
+              fontSize: "13px",
+            }}
+          >
+            <i className="fa-solid fa-calendar me-2"></i>
+            Registered: {formatDate(data?.registration_date)}
+          </p>
+        </div>
+
+        {/* Barcode Section - यहाँ सही reference use करें */}
+        <div
+          style={{
+            border: "1px solid #e9ecef",
+            borderRadius: "8px",
+            padding: "15px",
+            background: "#f8f9fa",
+            marginTop: "15px",
+            marginBottom: "15px",
+            height: "80px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div 
+            ref={barcodeContainerRef}
+            style={{ 
+              width: "100%", 
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          ></div>
+        </div>
+
+        {/* Subscription Status */}
+        <div style={{
+          background: "#f8f9fa",
+          padding: "15px",
+          borderRadius: "8px",
+          marginBottom: "15px"
+        }}>
+          <h6
+            style={{
+              color: "var(--primary-color)",
+              marginBottom: "10px",
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
+          >
+            <i className="fa-solid fa-chart-line me-2"></i>
+            Subscription Status
+          </h6>
+          <div className="text-center">
+            <CircularProgressBar
+              progress={subscriptionProgress}
+              daysRemaining={daysRemaining}
+              size={100}
+            />
+            {data?.subscription_id ? (
+              <div className="mt-2">
+                <p className="mb-1 small">
+                  <strong>Progress:</strong> {subscriptionProgress}%
+                </p>
+                <p className="mb-0 text-muted small">
+                  {daysRemaining > 0
+                    ? `${daysRemaining} days remaining`
+                    : "Subscription expired"}
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted small mt-2">
+                No Active Subscription
+              </p>
+            )}
           </div>
         </div>
-      ),
-    },
-    {
-      title: "Subscription Status",
-      colSize: 12,
-      render: (data) => (
-        <Card className="mt-3">
-          <Card.Body className="text-center">
-            {data?.subscription_id ? (
-              <>
-                <CircularProgressBar
-                  progress={subscriptionProgress}
-                  daysRemaining={daysRemaining}
-                  size={120}
-                />
-                <div className="mt-3">
-                  <p className="mb-1">
-                    <strong>Subscription Progress:</strong>{" "}
-                    {subscriptionProgress}%
-                  </p>
-                  <p className="mb-1 text-muted small">
-                    {daysRemaining > 0
-                      ? `${daysRemaining} days remaining`
-                      : "Subscription expired"}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="py-4">
-                <i
-                  className="fa-solid fa-clock text-muted"
-                  style={{ fontSize: "48px" }}
-                ></i>
-                <p className="mt-2 text-muted">No Active Subscription</p>
-              </div>
-            )}
-          </Card.Body>
-        </Card>
-      ),
-    },
-  ];
 
+        {/* Status Badge */}
+        <div className="text-center mt-3">
+          <Badge bg={data?.is_active ? "success" : "secondary"} className="px-3 py-2" style={{ fontSize: "14px" }}>
+            <i className={`fa-solid ${data?.is_active ? "fa-check-circle" : "fa-times-circle"} me-2`}></i>
+            {data?.is_active ? "Active Member" : "Inactive Member"}
+          </Badge>
+        </div>
+
+        {/* Footer Note */}
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "10px",
+            background: "#fff3cd",
+            borderRadius: "8px",
+            fontSize: "11px",
+            color: "#856404",
+            textAlign: "center",
+            border: "1px solid #ffc107",
+          }}
+        >
+          <p style={{ margin: 0 }}>
+            <i className="fa-solid fa-info-circle me-1"></i>
+            Scan barcode to verify membership
+          </p>
+        </div>
+      </Card.Body>
+    </Card>
+  );
+};
   const bookStatistics = [
     {
       title: "Book Statistics",
@@ -1574,7 +1507,6 @@ const LibraryCardDetail = ({
       );
     }
 
-
     const inputType =
       field.type === "number"
         ? "number"
@@ -1752,8 +1684,10 @@ const LibraryCardDetail = ({
                         >
                           {moduleLabel} Information
                         </h6>
-                        <Row className="px-5">
 
+                        {/* Fields in 3-3-3 Layout */}
+                        <Row className="px-5">
+                          {/* First Column: Card Number, First Name, Last Name */}
                           <Col md={4}>
                             {normalizedFields.details
                               .slice(0, 3)
@@ -1762,31 +1696,16 @@ const LibraryCardDetail = ({
                               )}
                           </Col>
 
-
+                          {/* Second Column: Email, Country Code, Phone */}
                           <Col md={4}>
-                            {/* Email */}
-                            {renderFieldGroup(
-                              normalizedFields.details[3],
-                              3
-                            )}
-
-                            <Row>
-                              <Col md={6}>
-                                {renderFieldGroup(
-                                  normalizedFields.details[4],
-                                  4
-                                )}
-                              </Col>
-                              <Col md={6}>
-                                {renderFieldGroup(
-                                  normalizedFields.details[5],
-                                  5
-                                )}
-                              </Col>
-                            </Row>
+                            {normalizedFields.details
+                              .slice(3, 6)
+                              .map((field, index) =>
+                                renderFieldGroup(field, index + 3)
+                              )}
                           </Col>
 
-
+                          {/* Third Column: Registration Date, Subscription, Status, Allowed Books */}
                           <Col md={4}>
                             {normalizedFields.details
                               .slice(6)
@@ -1795,6 +1714,8 @@ const LibraryCardDetail = ({
                               )}
                           </Col>
                         </Row>
+
+                        {/* Other Fields Section */}
                         <Col className="pt-4">
                           <h6
                             className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
@@ -1809,30 +1730,29 @@ const LibraryCardDetail = ({
                           <Row className="px-5">
                             <Col md={6}>
                               {normalizedFields.other
-                                ?.slice(
-                                  0,
-                                  Math.ceil(normalizedFields.other.length / 2)
-                                )
+                                ?.slice(0, 2)
                                 .map((field, index) =>
                                   renderFieldGroup(field, index)
                                 )}
                             </Col>
                             <Col md={6}>
                               {normalizedFields.other
-                                .slice(
-                                  Math.ceil(normalizedFields.other.length / 2)
-                                )
+                                ?.slice(2)
                                 .map((field, index) =>
-                                  renderFieldGroup(field, index)
+                                  renderFieldGroup(field, index + 2)
                                 )}
                             </Col>
                           </Row>
                         </Col>
-                      </Col>
-                      <Col md={3}>
-                        {customSections.length > 0 &&
-                          customSections.map((section, idx) => (
-                            <div key={idx}>
+
+                        {/* Book Statistics Section */}
+                        {bookStatistics.length > 0 &&
+                          bookStatistics.map((section, idx) => (
+                            <Col
+                              md={section.colSize || 12}
+                              key={idx}
+                              className="mt-5"
+                            >
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
@@ -1843,36 +1763,27 @@ const LibraryCardDetail = ({
                               >
                                 {section.title}
                               </h6>
-                              <Col md={section.colSize || 12}>
-                                {section.render
-                                  ? section.render(data)
-                                  : section.content}
-                              </Col>
-                            </div>
+                              {section.render
+                                ? section.render(data)
+                                : section.content}
+                            </Col>
                           ))}
                       </Col>
-                      {bookStatistics.length > 0 &&
-                        bookStatistics.map((section, idx) => (
-                          <Col
-                            md={section.colSize || 12}
-                            key={idx}
-                            className="mt-5"
-                          >
-                            <h6
-                              className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                              style={{
-                                color: "var(--primary-color)",
-                                background: "var(--header-highlighter-color)",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              {section.title}
-                            </h6>
-                            {section.render
-                              ? section.render(data)
-                              : section.content}
-                          </Col>
-                        ))}
+
+                      {/* ID Card Preview Section (Right Side) */}
+                      <Col md={3}>
+                        <h6
+                          className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                          style={{
+                            color: "var(--primary-color)",
+                            background: "var(--header-highlighter-color)",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          ID Card Preview
+                        </h6>
+                        <IDCardPreview />
+                      </Col>
                     </>
                   )}
               </Row>

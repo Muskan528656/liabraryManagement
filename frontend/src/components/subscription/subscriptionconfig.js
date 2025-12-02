@@ -124,17 +124,16 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
                 colSize: 6,
                 helpText: "Keep empty for never ending plans",
             },
-            {
+             {
                 name: "status",
                 label: "Status",
-                type: "select",
-                required: true,
+                type: "toggle",
                 options: [
-                    { value: "active", label: "Active" },
-                    { value: "inactive", label: "Inactive" },
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
                 ],
                 colSize: 6,
-            },
+            }
         ],
 
         validationRules: (formData) => {
@@ -159,7 +158,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
             showSearch: true,
             showColumnVisibility: true,
             showCheckbox: true,
-            allowDelete: true,
+            allowDelete: false,
             allowEdit: true,
         },
 
