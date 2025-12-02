@@ -5,7 +5,7 @@ export default class DataApi {
         this.token = sessionStorage.getItem('token');
 
         this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
-        console.log('baseUrl: ', this.baseUrl);
+        
     }
 
     fetchAll(queryString = '') {

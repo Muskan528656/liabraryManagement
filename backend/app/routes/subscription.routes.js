@@ -40,7 +40,7 @@ module.exports = (app) => {
             body("start_date").optional().isISO8601(),
             body("end_date").optional().isISO8601(),
             body("is_active").optional().isBoolean(),
-            body("allowed_books").optional().isString()
+            body("allowed_books").optional().isNumeric()
         ],
         async (req, res) => {
             const errors = validationResult(req);
@@ -95,6 +95,6 @@ module.exports = (app) => {
         }
     });
 
- 
+
     app.use(process.env.BASE_API_URL + "/api/subscriptions", router);
 };

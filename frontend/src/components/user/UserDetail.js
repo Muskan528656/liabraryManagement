@@ -31,7 +31,7 @@ const UserDetail = () => {
         console.log("Fetched userRoles:", userRoles);
         console.log("Fetched companies:", companies);
 
- 
+
         let defaultCountryCode = "+91";
         if (Array.isArray(companies) && companies.length > 0) {
           const company = companies.find((c) => c.country_code);
@@ -67,19 +67,19 @@ const UserDetail = () => {
     fetchExternalData();
   }, []);
 
- 
+
   const countryCodeOptions = COUNTRY_CODES.map((country) => ({
     value: country.country_code,
     label: `${country.country_code} - ${country.country}`,
   }));
 
- 
+
   const userRoleOptions = externalData.userRoles.map((role) => ({
     value: role.id,
     label: role.role_name,
   }));
 
- 
+
   const companyOptions = externalData.companies.map((company) => ({
     value: company.id,
     label: company.name,

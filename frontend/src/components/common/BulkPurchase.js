@@ -23,7 +23,6 @@ const BulkPurchasePage = () => {
         notes: ""
     }]);
     const [selectedVendor, setSelectedVendor] = useState(null);
-    const [initialVendor, setInitialVendor] = useState(null); // Store initial vendor separately
     const [vendors, setVendors] = useState([]);
     const [books, setBooks] = useState([]);
     const [saving, setSaving] = useState(false);
@@ -66,7 +65,6 @@ const BulkPurchasePage = () => {
     const [autoLookupTimeout, setAutoLookupTimeout] = useState(null);
     const [barcodeProcessing, setBarcodeProcessing] = useState(false);
     const [newlyAddedBookId, setNewlyAddedBookId] = useState(null);
-    const [initialBookId, setInitialBookId] = useState(null); // Store initial book ID
 
     useEffect(() => {
         fetchVendors();
@@ -92,14 +90,11 @@ const BulkPurchasePage = () => {
 
     const fetchStats = async () => {
         try {
-
             const issuedApi = new DataApi("issued");
             const issuedResponse = await issuedApi.fetchAll();
 
-
             const purchaseApi = new DataApi("purchase");
             const purchaseResponse = await purchaseApi.fetchAll();
-
 
             const bookApi = new DataApi("book");
             const bookResponse = await bookApi.fetchAll();
@@ -108,16 +103,13 @@ const BulkPurchasePage = () => {
             let purchasedCount = 0;
             let availableCount = 0;
 
-
             if (issuedResponse.data && Array.isArray(issuedResponse.data)) {
                 issuedCount = issuedResponse.data.length;
             }
 
-
             if (purchaseResponse.data && Array.isArray(purchaseResponse.data)) {
                 purchasedCount = purchaseResponse.data.reduce((sum, purchase) => sum + (purchase.quantity || 0), 0);
             }
-
 
             if (bookResponse.data && Array.isArray(bookResponse.data)) {
                 availableCount = bookResponse.data.reduce((sum, book) => sum + (book.available_copies || 0), 0);
@@ -641,17 +633,6 @@ const BulkPurchasePage = () => {
 
     const handleMultiRowChange = (index, field, value) => {
         const updatedRows = [...multiInsertRows];
-
-
-        if (field === 'book_id' && index === 0 && value) {
-            setInitialBookId(value);
-        }
-
-
-        if (field === 'vendor_id' && index === 0 && !initialVendor && value) {
-            setInitialVendor(vendorOptions.find(v => v.value === value));
-        }
-
         updatedRows[index] = { ...updatedRows[index], [field]: value };
         setMultiInsertRows(updatedRows);
     };
@@ -659,7 +640,7 @@ const BulkPurchasePage = () => {
     const handleAddBookRow = () => {
         const newRow = {
             vendor_id: activeTab === "single" ? (selectedVendor ? selectedVendor.value : "") : "",
-            book_id: initialBookId || "", // Use initial book if available
+            book_id: "",
             quantity: 1,
             unit_price: 0,
             purchase_date: new Date().toISOString().split('T')[0],
@@ -678,17 +659,21 @@ const BulkPurchasePage = () => {
     const handleVendorChange = (selectedOption) => {
         setSelectedVendor(selectedOption);
 
-
-        if (!initialVendor && selectedOption) {
-            setInitialVendor(selectedOption);
-        }
-
         if (activeTab === "single") {
             const vendorId = selectedOption ? selectedOption.value : "";
-            const updatedRows = multiInsertRows.map(row => ({
-                ...row,
-                vendor_id: vendorId
-            }));
+
+            // Only update rows that are currently empty (no vendor selected)
+            const updatedRows = multiInsertRows.map(row => {
+                if (!row.vendor_id || row.vendor_id === "") {
+                    return {
+                        ...row,
+                        vendor_id: vendorId
+                    };
+                }
+                // If vendor is already selected in a row, keep it as is
+                return row;
+            });
+
             setMultiInsertRows(updatedRows);
         }
     };
@@ -774,11 +759,6 @@ const BulkPurchasePage = () => {
                 setNewlyAddedBookId(newBookId);
                 await fetchBooks();
                 toast.success("Book added successfully");
-
-
-                if (!initialBookId) {
-                    setInitialBookId(newBookId);
-                }
 
                 setTimeout(() => {
                     setShowAddBookModal(false);
@@ -876,8 +856,6 @@ const BulkPurchasePage = () => {
                     notes: ""
                 }]);
                 setSelectedVendor(null);
-                setInitialVendor(null);
-                setInitialBookId(null);
                 navigate('/purchase');
             }
 
@@ -914,13 +892,13 @@ const BulkPurchasePage = () => {
                                 <Form.Group>
                                     <Form.Label className="fw-bold">
                                         <i className="fa-solid fa-user-tie me-2 text-primary"></i>
-                                        Select Vendor <span className="text-danger">*</span>
+                                        Select Default Vendor <span className="text-danger">*</span>
                                     </Form.Label>
                                     <Select
                                         value={selectedVendor}
                                         onChange={handleVendorChange}
                                         options={vendorOptions}
-                                        placeholder="Choose vendor for all purchases..."
+                                        placeholder="Choose default vendor for new rows..."
                                         isClearable
                                         isSearchable
                                         menuPlacement="auto"
@@ -947,18 +925,12 @@ const BulkPurchasePage = () => {
                                         }}
                                         menuPortalTarget={document.body}
                                     />
+                                    <Form.Text className="text-muted">
+                                        Selected vendor will be applied only to empty vendor rows
+                                    </Form.Text>
                                 </Form.Group>
                             </Col>
-                            <Col md={6} className="text-end">
-                                <Button
-                                    variant="outline-primary"
-                                    onClick={() => setShowAddVendorModal(true)}
-                                    className="mt-4"
-                                >
-                                    <i className="fa-solid fa-plus me-2"></i>
-                                    Add New Vendor
-                                </Button>
-                            </Col>
+
                         </Row>
 
                         {renderPurchaseEntries("single")}
@@ -992,13 +964,12 @@ const BulkPurchasePage = () => {
                         </h5>
                         {tabType === "single" && selectedVendor && (
                             <small className="text-muted">
-                                Adding books for vendor: <strong>{selectedVendor.label}</strong>
-                                {initialVendor && initialVendor.value !== selectedVendor.value && (
-                                    <span className="ms-2 text-warning">
-                                        <i className="fa-solid fa-exclamation-circle me-1"></i>
-                                        Initial vendor was {initialVendor.label}
-                                    </span>
-                                )}
+                                Default vendor: <strong>{selectedVendor.label}</strong>
+                                <br />
+                                <small className="text-info">
+                                    <i className="fa-solid fa-info-circle me-1"></i>
+                                    Default vendor will be applied to new rows and rows with empty vendor
+                                </small>
                             </small>
                         )}
                     </div>
@@ -1010,7 +981,6 @@ const BulkPurchasePage = () => {
                             size='sm'
                             variant={tabType === "single" ? "success" : "info"}
                             onClick={handleAddBookRow}
-                            disabled={tabType === "single" && !selectedVendor}
                         >
                             <i className="fa-solid fa-plus me-1"></i>
                             {tabType === "single" ? "Add Book" : "Add Entry"}
@@ -1018,250 +988,259 @@ const BulkPurchasePage = () => {
                     </div>
                 </div>
 
-                {tabType === "single" && !selectedVendor ? (
-                    <div className="text-center py-5 border rounded bg-light">
-                        <i className="fa-solid fa-user-tie fa-3x text-muted mb-3"></i>
-                        <h5 className="text-muted">Please select a vendor first</h5>
-                        <p className="text-muted">Choose a vendor above to start adding books for purchase</p>
-                    </div>
-                ) : (
-                    <Row className="g-4">
-                        <Col lg={9}>
-                            <div className="table-responsive" style={{ position: 'relative', zIndex: 5, maxHeight: '65vh', overflowY: 'auto' }}>
-                                <Table bordered hover>
-                                    <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 6 }}>
-                                        <tr>
-                                            {/* Vendor column for single tab */}
-                                            <th width="20%">
-                                                Vendor <span className="text-danger">*</span>
-                                            </th>
-                                            <th width="25%">
-                                                Book <span className="text-danger">*</span>
-                                            </th>
-                                            <th width="8%">
-                                                Qty <span className="text-danger">*</span>
-                                            </th>
-                                            <th width="10%">
-                                                Unit Price <span className="text-danger">*</span>
-                                            </th>
-                                            <th width="12%">
-                                                Total Amount
-                                            </th>
-                                            <th width="12%">
-                                                Purchase Date
-                                            </th>
-                                            <th width="15%">
-                                                Notes
-                                            </th>
-                                            <th width="5%" className="text-center">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {multiInsertRows.map((row, index) => (
-                                            <tr key={index}>
-                                                {/* Vendor Dropdown for each row */}
-                                                <td>
-                                                    <div className="d-flex gap-1">
-                                                        <div className="flex-grow-1">
-                                                            <Select
-                                                                value={getSelectedVendorForRow(index)}
-                                                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
-                                                                options={vendorOptions}
-                                                                placeholder="Select Vendor"
-                                                                isClearable
-                                                                isSearchable
-                                                                menuPlacement="auto"
-                                                                styles={{
-                                                                    menu: (base) => ({
-                                                                        ...base,
-                                                                        zIndex: 9999,
-                                                                        position: 'absolute'
-                                                                    }),
-                                                                    menuPortal: (base) => ({
-                                                                        ...base,
-                                                                        zIndex: 9999
-                                                                    })
-                                                                }}
-                                                                menuPortalTarget={document.body}
-                                                            />
-                                                        </div>
-                                                        <Button
-                                                            variant="outline-primary"
-                                                            size="sm"
-                                                            onClick={() => setShowAddVendorModal(true)}
-                                                        >
-                                                            <i className="fa-solid fa-plus"></i>
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                                {/* Book Dropdown */}
-                                                <td>
-                                                    <div className="d-flex gap-1">
-                                                        <div className="flex-grow-1">
-                                                            <Select
-                                                                value={getSelectedBook(index)}
-                                                                onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
-                                                                options={bookOptions}
-                                                                placeholder="Select Book"
-                                                                isClearable
-                                                                isSearchable
-                                                                menuPlacement="auto"
-                                                                styles={{
-                                                                    menu: (base) => ({
-                                                                        ...base,
-                                                                        zIndex: 9999,
-                                                                        position: 'absolute'
-                                                                    }),
-                                                                    menuPortal: (base) => ({
-                                                                        ...base,
-                                                                        zIndex: 9999
-                                                                    })
-                                                                }}
-                                                                menuPortalTarget={document.body}
-                                                            />
-                                                        </div>
-                                                        <Button
-                                                            variant="outline-success"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setShowAddBookModal(true);
+                <Row className="g-4">
+                    <Col lg={9}>
+                        <div className="table-responsive" style={{ position: 'relative', zIndex: 5, maxHeight: '65vh', overflowY: 'auto' }}>
+                            <Table bordered hover>
+                                <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 6 }}>
+                                    <tr>
+                                        <th width="20%">
+                                            Vendor <span className="text-danger">*</span>
+                                        </th>
+                                        <th width="25%">
+                                            Book <span className="text-danger">*</span>
+                                        </th>
+                                        <th width="8%">
+                                            Qty <span className="text-danger">*</span>
+                                        </th>
+                                        <th width="10%">
+                                            Unit Price <span className="text-danger">*</span>
+                                        </th>
+                                        <th width="12%">
+                                            Total Amount
+                                        </th>
+                                        <th width="12%">
+                                            Purchase Date
+                                        </th>
+                                        <th width="15%">
+                                            Notes
+                                        </th>
+                                        <th width="5%" className="text-center">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {multiInsertRows.map((row, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <div className="d-flex gap-1">
+                                                    <div className="flex-grow-1">
+                                                        <Select
+                                                            value={getSelectedVendorForRow(index)}
+                                                            onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                            options={vendorOptions}
+                                                            placeholder="Select Vendor"
+                                                            isClearable
+                                                            isSearchable
+                                                            menuPlacement="auto"
+                                                            styles={{
+                                                                control: (base, state) => ({
+                                                                    ...base,
+                                                                    minHeight: "38px",
+                                                                    borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#ced4da",
+                                                                    backgroundColor: row.vendor_id ? "#f8fff9" : "white",
+                                                                    "&:hover": {
+                                                                        borderColor: row.vendor_id ? "#28a745" : "#8b5cf6",
+                                                                    },
+                                                                }),
+                                                                menu: (base) => ({
+                                                                    ...base,
+                                                                    zIndex: 9999,
+                                                                    position: 'absolute'
+                                                                }),
+                                                                menuPortal: (base) => ({
+                                                                    ...base,
+                                                                    zIndex: 9999
+                                                                })
                                                             }}
-                                                        >
-                                                            <i className="fa-solid fa-plus"></i>
-                                                        </Button>
+                                                            menuPortalTarget={document.body}
+                                                        />
                                                     </div>
-
-                                                </td>
-
-                                                <td>
-                                                    <Form.Control
-                                                        type="number"
-                                                        value={row.quantity}
-                                                        onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
-                                                        min="1"
-                                                    />
-                                                </td>
-
-                                                <td>
-                                                    <Form.Control
-                                                        type="number"
-                                                        value={row.unit_price}
-                                                        onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
-                                                        min="0"
-                                                        step="0.01"
-                                                    />
-                                                </td>    <td>
-                                                    <Form.Control
-                                                        type="text"
-                                                        value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
-                                                        readOnly
-                                                        className="bg-light"
-                                                    />
-                                                </td>
-                                                {/* Purchase Date */}
-                                                <td>
-                                                    <Form.Control
-                                                        type="date"
-                                                        value={row.purchase_date}
-                                                        onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
-                                                    />
-                                                </td>
-                                                {/* Notes */}
-                                                <td>
-                                                    <Form.Control
-                                                        type="text"
-                                                        value={row.notes}
-                                                        onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
-                                                        placeholder="Notes..."
-                                                    />
-                                                </td>
-                                                {/* Actions */}
-                                                <td className="text-center">
                                                     <Button
-                                                        variant="outline-danger"
+                                                        variant="outline-primary"
                                                         size="sm"
-                                                        onClick={() => handleRemoveRow(index)}
-                                                        disabled={multiInsertRows.length === 1}
+                                                        onClick={() => setShowAddVendorModal(true)}
+                                                        title="Add New Vendor"
                                                     >
-                                                        <i className="fa-solid fa-trash"></i>
+                                                        <i className="fa-solid fa-plus"></i>
                                                     </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            </div>
-                        </Col>
-                        {/* Summary Card - Fixed position and proper spacing */}
-                        <Col lg={3}>
-                            <Card className="shadow-sm" style={{
-                                position: 'sticky',
-                                top: '20px',
-                                height: 'fit-content',
-                                marginBottom: '20px'
-                            }}>
-                                <Card.Body>
-                                    <h5 className="fw-bold mb-3">
-                                        <i className="fa-solid fa-clipboard-check me-2 text-primary"></i>
-                                        Purchase Summary
-                                    </h5>
-                                    <div className="d-flex justify-content-between mb-2">
-                                        <span className="text-muted">Entries</span>
-                                        <span className="fw-semibold">{multiInsertRows.length}</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between mb-2">
-                                        <span className="text-muted">Vendors</span>
-                                        <span className="fw-semibold">{uniqueVendors.length}</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between mb-3">
-                                        <span className="text-muted">Total Books</span>
-                                        <span className="fw-semibold">{totalBooks}</span>
-                                    </div>
-                                    <div className="p-3 rounded bg-light mb-4">
-                                        <small className="text-muted text-uppercase">Total Value</small>
-                                        <div className="h4 mb-0">₹{totalAmount.toFixed(2)}</div>
-                                    </div>
-                                    <Button
-                                        variant="primary"
-                                        className="w-100 mb-2"
-                                        onClick={handleSavePurchases}
-                                        disabled={saving || multiInsertRows.length === 0}
-                                    >
-                                        {saving ? (
-                                            <>
-                                                <i className="fa-solid fa-spinner fa-spin me-2"></i>
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <i className="fa-solid fa-save me-2"></i>
-                                                Save Purchases
-                                            </>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="d-flex gap-1">
+                                                    <div className="flex-grow-1">
+                                                        <Select
+                                                            value={getSelectedBook(index)}
+                                                            onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                                            options={bookOptions}
+                                                            placeholder="Select Book"
+                                                            isClearable
+                                                            isSearchable
+                                                            menuPlacement="auto"
+                                                            styles={{
+                                                                control: (base, state) => ({
+                                                                    ...base,
+                                                                    minHeight: "38px",
+                                                                    borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#ced4da",
+                                                                    backgroundColor: row.book_id ? "#f8fff9" : "white",
+                                                                    "&:hover": {
+                                                                        borderColor: row.book_id ? "#28a745" : "#8b5cf6",
+                                                                    },
+                                                                }),
+                                                                menu: (base) => ({
+                                                                    ...base,
+                                                                    zIndex: 9999,
+                                                                    position: 'absolute'
+                                                                }),
+                                                                menuPortal: (base) => ({
+                                                                    ...base,
+                                                                    zIndex: 9999
+                                                                })
+                                                            }}
+                                                            menuPortalTarget={document.body}
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        variant="outline-success"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setShowAddBookModal(true);
+                                                        }}
+                                                        title="Add New Book"
+                                                    >
+                                                        <i className="fa-solid fa-plus"></i>
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <Form.Control
+                                                    type="number"
+                                                    value={row.quantity}
+                                                    onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                                                    min="1"
+                                                />
+                                            </td>
+                                            <td>
+                                                <Form.Control
+                                                    type="number"
+                                                    value={row.unit_price}
+                                                    onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                                                    min="0"
+                                                    step="0.01"
+                                                />
+                                            </td>
+                                            <td>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
+                                                    readOnly
+                                                    className="bg-light"
+                                                />
+                                            </td>
+                                            <td>
+                                                <Form.Control
+                                                    type="date"
+                                                    value={row.purchase_date}
+                                                    onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                                                />
+                                            </td>
+                                            <td>
+                                                <Form.Control
+                                                    type="text"
+                                                    value={row.notes}
+                                                    onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                                                    placeholder="Notes..."
+                                                />
+                                            </td>
+                                            <td className="text-center">
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
+                                                    onClick={() => handleRemoveRow(index)}
+                                                    disabled={multiInsertRows.length === 1}
+                                                    title="Remove Row"
+                                                >
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    </Col>
+                    <Col lg={3}>
+                        <Card className="shadow-sm" style={{
+                            position: 'sticky',
+                            top: '20px',
+                            height: 'fit-content',
+                            marginBottom: '20px'
+                        }}>
+                            <Card.Body>
+                                <h5 className="fw-bold mb-3">
+                                    <i className="fa-solid fa-clipboard-check me-2 text-primary"></i>
+                                    Purchase Summary
+                                </h5>
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span className="text-muted">Entries</span>
+                                    <span className="fw-semibold">{multiInsertRows.length}</span>
+                                </div>
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span className="text-muted">Vendors</span>
+                                    <span className="fw-semibold">
+                                        {uniqueVendors.length}
+                                        {uniqueVendors.length > 1 && (
+                                            <span className="ms-1 text-warning small" title="Multiple vendors selected">
+                                                <i className="fa-solid fa-exclamation-triangle"></i>
+                                            </span>
                                         )}
-                                    </Button>
-                                    <Button
-                                        variant="outline-secondary"
-                                        className="w-100"
-                                        onClick={() => navigate('/purchase')}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
-                )}
+                                    </span>
+                                </div>
+                                <div className="d-flex justify-content-between mb-3">
+                                    <span className="text-muted">Total Books</span>
+                                    <span className="fw-semibold">{totalBooks}</span>
+                                </div>
+                                <div className="p-3 rounded bg-light mb-4">
+                                    <small className="text-muted text-uppercase">Total Value</small>
+                                    <div className="h4 mb-0">₹{totalAmount.toFixed(2)}</div>
+                                </div>
+                                <Button
+                                    variant="primary"
+                                    className="w-100 mb-2"
+                                    onClick={handleSavePurchases}
+                                    disabled={saving || multiInsertRows.length === 0}
+                                >
+                                    {saving ? (
+                                        <>
+                                            <i className="fa-solid fa-spinner fa-spin me-2"></i>
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fa-solid fa-save me-2"></i>
+                                            Save Purchases
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    variant="outline-secondary"
+                                    className="w-100"
+                                    onClick={() => navigate('/purchase')}
+                                >
+                                    Cancel
+                                </Button>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
             </>
         );
     };
 
     return (
         <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1, }} >
-            {/* Stats Cards Row */}
             <Row className="mb-4">
-                {/* Books Issued */}
                 <Col md={4}>
                     <Card style={{
                         background: "#E0F2FF",
@@ -1277,8 +1256,6 @@ const BulkPurchasePage = () => {
                         </Card.Body>
                     </Card>
                 </Col>
-
-                {/* Books Purchased */}
                 <Col md={4}>
                     <Card className="shadow-sm bg-success text-white">
                         <Card.Body className="p-4 d-flex align-items-center justify-content-between">
@@ -1290,8 +1267,6 @@ const BulkPurchasePage = () => {
                         </Card.Body>
                     </Card>
                 </Col>
-
-                {/* Books Available */}
                 <Col md={4}>
                     <Card className="shadow-sm bg-warning text-dark">
                         <Card.Body className="p-4 d-flex align-items-center justify-content-between">
@@ -1305,7 +1280,6 @@ const BulkPurchasePage = () => {
                 </Col>
             </Row>
 
-            {/* Main Card with Tabs */}
             <Row >
                 <Col lg={12}>
                     <Card className="shadow-sm border-0" style={{ minHeight: '600px', }}>
@@ -1328,7 +1302,6 @@ const BulkPurchasePage = () => {
                             </Tabs>
                         </Card.Header>
 
-                        {/* Card Body with proper padding */}
                         <Card.Body className="p-4" style={{ paddingBottom: '30px' }}>
                             {renderTabContent()}
                         </Card.Body>
@@ -1336,7 +1309,6 @@ const BulkPurchasePage = () => {
                 </Col>
             </Row>
 
-            {/* Add Vendor Modal */}
             <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
                 <Modal.Header closeButton className="border-bottom-0 pb-0">
                     <Modal.Title className="fw-bold">
@@ -1450,7 +1422,6 @@ const BulkPurchasePage = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Book Modal */}
             <Modal show={showAddBookModal} onHide={() => {
                 setShowAddBookModal(false);
                 setBarcodeInput("");
@@ -1462,7 +1433,6 @@ const BulkPurchasePage = () => {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="pt-0">
-                    {/* Barcode Scan Section */}
                     <Card className="mb-4 border-0 bg-light">
                         <Card.Body className="p-3">
                             <div className="d-flex justify-content-between align-items-center">
@@ -1514,7 +1484,6 @@ const BulkPurchasePage = () => {
                                     />
                                 </div>
 
-                                {/* Scanner Section */}
                                 <div className="d-flex gap-2 align-items-center">
                                     <div className="flex-grow-1">
                                         <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />

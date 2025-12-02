@@ -14,10 +14,82 @@ const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [barcodeError, setBarcodeError] = useState(null);
+  const [baseConfig, setBaseConfig] = useState(null);
+  const [finalConfig, setFinalConfig] = useState(null);
 
-  const baseConfig = getLibraryCardConfig();
-  const dataDependencies = baseConfig.dataDependencies || [];
+  const dataDependencies = baseConfig?.dataDependencies || [];
   const { data, loading, error } = useDataManager(dataDependencies, props);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await getLibraryCardConfig();
+        setBaseConfig(config);
+      } catch (error) {
+        console.error("Error fetching library card config:", error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  useEffect(() => {
+    if (data && baseConfig) {
+      const buildFinalConfig = async () => {
+        try {
+          const allData = { ...(data || {}), ...props };
+          const config = await getLibraryCardConfig(allData);
+          const final = {
+            ...config,
+            onSubmit: async (formData, setFormData) => {
+              if (!formData.user_id) {
+                alert("Please select a user");
+                return false;
+              }
+
+              if (!formData.card_number) {
+                const cardNumber = await handleAutoConfig(setFormData);
+                if (!cardNumber) return false;
+              }
+
+              formData.isbn_code = generateDefaultISBN({ id: formData.card_number });
+
+              try {
+                const response = await DataApi.createLibraryCard(formData);
+
+                if (!response?.data?.success || !response.data.data) {
+                  alert("Failed to create library card");
+                  return false;
+                }
+
+                const newCard = response.data.data;
+
+                handleModalOpen(newCard);
+
+                if (setFormData) setFormData({});
+
+                return true;
+              } catch (err) {
+                console.error("Error creating card:", err);
+                alert("Error creating library card");
+                return false;
+              }
+            },
+
+            customHandlers: {
+              ...config.customHandlers,
+              handleBarcodePreview: handleModalOpen,
+              formatDateToDDMMYYYY: formatDate,
+              generateISBN13Number: generateDefaultISBN
+            }
+          };
+          setFinalConfig(final);
+        } catch (error) {
+          console.error("Error building final config:", error);
+        }
+      };
+      buildFinalConfig();
+    }
+  }, [data, baseConfig, props]);
 
   useEffect(() => {
     if (showBarcodeModal && selectedCard) {
@@ -112,7 +184,7 @@ const LibraryCard = (props) => {
 
   const generateCardNumber = (card) => card.card_number || 'N/A';
 
-  if (loading) return <Loader message="Loading library cards data..." />;
+  if (loading || !finalConfig) return <Loader message="Loading library cards data..." />;
   if (error) return (
     <div className="alert alert-danger m-3">
       <h4>Error Loading Library Cards</h4>
@@ -121,58 +193,7 @@ const LibraryCard = (props) => {
     </div>
   );
 
-  const allData = { ...(data || {}), ...props };
 
-
-  const finalConfig = {
-    ...getLibraryCardConfig(allData),
-    onSubmit: async (formData, setFormData) => {
-      if (!formData.user_id) {
-        alert("Please select a user");
-        return false;
-      }
-
-
-      if (!formData.card_number) {
-        const cardNumber = await handleAutoConfig(setFormData);
-        if (!cardNumber) return false;
-      }
-
-
-      formData.isbn_code = generateDefaultISBN({ id: formData.card_number });
-
-      try {
-
-        const response = await DataApi.createLibraryCard(formData);
-
-        if (!response?.data?.success || !response.data.data) {
-          alert("Failed to create library card");
-          return false;
-        }
-
-        const newCard = response.data.data;
-
-
-        handleModalOpen(newCard);
-
-
-        if (setFormData) setFormData({});
-
-        return true;
-      } catch (err) {
-        console.error("Error creating card:", err);
-        alert("Error creating library card");
-        return false;
-      }
-    },
-
-    customHandlers: {
-      ...getLibraryCardConfig(allData).customHandlers,
-      handleBarcodePreview: handleModalOpen,
-      formatDateToDDMMYYYY: formatDate,
-      generateISBN13Number: generateDefaultISBN
-    }
-  };
 
   return (
     <>

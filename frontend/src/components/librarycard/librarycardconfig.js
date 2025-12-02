@@ -1,31 +1,74 @@
-import { Badge, Button } from "react-bootstrap";
+import { Badge } from "react-bootstrap";
 import { API_BASE_URL } from "../../constants/CONSTANT";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import DataApi from "../../api/dataApi";
 
 const formatDateToDDMMYYYY = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
 };
 
 const generateCardNumber = (card) => {
-    const uuidPart = card.id?.replace(/-/g, '').substring(0, 8).toUpperCase() || 'LIB00000';
+    const uuidPart =
+        card.id?.replace(/-/g, "").substring(0, 8).toUpperCase() || "LIB00000";
     return `LIB${uuidPart}`;
 };
 
-export const getLibraryCardConfig = (externalData = {}) => {
+
+export const getLibraryCardConfig = async (externalData = {}) => {
     const customHandlers = externalData.customHandlers || {};
-    const handleBarcodePreview = customHandlers.handleBarcodePreview ||
-        ((card) => console.warn('Barcode preview handler not provided', card));
-    console.log("externalDataexternalData", externalData)
+    const handleBarcodePreview =
+        customHandlers.handleBarcodePreview ||
+        ((card) => console.warn("Barcode preview handler not provided", card));
+    console.log("externalDataexternalData", externalData);
 
+    let defaultCountryCode = "";
+    try {
+        const companyApi = new DataApi("company");
+        const companyResponse = await companyApi.fetchAll();
+        if (
+            Array.isArray(companyResponse.data) &&
+            companyResponse.data.length > 0
+        ) {
+            const companyWithCountryCode = companyResponse.data.find(
+                (c) => c && c.country_code
+            );
+            console.log("Company with country code:", companyWithCountryCode);
 
-    const safeSubscriptions = Array.isArray(externalData.subscriptions?.data)
-        ? externalData.subscriptions.data
-        : [];
-    console.log("Safe subs", safeSubscriptions)
+            if (companyWithCountryCode && companyWithCountryCode.country_code) {
+                const countryCodeStr = String(
+                    companyWithCountryCode.country_code
+                ).trim();
+                console.log("Original country_code string:", countryCodeStr);
+
+                const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
+                console.log("Extracted code part:", codePart);
+
+                if (codePart && !codePart.startsWith("+")) {
+                    defaultCountryCode = "+" + codePart;
+                } else if (codePart) {
+                    defaultCountryCode = codePart;
+                }
+
+                console.log("Final defaultCountryCode:", defaultCountryCode);
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching company data:", error);
+    }
+
+    console.log("defaultCountryCode", defaultCountryCode);
+
+    const safeSubscriptions =
+        externalData.subscriptions?.data ||
+        externalData.subscriptions ||
+        [];
+    console.log("Safe subs", safeSubscriptions);
+
     const defaultColumns = [
         {
             field: "image",
@@ -44,7 +87,6 @@ export const getLibraryCardConfig = (externalData = {}) => {
                             src={imgSrc}
                             alt={row.first_name || "User"}
                             className="table-user-image"
-
                         />
                     );
                 }
@@ -54,22 +96,47 @@ export const getLibraryCardConfig = (externalData = {}) => {
                         <i className="fa-solid fa-user"></i>
                     </div>
                 );
-            }
-        }
-        ,
+            },
+        },
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
         { field: "last_name", label: "Last Name", sortable: true },
         { field: "email", label: "Email", sortable: true },
+        {
+            field: "country_code",
+            label: "Country Code",
+            render: (value) => {
+                const cleanValue = value
+                    ? String(value).split(/[—\-]/)[0].trim()
+                    : value;
+                const country = COUNTRY_CODES.find(
+                    (c) => c.country_code === cleanValue
+                );
+                return country
+                    ? `${country.country_code} (${country.country})`
+                    : cleanValue || defaultCountryCode;
+            },
+        },
         { field: "phone_number", label: "Phone Number", sortable: true },
         {
             field: "subscription_id",
             label: "Subscription",
             sortable: true,
             render: (value, row) => {
-                const subscription = safeSubscriptions.find(sub => sub.id === value);
-                return subscription ? subscription.plan_name || subscription.name : "No Subscription";
+                const subscription = (externalData.subscriptions?.data || []).find(
+                    sub => sub.id === row.subscription_id
+                );
+
+                return subscription
+                    ? subscription.plan_name || subscription.name
+                    : "No Subscription";
             }
+        },
+        {
+            field: "allowed_book",
+            label: "Allowed Books",
+            sortable: true,
+
         },
         {
             field: "status",
@@ -77,12 +144,14 @@ export const getLibraryCardConfig = (externalData = {}) => {
             sortable: true,
             render: (value) => {
                 return (
-                    <Badge bg={value === true || value === "active" ? "success" : "secondary"}>
+                    <Badge
+                        bg={value === true || value === "active" ? "success" : "secondary"}
+                    >
                         {value === true || value === "active" ? "Active" : "Inactive"}
                     </Badge>
                 );
-            }
-        }
+            },
+        },
     ];
 
     return {
@@ -96,14 +165,15 @@ export const getLibraryCardConfig = (externalData = {}) => {
             last_name: "",
             name: "",
             email: "",
+            country_code: defaultCountryCode,
             phone_number: "",
-            registration_date: new Date().toISOString().split('T')[0],
+            registration_date: new Date().toISOString().split("T")[0],
             type: "",
-            renewal: "",
             subscription_id: "",
-            issue_date: new Date().toISOString().split('T')[0],
+            allowed_book: null, // null means use subscription default
+            issue_date: new Date().toISOString().split("T")[0],
             status: "active",
-            image: null
+            image: null,
         },
 
         formFields: [
@@ -113,7 +183,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "text",
                 required: false,
                 placeholder: "Enter first name",
-                colSize: 6
+                colSize: 6,
             },
             {
                 name: "last_name",
@@ -121,7 +191,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "text",
                 required: false,
                 placeholder: "Enter last name",
-                colSize: 6
+                colSize: 6,
             },
             {
                 name: "email",
@@ -129,7 +199,20 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "email",
                 required: false,
                 placeholder: "Enter email address",
-                colSize: 6
+                colSize: 6,
+            },
+            {
+                name: "country_code",
+                label: "Country Code",
+                type: "select",
+                options: COUNTRY_CODES.map((country) => ({
+                    value: country.country_code,
+                    label: `${country.country_code} - ${country.country}`,
+                })),
+                required: true,
+                placeholder: "Select country code",
+                defaultValue: defaultCountryCode,
+                colSize: 3,
             },
             {
                 name: "phone_number",
@@ -137,14 +220,14 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 type: "tel",
                 required: false,
                 placeholder: "Enter phone number",
-                colSize: 6
+                colSize: 3,
             },
             {
                 name: "registration_date",
                 label: "Registration Date",
                 type: "date",
                 required: false,
-                colSize: 6
+                colSize: 6,
             },
             {
                 name: "type",
@@ -155,10 +238,10 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     { value: "student", label: "Student" },
                     { value: "faculty", label: "Faculty" },
                     { value: "staff", label: "Staff" },
-                    { value: "guest", label: "Guest" }
+                    { value: "guest", label: "Guest" },
                 ],
                 placeholder: "Select type",
-                colSize: 6
+                colSize: 6,
             },
             {
                 name: "subscription_id",
@@ -171,12 +254,16 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 displayKey: "plan_name"
             },
             {
-                name: "renewal",
-                label: "Renewal",
-                type: "text",
+                name: "allowed_book",
+                label: "Allowed Books (Override)",
+                type: "number",
                 required: false,
-                placeholder: "Enter renewal information",
-                colSize: 6
+                placeholder: "Leave empty to use subscription default",
+                colSize: 6,
+                min: 0,
+                max: 100,
+                helperText: "Leave empty to use subscription limit. 0 = unlimited?",
+            
             },
             {
                 name: "image",
@@ -191,28 +278,27 @@ export const getLibraryCardConfig = (externalData = {}) => {
 
                 onChange: (file, formData, setFormData) => {
                     if (file) {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                             ...prev,
-                            image: file
+                            image: file,
                         }));
                     }
-                }
+                },
             },
-
             {
                 name: "status",
                 label: "Status",
                 type: "toggle",
                 options: [
                     { value: true, label: "Active" },
-                    { value: false, label: "Inactive" }
+                    { value: false, label: "Inactive" },
                 ],
                 colSize: 6,
-            }
+            },
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-            console.log("FormData", formData)
+            console.log("FormData", formData);
             const errors = {};
 
             if (!formData.user_id) {
@@ -224,7 +310,8 @@ export const getLibraryCardConfig = (externalData = {}) => {
             }
 
             const existingCard = allCards?.find(
-                card => card.user_id === formData.user_id &&
+                (card) =>
+                    card.user_id === formData.user_id &&
                     card.is_active &&
                     card.id !== editingCard?.id
             );
@@ -233,19 +320,28 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 errors.user_id = "Member already has an active library card";
             }
 
+            // Validate allowed_books
+            if (formData.allowed_books !== null && formData.allowed_books !== undefined) {
+                const allowedBooks = parseInt(formData.allowed_books);
+                if (isNaN(allowedBooks) || allowedBooks < 0) {
+                    errors.allowed_books = "Allowed books must be a positive number";
+                }
+            }
+
             return errors;
         },
 
         dataDependencies: {
             users: "user",
-            subscriptions: "subscriptions"
+            subscriptions: "subscriptions",
+            company: "company",
         },
 
         lookupNavigation: {
             user_id: {
                 path: "user",
                 idField: "id",
-                labelField: "name"
+                labelField: "name",
             },
             subscription_id: {
                 path: "subscriptions",
@@ -263,7 +359,7 @@ export const getLibraryCardConfig = (externalData = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true
+            allowDelete: false,
         },
 
         details: [
@@ -273,10 +369,24 @@ export const getLibraryCardConfig = (externalData = {}) => {
             { key: "last_name", label: "Last Name", type: "text" },
             { key: "user_name", label: "Linked User", type: "text" },
             { key: "email", label: "Email", type: "text" },
+            {
+                key: "country_code",
+                label: "Country Code",
+                render: (value) => {
+                    const cleanValue = value
+                        ? String(value).split(/[—\-]/)[0].trim()
+                        : value;
+                    const country = COUNTRY_CODES?.find(
+                        (c) => c.country_code === cleanValue
+                    );
+                    return country
+                        ? `${country.country_code} (${country.country})`
+                        : cleanValue || defaultCountryCode;
+                },
+            },
             { key: "phone_number", label: "Phone Number", type: "text" },
             { key: "registration_date", label: "Registration Date", type: "date" },
             { key: "type", label: "Type", type: "text" },
-            { key: "renewal", label: "Renewal", type: "text" },
             {
                 key: "subscription_id",
                 label: "Subscription",
@@ -287,6 +397,12 @@ export const getLibraryCardConfig = (externalData = {}) => {
                         data.subscription?.plan_name ||
                         "No Subscription";
                 }
+            },
+            {
+                key: "allowed_books",
+                label: "Allowed Books",
+                type: "text",
+
             },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
@@ -301,22 +417,21 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     false: "secondary",
                     true_label: "Active",
                     false_label: "Inactive",
-                }
+                },
             },
         ],
-
 
         customHandlers: {
             generateCardNumber,
             formatDateToDDMMYYYY,
             handleBarcodePreview,
+            // calculateAllowedBooks,
 
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
-                    data.forEach(item => {
-
-                        if (item.hasOwnProperty('is_active')) {
-                            item.status = item.is_active ? 'active' : 'inactive';
+                    data.forEach((item) => {
+                        if (item.hasOwnProperty("is_active")) {
+                            item.status = item.is_active ? "active" : "inactive";
                         }
 
                         if (item.subscription_id) {
@@ -324,26 +439,36 @@ export const getLibraryCardConfig = (externalData = {}) => {
                                 sub => sub.id === item.subscription_id
                             );
                             item.subscription_name = subscription?.plan_name || subscription?.name || '';
+
+                            // // Calculate allowed books for display
+                            // item.allowed_books_display = calculateAllowedBooks(subscription, item);
                         }
 
-
-                        if (!item.first_name) item.first_name = '-';
-                        if (!item.last_name) item.last_name = '-';
+                        if (!item.first_name) item.first_name = "-";
+                        if (!item.last_name) item.last_name = "-";
                     });
                 }
             },
 
-
-
             getSubscriptionOptions: () => {
                 return safeSubscriptions.map(sub => ({
                     value: sub.id,
-                    label: sub.plan_name || sub.name || `Subscription ${sub.id}`
+                    label: `${sub.plan_name || sub.name} (Books: ${sub.allowed_books || 5})`
                 }));
-            }
+            },
+
+            // Helper to get the effective allowed books for a card
+            // getAllowedBooksForCard: (cardId, allCards, subscriptions) => {
+            //     const card = allCards.find(c => c.id === cardId);
+            //     if (!card) return 5;
+
+            //     const subscription = subscriptions.find(sub => sub.id === card.subscription_id);
+            //     // return calculateAllowedBooks(subscription, card);
+            // }
         },
 
         beforeSubmit: (formData, isEditing) => {
+            console.log("FORM DTA", formData)
             const errors = [];
 
             if (!formData.user_id) {
@@ -358,14 +483,13 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 errors.push("Image size must be less than 2MB");
             }
 
+
             return errors;
         },
-
 
         transformResponse: (response) => {
             if (response && response.data) {
                 let data = response.data;
-
 
                 if (data.data && Array.isArray(data.data)) {
                     data = data.data;
@@ -373,8 +497,8 @@ export const getLibraryCardConfig = (externalData = {}) => {
                     data = data.data;
                 }
 
-
-                if (Array.isArray(data) && safeSubscriptions.length > 0) {
+                const subs = externalData.subscriptions?.data || [];
+                if (Array.isArray(data) && subs.length > 0) {
                     data = data.map(item => {
                         if (item.subscription_id) {
                             const subscription = safeSubscriptions.find(
@@ -383,10 +507,12 @@ export const getLibraryCardConfig = (externalData = {}) => {
                             if (subscription) {
                                 return {
                                     ...item,
-                                    subscription_name: subscription.plan_name || subscription.name
+                                    subscription_name: subscription.plan_name || subscription.name,
+
                                 };
                             }
                         }
+
                         return item;
                     });
                 }
@@ -394,6 +520,17 @@ export const getLibraryCardConfig = (externalData = {}) => {
                 return data;
             }
             return response;
+        },
+
+
+        exportConfig: {
+            includeFields: [
+                'card_number', 'first_name', 'last_name', 'email',
+                'phone_number', 'subscription_name', 'allowed_books_display', 'status'
+            ],
+            fieldLabels: {
+                allowed_books_display: 'Allowed Books'
+            }
         }
     };
 };

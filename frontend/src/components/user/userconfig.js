@@ -2,25 +2,25 @@ import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 export const getUserConfig = (externalData = {}, props = {}) => {
- 
+
     let userRoles = [];
 
- 
+
     if (externalData && externalData.userRoles) {
         userRoles = externalData.userRoles;
     }
- 
+
     else if (props && props.userRoles) {
         userRoles = props.userRoles;
     }
- 
+
     else if (externalData && externalData["user-role"]) {
         userRoles = externalData["user-role"];
     }
 
     console.log("Extracted userRoles in getUserConfig:", userRoles);
 
- 
+
     let companies = [];
     if (externalData && externalData.companies) {
         companies = externalData.companies;
@@ -30,7 +30,7 @@ export const getUserConfig = (externalData = {}, props = {}) => {
         companies = externalData["company"];
     }
 
- 
+
     let defaultCountryCode = "+91";
 
     console.log("Companies array in getUserConfig:", companies);
@@ -78,7 +78,7 @@ export const getUserConfig = (externalData = {}, props = {}) => {
                 field: "userrole",
                 label: "Role",
                 render: (value, record, extData) => {
- 
+
                     const roles = extData?.userRoles || userRoles || [];
                     console.log("Available roles for render:", roles);
                     console.log("Looking for role with id:", value);

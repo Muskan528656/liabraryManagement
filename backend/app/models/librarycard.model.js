@@ -11,9 +11,6 @@ function init(schema_name) {
 }
 
 
- 
- 
- 
 async function findAll() {
   try {
     const query = `
@@ -34,9 +31,9 @@ async function findAll() {
   }
 }
 
- 
- 
- 
+
+
+
 async function findById(id) {
   try {
     const query = `
@@ -57,9 +54,9 @@ async function findById(id) {
   }
 }
 
- 
- 
- 
+
+
+
 async function findByCardNumber(cardNumber) {
   try {
     const query = `
@@ -79,79 +76,88 @@ async function findByCardNumber(cardNumber) {
     throw error;
   }
 }
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
 async function create(cardData, userId) {
   console.log("cardData:", cardData);
 
   if (!cardData.card_number) {
-    cardData.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
-
+    cardData.card_number = await generateAutoNumberSafe(
+      "library_members",
+      userId,
+      "LIB-",
+      5
+    );
 
     if (!cardData.card_number) {
       throw new Error("Failed to generate unique card number");
     }
   }
 
-
-
   try {
     const query = `
       INSERT INTO ${schema}.library_members
-      (card_number,is_active, image, subscription_id,
-       first_name, last_name, name, email, phone_number,
-       registration_date, type,
-       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
+      (
+        card_number,
+        is_active,
+        image,
+        subscription_id,
+        first_name,
+        last_name,
+        name,
+        email,
+        phone_number,
+        registration_date,
+        type,
+        country_code,
+        allowed_book,
+        createddate,
+        lastmodifieddate,
+        createdbyid,
+        lastmodifiedbyid
+      )
       VALUES
-      ($1, $2, $3, $4, $5,
-       $6, $7, $8, $9, $10,
-       $11,
-       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $12, $12)
+      (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, $10,
+        $11, $12, $13,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
+        $14, $14
+      )
       RETURNING *
     `;
 
     const values = [
-      cardData.card_number,
-      cardData.is_active ?? true,
-      cardData.image || null,
-   
-      cardData.subscription_id || null,
-      cardData.first_name || null,
-      cardData.last_name || null,
-      cardData.name || null,
-      cardData.email || null,
-      cardData.phone_number || null,
-      cardData.registration_date || null,
-      cardData.type || null,
-      userId,
+      cardData.card_number,             // $1
+      cardData.is_active ?? true,       // $2
+      cardData.image || null,           // $3
+      cardData.subscription_id || null, // $4
+      cardData.first_name || null,      // $5
+      cardData.last_name || null,       // $6
+      cardData.name || null,            // $7
+      cardData.email || null,           // $8
+      cardData.phone_number || null,    // $9
+      cardData.registration_date || null, // $10
+      cardData.type || null,            // $11
+      cardData.country_code || null,    // $12
+      cardData.allowed_book || null,    // $13
+      userId                            // $14
     ];
 
     const result = await sql.query(query, values);
+    console.log("RESULT->>", result.rows[0])
     return result.rows[0] || null;
-
   } catch (error) {
     console.error("Error in create:", error);
     throw error;
   }
 }
 
- 
 async function updateById(id, cardData, userId) {
   try {
     const updates = [];
     const values = [];
     let idx = 1;
-
+    console.log("cardDatacardData", cardData)
+    // Same field list jaisa pehle tha — bas allowed_book add kiya
     const fields = [
       "card_number",
       "is_active",
@@ -164,9 +170,12 @@ async function updateById(id, cardData, userId) {
       "email",
       "phone_number",
       "registration_date",
-      "type"
+      "type",
+      "country_code",
+      "allowed_book"
     ];
 
+    // Dynamically update only passed fields
     fields.forEach(f => {
       if (cardData[f] !== undefined) {
         updates.push(`${f} = $${idx}`);
@@ -175,11 +184,13 @@ async function updateById(id, cardData, userId) {
       }
     });
 
+    // Last modified fields
     updates.push(`lastmodifieddate = CURRENT_TIMESTAMP`);
     updates.push(`lastmodifiedbyid = $${idx}`);
     values.push(userId);
     idx++;
 
+    // WHERE id = ?
     values.push(id);
 
     const query = `
@@ -198,9 +209,9 @@ async function updateById(id, cardData, userId) {
   }
 }
 
- 
- 
- 
+
+
+
 async function deleteById(id) {
   try {
     const query = `DELETE FROM ${schema}.library_members WHERE id = $1 RETURNING *`;

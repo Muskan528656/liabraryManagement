@@ -6,24 +6,64 @@ import Image from "react-bootstrap/Image";
 import Modal from "react-bootstrap/Modal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { NameInitialsAvatar } from "react-name-initials-avatar"; // npm install react-name-initials-avatar --force
+import { NameInitialsAvatar } from "react-name-initials-avatar";
 import jwt_decode from "jwt-decode";
 import DataApi from "../api/dataApi";
 import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import axios from "axios";
 import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
+
 const EditProfile = ({ userId }) => {
   const fileInputRef = useRef();
+  const barcodeRef = useRef(null);
+
   const [profile, setProfile] = useState({
+    id: "",
     firstname: "",
     lastname: "",
     email: "",
     whatsapp_number: "",
+    country_code: "",
   });
   const [body, setBody] = useState();
   const [user, setUser] = useState({ password: "", confirmpassword: "" });
   const [selectedFiles, setSelectedFiles] = useState(null);
+  const [companyCountryCode, setCompanyCountryCode] = useState("");
+
+  console.log("defaultCountryCode", companyCountryCode)
+  const fetCompanyCode = async () => {
+    try {
+      const companyApi = new DataApi("company");
+      const companyResponse = await companyApi.fetchAll();
+      if (
+        Array.isArray(companyResponse.data) &&
+        companyResponse.data.length > 0
+      ) {
+        const companyWithCountryCode = companyResponse.data.find(
+          (c) => c && c.country_code
+        );
+
+        if (companyWithCountryCode && companyWithCountryCode.country_code) {
+          const countryCodeStr = String(
+            companyWithCountryCode.country_code
+          ).trim();
+          const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
+
+          let finalCode = codePart || "";
+          if (finalCode && !finalCode.startsWith("+")) {
+            finalCode = "+" + finalCode;
+          }
+
+          setCompanyCountryCode(finalCode);
+          console.log("Company country code set to:", finalCode);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+    }
+  };
+
 
 
   let tenantcode = "";
@@ -54,11 +94,12 @@ const EditProfile = ({ userId }) => {
   const [brokenImages, setBrokenImages] = useState([]);
   const [libraryCard, setLibraryCard] = useState(null);
   const [showLibraryCardModal, setShowLibraryCardModal] = useState(false);
-  const barcodeRef = useRef(null);
 
   useEffect(() => {
     async function init() {
       try {
+
+        await fetCompanyCode();
 
         const token = sessionStorage.getItem("token");
         if (!token) {
@@ -67,20 +108,18 @@ const EditProfile = ({ userId }) => {
         }
 
         const decoded = jwt_decode(token);
-        const userId = decoded.id;
+        const userIdFromToken = decoded.id;
 
-        if (!userId) {
+        if (!userIdFromToken) {
           console.error("User ID not found in token");
           return;
         }
 
-
         const userApi = new DataApi("user");
-        const userResponse = await userApi.fetchById(userId);
+        const userResponse = await userApi.fetchById(userIdFromToken);
 
         if (userResponse && userResponse.data) {
           let result = userResponse.data;
-
 
           if (result.whatsapp_number) {
             result.whatsapp_number =
@@ -90,6 +129,14 @@ const EditProfile = ({ userId }) => {
                 : result.whatsapp_number;
           }
 
+          // Set user's country code or default to company code if empty
+          let userCountryCode = result.country_code || "";
+          if (userCountryCode) {
+            userCountryCode = String(userCountryCode).trim();
+            if (!userCountryCode.startsWith("+")) {
+              userCountryCode = "+" + userCountryCode;
+            }
+          }
 
           setProfile({
             id: result.id,
@@ -97,14 +144,12 @@ const EditProfile = ({ userId }) => {
             lastname: result.lastname || "",
             email: result.email || "",
             whatsapp_number: result.whatsapp_number || "",
-            country_code: result.country_code || "+91",
+            country_code: companyCountryCode || "",
           });
-
 
           if (result.id) {
             setBody(profileImg + "/" + result.id);
           }
-
 
           try {
             const cardApi = new DataApi("librarycard");
@@ -139,11 +184,9 @@ const EditProfile = ({ userId }) => {
       setTimeout(() => {
         try {
           if (barcodeRef.current) {
-
-            barcodeRef.current.innerHTML = '';
+            barcodeRef.current.innerHTML = "";
 
             const barcodeData = libraryCard.card_number;
-
 
             JsBarcode(barcodeRef.current, barcodeData, {
               format: "CODE128",
@@ -161,7 +204,7 @@ const EditProfile = ({ userId }) => {
                 if (!valid) {
                   console.error("Invalid barcode data");
                 }
-              }
+              },
             });
           }
         } catch (error) {
@@ -218,23 +261,21 @@ const EditProfile = ({ userId }) => {
         return;
       }
 
-
-      profile.country_code = profile.country_code
-        ? String(profile.country_code).trim()
-        : "+91";
-      if (!profile.country_code.startsWith("+")) {
-        profile.country_code = `+${profile.country_code}`;
+      // ✅ Normalize country code safely (no state mutation)
+      let code = profile.country_code || companyCountryCode || "";
+      code = String(code).trim();
+      if (code && !code.startsWith("+")) {
+        code = "+" + code;
       }
 
       if (selectedFiles === null) {
-
         const userApi = new DataApi("user");
         const updateData = {
           firstname: profile.firstname,
           lastname: profile.lastname,
           email: profile.email,
           whatsapp_number: profile.whatsapp_number,
-          country_code: profile.country_code,
+          country_code: code,
         };
 
         const result = await userApi.update(updateData, profile.id);
@@ -256,44 +297,38 @@ const EditProfile = ({ userId }) => {
           toast.error(result.data?.errors || "Failed to update profile");
         }
       } else {
-
         try {
-
           const formData = new FormData();
-          formData.append('file', selectedFiles);
+          formData.append("file", selectedFiles);
 
-          const token = sessionStorage.getItem('token');
-
+          const token = sessionStorage.getItem("token");
 
           const uploadResponse = await axios.post(
             `${COUNTRY_CODES.API_BASE_URL}/api/user/${profile.id}/upload-image`,
             formData,
             {
               headers: {
-                'Content-Type': 'multipart/form-data',
+                "Content-Type": "multipart/form-data",
                 Authorization: token,
               },
             }
           );
 
           if (uploadResponse.data && uploadResponse.data.success) {
-
             const userApi = new DataApi("user");
             const updateData = {
               firstname: profile.firstname,
               lastname: profile.lastname,
               email: profile.email,
               whatsapp_number: profile.whatsapp_number,
-              country_code: profile.country_code,
+              country_code: code,
             };
 
             const result = await userApi.update(updateData, profile.id);
 
             if (result.data && result.data.success !== false) {
-
               const imagePath = `${profileImg}/${profile.id}`;
               sessionStorage.setItem("myimage", imagePath);
-
 
               setTimeout(() => {
                 window.location.reload();
@@ -313,14 +348,13 @@ const EditProfile = ({ userId }) => {
           console.error("Error uploading image:", uploadError);
           toast.error("Failed to upload image. Please try again.");
 
-
           const userApi = new DataApi("user");
           const updateData = {
             firstname: profile.firstname,
             lastname: profile.lastname,
             email: profile.email,
             whatsapp_number: profile.whatsapp_number,
-            country_code: profile.country_code,
+            country_code: code,
           };
 
           const result = await userApi.update(updateData, profile.id);
@@ -334,7 +368,10 @@ const EditProfile = ({ userId }) => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error(error.response?.data?.errors || "Failed to update profile. Please try again.");
+      toast.error(
+        error.response?.data?.errors ||
+        "Failed to update profile. Please try again."
+      );
     }
   };
 
@@ -379,7 +416,10 @@ const EditProfile = ({ userId }) => {
       }
     } catch (error) {
       console.error("Error updating password:", error);
-      toast.error(error.response?.data?.errors || "Failed to update password. Please try again.");
+      toast.error(
+        error.response?.data?.errors ||
+        "Failed to update password. Please try again."
+      );
     }
   };
 
@@ -417,7 +457,12 @@ const EditProfile = ({ userId }) => {
       <Container fluid className="mt-4">
         <Row className="mb-4">
           <Col>
-            <Card style={{ border: "none", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)" }}>
+            <Card
+              style={{
+                border: "none",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)",
+              }}
+            >
               <Card.Body className="p-4">
                 <div className="d-flex align-items-center">
                   <div
@@ -425,20 +470,30 @@ const EditProfile = ({ userId }) => {
                       width: "50px",
                       height: "50px",
                       borderRadius: "12px",
-                      background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                      background:
+                        "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       marginRight: "15px",
                     }}
                   >
-                    <i className="fa-solid fa-user" style={{ fontSize: "24px", color: "white" }}></i>
+                    <i
+                      className="fa-solid fa-user"
+                      style={{ fontSize: "24px", color: "white" }}
+                    ></i>
                   </div>
                   <div>
-                    <h4 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>
+                    <h4
+                      className="mb-0 fw-bold"
+                      style={{ color: "#6f42c1" }}
+                    >
                       Update Profile
                     </h4>
-                    <p className="text-muted mb-0" style={{ fontSize: "14px" }}>
+                    <p
+                      className="text-muted mb-0"
+                      style={{ fontSize: "14px" }}
+                    >
                       Manage your personal information and account settings
                     </p>
                   </div>
@@ -450,7 +505,13 @@ const EditProfile = ({ userId }) => {
 
         <Row>
           <Col lg={4} xs={12} sm={12} className="mb-4">
-            <Card style={{ border: "none", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)", height: "100%" }}>
+            <Card
+              style={{
+                border: "none",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)",
+                height: "100%",
+              }}
+            >
               <Card.Body className="text-center p-4">
                 <Card.Title
                   style={{
@@ -458,16 +519,11 @@ const EditProfile = ({ userId }) => {
                     color: "#6f42c1",
                     fontSize: "20px",
                     fontWeight: "600",
-                    marginBottom: "20px"
+                    marginBottom: "20px",
                   }}
                 >
                   {profile.firstname || ""} {profile.lastname || ""}
                 </Card.Title>
-                {/* <Image variant="top"
-                  src={body}
-                  className="rounded-circle"
-                  thumbnail
-                  style={{ width: "207px", height: "207px", objectFit: "contain" }}></Image> */}
 
                 <div style={{ marginBottom: "20px" }}>
                   {brokenImages.includes(`img-${profile.id}`) ? (
@@ -503,7 +559,10 @@ const EditProfile = ({ userId }) => {
                         boxShadow: "0 4px 12px rgba(111, 66, 193, 0.2)",
                       }}
                       onError={() =>
-                        setBrokenImages((prev) => [...prev, `img-${profile.id}`])
+                        setBrokenImages((prev) => [
+                          ...prev,
+                          `img-${profile.id}`,
+                        ])
                       }
                       id={`img-${profile.id}`}
                     />
@@ -514,10 +573,11 @@ const EditProfile = ({ userId }) => {
                   className="btn mt-3"
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                    background:
+                      "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
                     border: "none",
                     padding: "10px",
-                    fontWeight: "500"
+                    fontWeight: "500",
                   }}
                   onClick={() => fileInputRef.current.click()}
                 >
@@ -534,34 +594,55 @@ const EditProfile = ({ userId }) => {
                 />
 
                 {/* Library Card Section - Always Show */}
-                <div className="mt-4 pt-4" style={{ borderTop: "2px solid #e9ecef" }}>
-                  <h6 className="mb-3" style={{ color: "#6f42c1", fontWeight: "600" }}>
+                <div
+                  className="mt-4 pt-4"
+                  style={{ borderTop: "2px solid #e9ecef" }}
+                >
+                  <h6
+                    className="mb-3"
+                    style={{ color: "#6f42c1", fontWeight: "600" }}
+                  >
                     <i className="fa-solid fa-id-card me-2"></i>
                     Library Card
                   </h6>
                   {libraryCard ? (
-                    <div className="p-3" style={{
-                      background: "#f8f9fa",
-                      borderRadius: "8px",
-                      border: "1px solid #e9ecef"
-                    }}>
+                    <div
+                      className="p-3"
+                      style={{
+                        background: "#f8f9fa",
+                        borderRadius: "8px",
+                        border: "1px solid #e9ecef",
+                      }}
+                    >
                       <p className="mb-2">
                         <strong>Card Number:</strong> {libraryCard.card_number}
                       </p>
                       <p className="mb-2">
                         <strong>Status:</strong>{" "}
-                        <Badge bg={libraryCard.status === 'active' ? 'success' : 'secondary'}>
+                        <Badge
+                          bg={
+                            libraryCard.status === "active"
+                              ? "success"
+                              : "secondary"
+                          }
+                        >
                           {libraryCard.status}
                         </Badge>
                       </p>
                       {libraryCard.issue_date && (
                         <p className="mb-2">
-                          <strong>Issued:</strong> {new Date(libraryCard.issue_date).toLocaleDateString('en-IN')}
+                          <strong>Issued:</strong>{" "}
+                          {new Date(
+                            libraryCard.issue_date
+                          ).toLocaleDateString("en-IN")}
                         </p>
                       )}
                       {libraryCard.expiry_date && (
                         <p className="mb-3">
-                          <strong>Expires:</strong> {new Date(libraryCard.expiry_date).toLocaleDateString('en-IN')}
+                          <strong>Expires:</strong>{" "}
+                          {new Date(
+                            libraryCard.expiry_date
+                          ).toLocaleDateString("en-IN")}
                         </p>
                       )}
                       <Button
@@ -579,11 +660,14 @@ const EditProfile = ({ userId }) => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="p-3 text-center" style={{
-                      background: "#f8f9fa",
-                      borderRadius: "8px",
-                      border: "1px dashed #e9ecef"
-                    }}>
+                    <div
+                      className="p-3 text-center"
+                      style={{
+                        background: "#f8f9fa",
+                        borderRadius: "8px",
+                        border: "1px dashed #e9ecef",
+                      }}
+                    >
                       <p className="text-muted mb-0">
                         <i className="fa-solid fa-info-circle me-2"></i>
                         No library card assigned yet
@@ -596,10 +680,19 @@ const EditProfile = ({ userId }) => {
           </Col>
 
           <Col lg={8} sm={12} xs={12}>
-            <Card style={{ border: "none", boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)", height: "100%" }}>
+            <Card
+              style={{
+                border: "none",
+                boxShadow: "0 2px 8px rgba(111, 66, 193, 0.1)",
+                height: "100%",
+              }}
+            >
               <Card.Body className="p-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h5 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>
+                  <h5
+                    className="mb-0 fw-bold"
+                    style={{ color: "#6f42c1" }}
+                  >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Profile
                   </h5>
@@ -620,8 +713,17 @@ const EditProfile = ({ userId }) => {
                 <Form>
                   <Row>
                     <Col lg={6} sm={12} xs={12}>
-                      <Form.Group className="mb-3" controlId="formBasicPhone">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
+                      <Form.Group
+                        className="mb-3"
+                        controlId="formBasicPhone"
+                      >
+                        <Form.Label
+                          style={{
+                            fontWeight: "500",
+                            color: "#333",
+                            marginBottom: "8px",
+                          }}
+                        >
                           First Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
@@ -636,14 +738,27 @@ const EditProfile = ({ userId }) => {
                           value={profile.firstname}
                           onChange={handleChange}
                           placeholder="Enter First Name"
-                          onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                          onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "#6f42c1")
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = "#e9ecef")
+                          }
                         />
                       </Form.Group>
                     </Col>
                     <Col lg={6} sm={12} xs={12}>
-                      <Form.Group className="mb-3" controlId="formBasicLastName">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
+                      <Form.Group
+                        className="mb-3"
+                        controlId="formBasicLastName"
+                      >
+                        <Form.Label
+                          style={{
+                            fontWeight: "500",
+                            color: "#333",
+                            marginBottom: "8px",
+                          }}
+                        >
                           Last Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
@@ -658,21 +773,36 @@ const EditProfile = ({ userId }) => {
                           placeholder="Enter Last Name"
                           value={profile.lastname}
                           onChange={handleChange}
-                          onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                          onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "#6f42c1")
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = "#e9ecef")
+                          }
                         />
                       </Form.Group>
                     </Col>
 
                     <Col lg={6} sm={12} xs={12}>
-                      <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
+                      <Form.Group
+                        className="mb-3"
+                        controlId="formBasicEmail"
+                      >
+                        <Form.Label
+                          style={{
+                            fontWeight: "500",
+                            color: "#333",
+                            marginBottom: "8px",
+                          }}
+                        >
                           Email <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
                           style={{
                             height: "42px",
-                            borderColor: emailError ? "#dc3545" : "#e9ecef",
+                            borderColor: emailError
+                              ? "#dc3545"
+                              : "#e9ecef",
                             borderRadius: "8px",
                           }}
                           required
@@ -681,8 +811,14 @@ const EditProfile = ({ userId }) => {
                           placeholder="Enter Email"
                           value={profile.email}
                           onChange={handleChange}
-                          onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                          onBlur={(e) => e.target.style.borderColor = emailError ? "#dc3545" : "#e9ecef"}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "#6f42c1")
+                          }
+                          onBlur={(e) =>
+                          (e.target.style.borderColor = emailError
+                            ? "#dc3545"
+                            : "#e9ecef")
+                          }
                         />
                         {emailError && (
                           <small className="text-danger d-block mt-1">
@@ -693,8 +829,17 @@ const EditProfile = ({ userId }) => {
                       </Form.Group>
                     </Col>
                     <Col lg={2} sm={12} xs={12}>
-                      <Form.Group className="mb-3" controlId="formBasicPhone">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
+                      <Form.Group
+                        className="mb-3"
+                        controlId="formBasicPhone"
+                      >
+                        <Form.Label
+                          style={{
+                            fontWeight: "500",
+                            color: "#333",
+                            marginBottom: "8px",
+                          }}
+                        >
                           Country Code
                         </Form.Label>
                         <Form.Select
@@ -705,13 +850,20 @@ const EditProfile = ({ userId }) => {
                           }}
                           required
                           name="country_code"
-                          value={profile.country_code || "+91"}
+                          value={profile.country_code || companyCountryCode}
                           onChange={handleChange}
-                          onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                          onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "#6f42c1")
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor = "#e9ecef")
+                          }
                         >
                           {COUNTRY_CODES.map((country, index) => (
-                            <option key={index} value={country.country_code}>
+                            <option
+                              key={index}
+                              value={country.country_code}
+                            >
                               {country.country} ({country.country_code})
                             </option>
                           ))}
@@ -719,14 +871,26 @@ const EditProfile = ({ userId }) => {
                       </Form.Group>
                     </Col>
                     <Col lg={4} sm={12} xs={12}>
-                      <Form.Group className="mb-3" controlId="formBasicPhone">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
-                          WhatsApp Number <span className="text-danger">*</span>
+                      <Form.Group
+                        className="mb-3"
+                        controlId="formBasicPhone"
+                      >
+                        <Form.Label
+                          style={{
+                            fontWeight: "500",
+                            color: "#333",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          WhatsApp Number{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
                           style={{
                             height: "42px",
-                            borderColor: phoneError ? "#dc3545" : "#e9ecef",
+                            borderColor: phoneError
+                              ? "#dc3545"
+                              : "#e9ecef",
                             borderRadius: "8px",
                           }}
                           required
@@ -735,8 +899,14 @@ const EditProfile = ({ userId }) => {
                           placeholder="Enter Phone Number"
                           value={profile.whatsapp_number}
                           onChange={handleChange}
-                          onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                          onBlur={(e) => e.target.style.borderColor = phoneError ? "#dc3545" : "#e9ecef"}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "#6f42c1")
+                          }
+                          onBlur={(e) =>
+                          (e.target.style.borderColor = phoneError
+                            ? "#dc3545"
+                            : "#e9ecef")
+                          }
                         />
                         {phoneError && (
                           <small className="text-danger d-block mt-1">
@@ -748,10 +918,20 @@ const EditProfile = ({ userId }) => {
                     </Col>
 
                     <Col lg={12} sm={12} xs={12}>
-                      <hr style={{ borderColor: "#e9ecef", margin: "20px 0" }}></hr>
+                      <hr
+                        style={{
+                          borderColor: "#e9ecef",
+                          margin: "20px 0",
+                        }}
+                      ></hr>
                     </Col>
 
-                    <Col lg={12} sm={12} xs={12} className="text-end">
+                    <Col
+                      lg={12}
+                      sm={12}
+                      xs={12}
+                      className="text-end"
+                    >
                       <Button
                         variant="secondary"
                         className="me-2"
@@ -790,6 +970,7 @@ const EditProfile = ({ userId }) => {
           </Col>
         </Row>
 
+        {/* Password Modal */}
         <Modal
           show={showPasswordModal}
           aria-labelledby="contained-modal-title-vcenter"
@@ -801,12 +982,16 @@ const EditProfile = ({ userId }) => {
             closeButton
             onClick={handleClose}
             style={{
-              background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+              background:
+                "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
               color: "white",
               borderBottom: "none",
             }}
           >
-            <Modal.Title id="contained-modal-title-vcenter" style={{ color: "white" }}>
+            <Modal.Title
+              id="contained-modal-title-vcenter"
+              style={{ color: "white" }}
+            >
               <i className="fa-solid fa-key me-2"></i>
               Change Password
             </Modal.Title>
@@ -815,9 +1000,19 @@ const EditProfile = ({ userId }) => {
             <Row>
               <Col lg={12} sm={12} xs={12}>
                 <Form noValidate className="mb-0">
-                  <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
-                      New Password <span className="text-danger">*</span>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formBasicPassword"
+                  >
+                    <Form.Label
+                      style={{
+                        fontWeight: "500",
+                        color: "#333",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      New Password{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <div className="d-flex align-items-center position-relative">
                       <Form.Control
@@ -833,13 +1028,20 @@ const EditProfile = ({ userId }) => {
                           borderRadius: "8px",
                           paddingRight: "40px",
                         }}
-                        onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                        onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = "#6f42c1")
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = "#e9ecef")
+                        }
                       />
                       <span
                         className="position-absolute end-0 me-3"
                         onClick={togglePasswordVisibility}
-                        style={{ cursor: "pointer", color: "#6f42c1" }}
+                        style={{
+                          cursor: "pointer",
+                          color: "#6f42c1",
+                        }}
                       >
                         <i
                           className={`fa-solid ${!showPassword ? "fa-eye-slash" : "fa-eye"
@@ -859,12 +1061,21 @@ const EditProfile = ({ userId }) => {
                     className="mb-3"
                     controlId="formBasicConfirmPassword"
                   >
-                    <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "8px" }}>
-                      Confirm Password <span className="text-danger">*</span>
+                    <Form.Label
+                      style={{
+                        fontWeight: "500",
+                        color: "#333",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Confirm Password{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <div className="d-flex align-items-center position-relative">
                       <Form.Control
-                        type={showConfirmPassword ? "text" : "password"}
+                        type={
+                          showConfirmPassword ? "text" : "password"
+                        }
                         name="confirmpassword"
                         placeholder="Confirm your new password"
                         value={confirmPassword}
@@ -872,37 +1083,60 @@ const EditProfile = ({ userId }) => {
                         required
                         style={{
                           height: "42px",
-                          borderColor: confirmPassword && password !== confirmPassword ? "#dc3545" : "#e9ecef",
+                          borderColor:
+                            confirmPassword &&
+                              password !== confirmPassword
+                              ? "#dc3545"
+                              : "#e9ecef",
                           borderRadius: "8px",
                           paddingRight: "40px",
                         }}
-                        onFocus={(e) => e.target.style.borderColor = "#6f42c1"}
-                        onBlur={(e) => e.target.style.borderColor = confirmPassword && password !== confirmPassword ? "#dc3545" : "#e9ecef"}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = "#6f42c1")
+                        }
+                        onBlur={(e) =>
+                        (e.target.style.borderColor =
+                          confirmPassword &&
+                            password !== confirmPassword
+                            ? "#dc3545"
+                            : "#e9ecef")
+                        }
                       />
                       <span
                         className="position-absolute end-0 me-3"
                         onClick={toggleConfirmPasswordVisibility}
-                        style={{ cursor: "pointer", color: "#6f42c1" }}
+                        style={{
+                          cursor: "pointer",
+                          color: "#6f42c1",
+                        }}
                       >
                         <i
-                          className={`fa-solid ${!showConfirmPassword ? "fa-eye-slash" : "fa-eye"
+                          className={`fa-solid ${!showConfirmPassword
+                            ? "fa-eye-slash"
+                            : "fa-eye"
                             }`}
                           aria-hidden="true"
                         ></i>
                       </span>
                     </div>
-                    {confirmPassword && password !== confirmPassword && (
-                      <small className="text-danger d-block mt-1">
-                        <i className="fa-solid fa-exclamation-circle me-1"></i>
-                        Passwords do not match
-                      </small>
-                    )}
+                    {confirmPassword &&
+                      password !== confirmPassword && (
+                        <small className="text-danger d-block mt-1">
+                          <i className="fa-solid fa-exclamation-circle me-1"></i>
+                          Passwords do not match
+                        </small>
+                      )}
                   </Form.Group>
                 </Form>
               </Col>
             </Row>
           </Modal.Body>
-          <Modal.Footer style={{ borderTop: "1px solid #e9ecef", padding: "16px 24px" }}>
+          <Modal.Footer
+            style={{
+              borderTop: "1px solid #e9ecef",
+              padding: "16px 24px",
+            }}
+          >
             <div className="d-flex justify-content-end w-100">
               <Button
                 variant="secondary"
@@ -948,8 +1182,9 @@ const EditProfile = ({ userId }) => {
           <Modal.Header
             closeButton
             style={{
-              background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-              color: "white"
+              background:
+                "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+              color: "white",
             }}
           >
             <Modal.Title>
@@ -957,7 +1192,10 @@ const EditProfile = ({ userId }) => {
               Library Member
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body id="library-card-print-content" style={{ padding: "30px" }}>
+          <Modal.Body
+            id="library-card-print-content"
+            style={{ padding: "30px" }}
+          >
             <style>{`
               @media print {
                 body * {
@@ -998,28 +1236,39 @@ const EditProfile = ({ userId }) => {
                   border: "3px solid #6f42c1",
                   borderRadius: "12px",
                   padding: "30px",
-                  background: "linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)",
-                  boxShadow: "0 4px 12px rgba(111, 66, 193, 0.2)"
+                  background:
+                    "linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)",
+                  boxShadow: "0 4px 12px rgba(111, 66, 193, 0.2)",
                 }}
               >
                 <div className="text-center mb-4">
-                  <h3 style={{ color: "#6f42c1", fontWeight: "bold", marginBottom: "10px" }}>
+                  <h3
+                    style={{
+                      color: "#6f42c1",
+                      fontWeight: "bold",
+                      marginBottom: "10px",
+                    }}
+                  >
                     Library Card
                   </h3>
-                  <div style={{
-                    width: "100px",
-                    height: "100px",
-                    margin: "0 auto 20px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                    fontSize: "36px",
-                    fontWeight: "bold"
-                  }}>
-                    {profile.firstname?.charAt(0)}{profile.lastname?.charAt(0)}
+                  <div
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      margin: "0 auto 20px",
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "36px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {profile.firstname?.charAt(0)}
+                    {profile.lastname?.charAt(0)}
                   </div>
                 </div>
 
@@ -1036,17 +1285,22 @@ const EditProfile = ({ userId }) => {
                   <div className="col-6">
                     <strong style={{ color: "#6f42c1" }}>Email:</strong>
                   </div>
-                  <div className="col-6">
-                    {profile.email}
-                  </div>
+                  <div className="col-6">{profile.email}</div>
                 </div>
 
                 <div className="row mb-3">
                   <div className="col-6">
-                    <strong style={{ color: "#6f42c1" }}>Card Number:</strong>
+                    <strong style={{ color: "#6f42c1" }}>
+                      Card Number:
+                    </strong>
                   </div>
                   <div className="col-6">
-                    <strong style={{ fontSize: "18px", color: "#6f42c1" }}>
+                    <strong
+                      style={{
+                        fontSize: "18px",
+                        color: "#6f42c1",
+                      }}
+                    >
                       {libraryCard.card_number}
                     </strong>
                   </div>
@@ -1057,7 +1311,13 @@ const EditProfile = ({ userId }) => {
                     <strong style={{ color: "#6f42c1" }}>Status:</strong>
                   </div>
                   <div className="col-6">
-                    <Badge bg={libraryCard.status === 'active' ? 'success' : 'secondary'}>
+                    <Badge
+                      bg={
+                        libraryCard.status === "active"
+                          ? "success"
+                          : "secondary"
+                      }
+                    >
                       {libraryCard.status?.toUpperCase()}
                     </Badge>
                   </div>
@@ -1066,13 +1326,17 @@ const EditProfile = ({ userId }) => {
                 {libraryCard.issue_date && (
                   <div className="row mb-3">
                     <div className="col-6">
-                      <strong style={{ color: "#6f42c1" }}>Issued Date:</strong>
+                      <strong style={{ color: "#6f42c1" }}>
+                        Issued Date:
+                      </strong>
                     </div>
                     <div className="col-6">
-                      {new Date(libraryCard.issue_date).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                      {new Date(
+                        libraryCard.issue_date
+                      ).toLocaleDateString("en-IN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </div>
                   </div>
@@ -1081,13 +1345,17 @@ const EditProfile = ({ userId }) => {
                 {libraryCard.expiry_date && (
                   <div className="row mb-3">
                     <div className="col-6">
-                      <strong style={{ color: "#6f42c1" }}>Expiry Date:</strong>
+                      <strong style={{ color: "#6f42c1" }}>
+                        Expiry Date:
+                      </strong>
                     </div>
                     <div className="col-6">
-                      {new Date(libraryCard.expiry_date).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                      {new Date(
+                        libraryCard.expiry_date
+                      ).toLocaleDateString("en-IN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </div>
                   </div>
@@ -1096,47 +1364,82 @@ const EditProfile = ({ userId }) => {
                 {/* Barcode Section */}
                 <div className="row mb-3 mt-4">
                   <div className="col-12">
-                    <div className="text-center" style={{
-                      padding: "15px",
-                      background: "#ffffff",
-                      borderRadius: "8px",
-                      border: "1px solid #e9ecef"
-                    }}>
-                      <strong style={{ color: "#6f42c1", display: "block", marginBottom: "10px", fontSize: "14px" }}>
+                    <div
+                      className="text-center"
+                      style={{
+                        padding: "15px",
+                        background: "#ffffff",
+                        borderRadius: "8px",
+                        border: "1px solid #e9ecef",
+                      }}
+                    >
+                      <strong
+                        style={{
+                          color: "#6f42c1",
+                          display: "block",
+                          marginBottom: "10px",
+                          fontSize: "14px",
+                        }}
+                      >
                         Library Card Barcode
                       </strong>
-                      <div style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        padding: "10px",
-                        background: "#ffffff"
-                      }}>
-                        <div style={{ maxWidth: "100%", overflow: "hidden" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          padding: "10px",
+                          background: "#ffffff",
+                        }}
+                      >
+                        <div
+                          style={{
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                          }}
+                        >
                           <svg
                             ref={barcodeRef}
                             id="library-card-barcode"
                             style={{
                               maxWidth: "100%",
                               height: "auto",
-                              display: "block"
+                              display: "block",
                             }}
                           ></svg>
                         </div>
                       </div>
-                      <div style={{ marginTop: "8px", fontSize: "12px", color: "#6f42c1", fontWeight: "600" }}>
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          fontSize: "12px",
+                          color: "#6f42c1",
+                          fontWeight: "600",
+                        }}
+                      >
                         {libraryCard.card_number}
                       </div>
-                      <small className="text-muted" style={{ display: "block", marginTop: "5px", fontSize: "10px" }}>
+                      <small
+                        className="text-muted"
+                        style={{
+                          display: "block",
+                          marginTop: "5px",
+                          fontSize: "10px",
+                        }}
+                      >
                         Scan barcode to retrieve card information
                       </small>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-center mt-4 pt-3" style={{ borderTop: "2px solid #e9ecef" }}>
+                <div
+                  className="text-center mt-4 pt-3"
+                  style={{ borderTop: "2px solid #e9ecef" }}
+                >
                   <small className="text-muted">
-                    This card is the property of the Library Management System
+                    This card is the property of the Library Management
+                    System
                   </small>
                 </div>
               </div>
@@ -1155,8 +1458,9 @@ const EditProfile = ({ userId }) => {
                 window.print();
               }}
               style={{
-                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
-                border: "none"
+                background:
+                  "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                border: "none",
               }}
             >
               <i className="fa-solid fa-print me-2"></i>

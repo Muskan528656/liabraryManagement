@@ -1,6 +1,6 @@
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
-import { getVendorConfig } from "./VendorConfig";
+import { getVendorConfig } from "./vendorconfig";
 
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
@@ -41,7 +41,7 @@ const Vendor = (props) => {
 
   const finalConfig = getVendorConfig(allData);
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-store"/>;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-store" />;
 };
 
 export default Vendor;

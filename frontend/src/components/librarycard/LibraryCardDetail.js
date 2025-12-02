@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import {
@@ -15,6 +21,7 @@ import JsBarcode from "jsbarcode";
 import ScrollToTop from "../common/ScrollToTop";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { API_BASE_URL } from "../../constants/CONSTANT";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const LibraryCardDetail = ({
   onEdit = null,
@@ -29,7 +36,9 @@ const LibraryCardDetail = ({
   const [issuedCount, setIssuedCount] = useState(0);
   const [submittedCount, setSubmittedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
+  const [isEditing, setIsEditing] = useState(
+    location?.state?.isEdit ? location?.state?.isEdit : false
+  );
   const [tempData, setTempData] = useState(null);
   const [data, setData] = useState(null);
   const [originalData, setOriginalData] = useState(null);
@@ -44,6 +53,7 @@ const LibraryCardDetail = ({
   const [showBack, setShowBack] = useState(false);
   const [subscriptionProgress, setSubscriptionProgress] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(0);
+  const [companyCountryCode, setCompanyCountryCode] = useState("");
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -55,12 +65,25 @@ const LibraryCardDetail = ({
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
   const DISABLED_FIELDS_ON_EDIT = useMemo(() => new Set(), []);
-  const READONLY_FIELDS_ON_EDIT = useMemo(() => new Set(["user_email", "card_number"]), []);
+  const READONLY_FIELDS_ON_EDIT = useMemo(
+    () => new Set(["user_email", "card_number"]),
+    []
+  );
 
-  const EDITABLE_FIELDS = useMemo(() => [
-    "first_name", "last_name", "email", "phone_number",
-    "registration_date", "subscription_id", "is_active"
-  ], []);
+  const EDITABLE_FIELDS = useMemo(
+    () => [
+      "first_name",
+      "last_name",
+      "email",
+      "country_code",
+      "phone_number",
+      "registration_date",
+      "subscription_id",
+      "is_active",
+      "allowed_book"
+    ],
+    []
+  );
 
   const normalizedFileHost = useMemo(() => {
     if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
@@ -85,7 +108,6 @@ const LibraryCardDetail = ({
     [normalizedFileHost]
   );
 
- 
   const CircularProgressBar = ({ progress, daysRemaining, size = 120 }) => {
     const strokeWidth = 8;
     const radius = (size - strokeWidth) / 2;
@@ -127,24 +149,38 @@ const LibraryCardDetail = ({
             className="position-absolute top-50 start-50 translate-middle text-center"
             style={{ width: "80px" }}
           >
-            <div className="fw-bold" style={{ fontSize: "24px", color: getProgressColor(progress) }}>
+            <div
+              className="fw-bold"
+              style={{ fontSize: "24px", color: getProgressColor(progress) }}
+            >
               {daysRemaining}
             </div>
             <div className="small text-muted">Days Left</div>
           </div>
         </div>
         <div className="mt-2">
-          <Badge bg={progress > 70 ? "success" : progress > 30 ? "warning" : "danger"}>
-            {progress > 70 ? "Good" : progress > 30 ? "Warning" : "Expiring Soon"}
+          <Badge
+            bg={
+              progress > 70 ? "success" : progress > 30 ? "warning" : "danger"
+            }
+          >
+            {progress > 70
+              ? "Good"
+              : progress > 30
+                ? "Warning"
+                : "Expiring Soon"}
           </Badge>
         </div>
       </div>
     );
   };
 
- 
   const calculateSubscriptionProgress = useCallback((subscriptionData) => {
-    if (!subscriptionData || !subscriptionData.start_date || !subscriptionData.end_date) {
+    if (
+      !subscriptionData ||
+      !subscriptionData.start_date ||
+      !subscriptionData.end_date
+    ) {
       return { progress: 0, daysRemaining: 0 };
     }
 
@@ -165,12 +201,22 @@ const LibraryCardDetail = ({
 
     const daysRemaining = Math.ceil(remainingDuration / (1000 * 60 * 60 * 24));
 
-    return { progress: Math.round(progress), daysRemaining: Math.max(0, daysRemaining) };
+    return {
+      progress: Math.round(progress),
+      daysRemaining: Math.max(0, daysRemaining),
+    };
   }, []);
 
-  const UserAvatar = ({ userId, size = 32, showName = true, clickable = true }) => {
+  const UserAvatar = ({
+    userId,
+    size = 32,
+    showName = true,
+    clickable = true,
+  }) => {
     const userName = userNames[userId] || `User ${userId}`;
-    const userAvatar = userAvatars[userId] || `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+    const userAvatar =
+      userAvatars[userId] ||
+      `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
 
     const handleUserClick = () => {
       if (clickable && userId) {
@@ -180,12 +226,13 @@ const LibraryCardDetail = ({
 
     return (
       <div
-        className={`d-flex align-items-center ${clickable ? 'cursor-pointer' : ''}`}
+        className={`d-flex align-items-center ${clickable ? "cursor-pointer" : ""
+          }`}
         onClick={handleUserClick}
         style={{
-          cursor: clickable ? 'pointer' : 'default',
-          textDecoration: 'none',
-          gap: '8px'
+          cursor: clickable ? "pointer" : "default",
+          textDecoration: "none",
+          gap: "8px",
         }}
       >
         <img
@@ -195,22 +242,22 @@ const LibraryCardDetail = ({
           style={{
             width: size,
             height: size,
-            objectFit: 'cover',
-            border: '2px solid #e9ecef'
+            objectFit: "cover",
+            border: "2px solid #e9ecef",
           }}
         />
         {showName && (
           <span
             className="fw-medium"
             style={{
-              color: clickable ? 'var(--primary-color)' : '#495057',
-              textDecoration: clickable ? 'none' : 'none'
+              color: clickable ? "var(--primary-color)" : "#495057",
+              textDecoration: clickable ? "none" : "none",
             }}
             onMouseEnter={(e) => {
-              if (clickable) e.target.style.textDecoration = 'underline';
+              if (clickable) e.target.style.textDecoration = "underline";
             }}
             onMouseLeave={(e) => {
-              if (clickable) e.target.style.textDecoration = 'none';
+              if (clickable) e.target.style.textDecoration = "none";
             }}
           >
             {userName}
@@ -220,6 +267,7 @@ const LibraryCardDetail = ({
     );
   };
 
+  // Image preview handling
   useEffect(() => {
     if (selectedImageFile) {
       return;
@@ -241,6 +289,56 @@ const LibraryCardDetail = ({
       }
     };
   }, []);
+
+  // Fetch company country code
+  const fetCompanyCode = async () => {
+    try {
+      const companyApi = new DataApi("company");
+      const companyResponse = await companyApi.fetchAll();
+      if (
+        Array.isArray(companyResponse.data) &&
+        companyResponse.data.length > 0
+      ) {
+        const companyWithCountryCode = companyResponse.data.find(
+          (c) => c && c.country_code
+        );
+
+        if (companyWithCountryCode && companyWithCountryCode.country_code) {
+          const countryCodeStr = String(
+            companyWithCountryCode.country_code
+          ).trim();
+          const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
+
+          let finalCode = codePart || "";
+          if (finalCode && !finalCode.startsWith("+")) {
+            finalCode = "+" + finalCode;
+          }
+
+          setCompanyCountryCode(finalCode);
+          console.log("Company country code set to:", finalCode);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching company data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetCompanyCode();
+  }, []);
+
+  // Apply default country code into tempData when editing, if empty
+  useEffect(() => {
+    if (isEditing && companyCountryCode) {
+      setTempData((prev) => {
+        if (!prev) return prev;
+        if (!prev.country_code) {
+          return { ...prev, country_code: companyCountryCode };
+        }
+        return prev;
+      });
+    }
+  }, [companyCountryCode, isEditing]);
 
   useEffect(() => {
     fetchCardData();
@@ -281,7 +379,6 @@ const LibraryCardDetail = ({
     }
   }, [cardData, showBack]);
 
- 
   useEffect(() => {
     const fetchSubscriptionProgress = async () => {
       if (data?.subscription_id) {
@@ -289,8 +386,11 @@ const LibraryCardDetail = ({
           const api = new DataApi("subscriptions");
           const response = await api.fetchById(data.subscription_id);
           if (response && response.data) {
-            const subscriptionData = response.data.success ? response.data.data : response.data;
-            const { progress, daysRemaining } = calculateSubscriptionProgress(subscriptionData);
+            const subscriptionData = response.data.success
+              ? response.data.data
+              : response.data;
+            const { progress, daysRemaining } =
+              calculateSubscriptionProgress(subscriptionData);
             setSubscriptionProgress(progress);
             setDaysRemaining(daysRemaining);
           }
@@ -388,19 +488,60 @@ const LibraryCardDetail = ({
         key: "card_number",
         label: "Card Number",
         type: "text",
+        colSize: 3,
       },
-      { key: "first_name", label: "First Name", type: "text" },
-      { key: "last_name", label: "Last Name", type: "text" },
-      { key: "email", label: "Email", type: "text" },
-      { key: "phone_number", label: "Phone", type: "text" },
-      { key: "registration_date", label: "Registration Date", type: "date" },
+      {
+        key: "first_name",
+        label: "First Name",
+        type: "text",
+        colSize: 3,
+      },
+      {
+        key: "last_name",
+        label: "Last Name",
+        type: "text",
+        colSize: 3,
+      },
+      {
+        key: "email",
+        label: "Email",
+        type: "text",
+        colSize: 3,
+      },
+
+      {
+        key: "country_code",
+        label: "Country Code",
+        type: "select",
+        options: COUNTRY_CODES.map((c) => ({
+          label: `${c.country_code} (${c.country})`,
+          value: c.country_code,
+        })),
+        colSize: 3,
+      },
+
+      {
+        key: "phone_number",
+        label: "Phone",
+        type: "text",
+        colSize: 3,
+      },
+
+      {
+        key: "registration_date",
+        label: "Registration Date",
+        type: "date",
+        colSize: 3,
+      },
 
       {
         key: "subscription_id",
         label: "Subscription",
         type: "select",
-        options: "subscriptions"
+        options: "subscriptions",
+        colSize: 3,
       },
+
       {
         key: "is_active",
         label: "Status",
@@ -411,8 +552,17 @@ const LibraryCardDetail = ({
           true_label: "Active",
           false_label: "Inactive",
         },
+        colSize: 3,
+      },
+
+      {
+        key: "allowed_book",
+        label: "Allowed Book",
+        type: "text",
+        colSize: 3,
       },
     ],
+
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
@@ -493,7 +643,10 @@ const LibraryCardDetail = ({
                     >
                       <i
                         className="fa-solid fa-user"
-                        style={{ fontSize: "48px", color: "var(--primary-color)" }}
+                        style={{
+                          fontSize: "48px",
+                          color: "var(--primary-color)",
+                        }}
                       ></i>
                     </div>
                   )}
@@ -504,7 +657,9 @@ const LibraryCardDetail = ({
                         <Form.Label className="w-100 mb-0">
                           <span className="btn btn-outline-primary w-100">
                             <i className="fa-solid fa-upload me-2"></i>
-                            {selectedImageFile ? "Change Photo" : "Upload Photo"}
+                            {selectedImageFile
+                              ? "Change Photo"
+                              : "Upload Photo"}
                           </span>
                           <Form.Control
                             type="file"
@@ -581,9 +736,7 @@ const LibraryCardDetail = ({
                     color: "#6c757d",
                     textAlign: "center",
                   }}
-                >
-
-                </div>
+                ></div>
               </Card.Body>
             </Card>
           ) : (
@@ -650,7 +803,8 @@ const LibraryCardDetail = ({
                     <strong>Email:</strong> {data?.email || "N/A"}
                   </p>
                   <p style={{ margin: "5px 0" }}>
-                    <strong>Registration Date:</strong> {formatDate(data?.registration_date)}
+                    <strong>Registration Date:</strong>{" "}
+                    {formatDate(data?.registration_date)}
                   </p>
                   <p style={{ margin: "5px 0" }}>
                     <strong>Status:</strong>{" "}
@@ -715,7 +869,8 @@ const LibraryCardDetail = ({
                 />
                 <div className="mt-3">
                   <p className="mb-1">
-                    <strong>Subscription Progress:</strong> {subscriptionProgress}%
+                    <strong>Subscription Progress:</strong>{" "}
+                    {subscriptionProgress}%
                   </p>
                   <p className="mb-1 text-muted small">
                     {daysRemaining > 0
@@ -726,7 +881,10 @@ const LibraryCardDetail = ({
               </>
             ) : (
               <div className="py-4">
-                <i className="fa-solid fa-clock text-muted" style={{ fontSize: "48px" }}></i>
+                <i
+                  className="fa-solid fa-clock text-muted"
+                  style={{ fontSize: "48px" }}
+                ></i>
                 <p className="mt-2 text-muted">No Active Subscription</p>
               </div>
             )}
@@ -826,7 +984,10 @@ const LibraryCardDetail = ({
 
         const userIds = [];
         if (fetchedData.createdbyid) userIds.push(fetchedData.createdbyid);
-        if (fetchedData.lastmodifiedbyid && fetchedData.lastmodifiedbyid !== fetchedData.createdbyid) {
+        if (
+          fetchedData.lastmodifiedbyid &&
+          fetchedData.lastmodifiedbyid !== fetchedData.createdbyid
+        ) {
           userIds.push(fetchedData.lastmodifiedbyid);
         }
 
@@ -849,36 +1010,44 @@ const LibraryCardDetail = ({
       const names = {};
       const avatars = {};
 
-      const uniqueUserIds = [...new Set(userIds.filter(id => id && id !== ''))];
+      const uniqueUserIds = [
+        ...new Set(userIds.filter((id) => id && id !== "")),
+      ];
 
       for (const userId of uniqueUserIds) {
         try {
           const response = await userApi.fetchById(userId);
           if (response && response.data) {
-            const user = response.data.success ? response.data.data : response.data;
+            const user = response.data.success
+              ? response.data.data
+              : response.data;
             if (user) {
-              const fullName = `${user.firstname || ''} ${user.lastname || ''}`.trim();
+              const fullName = `${user.firstname || ""} ${user.lastname || ""
+                }`.trim();
               names[userId] = fullName || user.email || `User ${userId}`;
 
               if (user.profile_picture) {
                 avatars[userId] = user.profile_picture;
               } else {
-                const initials = fullName
-                  ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
-                  : 'U';
-                avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=6f42c1&color=fff&size=32`;
+                avatars[
+                  userId
+                ] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  fullName || "User"
+                )}&background=6f42c1&color=fff&size=32`;
               }
             }
           }
         } catch (error) {
           console.error(`Error fetching user ${userId}:`, error);
           names[userId] = `User ${userId}`;
-          avatars[userId] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
+          avatars[
+            userId
+          ] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
         }
       }
 
-      setUserNames(prev => ({ ...prev, ...names }));
-      setUserAvatars(prev => ({ ...prev, ...avatars }));
+      setUserNames((prev) => ({ ...prev, ...names }));
+      setUserAvatars((prev) => ({ ...prev, ...avatars }));
     } catch (error) {
       console.error("Error fetching user names:", error);
     }
@@ -890,8 +1059,8 @@ const LibraryCardDetail = ({
     if (field.type === "date") {
       try {
         const date = new Date(value);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
         return `${day} ${month} ${year}`;
       } catch {
@@ -940,12 +1109,14 @@ const LibraryCardDetail = ({
     } else {
       resetImageSelection();
       setIsEditing(true);
-      setTempData({ ...data });
+      setTempData({
+        ...data,
+        country_code: data?.country_code || companyCountryCode || "",
+      });
       await fetchLookupData();
     }
   };
 
- 
   const fetchLookupData = async () => {
     try {
       const normalizedFields = {
@@ -953,15 +1124,18 @@ const LibraryCardDetail = ({
         other: fields?.other || [],
       };
 
-      const allFields = [...(normalizedFields.details || []), ...(normalizedFields.other || [])];
-      const lookupFields = allFields.filter(field =>
-        field.type === "select" && field.options
+      const allFields = [
+        ...(normalizedFields.details || []),
+        ...(normalizedFields.other || []),
+      ];
+      const lookupFields = allFields.filter(
+        (field) => field.type === "select" && field.options
       );
 
       const lookupDataObj = {};
       const endpointMap = {
         subscriptions: "subscriptions",
-        subscription: "subscriptions"
+        subscription: "subscriptions",
       };
 
       for (const field of lookupFields) {
@@ -973,7 +1147,6 @@ const LibraryCardDetail = ({
             if (response && response.data) {
               let data = response.data;
 
- 
               if (data.data && Array.isArray(data.data)) {
                 data = data.data;
               } else if (data.success && data.data) {
@@ -982,27 +1155,32 @@ const LibraryCardDetail = ({
                 data = data;
               }
 
- 
               if (field.options === "subscriptions" && Array.isArray(data)) {
-                const transformedData = data.map(item => {
- 
-                  const displayName = item.plan_name || item.name || item.title ||
-                    item.subscription_name || `Subscription ${item.id}`;
+                const transformedData = data.map((item) => {
+                  const displayName =
+                    item.plan_name ||
+                    item.name ||
+                    item.title ||
+                    item.subscription_name ||
+                    `Subscription ${item.id}`;
                   return {
                     ...item,
                     label: displayName,
-                    name: displayName
+                    name: displayName,
                   };
                 });
                 lookupDataObj[field.options] = transformedData;
               } else {
-                lookupDataObj[field.options] = Array.isArray(data) ? data : [data];
+                lookupDataObj[field.options] = Array.isArray(data)
+                  ? data
+                  : [data];
               }
-
-              console.log(`Fetched ${field.options}:`, lookupDataObj[field.options]);
             }
           } catch (error) {
-            console.error(`Error fetching lookup data for ${field.options}:`, error);
+            console.error(
+              `Error fetching lookup data for ${field.options}:`,
+              error
+            );
             lookupDataObj[field.options] = [];
           }
         }
@@ -1026,7 +1204,9 @@ const LibraryCardDetail = ({
       }
 
       if (field.includes("date") && originalValue && tempValue) {
-        return new Date(originalValue).getTime() !== new Date(tempValue).getTime();
+        return (
+          new Date(originalValue).getTime() !== new Date(tempValue).getTime()
+        );
       }
 
       return String(originalValue || "") !== String(tempValue || "");
@@ -1036,15 +1216,15 @@ const LibraryCardDetail = ({
   };
 
   const formatDateDDMMYYYY = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
       return `${day} ${month} ${year}`;
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -1152,11 +1332,11 @@ const LibraryCardDetail = ({
   };
 
   const handleFieldChange = (fieldKey, value) => {
-    if (isEditing && tempData) {
-      setTempData({
-        ...tempData,
+    if (isEditing) {
+      setTempData((prev) => ({
+        ...(prev || {}),
         [fieldKey]: value,
-      });
+      }));
     }
   };
 
@@ -1220,16 +1400,15 @@ const LibraryCardDetail = ({
   const normalizeOptionValue = (value) =>
     value === undefined || value === null ? "" : value.toString();
 
- 
   const getOptionLabel = (option = {}) => {
- 
     if (option.label) return option.label;
     if (option.plan_name) return option.plan_name;
     if (option.subscription_name) return option.subscription_name;
     if (option.name) return option.name;
     if (option.title) return option.title;
     if (option.firstname || option.lastname) {
-      const composed = `${option.firstname || ""} ${option.lastname || ""}`.trim();
+      const composed = `${option.firstname || ""} ${option.lastname || ""
+        }`.trim();
       if (composed) return composed;
     }
     if (option.email) return option.email;
@@ -1238,15 +1417,55 @@ const LibraryCardDetail = ({
     return "Unknown Item";
   };
 
+  const getFieldValue = (field, currentData) => {
+    if (!currentData) return "";
+    const value = currentData[field.key];
+
+    if (isEditing) {
+      if (field.type === "date" && value) {
+        try {
+          const date = new Date(value);
+          return date.toISOString().split("T")[0];
+        } catch {
+          return value;
+        }
+      }
+      if (field.type === "datetime" && value) {
+        try {
+          const date = new Date(value);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          const hours = String(date.getHours()).padStart(2, "0");
+          const minutes = String(date.getMinutes()).padStart(2, "0");
+          return `${year}-${month}-${day}T${hours}:${minutes}`;
+        } catch {
+          return value;
+        }
+      }
+      return value || "";
+    } else {
+      if (
+        (field.key === "createdbyid" || field.key === "lastmodifiedbyid") &&
+        value
+      ) {
+        return userNames[value] || value || "—";
+      }
+      return formatValue(value, field) || "—";
+    }
+  };
+
   const renderFieldGroup = (field, index) => {
     if (!field) return null;
-    const currentData = isEditing ? tempData : data;
+    const currentData = isEditing ? tempData || {} : data;
     if (!currentData) return null;
+
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
     const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField;
 
-    if (!isEditing && (field.key === 'createdbyid' || field.key === 'lastmodifiedbyid')) {
+
+    if (field.key === "createdbyid" || field.key === "lastmodifiedbyid") {
       const userId = currentData[field.key];
       if (userId) {
         return (
@@ -1263,6 +1482,13 @@ const LibraryCardDetail = ({
           </Form.Group>
         );
       }
+
+      return (
+        <Form.Group key={`${field.key}-${index}`} className="mb-3">
+          <Form.Label className="fw-semibold">{field.label}</Form.Label>
+          <div className="form-control-plaintext p-0 border-0">—</div>
+        </Form.Group>
+      );
     }
 
     if (field.key === "is_active") {
@@ -1273,9 +1499,9 @@ const LibraryCardDetail = ({
             <Form.Check
               type="switch"
               id="libraryCardStatusSwitch"
-              checked={Boolean(tempData?.is_active)}
+              checked={Boolean((tempData || {})?.is_active)}
               onChange={(e) => handleFieldChange(field.key, e.target.checked)}
-              label={tempData?.is_active ? "Active" : "Inactive"}
+              label={(tempData || {})?.is_active ? "Active" : "Inactive"}
             />
           ) : (
             <div>{formatValue(currentData[field.key], field) || "—"}</div>
@@ -1307,7 +1533,10 @@ const LibraryCardDetail = ({
                   extractOptionValue(option)
                 );
                 return (
-                  <option key={normalizedOptionValue} value={normalizedOptionValue}>
+                  <option
+                    key={normalizedOptionValue}
+                    value={normalizedOptionValue}
+                  >
                     {getOptionLabel(option)}
                   </option>
                 );
@@ -1345,6 +1574,7 @@ const LibraryCardDetail = ({
       );
     }
 
+
     const inputType =
       field.type === "number"
         ? "number"
@@ -1353,6 +1583,7 @@ const LibraryCardDetail = ({
           : field.type === "datetime"
             ? "datetime-local"
             : "text";
+
     const fieldValue = getFieldValue(field, currentData) ?? "";
     const isElementValue = React.isValidElement(fieldValue);
     const controlType = isInputEditable ? inputType : "text";
@@ -1404,42 +1635,7 @@ const LibraryCardDetail = ({
     );
   };
 
-  const getFieldValue = (field, currentData) => {
-    if (!currentData) return "";
-    const value = currentData[field.key];
-
-    if (isEditing) {
-      if (field.type === "date" && value) {
-        try {
-          const date = new Date(value);
-          return date.toISOString().split("T")[0];
-        } catch {
-          return value;
-        }
-      }
-      if (field.type === "datetime" && value) {
-        try {
-          const date = new Date(value);
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const day = String(date.getDate()).padStart(2, "0");
-          const hours = String(date.getHours()).padStart(2, "0");
-          const minutes = String(date.getMinutes()).padStart(2, "0");
-          return `${year}-${month}-${day}T${hours}:${minutes}`;
-        } catch {
-          return value;
-        }
-      }
-      return value || "";
-    } else {
-      if ((field.key === "createdbyid" || field.key === "lastmodifiedbyid") && value) {
-        return userNames[value] || value || "—";
-      }
-      return formatValue(value, field) || "—";
-    }
-  };
-
-  const handleDelete = (id) => {
+  const handleDelete = () => {
     setDeleteId(id);
     setShowConfirmModal(true);
   };
@@ -1464,6 +1660,7 @@ const LibraryCardDetail = ({
   const normalizedFields = Array.isArray(fields)
     ? { details: fields }
     : fields || {};
+
   const handleBack = () => {
     navigate(`/${moduleName}`);
   };
@@ -1475,7 +1672,6 @@ const LibraryCardDetail = ({
         <Col lg={12} xl={12}>
           <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
-
               <div
                 className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
@@ -1484,10 +1680,11 @@ const LibraryCardDetail = ({
                   borderRadius: "10px",
                 }}
               >
-
-
                 <div className="d-flex align-items-center gap-3">
-                  <button onClick={handleBack} className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back">
+                  <button
+                    onClick={handleBack}
+                    className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
+                  >
                     <i className="fa-solid fa-arrow-left"></i>
                   </button>
                   <h5
@@ -1500,10 +1697,7 @@ const LibraryCardDetail = ({
                 </div>
                 <div>
                   {!isEditing ? (
-                    <button
-                      onClick={handleEdit}
-                      className="custom-btn-primary"
-                    >
+                    <button onClick={handleEdit} className="custom-btn-primary">
                       <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
                     </button>
@@ -1515,7 +1709,11 @@ const LibraryCardDetail = ({
                         disabled={saving}
                       >
                         <i className="fa-solid fa-check me-2"></i>
-                        {saving ? "Saving..." : hasDataChanged() ? `Save - ${formatDateDDMMYYYY(new Date())}` : "Save"}
+                        {saving
+                          ? "Saving..."
+                          : hasDataChanged()
+                            ? `Save - ${formatDateDDMMYYYY(new Date())}`
+                            : "Save"}
                       </button>
                       <button
                         className="custom-btn-secondary"
@@ -1555,27 +1753,45 @@ const LibraryCardDetail = ({
                           {moduleLabel} Information
                         </h6>
                         <Row className="px-5">
-                          <Col md={6}>
+
+                          <Col md={4}>
                             {normalizedFields.details
-                              ?.slice(
-                                0,
-                                Math.ceil(
-                                  normalizedFields.details.length / 2
-                                )
-                              )
+                              .slice(0, 3)
                               .map((field, index) =>
                                 renderFieldGroup(field, index)
                               )}
                           </Col>
-                          <Col md={6}>
+
+
+                          <Col md={4}>
+                            {/* Email */}
+                            {renderFieldGroup(
+                              normalizedFields.details[3],
+                              3
+                            )}
+
+                            <Row>
+                              <Col md={6}>
+                                {renderFieldGroup(
+                                  normalizedFields.details[4],
+                                  4
+                                )}
+                              </Col>
+                              <Col md={6}>
+                                {renderFieldGroup(
+                                  normalizedFields.details[5],
+                                  5
+                                )}
+                              </Col>
+                            </Row>
+                          </Col>
+
+
+                          <Col md={4}>
                             {normalizedFields.details
-                              .slice(
-                                Math.ceil(
-                                  normalizedFields.details.length / 2
-                                )
-                              )
+                              .slice(6)
                               .map((field, index) =>
-                                renderFieldGroup(field, index)
+                                renderFieldGroup(field, index + 6)
                               )}
                           </Col>
                         </Row>
@@ -1595,9 +1811,7 @@ const LibraryCardDetail = ({
                               {normalizedFields.other
                                 ?.slice(
                                   0,
-                                  Math.ceil(
-                                    normalizedFields.other.length / 2
-                                  )
+                                  Math.ceil(normalizedFields.other.length / 2)
                                 )
                                 .map((field, index) =>
                                   renderFieldGroup(field, index)
@@ -1606,9 +1820,7 @@ const LibraryCardDetail = ({
                             <Col md={6}>
                               {normalizedFields.other
                                 .slice(
-                                  Math.ceil(
-                                    normalizedFields.other.length / 2
-                                  )
+                                  Math.ceil(normalizedFields.other.length / 2)
                                 )
                                 .map((field, index) =>
                                   renderFieldGroup(field, index)
@@ -1625,8 +1837,7 @@ const LibraryCardDetail = ({
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
-                                  background:
-                                    "var(--header-highlighter-color)",
+                                  background: "var(--header-highlighter-color)",
                                   borderRadius: "10px",
                                 }}
                               >
@@ -1642,13 +1853,16 @@ const LibraryCardDetail = ({
                       </Col>
                       {bookStatistics.length > 0 &&
                         bookStatistics.map((section, idx) => (
-                          <Col md={section.colSize || 12} key={idx} className="mt-5">
+                          <Col
+                            md={section.colSize || 12}
+                            key={idx}
+                            className="mt-5"
+                          >
                             <h6
                               className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                               style={{
                                 color: "var(--primary-color)",
-                                background:
-                                  "var(--header-highlighter-color)",
+                                background: "var(--header-highlighter-color)",
                                 borderRadius: "10px",
                               }}
                             >

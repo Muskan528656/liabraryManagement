@@ -100,10 +100,10 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             label: "Total Amount",
             type: "number",
             required: true,
-            disabled: true, 
+            disabled: true,
             readOnly: true,
             calculateValue: (formData) => {
-               
+
                 const quantity = parseFloat(formData.quantity) || 0;
                 const unitPrice = parseFloat(formData.unit_price) || 0;
                 return (quantity * unitPrice).toFixed(2);
@@ -139,7 +139,7 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true
+            allowDelete: false
         },
         dataDependencies: {
             vendors: "vendor",
@@ -155,7 +155,7 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             handleAdd: (navigate) => {
                 navigate('/purchase/bulk');
             },
-       
+
             onFormDataChange: (formData, setFormData) => {
                 const quantity = parseFloat(formData.quantity) || 0;
                 const unitPrice = parseFloat(formData.unit_price) || 0;
