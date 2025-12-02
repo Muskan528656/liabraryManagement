@@ -13,7 +13,7 @@ module.exports = (app) => {
     const router = require("express").Router();
     const { body, validationResult } = require("express-validator");
 
- 
+
     router.get("/", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -25,12 +25,12 @@ module.exports = (app) => {
         }
     });
 
- 
+
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
             const role = await UserRole.findById(req.params.id);
-            if (!role) return res.status(404).json({ msg: "Role not found" });
+            if (!role) return res.status(404).json({ success: true, msg: "Role not found" });
 
             res.status(200).json(role);
         } catch (error) {
@@ -39,7 +39,7 @@ module.exports = (app) => {
         }
     });
 
- 
+
     router.post(
         "/",
         fetchUser,
@@ -56,7 +56,7 @@ module.exports = (app) => {
                 };
 
                 const newRole = await UserRole.create(data);
-                return res.status(201).json(newRole);
+                return res.status(201).json({ success: true, newRole });
             } catch (error) {
                 console.error("Error creating role:", error);
                 return res.status(500).json({ errors: "Internal server error" });
@@ -64,7 +64,7 @@ module.exports = (app) => {
         }
     );
 
- 
+
     router.put(
         "/:id",
         fetchUser,
@@ -82,7 +82,7 @@ module.exports = (app) => {
                 };
 
                 const updated = await UserRole.update(req.params.id, data);
-                if (!updated) return res.status(404).json({ msg: "Role not found" });
+                if (!updated) return res.status(404).json({ success: true, msg: "Role not found" });
 
                 return res.status(200).json(updated);
             } catch (error) {
@@ -92,7 +92,7 @@ module.exports = (app) => {
         }
     );
 
- 
+
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -100,13 +100,13 @@ module.exports = (app) => {
             const deleted = await UserRole.remove(req.params.id);
             if (!deleted) return res.status(404).json({ msg: "Role not found" });
 
-            return res.status(200).json({ msg: "Role deleted successfully" });
+            return res.status(200).json({ success: true, msg: "Role deleted successfully" });
         } catch (error) {
             console.error("Error deleting role:", error);
             return res.status(500).json({ errors: "Internal server error" });
         }
     });
 
-    app.use(process.env.BASE_API_URL+ "/api/user-role", router);
+    app.use(process.env.BASE_API_URL + "/api/user-role", router);
 
 };
