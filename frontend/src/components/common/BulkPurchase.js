@@ -992,41 +992,41 @@ const BulkPurchasePage = () => {
                                 zIndex: 10,
                                 backgroundColor: '#f8f9fa'
                             }}>
-                                <tr>
-                                    <th width="20%" className="border-end p-3">
+                                <tr >
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div className="d-flex align-items-center">
                                             <span>Vendor</span>
                                             <span className="text-danger ms-1">*</span>
                                         </div>
                                     </th>
-                                    <th width="25%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div className="d-flex align-items-center">
                                             <span>Book</span>
                                             <span className="text-danger ms-1">*</span>
                                         </div>
                                     </th>
-                                    <th width="8%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div className="d-flex align-items-center">
                                             <span>Qty</span>
                                             <span className="text-danger ms-1">*</span>
                                         </div>
                                     </th>
-                                    <th width="10%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div className="d-flex align-items-center">
                                             <span>Unit Price</span>
                                             <span className="text-danger ms-1">*</span>
                                         </div>
                                     </th>
-                                    <th width="12%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div>Total Amount</div>
                                     </th>
-                                    <th width="12%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div>Purchase Date</div>
                                     </th>
-                                    <th width="15%" className="border-end p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="border-end p-3">
                                         <div>Notes</div>
                                     </th>
-                                    <th width="5%" className="text-center p-3">
+                                    <th style={{ background: 'var( --primary-background-color)' }} className="text-center p-3">
                                         <div>Actions</div>
                                     </th>
                                 </tr>
