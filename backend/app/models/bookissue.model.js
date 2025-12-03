@@ -172,46 +172,85 @@ async function findByCardId(cardId) {
 
 
 
-
 async function issueBook(issueData, userId) {
+  const client = await sql.getClient();
+  
   try {
+    await client.query('BEGIN');
 
-    const bookCheck = await sql.query(
-      `SELECT available_copies FROM ${schema}.books WHERE id = $1`,
+    // 1. Book availability check
+    const bookCheck = await client.query(
+      `SELECT id, title, isbn, available_copies, total_copies 
+       FROM ${schema}.books 
+       WHERE id = $1 AND is_active = true`,
       [issueData.book_id]
     );
-    const duplicateCheck = await sql.query(
-      `SELECT id FROM ${schema}.book_issues
-   WHERE issued_to = $1 AND book_id = $2 
-   AND return_date IS NULL AND status = 'issued'`,
-      [issued_to, issueData.book_id]
-    );
 
-    if (duplicateCheck.rows.length > 0) {
-      throw new Error("This book is already issued to this member.");
-    }
     if (bookCheck.rows.length === 0) {
-      throw new Error("Book not found");
+      throw new Error("Book not found or inactive");
     }
 
-    if (bookCheck.rows[0].available_copies <= 0) {
-      throw new Error("Book is not available (no copies left)");
+    const book = bookCheck.rows[0];
+    
+    // Available copies check
+    if (book.available_copies <= 0) {
+      throw new Error(`Book "${book.title}" is not available (no copies left)`);
     }
 
+    // 2. Member/Library Card check
     let issued_to = issueData.issued_to || issueData.card_id;
     if (!issued_to) {
       throw new Error("Library card ID (issued_to) is required");
     }
 
+    const memberCheck = await client.query(
+      `SELECT id, card_number, first_name, last_name, allowed_books, is_active 
+       FROM ${schema}.library_members 
+       WHERE id = $1`,
+      [issued_to]
+    );
 
-    const LibrarySettings = require("./librarysettings.model.js");
-    LibrarySettings.init(schema);
-    const settings = await LibrarySettings.getAllSettings();
-    const maxBooksPerCard = parseInt(settings.max_books_per_card || 6);
+    if (memberCheck.rows.length === 0) {
+      throw new Error("Library member not found");
+    }
+
+    const member = memberCheck.rows[0];
+    
+    if (!member.is_active) {
+      throw new Error("Library member is inactive");
+    }
+
+    // 3. Duplicate issue check - same book to same member
+    const duplicateCheck = await client.query(
+      `SELECT id FROM ${schema}.book_issues
+       WHERE issued_to = $1 AND book_id = $2 
+       AND return_date IS NULL AND status = 'issued'`,
+      [issued_to, issueData.book_id]
+    );
+
+    if (duplicateCheck.rows.length > 0) {
+      throw new Error(`Book "${book.title}" is already issued to this member`);
+    }
+
+    // 4. Get library settings
+    const settingsCheck = await client.query(
+      `SELECT max_books_per_card, duration_days, fine_per_day 
+       FROM ${schema}.library_settings 
+       LIMIT 1`
+    );
+    
+    const settings = settingsCheck.rows.length > 0 ? settingsCheck.rows[0] : {};
+    const maxBooksPerCardFromSettings = parseInt(settings.max_books_per_card || 6);
     const durationDays = parseInt(settings.duration_days || 15);
 
+    // 5. Check member's personal allowed books limit
+    const memberAllowedBooks = member.allowed_books || maxBooksPerCardFromSettings;
+    
+    // Take the minimum between member's allowed books and system max
+    const effectiveAllowedBooks = Math.min(memberAllowedBooks, maxBooksPerCardFromSettings);
 
-    const activeIssuesResult = await sql.query(
+    // 6. Active issues count for this member
+    const activeIssuesResult = await client.query(
       `SELECT COUNT(*) as count FROM ${schema}.book_issues 
        WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`,
       [issued_to]
@@ -219,49 +258,79 @@ async function issueBook(issueData, userId) {
 
     const activeIssuesCount = parseInt(activeIssuesResult.rows[0].count || 0);
 
-    if (activeIssuesCount >= maxBooksPerCard) {
+    // Check against effective allowed books
+    if (activeIssuesCount >= effectiveAllowedBooks) {
       throw new Error(
-        `Maximum ${maxBooksPerCard} books can be issued per card (system limit). This card already has ${activeIssuesCount} books issued.`
+        `Maximum ${effectiveAllowedBooks} books can be issued per card. ` +
+        `This card already has ${activeIssuesCount} books issued. ` +
+        `(Member limit: ${memberAllowedBooks}, System limit: ${maxBooksPerCardFromSettings})`
       );
     }
 
-
+    // 7. Dates calculation
     const issueDate = issueData.issue_date || new Date().toISOString().split('T')[0];
     const dueDateObj = new Date(issueDate);
     dueDateObj.setDate(dueDateObj.getDate() + durationDays);
     const dueDate = issueData.due_date || dueDateObj.toISOString().split('T')[0];
 
-
+    // 8. Insert issue record
     const issueQuery = `
       INSERT INTO ${schema}.book_issues 
       (book_id, issued_to, issued_by, issue_date, due_date, status, 
-       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7, $7) 
+       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid,
+       condition_before, remarks) 
+      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $7, $7, $8, $9) 
       RETURNING *
     `;
 
     const issueValues = [
       issueData.book_id,
       issued_to,
-      userId, // Use userId from parameter
+      userId,
       issueDate,
       dueDate,
       'issued',
-      userId
+      userId,
+      issueData.condition_before || 'Good',
+      issueData.remarks || ''
     ];
 
-    const issueResult = await sql.query(issueQuery, issueValues);
+    const issueResult = await client.query(issueQuery, issueValues);
 
-
-    await sql.query(
-      `UPDATE ${schema}.books SET available_copies = available_copies - 1 WHERE id = $1`,
-      [issueData.book_id]
+    // 9. Update book available copies
+    await client.query(
+      `UPDATE ${schema}.books 
+       SET available_copies = available_copies - 1,
+           lastmodifieddate = CURRENT_TIMESTAMP,
+           lastmodifiedbyid = $2
+       WHERE id = $1`,
+      [issueData.book_id, userId]
     );
 
-    return issueResult.rows[0];
+    await client.query('COMMIT');
+    
+    // Return enriched data
+    return {
+      ...issueResult.rows[0],
+      book_title: book.title,
+      book_isbn: book.isbn,
+      member_name: `${member.first_name} ${member.last_name}`,
+      card_number: member.card_number,
+      limits: {
+        member_allowed: memberAllowedBooks,
+        system_max: maxBooksPerCardFromSettings,
+        effective_limit: effectiveAllowedBooks
+      },
+      currently_issued: activeIssuesCount + 1,
+      remaining_allowed: effectiveAllowedBooks - (activeIssuesCount + 1)
+    };
+
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error("Error in issueBook:", error);
     throw error;
+  } finally {
+    client.release();
   }
 }
 async function returnBook(issueId, returnData, userId) {

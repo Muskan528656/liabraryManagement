@@ -1,5 +1,5 @@
 import React from "react";
-
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 const convertUTCToTZ = (utcDate, tz) => {
     if (!utcDate) return "";
     try {
@@ -41,7 +41,7 @@ const statusBadge = (value) => (
 );
 
 
-export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
+export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, timeZone) => {
     const companies = externalData?.company || [];
 
     const COMPANY_TIMEZONE =
@@ -66,8 +66,8 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
         columns: [
             { field: "plan_name", label: "Plan Name" },
             { field: "renewal", label: "Renewal" },
-            { field: "start_date_display", label: "Start Date" },
-            { field: "end_date_display", label: "End Date" },
+            // { field: "start_date_display", label: "Start Date" },
+            // { field: "end_date_display", label: "End Date" },
             {
                 field: "allowed_books",
                 label: "Allowed Books",
@@ -80,6 +80,22 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
                     const statusValue =
                         value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
                     return statusBadge(statusValue === "active" || statusValue === true);
+                },
+            },
+            {
+                field: "start_date_display",
+                label: "Start Date",
+                render: (value) => {
+                    // Pass the safe 'currentTz'
+                    return convertToUserTimezone(value, timeZone);
+                }
+            },
+            {
+                field: "end_date_display",
+                label: "End Date",
+                render: (value) => {
+                    // Pass the safe 'currentTz'
+                    return convertToUserTimezone(value, timeZone);
                 },
             },
         ],

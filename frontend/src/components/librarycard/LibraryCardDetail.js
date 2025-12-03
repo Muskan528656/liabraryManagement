@@ -596,7 +596,7 @@ const LibraryCardDetail = ({
           borderRadius: "15px",
           overflow: "hidden",
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          height: "900px",
+          height: "700px",
         }}
       >
         <div
@@ -727,7 +727,6 @@ const LibraryCardDetail = ({
             </p>
           </div>
 
-          {/* Barcode Section - यहाँ सही reference use करें */}
           <div
             style={{
               border: "1px solid #e9ecef",
@@ -797,32 +796,7 @@ const LibraryCardDetail = ({
             </div>
           </div>
 
-          {/* Status Badge */}
-          <div className="text-center mt-3">
-            <Badge bg={data?.is_active ? "success" : "secondary"} className="px-3 py-2" style={{ fontSize: "14px" }}>
-              <i className={`fa-solid ${data?.is_active ? "fa-check-circle" : "fa-times-circle"} me-2`}></i>
-              {data?.is_active ? "Active Member" : "Inactive Member"}
-            </Badge>
-          </div>
-
-          {/* Footer Note */}
-          <div
-            style={{
-              marginTop: "15px",
-              padding: "10px",
-              background: "#fff3cd",
-              borderRadius: "8px",
-              fontSize: "11px",
-              color: "#856404",
-              textAlign: "center",
-              border: "1px solid #ffc107",
-            }}
-          >
-            <p style={{ margin: 0 }}>
-              <i className="fa-solid fa-info-circle me-1"></i>
-              Scan barcode to verify membership
-            </p>
-          </div>
+      
         </Card.Body>
       </Card>
     );

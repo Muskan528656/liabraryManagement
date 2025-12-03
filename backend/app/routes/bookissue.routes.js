@@ -102,7 +102,6 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-
   router.post(
     "/issue",
     fetchUser,
@@ -136,45 +135,65 @@ module.exports = (app) => {
           return res.status(401).json({ error: "User not authenticated" });
         }
 
-
+        // 1. Check book exists and is available
         const bookRes = await sql.query(
-          `SELECT id, title FROM ${tenantcode}.books WHERE id = $1`,
+          `SELECT id, title, available_copies FROM ${tenantcode}.books WHERE id = $1 AND is_active = true`,
           [req.body.book_id]
         );
 
         if (bookRes.rows.length === 0) {
-          return res.status(404).json({ error: "Book not found" });
-        }
-        const bookTitle = bookRes.rows[0].title;
-
-
-        const issueCheck = await sql.query(
-          `SELECT id 
-         FROM ${tenantcode}.book_issues 
-         WHERE book_id = $1 
-           AND status = 'issued' 
-           AND return_date IS NULL`,
-          [req.body.book_id]
-        );
-
-        if (issueCheck.rows.length > 0) {
-          return res.status(400).json({ error: "Book is already issued" });
+          return res.status(404).json({ error: "Book not found or inactive" });
         }
 
+        const book = bookRes.rows[0];
+        const bookTitle = book.title;
 
+        // Check available copies
+        if (book.available_copies <= 0) {
+          return res.status(400).json({
+            error: `Book "${bookTitle}" is not available (no copies left)`,
+            details: {
+              available_copies: book.available_copies
+            }
+          });
+        }
+
+        // 2. Check member/card exists and get allowed_books
         const cardRes = await sql.query(
-          `SELECT id, card_number, first_name,last_name allowed_books 
+          `SELECT id, card_number, first_name, last_name, allowed_books, is_active 
          FROM ${tenantcode}.library_members 
          WHERE id = $1`,
           [req.body.card_id]
         );
 
         if (cardRes.rows.length === 0) {
-          return res.status(404).json({ error: "Card not found" });
+          return res.status(404).json({ error: "Library member not found" });
         }
 
         const card = cardRes.rows[0];
-        const memberAllowedBooks = card.allowed_books || 6;
+
+        if (!card.is_active) {
+          return res.status(400).json({ error: "Library member is inactive" });
+        }
+
+        const memberName = `${card.first_name} ${card.last_name}`;
+
+        // 3. Get library settings for max_books_per_card
+        const settingsRes = await sql.query(
+          `SELECT max_books_per_card, duration_days 
+         FROM ${tenantcode}.library_settings 
+         LIMIT 1`
+        );
+
+        const maxBooksPerCard = settingsRes.rows.length > 0
+          ? parseInt(settingsRes.rows[0].max_books_per_card || 6)
+          : 6;
+
+        // 4. Calculate effective allowed books (minimum of member's allowed_books and system max)
+        const memberAllowedBooks = card.allowed_books || maxBooksPerCard;
+        const effectiveAllowedBooks = Math.min(memberAllowedBooks, maxBooksPerCard);
+
+        // 5. Check currently issued books count
         const currentIssuesRes = await sql.query(
           `SELECT COUNT(*) as issued_count 
          FROM ${tenantcode}.book_issues 
@@ -186,27 +205,58 @@ module.exports = (app) => {
 
         const currentlyIssued = parseInt(currentIssuesRes.rows[0].issued_count) || 0;
 
-
-        if (currentlyIssued >= memberAllowedBooks) {
+        // 6. Check if member has reached their allowed limit
+        if (currentlyIssued >= effectiveAllowedBooks) {
           return res.status(400).json({
-            error: `Member has reached their allowed books limit (${memberAllowedBooks} books). Please return some books before issuing new ones.`,
+            error: `Member "${memberName}" has reached their allowed books limit`,
             details: {
+              member_name: memberName,
+              card_number: card.card_number,
               currently_issued: currentlyIssued,
-              member_allowed: memberAllowedBooks
+              member_allowed: memberAllowedBooks,
+              system_max: maxBooksPerCard,
+              effective_limit: effectiveAllowedBooks,
+              message: `Maximum ${effectiveAllowedBooks} books allowed. Already issued: ${currentlyIssued}`
             }
           });
         }
 
+        // 7. Check if this specific book is already issued to this member
+        const duplicateCheck = await sql.query(
+          `SELECT id 
+         FROM ${tenantcode}.book_issues 
+         WHERE issued_to = $1 
+           AND book_id = $2
+           AND status = 'issued' 
+           AND return_date IS NULL`,
+          [req.body.card_id, req.body.book_id]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+          return res.status(400).json({
+            error: `Book "${bookTitle}" is already issued to this member`,
+            details: {
+              book_title: bookTitle,
+              member_name: memberName
+            }
+          });
+        }
+
+        // 8. Prepare issue data
         const issueData = {
           book_id: req.body.book_id,
+          card_id: req.body.card_id,
           issued_to: req.body.card_id,
           issue_date: req.body.issue_date || new Date().toISOString().split("T")[0],
+          condition_before: req.body.condition_before || "Good",
+          remarks: req.body.remarks || ""
         };
 
+        // 9. Call model to issue book
         BookIssue.init(tenantcode);
         const issue = await BookIssue.issueBook(issueData, userId);
 
-
+        // 10. Get updated count
         const updatedIssuesRes = await sql.query(
           `SELECT COUNT(*) as issued_count 
          FROM ${tenantcode}.book_issues 
@@ -223,15 +273,33 @@ module.exports = (app) => {
           message: "Book issued successfully",
           data: {
             ...issue,
-            member_name: card.member_name,
+            member_name: memberName,
             book_title: bookTitle,
             card_number: card.card_number,
             issued_count: updatedIssuedCount,
-            remaining_allowed: memberAllowedBooks - updatedIssuedCount
+            remaining_allowed: effectiveAllowedBooks - updatedIssuedCount,
+            limits: {
+              member_allowed: memberAllowedBooks,
+              system_max: maxBooksPerCard,
+              effective_limit: effectiveAllowedBooks
+            }
           },
         });
       } catch (error) {
         console.error("Error issuing book:", error);
+
+        // Return appropriate error messages
+        if (error.message.includes("already issued") ||
+          error.message.includes("not available") ||
+          error.message.includes("Maximum") ||
+          error.message.includes("limit")) {
+          return res.status(400).json({
+            error: "Validation Error",
+            message: error.message,
+            details: error.details || {}
+          });
+        }
+
         return res.status(500).json({
           error: "Internal server error",
           details: error.message,

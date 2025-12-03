@@ -27,11 +27,11 @@ const LibraryCard = (props) => {
       console.log("Fetching subscriptions data...");
       const subscriptionApi = new DataApi("subscriptions");
       const response = await subscriptionApi.fetchAll();
-      
+
       let subscriptionData = [];
-      
+
       if (response?.data) {
-      
+
         if (response.data.success && response.data.data) {
           subscriptionData = response.data.data;
         } else if (Array.isArray(response.data)) {
@@ -42,7 +42,7 @@ const LibraryCard = (props) => {
           subscriptionData = response.data.rows;
         }
       }
-      
+
       console.log(`Fetched ${subscriptionData.length} subscriptions`);
       setSubscriptionsData(subscriptionData);
       return subscriptionData;
@@ -59,9 +59,9 @@ const LibraryCard = (props) => {
       console.log("Fetching users data...");
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
-      
+
       let usersData = [];
-      
+
       if (response?.data) {
         if (response.data.success && response.data.data) {
           usersData = response.data.data;
@@ -71,7 +71,7 @@ const LibraryCard = (props) => {
           usersData = response.data.data;
         }
       }
-      
+
       console.log(`Fetched ${usersData.length} users`);
       setUsersData(usersData);
       return usersData;
@@ -87,33 +87,33 @@ const LibraryCard = (props) => {
       try {
         setLoadingConfig(true);
         setConfigError(null);
-        
+
         console.log("Initializing library card configuration...");
-        
+
 
         const [subscriptions, users] = await Promise.all([
           fetchSubscriptions(),
           fetchUsers()
         ]);
-        
+
 
         const externalData = {
           subscriptions: subscriptions,
           users: users,
           ...props
         };
-        
+
         console.log("External data for config:", {
           subscriptionsCount: subscriptions.length,
           usersCount: users.length
         });
-        
+
 
         const config = await getLibraryCardConfig(externalData);
         setBaseConfig(config);
-        
+
         console.log("Base config loaded successfully");
-        
+
       } catch (error) {
         console.error("Error initializing config:", error);
         setConfigError("Failed to load configuration");
@@ -121,55 +121,55 @@ const LibraryCard = (props) => {
         setLoadingConfig(false);
       }
     };
-    
+
     initializeConfig();
   }, [fetchSubscriptions, fetchUsers, props]);
 
 
   useEffect(() => {
     if (!baseConfig || loadingConfig) return;
-    
+
     const buildFinalConfig = () => {
       try {
         console.log("Building final configuration...");
-        
+
 
         const final = {
           ...baseConfig,
-          
+
 
           formFields: baseConfig.formFields?.map(field => {
 
             if (field.name === "subscription_id") {
               return {
                 ...field,
-                options: subscriptionsData.length > 0 
+                options: subscriptionsData.length > 0
                   ? subscriptionsData.map(sub => ({
-                      value: sub.id,
-                      label: `${sub.plan_name || sub.name || 'Subscription'} ${sub.allowed_books ? `(${sub.allowed_books} books)` : ''}`
-                    }))
+                    value: sub.id,
+                    label: `${sub.plan_name || sub.name || 'Subscription'} ${sub.allowed_books ? `(${sub.allowed_books} books)` : ''}`
+                  }))
                   : [{ value: '', label: 'No subscriptions available' }],
                 key: `subscription-select-${subscriptionsData.length}`
               };
             }
-            
+
 
             if (field.name === "user_id") {
               return {
                 ...field,
                 options: usersData.length > 0
                   ? usersData.map(user => ({
-                      value: user.id,
-                      label: `${user.first_name || ''} ${user.last_name || ''} - ${user.email || user.username || ''}`
-                    }))
+                    value: user.id,
+                    label: `${user.first_name || ''} ${user.last_name || ''} - ${user.email || user.username || ''}`
+                  }))
                   : [{ value: '', label: 'No users available' }],
                 key: `user-select-${usersData.length}`
               };
             }
-            
+
             return field;
           }),
-          
+
 
           columns: baseConfig.columns?.map(column => {
             if (column.field === "subscription_id") {
@@ -177,15 +177,15 @@ const LibraryCard = (props) => {
                 ...column,
                 render: (value, row) => {
                   if (!value) return "No Subscription";
-                  
+
                   const subscription = subscriptionsData.find(sub => sub.id === value);
                   if (!subscription) return `ID: ${value}`;
-                  
+
                   return subscription.plan_name || subscription.name || `Subscription ${value}`;
                 }
               };
             }
-            
+
             if (column.field === "allowed_book") {
               return {
                 ...column,
@@ -194,7 +194,7 @@ const LibraryCard = (props) => {
                   if (value !== null && value !== undefined && value !== "") {
                     return `${value}`;
                   }
-                  
+
 
                   if (row.subscription_id) {
                     const subscription = subscriptionsData.find(sub => sub.id === row.subscription_id);
@@ -202,19 +202,19 @@ const LibraryCard = (props) => {
                       return `${subscription.allowed_books} `;
                     }
                   }
-                  
-                
+
+
                 }
               };
             }
-            
+
             return column;
           }),
-          
+
 
           onSubmit: async (formData, setFormData) => {
             console.log("Submitting form data:", formData);
-            
+
 
             if (!formData.user_id) {
               alert("Please select a user");
@@ -258,10 +258,10 @@ const LibraryCard = (props) => {
 
               const newCard = response.data.data;
               console.log("Card created successfully:", newCard);
-              
+
 
               handleModalOpen(newCard);
-              
+
 
               if (setFormData) {
                 setFormData(baseConfig.initialFormData || {});
@@ -274,14 +274,14 @@ const LibraryCard = (props) => {
               return false;
             }
           },
-          
+
 
           customHandlers: {
             ...baseConfig.customHandlers,
             handleBarcodePreview: handleModalOpen,
             formatDateToDDMMYYYY: formatDate,
             generateISBN13Number: generateDefaultISBN,
-            
+
 
             getSubscriptionOptions: () => {
               return subscriptionsData.map(sub => ({
@@ -290,7 +290,7 @@ const LibraryCard = (props) => {
                 data: sub
               }));
             },
-            
+
             getUserOptions: () => {
               return usersData.map(user => ({
                 value: user.id,
@@ -298,23 +298,23 @@ const LibraryCard = (props) => {
                 data: user
               }));
             },
-            
+
 
             onDataLoad: (data) => {
               console.log("Transforming table data:", data?.length);
-              
+
               if (!Array.isArray(data)) return data;
-              
+
               return data.map(item => {
                 const enhancedItem = { ...item };
-                
+
 
                 if (item.subscription_id && subscriptionsData.length > 0) {
                   const subscription = subscriptionsData.find(sub => sub.id === item.subscription_id);
                   if (subscription) {
                     enhancedItem.subscription_name = subscription.plan_name || subscription.name;
                     enhancedItem.subscription_allowed_books = subscription.allowed_books;
-                    
+
 
                     if (item.allowed_book !== null && item.allowed_book !== undefined && item.allowed_book !== "") {
                       enhancedItem.allowed_books_effective = item.allowed_book;
@@ -328,7 +328,7 @@ const LibraryCard = (props) => {
                     }
                   }
                 }
-                
+
 
                 if (item.user_id && usersData.length > 0) {
                   const user = usersData.find(u => u.id === item.user_id);
@@ -337,7 +337,7 @@ const LibraryCard = (props) => {
                     enhancedItem.user_email = user.email;
                   }
                 }
-                
+
 
                 if (item.registration_date) {
                   enhancedItem.registration_date_formatted = formatDate(item.registration_date);
@@ -345,57 +345,57 @@ const LibraryCard = (props) => {
                 if (item.issue_date) {
                   enhancedItem.issue_date_formatted = formatDate(item.issue_date);
                 }
-                
+
                 return enhancedItem;
               });
             }
           },
-          
+
 
           validationRules: (formData, allCards, editingCard) => {
             const errors = {};
-            
+
             if (!formData.user_id) {
               errors.user_id = "Please select a user";
             }
-            
+
             if (formData.subscription_id) {
               const subscription = subscriptionsData.find(sub => sub.id === formData.subscription_id);
               if (!subscription) {
                 errors.subscription_id = "Selected subscription is invalid";
               }
             }
-            
+
 
             const existingCard = allCards?.find(
-              card => card.user_id === formData.user_id && 
-              card.is_active && 
-              card.id !== editingCard?.id
+              card => card.user_id === formData.user_id &&
+                card.is_active &&
+                card.id !== editingCard?.id
             );
-            
+
             if (existingCard) {
               errors.user_id = "This user already has an active library card";
             }
-            
+
             return errors;
           },
-          
+
 
           beforeSubmit: (formData, isEditing) => {
             const errors = [];
-            
+
             if (!formData.user_id) {
               errors.push("Please select a user");
             }
-            
+
             if (!formData.card_number) {
               errors.push("Card number is required");
             }
-            
+
             if (formData.image && formData.image.size > 2 * 1024 * 1024) {
               errors.push("Image size must be less than 2MB");
             }
-            
+
 
             if (formData.allowed_book !== null && formData.allowed_book !== undefined && formData.allowed_book !== "") {
               const allowedBooks = parseInt(formData.allowed_book);
@@ -403,20 +403,20 @@ const LibraryCard = (props) => {
                 errors.push("Allowed books must be a positive number");
               }
             }
-            
+
             return errors;
           }
         };
-        
+
         console.log("Final configuration built successfully");
         setFinalConfig(final);
-        
+
       } catch (error) {
         console.error("Error building final config:", error);
         setConfigError("Failed to build configuration");
       }
     };
-    
+
     buildFinalConfig();
   }, [baseConfig, subscriptionsData, usersData, loadingConfig]);
 
@@ -540,8 +540,8 @@ const LibraryCard = (props) => {
 
   return (
     <>
-      <DynamicCRUD 
-        {...finalConfig} 
+      <DynamicCRUD
+        {...finalConfig}
         icon="fa-solid fa-id-card"
 
         subscriptionsData={subscriptionsData}
@@ -550,28 +550,28 @@ const LibraryCard = (props) => {
 
       {/* Barcode Modal */}
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
-        <Modal.Header 
-          closeButton 
-          style={{ 
-            background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", 
-            color: "white", 
-            borderBottom: "none" 
+        <Modal.Header
+          closeButton
+          style={{
+            background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+            color: "white",
+            borderBottom: "none"
           }}
         >
           <Modal.Title style={{ color: "white" }}>
             <i className="fa-solid fa-id-card me-2"></i> Member Information
           </Modal.Title>
         </Modal.Header>
-        
+
         <Modal.Body style={{ padding: "20px", background: "#f8f9fa" }}>
           {selectedCard && (
-            <div style={{ 
-              background: "white", 
-              border: "2px solid #6f42c1", 
-              borderRadius: "10px", 
-              padding: "20px", 
-              maxWidth: "500px", 
-              margin: "0 auto" 
+            <div style={{
+              background: "white",
+              border: "2px solid #6f42c1",
+              borderRadius: "10px",
+              padding: "20px",
+              maxWidth: "500px",
+              margin: "0 auto"
             }}>
               {/* User Image */}
               <div style={{ textAlign: "center", marginBottom: "20px" }}>
@@ -579,25 +579,25 @@ const LibraryCard = (props) => {
                   <img
                     src={selectedCard.image.startsWith("http") ? selectedCard.image : `${API_BASE_URL}${selectedCard.image}`}
                     alt={selectedCard.first_name || 'User'}
-                    style={{ 
-                      width: '80px', 
-                      height: '80px', 
-                      borderRadius: '50%', 
-                      objectFit: 'cover', 
-                      border: '3px solid #6f42c1' 
+                    style={{
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid #6f42c1'
                     }}
                   />
                 ) : (
-                  <div style={{ 
-                    width: '80px', 
-                    height: '80px', 
-                    borderRadius: '50%', 
-                    background: '#f0f0f0', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    margin: '0 auto', 
-                    border: '3px solid #6f42c1' 
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: '#f0f0f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto',
+                    border: '3px solid #6f42c1'
                   }}>
                     <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "#6f42c1" }}></i>
                   </div>
@@ -605,11 +605,11 @@ const LibraryCard = (props) => {
               </div>
 
               {/* User Information */}
-              <div style={{ 
-                background: "#f8f9fa", 
-                padding: "15px", 
-                borderRadius: "8px", 
-                marginBottom: "20px" 
+              <div style={{
+                background: "#f8f9fa",
+                padding: "15px",
+                borderRadius: "8px",
+                marginBottom: "20px"
               }}>
                 <p><strong>Card No:</strong> {generateCardNumber(selectedCard)}</p>
                 <p><strong>Name:</strong> {selectedCard.first_name || 'N/A'} {selectedCard.last_name || ''}</p>
@@ -617,9 +617,9 @@ const LibraryCard = (props) => {
                 <p><strong>Registration Date:</strong> {formatDate(selectedCard.registration_date)}</p>
                 <p><strong>Subscription:</strong> {selectedCard.subscription_name || 'No Subscription'}</p>
                 <p><strong>Allowed Books:</strong> {selectedCard.allowed_books_effective || selectedCard.allowed_book || '5'}</p>
-                <p><strong>Status:</strong> 
-                  <span style={{ 
-                    color: selectedCard.is_active ? "green" : "gray", 
+                <p><strong>Status:</strong>
+                  <span style={{
+                    color: selectedCard.is_active ? "green" : "gray",
                     fontWeight: "bold",
                     marginLeft: "5px"
                   }}>
@@ -636,35 +636,35 @@ const LibraryCard = (props) => {
               )}
 
               {/* Barcode Display */}
-              <div style={{ 
-                border: "1px solid #ddd", 
-                padding: "15px", 
-                background: "white", 
-                textAlign: "center", 
-                marginBottom: "15px", 
-                borderRadius: "8px" 
+              <div style={{
+                border: "1px solid #ddd",
+                padding: "15px",
+                background: "white",
+                textAlign: "center",
+                marginBottom: "15px",
+                borderRadius: "8px"
               }}>
-                <svg 
-                  id={`barcode-modal-${selectedCard.id}`} 
+                <svg
+                  id={`barcode-modal-${selectedCard.id}`}
                   style={{ width: '100%', height: '70px', display: 'block' }}
                 ></svg>
-                <div style={{ 
-                  marginTop: "10px", 
-                  fontSize: "14px", 
-                  fontWeight: "600", 
-                  color: "#6f42c1", 
-                  fontFamily: "monospace" 
+                <div style={{
+                  marginTop: "10px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#6f42c1",
+                  fontFamily: "monospace"
                 }}>
                   {generateCardNumber(selectedCard)}
                 </div>
               </div>
 
               {/* Footer Note */}
-              <div style={{ 
-                textAlign: "center", 
-                fontSize: "12px", 
-                color: "#666", 
-                marginTop: "15px" 
+              <div style={{
+                textAlign: "center",
+                fontSize: "12px",
+                color: "#666",
+                marginTop: "15px"
               }}>
                 <p style={{ margin: 0 }}>Scan barcode to verify membership</p>
                 <p style={{ margin: "5px 0 0 0" }}>
@@ -674,19 +674,19 @@ const LibraryCard = (props) => {
             </div>
           )}
         </Modal.Body>
-        
+
         <Modal.Footer className="d-flex justify-content-between">
           <div>
-            <Button 
-              variant="outline-success" 
-              onClick={() => handleDownloadBarcode(selectedCard, API_BASE_URL, generateCardNumber, setBarcodeError, formatDate)} 
+            <Button
+              variant="outline-success"
+              onClick={() => handleDownloadBarcode(selectedCard, API_BASE_URL, generateCardNumber, setBarcodeError, formatDate)}
               className="me-2"
             >
               <i className="fa-solid fa-download me-1"></i> Download
             </Button>
-            <Button 
-              variant="outline-primary" 
-              onClick={() => handlePrintBarcode(selectedCard, API_BASE_URL, generateCardNumber, formatDate, setBarcodeError)} 
+            <Button
+              variant="outline-primary"
+              onClick={() => handlePrintBarcode(selectedCard, API_BASE_URL, generateCardNumber, formatDate, setBarcodeError)}
               className="me-2"
             >
               <i className="fa-solid fa-print me-1"></i> Print

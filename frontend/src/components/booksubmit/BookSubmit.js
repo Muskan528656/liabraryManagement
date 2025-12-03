@@ -894,16 +894,16 @@ const BookSubmit = () => {
                                                     background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
                                                     border: "none",
                                                     borderBottom: "2px solid #d1d5db",
-                                                    padding: "20px 24px"
+                                                    padding: "15px 20px"
                                                 }}>
-                                                    <h5 className="mb-0 fw-bold" style={{
+                                                    <h3 className="mb-0 fw-bold" style={{
                                                         color: "#1f2937",
-                                                        fontSize: "20px",
+                                                        fontSize: "16px",
                                                         letterSpacing: "0.3px"
                                                     }}>
                                                         <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
                                                         Book Identification
-                                                    </h5>
+                                                    </h3>
                                                 </Card.Header>
                                                 <Card.Body className="p-4">
                                                     {/* Search Mode Dropdown */}
@@ -915,8 +915,8 @@ const BookSubmit = () => {
                                                             style={{
                                                                 border: "2px solid #8b5cf6",
                                                                 borderRadius: "8px",
-                                                                fontSize: "0.95rem",
-                                                                padding: "0.75rem 1rem"
+                                                                fontSize: "0.7rem",
+                                                                padding: "0.5rem 1rem"
                                                             }}
                                                         >
                                                             <option value="isbn">Search by ISBN</option>
@@ -942,8 +942,8 @@ const BookSubmit = () => {
                                                                 style={{
                                                                     border: "1px solid #dee2e6",
                                                                     borderRadius: "8px 0 0 8px",
-                                                                    fontSize: "0.95rem",
-                                                                    padding: "0.75rem 1rem"
+                                                                    fontSize: "0.7rem",
+                                                                    padding: "0.5rem 1rem"
                                                                 }}
                                                             />
                                                             {loading && (
@@ -1119,12 +1119,12 @@ const BookSubmit = () => {
                                                         <Col>
                                                             <h5 className="mb-0 fw-bold" style={{
                                                                 color: "#1f2937",
-                                                                fontSize: "20px",
+                                                                fontSize: "18px",
                                                                 letterSpacing: "0.3px"
                                                             }}>
                                                                 <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
                                                                 {bookIssues.length > 0 ? "Issued Books for this ISBN" : "All Issued Books"}
-                                                                <span style={{ color: "orange", fontSize: "16px", marginLeft: "8px" }}>
+                                                                <span style={{ color: "orange", fontSize: "14px", marginLeft: "8px" }}>
                                                                     ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
                                                                 </span>
                                                             </h5>

@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
- 
+
 async function findAll() {
   try {
     if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
@@ -25,7 +25,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findById(id) {
   try {
     const query = `SELECT * FROM ${this.schema}.user_role WHERE id = $1`;
@@ -37,7 +37,7 @@ async function findById(id) {
   }
 }
 
- 
+
 async function create(data) {
   try {
     const query = `
@@ -63,7 +63,7 @@ async function create(data) {
   }
 }
 
- 
+
 async function update(id, data) {
   try {
     const query = `
@@ -92,7 +92,7 @@ async function update(id, data) {
   }
 }
 
- 
+
 async function remove(id) {
   try {
     const query = `DELETE FROM ${this.schema}.user_role WHERE id = $1 RETURNING *`;

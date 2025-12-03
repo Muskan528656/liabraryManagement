@@ -5,6 +5,7 @@ import PubSub from 'pubsub-js';
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { TIME_ZONE } from "../../constants/TIME_ZONE"
 import { CURRENCY } from '../../constants/CURRENCY';
+
 const Company = () => {
   const [Company, setCompany] = useState({
     name: "",
@@ -34,28 +35,53 @@ const Company = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
-  const [selectedCurrency, setSelectedCurrency] = useState(Company.currency);
-  const [timeZones, setTimeZones] = useState([]);
+
   useEffect(() => {
     fetchCompany();
   }, []);
+
   const handleCurrencyChange = (e) => {
-    const selectedTimezone = e.target.value;
+    const selectedCurrencyValue = e.target.value;
 
-    setSelectedCurrency(selectedTimezone);
-
-
-    const matchedTimeZone = TIME_ZONE.find(
-      (t) => t.timezone === selectedTimezone
+    // CURRENCY से selected currency ढूंढें
+    const matchedCurrency = CURRENCY.find(
+      (c) => c.value === selectedCurrencyValue
     );
+
+    if (matchedCurrency) {
+      // Currency का timezone निकालें (जैसे "Africa/Cairo")
+      const currencyTimezone = matchedCurrency.timezone;
+
+      // TIME_ZONE में से इस timezone के लिए matching entry ढूंढें
+      const matchedTimeZone = TIME_ZONE.find(
+        (t) => t.timezone === currencyTimezone
+      );
+
+      setTempCompany((prev) => ({
+        ...prev,
+        currency: selectedCurrencyValue,
+        currency_display: matchedCurrency.label,
+        // Time zone automatically set करें
+        time_zone: matchedTimeZone ? matchedTimeZone.value : "",
+        time_zone_display: matchedTimeZone ? matchedTimeZone.label : "",
+        timezone_identifier: matchedTimeZone ? matchedTimeZone.timezone : ""
+      }));
+    }
+  };
+
+  const handleTimeZoneChange = (e) => {
+    const selectedValue = e.target.value;
+
+    const matchedTimeZone = TIME_ZONE.find(t => t.value === selectedValue);
 
     setTempCompany((prev) => ({
       ...prev,
-      currency: selectedTimezone,
+      time_zone: selectedValue,
       time_zone_display: matchedTimeZone ? matchedTimeZone.label : "",
-      time_zone: matchedTimeZone ? matchedTimeZone.timezone : ""
+      timezone_identifier: matchedTimeZone ? matchedTimeZone.timezone : ""
     }));
   };
+
   function getCompanyIdFromToken() {
     const token = sessionStorage.getItem("token");
     if (!token) return null;
@@ -77,8 +103,29 @@ const Company = () => {
       const response = await companyApi.fetchById(companyid);
 
       if (response.data) {
-        setCompany(response.data);
-        console.log("Company:", response.data);
+        const companyData = response.data;
+        console.log("Database से आया time_zone:", companyData.time_zone);
+
+        let timeZoneValue = companyData.time_zone;
+
+      
+        if (timeZoneValue && timeZoneValue.includes("GMT")) {
+        
+          const gmtMatch = timeZoneValue.match(/GMT[+-]\d{2}:\d{2}/);
+          if (gmtMatch) {
+            timeZoneValue = gmtMatch[0];
+            console.log("Extracted GMT value:", timeZoneValue);
+          }
+        }
+
+        const updatedCompanyData = {
+          ...companyData,
+          time_zone: timeZoneValue 
+        };
+
+        setCompany(updatedCompanyData);
+        setTempCompany(updatedCompanyData);
+        console.log("Updated Company Data:", updatedCompanyData);
       }
     } catch (error) {
       console.error("Error fetching company by ID:", error);
@@ -98,7 +145,9 @@ const Company = () => {
     try {
       const companyId = getCompanyIdFromToken();
       const companyApi = new DataApi("company");
-      console.log("tempCompanytempCompany", tempCompany)
+
+      console.log("Saving Company:", tempCompany);
+
       const response = await companyApi.update(tempCompany, companyId);
 
       if (response.data) {
@@ -131,11 +180,44 @@ const Company = () => {
     }));
   };
 
+  // Time Zone display value निकालें
+  const getTimeZoneDisplay = () => {
+    if (isEditingCompany) {
+      const timeZoneValue = tempCompany.time_zone;
+      if (!timeZoneValue) return "Select TimeZone";
+      console.log("TIME", timeZoneValue)
+      const matchedTimeZone = TIME_ZONE.find(t => t.value === timeZoneValue);
+      return matchedTimeZone ? matchedTimeZone.label : timeZoneValue;
+    } else {
+      const timeZoneValue = Company.time_zone;
+      if (!timeZoneValue) return "No TimeZone selected";
+
+      const matchedTimeZone = TIME_ZONE.find(t => t.value === timeZoneValue);
+      return matchedTimeZone ? matchedTimeZone.label : timeZoneValue;
+    }
+  };
+
+  // Currency display value निकालें
+  const getCurrencyDisplay = () => {
+    if (isEditingCompany) {
+      const currencyValue = tempCompany.currency;
+      if (!currencyValue) return "Select Currency";
+
+      const matchedCurrency = CURRENCY.find(c => c.value === currencyValue);
+      return matchedCurrency ? matchedCurrency.label : currencyValue;
+    } else {
+      const currencyValue = Company.currency;
+      if (!currencyValue) return "No Currency selected";
+
+      const matchedCurrency = CURRENCY.find(c => c.value === currencyValue);
+      return matchedCurrency ? matchedCurrency.label : currencyValue;
+    }
+  };
+
   return (
     <Container fluid className="py-4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-
           <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
               <div
@@ -152,7 +234,6 @@ const Company = () => {
                 </h5>
                 {!isEditingCompany ? (
                   <button
-
                     className="custom-btn-primary"
                     onClick={handleCompanyEdit}
                   >
@@ -178,6 +259,7 @@ const Company = () => {
                   </div>
                 )}
               </div>
+
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h6
@@ -191,9 +273,11 @@ const Company = () => {
                     Company Information
                   </h6>
                 </Col>
+
                 <Row className="px-5">
                   <Col md={9}>
                     <Row>
+                      {/* Company Name */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Company Name</Form.Label>
@@ -206,13 +290,14 @@ const Company = () => {
                               handleCompanyChange("name", e.target.value)
                             }
                             style={{
-
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
                           />
                         </Form.Group>
                       </Col>
+
+                      {/* Tenant Code */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Tenant Code</Form.Label>
@@ -229,13 +314,14 @@ const Company = () => {
                               handleCompanyChange("tenantcode", e.target.value)
                             }
                             style={{
-
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
                           />
                         </Form.Group>
                       </Col>
+
+                      {/* User Licenses */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">User Licenses</Form.Label>
@@ -252,13 +338,14 @@ const Company = () => {
                               handleCompanyChange("userlicenses", e.target.value)
                             }
                             style={{
-
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
                           />
                         </Form.Group>
                       </Col>
+
+                      {/* System Email */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">System Email</Form.Label>
@@ -275,13 +362,14 @@ const Company = () => {
                               handleCompanyChange("systememail", e.target.value)
                             }
                             style={{
-
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
                           />
                         </Form.Group>
                       </Col>
+
+                      {/* Admin Email */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Admin Email</Form.Label>
@@ -298,19 +386,19 @@ const Company = () => {
                               handleCompanyChange("adminemail", e.target.value)
                             }
                             style={{
-
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
                           />
                         </Form.Group>
                       </Col>
+
+                      {/* Is Active */}
                       <Col md={6}>
                         <Form.Label className="fw-semibold">Is Active</Form.Label>
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
-
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -330,48 +418,79 @@ const Company = () => {
                           />
                         </div>
                       </Col>
+
+                      {/* Currency Dropdown */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Currency</Form.Label>
-                          <div className="dropdown-container">
-                            <Form.Control
-                              as="select"
-                              value={selectedCurrency}
+                          {isEditingCompany ? (
+                            <Form.Select
+                              value={tempCompany.currency || ""}
+
                               onChange={handleCurrencyChange}
-                              className="currency-dropdown"
-                              disabled={!isEditingCompany}  // Currency dropdown will be disabled when not in edit mode
+                              style={{
+                                opacity: 1,
+                              }}
                             >
+                              <option value="">Select Currency</option>
                               {CURRENCY.map((currency) => (
-                                <option key={currency.value} value={currency.timezone}>
-                                  {currency.label} - {currency.value}
+                                <option key={currency.value} value={currency.value}>
+                                  {currency.label}
                                 </option>
                               ))}
-                            </Form.Control>
-                          </div>
+                            </Form.Select>
+                          ) : (
+                            <Form.Control
+                              type="text"
+                              value={getCurrencyDisplay()}
+                              readOnly
+                              style={{
+                                opacity: 0.9,
+                              }}
+                            />
+                          )}
                         </Form.Group>
-
                       </Col>
+
+                      {/* Time Zone Dropdown */}
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Time Zone</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.time_zone_display
-                                : Company.time_zone_display || Company.time_zone
-                            }
-                            readOnly
-                          />
+                          {isEditingCompany ? (
+                            <Form.Select
+                              value={tempCompany.time_zone || ""}
 
-
+                              onChange={handleTimeZoneChange}
+                              style={{
+                                opacity: 1,
+                              }}
+                            >
+                              <option value="">Select TimeZone</option>
+                              {TIME_ZONE.map((timeZone) => (
+                                <option key={timeZone.value} value={timeZone.value}>
+                                  {timeZone.label}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          ) : (
+                            <Form.Control
+                              type="text"
+                              value={getTimeZoneDisplay()}
+                              readOnly
+                              style={{
+                                opacity: 0.9,
+                              }}
+                            />
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>
                   </Col>
-                  <Col md={3} >
+
+                  {/* Company Logo Section */}
+                  <Col md={3}>
                     <Form.Label className="fw-semibold">Company Logo</Form.Label>
-                    <div className="d-flex align-items-center justify-content-center ">
+                    <div className="d-flex align-items-center justify-content-center">
                       <div
                         className="border border-dashed d-flex align-items-center justify-content-center position-relative overflow-hidden"
                         style={{
@@ -407,6 +526,7 @@ const Company = () => {
                           </div>
                         )}
                       </div>
+
                       {isEditingCompany && (
                         <Form.Control
                           type="file"
@@ -427,6 +547,7 @@ const Company = () => {
                 </Row>
               </Row>
 
+              {/* Address Information Section */}
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h6
@@ -440,6 +561,7 @@ const Company = () => {
                     Address Information
                   </h6>
                 </Col>
+
                 <Row className="px-5">
                   <Col md={4}>
                     <Form.Group className="mb-3">
@@ -455,13 +577,13 @@ const Company = () => {
                           handleCompanyChange("country", e.target.value)
                         }
                         style={{
-
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Country Code</Form.Label>
@@ -477,7 +599,6 @@ const Company = () => {
                         }}
                       >
                         <option value="">Select Country Code</option>
-
                         {COUNTRY_CODES.map((c) => (
                           <option key={c.code} value={c.code}>
                             {c.country_code} — {c.country}
@@ -486,6 +607,7 @@ const Company = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">State</Form.Label>
@@ -500,13 +622,13 @@ const Company = () => {
                           handleCompanyChange("state", e.target.value)
                         }
                         style={{
-
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">City</Form.Label>
@@ -519,13 +641,13 @@ const Company = () => {
                           handleCompanyChange("city", e.target.value)
                         }
                         style={{
-
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Pincode</Form.Label>
@@ -540,7 +662,6 @@ const Company = () => {
                           handleCompanyChange("pincode", e.target.value)
                         }
                         style={{
-
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -549,6 +670,12 @@ const Company = () => {
                   </Col>
                 </Row>
               </Row>
+
+              {showAlert && (
+                <Alert variant="info" onClose={() => setShowAlert(false)} dismissible>
+                  {alertMessage}
+                </Alert>
+              )}
             </Card.Body>
           </Card>
         </Col>

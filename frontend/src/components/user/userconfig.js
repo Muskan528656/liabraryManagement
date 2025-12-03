@@ -61,6 +61,7 @@ export const getUserConfig = (externalData = {}, props = {}) => {
                     return country ? `${country.country_code} (${country.country})` : cleanValue || 'N/A';
                 }
             },
+            { field: "phone", label: "Phone" },
             {
                 field: "userrole",
                 label: "Role",

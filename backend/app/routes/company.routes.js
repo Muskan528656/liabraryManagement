@@ -145,6 +145,7 @@ module.exports = (app) => {
         }
 
         const userId = req.userinfo?.id || null;
+        console.log("requusus->>",req.body)
         const company = await Company.updateById(req.params.id, req.body, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to update company" });
