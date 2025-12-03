@@ -12,7 +12,7 @@ module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
 
-  // Get All Records
+ 
   router.get("/", fetchUser, async (req, res) => {
 
     moduleModel.init(req.userinfo.tenantcode);
@@ -24,7 +24,7 @@ module.exports = (app) => {
     }
   });
 
-  // records create
+ 
   router.post("/", fetchUser, async (req, res) => {
     const {
       name,
@@ -194,7 +194,7 @@ module.exports = (app) => {
     }
   });
 
-  // delete record
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     moduleModel.init(req.userinfo.tenantcode);
     const result = await moduleModel.deleteRecord(req.params.id);

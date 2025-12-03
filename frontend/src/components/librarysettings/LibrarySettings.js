@@ -61,7 +61,7 @@ const Settings = () => {
     setTwoFactorAuth(method);
   };
 
-  // Fetch settings from backend
+ 
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -72,7 +72,7 @@ const Settings = () => {
       const response = await settingsApi.get("/all");
       if (response.data && response.data.success) {
         const settingsData = response.data.data;
-        // Convert key-value pairs to object
+ 
         const settingsObj = {
           max_books_per_card: parseInt(settingsData.max_books_per_card || 1),
           duration_days: parseInt(settingsData.duration_days || 15),

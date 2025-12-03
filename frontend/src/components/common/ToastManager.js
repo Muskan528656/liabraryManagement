@@ -6,7 +6,7 @@ const ToastManager = () => {
   const [toasts, setToasts] = useState([]);
 
   useEffect(() => {
-    // Subscribe to toast events
+ 
     const savedToken = PubSub.subscribe("RECORD_SAVED_TOAST", (msg, data) => {
       addToast(data.message || "Record saved successfully", "success");
     });
@@ -19,7 +19,7 @@ const ToastManager = () => {
       addToast(data.message || "Warning", "warning");
     });
 
-    // Cleanup subscriptions
+ 
     return () => {
       PubSub.unsubscribe(savedToken);
       PubSub.unsubscribe(errorToken);

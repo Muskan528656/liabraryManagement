@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
     Tabs, Tab, Alert, Modal
@@ -8,10 +8,10 @@ import Select from 'react-select';
 import DataApi from '../../api/dataApi';
 import Loader from '../common/Loader';
 import { toast } from "react-toastify";
-import BarcodeScanPurchase from "../common/BarcodeScanPurchase";
 import PurchaseDataImport from "../common/PurchaseDataImport";
 import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
+
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
     const [multiInsertRows, setMultiInsertRows] = useState([{
@@ -23,17 +23,21 @@ const BulkPurchasePage = () => {
         notes: ""
     }]);
     const [selectedVendor, setSelectedVendor] = useState(null);
+    const [initialVendor, setInitialVendor] = useState(null); // Store initial vendor separately
     const [vendors, setVendors] = useState([]);
     const [books, setBooks] = useState([]);
     const [saving, setSaving] = useState(false);
-    const [currentRowIndex, setCurrentRowIndex] = useState(0);
     const [activeTab, setActiveTab] = useState("single");
     const [selectedFile, setSelectedFile] = useState(null);
     const [barcodeInput, setBarcodeInput] = useState("");
     const [scanningBook, setScanningBook] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({
+        issued: 0,
+        purchased: 0,
+        available: 0
+    });
 
-    // New states for modals
     const [showAddVendorModal, setShowAddVendorModal] = useState(false);
     const [showAddBookModal, setShowAddBookModal] = useState(false);
     const [vendorFormData, setVendorFormData] = useState({
@@ -62,6 +66,72 @@ const BulkPurchasePage = () => {
     const [autoLookupTimeout, setAutoLookupTimeout] = useState(null);
     const [barcodeProcessing, setBarcodeProcessing] = useState(false);
     const [newlyAddedBookId, setNewlyAddedBookId] = useState(null);
+    const [initialBookId, setInitialBookId] = useState(null); // Store initial book ID
+
+    useEffect(() => {
+        fetchVendors();
+        fetchBooks();
+        fetchAuthors();
+        fetchCategories();
+        fetchStats();
+    }, []);
+
+    useEffect(() => {
+        if (showAddBookModal) {
+            setBookFormData({
+                title: "",
+                author_id: "",
+                category_id: "",
+                isbn: barcodeInput || "",
+                language: "",
+                total_copies: 1,
+                available_copies: 1,
+            });
+        }
+    }, [showAddBookModal]);
+
+    const fetchStats = async () => {
+        try {
+
+            const issuedApi = new DataApi("issued");
+            const issuedResponse = await issuedApi.fetchAll();
+
+
+            const purchaseApi = new DataApi("purchase");
+            const purchaseResponse = await purchaseApi.fetchAll();
+
+
+            const bookApi = new DataApi("book");
+            const bookResponse = await bookApi.fetchAll();
+
+            let issuedCount = 0;
+            let purchasedCount = 0;
+            let availableCount = 0;
+
+
+            if (issuedResponse.data && Array.isArray(issuedResponse.data)) {
+                issuedCount = issuedResponse.data.length;
+            }
+
+
+            if (purchaseResponse.data && Array.isArray(purchaseResponse.data)) {
+                purchasedCount = purchaseResponse.data.reduce((sum, purchase) => sum + (purchase.quantity || 0), 0);
+            }
+
+
+            if (bookResponse.data && Array.isArray(bookResponse.data)) {
+                availableCount = bookResponse.data.reduce((sum, book) => sum + (book.available_copies || 0), 0);
+            }
+
+            setStats({
+                issued: issuedCount,
+                purchased: purchasedCount,
+                available: availableCount
+            });
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+        }
+    };
 
     const handleFileChange = (file) => {
         if (file) {
@@ -95,8 +165,6 @@ const BulkPurchasePage = () => {
 
     const fetchBookByISBN = async (isbn) => {
         console.log("Fetching book data for ISBN:", isbn);
-
-       
         const bookData = {
             isbn: isbn,
             title: "",
@@ -105,10 +173,8 @@ const BulkPurchasePage = () => {
         };
 
         try {
-          
             const openLibraryUrl = `https://openlibrary.org/isbn/${isbn}.json`;
             console.log("Trying Open Library API:", openLibraryUrl);
-
             const openLibraryResponse = await fetch(openLibraryUrl);
 
             if (openLibraryResponse.ok) {
@@ -117,12 +183,12 @@ const BulkPurchasePage = () => {
 
                 bookData.title = data.title || "";
 
-        
                 if (data.authors && data.authors.length > 0) {
                     try {
                         const authorPromises = data.authors.slice(0, 3).map(async (author) => {
                             const authorKey = author.key || author;
                             const authorUrl = `https://openlibrary.org${authorKey}.json`;
+
                             const authorResponse = await fetch(authorUrl);
                             if (authorResponse.ok) {
                                 const authorData = await authorResponse.json();
@@ -146,7 +212,6 @@ const BulkPurchasePage = () => {
                     }
                 }
 
-              
                 if (data.subjects && data.subjects.length > 0) {
                     const subject = data.subjects[0];
                     const categoryName = subject
@@ -175,7 +240,6 @@ const BulkPurchasePage = () => {
             console.log("Open Library API failed:", error);
         }
 
-        // Fallback to Google Books API
         try {
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
             console.log("Trying Google Books API:", googleBooksUrl);
@@ -190,7 +254,6 @@ const BulkPurchasePage = () => {
                     const volumeInfo = data.items[0].volumeInfo;
                     bookData.title = volumeInfo.title || "";
 
-                    // Get authors
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
                         bookData.author_details = {
@@ -201,7 +264,6 @@ const BulkPurchasePage = () => {
                         };
                     }
 
-                    // Get categories
                     if (volumeInfo.categories && volumeInfo.categories.length > 0) {
                         const category = volumeInfo.categories[0];
                         const categoryName = category
@@ -212,7 +274,6 @@ const BulkPurchasePage = () => {
                         bookData.category_description = category;
                     }
 
-                    // Get description
                     if (volumeInfo.description) {
                         bookData.description = volumeInfo.description;
                     }
@@ -257,7 +318,6 @@ const BulkPurchasePage = () => {
                     if (newAuthorResponse.data && newAuthorResponse.data.success) {
                         foundAuthor = newAuthorResponse.data.data;
                         toast.success(`Author "${primaryAuthorName}" created successfully`);
-                        // Refresh authors list
                         await fetchAuthors();
                     }
                 } else {
@@ -296,13 +356,11 @@ const BulkPurchasePage = () => {
             const categoriesResponse = await categoryApi.fetchAll();
 
             if (categoriesResponse.data && Array.isArray(categoriesResponse.data)) {
-              
                 let foundCategory = categoriesResponse.data.find(c =>
                     c.name && c.name.toLowerCase() === categoryName.toLowerCase()
                 );
 
                 if (!foundCategory) {
-                  
                     const categoryData = {
                         name: categoryName,
                         description: categoryDescription || ""
@@ -312,11 +370,10 @@ const BulkPurchasePage = () => {
                     if (newCategoryResponse.data && newCategoryResponse.data.success) {
                         foundCategory = newCategoryResponse.data.data;
                         toast.success(`Category "${categoryName}" created successfully`);
-                        // Refresh categories list
                         await fetchCategories();
                     }
                 } else {
-                  if (categoryDescription && !foundCategory.description) {
+                    if (categoryDescription && !foundCategory.description) {
                         try {
                             await categoryApi.update({ ...foundCategory, description: categoryDescription }, foundCategory.id);
                         } catch (e) {
@@ -348,10 +405,10 @@ const BulkPurchasePage = () => {
                 console.log("Valid ISBN detected:", isbnCheck);
                 const isbn = isbnCheck.value;
 
-               
                 const bookData = await fetchBookByISBN(isbn);
                 console.log("Fetched book data:", bookData);
-  if (bookData.author_name) {
+
+                if (bookData.author_name) {
                     const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
                     if (authorId) {
                         bookData.author_id = authorId;
@@ -419,7 +476,6 @@ const BulkPurchasePage = () => {
                 }
             }
 
-          
             if (barcode.length > 3) {
                 return {
                     title: barcode.trim(),
@@ -450,7 +506,6 @@ const BulkPurchasePage = () => {
 
         try {
             setLoading(true);
-
             const processedData = await processBarcodeData(barcode.trim());
 
             if (processedData) {
@@ -466,8 +521,6 @@ const BulkPurchasePage = () => {
                 } else {
                     toast.info("Basic book data prepared. Please fill remaining details.");
                 }
-
-           
             } else {
                 setBookFormData(prev => ({
                     ...prev,
@@ -495,81 +548,6 @@ const BulkPurchasePage = () => {
             handleBarcodeLookup(barcode);
         }, 500);
     };
-
-    const handleBarcodeScan = async (barcode) => {
-        if (!barcode || barcode.trim().length < 10) {
-            toast.error("Please enter a valid barcode/ISBN (minimum 10 characters)");
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const bookApi = new DataApi("book");
-            const allBooks = await bookApi.fetchAll();
-            const bookData = allBooks?.data || allBooks || [];
-
-            const foundBook = bookData.find(book =>
-                book.isbn && (
-                    book.isbn === barcode.trim() ||
-                    book.isbn.replace(/[-\s]/g, '') === barcode.trim().replace(/[-\s]/g, '') ||
-                    book.isbn.includes(barcode.trim()) ||
-                    barcode.trim().includes(book.isbn)
-                )
-            );
-
-            if (foundBook) {
-                setScanningBook(foundBook);
-                toast.success(`Book found: ${foundBook.title}`);
-            } else {
-                toast.error("Book not found with this ISBN/Barcode");
-                setScanningBook(null);
-            }
-        } catch (error) {
-            console.error("Error scanning barcode:", error);
-            toast.error("Failed to scan barcode. Please try again.");
-            setScanningBook(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchVendors();
-        fetchBooks();
-        fetchAuthors();
-        fetchCategories();
-    }, []);
-
-    useEffect(() => {
-        if (newlyAddedBookId && books.length > 0) {
-            const newBook = books.find(book => book.id === newlyAddedBookId);
-            if (newBook) {
-                const updatedRows = [...multiInsertRows];
-                updatedRows[currentRowIndex] = {
-                    ...updatedRows[currentRowIndex],
-                    book_id: newlyAddedBookId
-                };
-                setMultiInsertRows(updatedRows);
-
-                toast.success(`Book "${newBook.title}" added and selected successfully`);
-                setNewlyAddedBookId(null); 
-            }
-        }
-    }, [newlyAddedBookId, books, currentRowIndex, multiInsertRows]);
-
-    useEffect(() => {
-        if (showAddBookModal) {
-            setBookFormData({
-                title: "",
-                author_id: "",
-                category_id: "",
-                isbn: barcodeInput || "",
-                language: "",
-                total_copies: 1,
-                available_copies: 1,
-            });
-        }
-    }, [showAddBookModal]);
 
     const fetchVendors = async () => {
         try {
@@ -655,8 +633,25 @@ const BulkPurchasePage = () => {
         return bookOptions.find(option => option.value === row.book_id) || null;
     };
 
+    const getSelectedVendorForRow = (rowIndex) => {
+        const row = multiInsertRows[rowIndex];
+        if (!row.vendor_id) return null;
+        return vendorOptions.find(option => option.value === row.vendor_id) || null;
+    };
+
     const handleMultiRowChange = (index, field, value) => {
         const updatedRows = [...multiInsertRows];
+
+
+        if (field === 'book_id' && index === 0 && value) {
+            setInitialBookId(value);
+        }
+
+
+        if (field === 'vendor_id' && index === 0 && !initialVendor && value) {
+            setInitialVendor(vendorOptions.find(v => v.value === value));
+        }
+
         updatedRows[index] = { ...updatedRows[index], [field]: value };
         setMultiInsertRows(updatedRows);
     };
@@ -664,19 +659,7 @@ const BulkPurchasePage = () => {
     const handleAddBookRow = () => {
         const newRow = {
             vendor_id: activeTab === "single" ? (selectedVendor ? selectedVendor.value : "") : "",
-            book_id: "",
-            quantity: 1,
-            unit_price: 0,
-            purchase_date: new Date().toISOString().split('T')[0],
-            notes: ""
-        };
-        setMultiInsertRows([...multiInsertRows, newRow]);
-    };
-
-    const handleAddVendorRow = () => {
-        const newRow = {
-            vendor_id: "",
-            book_id: "",
+            book_id: initialBookId || "", // Use initial book if available
             quantity: 1,
             unit_price: 0,
             purchase_date: new Date().toISOString().split('T')[0],
@@ -687,16 +670,24 @@ const BulkPurchasePage = () => {
 
     const handleRemoveRow = (index) => {
         if (multiInsertRows.length > 1) {
-            setMultiInsertRows(multiInsertRows.filter((_, i) => i !== index));
+            const updatedRows = multiInsertRows.filter((_, i) => i !== index);
+            setMultiInsertRows(updatedRows);
         }
     };
 
     const handleVendorChange = (selectedOption) => {
         setSelectedVendor(selectedOption);
+
+
+        if (!initialVendor && selectedOption) {
+            setInitialVendor(selectedOption);
+        }
+
         if (activeTab === "single") {
+            const vendorId = selectedOption ? selectedOption.value : "";
             const updatedRows = multiInsertRows.map(row => ({
                 ...row,
-                vendor_id: selectedOption ? selectedOption.value : ""
+                vendor_id: vendorId
             }));
             setMultiInsertRows(updatedRows);
         }
@@ -759,33 +750,57 @@ const BulkPurchasePage = () => {
             const bookApi = new DataApi("book");
             const response = await bookApi.create(bookFormData);
 
+            console.log("🔍 Full API Response:", response);
+
+            let newBookId = null;
+
             if (response && response.data) {
-                const newBook = response.data;
-                const newBookId = newBook.id || newBook._id;
+                const bookData = response.data;
+                newBookId = bookData.id || bookData._id;
+            }
 
-                if (newBookId) {
-                    setNewlyAddedBookId(newBookId);
+            if (!newBookId && response && response.data && response.data.data) {
+                const bookData = response.data.data;
+                newBookId = bookData.id || bookData._id;
+            }
 
-                    await fetchBooks();
+            if (!newBookId && response) {
+                newBookId = response.id || response._id;
+            }
 
-                    toast.success("Book added successfully");
+            console.log("🔍 Final Book ID:", newBookId);
 
-                    setShowAddBookModal(false);
-                    setBookFormData({
-                        title: "",
-                        author_id: "",
-                        category_id: "",
-                        isbn: "",
-                        language: "",
-                        total_copies: 1,
-                        available_copies: 1,
-                    });
-                    setBarcodeInput("");
+            if (newBookId) {
+                setNewlyAddedBookId(newBookId);
+                await fetchBooks();
+                toast.success("Book added successfully");
+
+
+                if (!initialBookId) {
+                    setInitialBookId(newBookId);
                 }
+
+                setTimeout(() => {
+                    setShowAddBookModal(false);
+                }, 300);
+
+                setBookFormData({
+                    title: "",
+                    author_id: "",
+                    category_id: "",
+                    isbn: "",
+                    language: "",
+                    total_copies: 1,
+                    available_copies: 1,
+                });
+                setBarcodeInput("");
+            } else {
+                toast.error("Book created but could not get book ID");
+                setShowAddBookModal(false);
             }
         } catch (error) {
-            console.error("Error adding book:", error);
-            toast.error("Failed to add book");
+            console.error("❌ Error adding book:", error);
+            toast.error("Failed to add book: " + (error.message || "Unknown error"));
         } finally {
             setLoading(false);
         }
@@ -861,6 +876,8 @@ const BulkPurchasePage = () => {
                     notes: ""
                 }]);
                 setSelectedVendor(null);
+                setInitialVendor(null);
+                setInitialBookId(null);
                 navigate('/purchase');
             }
 
@@ -893,7 +910,7 @@ const BulkPurchasePage = () => {
                 return (
                     <>
                         <Row className="align-items-center mb-4">
-                            <Col md={8}>
+                            <Col md={6}>
                                 <Form.Group>
                                     <Form.Label className="fw-bold">
                                         <i className="fa-solid fa-user-tie me-2 text-primary"></i>
@@ -932,7 +949,7 @@ const BulkPurchasePage = () => {
                                     />
                                 </Form.Group>
                             </Col>
-                            <Col md={4} className="text-end">
+                            <Col md={6} className="text-end">
                                 <Button
                                     variant="outline-primary"
                                     onClick={() => setShowAddVendorModal(true)}
@@ -948,40 +965,14 @@ const BulkPurchasePage = () => {
                     </>
                 );
 
-            case "multiple":
-                return (
-                    <>
-                        <Alert variant="info" className="mb-4">
-                            <i className="fa-solid fa-info-circle me-2"></i>
-                            Add purchases from different vendors in one go. Each row can have a different vendor.
-                        </Alert>
-                        {renderPurchaseEntries("multiple")}
-                    </>
-                );
-
-            case "scan":
-                return (
-                    <BarcodeScanPurchase
-                        barcodeInput={barcodeInput}
-                        setBarcodeInput={setBarcodeInput}
-                        scanningBook={scanningBook}
-                        setScanningBook={setScanningBook}
-                        multiInsertRows={multiInsertRows}
-                        setMultiInsertRows={setMultiInsertRows}
-                        currentRowIndex={setCurrentRowIndex}
-                        setCurrentRowIndex={setCurrentRowIndex}
-                        setActiveTab={setActiveTab}
-                        onBarcodeScan={handleBarcodeScan}
-                        loading={loading}
-                    />
-                );
-
             case "import":
                 return (
                     <PurchaseDataImport
                         selectedFile={selectedFile}
                         onFileChange={handleFileChange}
                         loading={loading}
+                        vendors={vendors}
+                        books={books}
                     />
                 );
 
@@ -993,7 +984,6 @@ const BulkPurchasePage = () => {
     const renderPurchaseEntries = (tabType) => {
         return (
             <>
-                {/* Purchase Entries Header */}
                 <div className="mb-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 className="mb-1">
@@ -1003,6 +993,12 @@ const BulkPurchasePage = () => {
                         {tabType === "single" && selectedVendor && (
                             <small className="text-muted">
                                 Adding books for vendor: <strong>{selectedVendor.label}</strong>
+                                {initialVendor && initialVendor.value !== selectedVendor.value && (
+                                    <span className="ms-2 text-warning">
+                                        <i className="fa-solid fa-exclamation-circle me-1"></i>
+                                        Initial vendor was {initialVendor.label}
+                                    </span>
+                                )}
                             </small>
                         )}
                     </div>
@@ -1013,7 +1009,7 @@ const BulkPurchasePage = () => {
                         <Button
                             size='sm'
                             variant={tabType === "single" ? "success" : "info"}
-                            onClick={tabType === "single" ? handleAddBookRow : handleAddVendorRow}
+                            onClick={handleAddBookRow}
                             disabled={tabType === "single" && !selectedVendor}
                         >
                             <i className="fa-solid fa-plus me-1"></i>
@@ -1030,17 +1026,16 @@ const BulkPurchasePage = () => {
                     </div>
                 ) : (
                     <Row className="g-4">
-                        <Col lg={6}>
+                        <Col lg={9}>
                             <div className="table-responsive" style={{ position: 'relative', zIndex: 5, maxHeight: '65vh', overflowY: 'auto' }}>
                                 <Table bordered hover>
                                     <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 6 }}>
                                         <tr>
-                                            {tabType === "multiple" && (
-                                                <th width="20%">
-                                                    Vendor <span className="text-danger">*</span>
-                                                </th>
-                                            )}
-                                            <th width={tabType === "multiple" ? "20%" : "25%"}>
+                                            {/* Vendor column for single tab */}
+                                            <th width="20%">
+                                                Vendor <span className="text-danger">*</span>
+                                            </th>
+                                            <th width="25%">
                                                 Book <span className="text-danger">*</span>
                                             </th>
                                             <th width="8%">
@@ -1055,7 +1050,7 @@ const BulkPurchasePage = () => {
                                             <th width="12%">
                                                 Purchase Date
                                             </th>
-                                            <th width={tabType === "multiple" ? "12%" : "15%"}>
+                                            <th width="15%">
                                                 Notes
                                             </th>
                                             <th width="5%" className="text-center">
@@ -1066,42 +1061,42 @@ const BulkPurchasePage = () => {
                                     <tbody>
                                         {multiInsertRows.map((row, index) => (
                                             <tr key={index}>
-                                                {tabType === "multiple" && (
-                                                    <td>
-                                                        <div className="d-flex gap-1">
-                                                            <div className="flex-grow-1">
-                                                                <Select
-                                                                    value={vendorOptions.find((v) => v.value === row.vendor_id) || null}
-                                                                    onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
-                                                                    options={vendorOptions}
-                                                                    placeholder="Select Vendor"
-                                                                    isClearable
-                                                                    isSearchable
-                                                                    menuPlacement="auto"
-                                                                    styles={{
-                                                                        menu: (base) => ({
-                                                                            ...base,
-                                                                            zIndex: 9999,
-                                                                            position: 'absolute'
-                                                                        }),
-                                                                        menuPortal: (base) => ({
-                                                                            ...base,
-                                                                            zIndex: 9999
-                                                                        })
-                                                                    }}
-                                                                    menuPortalTarget={document.body}
-                                                                />
-                                                            </div>
-                                                            <Button
-                                                                variant="outline-primary"
-                                                                size="sm"
-                                                                onClick={() => setShowAddVendorModal(true)}
-                                                            >
-                                                                <i className="fa-solid fa-plus"></i>
-                                                            </Button>
+                                                {/* Vendor Dropdown for each row */}
+                                                <td>
+                                                    <div className="d-flex gap-1">
+                                                        <div className="flex-grow-1">
+                                                            <Select
+                                                                value={getSelectedVendorForRow(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                                options={vendorOptions}
+                                                                placeholder="Select Vendor"
+                                                                isClearable
+                                                                isSearchable
+                                                                menuPlacement="auto"
+                                                                styles={{
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                        position: 'absolute'
+                                                                    }),
+                                                                    menuPortal: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999
+                                                                    })
+                                                                }}
+                                                                menuPortalTarget={document.body}
+                                                            />
                                                         </div>
-                                                    </td>
-                                                )}
+                                                        <Button
+                                                            variant="outline-primary"
+                                                            size="sm"
+                                                            onClick={() => setShowAddVendorModal(true)}
+                                                        >
+                                                            <i className="fa-solid fa-plus"></i>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                {/* Book Dropdown */}
                                                 <td>
                                                     <div className="d-flex gap-1">
                                                         <div className="flex-grow-1">
@@ -1131,14 +1126,15 @@ const BulkPurchasePage = () => {
                                                             variant="outline-success"
                                                             size="sm"
                                                             onClick={() => {
-                                                                setCurrentRowIndex(index);
                                                                 setShowAddBookModal(true);
                                                             }}
                                                         >
                                                             <i className="fa-solid fa-plus"></i>
                                                         </Button>
                                                     </div>
+
                                                 </td>
+
                                                 <td>
                                                     <Form.Control
                                                         type="number"
@@ -1147,6 +1143,7 @@ const BulkPurchasePage = () => {
                                                         min="1"
                                                     />
                                                 </td>
+
                                                 <td>
                                                     <Form.Control
                                                         type="number"
@@ -1155,8 +1152,7 @@ const BulkPurchasePage = () => {
                                                         min="0"
                                                         step="0.01"
                                                     />
-                                                </td>
-                                                <td>
+                                                </td>    <td>
                                                     <Form.Control
                                                         type="text"
                                                         value={`₹${((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}`}
@@ -1164,6 +1160,7 @@ const BulkPurchasePage = () => {
                                                         className="bg-light"
                                                     />
                                                 </td>
+                                                {/* Purchase Date */}
                                                 <td>
                                                     <Form.Control
                                                         type="date"
@@ -1171,6 +1168,7 @@ const BulkPurchasePage = () => {
                                                         onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
                                                     />
                                                 </td>
+                                                {/* Notes */}
                                                 <td>
                                                     <Form.Control
                                                         type="text"
@@ -1179,6 +1177,7 @@ const BulkPurchasePage = () => {
                                                         placeholder="Notes..."
                                                     />
                                                 </td>
+                                                {/* Actions */}
                                                 <td className="text-center">
                                                     <Button
                                                         variant="outline-danger"
@@ -1195,8 +1194,14 @@ const BulkPurchasePage = () => {
                                 </Table>
                             </div>
                         </Col>
-                        <Col lg={6}>
-                            <Card className="shadow-sm sticky-top" style={{ top: '90px' }}>
+                        {/* Summary Card - Fixed position and proper spacing */}
+                        <Col lg={3}>
+                            <Card className="shadow-sm" style={{
+                                position: 'sticky',
+                                top: '20px',
+                                height: 'fit-content',
+                                marginBottom: '20px'
+                            }}>
                                 <Card.Body>
                                     <h5 className="fw-bold mb-3">
                                         <i className="fa-solid fa-clipboard-check me-2 text-primary"></i>
@@ -1211,7 +1216,7 @@ const BulkPurchasePage = () => {
                                         <span className="fw-semibold">{uniqueVendors.length}</span>
                                     </div>
                                     <div className="d-flex justify-content-between mb-3">
-                                        <span className="text-muted">Books</span>
+                                        <span className="text-muted">Total Books</span>
                                         <span className="fw-semibold">{totalBooks}</span>
                                     </div>
                                     <div className="p-3 rounded bg-light mb-4">
@@ -1253,57 +1258,58 @@ const BulkPurchasePage = () => {
     };
 
     return (
-        <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1 }}>
+        <Container fluid className="py-4" style={{ position: 'relative', zIndex: 1, }} >
+            {/* Stats Cards Row */}
             <Row className="mb-4">
-                <Col>
-                    <Card>
-                        <Card.Header style={{ background: "var(--primary-background-color)" }}>
-                            <div className="d-flex align-items-center">
-                                <button
-                                    onClick={() => navigate('/purchase')}
-                                    style={{
-                                        border: '2px solid var(--primary-color)',
-                                        borderRadius: '50%',
-                                        background: 'transparent',
-                                        color: 'var(--primary-color)',
-                                        width: '40px',
-                                        height: '40px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '16px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        marginRight: '15px'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.background = 'var(--primary-color)';
-                                        e.target.style.color = 'white';
-                                        e.target.style.transform = 'translateX(-3px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.background = 'transparent';
-                                        e.target.style.color = 'var(--primary-color)';
-                                        e.target.style.transform = 'translateX(0)';
-                                    }}
-                                >
-                                    <i className="fa-solid fa-arrow-left"></i>
-                                </button>
-
-                                <h1 className="h3 fw-bold mb-0" style={{ color: "var(--primary-color)" }}>
-                                    <i className="fa-solid fa-layer-group me-2"></i>
-                                    Purchase Management
-                                </h1>
+                {/* Books Issued */}
+                <Col md={4}>
+                    <Card style={{
+                        background: "#E0F2FF",
+                        color: "#0D6EFD",
+                        borderRadius: "10px"
+                    }}>
+                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
+                            <div>
+                                <p className="mb-1 text-uppercase">Books Issued</p>
+                                <h2 className="mb-0">{stats.issued}</h2>
                             </div>
-                        </Card.Header>
+                            <i className="fa-solid fa-book-open fa-3x opacity-50"></i>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                {/* Books Purchased */}
+                <Col md={4}>
+                    <Card className="shadow-sm bg-success text-white">
+                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
+                            <div>
+                                <p className="mb-1 text-uppercase">Books Purchased</p>
+                                <h2 className="mb-0">{stats.purchased}</h2>
+                            </div>
+                            <i className="fa-solid fa-cart-shopping fa-3x opacity-50"></i>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                {/* Books Available */}
+                <Col md={4}>
+                    <Card className="shadow-sm bg-warning text-dark">
+                        <Card.Body className="p-4 d-flex align-items-center justify-content-between">
+                            <div>
+                                <p className="mb-1 text-uppercase">Books Available</p>
+                                <h2 className="mb-0">{stats.available}</h2>
+                            </div>
+                            <i className="fa-solid fa-layer-group fa-3x opacity-50"></i>
+                        </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
-            <Row>
+            {/* Main Card with Tabs */}
+            <Row >
                 <Col lg={12}>
-                    <Card className="shadow-sm border-0">
-                        <Card.Header className="bg-white border-bottom-0 py-3">
+                    <Card className="shadow-sm border-0" style={{ minHeight: '600px', }}>
+                        <Card.Header className="bg-white border-bottom-0 py-3" >
                             <Tabs
                                 activeKey={activeTab}
                                 onSelect={(k) => setActiveTab(k)}
@@ -1322,8 +1328,8 @@ const BulkPurchasePage = () => {
                             </Tabs>
                         </Card.Header>
 
-                        {/* Card Body */}
-                        <Card.Body className="p-4">
+                        {/* Card Body with proper padding */}
+                        <Card.Body className="p-4" style={{ paddingBottom: '30px' }}>
                             {renderTabContent()}
                         </Card.Body>
                     </Card>
@@ -1444,7 +1450,7 @@ const BulkPurchasePage = () => {
                 </Modal.Footer>
             </Modal>
 
-            {/* Add Book Modal with Barcode Scan - ENHANCED */}
+            {/* Add Book Modal */}
             <Modal show={showAddBookModal} onHide={() => {
                 setShowAddBookModal(false);
                 setBarcodeInput("");
@@ -1465,7 +1471,10 @@ const BulkPurchasePage = () => {
                                         <i className="fa-solid fa-barcode me-2"></i>
                                         Scan Barcode
                                     </h6>
-                                    <p className="mb-0 text-muted small">Enter ISBN to auto-fill details and auto-create author/category</p>
+                                    <p className="mb-0 text-muted small">
+                                        Enter ISBN to auto-fill details and auto-create author/category.
+                                        <strong> Book will be created only when you click "Add Book"</strong>
+                                    </p>
                                 </div>
                                 {(loading || barcodeProcessing) && (
                                     <div className="spinner-border spinner-border-sm text-primary" role="status">

@@ -10,7 +10,7 @@ const CustomToast = ({ show, message, type = "success", onClose, duration = 3000
       setIsVisible(true);
       setIsExiting(false);
 
-      // Auto close after durationn
+ 
       const timer = setTimeout(() => {
         handleClose();
       }, duration);

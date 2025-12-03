@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Dropdown, Button, InputGroup, Form } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
-// import QuickActions from "../common/QuickActions";
+ 
 import BookSubmitModal from "../common/BookSubmitModal";
 import * as constants from "../../constants/CONSTANT";
 import helper from "../common/helper";
@@ -14,8 +14,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
-  // const [showQuickAction, setShowQuickAction] = useState(false);
-  // const [quickActionType, setQuickActionType] = useState(null);
+ 
+ 
   const [showBookSubmitModal, setShowBookSubmitModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -35,7 +35,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const [Company, setCompany] = useState([]);
 
-  // Fetch notifications
+ 
   const fetchNotifications = async () => {
     try {
       const response = await helper.fetchWithAuth(
@@ -44,7 +44,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
-        // Show all notifications, not just unread
+ 
         setNotifications(result.notifications || []);
       } else {
         console.error("Error fetching notifications:", result.message);
@@ -54,7 +54,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // Fetch unread count
+ 
   const fetchUnreadCount = async () => {
     try {
       const response = await helper.fetchWithAuth(
@@ -72,7 +72,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const fetchModulesFromDB = async () => {
     try {
-      // First, try to load from localStorage (for faster initial load in new tabs)
+ 
       const cachedModules = localStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
@@ -85,7 +85,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         }
       }
 
-      // Then fetch fresh data from API
+ 
       const api = new DataApi("module");
       const resp = await api.fetchAll();
       const result = resp?.data;
@@ -101,19 +101,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
       if (modules.length > 0) {
         setModulesFromDB(modules);
-        // Cache modules in localStorage for faster loading in new tabs
+ 
         localStorage.setItem("cached_modules", JSON.stringify(modules));
         localStorage.setItem(
           "cached_modules_timestamp",
           Date.now().toString()
         );
       } else if (!cachedModules) {
-        // Only set empty if we don't have cached data
+ 
         setModulesFromDB([]);
       }
     } catch (error) {
       console.error("Error fetching modules from DB:", error);
-      // If API fails, try to use cached data if available
+ 
       const cachedModules = localStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
@@ -156,11 +156,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         fetchNotifications();
         fetchUnreadCount();
         fetchModulesFromDB();
-        // if (user.userrole) {
-        //   // fetchRolePermissions(user.userrole);
-        // }
+ 
+ 
+ 
       } else {
-        // If no token, clear cached modules
+ 
         localStorage.removeItem("cached_modules");
         localStorage.removeItem("cached_modules_timestamp");
       }
@@ -169,17 +169,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, []);
 
-  // Re-fetch modules when token changes (for new tabs) and when tab becomes visible
+ 
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "token" && e.newValue) {
-        // Token was set in another tab, refresh modules
+ 
         fetchModulesFromDB();
       }
     };
 
     const handleVisibilityChange = () => {
-      // When tab becomes visible, refresh modules if token exists
+ 
       if (document.visibilityState === "visible") {
         const token = sessionStorage.getItem("token");
         if (token) {
@@ -225,22 +225,22 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const menuItems = getMenuItems();
 
-  // Calculate visible modules based on 70% screen width
+ 
   useEffect(() => {
     const calculateVisibleModules = () => {
       const screenWidth = window.innerWidth;
       const availableWidth = screenWidth * 0.7; // 70% of screen width
 
-      // Estimate width per module
+ 
       const avgModuleWidth = 110;
       const moreButtonWidth = 80; // "More" button width
 
-      // Calculate how many modules can fit
+ 
       const maxModules = Math.floor(
         (availableWidth - moreButtonWidth) / avgModuleWidth
       );
 
-      // Ensure at least 1 module is visible, and at least 1 goes to "More" if there are many modules
+ 
       const currentMenuItems = getMenuItems();
       if (currentMenuItems.length > 0) {
         const visibleCount = Math.max(
@@ -265,7 +265,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return location.pathname.startsWith(path);
   };
 
-  // Listen to socket notifications
+ 
   useEffect(() => {
     if (socket) {
       console.log("🔔 Setting up notification listener for socket:", socket.id);
@@ -274,9 +274,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         console.log("📬 New notification received via socket:", notification);
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
-        // removed buggy setDueNotifications(prev => prev + 1);
+ 
 
-        // Show browser notification if permission granted
+ 
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(notification.title, {
             body: notification.message,
@@ -296,7 +296,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, [socket]);
 
-  // Request notification permission
+ 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
@@ -322,17 +322,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const getUserInitials = () => {
     if (userInfo) {
-      // Try to get first letter from username (full name)
+ 
       if (userInfo.username) {
         const firstLetter = userInfo.username.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
-      // Fallback to firstname
+ 
       if (userInfo.firstname) {
         const firstLetter = userInfo.firstname.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
-      // Fallback to email
+ 
       if (userInfo.email) {
         const firstLetter = userInfo.email.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
@@ -343,7 +343,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const getUserName = () => {
     if (userInfo) {
-      // Show role instead of "User"
+ 
       if (userInfo.userrole) {
         return userInfo.userrole;
       }
@@ -352,7 +352,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return "User";
   };
 
-  // Handle barcode search
+ 
   const handleBarcodeSearch = (e) => {
     e.preventDefault();
     if (searchBarcode.trim()) {
@@ -396,7 +396,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   console.log("Company", Company);
 
-  // Mark notification as read
+ 
   const markAsRead = async (notificationId) => {
     try {
       const response = await helper.fetchWithAuth(
@@ -417,7 +417,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // Mark all as read
+ 
   const markAllAsRead = async () => {
     try {
       const response = await helper.fetchWithAuth(
@@ -613,7 +613,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           } else if (
                             notification.related_type === "book_request"
                           ) {
-                            // navigate("/bookrequest");
+ 
                           }
                         }}
                         style={{
@@ -697,7 +697,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   <Dropdown.Item
                     className="text-center"
                     onClick={() => {
-                      // navigate("/notifications");
+ 
                       setShowNotifications(false);
                     }}
                   >

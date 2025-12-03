@@ -22,6 +22,8 @@ const Subscription = (props) => {
     }
 
     const finalConfig = getSubscriptionConfig(data, props);
+    console.log("finalConfig---22 ",finalConfig);
+    
     return <DynamicCRUD {...finalConfig} icon="fa-solid fa-id-card" />;
 };
 

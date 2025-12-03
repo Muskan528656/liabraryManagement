@@ -44,7 +44,7 @@ module.exports = (app) => {
     });
 
 
-    // Get other metrics
+ 
     router.get("/other-metrics", fetchUser, async (req, res) => {
         try {
             const result = await Dashboard.getOtherMetrics();

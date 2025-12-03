@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all categories
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       const categories = await Category.findAll();
@@ -34,7 +34,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get category by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       const category = await Category.findById(req.params.id);
@@ -48,15 +48,15 @@ module.exports = (app) => {
     }
   });
 
-  // Create a new category
+ 
   router.post(
     "/",
     fetchUser,
 
     [
-      // Allow empty name for barcode scanning - will use default in model
+ 
       body("name").optional().custom((value) => {
-        // Allow null, undefined, or empty string for barcode scans
+ 
         return true;
       }),
     ],
@@ -67,7 +67,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check for duplicate name
+ 
         const existingCategory = await Category.findByName(req.body.name);
         if (existingCategory) {
           return res
@@ -93,7 +93,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update category by ID
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -138,7 +138,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete category by ID
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const result = await Category.deleteById(req.params.id);
@@ -152,7 +152,7 @@ module.exports = (app) => {
     }
   });
 
-  //  app.use(process.env.BASE_API_URL + "/api/category", router);
-   app.use("/api/category", router);
+ 
+  app.use(process.env.BASE_API_URL+"/api/category", router);
 };
 

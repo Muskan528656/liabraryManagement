@@ -13,7 +13,7 @@ module.exports = (app) => {
     const router = require("express").Router();
     const { body, validationResult } = require("express-validator");
 
-    // GET all roles
+
     router.get("/", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -25,12 +25,12 @@ module.exports = (app) => {
         }
     });
 
-    // GET role by id
+
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
             const role = await UserRole.findById(req.params.id);
-            if (!role) return res.status(404).json({ msg: "Role not found" });
+            if (!role) return res.status(404).json({ success: true, msg: "Role not found" });
 
             // Add country code display
             if (role.country_code) {
@@ -48,24 +48,6 @@ module.exports = (app) => {
         }
     });
 
-    // GET country codes as picklist
-    router.get("/picklist/country-codes", fetchUser, async (req, res) => {
-        try {
-            const CountryCode = require('../../constants/CountryCode.json');
-            const picklist = CountryCode.map((item) => ({
-                id: item.country_code,
-                name: `${item.country} (${item.country_code})`,
-                country: item.country,
-                country_code: item.country_code
-            }));
-            return res.status(200).json(picklist);
-        } catch (error) {
-            console.error("Error fetching country codes:", error);
-            return res.status(500).json({ errors: "Internal server error" });
-        }
-    });
-
-    // POST create role
     router.post(
         "/",
         fetchUser,
@@ -85,7 +67,7 @@ module.exports = (app) => {
                 };
                 console.log('user role', data);
                 const newRole = await UserRole.create(data);
-                return res.status(201).json({ success: true, data: newRole });
+                return res.status(201).json({ success: true, newRole });
             } catch (error) {
                 console.error("Error creating role:", error);
                 return res.status(500).json({ success: false, errors: error.message });
@@ -93,7 +75,7 @@ module.exports = (app) => {
         }
     );
 
-    // PUT update role
+
     router.put(
         "/:id",
         fetchUser,
@@ -112,7 +94,7 @@ module.exports = (app) => {
                 };
 
                 const updated = await UserRole.update(req.params.id, data);
-                if (!updated) return res.status(404).json({ success: false, msg: "Role not found" });
+                if (!updated) return res.status(404).json({ success: true, msg: "Role not found" });
 
                 return res.status(200).json({ success: true, data: updated });
             } catch (error) {
@@ -122,7 +104,7 @@ module.exports = (app) => {
         }
     );
 
-    // DELETE role
+
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
@@ -137,6 +119,6 @@ module.exports = (app) => {
         }
     });
 
-     app.use( "/api/user-role", router);
+    app.use(process.env.BASE_API_URL + "/api/user-role", router);
 
 };

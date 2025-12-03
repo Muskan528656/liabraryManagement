@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all books with related data
+ 
 async function findAll() {
   try {
     if (!this.schema) {
@@ -32,7 +32,7 @@ async function findAll() {
   }
 }
 
-// Find book by ID
+ 
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -57,7 +57,7 @@ async function findById(id) {
   }
 }
 
-// Create a new book
+ 
 async function create(bookData, userId) {
   try {
     if (!this.schema) {
@@ -100,7 +100,7 @@ async function create(bookData, userId) {
   }
 }
 
-// Update book by ID
+ 
 async function updateById(id, bookData, userId) {
   try {
     if (!this.schema) {
@@ -145,7 +145,7 @@ async function updateById(id, bookData, userId) {
   }
 }
 
-// Delete book by ID
+ 
 async function deleteById(id) {
   try {
     if (!this.schema) {

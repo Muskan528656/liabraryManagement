@@ -36,13 +36,13 @@ const Category = (props) => {
     );
   }
 
-  // Merge props data and fetched data
+ 
   const allData = {
     ...data,
     ...props
   };
 
-  // Get final config with all data
+ 
   const finalConfig = getCategoryConfig(allData);
 
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags"/>;

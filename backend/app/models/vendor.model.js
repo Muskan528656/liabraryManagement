@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all vendors
+
 async function findAll() {
   try {
     if (!this.schema) {
@@ -25,7 +25,7 @@ async function findAll() {
   }
 }
 
-// Find vendor by ID
+
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -43,15 +43,16 @@ async function findById(id) {
   }
 }
 
-// Create a new vendor
+
 async function create(vendorData, userId) {
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
     const query = `INSERT INTO ${this.schema}.vendors 
-                   (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW(), $13, $13, $14) 
+                   (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id , country_code) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW(), $13, $13, $14,$15) 
                    RETURNING *`;
     const values = [
       vendorData.name || "Scanned Vendor",
@@ -68,6 +69,7 @@ async function create(vendorData, userId) {
       vendorData.status || 'active',
       userId || null,
       vendorData.company_id || vendorData.companyId || null,
+      vendorData.country_code || vendorData.country_code || null,
     ];
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
@@ -80,14 +82,14 @@ async function create(vendorData, userId) {
   }
 }
 
-// Update vendor by ID
+
 async function updateById(id, vendorData, userId) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    // Build dynamic UPDATE query based on provided fields
+
     const updateFields = [];
     const values = [id];
     let paramIndex = 2;
@@ -144,13 +146,17 @@ async function updateById(id, vendorData, userId) {
       updateFields.push(`company_id = $${paramIndex++}`);
       values.push(vendorData.company_id || vendorData.companyId || null);
     }
+    if (vendorData.country_code !== undefined || vendorData.country_code !== undefined) {
+      updateFields.push(`country_code = $${paramIndex++}`);
+      values.push(vendorData.country_code || vendorData.country_code || null);
+    }
 
-    // Always update lastmodifieddate and lastmodifiedbyid
+
     updateFields.push(`lastmodifieddate = NOW()`);
     updateFields.push(`lastmodifiedbyid = $${paramIndex++}`);
     values.push(userId || null);
 
-    if (updateFields.length === 2) { // Only lastmodifieddate and lastmodifiedbyid
+    if (updateFields.length === 2) {
       throw new Error("No fields to update");
     }
 
@@ -170,7 +176,7 @@ async function updateById(id, vendorData, userId) {
   }
 }
 
-// Delete vendor by ID
+
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -188,7 +194,7 @@ async function deleteById(id) {
   }
 }
 
-// Check if vendor name already exists (for duplicate check)
+
 async function findByName(name, excludeId = null) {
   try {
     if (!this.schema) {

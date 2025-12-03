@@ -7,15 +7,14 @@ import {
   Button,
   Badge,
   Form,
-  Modal,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
-import Loader from "./Loader";
 import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";
 import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -31,8 +30,6 @@ const LOOKUP_ENDPOINT_MAP = {
   vendors: "vendor",
   vendor: "vendor",
   roles: "user-role",
-  "user-role": "user-role",
-  "userroles": "user-role",
   modules: "module",
   module: "module",
   departments: "department",
@@ -89,6 +86,13 @@ const getOptionDisplayLabel = (option = {}) => {
   if (option.email) return option.email;
   if (option.value) return option.value;
   if (option.id) return option.id;
+  if (option.role_name) return option.role_name; if (option.firstname || option.lastname) {
+    const composed = `${option.firstname || ""} ${option.lastname || ""
+      }`.trim();
+    if (composed) return composed;
+  }
+
+
   return "Item";
 };
 
@@ -127,8 +131,6 @@ const ModuleDetail = ({
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [lookupOptions, setLookupOptions] = useState({});
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [userNames, setUserNames] = useState({});
@@ -536,6 +538,16 @@ const ModuleDetail = ({
       field.type
     );
 
+
+    if (field.type === "toggle") {
+      const boolValue = Boolean(value);
+      return (
+        <Badge bg={boolValue ? "success" : "danger"}>
+          {boolValue ? "Active" : "Inactive"}
+        </Badge>
+      );
+    }
+
     if (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id')) {
       const userId = value;
       if (userId && userNames[userId]) {
@@ -625,8 +637,11 @@ const ModuleDetail = ({
       onEdit(data);
     } else {
       setIsEditing(true);
-      setTempData({ ...data, ...externalData });
-      console.log("data.....1",data);
+      setTempData({
+        ...data,
+
+        isactive: data.isactive !== undefined ? Boolean(data.isactive) : true
+      });
     }
   };
 
@@ -726,10 +741,15 @@ const ModuleDetail = ({
     const value = resolveFieldValue(currentData, field.key);
 
     if (isEditing) {
+
+      if (field.type === "toggle") {
+        return Boolean(value);
+      }
+
       if (field.type === "date" && value) {
         try {
           const date = new Date(value);
-          return date.toISOString().split("T")[0]; 
+          return date.toISOString().split("T")[0];
         } catch {
           return value;
         }
@@ -775,31 +795,6 @@ const ModuleDetail = ({
     }
   };
 
-  const confirmDeleteRecord = async () => {
-    try {
-      setDeleteLoading(true);
-      const api = new DataApi(moduleApi);
-      await api.delete(id);
-      PubSub.publish("RECORD_SAVED_TOAST", {
-        title: "Success",
-        message: `${moduleLabel} deleted successfully`,
-      });
-      // Resolve list route for navigation back to list view
-      const API_TO_ROUTE = {
-        "user-role": "userroles",
-      };
-      const listPath = API_TO_ROUTE[moduleApi] || moduleApi;
-      navigate(`/${listPath}`);
-    } catch (error) {
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: `Failed to delete ${moduleLabel} ${error.message}`,
-      });
-    } finally {
-      setDeleteLoading(false);
-      setShowDeleteModal(false);
-    }
-  };
   const handleBack = () => {
     navigate(`/${moduleName}`);
   };
@@ -869,8 +864,80 @@ const ModuleDetail = ({
 
   const renderField = (field, index, currentData) => {
     const isNonEditableField = nonEditableFields.includes(field.key);
-
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
+
+
+    if (field.type === "toggle") {
+      console.log("Toggle Field Debug:", {
+        fieldName: field.key,
+        fieldLabel: field.label,
+        currentValue: currentData ? currentData[field.key] : "undefined",
+        isEditing: isEditing,
+        currentData: currentData
+      });
+    }
+
+
+    if (field.type === "toggle") {
+      const value = currentData ? Boolean(currentData[field.key]) : false;
+
+      return (
+        <Form.Group key={index} className="mb-3">
+          <Form.Label className="fw-semibold d-flex justify-content-between align-items-center">
+            <span>{field.label}</span>
+            {!isEditing && (
+              <span className={`badge ${value ? 'bg-success' : 'bg-danger'}`}>
+                {value ? 'Active' : 'Inactive'}
+              </span>
+            )}
+          </Form.Label>
+
+          {isEditing && !isNonEditableField ? (
+            <div
+              className="custom-toggle"
+              onClick={() => handleFieldChange(field.key, !value)}
+              style={{
+                width: "60px",
+                height: "30px",
+                borderRadius: "20px",
+                background: value ? "#6f42c1" : "#d1d5db",
+                position: "relative",
+                cursor: "pointer",
+                transition: "0.3s",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  background: "#fff",
+                  borderRadius: "50%",
+                  position: "absolute",
+                  top: "3px",
+                  left: value ? "33px" : "3px",
+                  transition: "0.3s",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                }}
+              ></div>
+            </div>
+          ) : (
+            <Form.Control
+              type="text"
+              readOnly
+              value={value ? "Active" : "Inactive"}
+              style={{
+                pointerEvents: "none",
+                opacity: 0.9,
+                backgroundColor: value ? '#d4edda' : '#f8d7da',
+                color: value ? '#155724' : '#721c24',
+                border: value ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
+              }}
+            />
+          )}
+        </Form.Group>
+      );
+    }
+
 
     if ((!isEditing || shouldShowAsReadOnly) && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
       const userId = currentData ? currentData[field.key] : null;

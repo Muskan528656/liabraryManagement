@@ -1,4 +1,4 @@
-// Testing
+ 
 /**
  * Handles all incoming request for /api/files endpoint
  * DB table for this public.file
@@ -21,7 +21,7 @@ const { fetchUser } = require("../middleware/fetchuser.js");
 const File = require("../models/files.model.js");
 const path = require('path');
 const fs = require('fs');
-// const moment = require("moment");
+ 
 
 
 module.exports = app => {
@@ -34,7 +34,7 @@ module.exports = app => {
 
 
 
-    // ................................create......................................
+ 
 
     router.post("/:id", fetchUser, [],
         async (req, res) => {
@@ -76,8 +76,8 @@ module.exports = app => {
                     "filetype": MIMEType.has(fileDetail.mimetype) ? MIMEType.get(fileDetail.mimetype) : fileDetail.mimetype,
                     "parentid": req.params.id,
                     "filesize": fileDetail.size,
-                    // "createddate": moment().format("YYYY-MM-DD"),
-                    // "createdbyid": req.params.id,
+ 
+ 
                     "description": req.body.description
                 }
 
@@ -127,7 +127,7 @@ module.exports = app => {
         });
 
 
-    // .......................................get all related file by parentID.....................................
+ 
     router.get("/:id/all", fetchUser, async (req, res) => {
         try {
             File.init(req.userinfo.tenantcode);
@@ -142,7 +142,7 @@ module.exports = app => {
         }
     });
 
-    // ................................................get file by Id.......................................
+ 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             File.init(req.userinfo.tenantcode);
@@ -159,7 +159,7 @@ module.exports = app => {
     });
 
 
-    // ................................................Download file .......................................
+ 
     router.get("/:id/download", fetchUser, async (req, res) => {
         try {
             File.init(req.userinfo.tenantcode);
@@ -171,7 +171,7 @@ module.exports = app => {
             const fileTitle = fileRec.title;
             const fileType = fileRec.filetype;
             const parentId = fileRec.parentid
-            //const filePath = "D:/Files/" + parentId +"/"+ fileId + '.' + fileType;
+ 
             let filePath = process.env.FILE_UPLOAD_PATH + '/' + req.userinfo.tenantcode + '/' + parentId + "/" + fileId;
             res.attachment(fileTitle + '.' + fileType);
             res.download(filePath + '.' + fileType, fileTitle, function (err) {
@@ -190,7 +190,7 @@ module.exports = app => {
 
 
 
-    // ................................update file........................................................
+ 
     router.put("/:id", fetchUser, async (req, res) => {
         try {
             const { title, filetype, filesize, description } = req.body;
@@ -228,7 +228,7 @@ module.exports = app => {
     });
 
 
-    // .......................................... get all file......................................
+ 
     router.get("/", fetchUser, async (req, res) => {
         File.init(req.userinfo.tenantcode);
         const files = await File.findAll();
@@ -240,7 +240,7 @@ module.exports = app => {
 
     });
 
-    // ..................................................delete file by id......................................
+ 
     router.delete("/:id", fetchUser, async (req, res) => {
         File.init(req.userinfo.tenantcode);
         let resultFile = await File.findById(req.params.id);
@@ -269,7 +269,7 @@ module.exports = app => {
                 ["application/atom+xml", "xml"],
                 ["application/zip", "zip"],
             ]);
-            //let uploadPath = './app/upload/' + resultFile.parentid;
+ 
 
             let fileRec = await File.findById(req.params.id);
             if (!fileRec) {
@@ -279,10 +279,10 @@ module.exports = app => {
             const fileTitle = fileRec.title;
             const fileType = fileRec.filetype;
             const parentId = fileRec.parentid
-            //const filePath = "D:/Files/" + parentId +"/"+ fileId + "."+fileType;
+ 
             let filePath = process.env.FILE_UPLOAD_PATH + '/' + req.userinfo.tenantcode + '/' + parentId + "/" + fileId;
 
-            //let uploadPath = process.env.FILE_UPLOAD_PATH + resultFile.parentid;
+ 
 
             let type = MIMEType.has(resultFile.filetype) ? MIMEType.get(resultFile.filetype) : resultFile.filetype;
             filePath += '.' + type;
@@ -290,7 +290,7 @@ module.exports = app => {
             const result = File.deleteFile(req.params.id);
             if (fs.existsSync(filePath)) {
 
-                //const result = File.deleteFile(req.params.id);
+ 
                 if (!result) {
                     return res.status(200).json({ "success": false, "message": "No record found" });
                 } else {
@@ -303,7 +303,7 @@ module.exports = app => {
         return res.status(400).json({ "success": true, "message": "Successfully Deleted" });
     });
 
-    // Delete all Tutorials
-    //router.delete("/", files.deleteAll);
-     app.use( '/api/files', router);
+ 
+ 
+    app.use(process.env.BASE_API_URL+ '/api/files', router);
 };

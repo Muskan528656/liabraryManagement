@@ -15,7 +15,7 @@ const DashboardApi = {
         }
     },
 
-    // Fetch all dashboard data
+ 
     fetchAll: async () => {
         const token = sessionStorage.getItem("token");
         let response = await helper.fetchWithAuth(

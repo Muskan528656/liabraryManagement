@@ -20,13 +20,26 @@ const FormModal = ({
   children,
 }) => {
   const [filePreviews, setFilePreviews] = useState({});
+  const formatDateDDMMYYYY = (date) => {
+    if (!date) return "";
 
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
   const handleInputChange = (name, value) => {
+ 
     setFormData({ ...formData, [name]: value });
   };
 
   const handleFieldChange = (field, value) => {
+    console.log("asdfas", field)
+ 
     if (field.onChange) {
+      console.log("form")
       field.onChange(value, formData, setFormData);
     } else {
       handleInputChange(field.name, value);
@@ -38,7 +51,6 @@ const FormModal = ({
     const fieldName = field.name;
 
     if (!file) {
-      // File remove karna hai
       handleInputChange(fieldName, null);
       setFilePreviews(prev => ({
         ...prev,
@@ -47,26 +59,24 @@ const FormModal = ({
       return;
     }
 
-    // File validation
     if (field.maxSize && file.size > field.maxSize) {
       alert(`File size must be less than ${field.maxSize / 1024 / 1024}MB`);
-      event.target.value = ''; // Clear file input
+      event.target.value = '';
       return;
     }
 
-    // ✅ FIXED: File type validation
     if (field.accept) {
       const allowedTypes = field.accept.split(',').map(type => type.trim());
       const isFileValid = isFileTypeValid(file, allowedTypes);
 
       if (!isFileValid) {
         alert(`Only ${field.accept} files are allowed`);
-        event.target.value = ''; // Clear file input
+        event.target.value = '';
         return;
       }
     }
 
-    // Preview generate karen (images ke liye)
+
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -78,14 +88,14 @@ const FormModal = ({
       reader.readAsDataURL(file);
     }
 
-    // Form data mein file set karen
+
     handleInputChange(fieldName, file);
   };
 
-  // ✅ NEW: File type validation function
+
   const isFileTypeValid = (file, allowedTypes) => {
     for (const allowedType of allowedTypes) {
-      // Case 1: Wildcard match (image/*, */*)
+
       if (allowedType.includes('/*')) {
         const [category] = allowedType.split('/*');
         if (category === '*' || file.type.startsWith(`${category}/`)) {
@@ -93,12 +103,12 @@ const FormModal = ({
         }
       }
 
-      // Case 2: Exact MIME type match
+
       else if (file.type === allowedType) {
         return true;
       }
 
-      // Case 3: File extension match (.pdf, .jpg, etc.)
+
       else if (allowedType.startsWith('.')) {
         const fileName = file.name.toLowerCase();
         if (fileName.endsWith(allowedType.toLowerCase())) {
@@ -106,7 +116,7 @@ const FormModal = ({
         }
       }
 
-      // Case 4: Specific type patterns (application/pdf, etc.)
+
       else if (allowedType.includes('/')) {
         if (file.type === allowedType) {
           return true;
@@ -123,7 +133,7 @@ const FormModal = ({
       ...prev,
       [fieldName]: null
     }));
-    // File input reset karen
+
     const fileInput = document.getElementById(`file-${fieldName}`);
     if (fileInput) fileInput.value = '';
   };
@@ -145,7 +155,7 @@ const FormModal = ({
               {field.label} {isRequired && <span className="text-danger">*</span>}
             </Form.Label>
 
-            {/* File Preview */}
+
             {showPreview && (
               <div className="mb-3 text-center">
                 {field.accept?.includes('image') ? (
@@ -342,26 +352,72 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-
+      case "toggle":
+        return (
+          <div className={`col-md-${field.colSize || 6} mb-3`} key={field.name}>
+            <label className="form-label d-block">{field.label}</label>
+            <div className="form-check form-switch">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                checked={formData[field.name] || false}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    [field.name]: e.target.checked
+                  })
+                }
+              />
+            </div>
+          </div>
+        );
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
-
       case "toggle":
         return (
           <Form.Group className="mb-3" key={field.name}>
-            <Form.Check
-              type="switch"
-              id={fieldId}
-              label={field.label}
-              checked={!!value}
-              onChange={(e) => handleFieldChange(field, e.target.checked)}
-              disabled={field.disabled}
-              {...field.props}  
-            />
+            <Form.Label className="d-flex justify-content-between">
+              <span>
+                {field.label} {field.required && <span className="text-danger">*</span>}
+              </span>
+              <span className="fw-bold">
+                {formData[field.name] ? "Yes" : "No"}
+              </span>
+            </Form.Label>
+
+            <div
+              className="custom-toggle"
+              onClick={() =>
+                handleFieldChange(field, !formData[field.name])
+              }
+              style={{
+                width: "55px",
+                height: "28px",
+                borderRadius: "20px",
+                background: formData[field.name] ? "#6f42c1" : "#d1d5db",
+                position: "relative",
+                cursor: "pointer",
+                transition: "0.3s",
+              }}
+            >
+              <div
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  background: "#fff",
+                  borderRadius: "50%",
+                  position: "absolute",
+                  top: "3px",
+                  left: formData[field.name] ? "29px" : "3px",
+                  transition: "0.3s",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                }}
+              ></div>
+            </div>
+
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-
       default:
         return null;
     }
@@ -378,9 +434,9 @@ const FormModal = ({
       <Modal.Body>
         <Form>
           {fields.length > 0 ? (
-            // Check if fields have sections
+ 
             fields.some(field => field.section) ? (
-              // Render with sections
+ 
               Object.entries(
                 fields.reduce((acc, field) => {
                   const sectionName = field.section || 'default';
@@ -427,7 +483,7 @@ const FormModal = ({
                 </div>
               ))
             ) : (
-              // Render without sections (default behavior)
+ 
               <Row>
                 {fields.map((field) => {
                   const colSize = field.colSize || 12;

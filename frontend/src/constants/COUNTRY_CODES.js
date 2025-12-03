@@ -1,4 +1,4 @@
-[
+export const COUNTRY_CODES = [
     {"country": "United Arab Emirates", "country_code": "+971"},
     {"country": "Afghanistan", "country_code": "+93"},
     {"country": "Albania", "country_code": "+355"},

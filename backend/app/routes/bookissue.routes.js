@@ -22,13 +22,13 @@ const e = require("express");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const BookIssue = require("../models/bookissue.model.js");
 const Notification = require("../models/notification.model.js");
-
+const sql = require("../models/db.js")
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
 
-  // Get all book issues
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -40,7 +40,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get active issues (not returned)
+
   router.get("/active", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -52,7 +52,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by book ID
+
   router.get("/book/:bookId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -64,7 +64,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by user ID (issued_to)
+
   router.get("/user/:userId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -76,7 +76,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get issues by card ID (for backward compatibility)
+
   router.get("/card/:cardId", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -88,7 +88,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get book issue by ID
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
@@ -103,88 +103,121 @@ module.exports = (app) => {
     }
   });
 
-  // Issue a book (checkout)
+
   router.post(
     "/issue",
     fetchUser,
-
     [
-      body("book_id").notEmpty().isUUID().withMessage("Book ID is required and must be a valid UUID"),
-      body("issued_to").optional().isUUID().withMessage("Issued to (user ID) must be a valid UUID"),
-      body("card_id").optional().isUUID().withMessage("Card ID must be a valid UUID"),
-      body("due_date").optional().isISO8601().withMessage("Due date must be a valid date"),
-      body("issue_date").optional().isISO8601().withMessage("Issue date must be a valid date"),
+      body("book_id")
+        .notEmpty()
+        .isUUID()
+        .withMessage("Book ID is required and must be a valid UUID"),
+
+      body("card_id")
+        .notEmpty()
+        .isUUID()
+        .withMessage("Card ID is required and must be a valid UUID"),
+
+      body("issue_date")
+        .optional()
+        .isISO8601()
+        .withMessage("Issue date must be a valid date"),
     ],
     async (req, res) => {
       try {
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Validate that either issued_to or card_id is provided
-        if (!req.body.issued_to && !req.body.issuedTo && !req.body.card_id && !req.body.cardId) {
-          return res.status(400).json({ errors: "Either issued_to (user ID) or card_id is required" });
+        const userId = req.userinfo?.id;
+        const tenantcode = req.userinfo?.tenantcode;
+
+        if (!userId) {
+          return res.status(401).json({ error: "User not authenticated" });
         }
 
-        const userId = req.user?.id || req.userinfo?.id || null;
-        BookIssue.init(req.userinfo.tenantcode);
-        const issue = await BookIssue.issueBook(req.body, userId);
-        
-      
-        if (issue && issue.issued_to) {
-          try {
-            Notification.init(req.userinfo.tenantcode);
-              const sql = require("../models/db.js");
-            const bookQuery = await sql.query(
-              `SELECT title FROM ${req.userinfo.tenantcode}.books WHERE id = $1`,
-              [issue.book_id]
-            );
-            const bookTitle = bookQuery.rows.length > 0 ? bookQuery.rows[0].title : "Book";
-            
-          
-            const dueDate = issue.due_date ? new Date(issue.due_date).toLocaleDateString('en-IN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : "N/A";
-            
-            const notification = await Notification.create({
-              user_id: issue.issued_to,
-              title: "Book Issued Successfully",
-              message: `You have been issued the book "${bookTitle}". Due date: ${dueDate}. Please return it on time to avoid fines.`,
-              type: "book_issued",
-              related_id: issue.id,
-              related_type: "book_issue"
-            });
+        const bookRes = await sql.query(
+          `SELECT id, title FROM ${tenantcode}.books WHERE id = $1`,
+          [req.body.book_id]
+        );
 
-            if (req.app.get('io')) {
-              const io = req.app.get('io');
-              io.to(`user_${issue.issued_to}`).emit("new_notification", notification);
-              io.to(issue.issued_to).emit("new_notification", notification);
-              console.log(`📨 Sent book issue notification to user ${issue.issued_to} in rooms: user_${issue.issued_to}, ${issue.issued_to}`);
-            } else {
-              console.warn("⚠️ Socket.io instance not available for sending notification");
-            }
-          } catch (notifError) {
-            console.error("Error creating notification for book issue:", notifError);
-            // Don't fail the book issue if notification fails
-          }
+        if (bookRes.rows.length === 0) {
+          return res.status(404).json({ error: "Book not found" });
         }
-        
-        return res.status(200).json({ success: true, data: issue });
+        const bookTitle = bookRes.rows[0].title;
+
+
+        const issueCheck = await sql.query(
+          `SELECT id 
+         FROM ${tenantcode}.book_issues 
+         WHERE book_id = $1 
+           AND status = 'issued' 
+           AND return_date IS NULL`,
+          [req.body.book_id]
+        );
+
+        if (issueCheck.rows.length > 0) {
+          return res.status(400).json({ error: "Book is already issued" });
+        }
+
+        const cardRes = await sql.query(
+          `SELECT id, card_number 
+         FROM ${tenantcode}.library_members 
+         WHERE id = $1`,
+          [req.body.card_id]
+        );
+
+        if (cardRes.rows.length === 0) {
+          return res.status(404).json({ error: "Card not found" });
+        }
+
+        const card = cardRes.rows[0];
+
+
+        const issueData = {
+          book_id: req.body.book_id,
+          issued_to: req.body.card_id,
+          issued_by: userId,
+          issue_date:
+            req.body.issue_date || new Date().toISOString().split("T")[0],
+          due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          status: "issued",
+        };
+
+
+        BookIssue.init(tenantcode);
+        const issue = await BookIssue.issueBook(issueData, userId);
+
+        return res.status(200).json({
+          success: true,
+          message: "Book issued successfully",
+          data: {
+            ...issue,
+            member_name: card.member_name,
+            book_title: bookTitle,
+            card_number: card.card_number,
+          },
+        });
       } catch (error) {
         console.error("Error issuing book:", error);
-        return res.status(500).json({ errors: error.message });
+        return res.status(500).json({
+          error: "Internal server error",
+          details: error.message,
+        });
       }
     }
   );
 
-  // Return a book (checkin)
+
+
   router.post(
     "/return/:id",
     fetchUser,
-    
+
     [
       body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
       body("status").optional().isIn(['issued', 'returned', 'lost', 'damaged']).withMessage("Status must be one of: issued, returned, lost, damaged"),
@@ -222,29 +255,29 @@ module.exports = (app) => {
   router.post("/payment/:id", fetchUser, async (req, res) => {
     try {
       const { amount, payment_method, payment_date } = req.body;
-      
+
       if (!amount || amount <= 0) {
         return res.status(400).json({ errors: "Invalid payment amount" });
       }
 
       BookIssue.init(req.userinfo.tenantcode);
       const userId = req.userinfo.id;
-      
-    
+
+
       const issue = await BookIssue.findById(req.params.id);
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }
 
-    
+
       if (req.userinfo.userrole === "STUDENT" && issue.issued_to !== userId) {
         return res.status(403).json({ errors: "You can only pay for your own fines" });
       }
 
       const penaltyData = await BookIssue.calculatePenalty(req.params.id);
       const totalPenalty = penaltyData.penalty || 0;
-      
-     
+
+
       const currentPaid = issue.paid_amount || 0;
       const currentDue = totalPenalty - currentPaid;
 
@@ -252,7 +285,7 @@ module.exports = (app) => {
         return res.status(400).json({ errors: `Payment amount cannot exceed due amount of ₹${currentDue}` });
       }
 
-    
+
       const sql = require("../models/db.js");
       const updateQuery = `
         UPDATE ${req.userinfo.tenantcode}.book_issues 
@@ -274,7 +307,7 @@ module.exports = (app) => {
       try {
         const Notification = require("../models/notification.model.js");
         Notification.init(req.userinfo.tenantcode);
-        
+
         const bookTitle = issue.book_title || "Book";
         await Notification.create({
           user_id: issue.issued_to,
@@ -285,7 +318,7 @@ module.exports = (app) => {
           related_type: "book_issue"
         });
 
-     
+
         if (req.app.get('io')) {
           const io = req.app.get('io');
           const notification = {
@@ -304,7 +337,7 @@ module.exports = (app) => {
         }
       } catch (notifError) {
         console.error("Error creating payment notification:", notifError);
-        // Don't fail payment if notification fails
+
       }
 
       return res.status(200).json({
@@ -323,8 +356,8 @@ module.exports = (app) => {
     }
   });
 
-  // Delete book issue by ID
-  router.delete("/:id", fetchUser,  async (req, res) => {
+
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.deleteById(req.params.id);
@@ -338,8 +371,8 @@ module.exports = (app) => {
     }
   });
 
-  
- app.use( "/api/bookissue", router);
-  //  app.use(process.env.BASE_API_URL + "/api/bookissue", router);
+
+  app.use(process.env.BASE_API_URL + "/api/bookissue", router);
+
 };
 

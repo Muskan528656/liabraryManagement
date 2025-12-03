@@ -10,7 +10,7 @@ function init(schema_name) {
   schema = schema_name;
 }
 
-// Get all user roles
+ 
 async function findAll() {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
@@ -25,7 +25,7 @@ async function findAll() {
   }
 }
 
-// Get one role by id
+ 
 async function findById(id) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
@@ -38,7 +38,7 @@ async function findById(id) {
   }
 }
 
-// Insert new role
+ 
 async function create(data) {
   try {
     const query = `
@@ -65,7 +65,7 @@ async function create(data) {
   }
 }
 
-// Update role
+ 
 async function update(id, data) {
   try {
     const query = `
@@ -96,7 +96,7 @@ async function update(id, data) {
   }
 }
 
-// Delete role
+ 
 async function remove(id) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");

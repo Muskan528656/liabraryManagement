@@ -95,6 +95,6 @@ module.exports = (app) => {
         }
     });
 
-    // Mount the router
+ 
     app.use(process.env.BASE_API_URL + "/api/subscriptions", router);
 };

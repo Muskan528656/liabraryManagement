@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all authors
+ 
 async function findAll() {
   try {
     const query = `SELECT * FROM demo.authors ORDER BY createddate DESC`;
@@ -22,7 +22,7 @@ async function findAll() {
   }
 }
 
-// Find author by ID
+ 
 async function findById(id) {
   try {
     const query = `SELECT * FROM demo.authors WHERE id = $1`;
@@ -63,7 +63,7 @@ async function create(authorData, userId) {
 }
 
 
-// Update author by ID
+ 
 async function updateById(id, authorData, userId) {
   try {
     const query = `UPDATE demo.authors 
@@ -89,7 +89,7 @@ async function updateById(id, authorData, userId) {
   }
 }
 
-// Delete author by ID
+ 
 async function deleteById(id) {
   try {
     const query = `DELETE FROM demo.authors WHERE id = $1 RETURNING *`;
@@ -104,7 +104,7 @@ async function deleteById(id) {
   }
 }
 
-// Check if email already exists (for duplicate check)
+ 
 async function findByEmail(email, excludeId = null) {
   try {
     let query = `SELECT * FROM demo.authors WHERE email = $1`;

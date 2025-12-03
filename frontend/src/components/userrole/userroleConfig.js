@@ -1,8 +1,6 @@
+import moment from 'moment';
 import { Badge } from "react-bootstrap";
-import Switch from "@mui/material/Switch";
-import CountryCode from '../../constants/CountryCode.json';
-
-// config/userRoleConfig.js
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
     // Get country code options from props or fallback to local JSON
     const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0 
@@ -10,7 +8,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             value: item.id,
             label: item.name
           }))
-        : CountryCode.map(item => ({
+        : COUNTRY_CODES.map(item => ({
             value: item.country_code,
             label: `${item.country} (${item.country_code})`
           }));
@@ -31,25 +29,41 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "role_name",
                 label: "Role Name",
             },
+
             {
                 field: "country_code",
                 label: "Country Code",
                 render: (value) => {
                     if (!value) return "—";
-                    const country = CountryCode.find(c => c.country_code === value);
+                    const country = COUNTRY_CODES.find(c => c.country_code === value);
                     return country ? `${country.country} (${country.country_code})` : value;
                 }
             },
          {
                 field: "is_active",
-                label: "Active",
-                render: (value) => (
-                    <Badge bg={value ? "success" : "secondary"}>
-                        {value ? "Active" : "Inactive"}
-                    </Badge>
-                )
+                label: "Status",
+                sortable: true,
+                render: (value) => {
+                    const statusValue =
+                        value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
 
-            }
+                    return (
+                        <Badge bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                            {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
+                        </Badge>
+                    );
+                }
+            },
+
+            {
+                field: "createddate",
+                label: "Created Date",
+
+                render: (value) => {
+                    return moment(value).format('DD/MM/YYYY');
+
+                },
+            },
         ],
 
         formFields: [
@@ -61,22 +75,18 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 placeholder: "Enter role name",
                 colSize: 12,
             },
+
             {
-                name: "country_code",
-                label: "Country Code",
-                type: "select",
-                required: false,
-                placeholder: "Select country code",
-                colSize: 12,
-                options: countryCodeOptions
-            },
-            {
-                name: "is_active",
-                label: "is_Active",
+                key: "is_active",
+                label: "Status",
                 type: "toggle",
-                colSize: 12,
-                helpText: "Toggle to enable or disable this role"
-            }
+                badgeConfig: {
+                    true: "success",
+                    false: "secondary",
+                    true_label: "Active",
+                    false_label: "Inactive",
+                },
+            },
         ],
 
         validationRules: (formData, allRoles, editingRole) => {
@@ -108,12 +118,6 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             allowDelete: true
         },
 
-        // details: [
-        //     { key: "role_name", label: "Role Name", type: "text" },
-        //     { key: "is_active", label: "Active Status", type: "text"  },
-        //     { key: "createddate", label: "Created At", type: "date"  },
-        //     { key: "lastmodifieddate", label: "Updated At", type: "date" },
-        // ],
 
         customHandlers: {
             beforeSave: (formData, editingItem) => {

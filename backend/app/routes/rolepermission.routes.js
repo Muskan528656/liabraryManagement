@@ -13,7 +13,7 @@ const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {
 
-    // Get all role permissions
+ 
     router.get("/", fetchUser, async (req, res) => {
         try {
             const perms = await RolePermission.findAll();
@@ -23,7 +23,7 @@ module.exports = (app) => {
         }
     });
 
-    // Get role permission by ID
+ 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             const perm = await RolePermission.findById(req.params.id);
@@ -34,7 +34,7 @@ module.exports = (app) => {
         }
     });
 
-    // Create role permission
+ 
     router.post(
         "/",
         fetchUser,
@@ -55,7 +55,7 @@ module.exports = (app) => {
         }
     );
 
-    // Update role permission
+ 
     router.put(
         "/:id",
         fetchUser,
@@ -77,7 +77,7 @@ module.exports = (app) => {
         }
     );
 
-    // Delete role permission
+ 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             const result = await RolePermission.deleteById(req.params.id);
@@ -87,6 +87,6 @@ module.exports = (app) => {
         }
     });
 
-    // Mount the router
+ 
     app.use(process.env.BASE_API_URL + "/api/role-permissions", router);
 };

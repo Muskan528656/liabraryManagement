@@ -14,7 +14,7 @@ function init(schema_name) {
 }
 
 
-// Create book submission record
+ 
 async function create(submissionData, userId) {
   console.log("Schema initialized for BookSubmission model:", schema);
   try {
@@ -131,7 +131,7 @@ async function create(submissionData, userId) {
   }
 }
 
-// Find submission by ID
+ 
 async function findById(id) {
   try {
     if (!schema) {
@@ -164,7 +164,7 @@ async function findById(id) {
   }
 }
 
-// Find all submissions
+ 
 async function findAll() {
   console.log('schema', schema);
   console.log("findAll called for schema:", schema);
@@ -197,7 +197,7 @@ async function findAll() {
   }
 }
 
-// Find submissions by issue ID
+ 
 async function findByIssueId(issueId) {
   try {
     if (!schema) {
@@ -227,7 +227,7 @@ async function findByIssueId(issueId) {
   }
 }
 
-// Find submissions by book ID
+ 
 async function findByBookId(bookId) {
   try {
     if (!schema) {
@@ -258,7 +258,7 @@ async function findByBookId(bookId) {
   }
 }
 
-// Find submissions by date range
+ 
 async function findByDateRange(startDate, endDate) {
   try {
     if (!schema) {
@@ -289,7 +289,7 @@ async function findByDateRange(startDate, endDate) {
   }
 }
 
-// Find submissions by librarian (submitted_by)
+ 
 async function findByLibrarian(librarianId) {
   try {
     if (!schema) {
@@ -320,7 +320,7 @@ async function findByLibrarian(librarianId) {
   }
 }
 
-// Delete submission by ID
+ 
 async function deleteById(id) {
   try {
     const query = `DELETE FROM ${schema}.book_submissions WHERE id = $1 RETURNING *`;
@@ -335,7 +335,7 @@ async function deleteById(id) {
   }
 }
 
-// getAll
+ 
 async function getAllBooks() {
   try {
     const query = `SELECT 
@@ -375,7 +375,7 @@ async function checkbeforeDue() {
   let notifications = [];
   try {
     const response = await getAllBooks();
-    // console.log(response.data);
+ 
 
     const submittedBooks = response.data;
 
@@ -387,7 +387,7 @@ async function checkbeforeDue() {
 
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
-      // console.log('book title ',book.book_title,);
+ 
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
@@ -406,7 +406,7 @@ async function checkbeforeDue() {
       }
     });
 
-    // console.log("🔔 Notifications updated:", notifications);
+ 
     return notifications;
 
   } catch (error) {

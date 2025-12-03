@@ -152,16 +152,16 @@ const Submodule = () => {
     if (path === "/") {
       return location.pathname === "/";
     }
-    // Exact match for root paths
+ 
     if (location.pathname === path) {
       return true;
     }
-    // For nested paths, check if it starts with the path but ensure it's not a different module
-    // e.g., /book should match /book and /book/123 but not /booksubmit
+ 
+ 
     if (location.pathname.startsWith(path + "/")) {
       return true;
     }
-    // Also check by moduleUrl to ensure exact module match
+ 
     if (moduleUrl) {
       const currentPath = location.pathname.toLowerCase();
       const modulePath = `/${moduleUrl}`;

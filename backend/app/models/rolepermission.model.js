@@ -13,21 +13,21 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all role permissions
+ 
 async function findAll() {
   const query = `SELECT * FROM demo.role_permissions ORDER BY createddate DESC`;
   const result = await sql.query(query);
   return result.rows.length ? result.rows : [];
 }
 
-// Find role permission by ID
+ 
 async function findById(id) {
   const query = `SELECT * FROM demo.role_permissions WHERE id = $1`;
   const result = await sql.query(query, [id]);
   return result.rows.length ? result.rows[0] : null;
 }
 
-// Create a new role permission
+ 
 async function create(data, userId) {
   const query = `
         INSERT INTO demo.role_permissions
@@ -43,7 +43,7 @@ async function create(data, userId) {
   return result.rows[0] || null;
 }
 
-// Update role permission by ID
+ 
 async function updateById(id, data, userId) {
   const current = await findById(id);
   if (!current) throw new Error("Role permission not found");
@@ -65,7 +65,7 @@ async function updateById(id, data, userId) {
   return result.rows.length ? result.rows[0] : null;
 }
 
-// Delete role permission by ID
+ 
 async function deleteById(id) {
   const query = `DELETE FROM demo.role_permissions WHERE id = $1 RETURNING *`;
   const result = await sql.query(query, [id]);

@@ -35,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
-
+ 
   router.get("/stats", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
@@ -61,6 +61,7 @@ module.exports = (app) => {
     }
   });
 
+ 
   router.post(
     "/",
     fetchUser,
@@ -93,7 +94,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update purchase by ID (ADMIN and ADMIN)
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -130,7 +131,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete purchase by ID (ADMIN and ADMIN)
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
@@ -145,7 +146,7 @@ module.exports = (app) => {
     }
   });
 
-  //  app.use(process.env.BASE_API_URL + "/api/purchase", router);
-  app.use("/api/purchase", router);
+ 
+  app.use(process.env.BASE_API_URL + "/api/purchase", router);
 };
 

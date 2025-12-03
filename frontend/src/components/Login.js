@@ -34,20 +34,20 @@ const Login = () => {
             sessionStorage.setItem("myimage", window.URL.createObjectURL(data));
           else sessionStorage.setItem("myimage", "/abdul-pathan.png");
 
-          // let settingResult = await WhatsAppAPI.fetchCompanySetting(
-          //   "lead_status_setting"
-          // );
-          // if (settingResult && settingResult.setting) {
-          //   sessionStorage.setItem(
-          //     "lead_status",
-          //     settingResult.setting.configuration
-          //   );
-          // } else {
-          //   sessionStorage.setItem(
-          //     "lead_status",
-          //     JSON.stringify(constants.LEAD_STATUS_VALUES)
-          //   );
-          // }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
           window.location.assign("/");
         } else {
@@ -56,7 +56,7 @@ const Login = () => {
         }
       }
     } catch (error) {
-      // console.log(error)
+ 
     }
   };
 
@@ -106,7 +106,7 @@ const Login = () => {
                 <div className="text-center">
                   <div className="mb-4">
                     <img
-                      // src="/logo.png"
+ 
                       src="https://banner2.cleanpng.com/cb4/nis/mpu/abme50yvh.webp"
                       alt="Library Management"
                       style={{

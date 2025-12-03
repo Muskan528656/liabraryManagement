@@ -4,7 +4,7 @@
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
-const { getNextAutoNumber } = require("../utils/autoNumber.helper.js");
+const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 let schema = "";
 
 function init(schema_name) {
@@ -38,7 +38,7 @@ async function generatePurchaseSerialNo() {
   }
 }
 
-// Find all purchases with related data
+ 
 async function findAll() {
   try {
     if (!this.schema) {
@@ -67,7 +67,7 @@ async function findAll() {
   }
 }
 
-// Find purchase by ID
+ 
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -99,7 +99,7 @@ async function findById(id) {
   }
 }
 
-// Find purchase by serial number
+ 
 async function findBySerialNo(serialNo) {
   try {
     if (!this.schema) {
@@ -127,8 +127,6 @@ async function findBySerialNo(serialNo) {
 }
 
 
-
-
 async function create(purchaseData, userId) {
   try {
     if (!this.schema) {
@@ -139,14 +137,15 @@ async function create(purchaseData, userId) {
       throw new Error("Vendor ID is required for purchase");
     }
 
-
-    const purchaseSerialNo = await generateAutoNumberSafe('purchases', userId);
+ 
+    const purchaseSerialNo = await generateAutoNumberSafe('purchases', userId, 'PUR-', 5);
 
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
-                   (purchase_serial_no, vendor_id, book_id, quantity, unit_price, purchase_date, notes,
-                    createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8) 
-                   RETURNING *`;
+      (purchase_serial_no, vendor_id, book_id, quantity, unit_price, purchase_date, notes,
+       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8) 
+      RETURNING *`;
+
     const purchaseValues = [
       purchaseSerialNo,
       purchaseData.vendor_id || purchaseData.vendorId,
@@ -162,10 +161,11 @@ async function create(purchaseData, userId) {
     const purchase = purchaseResult.rows[0];
 
     const bookUpdateQuery = `UPDATE ${this.schema}.books 
-                            SET total_copies = total_copies + $1,
-                                available_copies = available_copies + $1,
-                                lastmodifieddate = NOW()
-                            WHERE id = $2`;
+      SET total_copies = total_copies + $1,
+          available_copies = available_copies + $1,
+          lastmodifieddate = NOW()
+      WHERE id = $2`;
+
     await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId]);
 
     return purchase;
@@ -176,14 +176,7 @@ async function create(purchaseData, userId) {
   }
 }
 
-async function generateAutoNumberSafe(tableName, userId) {
-  try {
-    return await getNextAutoNumber(tableName, { prefix: "PUR-", digit_count: 5 }, userId);
-  } catch (error) {
-    throw error;
-  }
-}
-// Update purchase by ID
+ 
 async function updateById(id, purchaseData, userId) {
   try {
     if (!this.schema) {
@@ -254,7 +247,7 @@ async function updateById(id, purchaseData, userId) {
   }
 }
 
-// Delete purchase by ID
+ 
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -283,7 +276,7 @@ async function deleteById(id) {
   }
 }
 
-// Get purchase statistics
+ 
 async function getStatistics() {
   try {
     if (!this.schema) {
@@ -303,7 +296,7 @@ async function getStatistics() {
   }
 }
 
-// Get recent purchases with serial numbers
+ 
 async function getRecentPurchases(limit = 10) {
   try {
     if (!this.schema) {

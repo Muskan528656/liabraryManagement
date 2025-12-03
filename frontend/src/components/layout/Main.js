@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
-// import Sidebar from "./Sidebar"; // Commented out - modules now in header
+ 
 import Footer from "./Footer";
-// import Libr
-// aryWorkflowGuide from "../common/LibraryWorkflowGuide";
+ 
+ 
 import UniversalBarcodeScanner from "../common/UniversalBarcodeScanner";
 
 export default function Main({ socket }) {

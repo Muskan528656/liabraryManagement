@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-// Find all categories
+ 
 async function findAll() {
   try {
     const query = `SELECT * FROM demo.categories ORDER BY createddate DESC`;
@@ -22,7 +22,7 @@ async function findAll() {
   }
 }
 
-// Find category by ID
+ 
 async function findById(id) {
   try {
     const query = `SELECT * FROM demo.categories WHERE id = $1`;
@@ -37,7 +37,7 @@ async function findById(id) {
   }
 }
 
-// Create a new category
+ 
 async function create(categoryData, userId) {
   try {
     console.log("Creating category with data:", categoryData);
@@ -47,7 +47,7 @@ async function create(categoryData, userId) {
                    (name, description, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
                    VALUES ($1, $2, NOW(), NOW(), $3, $3) 
                    RETURNING *`;
-    // For barcode scanning, allow empty name - use default if needed
+ 
     const values = [
       categoryData.name || "Scanned Category",
       categoryData.description || null,
@@ -74,7 +74,7 @@ async function create(categoryData, userId) {
   }
 }
 
-// Update category by ID
+ 
 async function updateById(id, categoryData, userId) {
   try {
     const query = `UPDATE demo.categories 
@@ -99,7 +99,7 @@ async function updateById(id, categoryData, userId) {
   }
 }
 
-// Delete category by ID
+ 
 async function deleteById(id) {
   try {
     const query = `DELETE FROM demo.categories WHERE id = $1 RETURNING *`;
@@ -114,7 +114,7 @@ async function deleteById(id) {
   }
 }
 
-// Check if category name already exists (for duplicate check)
+ 
 async function findByName(name, excludeId = null) {
   try {
     let query = `SELECT * FROM demo.categories WHERE name = $1`;

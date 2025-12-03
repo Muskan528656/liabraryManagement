@@ -24,7 +24,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  // Get all settings
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -36,7 +36,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get all settings as key-value pairs
+ 
   router.get("/all", fetchUser, async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -48,7 +48,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get active setting (single record)
+ 
   router.get("/active", fetchUser, async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -63,7 +63,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get setting by key
+ 
   router.get("/:key", fetchUser, async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -78,7 +78,7 @@ module.exports = (app) => {
     }
   });
 
-  // Create or update a setting
+ 
   router.post(
     "/",
     fetchUser,
@@ -104,7 +104,7 @@ module.exports = (app) => {
     }
   );
 
-  // Update settings (single record)
+ 
   router.put(
     "/",
     fetchUser,
@@ -156,7 +156,7 @@ module.exports = (app) => {
         LibrarySettings.init(req.userinfo.tenantcode);
         const userId = req.userinfo?.id || null;
 
-        // Convert array of key-value pairs to single object
+ 
         const settingData = {};
         req.body.settings.forEach(setting => {
           if (setting.setting_key === 'max_books_per_card') {
@@ -174,7 +174,7 @@ module.exports = (app) => {
           }
         });
 
-        // Set defaults
+ 
         settingData.name = 'Default';
         settingData.price = 0;
         settingData.reservation_limit = 3;
@@ -194,7 +194,7 @@ module.exports = (app) => {
     }
   );
 
-  // Delete setting by key
+ 
   router.delete("/:key", fetchUser, async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -209,7 +209,7 @@ module.exports = (app) => {
     }
   });
 
-  //  app.use(process.env.BASE_API_URL + "/api/librarysettings", router);
-   app.use("/api/librarysettings", router);
+ 
+  app.use("/api/librarysettings", router);
 };
 

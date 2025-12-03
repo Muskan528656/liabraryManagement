@@ -3,7 +3,7 @@ import axios from 'axios';
 export default class DataApi {
     constructor(path) {
         this.token = sessionStorage.getItem('token');
-      
+
         this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
         console.log('baseUrl: ', this.baseUrl);
     }
@@ -16,7 +16,7 @@ export default class DataApi {
         return axios.get(url, { headers });
     }
 
-    // Fetch a single record
+ 
     fetchById(id) {
         const url = id ? `${this.baseUrl}/${id}` : this.baseUrl;
         return axios.get(url, {
@@ -26,7 +26,7 @@ export default class DataApi {
         });
     }
 
-    // Create a record
+ 
     create(data) {
         console.log('data', data);
         const headers = { 'Content-Type': 'application/json' };
@@ -52,21 +52,21 @@ export default class DataApi {
         return axios.get(this.baseUrl + url, { headers, ...config });
     }
 
-    // Update a record
+ 
     update(data, id) {
         console.log(`Update Method: ${this.baseUrl}/${id}`);
         const headers = { 'Content-Type': 'application/json' };
         if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
         return axios.put(`${this.baseUrl}/${id}`, data, { headers }); // Update
     }
-    // Delete a record
+ 
     delete(id) {
         const headers = {};
         if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
         return axios.delete(`${this.baseUrl}/${id}`, { headers });
     }
 
-    // Delete with data in body (for bulk operations)
+ 
     deleteWithBody(url, data) {
         const headers = { 'Content-Type': 'application/json' };
         if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
@@ -88,7 +88,7 @@ export default class DataApi {
         return res.data;
     }
 
-    // Bulk upsert records
+ 
     upsert(data) {
         console.log('upsert payload data: ', data);
         const headers = { 'Content-Type': 'application/json' };

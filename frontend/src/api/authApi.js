@@ -1,4 +1,3 @@
-import { useState } from "react";
 import * as constants from "../constants/CONSTANT";
 import helper from "../components/common/helper";
 const AuthApi = {
@@ -19,8 +18,6 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
-
-      console.log("REe@@@@@@@@@@@@@@@@@",response)
       const result = await response.json();
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);
@@ -34,7 +31,7 @@ const AuthApi = {
   },
 
   async fetchMyImage() {
-    const token = sessionStorage.getItem("token");
+    // const token = sessionStorage.getItem("token");
 
     let response = await helper.fetchWithAuth(
       constants.API_BASE_URL + "/api/auth/myimage",
@@ -50,7 +47,7 @@ const AuthApi = {
   },
 
   async fetchUserImage(userid) {
-    const token = sessionStorage.getItem("token");
+    // const token = sessionStorage.getItem("token");
 
     let response = await helper.fetchWithAuth(
       constants.API_BASE_URL + "/api/auth/userimage/" + userid,
@@ -64,7 +61,7 @@ const AuthApi = {
   async refreshToken() {
     const refreshToken = sessionStorage.getItem("r-t");
     if (!refreshToken) {
-      // console.error("No refresh token found in localStorage.");
+ 
       this.logout();
       return;
     }

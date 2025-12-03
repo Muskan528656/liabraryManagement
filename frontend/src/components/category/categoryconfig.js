@@ -1,4 +1,4 @@
-// config/categoryConfig.js
+ 
 export const getCategoryConfig = (externalData = {}, props = {}) => {
     return {
         moduleName: "categories",
@@ -41,7 +41,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
 
-            // Check for duplicate name
+ 
             const duplicate = allCategories.find(
                 category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
                     category.id !== editingCategory?.id

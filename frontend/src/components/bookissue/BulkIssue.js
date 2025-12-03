@@ -20,7 +20,6 @@ import * as constants from "../../constants/CONSTANT";
 const BulkIssue = () => {
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
-  const [users, setUsers] = useState([]);
   const [issuedBooks, setIssuedBooks] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
@@ -38,7 +37,7 @@ const BulkIssue = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // --- Effects ---
+ 
   useEffect(() => {
     fetchAll();
   }, []);
@@ -52,7 +51,7 @@ const BulkIssue = () => {
     }
   }, [issueDate, durationDays]);
 
-  // --- Data Fetching ---
+ 
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -71,17 +70,15 @@ const BulkIssue = () => {
           settingsRespTry(settingsApi),
         ]);
 
-      // Normalize responses
+ 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
-      const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
 
       setBooks(booksList);
       setLibraryCards(
         cardsList.filter((c) => c.is_active === true || c.is_active === "true")
       );
-      setUsers(usersList);
 
       const activeIssues = issuesList.filter(
         (issue) =>
@@ -125,7 +122,7 @@ const BulkIssue = () => {
     }
   };
 
-  // --- Logic Helpers ---
+ 
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
@@ -217,7 +214,7 @@ const BulkIssue = () => {
     }
   };
 
-  // --- Calculated Values ---
+ 
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
@@ -226,7 +223,7 @@ const BulkIssue = () => {
     (parseInt(maxBooksPerCard) || 1) - issuedCountForSelectedCard
   );
 
-  // React Select Options
+ 
   const bookOptions = books.map((b) => ({
     value: b.id,
     label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
@@ -241,7 +238,7 @@ const BulkIssue = () => {
     data: c,
   }));
 
-  // --- Custom Styles for React Select to match theme ---
+ 
   const customSelectStyles = {
     control: (base) => ({
       ...base,
@@ -267,12 +264,12 @@ const BulkIssue = () => {
       style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
     >
       {/* Header Section */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h3 className="fw-bold text-dark mb-1">Bulk Books Issue Process... </h3>
         <p className="text-muted">
           Streamline the book issuing process for library members.
         </p>
-      </div>
+      </div> */}
 
       {loading ? (
         <div
@@ -430,7 +427,7 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        // Validation Logic
+ 
                         const invalid = v.find((sel) => {
                           const b = sel.data;
                           return issuedBooks.some(
@@ -454,7 +451,7 @@ const BulkIssue = () => {
                       }
                       setSelectedBooks(v || []);
                     }}
-                    // Hide default dropdown when selected to use custom grid below
+ 
                     controlShouldRenderValue={false}
                     placeholder={
                       !selectedCard

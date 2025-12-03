@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
-import CountryCode from '../../constants/CountryCode.json';
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { TIME_ZONE } from "../../constants/TIME_ZONE"
+import { CURRENCY } from '../../constants/CURRENCY';
 
 const Company = () => {
   const [Company, setCompany] = useState({
@@ -28,6 +30,7 @@ const Company = () => {
     has_wallet: false,
     currency: "",
     time_zone: "",
+    country_code: "",
   });
 
   const [showAlert, setShowAlert] = useState(false);
@@ -65,7 +68,7 @@ const Company = () => {
       console.error("Error fetching country codes list:", error);
       // Fallback to local JSON if API fails
       setCountryCodeList(
-        CountryCode.map((item) => ({
+        COUNTRY_CODES.map((item) => ({
           id: item.country_code,
           name: `${item.country} (${item.country_code})`,
           country: item.country,
@@ -94,7 +97,7 @@ const Company = () => {
         if (response.data.country_code_display) {
           setCountryCodeDisplay(response.data.country_code_display);
         } else if (response.data.country_code) {
-          const countryInfo = CountryCode.find(c => c.country_code === response.data.country_code);
+          const countryInfo = COUNTRY_CODES.find(c => c.country_code === response.data.country_code);
           if (countryInfo) {
             setCountryCodeDisplay(`${countryInfo.country} (${countryInfo.country_code})`);
           }
@@ -127,7 +130,7 @@ const Company = () => {
     try {
       const companyId = getCompanyIdFromToken();
       const companyApi = new DataApi("company");
-
+      console.log("tempCompanytempCompany", tempCompany)
       const response = await companyApi.update(tempCompany, companyId);
 
       if (response.data) {
@@ -195,16 +198,9 @@ const Company = () => {
                 </h5>
                 {!isEditingCompany ? (
                   <button
-                    // variant="outline-primary"
+
                     className="custom-btn-primary"
                     onClick={handleCompanyEdit}
-                    // style={{
-                    //   border: "2px solid var(--primary-color)",
-                    //   color: "var(--primary-color)",
-                    //   borderRadius: "8px",
-                    //   padding: "8px 20px",
-                    //   fontWeight: "600",
-                    // }}
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Company
@@ -256,7 +252,7 @@ const Company = () => {
                               handleCompanyChange("name", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -279,7 +275,7 @@ const Company = () => {
                               handleCompanyChange("tenantcode", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -302,7 +298,7 @@ const Company = () => {
                               handleCompanyChange("userlicenses", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -325,7 +321,7 @@ const Company = () => {
                               handleCompanyChange("systememail", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -348,7 +344,7 @@ const Company = () => {
                               handleCompanyChange("adminemail", e.target.value)
                             }
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
@@ -383,7 +379,7 @@ const Company = () => {
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
-                            // background: "var(--header-highlighter-color)",
+
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -406,47 +402,49 @@ const Company = () => {
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Currency</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.currency
-                                : Company.currency
-                            }
-                            readOnly={!isEditingCompany}
+                          <Form.Select
+                            value={isEditingCompany ? tempCompany.currency : (Company.currency || "")}
                             onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("currency", e.target.value)
+                              isEditingCompany && handleCompanyChange("currency", e.target.value)
                             }
+                            disabled={!isEditingCompany}
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
-                          />
+                          >
+                            <option value="">Select Currency</option>
+
+                            {CURRENCY.map((c) => (
+                              <option key={c.label} value={c.value}>
+                                {c.label} — {c.value}
+                              </option>
+                            ))}
+                          </Form.Select>
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Time Zone</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.time_zone
-                                : Company.time_zone
-                            }
-                            readOnly={!isEditingCompany}
+                          <Form.Select
+                            value={isEditingCompany ? tempCompany.time_zone : (Company.time_zone || "")}
                             onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("time_zone", e.target.value)
+                              isEditingCompany && handleCompanyChange("time_zone", e.target.value)
                             }
+                            disabled={!isEditingCompany}
                             style={{
-                              // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
                               pointerEvents: isEditingCompany ? "auto" : "none",
                               opacity: isEditingCompany ? 1 : 0.9,
                             }}
-                          />
+                          >
+                            <option value="">Select TimeZone</option>
+
+                            {TIME_ZONE.map((c) => (
+                              <option key={c.label} value={c.value}>
+                                {c.label} — {c.value}
+                              </option>
+                            ))}
+                          </Form.Select>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -537,11 +535,35 @@ const Company = () => {
                           handleCompanyChange("country", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Country Code</Form.Label>
+                      <Form.Select
+                        value={isEditingCompany ? tempCompany.country_code : (Company.country_code || "")}
+                        onChange={(e) =>
+                          isEditingCompany && handleCompanyChange("country_code", e.target.value)
+                        }
+                        disabled={!isEditingCompany}
+                        style={{
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
+                        }}
+                      >
+                        <option value="">Select Country Code</option>
+
+                        {COUNTRY_CODES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.country_code} — {c.country}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -558,7 +580,7 @@ const Company = () => {
                           handleCompanyChange("state", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -577,7 +599,7 @@ const Company = () => {
                           handleCompanyChange("city", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -598,7 +620,7 @@ const Company = () => {
                           handleCompanyChange("pincode", e.target.value)
                         }
                         style={{
-                          // background: !isEditingCompany ? "var(--header-highlighter-color)" : "white",
+
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
@@ -620,7 +642,7 @@ const Company = () => {
                           }}
                         >
                           <option value="">Select Country Code</option>
-                          {CountryCode.map((item) => (
+                          {COUNTRY_CODES.map((item) => (
                             <option key={item.country_code} value={item.country_code}>
                               {item.country} ({item.country_code})
                             </option>
@@ -631,7 +653,7 @@ const Company = () => {
                           type="text"
                           value={
                             Company.country_code
-                              ? `${CountryCode.find(c => c.country_code === Company.country_code)?.country} (${Company.country_code})` || Company.country_code
+                              ? `${COUNTRY_CODES.find(c => c.country_code === Company.country_code)?.country} (${Company.country_code})` || Company.country_code
                               : ""
                           }
                           readOnly
