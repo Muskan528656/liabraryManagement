@@ -163,7 +163,7 @@ module.exports = (app) => {
 
 
         const cardRes = await sql.query(
-          `SELECT id, card_number, member_name, allowed_books 
+          `SELECT id, card_number, first_name,last_name allowed_books 
          FROM ${tenantcode}.library_members 
          WHERE id = $1`,
           [req.body.card_id]
@@ -206,7 +206,7 @@ module.exports = (app) => {
         BookIssue.init(tenantcode);
         const issue = await BookIssue.issueBook(issueData, userId);
 
-      
+
         const updatedIssuesRes = await sql.query(
           `SELECT COUNT(*) as issued_count 
          FROM ${tenantcode}.book_issues 

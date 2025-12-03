@@ -34,11 +34,28 @@ const Company = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
-
+  const [selectedCurrency, setSelectedCurrency] = useState(Company.currency);
+  const [timeZones, setTimeZones] = useState([]);
   useEffect(() => {
     fetchCompany();
   }, []);
+  const handleCurrencyChange = (e) => {
+    const selectedTimezone = e.target.value;
 
+    setSelectedCurrency(selectedTimezone);
+
+
+    const matchedTimeZone = TIME_ZONE.find(
+      (t) => t.timezone === selectedTimezone
+    );
+
+    setTempCompany((prev) => ({
+      ...prev,
+      currency: selectedTimezone,
+      time_zone_display: matchedTimeZone ? matchedTimeZone.label : "",
+      time_zone: matchedTimeZone ? matchedTimeZone.timezone : ""
+    }));
+  };
   function getCompanyIdFromToken() {
     const token = sessionStorage.getItem("token");
     if (!token) return null;
@@ -316,49 +333,38 @@ const Company = () => {
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Currency</Form.Label>
-                          <Form.Select
-                            value={isEditingCompany ? tempCompany.currency : (Company.currency || "")}
-                            onChange={(e) =>
-                              isEditingCompany && handleCompanyChange("currency", e.target.value)
-                            }
-                            disabled={!isEditingCompany}
-                            style={{
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
-                          >
-                            <option value="">Select Currency</option>
-
-                            {CURRENCY.map((c) => (
-                              <option key={c.label} value={c.value}>
-                                {c.label} — {c.value}
-                              </option>
-                            ))}
-                          </Form.Select>
+                          <div className="dropdown-container">
+                            <Form.Control
+                              as="select"
+                              value={selectedCurrency}
+                              onChange={handleCurrencyChange}
+                              className="currency-dropdown"
+                              disabled={!isEditingCompany}  // Currency dropdown will be disabled when not in edit mode
+                            >
+                              {CURRENCY.map((currency) => (
+                                <option key={currency.value} value={currency.timezone}>
+                                  {currency.label} - {currency.value}
+                                </option>
+                              ))}
+                            </Form.Control>
+                          </div>
                         </Form.Group>
+
                       </Col>
-                      <Col md={6}>
+                           <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Time Zone</Form.Label>
-                          <Form.Select
-                            value={isEditingCompany ? tempCompany.time_zone : (Company.time_zone || "")}
-                            onChange={(e) =>
-                              isEditingCompany && handleCompanyChange("time_zone", e.target.value)
+                          <Form.Control
+                            type="text"
+                            value={
+                              isEditingCompany
+                                ? tempCompany.time_zone_display
+                                : Company.time_zone_display || Company.time_zone
                             }
-                            disabled={!isEditingCompany}
-                            style={{
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
-                          >
-                            <option value="">Select TimeZone</option>
+                            readOnly
+                          />
 
-                            {TIME_ZONE.map((c) => (
-                              <option key={c.label} value={c.value}>
-                                {c.label} — {c.value}
-                              </option>
-                            ))}
-                          </Form.Select>
+
                         </Form.Group>
                       </Col>
                     </Row>

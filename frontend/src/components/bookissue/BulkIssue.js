@@ -37,7 +37,7 @@ const BulkIssue = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
- 
+
   useEffect(() => {
     fetchAll();
   }, []);
@@ -51,7 +51,7 @@ const BulkIssue = () => {
     }
   }, [issueDate, durationDays]);
 
- 
+
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -70,7 +70,7 @@ const BulkIssue = () => {
           settingsRespTry(settingsApi),
         ]);
 
- 
+
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const issuesList = normalize(issuesResp);
@@ -122,7 +122,7 @@ const BulkIssue = () => {
     }
   };
 
- 
+
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
@@ -214,7 +214,7 @@ const BulkIssue = () => {
     }
   };
 
- 
+
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
@@ -223,7 +223,7 @@ const BulkIssue = () => {
     (parseInt(maxBooksPerCard) || 1) - issuedCountForSelectedCard
   );
 
- 
+
   const bookOptions = books.map((b) => ({
     value: b.id,
     label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
@@ -238,7 +238,7 @@ const BulkIssue = () => {
     data: c,
   }));
 
- 
+
   const customSelectStyles = {
     control: (base) => ({
       ...base,
@@ -252,11 +252,11 @@ const BulkIssue = () => {
       backgroundColor: state.isSelected
         ? "#8b5cf6"
         : state.isFocused
-        ? "#f3f0ff"
-        : "white",
+          ? "#f3f0ff"
+          : "white",
     }),
   };
-
+  console.log("selectedCard", selectedCard)
   return (
     <Container
       fluid
@@ -427,7 +427,7 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
- 
+
                         const invalid = v.find((sel) => {
                           const b = sel.data;
                           return issuedBooks.some(
@@ -451,15 +451,14 @@ const BulkIssue = () => {
                       }
                       setSelectedBooks(v || []);
                     }}
- 
+
                     controlShouldRenderValue={false}
                     placeholder={
                       !selectedCard
                         ? "Select card first..."
                         : selectedBooks.length >= remainingForCard
-                        ? "Limit Reached"
-                        : `Select up to ${
-                            remainingForCard - selectedBooks.length
+                          ? "Limit Reached"
+                          : `Select up to ${remainingForCard - selectedBooks.length
                           } more book(s)...`
                     }
                     /* 

@@ -5,7 +5,7 @@ export default class DataApi {
         this.token = sessionStorage.getItem('token');
 
         this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
-        
+
     }
 
     fetchAll(queryString = '') {
@@ -18,7 +18,7 @@ export default class DataApi {
         });
     }
 
- 
+
     fetchById(id) {
         const url = id ? `${this.baseUrl}/${id}` : this.baseUrl;
         return axios.get(url, {
@@ -28,7 +28,7 @@ export default class DataApi {
         });
     }
 
- 
+
     create(data) {
         console.log('data', data);
         return axios.post(this.baseUrl, data, {
@@ -63,7 +63,7 @@ export default class DataApi {
         });
     }
 
- 
+
     update(data, id) {
         console.log(`Update Method: ${this.baseUrl}/${id}`);
         return axios.put(`${this.baseUrl}/${id}`, data, {
@@ -72,7 +72,7 @@ export default class DataApi {
             },
         }); // Update
     }
- 
+
     delete(id) {
         return axios.delete(`${this.baseUrl}/${id}`, {
             headers: {
@@ -81,7 +81,7 @@ export default class DataApi {
         });
     }
 
- 
+
     deleteWithBody(url, data) {
         return axios.delete(this.baseUrl + url, {
             data: data,
@@ -110,7 +110,7 @@ export default class DataApi {
         return res.data;
     }
 
- 
+
     upsert(data) {
         console.log('upsert payload data: ', data);
         return axios.post(this.baseUrl, data, {

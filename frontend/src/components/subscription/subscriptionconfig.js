@@ -124,7 +124,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10) => {
                 colSize: 6,
                 helpText: "Keep empty for never ending plans",
             },
-             {
+            {
                 name: "status",
                 label: "Status",
                 type: "toggle",

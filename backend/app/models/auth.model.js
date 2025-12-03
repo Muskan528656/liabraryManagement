@@ -53,7 +53,7 @@ async function createUser(newUser) {
 
   console.log("Creating user with companyId:", finalCompanyId, "in schema:", this.schema);
 
- 
+
   if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
     console.error("Error: Invalid schema name:", this.schema);
     throw new Error(`Invalid schema name: ${this.schema}. Cannot create user.`);
@@ -126,9 +126,11 @@ async function findByEmail(email) {
       'password', u.password,
       'userrole', u.userrole,
       'companyid', u.companyid,
+    
       -- Removed whatsapp_settings as it doesn't exist in table
 
       -- company info
+        'time_zone', c.time_zone,
       'companyname', c.name,
       'companystreet', c.street,
       'companycity', c.city,
@@ -156,7 +158,6 @@ async function findById(id) {
   } catch (error) {
     console.log("error ", error);
   }
-
   return null;
 }
 
@@ -245,7 +246,7 @@ async function checkForDuplicate(email, phone, userId = null) {
   return null;
 }
 
- 
+
 async function getAllManager(role) {
   try {
     var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM ${this.schema}.user WHERE `;
@@ -259,7 +260,7 @@ async function getAllManager(role) {
   }
 }
 
- 
+
 async function updateRecById(id, userRec, userid) {
   try {
     delete userRec.id;
