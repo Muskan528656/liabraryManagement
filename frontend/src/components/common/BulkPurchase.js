@@ -892,7 +892,6 @@ const BulkPurchasePage = () => {
                             <Col lg={8}>
                                 <Form.Group>
                                     <Form.Label className="fw-bold mb-2">
-                                        <i className="fa-solid fa-user-tie me-2 text-primary"></i>
                                         Select Default Vendor <span className="text-danger">*</span>
                                     </Form.Label>
                                     <Select
@@ -926,11 +925,21 @@ const BulkPurchasePage = () => {
                                         }}
                                         menuPortalTarget={document.body}
                                     />
-
                                 </Form.Group>
                             </Col>
-
+                            <Col lg={2}></Col> {/* Empty column for spacing */}
+                            <Col lg={2} className="d-flex justify-content-end">
+                                <Button
+                                    size="sm"
+                                    onClick={handleAddBookRow}
+                                    className="mt-4 custom-btn-primary"
+                                >
+                                    <i className="fa-solid fa-plus me-1"></i>
+                                    Add New Row
+                                </Button>
+                            </Col>
                         </Row>
+
 
                         {renderPurchaseEntries("single")}
                     </>
@@ -958,23 +967,10 @@ const BulkPurchasePage = () => {
                 {/* Table Header with Add Button */}
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h6 className="mb-0">
-                        <i className="fa-solid fa-table me-2 text-primary"></i>
+
                         Purchase Items ({multiInsertRows.length})
                     </h6>
-                    <Button
-                        size='sm'
 
-                        onClick={handleAddBookRow}
-                        style={{
-                            color: '#fff',
-                            backgroundColor: 'var(--primary-color, #6f42c1)',
-                            borderColor: 'var(--primary-color, #6f42c1)',
-                            fontWeight: '500'
-                        }}
-                    >
-                        <i className="fa-solid fa-plus me-1"></i>
-                        Add New Row
-                    </Button>
                 </div>
 
                 {/* Table with Horizontal and Vertical Scroll - FIXED */}
@@ -1070,7 +1066,7 @@ const BulkPurchasePage = () => {
                                                     title="Add New Vendor"
                                                     className="p-0 text-primary"
                                                 >
-                                                    <i className="fa-solid fa-plus-circle"></i>
+                                                    <i className="fs-4 fa-solid fa-plus-square"></i>
                                                 </Button>
                                             </div>
                                         </td>
@@ -1110,7 +1106,7 @@ const BulkPurchasePage = () => {
                                                     title="Add New Book"
                                                     className="p-0 text-success"
                                                 >
-                                                    <i className="fa-solid fa-plus-circle"></i>
+                                                    <i className="fs-4  fa-solid fa-plus-square"></i>
                                                 </Button>
                                             </div>
                                         </td>
@@ -1390,7 +1386,6 @@ const BulkPurchasePage = () => {
                             eventKey="single"
                             title={
                                 <div className="d-flex align-items-center px-3 py-2">
-                                    <i className="fa-solid fa-user me-2"></i>
                                     Single Vendor
                                 </div>
                             }
@@ -1400,7 +1395,7 @@ const BulkPurchasePage = () => {
                             eventKey="import"
                             title={
                                 <div className="d-flex align-items-center px-3 py-2">
-                                    <i className="fa-solid fa-file-import me-2"></i>
+
                                     Import File
                                 </div>
                             }
@@ -1427,16 +1422,15 @@ const BulkPurchasePage = () => {
                 <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
                     <Modal.Header closeButton className="border-bottom-0 pb-0" style={{ background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", color: "white" }}>
                         <Modal.Title className="fw-bold">
-                            <i className="fa-solid fa-user-tie me-2"></i>
                             Add New Vendor
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className="pt-0">
                         <Form>
                             {/* Contact Person Information Section */}
-                            <div className="mb-4">
+                            <div className="mt-2 mb-4">
                                 <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
-                                    <i className="fa-solid fa-user me-2 text-primary"></i>
+
                                     <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>Contact Person Information</h6>
                                 </div>
 
@@ -1451,7 +1445,7 @@ const BulkPurchasePage = () => {
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
                                                 placeholder="Enter contact person name"
                                                 required
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1464,7 +1458,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.country_code || defaultCountryCode}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, country_code: e.target.value })}
                                                 required
-                                                style={{ borderColor: "#6f42c1" }}
+                                                 
                                             >
                                                 <option value="">Select Code</option>
                                                 {COUNTRY_CODES.map((country, index) => (
@@ -1485,7 +1479,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.phone}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
                                                 placeholder="Enter phone number"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                             {vendorFormData.phone && !/^[0-9+\-\s()]{10,15}$/.test(vendorFormData.phone) && (
                                                 <small className="text-danger">Please enter a valid phone number</small>
@@ -1502,7 +1496,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.email}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
                                                 placeholder="Enter email address"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                             {vendorFormData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vendorFormData.email) && (
                                                 <small className="text-danger">Please enter a valid email</small>
@@ -1515,7 +1509,7 @@ const BulkPurchasePage = () => {
                             {/* Company Information Section */}
                             <div className="mb-4">
                                 <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
-                                    <i className="fa-solid fa-building me-2 text-primary"></i>
+
                                     <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1" }}>Company Information</h6>
                                 </div>
 
@@ -1529,7 +1523,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.company_name}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, company_name: e.target.value })}
                                                 placeholder="Enter company name"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1543,7 +1537,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.gst_number}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, gst_number: e.target.value })}
                                                 placeholder="Enter GST number"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                                 maxLength={15}
                                             />
                                             {vendorFormData.gst_number && vendorFormData.gst_number.length !== 15 && (
@@ -1561,7 +1555,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.pan_number}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, pan_number: e.target.value.toUpperCase() })}
                                                 placeholder="Enter PAN number (e.g., ABCDE1234F)"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                                 maxLength={10}
                                             />
                                             {vendorFormData.pan_number && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(vendorFormData.pan_number) && (
@@ -1580,7 +1574,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.address}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, address: e.target.value })}
                                                 placeholder="Enter address"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1594,7 +1588,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.country || "India"}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, country: e.target.value })}
                                                 placeholder="Enter country"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1655,7 +1649,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.pincode}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                                                 placeholder="Enter pincode"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                                 maxLength={6}
                                             />
                                             {vendorFormData.pincode && vendorFormData.pincode.length !== 6 && (
@@ -1671,7 +1665,7 @@ const BulkPurchasePage = () => {
                                                 name="status"
                                                 value={vendorFormData.status || "active"}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, status: e.target.value })}
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             >
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
@@ -1699,7 +1693,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.website}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, website: e.target.value })}
                                                 placeholder="https://example.com"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1713,7 +1707,7 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.payment_terms}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, payment_terms: e.target.value })}
                                                 placeholder="e.g., Net 30 days"
-                                                style={{ borderColor: "#6f42c1" }}
+
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1723,7 +1717,6 @@ const BulkPurchasePage = () => {
                     </Modal.Body>
                     <Modal.Footer className="border-top-0">
                         <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)} style={{ borderColor: "#6f42c1", color: "#6f42c1" }}>
-                            <i className="fa-solid fa-times me-2"></i>
                             Cancel
                         </Button>
                         <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)", border: "none" }}>
@@ -1734,7 +1727,7 @@ const BulkPurchasePage = () => {
                                 </>
                             ) : (
                                 <>
-                                    <i className="fa-solid fa-plus me-2"></i>
+
                                     Add Vendor
                                 </>
                             )}

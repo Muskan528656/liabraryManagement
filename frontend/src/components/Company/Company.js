@@ -351,7 +351,7 @@ const Company = () => {
                         </Form.Group>
 
                       </Col>
-                           <Col md={6}>
+                      <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label className="fw-semibold">Time Zone</Form.Label>
                           <Form.Control

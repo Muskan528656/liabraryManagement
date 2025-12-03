@@ -1,110 +1,134 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
-import DynamicCRUD from "../common/DynaminCrud";
-import { getPermissionConfig } from '../Permission/permissionConfig'
-import { useDataManager } from '../common/userdatamanager';
 import Loader from '../common/Loader';
-const Permission = ({ props }) => {
-    const [showModal, setShowModal] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
+
+const Permission = () => {
+    const [permissions, setPermissions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [refreshKey, setRefreshKey] = useState(0); // To trigger refresh
 
-    const baseConfig = getPermissionConfig();
-    const { data, loading, error } = useDataManager(baseConfig.dataDependencies, props);
-
-    if (loading) {
-        return <Loader message="Loading permissions..." />;
-    }
-
-    if (error) {
-        return (
-            <div className="alert alert-danger">
-                <h4>Failed to load permissions</h4>
-                <p>{error}</p>
-            </div>
-        );
-    }
-
-    const finalConfig = getPermissionConfig(data, props);
-
-    const handleSavePermission = async (formData) => {
+    // Fetch permissions from API
+    const fetchPermissions = async () => {
         try {
-            console.log("Saving permission data:", formData);
-
+            setLoading(true);
             const api = new DataApi("permissions");
-            const result = api.create(formData);
-
-
-            if (editingItem) {
-
-                result = await api.update(editingItem.id, formData);
-                console.log("Update result:", result);
-            } else {
-
-                result = await api.create(formData);
-                console.log("Create result:", result);
-            }
-
-
-            alert(editingItem ? "Permission updated successfully!" : "Permission created successfully!");
-
-
-
-
-        } catch (error) {
-            console.error("Error saving permission:", error);
-            alert("Error saving permission: " + error.message);
+            const result = await api.fetchAll();
+            console.log("RESULT PERMISOON",result)
+            setPermissions(result?.data?.permissions || []);
+            setLoading(false);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Failed to fetch permissions");
+            setLoading(false);
         }
     };
 
-    const handleAddNew = () => {
-        setEditingItem(null);
-        setShowModal(true);
+    useEffect(() => {
+        fetchPermissions();
+    }, [refreshKey]);
+
+    const handleSavePermission = async (formData) => {
+        try {
+            const api = new DataApi("permissions");
+            if (editingItem) {
+                await api.update(editingItem.id, formData);
+                alert("Permission updated successfully!");
+            } else {
+                await api.create(formData);
+                alert("Permission created successfully!");
+            }
+            setShowAddModal(false);
+            setEditingItem(null);
+            setRefreshKey(prev => prev + 1); // Refresh table
+        } catch (err) {
+            console.error(err);
+            alert("Error saving permission: " + err.message);
+        }
     };
 
     const handleEdit = (item) => {
         setEditingItem(item);
-        setShowModal(true);
+        setShowAddModal(true);
+    };
+
+    const handleDelete = async (id) => {
+        try {
+            const api = new DataApi("permissions");
+            await api.delete(id);
+            alert("Permission deleted successfully!");
+            setRefreshKey(prev => prev + 1); // Refresh table
+        } catch (err) {
+            console.error(err);
+            alert("Error deleting permission: " + err.message);
+        }
+    };
+
+    const CustomHeader = () => (
+        <div className="d-flex justify-content-between align-items-center mb-4 p-2"
+            style={{
+                color: "var(--primary-color)",
+                background: "var(--primary-background-color)",
+                borderRadius: "10px",
+            }}>
+            <h5 className="fw-bold mb-1">
+                <i className="fa-solid fa-lock me-2 fs-6"></i> Permissions
+            </h5>
+            <button className="custom-btn-table-header" onClick={() => setShowAddModal(true)}>
+                <i className="fa-solid fa-plus me-1"></i> Add Permission
+            </button>
+        </div>
+    );
+
+    const PermissionTable = () => {
+        console.log("permissionspermissions",permissions)
+        if (loading) return <Loader message="Loading permissions..." />;
+        if (error) return <div className="alert alert-danger">{error}</div>;
+        if (!permissions.length) return <div>No permissions available.</div>;
+
+        return (
+            <table className="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Module ID</th>
+                        <th>Permissions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {permissions.map((item, index) => (
+                        <tr key={index}>
+                            <td>{item.module_id || "N/A"}</td>
+                            <td>
+                                View: {item.allow_view ? "Yes" : "No"},&nbsp;
+                                Create: {item.allow_create ? "Yes" : "No"},&nbsp;
+                                Edit: {item.allow_edit ? "Yes" : "No"},&nbsp;
+                                Delete: {item.allow_delete ? "Yes" : "No"}
+                            </td>
+                            <td>
+                                <button className="btn btn-primary btn-sm me-2" onClick={() => handleEdit(item)}>Edit</button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}>Delete</button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
     };
 
     return (
         <div className="permission-page">
-
-
-            <div className="d-flex justify-content-start mb-2">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowAddModal(true)}
-                >
-                    <i className="fa fa-plus me-2"></i>
-                    Add Permission
-                </button>
-            </div>     <div
-                style={{
-                    overflowX: "auto",
-                    resize: "horizontal",
-                    border: "1px solid #ddd",
-                    padding: "5px",
-                    minWidth: "400px"
-                }}
-            >
-                <DynamicCRUD
-                    {...finalConfig}
-                    icon="fa-solid fa-lock"
-                    enableResizableColumns={true}
-                    stickyHeader={true}
-                />
-            </div>
-
+            <CustomHeader />
+            <PermissionTable />
 
             <AddPermissionModal
                 show={showAddModal}
-                handleClose={() => setShowAddModal(false)}
-                onSave={(permissionData) => {
-                    console.log("Saving permission:", permissionData);
-                    setShowAddModal(false);
-                }}
+                handleClose={() => { setShowAddModal(false); setEditingItem(null); }}
+                editingItem={editingItem}
+                onSave={handleSavePermission}
             />
         </div>
     );
