@@ -1,50 +1,9 @@
 import React from "react";
-import { convertToUserTimezone } from "../../utils/convetTimeZone";
-
-/* -------------------------
-   TIMEZONE HELPERS
-------------------------- */
-
-const getOffsetHours = (tzString) => {
-  const match = tzString.match(/GMT([+-]\d{2}):(\d{2})/);
-  if (!match) return 0;
-  return Number(match[1]);
-};
-
-const convertUTCToTZ = (utcDate, tzString) => {
-  if (!utcDate) return "";
-  const offset = getOffsetHours(tzString);
-
-  const date = new Date(utcDate);
-  date.setHours(date.getHours() + offset);
-
-  const iso = date.toISOString().replace("Z", "");
-  const [d, t] = iso.split("T");
-  const time = t.substring(0, 5);
-  return `${d} ${time} (${tzString})`;
-};
-
-const convertTZToUTC = (localDate, tzString) => {
-  if (!localDate) return null;
-  const offset = getOffsetHours(tzString);
-
-  const date = new Date(localDate);
-  date.setHours(date.getHours() - offset);
-
-  return date.toISOString();
-};
-
-/* -------------------------
-   DEPENDENCY CONFIG
-------------------------- */
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 export const subscriptionDataDependencies = {
   company: "company",
 };
-
-/* -------------------------
-   STATUS BADGE
-------------------------- */
 
 const statusBadge = (value) => (
   <span className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
@@ -52,29 +11,19 @@ const statusBadge = (value) => (
   </span>
 );
 
-/* -------------------------
-   MAIN CONFIG EXPORT
-------------------------- */
-
-export const getSubscriptionConfig = (externalData = {}) => {
-  let companies = [];
-
-  if (externalData && externalData.company) {
-    companies = externalData.company;
-  }
-
-  const COMPANY_TIMEZONE =
-    Array.isArray(companies) &&
-    companies.length > 0 &&
-    companies[0].time_zone
-      ? companies[0].time_zone
-      : "GMT-05:00";
-
+export const getSubscriptionConfig = (data, time_zone) => {
+  
+  
+ 
+  const currentTz = time_zone;
+  console.log("currentTz", currentTz);
+  
+  
+  
   return {
     moduleName: "subscriptions",
     moduleLabel: "Subscription",
     apiEndpoint: "subscriptions",
-
     initialFormData: {
       renewal: "",
       plan_name: "",
@@ -84,25 +33,25 @@ export const getSubscriptionConfig = (externalData = {}) => {
       status: "active",
     },
 
-    /* -------------------------
-       TABLE COLUMNS
-    ------------------------- */
-
     columns: [
       { field: "plan_name", label: "Plan Name" },
       { field: "renewal", label: "Renewal" },
       {
-        field: "start_date_display",
+        field: "start_date",
         label: "Start Date",
         render: (value) => {
-          console.log("0-iujkkk",value)
-          return convertToUserTimezone(value,"GMT-04:00");
+       
+          console.log("currentZ", currentTz)
+          return convertToUserTimezone(value, currentTz);
         }
       },
       {
-        field: "end_date_display",
+        field: "end_date",
         label: "End Date",
-        
+        render: (value) => {
+    
+          return convertToUserTimezone(value, currentTz);
+        },
       },
       {
         field: "allowed_books",
@@ -120,10 +69,6 @@ export const getSubscriptionConfig = (externalData = {}) => {
         },
       },
     ],
-
-    /* -------------------------
-       FORM FIELDS
-    ------------------------- */
 
     formFields: [
       {
@@ -176,10 +121,6 @@ export const getSubscriptionConfig = (externalData = {}) => {
       },
     ],
 
-    /* -------------------------
-       VALIDATION RULES
-    ------------------------- */
-
     validationRules: (formData) => {
       const errors = [];
       if (!formData.plan_name?.trim()) {
@@ -201,10 +142,6 @@ export const getSubscriptionConfig = (externalData = {}) => {
       return errors;
     },
 
-    /* -------------------------
-       FEATURES
-    ------------------------- */
-
     features: {
       showBulkInsert: false,
       showImportExport: true,
@@ -216,28 +153,16 @@ export const getSubscriptionConfig = (externalData = {}) => {
       allowEdit: true,
     },
 
-    /* -------------------------
-       DETAILS VIEW
-    ------------------------- */
-
     details: [
       { key: "plan_name", label: "Plan Name" },
       { key: "allowed_books", label: "Allowed Books" },
-      { key: "start_date_display", label: "Start Date" },
-      { key: "end_date_display", label: "End Date" },
+      { key: "start_date", label: "Start Date" },
+      { key: "end_date", label: "End Date" },
       { key: "status", label: "Status" },
     ],
 
-    /* -------------------------
-       CUSTOM HANDLERS
-    ------------------------- */
-
     customHandlers: {
       beforeSave: (formData) => {
-        // Convert to UTC before API posting
-        formData.start_date = convertTZToUTC(formData.start_date, COMPANY_TIMEZONE);
-        formData.end_date = convertTZToUTC(formData.end_date, COMPANY_TIMEZONE);
-
         if (formData.plan_name === "") formData.plan_name = null;
         if (formData.allowed_books === "") formData.allowed_books = null;
 
@@ -252,27 +177,14 @@ export const getSubscriptionConfig = (externalData = {}) => {
       onDataLoad: (data) => {
         if (Array.isArray(data)) {
           data.forEach((item) => {
-            item.start_date_display = item.start_date
-              ? convertUTCToTZ(item.start_date, COMPANY_TIMEZONE)
-              : "";
-
-            item.end_date_display = item.end_date
-              ? convertUTCToTZ(item.end_date, COMPANY_TIMEZONE)
-              : "";
-
             if (item.hasOwnProperty("is_active")) {
               item.status = item.is_active ? "active" : "inactive";
             }
+
+            if (!item.plan_name) item.plan_name = "";
+            if (!item.allowed_books) item.allowed_books = "";
           });
         } else if (data && typeof data === "object") {
-          data.start_date_display = data.start_date
-            ? convertUTCToTZ(data.start_date, COMPANY_TIMEZONE)
-            : "";
-
-          data.end_date_display = data.end_date
-            ? convertUTCToTZ(data.end_date, COMPANY_TIMEZONE)
-            : "";
-
           if (data.hasOwnProperty("is_active")) {
             data.status = data.is_active ? "active" : "inactive";
           }

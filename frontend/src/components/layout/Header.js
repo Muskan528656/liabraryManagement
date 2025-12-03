@@ -387,6 +387,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
       if (response.data) {
         setCompany(response.data);
+        
         console.log("Company:", response.data);
       }
     } catch (error) {
