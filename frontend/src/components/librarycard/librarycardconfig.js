@@ -127,29 +127,29 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 if (row.subscription_name && row.subscription_name.trim() !== "") {
                     return row.subscription_name;
                 }
-                
+
                 // Check if subscription_id exists and is valid
                 const subId = row.subscription_id;
                 if (!subId || subId === "null" || subId === "undefined" || String(subId).trim() === "") {
                     return "";
                 }
-                
+
                 // Try to find subscription from external data
                 const subs = safeSubscriptions || [];
-                const subscription = subs.find(sub => 
+                const subscription = subs.find(sub =>
                     String(sub.id) === String(subId)
                 );
-                
+
                 if (subscription) {
                     return subscription.plan_name || subscription.name || "";
                 }
-                
+
                 // Return empty if nothing found
                 return "";
             }
         },
         {
-            field: "allowed_book",
+            field: "allowed_books",
             label: "Allowed Books",
             sortable: true,
 
@@ -283,7 +283,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 displayKey: "plan_name"
             },
             {
-                name: "allowed_book",
+                name: "allowed_books",
                 label: "Allowed Books (Override)",
                 type: "number",
                 required: false,
@@ -425,7 +425,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     if (data.subscription_name && data.subscription_name.trim() !== "") {
                         return data.subscription_name;
                     }
-                    
+
                     // Return empty for no subscription
                     return "";
                 }
@@ -467,17 +467,17 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
                         // Handle subscription mapping
                         const subId = item.subscription_id;
-                        
+
                         // Check if subscription_id is valid
-                        if (subId && subId !== null && subId !== undefined && 
-                            subId !== "null" && subId !== "undefined" && 
+                        if (subId && subId !== null && subId !== undefined &&
+                            subId !== "null" && subId !== "undefined" &&
                             String(subId).trim() !== "") {
-                            
+
                             // Try to find subscription
-                            const subscription = safeSubscriptions.find(sub => 
+                            const subscription = safeSubscriptions.find(sub =>
                                 String(sub.id) === String(subId)
                             );
-                            
+
                             // Set subscription_name if found
                             item.subscription_name = subscription?.plan_name || subscription?.name || "";
                         } else {
@@ -487,7 +487,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
                         if (!item.first_name) item.first_name = "-";
                         if (!item.last_name) item.last_name = "-";
-                        
+
                         // Add subscription_display field for table
                         item.subscription_display = item.subscription_name || "";
                     });
@@ -536,12 +536,12 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     data = data.map(item => {
                         // Handle subscription mapping
                         const subId = item.subscription_id;
-                        
+
                         if (subId && subId !== "null" && subId !== "undefined" && String(subId).trim() !== "") {
-                            const subscription = subs.find(sub => 
+                            const subscription = subs.find(sub =>
                                 String(sub.id) === String(subId)
                             );
-                            
+
                             if (subscription) {
                                 return {
                                     ...item,

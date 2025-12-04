@@ -91,7 +91,7 @@ const BulkPurchasePage = () => {
 
     const fetchStats = async () => {
         try {
-            const issuedApi = new DataApi("issued");
+            const issuedApi = new DataApi("bookissue");
             const issuedResponse = await issuedApi.fetchAll();
 
             const purchaseApi = new DataApi("purchase");
@@ -100,32 +100,63 @@ const BulkPurchasePage = () => {
             const bookApi = new DataApi("book");
             const bookResponse = await bookApi.fetchAll();
 
-            let issuedCount = 0;
+            let currentIssuedCount = 0;
+            let totalIssuedRecords = 0;
+            let returnedCount = 0;
             let purchasedCount = 0;
             let availableCount = 0;
+            let totalBooksCount = 0;
+
 
             if (issuedResponse.data && Array.isArray(issuedResponse.data)) {
-                issuedCount = issuedResponse.data.length;
+                totalIssuedRecords = issuedResponse.data.length;
+
+                currentIssuedCount = issuedResponse.data.filter(issue =>
+                    issue.status.toLowerCase() === "issued"
+                ).length;
+
+                returnedCount = issuedResponse.data.filter(issue =>
+                    issue.status.toLowerCase() === "returned"
+                ).length;
+
+                console.log(`Total Issue Records: ${totalIssuedRecords}`);
+                console.log(`Currently Issued: ${currentIssuedCount}`);
+                console.log(`Returned: ${returnedCount}`);
             }
+
 
             if (purchaseResponse.data && Array.isArray(purchaseResponse.data)) {
-                purchasedCount = purchaseResponse.data.reduce((sum, purchase) => sum + (purchase.quantity || 0), 0);
+                purchasedCount = purchaseResponse.data.reduce((sum, purchase) =>
+                    sum + (parseInt(purchase.quantity) || 0), 0);
+                console.log(`Total Purchased Quantity: ${purchasedCount}`);
             }
+
 
             if (bookResponse.data && Array.isArray(bookResponse.data)) {
-                availableCount = bookResponse.data.reduce((sum, book) => sum + (book.available_copies || 0), 0);
+                totalBooksCount = bookResponse.data.length;
+
+                availableCount = bookResponse.data.reduce((sum, book) =>
+                    sum + (parseInt(book.available_copies) || 0), 0);
+
+                console.log(`Total Books: ${totalBooksCount}`);
+                console.log(`Total Available Copies: ${availableCount}`);
             }
 
+
             setStats({
-                issued: issuedCount,
+                issued: currentIssuedCount,
                 purchased: purchasedCount,
-                available: availableCount
+                available: availableCount,
+
+                totalIssuedRecords: totalIssuedRecords,
+                returnedBooks: returnedCount,
+                totalBooks: totalBooksCount
             });
+
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
     };
-
     const handleFileChange = (file) => {
         if (file) {
             setSelectedFile(file);

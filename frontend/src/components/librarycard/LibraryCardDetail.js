@@ -530,7 +530,7 @@ const LibraryCardDetail = ({
         colSize: 3,
       },
       {
-        key: "allowed_book",
+        key: "allowed_books",
         label: "Allowed Book",
         type: "text",
         colSize: 3,

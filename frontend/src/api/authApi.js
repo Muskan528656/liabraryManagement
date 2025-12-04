@@ -18,7 +18,10 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
+      console.log("loginDataloginDataloginData",loginData)
       const result = await response.json();
+      console.log("result",result)
+      debugger;
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);
         sessionStorage.setItem("r-t", result.refreshToken);

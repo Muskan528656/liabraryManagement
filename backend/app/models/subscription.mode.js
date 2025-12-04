@@ -79,7 +79,7 @@ async function create(data, userId) {
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Subscription not found");
-
+console.log("datadata",data)
     const query = `
         UPDATE demo.subscriptions
         SET plan_name = $2,
@@ -87,7 +87,7 @@ async function updateById(id, data, userId) {
             end_date = $4,
             is_active = $5,
             renewal = $6,
-            "allowed books" = $7,
+            allowed books = $7,
             lastmodifiedbyid = $8,
             lastmodifieddate = NOW()
         WHERE id = $1
@@ -100,7 +100,7 @@ async function updateById(id, data, userId) {
         data.start_date?.trim() !== "" ? data.start_date : current.start_date,
         data.end_date?.trim() !== "" ? data.end_date : current.end_date,
         data.is_active ?? current.is_active,
-        data.renewal ?? current.renewal,           // 🔥 NEW FIELD
+        data.renewal ?? current.renewal,
         data.allowed_books ?? data["allowed books"] ?? current.allowed_books,
         userId || null
     ];

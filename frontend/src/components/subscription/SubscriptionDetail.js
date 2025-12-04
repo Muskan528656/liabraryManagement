@@ -5,7 +5,7 @@ const SubscriptionDetail = () => {
     const fields = {
         details: [
             { key: "plan_name", label: "Plan Name", type: "text" },
-            { key: "allowed_books", label: "Allowed Books", type: "number", disabled: true },
+            { key: "allowed_books", label: "Allowed Books", type: "number", },
             { key: "is_active", label: "Active", type: "toggle" },
             { key: "start_date", label: "Start Date", type: "date" },
             { key: "end_date", label: "End Date", type: "date" },

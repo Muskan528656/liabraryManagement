@@ -10,6 +10,8 @@ import {
   Spinner,
   ProgressBar,
   Badge,
+  Tooltip,
+  OverlayTrigger,
 } from "react-bootstrap";
 import Select from "react-select";
 import DataApi from "../../api/dataApi";
@@ -29,9 +31,9 @@ const BulkIssue = () => {
   const [selectedBooks, setSelectedBooks] = useState([]);
 
   const [durationDays, setDurationDays] = useState(7);
-  const [maxBooksPerCard, setMaxBooksPerCard] = useState(1);
-  const [memberAllowedBooks, setMemberAllowedBooks] = useState(1);
-  const [effectiveAllowedBooks, setEffectiveAllowedBooks] = useState(1);
+  const [systemMaxBooks, setSystemMaxBooks] = useState(6);
+  const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
+  const [totalAllowedBooks, setTotalAllowedBooks] = useState(6);
 
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -41,10 +43,11 @@ const BulkIssue = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [memberInfo, setMemberInfo] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     fetchAll();
-  }, []);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     if (issueDate) {
@@ -61,10 +64,10 @@ const BulkIssue = () => {
       loadMemberInfo(selectedCard.value);
     } else {
       setMemberInfo(null);
-      setMemberAllowedBooks(maxBooksPerCard);
-      setEffectiveAllowedBooks(maxBooksPerCard);
+      setMemberExtraAllowance(0);
+      setTotalAllowedBooks(systemMaxBooks);
     }
-  }, [selectedCard, maxBooksPerCard]);
+  }, [selectedCard, systemMaxBooks]);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -98,7 +101,7 @@ const BulkIssue = () => {
       const activeIssues = issuesList.filter(
         (issue) =>
           issue.status !== "returned" &&
-          (issue.return_date == null || issue.return_date === undefined)
+          (issue.return_date == null || issue.return_date === undefined || issue.return_date === "")
       );
       setIssuedBooks(activeIssues);
 
@@ -110,13 +113,13 @@ const BulkIssue = () => {
         const maxBooks =
           parseInt(settingsResp.max_books_per_card) ||
           parseInt(settingsResp?.data?.max_books_per_card) ||
-          1;
+          6;
         setDurationDays(dur);
-        setMaxBooksPerCard(maxBooks);
+        setSystemMaxBooks(maxBooks);
         setLibrarySettings(settingsResp);
-        // Initialize with system max
-        setMemberAllowedBooks(maxBooks);
-        setEffectiveAllowedBooks(maxBooks);
+        // Initialize
+        setMemberExtraAllowance(0);
+        setTotalAllowedBooks(maxBooks);
       }
     } catch (err) {
       console.error("Error fetching lists:", err);
@@ -128,24 +131,52 @@ const BulkIssue = () => {
 
   const loadMemberInfo = async (cardId) => {
     try {
-      // Fetch detailed member info including allowed_books
       const cardApi = new DataApi("librarycard");
       const memberResp = await cardApi.fetchById(cardId);
-      
+
       if (memberResp && memberResp.data) {
         const member = memberResp.data;
         setMemberInfo(member);
+
+        // Get member's extra allowance (allowed_books field)
+        let extraAllowance = 0; // Default to 0
+
+        if (member.allowed_books !== undefined && member.allowed_books !== null) {
+          extraAllowance = parseInt(member.allowed_books);
+        } else if (member.allowedBooks !== undefined && member.allowedBooks !== null) {
+          extraAllowance = parseInt(member.allowedBooks);
+        } else if (member.allowed !== undefined && member.allowed !== null) {
+          extraAllowance = parseInt(member.allowed);
+        }
+
+        // Ensure it's a valid number
+        if (isNaN(extraAllowance) || extraAllowance < 0) {
+          extraAllowance = 0;
+        }
+
+        setMemberExtraAllowance(extraAllowance);
+
+        // NEW CORRECT LOGIC:
+        // 1. System Max = fixed (from settings, e.g., 6)
+        // 2. Member's Extra Allowance = from member.allowed_books field (e.g., 4)
+        // 3. Total Allowed = System Max + Member's Extra Allowance (6 + 4 = 10)
+
+        const totalAllowed = systemMaxBooks + extraAllowance;
+
+        setTotalAllowedBooks(totalAllowed);
+
         
-        // Get member's allowed_books, default to system max if not set
-        const memberAllowed = parseInt(member.allowed_books) || maxBooksPerCard;
-        setMemberAllowedBooks(memberAllowed);
-        
-        // Effective allowed = min(member_allowed, system_max)
-        const effective = Math.min(memberAllowed, maxBooksPerCard);
-        setEffectiveAllowedBooks(effective);
+      } else {
+        console.warn("No member data found for card:", cardId);
+        // Fallback to system max only
+        setMemberExtraAllowance(0);
+        setTotalAllowedBooks(systemMaxBooks);
       }
     } catch (err) {
       console.error("Error loading member info:", err);
+      // Fallback to system max only
+      setMemberExtraAllowance(0);
+      setTotalAllowedBooks(systemMaxBooks);
     }
   };
 
@@ -165,21 +196,17 @@ const BulkIssue = () => {
     }
   };
 
-  // Function to find user by card
   const findUserByCardId = (cardId) => {
     if (!cardId) return null;
-    
-    // पहले card से user खोजें
+
     const card = libraryCards.find(c => c.id.toString() === cardId.toString());
     if (!card) return null;
-    
-    // Card में user_id या userId हो तो उससे user ढूंढें
+
     const userId = card.user_id || card.userId;
     if (userId) {
       return users.find(u => u.id.toString() === userId.toString());
     }
-    
-    // अगर card में user_name है तो उसका उपयोग करें
+
     if (card.user_name || card.student_name) {
       return {
         name: card.user_name || card.student_name,
@@ -187,55 +214,80 @@ const BulkIssue = () => {
         phone: card.phone || 'N/A'
       };
     }
-    
+
     return null;
   };
 
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
-      (i) =>
-        (i.card_id || i.cardId || i.library_card_id)?.toString() ===
-        cardId.toString()
+      (i) => {
+        const issCardId = i.card_id || i.cardId || i.library_card_id;
+        return issCardId?.toString() === cardId.toString();
+      }
     ).length;
+  };
+
+  const isBookIssuedToSelectedCard = (bookId) => {
+    if (!selectedCard) return false;
+
+    return issuedBooks.some(
+      (iss) => {
+        const issCardId = iss.card_id || iss.cardId || iss.library_card_id;
+        const issBookId = iss.book_id || iss.bookId;
+
+        return (
+          issCardId?.toString() === selectedCard.value.toString() &&
+          issBookId?.toString() === bookId.toString() &&
+          iss.status !== "returned" &&
+          (iss.return_date == null || iss.return_date === undefined || iss.return_date === "")
+        );
+      }
+    );
   };
 
   const availableForSelect = (option) => {
     const b = option.data;
-    
+
     // Check available copies
     if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0) {
       return {
         ...option,
         isDisabled: true,
-        label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Out of Stock)`
+        label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Out of Stock)`,
+        data: { ...b, isOutOfStock: true, issuedToCurrentMember: false }
       };
     }
 
     if (selectedCard) {
       // Check if already issued to this card
-      const alreadyIssued = issuedBooks.some(
-        (iss) =>
-          (
-            iss.card_id ||
-            iss.cardId ||
-            iss.library_card_id
-          )?.toString() === selectedCard.value.toString() &&
-          iss.book_id?.toString() === b.id.toString() &&
-          iss.status !== "returned" &&
-          (iss.return_date == null || iss.return_date === undefined)
-      );
-      
+      const alreadyIssued = isBookIssuedToSelectedCard(b.id);
+
       if (alreadyIssued) {
         return {
           ...option,
           isDisabled: true,
-          label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Already Issued)`
+          label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Already Issued)`,
+          data: { ...b, issuedToCurrentMember: true, isOutOfStock: false }
+        };
+      }
+
+      // Check if already selected in current selection
+      const alreadySelected = selectedBooks.some(sel => sel.value.toString() === b.id.toString());
+      if (alreadySelected) {
+        return {
+          ...option,
+          isDisabled: false,
+          label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Selected)`,
+          data: { ...b, alreadySelected: true, issuedToCurrentMember: false, isOutOfStock: false }
         };
       }
     }
 
-    return option;
+    return {
+      ...option,
+      data: { ...b, issuedToCurrentMember: false, alreadySelected: false, isOutOfStock: false }
+    };
   };
 
   const showSuccessToast = (message) => {
@@ -271,7 +323,7 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 2. Check for duplicate book selection in current transaction
+    // 2. Check for duplicate book selection
     const bookIds = selectedBooks.map(b => b.value);
     const uniqueBookIds = [...new Set(bookIds)];
     if (bookIds.length !== uniqueBookIds.length) {
@@ -282,13 +334,13 @@ const BulkIssue = () => {
     // 3. Get current issued count
     const issuedCount = computeIssuedCountForCard(selectedCard.value);
     const toIssueCount = selectedBooks.length;
-    
-    // 4. Check against effective allowed books (min of member_allowed and system_max)
-    if (issuedCount + toIssueCount > effectiveAllowedBooks) {
+
+    // 4. Check against total allowed books
+    if (issuedCount + toIssueCount > totalAllowedBooks) {
       showErrorToast(
-        `Maximum ${effectiveAllowedBooks} books allowed per card. ` +
+        `Maximum ${totalAllowedBooks} books allowed for this member. ` +
         `Already issued: ${issuedCount}, Trying to issue: ${toIssueCount}. ` +
-        `(Member limit: ${memberAllowedBooks}, System limit: ${maxBooksPerCard})`
+        `(System max: ${systemMaxBooks} + Extra allowance: ${memberExtraAllowance})`
       );
       return false;
     }
@@ -296,26 +348,15 @@ const BulkIssue = () => {
     // 5. Check for already issued books
     const alreadyIssuedBooks = [];
     selectedBooks.forEach(book => {
-      const isAlreadyIssued = issuedBooks.some(
-        (iss) =>
-          (
-            iss.card_id ||
-            iss.cardId ||
-            iss.library_card_id
-          )?.toString() === selectedCard.value.toString() &&
-          iss.book_id?.toString() === book.value.toString() &&
-          iss.status !== "returned" &&
-          (iss.return_date == null || iss.return_date === undefined)
-      );
-      if (isAlreadyIssued) {
+      if (isBookIssuedToSelectedCard(book.value)) {
         alreadyIssuedBooks.push(book.data.title);
       }
     });
 
     if (alreadyIssuedBooks.length > 0) {
-      showWarningToast(
+      showErrorToast(
         `Following books are already issued to this member: ${alreadyIssuedBooks.join(", ")}. ` +
-        `Please select other books.`
+        `Please remove them from selection.`
       );
       return false;
     }
@@ -337,7 +378,7 @@ const BulkIssue = () => {
     }
 
     // 7. Check if member is active
-    if (memberInfo && !memberInfo.is_active) {
+    if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;
     }
@@ -355,10 +396,10 @@ const BulkIssue = () => {
     try {
       const successBooks = [];
       const failedBooks = [];
-      const memberName = memberInfo ? 
-        `${memberInfo.first_name || ''} ${memberInfo.last_name || ''}`.trim() : 
+      const memberName = memberInfo ?
+        `${memberInfo.first_name || ''} ${memberInfo.last_name || ''}`.trim() :
         "Unknown Member";
-      
+
       for (const b of selectedBooks) {
         try {
           const body = {
@@ -377,7 +418,7 @@ const BulkIssue = () => {
           );
 
           const result = await response.json();
-          
+
           if (response.ok && result.success) {
             successBooks.push({
               title: b.data.title,
@@ -403,47 +444,51 @@ const BulkIssue = () => {
       if (successBooks.length > 0) {
         const successTitles = successBooks.map(b => b.title);
         const newIssuedCount = computeIssuedCountForCard(selectedCard.value) + successBooks.length;
-        const remaining = Math.max(0, effectiveAllowedBooks - newIssuedCount);
-        
+        const remaining = Math.max(0, totalAllowedBooks - newIssuedCount);
+
+        // Calculate system max remaining and extra remaining
+        const systemMaxUsed = Math.min(newIssuedCount, systemMaxBooks);
+        const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
+
+        const extraUsed = Math.max(0, newIssuedCount - systemMaxBooks);
+        const extraRemaining = Math.max(0, memberExtraAllowance - extraUsed);
+
+        let extraMessage = "";
+        if (memberExtraAllowance > 0) {
+          extraMessage = ` (System: ${systemMaxRemaining} remaining, Extra: ${extraRemaining} remaining)`;
+        }
+
         showSuccessToast(
           `Successfully issued ${successBooks.length} book(s) to ${memberName}: ` +
           `${successTitles.join(", ")}. ` +
-          `Remaining allowed: ${remaining}`
+          `Remaining allowed: ${remaining}${extraMessage}`
         );
       }
-      
+
       if (failedBooks.length > 0) {
         failedBooks.forEach(failed => {
           let errorMessage = `${failed.book}: ${failed.error}`;
-          
-          // Add details if available
+
           if (failed.details && typeof failed.details === 'object') {
             if (failed.details.currently_issued !== undefined && failed.details.member_allowed !== undefined) {
               errorMessage += ` (Issued: ${failed.details.currently_issued}, Allowed: ${failed.details.member_allowed})`;
             }
           }
-          
+
           showErrorToast(errorMessage);
         });
       }
 
       // Reset and refresh
       if (failedBooks.length === 0) {
-        // All successful - reset form
         setSelectedBooks([]);
-        setSelectedCard(null);
-        setSelectedUser(null);
-        setMemberInfo(null);
-        fetchAll();
+        setRefreshTrigger(prev => prev + 1);
       } else {
-        // Some failed - remove only successful books from selection
-        const remainingBooks = selectedBooks.filter(book => 
+        const remainingBooks = selectedBooks.filter(book =>
           !successBooks.some(success => success.title === book.data.title)
         );
         setSelectedBooks(remainingBooks);
-        
-        // Refresh data to get updated counts
-        fetchAll();
+        setRefreshTrigger(prev => prev + 1);
       }
 
     } catch (err) {
@@ -459,12 +504,20 @@ const BulkIssue = () => {
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
-  
-  // Calculate remaining books based on effective allowed (min of member_allowed and system_max)
+
+  // Calculate remaining books
   const remainingForCard = Math.max(
     0,
-    effectiveAllowedBooks - issuedCountForSelectedCard
+    totalAllowedBooks - issuedCountForSelectedCard
   );
+
+  // Calculate how many from system max are used/remaining
+  const systemMaxUsed = Math.min(issuedCountForSelectedCard, systemMaxBooks);
+  const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
+
+  // Calculate extra allowance used/remaining
+  const extraUsed = Math.max(0, issuedCountForSelectedCard - systemMaxBooks);
+  const extraRemaining = Math.max(0, memberExtraAllowance - extraUsed);
 
   const bookOptions = books.map((b) => ({
     value: b.id,
@@ -502,18 +555,39 @@ const BulkIssue = () => {
 
   const getMemberName = () => {
     if (!selectedCard) return "Unknown";
-    
+
     if (memberInfo) {
       return `${memberInfo.first_name || ''} ${memberInfo.last_name || ''}`.trim() ||
-             memberInfo.user_name ||
-             memberInfo.student_name ||
-             "Unknown Member";
+        memberInfo.user_name ||
+        memberInfo.student_name ||
+        "Unknown Member";
     }
-    
+
     const user = findUserByCardId(selectedCard.value);
-    return user ? (user.name || user.full_name || user.username) : 
-           (selectedCard.data.user_name || selectedCard.data.student_name || "Unknown User");
+    return user ? (user.name || user.full_name || user.username) :
+      (selectedCard.data.user_name || selectedCard.data.student_name || "Unknown User");
   };
+
+  // Tooltip for member limits
+  const limitsTooltip = (props) => (
+    <Tooltip id="limits-tooltip" {...props}>
+      <div className="text-start">
+        <strong>Limits Breakdown:</strong>
+        <div className="small">
+          <div>System Maximum: {systemMaxBooks}</div>
+          <div>Member's Extra Allowance: {memberExtraAllowance}</div>
+          {/* <div className="fw-bold">Total Allowed: {totalAllowedBooks}</div> */}
+          <hr className="my-1" />
+          <div>Currently Issued: {issuedCountForSelectedCard}</div>
+          <div>From System Max: {systemMaxUsed}/{systemMaxBooks}</div>
+          {memberExtraAllowance > 0 && (
+            <div>From Extra Allowance: {extraUsed}/{memberExtraAllowance}</div>
+          )}
+          <div className="fw-bold mt-1">Can Issue More: {remainingForCard}</div>
+        </div>
+      </div>
+    </Tooltip>
+  );
 
   return (
     <Container
@@ -581,7 +655,6 @@ const BulkIssue = () => {
                   </div>
                 ) : (
                   <>
-                    {/* User Details Section */}
                     <div className="text-center mb-3">
                       <div className="mb-2">
                         <i className="fa-solid fa-user-circle fa-2x text-primary"></i>
@@ -589,23 +662,15 @@ const BulkIssue = () => {
                       <h5 className="fw-bold mb-1">
                         {getMemberName()}
                       </h5>
-                      <div className="small text-muted">
-                        Card: {selectedCard.label}
-                        {(() => {
-                          const user = findUserByCardId(selectedCard.value);
-                          return user && user.email ? ` • ${user.email}` : '';
-                        })()}
-                      </div>
-                      
-                      {/* Member Status Badge */}
-                      {memberInfo && (
-                        <Badge 
-                          bg={memberInfo.is_active ? "success" : "danger"} 
-                          className="mt-2"
-                          pill
-                        >
-                          {memberInfo.is_active ? "Active" : "Inactive"}
-                        </Badge>
+
+                      {/* Debug info - only in development */}
+                      {process.env.NODE_ENV === 'development' && memberInfo && (
+                        <div className="mt-2 small text-muted">
+                          <div>System Max: {systemMaxBooks}</div>
+                          <div>Allowed Books : {memberExtraAllowance}</div>
+                          <div>Total Allowed: {totalAllowedBooks}</div>
+                          {/* <div>Formula: {systemMaxBooks} + {memberExtraAllowance} = {totalAllowedBooks}</div> */}
+                        </div>
                       )}
                     </div>
 
@@ -613,21 +678,19 @@ const BulkIssue = () => {
 
                     {/* Limits Information */}
                     <div className="mb-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="small text-muted">Issuing Limits</span>
-                        <Badge bg="info">
-                          Effective: {effectiveAllowedBooks}
-                        </Badge>
-                      </div>
-                      <div className="small text-muted mb-1">
-                        <div className="d-flex justify-content-between">
-                          <span>Member Limit:</span>
-                          <span>{memberAllowedBooks}</span>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <span>System Limit:</span>
-                          <span>{maxBooksPerCard}</span>
-                        </div>
+                      <div className="small text-muted">
+                        {memberExtraAllowance > 0 && (
+                          <div className="text-success fw-bold small mb-1">
+                            <i className="fa-solid fa-crown me-1"></i>
+                            This member gets {memberExtraAllowance} extra book(s) beyond system limit
+                          </div>
+                        )}
+                        {memberExtraAllowance === 0 && (
+                          <div className="text-info small mb-1">
+                            <i className="fa-solid fa-info-circle me-1"></i>
+                            This member gets standard system limit only
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -635,7 +698,7 @@ const BulkIssue = () => {
                     <Row className="g-2 mb-3">
                       <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
-                          <div className="small text-muted">Issued</div>
+                          <div className="small text-muted">Currently Issued</div>
                           <div className="h5 mb-0 fw-bold text-primary">
                             {issuedCountForSelectedCard}
                           </div>
@@ -643,15 +706,20 @@ const BulkIssue = () => {
                       </Col>
                       <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
-                          <div className="small text-muted">Allowed</div>
+                          <div className="small text-muted">Total Allowed</div>
                           <div className="h5 mb-0 fw-bold text-dark">
-                            {effectiveAllowedBooks}
+                            {totalAllowedBooks}
+                            {memberExtraAllowance > 0 && (
+                              <small className="text-success ms-1">
+
+                              </small>
+                            )}
                           </div>
                         </div>
                       </Col>
                       <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
-                          <div className="small text-muted">Remaining</div>
+                          <div className="small text-muted">Can Issue More</div>
                           <div className="h5 mb-0 fw-bold text-success">
                             {remainingForCard}
                           </div>
@@ -659,27 +727,70 @@ const BulkIssue = () => {
                       </Col>
                     </Row>
 
+                    {/* Detailed Usage Breakdown */}
+                    <div className="mb-3 p-3 bg-light rounded-3">
+                      <div className="small text-muted mb-2">Usage Breakdown:</div>
+                      <div className="d-flex justify-content-between mb-1">
+                        <span className="small">System Limit ({systemMaxBooks}):</span>
+                        <span className="small fw-bold">
+                          {systemMaxUsed}/{systemMaxBooks} books
+                        </span>
+                      </div>
+                      {memberExtraAllowance > 0 && (
+                        <div className="d-flex justify-content-between mb-1">
+                          <span className="small text-success">Extra Allowance ({memberExtraAllowance}):</span>
+                          <span className="small fw-bold text-success">
+                            {extraUsed}/{memberExtraAllowance} books
+                          </span>
+                        </div>
+                      )}
+                      <div className="d-flex justify-content-between mt-2 pt-2 border-top">
+                        <span className="small fw-bold">Total Used:</span>
+                        <span className="small fw-bold">
+                          {issuedCountForSelectedCard}/{totalAllowedBooks} books
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Progress Bar */}
                     <div className="text-start">
                       <div className="d-flex justify-content-between small mb-1">
-                        <span>Usage</span>
                         <span>
-                          {Math.round(
-                            (issuedCountForSelectedCard / effectiveAllowedBooks) * 100
+                          Overall Usage
+                          {memberExtraAllowance > 0 && (
+                            <span className="ms-1 text-success">
+                              ({systemMaxBooks} + {memberExtraAllowance})
+                            </span>
                           )}
-                          %
+                        </span>
+                        <span>
+                          {totalAllowedBooks > 0
+                            ? Math.round((issuedCountForSelectedCard / totalAllowedBooks) * 100)
+                            : 0}%
                         </span>
                       </div>
                       <ProgressBar
                         now={
-                          (issuedCountForSelectedCard / effectiveAllowedBooks) * 100
+                          totalAllowedBooks > 0
+                            ? (issuedCountForSelectedCard / totalAllowedBooks) * 100
+                            : 0
                         }
                         variant={
-                          remainingForCard === 0 ? "danger" : 
-                          remainingForCard <= 2 ? "warning" : "primary"
+                          remainingForCard === 0 ? "danger" :
+                            remainingForCard <= 2 ? "warning" : "primary"
                         }
-                        style={{ height: "8px", borderRadius: "10px" }}
+                        style={{ height: "10px", borderRadius: "10px" }}
                       />
+                      <div className="small text-muted mt-1">
+                        <div className="d-flex justify-content-between">
+                          <span>
+                            {issuedCountForSelectedCard} of {totalAllowedBooks} books
+                          </span>
+                          <span>
+                            {remainingForCard} books remaining
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Warning if member is inactive */}
@@ -720,37 +831,31 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        const invalid = v.find((sel) => {
-                          const b = sel.data;
-                          return issuedBooks.some(
-                            (iss) =>
-                              (
-                                iss.card_id ||
-                                iss.cardId ||
-                                iss.library_card_id
-                              )?.toString() === selectedCard.value.toString() &&
-                              iss.book_id?.toString() === b.id.toString() &&
-                              iss.status !== "returned"
-                          );
+                        // Filter out any books that are already issued to this member
+                        const filtered = v.filter((sel) => {
+                          return !isBookIssuedToSelectedCard(sel.value);
                         });
-                        if (invalid) {
+
+                        if (filtered.length !== v.length) {
                           showErrorToast(
-                            `Book '${invalid.data.title}' is already issued to this member.`
+                            "Some books are already issued to this member. They have been removed from selection."
                           );
-                          return;
                         }
+
+                        setSelectedBooks(filtered || []);
+                      } else {
+                        setSelectedBooks(v || []);
                       }
-                      setSelectedBooks(v || []);
                     }}
                     controlShouldRenderValue={false}
                     placeholder={
                       !selectedCard
                         ? "Select card first..."
                         : memberInfo && !memberInfo.is_active
-                        ? "Member is inactive"
-                        : selectedBooks.length >= remainingForCard
-                        ? "Limit Reached"
-                        : `Select up to ${remainingForCard - selectedBooks.length} more book(s)...`
+                          ? "Member is inactive"
+                          : selectedBooks.length >= remainingForCard
+                            ? `Limit Reached (${selectedBooks.length}/${totalAllowedBooks})`
+                            : `Select up to ${remainingForCard - selectedBooks.length} more book(s)... (${selectedBooks.length}/${totalAllowedBooks})`
                     }
                     isDisabled={
                       !selectedCard ||
@@ -759,11 +864,34 @@ const BulkIssue = () => {
                       selectedBooks.length >= remainingForCard
                     }
                     styles={customSelectStyles}
-                    formatOptionLabel={({ label, subLabel, isDisabled }) => (
+                    formatOptionLabel={({ label, subLabel, isDisabled, data }) => (
                       <div className="d-flex justify-content-between align-items-center">
-                        <span className={isDisabled ? "text-muted" : ""}>{label}</span>
-                        <Badge 
-                          bg={isDisabled ? "secondary" : "light"} 
+                        <div className="d-flex flex-column">
+                          <span className={isDisabled ? "text-muted" : ""}>
+                            {label}
+                            {isDisabled && data?.issuedToCurrentMember && (
+                              <i className="fa-solid fa-user-check ms-2 text-danger" title="Already issued to this member"></i>
+                            )}
+                            {isDisabled && data?.isOutOfStock && (
+                              <i className="fa-solid fa-box-open ms-2 text-warning" title="Out of stock"></i>
+                            )}
+                          </span>
+                          {isDisabled && data?.issuedToCurrentMember && (
+                            <small className="text-danger">
+                              <i className="fa-solid fa-ban me-1"></i>
+                              Already issued to this member
+                            </small>
+                          )}
+                          {isDisabled && data?.isOutOfStock && (
+                            <small className="text-warning">
+                              <i className="fa-solid fa-exclamation-circle me-1"></i>
+                              No copies available
+                            </small>
+                          )}
+                        </div>
+                        <Badge
+                          bg={isDisabled ? "secondary" :
+                            parseInt(data?.available_copies) > 0 ? "success" : "danger"}
                           text={isDisabled ? "white" : "dark"}
                         >
                           {subLabel}
@@ -771,41 +899,54 @@ const BulkIssue = () => {
                       </div>
                     )}
                   />
-                  
+
                   {/* Helper messages */}
                   {!selectedCard && (
                     <Form.Text className="text-danger">
+                      <i className="fa-solid fa-circle-info me-1"></i>
                       Please select a library card first.
                     </Form.Text>
                   )}
-                  
+
                   {selectedCard && memberInfo && !memberInfo.is_active && (
                     <Form.Text className="text-danger fw-bold">
                       <i className="fa-solid fa-circle-exclamation me-1"></i>
                       This member is inactive and cannot issue books.
                     </Form.Text>
                   )}
-                  
+
                   {selectedCard && memberInfo && memberInfo.is_active && selectedBooks.length >= remainingForCard && remainingForCard > 0 && (
                     <Form.Text className="text-warning fw-bold">
                       <i className="fa-solid fa-lock me-1"></i>
                       You have selected the maximum allowed books for this transaction.
                     </Form.Text>
                   )}
-                  
+
                   {selectedCard && remainingForCard === 0 && (
                     <Form.Text className="text-danger fw-bold">
                       <i className="fa-solid fa-ban me-1"></i>
                       This card has reached its issue limit.
                     </Form.Text>
                   )}
-                  
-                  {/* Show limits info */}
+
+                  {/* Show limits info
                   {selectedCard && remainingForCard > 0 && (
                     <Form.Text className="text-muted small">
                       <i className="fa-solid fa-info-circle me-1"></i>
-                      Member can issue {remainingForCard} more book(s). 
-                      (Member limit: {memberAllowedBooks}, System limit: {maxBooksPerCard})
+                      Member can issue {remainingForCard} more book(s).
+                      <OverlayTrigger placement="top" overlay={limitsTooltip}>
+                        <span className="ms-1 text-primary cursor-pointer">
+                          (Total allowed: {totalAllowedBooks})
+                        </span>
+                      </OverlayTrigger>
+                    </Form.Text>
+                  )} */}
+
+                  {/* Info about disabled books */}
+                  {selectedCard && (
+                    <Form.Text className="text-info small d-block mt-1">
+                      <i className="fa-solid fa-lightbulb me-1"></i>
+                      Already issued books are disabled. After successful issue, refresh the list to select them again.
                     </Form.Text>
                   )}
                 </div>
@@ -813,7 +954,7 @@ const BulkIssue = () => {
                 {/* SELECTED BOOKS GRID */}
                 <div className="mb-4">
                   <h6 className="fw-bold mb-3">
-                    Books to be Issued 
+                    Books to be Issued
                     {selectedBooks.length > 0 && ` (${selectedBooks.length})`}
                   </h6>
                   {selectedBooks.length === 0 ? (
@@ -941,7 +1082,7 @@ const BulkIssue = () => {
                         </>
                       )}
                     </Button>
-                    
+
                     {/* Summary info */}
                     {selectedBooks.length > 0 && selectedCard && (
                       <div className="mt-2 small text-center">
@@ -950,9 +1091,26 @@ const BulkIssue = () => {
                         </span>
                         <br />
                         <span className="text-muted">
-                          Will have {issuedCountForSelectedCard + selectedBooks.length} issued, 
-                          {remainingForCard - selectedBooks.length} remaining
+                          Will have {issuedCountForSelectedCard + selectedBooks.length} issued,
+                          {Math.max(0, remainingForCard - selectedBooks.length)} remaining
+                          <br />
+                          (Total allowed: {totalAllowedBooks})
+                          {memberExtraAllowance > 0 && (
+                            <span className="text-success">
+                              <br />
+                              <i className="fa-solid fa-calculator me-1"></i>
+                              {systemMaxBooks} (System) + {memberExtraAllowance} (Extra) = {totalAllowedBooks}
+                            </span>
+                          )}
                         </span>
+                      </div>
+                    )}
+
+                    {/* Info about refresh */}
+                    {selectedCard && (
+                      <div className="mt-2 small text-info text-center">
+                        <i className="fa-solid fa-rotate me-1"></i>
+                        List refreshes after successful issue
                       </div>
                     )}
                   </Col>
