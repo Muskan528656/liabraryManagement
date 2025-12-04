@@ -115,7 +115,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true
+            allowDelete: false
         },
 
 

@@ -15,6 +15,7 @@ import PubSub from "pubsub-js";
 import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -119,6 +120,7 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
+  onFieldChange = null,
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -141,7 +143,7 @@ const ModuleDetail = ({
   const nonEditableFields = useMemo(() => [
     'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
     'created_by', 'created_at', 'modified_by', 'modified_at',
-    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat'
+    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat' , 'allowed_books',
   ], []);
 
   const allFieldGroups = useMemo(() => {
@@ -486,18 +488,49 @@ const ModuleDetail = ({
   };
 
   const getSelectOptions = useCallback(
-    (field) => {
+    (field, currentData) => {
       if (!field || field.type !== "select" || !field.options) {
         return [];
       }
       if (Array.isArray(field.options)) {
         return field.options;
       }
-      return (
-        externalData?.[field.options] ||
-        lookupOptions?.[field.options] ||
-        []
-      );
+      let options = externalData?.[field.options] || lookupOptions?.[field.options] || [];
+
+      // Filter states based on selected country
+      if (field.options === 'states' && currentData?.country) {
+        options = options.filter(opt => opt.country === currentData.country);
+      }
+
+      // Filter cities based on selected country and state
+      if (field.options === 'cities') {
+        if (currentData?.country) {
+          options = options.filter(opt => opt.country === currentData.country);
+        }
+        if (currentData?.state) {
+          options = options.filter(opt => opt.state === currentData.state);
+        }
+      }
+      if (field.options === 'phonecode' && currentData?.country) {
+        options = options.filter(opt => opt.countryName === currentData.country);
+      }
+
+      if (field.options === 'countrycode' && currentData?.country) {
+        console.log("countrycode =", currentData.country);
+        options = options.filter(opt => opt.countryName === currentData.country);
+      }
+
+      if (field.options === 'currency' && currentData?.country) {
+        options = options.filter(opt => opt.countryName === currentData.country);
+      }
+
+      if (field.options === 'timezone' && currentData?.country) {
+        options = options.filter(opt => opt.countryName === currentData.country);
+      }
+
+      console.log("options ", options);
+
+      return options;
     },
     [externalData, lookupOptions]
   );
@@ -716,6 +749,11 @@ const ModuleDetail = ({
       }
 
       setTempData(updatedData);
+
+      // Call onFieldChange if provided
+      if (onFieldChange) {
+        onFieldChange(fieldKey, value, setTempData);
+      }
     }
   };
 
@@ -961,7 +999,7 @@ const ModuleDetail = ({
     }
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field);
+      const options = getSelectOptions(field, currentData);
       const rawValue = currentData ? currentData[field.key] : null;
       const currentValue = rawValue === undefined || rawValue === null ? "" : rawValue.toString();
 

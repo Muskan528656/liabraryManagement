@@ -1,33 +1,68 @@
-/**
- * Converts a date string to a specific timezone and formats it.
- * 
- * @param {string|Date} dateInput - The date (ISO string, Date object, etc.)
- * @param {string} timeZone - IANA Timezone string (e.g., "Asia/Kolkata", "UTC")
- * @returns {string} - Formatted string "YYYY-MM-DD HH:mm"
- */
+import { COUNTRY_TIMEZONE } from '../constants/COUNTRY_TIMEZONE.js';
+
+function normalizeDateInput(dateInput) {
+  if (!dateInput) return dateInput;
+  const test = new Date(dateInput);
+  if (!isNaN(test.getTime())) return dateInput;
+
+  const match = dateInput.match(/^(\d{2})-(\d{2})-(\d{2,4})(.*)$/);
+
+  if (match) {
+    let [_, dd, mm, yy, rest] = match;
+
+    if (yy.length === 2) {
+      const numYear = Number(yy);
+      yy = numYear < 50 ? `20${yy}` : `19${yy}`;
+    }
+
+    return `${yy}-${mm}-${dd}${rest}`;
+  }
+
+  return dateInput;
+}
+
+function resolveTimezone(timeZone) {
+  if (!timeZone || typeof timeZone !== 'string') {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+
+  if (timeZone.includes('/')) return timeZone;
+
+  const offsetMatch = timeZone.match(/^(GMT|UTC)([+-]\d{1,2}:\d{2})$/);
+
+  if (offsetMatch) {
+    const offset = offsetMatch[2]; // +05:30
+    const formattedOffset = `UTC${offset}`;
+
+    for (const country of COUNTRY_TIMEZONE) {
+      const timezone = country.timezones.find(tz => tz.gmtOffset === formattedOffset);
+      if (timezone) return timezone.zoneName;
+    }
+  }
+
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+
 export function convertToUserTimezone(dateInput, timeZone) {
-  // 1. Handle empty inputs immediately
+  console.log("dateInput =", dateInput);
+  console.log("timeZone =", timeZone);
+
   if (!dateInput) return "";
 
-  // 2. Normalize the Timezone
-  // If timeZone is empty or invalid, default to the user's browser/system timezone
-  let targetTimeZone = timeZone;
-  
-  if (!targetTimeZone || typeof targetTimeZone !== "string") {
-    targetTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  }
+  const normalizedDate = normalizeDateInput(dateInput);
+  console.log("normalizedDate =", normalizedDate);
 
-  // 3. Create a Date Object
-  const date = new Date(dateInput);
+  const date = new Date(normalizedDate);
 
-  // 4. Validate Date
   if (isNaN(date.getTime())) {
-    console.warn("Invalid Date detected:", dateInput);
-    return dateInput; // Return original string to avoid empty table cell
+    console.warn("❌ Invalid Date:", dateInput);
+    return dateInput;
   }
 
-  // 5. Format using Intl (Native Browser API)
-  // We use "en-CA" (Canadian English) because it naturally outputs "YYYY-MM-DD"
+  const targetTimeZone = resolveTimezone(timeZone);
+  console.log("Resolved TimeZone =", targetTimeZone);
+
   try {
     const formatter = new Intl.DateTimeFormat("en-CA", {
       year: "numeric",
@@ -35,21 +70,23 @@ export function convertToUserTimezone(dateInput, timeZone) {
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false, // Use 24-hour format (change to true for AM/PM)
-      timeZone: targetTimeZone, // conversion happens here magicallly
+      second: "2-digit",
+      hour12: false,
+      timeZone: targetTimeZone,
     });
 
-    // Format output: "2023-12-05, 14:30" -> cleanup comma -> "2023-12-05 14:30"
-    const formattedDate = formatter.format(date).replace(", ", " ");
-    return formattedDate;
+    return formatter.format(date).replace(", ", " ");
+  } catch (err) {
+    console.error(`❌ Invalid Timezone "${targetTimeZone}". Using system timezone.`);
 
-  } catch (error) {
-    console.error(`Timezone "${targetTimeZone}" is invalid. Falling back to System Time.`);
-    
-    // Fallback: Format using system timezone if the provided one was garbage
     return date.toLocaleString("en-CA", {
-       year: "numeric", month: "2-digit", day: "2-digit", 
-       hour: "2-digit", minute: "2-digit", hour12: false 
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
     }).replace(", ", " ");
   }
 }

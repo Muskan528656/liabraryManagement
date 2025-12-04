@@ -1,4 +1,4 @@
- 
+
 export const getBooksConfig = (externalData = {}, props = {}) => {
     const authors =
         props.authors ||
@@ -135,14 +135,14 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
         features: {
             showBulkInsert: true,
             showImportExport: true,
-            showDetailView: true,         // Detail view enable
-            showSearch: true,             // Search enable
-            showColumnVisibility: true,   // Column toggle enable
-            showCheckbox: true,           // Row selection enable
-            showActions: true,            // Action buttons enable
-            showAddButton: true,          // Add button enable
-            allowEdit: true,              // Edit permission
-            allowDelete: true,            // Delete permission
+            showDetailView: true,
+            showSearch: true,
+            showColumnVisibility: true,
+            showCheckbox: true,
+            showActions: true,
+            showAddButton: true,
+            allowEdit: true,
+            allowDelete: false,
         },
 
 

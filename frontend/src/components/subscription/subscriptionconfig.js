@@ -11,25 +11,20 @@ const statusBadge = (value) => (
   </span>
 );
 
-export const getSubscriptionConfig = (data, time_zone) => {
-  
-  
- 
-  const currentTz = time_zone;
-  console.log("currentTz", currentTz);
-  
-  
-  
+export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, timeZone) => {
+  console.log("Config Timezone:", timeZone);
+
   return {
     moduleName: "subscriptions",
     moduleLabel: "Subscription",
     apiEndpoint: "subscriptions",
+
     initialFormData: {
       renewal: "",
       plan_name: "",
       start_date: "",
       end_date: "",
-      allowed_books: "",
+      allowed_books: allowedBooks,
       status: "active",
     },
 
@@ -37,20 +32,19 @@ export const getSubscriptionConfig = (data, time_zone) => {
       { field: "plan_name", label: "Plan Name" },
       { field: "renewal", label: "Renewal" },
       {
-        field: "start_date",
+        // Changed to raw field 'start_date' so the renderer gets the ISO string
+        field: "start_date", 
         label: "Start Date",
         render: (value) => {
-       
-          console.log("currentZ", currentTz)
-          return convertToUserTimezone(value, currentTz);
+          return convertToUserTimezone(value, timeZone);
         }
       },
       {
+        // Changed to raw field 'end_date'
         field: "end_date",
         label: "End Date",
         render: (value) => {
-    
-          return convertToUserTimezone(value, currentTz);
+          return convertToUserTimezone(value, timeZone);
         },
       },
       {
@@ -84,6 +78,8 @@ export const getSubscriptionConfig = (data, time_zone) => {
         label: "Allowed Books",
         type: "number",
         min: 0,
+        defaultValue: allowedBooks,
+        disabled: true,
         placeholder: "Number of books allowed",
         colSize: 6,
       },
@@ -111,24 +107,19 @@ export const getSubscriptionConfig = (data, time_zone) => {
       {
         name: "status",
         label: "Status",
-        type: "select",
-        required: true,
+        type: "toggle",
         options: [
-          { value: "active", label: "Active" },
-          { value: "inactive", label: "Inactive" },
+          { value: true, label: "Active" },
+          { value: false, label: "Inactive" }
         ],
         colSize: 6,
-      },
+      }
     ],
 
     validationRules: (formData) => {
       const errors = [];
-      if (!formData.plan_name?.trim()) {
-        errors.push("Plan name is required");
-      }
-      if (!formData.start_date) {
-        errors.push("Start date is required");
-      }
+      if (!formData.plan_name?.trim()) errors.push("Plan name is required");
+      if (!formData.start_date) errors.push("Start date is required");
       if (
         formData.start_date &&
         formData.end_date &&
@@ -149,15 +140,15 @@ export const getSubscriptionConfig = (data, time_zone) => {
       showSearch: true,
       showColumnVisibility: true,
       showCheckbox: true,
-      allowDelete: true,
+      allowDelete: false,
       allowEdit: true,
     },
 
     details: [
       { key: "plan_name", label: "Plan Name" },
-      { key: "allowed_books", label: "Allowed Books" },
-      { key: "start_date", label: "Start Date" },
-      { key: "end_date", label: "End Date" },
+      { key: "allowed_books", label: "Allowed Books", disabled: true },
+      { key: "start_date_display", label: "Start Date" },
+      { key: "end_date_display", label: "End Date" },
       { key: "status", label: "Status" },
     ],
 
@@ -166,8 +157,8 @@ export const getSubscriptionConfig = (data, time_zone) => {
         if (formData.plan_name === "") formData.plan_name = null;
         if (formData.allowed_books === "") formData.allowed_books = null;
 
-        if (formData.status) {
-          formData.is_active = formData.status === "active";
+        if (formData.status !== undefined) {
+          formData.is_active = formData.status === "active" || formData.status === true;
           delete formData.status;
         }
 
@@ -175,22 +166,28 @@ export const getSubscriptionConfig = (data, time_zone) => {
       },
 
       onDataLoad: (data) => {
-        if (Array.isArray(data)) {
-          data.forEach((item) => {
-            if (item.hasOwnProperty("is_active")) {
-              item.status = item.is_active ? "active" : "inactive";
-            }
+        const processItem = (item) => {
+          
+          item.start_date_display = item.start_date
+            ? convertToUserTimezone(item.start_date, timeZone)
+            : "";
 
-            if (!item.plan_name) item.plan_name = "";
-            if (!item.allowed_books) item.allowed_books = "";
-          });
-        } else if (data && typeof data === "object") {
-          if (data.hasOwnProperty("is_active")) {
-            data.status = data.is_active ? "active" : "inactive";
+          item.end_date_display = item.end_date
+            ? convertToUserTimezone(item.end_date, timeZone)
+            : "";
+         console.log("start_date_display",convertToUserTimezone(item.start_date, timeZone))
+          if (item.hasOwnProperty("is_active")) {
+            item.status = item.is_active ? "active" : "inactive";
           }
-
-          if (!data.plan_name) data.plan_name = "";
-          if (!data.allowed_books) data.allowed_books = "";
+          
+          if (!item.plan_name) item.plan_name = "";
+          if (!item.allowed_books) item.allowed_books = "";
+        };
+        
+        if (Array.isArray(data)) {
+          data.forEach(processItem);
+        } else if (data && typeof data === "object") {
+          processItem(data);
         }
       },
     },

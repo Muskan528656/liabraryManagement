@@ -6,6 +6,7 @@ import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const BookSubmit = () => {
     const navigate = useNavigate();
@@ -33,14 +34,47 @@ const BookSubmit = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showScanModal, setShowScanModal] = useState(false);
     const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [timeZone, setTimeZone] = useState(null);
     const [scanMethod, setScanMethod] = useState("isbn");
     const recordsPerPage = 20;
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
+    function getCompanyIdFromToken() {
+        const token = sessionStorage.getItem("token");
+        if (!token) return null;
+
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.companyid || payload.companyid || null;
+    }
+
+    const fetchCompany = async () => {
+        try {
+            const companyid = getCompanyIdFromToken();
+    
+            if (!companyid) {
+            console.error("Company ID not found in token");
+            return;
+            }
+    
+            const companyApi = new DataApi("company");
+            const response = await companyApi.fetchById(companyid);
+    
+            if (response.data) {
+            setTimeZone(response.data.time_zone);
+            
+            // console.log("Company:", response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching company by ID:", error);
+        }
+        };
+    
+    
 
     useEffect(() => {
         fetchAllIssuedBooks();
+        fetchCompany();
     }, []);
 
 
@@ -112,9 +146,9 @@ const BookSubmit = () => {
             }
 
             if (e && (e.button === 2 || e.ctrlKey || e.metaKey)) {
-                window.open(`/user/${userId}`, '_blank');
+                window.open(`/librarycard/${userId}`, '_blank');
             } else {
-                navigate(`/user/${userId}`, {
+                navigate(`/librarycard/${userId}`, {
                     state: { userName: userName, ...issueData },
                 });
             }
@@ -618,7 +652,6 @@ const BookSubmit = () => {
             render: (value, record) => {
                 const userId = record.issued_to;
                 const displayName = `${record.first_name || ""} ${record.last_name || ""}`.trim() || "N/A";
-
                 if (userId) {
                     return (
                         <a
@@ -649,9 +682,7 @@ const BookSubmit = () => {
 
                 return displayName;
             }
-        }
-
-        ,
+        },
         {
             field: "card_number",
             label: "Card No",
@@ -661,20 +692,31 @@ const BookSubmit = () => {
             field: "issue_date",
             label: "Issue Date",
             width: 120,
-            render: (value) => formatDate(value)
+            render: (value) => {
+            return convertToUserTimezone(value, timeZone);
+            },
         },
         {
             field: "due_date",
             label: "Due Date",
             width: 120,
-            render: (value) => (
-                <span style={{
-                    color: new Date(value) < new Date() ? '#dc3545' : '#28a745',
-                    fontWeight: 'bold'
-                }}>
-                    {formatDate(value)}
+            render: (value) => {
+            if (!value) return "—";
+            const displayDate = convertToUserTimezone(value, timeZone);
+
+            const isOverdue = new Date(value) < new Date();
+
+            return (
+                <span
+                style={{
+                    color: isOverdue ? "#dc3545" : "#28a745",
+                    fontWeight: "bold",
+                }}
+                >
+                {displayDate}
                 </span>
-            )
+            );
+            },
         },
         {
             field: "actions",
@@ -761,14 +803,14 @@ const BookSubmit = () => {
                 if (userId) {
                     return (
                         <a
-                            href={`/user/${userId}`}
+                            href={`/librarycard/${userId}`}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 try {
                                     localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
                                 } catch (err) { }
-                                navigate(`/user/${userId}`, { state: record });
+                                navigate(`/librarycard/${userId}`, { state: record });
                             }}
                             onContextMenu={(e) => {
                                 e.preventDefault();
@@ -776,7 +818,7 @@ const BookSubmit = () => {
                                 try {
                                     localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
                                 } catch (err) { }
-                                window.open(`/user/${userId}`, '_blank');
+                                window.open(`/librarycard/${userId}`, '_blank');
                             }}
                             style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
                             onMouseEnter={(e) => {
@@ -798,7 +840,10 @@ const BookSubmit = () => {
             field: "submit_date",
             label: "Submit Date",
             width: 150,
-            render: (value) => formatDate(value)
+            // render: (value) => formatDate(value)
+            render: (value) => {
+              return  convertToUserTimezone(value, timeZone)
+            }
         },
         {
             field: "condition_after",

@@ -1,13 +1,4 @@
 export const getPermissionConfig = (modules = []) => {
-    /**
-     * modules = [{ id: "123", name: "User Management" }, ...]
-     * Ye array aap API se fetch karke pass kar sakte ho taaki module_id ko naam me convert kar sake
-     */
-
- 
- 
- 
- 
 
     return {
         moduleName: "permissions",
@@ -62,7 +53,7 @@ export const getPermissionConfig = (modules = []) => {
             {
                 field: "module_id",
                 label: "Module Name",
- 
+
             },
             {
                 field: "allow_view",
@@ -87,7 +78,7 @@ export const getPermissionConfig = (modules = []) => {
         ],
 
         details: [
- 
+
             { key: "role_name", label: "Role", type: "text" },
             { key: "allow_view", label: "Allow View", type: "toggle-view" },
             { key: "allow_create", label: "Allow Create", type: "toggle-view" },

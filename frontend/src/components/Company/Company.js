@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Container, Row, Col, Card, Form, Alert } from 'react-bootstrap';
 import DataApi from '../../api/dataApi';
 import PubSub from 'pubsub-js';
-import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
-import { TIME_ZONE } from "../../constants/TIME_ZONE"
-import { CURRENCY } from '../../constants/CURRENCY';
+import { Country, State, City } from 'country-state-city';
+import { COUNTRY_TIMEZONE } from '../../constants/COUNTRY_TIMEZONE';
 
 const Company = () => {
+
   const [Company, setCompany] = useState({
     name: "",
     tenantcode: "",
@@ -14,16 +14,14 @@ const Company = () => {
     isactive: false,
     systememail: "",
     adminemail: "",
-    phone_number: "",
     logourl: "",
     sidebarbgurl: "",
     sourceschema: "",
     city: "",
     street: "",
     pincode: "",
-    state: "",
-    country: "",
-    country_code: "",
+    state: "",     
+    country: "",    
     platform_name: "",
     platform_api_endpoint: "",
     is_external: false,
@@ -37,83 +35,68 @@ const Company = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
-  const [countryCodeList, setCountryCodeList] = useState([]);
-  const [countryCodeDisplay, setCountryCodeDisplay] = useState("");
-  const [combinedPhone, setCombinedPhone] = useState("");
+  const [availableTimeZones, setAvailableTimeZones] = useState([]);
+
+  const allCountries = useMemo(() => Country.getAllCountries(), []);
+
+  const currentCountryIso = useMemo(() => {
+    const countryName = isEditingCompany ? tempCompany.country : Company.country;
+    if (!countryName) return "";
+    return allCountries.find(c => c.name === countryName)?.isoCode || "";
+  }, [isEditingCompany, tempCompany.country, Company.country, allCountries]);
+
+  const availableStates = useMemo(() => {
+    if (!currentCountryIso) return [];
+    return State.getStatesOfCountry(currentCountryIso);
+  }, [currentCountryIso]);
+  const currentStateIso = useMemo(() => {
+    const stateName = isEditingCompany ? tempCompany.state : Company.state;
+    if (!stateName) return "";
+    return availableStates.find(s => s.name === stateName)?.isoCode || "";
+  }, [isEditingCompany, tempCompany.state, Company.state, availableStates]);
+
+  const availableCities = useMemo(() => {
+    if (!currentCountryIso || !currentStateIso) return [];
+    return City.getCitiesOfState(currentCountryIso, currentStateIso);
+  }, [currentCountryIso, currentStateIso]);
+
+
 
   useEffect(() => {
     fetchCompany();
-    fetchCountryCodesList();
   }, []);
+  useEffect(() => {
+    if (currentCountryIso) {
+      const countryData = COUNTRY_TIMEZONE.find((c) => c.countryCode === currentCountryIso);
+      setAvailableTimeZones(countryData ? countryData.timezones : []);
+    } else {
+      setAvailableTimeZones([]);
+    }
+  }, [currentCountryIso]);
+
+
 
   function getCompanyIdFromToken() {
     const token = sessionStorage.getItem("token");
     if (!token) return null;
-
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.companyid || payload.companyid || null;
   }
 
-  const fetchCountryCodesList = async () => {
-    try {
-      const companyApi = new DataApi("company");
-      // Call the picklist endpoint
-      const response = await companyApi.fetchAll("picklist/country-codes");
-      
-      if (response.data) {
-        setCountryCodeList(response.data);
-        console.log("Country Codes List:", response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching country codes list:", error);
-      // Fallback to local JSON if API fails
-      setCountryCodeList(
-        COUNTRY_CODES.map((item) => ({
-          id: item.country_code,
-          name: `${item.country} (${item.country_code})`,
-          country: item.country,
-          country_code: item.country_code
-        }))
-      );
-    }
-  };
-
   const fetchCompany = async () => {
     try {
       const companyid = getCompanyIdFromToken();
-
-      if (!companyid) {
-        console.error("Company ID not found in token");
-        return;
-      }
+      if (!companyid) return;
 
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
 
       if (response.data) {
         setCompany(response.data);
-        
-        // Set country code display from API response
-        if (response.data.country_code_display) {
-          setCountryCodeDisplay(response.data.country_code_display);
-        } else if (response.data.country_code) {
-          const countryInfo = COUNTRY_CODES.find(c => c.country_code === response.data.country_code);
-          if (countryInfo) {
-            setCountryCodeDisplay(`${countryInfo.country} (${countryInfo.country_code})`);
-          }
-        }
-        
-        // Set combined phone number (country code + phone)
-        if (response.data.country_code && response.data.phone_number) {
-          setCombinedPhone(`${response.data.country_code}${response.data.phone_number}`);
-        } else if (response.data.phone_number) {
-          setCombinedPhone(response.data.phone_number);
-        }
-        
-        console.log("Company:", response.data);
+        setTempCompany(response.data);
       }
     } catch (error) {
-      console.error("Error fetching company by ID:", error);
+      console.error("Error fetching company:", error);
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Error",
         message: "Failed to fetch company details",
@@ -121,16 +104,10 @@ const Company = () => {
     }
   };
 
-  const handleCompanyEdit = () => {
-    setIsEditingCompany(true);
-    setTempCompany({ ...Company });
-  };
-
   const handleCompanySave = async () => {
     try {
       const companyId = getCompanyIdFromToken();
       const companyApi = new DataApi("company");
-      console.log("tempCompanytempCompany", tempCompany)
       const response = await companyApi.update(tempCompany, companyId);
 
       if (response.data) {
@@ -143,12 +120,20 @@ const Company = () => {
           title: "Success",
           message: "Company details updated successfully!",
         });
+
+        // Publish event to update header and other components
+        PubSub.publish("COMPANY_UPDATED", { company: { ...tempCompany } });
       }
     } catch (error) {
       console.error("Error updating company:", error);
       setAlertMessage("Failed to update company details.");
       setShowAlert(true);
     }
+  };
+
+  const handleCompanyEdit = () => {
+    setIsEditingCompany(true);
+    setTempCompany({ ...Company });
   };
 
   const handleCompanyCancel = () => {
@@ -161,21 +146,39 @@ const Company = () => {
       ...prev,
       [key]: value,
     }));
+  };
+
+  const handleCountryUIChange = (e) => {
+    const selectedIso = e.target.value;
+    const countryObj = allCountries.find(c => c.isoCode === selectedIso);
     
-    // Update combined phone when country code or phone number changes
-    if (key === "country_code" || key === "phone_number") {
-      const countryCode = key === "country_code" ? value : tempCompany.country_code;
-      const phoneNumber = key === "phone_number" ? value : tempCompany.phone_number;
-      
-      if (countryCode && phoneNumber) {
-        setCombinedPhone(`${countryCode}${phoneNumber}`);
-      } else if (phoneNumber) {
-        setCombinedPhone(phoneNumber);
-      } else {
-        setCombinedPhone("");
-      }
+    if (countryObj) {
+      const tzData = COUNTRY_TIMEZONE.find(c => c.countryCode === selectedIso);
+
+      setTempCompany(prev => ({
+        ...prev,
+        country: countryObj.name, 
+        country_code: `+${countryObj.phonecode}`,
+        currency: tzData ? tzData.currency.code : countryObj.currency,
+        time_zone: tzData && tzData.timezones.length > 0 ? tzData.timezones[0].zoneName : "",
+        state: "", 
+        city: ""  
+      }));
     }
   };
+  const handleStateUIChange = (e) => {
+    const selectedStateIso = e.target.value; 
+    const stateObj = availableStates.find(s => s.isoCode === selectedStateIso);
+
+    if (stateObj) {
+      setTempCompany(prev => ({
+        ...prev,
+        state: stateObj.name, 
+        city: ""
+      }));
+    }
+  };
+
 
   return (
     <Container fluid className="py-4">
@@ -184,6 +187,7 @@ const Company = () => {
 
           <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
+              {/* --- HEADER --- */}
               <div
                 className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
@@ -197,33 +201,21 @@ const Company = () => {
                   Company
                 </h5>
                 {!isEditingCompany ? (
-                  <button
-
-                    className="custom-btn-primary"
-                    onClick={handleCompanyEdit}
-                  >
-                    <i className="fa-solid fa-edit me-2"></i>
-                    Edit Company
+                  <button className="custom-btn-primary" onClick={handleCompanyEdit}>
+                    <i className="fa-solid fa-edit me-2"></i> Edit Company
                   </button>
                 ) : (
                   <div className="d-flex gap-2">
-                    <button
-                      className="custom-btn-primary"
-                      onClick={handleCompanySave}
-                    >
-                      <i className="fa-solid fa-check me-2"></i>
-                      Save
+                    <button className="custom-btn-primary" onClick={handleCompanySave}>
+                      <i className="fa-solid fa-check me-2"></i> Save
                     </button>
-                    <button
-                      className="custom-btn-secondary "
-                      onClick={handleCompanyCancel}
-                    >
-                      <i className="fa-solid fa-times me-2"></i>
-                      Cancel
+                    <button className="custom-btn-secondary" onClick={handleCompanyCancel}>
+                      <i className="fa-solid fa-times me-2"></i> Cancel
                     </button>
                   </div>
                 )}
               </div>
+
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h6
@@ -247,15 +239,8 @@ const Company = () => {
                             type="text"
                             value={isEditingCompany ? tempCompany.name : Company.name}
                             readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("name", e.target.value)
-                            }
-                            style={{
-
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
+                            onChange={(e) => isEditingCompany && handleCompanyChange("name", e.target.value)}
+                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                           />
                         </Form.Group>
                       </Col>
@@ -264,21 +249,10 @@ const Company = () => {
                           <Form.Label className="fw-semibold">Tenant Code</Form.Label>
                           <Form.Control
                             type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.tenantcode
-                                : Company.tenantcode
-                            }
+                            value={isEditingCompany ? tempCompany.tenantcode : Company.tenantcode}
                             readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("tenantcode", e.target.value)
-                            }
-                            style={{
-
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
+                            onChange={(e) => isEditingCompany && handleCompanyChange("tenantcode", e.target.value)}
+                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                           />
                         </Form.Group>
                       </Col>
@@ -287,21 +261,10 @@ const Company = () => {
                           <Form.Label className="fw-semibold">User Licenses</Form.Label>
                           <Form.Control
                             type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.userlicenses
-                                : Company.userlicenses
-                            }
+                            value={isEditingCompany ? tempCompany.userlicenses : Company.userlicenses}
                             readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("userlicenses", e.target.value)
-                            }
-                            style={{
-
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
+                            onChange={(e) => isEditingCompany && handleCompanyChange("userlicenses", e.target.value)}
+                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                           />
                         </Form.Group>
                       </Col>
@@ -310,21 +273,10 @@ const Company = () => {
                           <Form.Label className="fw-semibold">System Email</Form.Label>
                           <Form.Control
                             type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.systememail
-                                : Company.systememail
-                            }
+                            value={isEditingCompany ? tempCompany.systememail : Company.systememail}
                             readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("systememail", e.target.value)
-                            }
-                            style={{
-
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
+                            onChange={(e) => isEditingCompany && handleCompanyChange("systememail", e.target.value)}
+                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                           />
                         </Form.Group>
                       </Col>
@@ -333,44 +285,10 @@ const Company = () => {
                           <Form.Label className="fw-semibold">Admin Email</Form.Label>
                           <Form.Control
                             type="text"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.adminemail
-                                : Company.adminemail
-                            }
+                            value={isEditingCompany ? tempCompany.adminemail : Company.adminemail}
                             readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("adminemail", e.target.value)
-                            }
-                            style={{
-
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Phone Number</Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter phone number (without country code)"
-                            value={
-                              isEditingCompany
-                                ? tempCompany.phone_number || ""
-                                : Company.phone_number || ""
-                            }
-                            readOnly={!isEditingCompany}
-                            onChange={(e) =>
-                              isEditingCompany &&
-                              handleCompanyChange("phone_number", e.target.value)
-                            }
-                            style={{
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
+                            onChange={(e) => isEditingCompany && handleCompanyChange("adminemail", e.target.value)}
+                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                           />
                         </Form.Group>
                       </Col>
@@ -379,7 +297,6 @@ const Company = () => {
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
-
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
                             cursor: isEditingCompany ? "pointer" : "not-allowed",
@@ -390,68 +307,18 @@ const Company = () => {
                             type="switch"
                             checked={tempCompany.isactive}
                             disabled={!isEditingCompany}
-                            onChange={(e) =>
-                              handleCompanyChange("isactive", e.target.checked)
-                            }
-                            style={{
-                              transform: "scale(1.1)",
-                            }}
+                            onChange={(e) => handleCompanyChange("isactive", e.target.checked)}
+                            style={{ transform: "scale(1.1)" }}
                           />
                         </div>
                       </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Currency</Form.Label>
-                          <Form.Select
-                            value={isEditingCompany ? tempCompany.currency : (Company.currency || "")}
-                            onChange={(e) =>
-                              isEditingCompany && handleCompanyChange("currency", e.target.value)
-                            }
-                            disabled={!isEditingCompany}
-                            style={{
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
-                          >
-                            <option value="">Select Currency</option>
-
-                            {CURRENCY.map((c) => (
-                              <option key={c.label} value={c.value}>
-                                {c.label} — {c.value}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Time Zone</Form.Label>
-                          <Form.Select
-                            value={isEditingCompany ? tempCompany.time_zone : (Company.time_zone || "")}
-                            onChange={(e) =>
-                              isEditingCompany && handleCompanyChange("time_zone", e.target.value)
-                            }
-                            disabled={!isEditingCompany}
-                            style={{
-                              pointerEvents: isEditingCompany ? "auto" : "none",
-                              opacity: isEditingCompany ? 1 : 0.9,
-                            }}
-                          >
-                            <option value="">Select TimeZone</option>
-
-                            {TIME_ZONE.map((c) => (
-                              <option key={c.label} value={c.value}>
-                                {c.label} — {c.value}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
+                     
                     </Row>
                   </Col>
-                  <Col md={3} >
+
+                  <Col md={3}>
                     <Form.Label className="fw-semibold">Company Logo</Form.Label>
-                    <div className="d-flex align-items-center justify-content-center ">
+                    <div className="d-flex align-items-center justify-content-center">
                       <div
                         className="border border-dashed d-flex align-items-center justify-content-center position-relative overflow-hidden"
                         style={{
@@ -476,9 +343,7 @@ const Company = () => {
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
-                          style={{
-                            objectFit: "cover",
-                          }}
+                          style={{ objectFit: "cover" }}
                         />
 
                         {isEditingCompany && (
@@ -506,7 +371,7 @@ const Company = () => {
                   </Col>
                 </Row>
               </Row>
-
+              
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h6
@@ -524,154 +389,155 @@ const Company = () => {
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Country</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={
-                          isEditingCompany ? tempCompany.country : Company.country
-                        }
-                        readOnly={!isEditingCompany}
-                        onChange={(e) =>
-                          isEditingCompany &&
-                          handleCompanyChange("country", e.target.value)
-                        }
-                        style={{
-
-                          pointerEvents: isEditingCompany ? "auto" : "none",
-                          opacity: isEditingCompany ? 1 : 0.9,
-                        }}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Country Code</Form.Label>
                       <Form.Select
-                        value={isEditingCompany ? tempCompany.country_code : (Company.country_code || "")}
-                        onChange={(e) =>
-                          isEditingCompany && handleCompanyChange("country_code", e.target.value)
-                        }
+                        value={currentCountryIso}
+                        onChange={handleCountryUIChange}
                         disabled={!isEditingCompany}
                         style={{
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
                         }}
                       >
-                        <option value="">Select Country Code</option>
-
-                        {COUNTRY_CODES.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.country_code} — {c.country}
+                        <option value="">Select Country</option>
+                        {COUNTRY_TIMEZONE.map((country) => (
+                          <option key={country.countryCode} value={country.countryCode}>
+                            {country.countryName}
                           </option>
                         ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">State</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={
-                          isEditingCompany ? tempCompany.state : Company.state
-                        }
-                        readOnly={!isEditingCompany}
-                        onChange={(e) =>
-                          isEditingCompany &&
-                          handleCompanyChange("state", e.target.value)
-                        }
+                      <Form.Select
+                        value={currentStateIso}
+                        onChange={handleStateUIChange}
+                        disabled={!isEditingCompany || !currentCountryIso}
                         style={{
-
                           pointerEvents: isEditingCompany ? "auto" : "none",
                           opacity: isEditingCompany ? 1 : 0.9,
+                        }}
+                      >
+                        <option value="">Select State</option>
+                        {availableStates.map((state) => (
+                          <option key={state.isoCode} value={state.isoCode}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">City</Form.Label>
+                      <Form.Select
+                        value={isEditingCompany ? tempCompany.city : Company.city}
+                        onChange={(e) => isEditingCompany && handleCompanyChange("city", e.target.value)}
+                        disabled={!isEditingCompany || !currentStateIso}
+                        style={{
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
+                        }}
+                      >
+                        <option value="">Select City</option>
+                        {availableCities.map((city) => (
+                          <option key={city.name} value={city.name}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+
+                   <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Currency</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={isEditingCompany ? tempCompany.currency : Company.currency}
+                            readOnly
+                            style={{ opacity: 0.9, backgroundColor: "#e9ecef" }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group className="mb-3">
+                          <Form.Label className="fw-semibold">Time Zone</Form.Label>
+                          <Form.Select
+                            value={isEditingCompany ? tempCompany.time_zone : Company.time_zone}
+                            onChange={(e) => handleCompanyChange("time_zone", e.target.value)}
+                            disabled={!isEditingCompany}
+                          >
+                            <option value="">Select Time Zone</option>
+                            {availableTimeZones.map((zone) => (
+                              <option key={zone.zoneName} value={zone.zoneName}>
+                                {zone.zoneName} {zone.gmtOffset}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Country Phone Code</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={isEditingCompany ? tempCompany.country_code : (Company.country_code || "")}
+                        readOnly
+                        style={{
+                          opacity: 0.9,
+                          backgroundColor: "#e9ecef"
                         }}
                       />
                     </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">City</Form.Label>
+                      <Form.Label className="fw-semibold">Street</Form.Label>
                       <Form.Control
                         type="text"
-                        value={isEditingCompany ? tempCompany.city : Company.city}
+                        value={isEditingCompany ? tempCompany.street : Company.street}
                         readOnly={!isEditingCompany}
-                        onChange={(e) =>
-                          isEditingCompany &&
-                          handleCompanyChange("city", e.target.value)
-                        }
-                        style={{
-
-                          pointerEvents: isEditingCompany ? "auto" : "none",
-                          opacity: isEditingCompany ? 1 : 0.9,
-                        }}
+                        onChange={(e) => isEditingCompany && handleCompanyChange("street", e.target.value)}
+                        style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                       />
                     </Form.Group>
                   </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Pincode</Form.Label>
                       <Form.Control
                         type="text"
-                        value={
-                          isEditingCompany ? tempCompany.pincode : Company.pincode
-                        }
+                        value={isEditingCompany ? tempCompany.pincode : Company.pincode}
                         readOnly={!isEditingCompany}
-                        onChange={(e) =>
-                          isEditingCompany &&
-                          handleCompanyChange("pincode", e.target.value)
-                        }
-                        style={{
-
-                          pointerEvents: isEditingCompany ? "auto" : "none",
-                          opacity: isEditingCompany ? 1 : 0.9,
-                        }}
+                        onChange={(e) => isEditingCompany && handleCompanyChange("pincode", e.target.value)}
+                        style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Country Code</Form.Label>
-                      {isEditingCompany ? (
-                        <Form.Select
-                          value={tempCompany.country_code || ""}
-                          onChange={(e) =>
-                            handleCompanyChange("country_code", e.target.value)
-                          }
-                          style={{
-                            pointerEvents: isEditingCompany ? "auto" : "none",
-                            opacity: isEditingCompany ? 1 : 0.9,
-                          }}
-                        >
-                          <option value="">Select Country Code</option>
-                          {COUNTRY_CODES.map((item) => (
-                            <option key={item.country_code} value={item.country_code}>
-                              {item.country} ({item.country_code})
-                            </option>
-                          ))}
-                        </Form.Select>
-                      ) : (
-                        <Form.Control
-                          type="text"
-                          value={
-                            Company.country_code
-                              ? `${COUNTRY_CODES.find(c => c.country_code === Company.country_code)?.country} (${Company.country_code})` || Company.country_code
-                              : ""
-                          }
-                          readOnly
-                          style={{
-                            pointerEvents: "none",
-                            opacity: 0.9,
-                          }}
-                        />
-                      )}
-                    </Form.Group>
-                  </Col>
-                 
+
                 </Row>
               </Row>
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+      {showAlert && (
+        <Alert
+          variant={alertMessage.includes("success") ? "success" : "danger"}
+          onClose={() => setShowAlert(false)}
+          dismissible
+          className="position-fixed top-0 end-0 m-3"
+        >
+          {alertMessage}
+        </Alert>
+      )}
     </Container>
   );
 };

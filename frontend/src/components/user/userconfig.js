@@ -2,25 +2,18 @@ import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 export const getUserConfig = (externalData = {}, props = {}) => {
- 
     let userRoles = [];
-
- 
     if (externalData && externalData.userRoles) {
         userRoles = externalData.userRoles;
     }
- 
     else if (props && props.userRoles) {
         userRoles = props.userRoles;
     }
- 
     else if (externalData && externalData["user-role"]) {
         userRoles = externalData["user-role"];
     }
 
     console.log("Extracted userRoles in getUserConfig:", userRoles);
-
- 
     let companies = [];
     if (externalData && externalData.companies) {
         companies = externalData.companies;
@@ -29,12 +22,8 @@ export const getUserConfig = (externalData = {}, props = {}) => {
     } else if (externalData && externalData["company"]) {
         companies = externalData["company"];
     }
-
- 
     let defaultCountryCode = "+91";
-
     console.log("Companies array in getUserConfig:", companies);
-
     if (Array.isArray(companies) && companies.length > 0) {
         const companyWithCountryCode = companies.find(c => c && c.country_code);
         console.log("Company with country code:", companyWithCountryCode);
@@ -55,12 +44,10 @@ export const getUserConfig = (externalData = {}, props = {}) => {
             console.log("Final defaultCountryCode:", defaultCountryCode);
         }
     }
-
     return {
         moduleName: "user",
         moduleLabel: "User Management",
         apiEndpoint: "user",
-
         columns: [
             { field: "firstname", label: "First Name" },
             { field: "lastname", label: "Last Name" },
@@ -78,7 +65,7 @@ export const getUserConfig = (externalData = {}, props = {}) => {
                 field: "userrole",
                 label: "Role",
                 render: (value, record, extData) => {
- 
+
                     const roles = extData?.userRoles || userRoles || [];
                     console.log("Available roles for render:", roles);
                     console.log("Looking for role with id:", value);
@@ -107,7 +94,6 @@ export const getUserConfig = (externalData = {}, props = {}) => {
                 }
             }
         ],
-
         initialFormData: {
             firstname: "",
             lastname: "",
@@ -117,7 +103,6 @@ export const getUserConfig = (externalData = {}, props = {}) => {
             userrole: "",
             isactive: true
         },
-
         formFields: [
             {
                 name: "firstname",
@@ -187,7 +172,6 @@ export const getUserConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
             }
         ],
-
         detailConfig: {
             title: "firstname",
             subtitle: "email",
@@ -280,7 +264,7 @@ export const getUserConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true,
+            allowDelete: false,
         },
 
         transformSubmitData: (formData, isEdit) => {

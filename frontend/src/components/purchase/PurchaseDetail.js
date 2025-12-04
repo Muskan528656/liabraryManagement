@@ -1,9 +1,41 @@
 import React, { useState, useEffect } from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const PurchaseDetail = () => {
   const [externalData, setExternalData] = useState({ vendors: [], books: [] });
+  const [timeZone, setTimeZone] = useState(null);
+
+   function getCompanyIdFromToken() {
+        const token = sessionStorage.getItem("token");
+        if (!token) return null;
+    
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.companyid || payload.companyid || null;
+      }
+    
+      const fetchCompany = async () => {
+        try {
+          const companyid = getCompanyIdFromToken();
+    
+          if (!companyid) {
+            console.error("Company ID not found in token");
+            return;
+          }
+    
+          const companyApi = new DataApi("company");
+          const response = await companyApi.fetchById(companyid);
+    
+          if (response.data) {
+            setTimeZone(response.data.time_zone);
+            
+            // console.log("Company:", response.data);
+          }
+        } catch (error) {
+          console.error("Error fetching company by ID:", error);
+        }
+      };
 
   useEffect(() => {
     const fetchExternalData = async () => {
@@ -28,6 +60,7 @@ const PurchaseDetail = () => {
     };
 
     fetchExternalData();
+    fetchCompany();
   }, []);
 
   const fields = {
@@ -53,7 +86,11 @@ const PurchaseDetail = () => {
       { key: "quantity", label: "Quantity", type: "number" },
       { key: "unit_price", label: "Unit Price", type: "number" },
       { key: "total_amount", label: "Total Amount", type: "number" },
-      { key: "purchase_date", label: "Purchase Date", type: "date" },
+      { key: "purchase_date", label: "Purchase Date", type: "date",
+        render: (value) =>{
+          return convertToUserTimezone(value, timeZone)
+        }
+       },
       { key: "notes", label: "Notes", type: "textarea" },
     ],
     other: [

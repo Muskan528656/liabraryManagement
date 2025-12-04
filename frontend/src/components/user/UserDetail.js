@@ -31,7 +31,7 @@ const UserDetail = () => {
         console.log("Fetched userRoles:", userRoles);
         console.log("Fetched companies:", companies);
 
- 
+
         let defaultCountryCode = "+91";
         if (Array.isArray(companies) && companies.length > 0) {
           const company = companies.find((c) => c.country_code);
@@ -67,19 +67,19 @@ const UserDetail = () => {
     fetchExternalData();
   }, []);
 
- 
+
   const countryCodeOptions = COUNTRY_CODES.map((country) => ({
     value: country.country_code,
     label: `${country.country_code} - ${country.country}`,
   }));
 
- 
+
   const userRoleOptions = externalData.userRoles.map((role) => ({
     value: role.id,
     label: role.role_name,
   }));
 
- 
+
   const companyOptions = externalData.companies.map((company) => ({
     value: company.id,
     label: company.name,
@@ -97,8 +97,8 @@ const UserDetail = () => {
       {
         key: "country_code",
         label: "Country Code",
-        type: "select", // Changed from "text" to "select"
-        options: countryCodeOptions, // Added options
+        type: "select",
+        options: countryCodeOptions,
         render: (value) => {
           const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
           const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
@@ -109,9 +109,17 @@ const UserDetail = () => {
       {
         key: "companyid",
         label: "Company",
-        type: "select", // Changed from "text" to "select"
-        options: companyOptions, // Added options
-        render: (value) => {
+        type: "select",
+        options: companyOptions,
+        displayKey: "company_name", // यह add करें
+        render: (value, data) => {
+
+          const companyName = data.company_name || 
+                             data.company?.name || 
+                             data.companyid_name;
+          if (companyName) return companyName;
+          
+
           const company = externalData.companies.find((c) => c.id === value);
           return company ? company.name : value || 'N/A';
         },
@@ -119,9 +127,17 @@ const UserDetail = () => {
       {
         key: "userrole",
         label: "User Role",
-        type: "select", // Changed from "text" to "select"
-        options: userRoleOptions, // Added options
-        render: (value) => {
+        type: "select",
+        options: userRoleOptions,
+        displayKey: "role_name", // यह add करें - यही main fix है
+        render: (value, data) => {
+
+          const roleName = data.role_name || 
+                          data.userrole_name || 
+                          data.user_role_name;
+          if (roleName) return roleName;
+          
+
           const role = externalData.userRoles.find((r) => r.id === value);
           return role ? role.role_name : value || 'N/A';
         },

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+// We import this, though for input fields we often need raw YYYY-MM-DD
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import {
   Container,
   Card,
@@ -6,7 +8,6 @@ import {
   Col,
   Button,
   Form,
-  Alert,
   Spinner,
   ProgressBar,
   Badge,
@@ -29,29 +30,100 @@ const BulkIssue = () => {
   const [durationDays, setDurationDays] = useState(7);
   const [maxBooksPerCard, setMaxBooksPerCard] = useState(1);
 
-  const [issueDate, setIssueDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  // Initialize with empty string, will populate once TZ is known
+  const [issueDate, setIssueDate] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [timeZone, setTimeZone] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
- 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  // --- TIMEZONE HELPERS ---
+
+  /**
+   * Returns "YYYY-MM-DD" for the current moment in the specific timezone.
+   * This ensures that if it's Dec 4th in India but Dec 3rd in New York,
+   * the input field shows Dec 4th.
+   */
+  const getCurrentDateInTimezone = (tz) => {
+    try {
+      // 'en-CA' format is YYYY-MM-DD
+      const safeTz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: safeTz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+    } catch (e) {
+      console.warn("Error calculating timezone date", e);
+      return new Date().toISOString().split("T")[0]; // Fallback to UTC
+    }
+  };
+
+  function getCompanyIdFromToken() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.companyid || payload.companyid || null;
+  }
+
+  const fetchCompany = async () => {
+    try {
+      const companyid = getCompanyIdFromToken();
+      if (!companyid) return;
+
+      const companyApi = new DataApi("company");
+      const response = await companyApi.fetchById(companyid);
+      console.log("response ", response)
+
+      if (response.data) {
+        const companyTz = response.data.time_zone || response.data.timezone;
+        console.log("companyTz" , companyTz);
+        setTimeZone(companyTz);
+
+        const companyToday = getCurrentDateInTimezone(companyTz);
+        setIssueDate(companyToday);
+      }
+    } catch (error) {
+      console.error("Error fetching company by ID:", error);
+      // Fallback if API fails
+      setIssueDate(getCurrentDateInTimezone(null));
+    }
+  };
+
+  // --- EFFECTS ---
 
   useEffect(() => {
+    // If issueDate hasn't been set yet (waiting for company API), don't set default
+    if (!issueDate) {
+      // Optional: Set a temporary browser-based date if you don't want to wait
+      // setIssueDate(new Date().toISOString().split("T")[0]);
+    }
+    fetchAll();
+    fetchCompany();
+  }, []);
+
+  // Update Due Date whenever Issue Date or Duration changes
+  useEffect(() => {
     if (issueDate) {
-      const duration = durationDays || 15;
-      const d = new Date(issueDate);
-      d.setDate(d.getDate() + duration);
-      setDueDate(d.toISOString().split("T")[0]);
+      const duration = parseInt(durationDays) || 7;
+      
+      // Safe Date Addition: Parse YYYY-MM-DD, add days, format back
+      const resultDate = new Date(issueDate);
+      resultDate.setDate(resultDate.getDate() + duration);
+      
+      // Format back to YYYY-MM-DD for the input
+      // We use ISO slice here because Date arithmetic on YYYY-MM-DD strings 
+      // is usually treated as UTC midnight, which is safe for this operation.
+      const resultString = resultDate.toISOString().split("T")[0];
+      
+      setDueDate(resultString);
     }
   }, [issueDate, durationDays]);
 
- 
+  // --- API CALLS ---
+
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -70,14 +142,13 @@ const BulkIssue = () => {
           settingsRespTry(settingsApi),
         ]);
 
- 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const issuesList = normalize(issuesResp);
 
       setBooks(booksList);
       setLibraryCards(
-        cardsList.filter((c) => c.is_active === true || c.is_active === "true")
+        cardsList.filter((c) => String(c.is_active) === "true" || c.is_active === true)
       );
 
       const activeIssues = issuesList.filter(
@@ -122,7 +193,8 @@ const BulkIssue = () => {
     }
   };
 
- 
+  // --- LOGIC ---
+
   const computeIssuedCountForCard = (cardId) => {
     if (!cardId) return 0;
     return issuedBooks.filter(
@@ -140,14 +212,10 @@ const BulkIssue = () => {
     if (selectedCard) {
       const alreadyIssued = issuedBooks.some(
         (iss) =>
-          (
-            iss.card_id ||
-            iss.cardId ||
-            iss.library_card_id
-          )?.toString() === selectedCard.value.toString() &&
+          (iss.card_id || iss.cardId || iss.library_card_id)?.toString() ===
+            selectedCard.value.toString() &&
           iss.book_id?.toString() === b.id.toString() &&
-          iss.status !== "returned" &&
-          (iss.return_date == null || iss.return_date === undefined)
+          iss.status !== "returned"
       );
       if (alreadyIssued) return false;
     }
@@ -214,7 +282,6 @@ const BulkIssue = () => {
     }
   };
 
- 
   const issuedCountForSelectedCard = selectedCard
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
@@ -223,7 +290,6 @@ const BulkIssue = () => {
     (parseInt(maxBooksPerCard) || 1) - issuedCountForSelectedCard
   );
 
- 
   const bookOptions = books.map((b) => ({
     value: b.id,
     label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
@@ -238,7 +304,6 @@ const BulkIssue = () => {
     data: c,
   }));
 
- 
   const customSelectStyles = {
     control: (base) => ({
       ...base,
@@ -257,20 +322,14 @@ const BulkIssue = () => {
     }),
   };
 
+  console.log("timeZone",timeZone)
+
   return (
     <Container
       fluid
       className="p-4"
       style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}
     >
-      {/* Header Section */}
-      {/* <div className="mb-4">
-        <h3 className="fw-bold text-dark mb-1">Bulk Books Issue Process... </h3>
-        <p className="text-muted">
-          Streamline the book issuing process for library members.
-        </p>
-      </div> */}
-
       {loading ? (
         <div
           className="d-flex justify-content-center align-items-center"
@@ -427,7 +486,6 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
- 
                         const invalid = v.find((sel) => {
                           const b = sel.data;
                           return issuedBooks.some(
@@ -451,7 +509,6 @@ const BulkIssue = () => {
                       }
                       setSelectedBooks(v || []);
                     }}
- 
                     controlShouldRenderValue={false}
                     placeholder={
                       !selectedCard
@@ -462,13 +519,6 @@ const BulkIssue = () => {
                             remainingForCard - selectedBooks.length
                           } more book(s)...`
                     }
-                    /* 
-                       UPDATED LOGIC HERE:
-                       Disable if:
-                       1. No card is selected OR
-                       2. The card has 0 remaining slots initially OR
-                       3. The user has ALREADY selected enough books to fill the slots
-                    */
                     isDisabled={
                       !selectedCard ||
                       remainingForCard === 0 ||
@@ -489,14 +539,12 @@ const BulkIssue = () => {
                       Please select a library card first.
                     </Form.Text>
                   )}
-                  {/* Show specific message when selection limit is hit */}
                   {selectedCard &&
                     selectedBooks.length >= remainingForCard &&
                     remainingForCard > 0 && (
                       <Form.Text className="text-warning fw-bold">
                         <i className="fa-solid fa-lock me-1"></i>
-                        You have selected the maximum allowed books for this
-                        transaction.
+                        You have selected the maximum allowed books.
                       </Form.Text>
                     )}
                   {selectedCard && remainingForCard === 0 && (
@@ -506,7 +554,7 @@ const BulkIssue = () => {
                   )}
                 </div>
 
-                {/* SELECTED BOOKS GRID (Cards Below) */}
+                {/* SELECTED BOOKS GRID */}
                 <div className="mb-4">
                   <h6 className="fw-bold mb-3">Books to be Issued</h6>
                   {selectedBooks.length === 0 ? (
@@ -580,6 +628,11 @@ const BulkIssue = () => {
                       value={issueDate}
                       onChange={(e) => setIssueDate(e.target.value)}
                     />
+                    {timeZone && (
+                      <Form.Text className="text-muted small">
+                        Zone: {timeZone}
+                      </Form.Text>
+                    )}
                   </Col>
                   <Col md={4}>
                     <Form.Label className="fw-bold small text-muted text-uppercase">

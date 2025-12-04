@@ -16,6 +16,7 @@ import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 import ResizableTable from "../common/ResizableTable";
 import BulkIssue from "./BulkIssue";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 const BookIssue = () => {
   const navigate = useNavigate();
   const [selectedBook, setSelectedBook] = useState(null);
@@ -37,14 +38,48 @@ const BookIssue = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
   const [durationDays, setDurationDays] = useState(7);
+  const [timeZone, setTimeZone] = useState(null);
+
   const bookInputRef = useRef(null);
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
 
+
+   function getCompanyIdFromToken() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.companyid || payload.companyid || null;
+  }
+
+  const fetchCompany = async () => {
+    try {
+      const companyid = getCompanyIdFromToken();
+
+      if (!companyid) {
+        console.error("Company ID not found in token");
+        return;
+      }
+
+      const companyApi = new DataApi("company");
+      const response = await companyApi.fetchById(companyid);
+
+      if (response.data) {
+        setTimeZone(response.data.time_zone);
+        
+      }
+    } catch (error) {
+      console.error("Error fetching company by ID:", error);
+    }
+  };
+
+
   useEffect(() => {
     fetchIssuedBooks();
     fetchLibrarySettings();
+    fetchCompany();
  
     setTimeout(() => {
       const bookSelect = bookInputRef.current?.querySelector("input");
@@ -425,42 +460,64 @@ const BookIssue = () => {
       field: "issue_date",
       label: "Issue Date",
       width: 120,
-      render: (value) => formatDate(value),
+      // render: (value) => formatDate(value),
+      render: (value) => {
+        // console.log(" timeZone", timeZone);
+        return convertToUserTimezone(value, timeZone)
+      }
     },
     {
       field: "due_date",
       label: "Submission Date",
       width: 180,
       render: (value, record) => {
-        const daysRemaining = getDaysRemaining(value);
-        const isOverdue = daysRemaining !== null && daysRemaining < 0;
-        const isDueSoon =
-          daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3;
+        // 1. Safety Check
+        if (!value) return "—";
+
+        // 2. Format the date for Display (Visual) using the dynamic timezone
+        const displayDate = convertToUserTimezone(value, timeZone);
+
+        // 3. Logic: Calculate Days Remaining
+        // We create Date objects and reset time to midnight to compare "Calendar Days"
+        const dueObj = new Date(value);
+        const nowObj = new Date();
+        
+        // Reset time to ensure accurate "Day" difference
+        dueObj.setHours(0, 0, 0, 0);
+        nowObj.setHours(0, 0, 0, 0);
+
+        // Difference in milliseconds
+        const diffTime = dueObj - nowObj;
+        // Convert to days
+        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const isOverdue = daysRemaining < 0;
+        const isDueSoon = daysRemaining >= 0 && daysRemaining <= 3;
 
         return (
           <div>
-            <div>{formatDate(value)}</div>
-            {daysRemaining !== null && (
-              <div className="small mt-1">
-                {isOverdue ? (
-                  <Badge bg="danger">
-                    Overdue by {Math.abs(daysRemaining)} day
-                    {Math.abs(daysRemaining) !== 1 ? "s" : ""}
-                  </Badge>
-                ) : isDueSoon ? (
-                  <Badge bg="warning" text="dark">
-                    {daysRemaining === 0
-                      ? "Due Today"
-                      : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
-                      } left`}
-                  </Badge>
-                ) : (
-                  <Badge bg="success">
-                    {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
-                  </Badge>
-                )}
-              </div>
-            )}
+            {/* Display the Timezone-adjusted date string */}
+            <div style={{ fontWeight: 500 }}>{displayDate}</div>
+            
+            <div className="small mt-1">
+              {isOverdue ? (
+                <Badge bg="danger">
+                  Overdue by {Math.abs(daysRemaining)} day
+                  {Math.abs(daysRemaining) !== 1 ? "s" : ""}
+                </Badge>
+              ) : isDueSoon ? (
+                <Badge bg="warning" text="dark">
+                  {daysRemaining === 0
+                    ? "Due Today"
+                    : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
+                    } left`}
+                </Badge>
+              ) : (
+                <Badge bg="success">
+                  {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
+                </Badge>
+              )}
+            </div>
           </div>
         );
       },

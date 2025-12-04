@@ -144,7 +144,7 @@ async function updateById(id, companyData, userId) {
       companyData.has_wallet ?? currentCompany.has_wallet,
       companyData.currency ?? currentCompany.currency,
       companyData.country_code ?? currentCompany.country_code,
-      companyData.time_zone ?? currentCompany.time_zone
+      companyData.time_zone ?? currentCompany.time_zone,
     ];
 
     const result = await sql.query(query, values);

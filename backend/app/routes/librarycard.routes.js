@@ -1,5 +1,4 @@
 
-
 /**
  * Handles all incoming request for /api/librarycard endpoint
  * DB table: demo.library_members

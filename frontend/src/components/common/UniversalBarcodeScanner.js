@@ -425,7 +425,7 @@ const UniversalBarcodeScanner = () => {
         };
 
         try {
-
+            console.log("isbn->>>", isbn)
             const openLibraryUrl = `https://openlibrary.org/isbn/${isbn}.json`;
             console.log("Trying Open Library API:", openLibraryUrl);
 
@@ -436,8 +436,6 @@ const UniversalBarcodeScanner = () => {
                 console.log("Open Library response:", data);
 
                 bookData.title = data.title || "";
-
-
                 if (data.authors && data.authors.length > 0) {
                     try {
                         const authorPromises = data.authors.slice(0, 3).map(async (author) => {

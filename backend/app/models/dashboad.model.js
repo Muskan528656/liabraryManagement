@@ -1,4 +1,3 @@
-
 /**
  * @author      Aabid
  * @date        Nov, 2025
@@ -10,22 +9,27 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-
 const getDashboardStats = async () => {
   try {
-    console.log('bookCountResult ');
+    console.log("bookCountResult ");
     const stats = {};
- 
+
     const bookCountResult = await sql.query(`SELECT COUNT(*) FROM demo.books`);
     stats.total_books = bookCountResult.rows[0].count;
-    const booksubmission = await sql.query(`SELECT COUNT(*) FROM demo.book_submissions`);
+    const booksubmission = await sql.query(
+      `SELECT COUNT(*) FROM demo.book_submissions`
+    );
     stats.total_submission = booksubmission.rows[0].count;
-    const issuedBooksResult = await sql.query(`SELECT COUNT(*) FROM demo.book_issues WHERE status = 'issued'`);
+    const issuedBooksResult = await sql.query(
+      `SELECT COUNT(*) FROM demo.book_issues WHERE status = 'issued'`
+    );
     stats.issued_books = issuedBooksResult.rows[0].count;
 
-    const dailyActivityResult = await sql.query(`SELECT COUNT(*) AS dailyActivity FROM demo.books WHERE DATE(createddate) = CURRENT_DATE`);
+    const dailyActivityResult = await sql.query(
+      `SELECT COUNT(*) AS dailyActivity FROM demo.books WHERE DATE(createddate) = CURRENT_DATE`
+    );
     stats.dailyActivity = dailyActivityResult.rows[0].dailyActivity;
- 
+
     const booksByCategoryResult = await sql.query(`    
         SELECT 
             c.name AS category,
@@ -37,8 +41,6 @@ const getDashboardStats = async () => {
         ORDER BY month, category;
     `);
     stats.booksByCategory = booksByCategoryResult.rows;
-
- 
 
     const recentIssuedResult = await sql.query(`    
         SELECT 
@@ -57,8 +59,6 @@ const getDashboardStats = async () => {
     `);
     stats.recentIssued = recentIssuedResult.rows;
 
-
-
     const monthlyTrendResult = await sql.query(`    
         SELECT TO_CHAR(createddate, 'YYYY-MM') AS month, COUNT(*) AS bookCount
         FROM demo.books
@@ -66,21 +66,8 @@ const getDashboardStats = async () => {
         ORDER BY month;
     `);
     stats.monthlyTrend = monthlyTrendResult.rows;
-    
-
 
     stats.available_books = stats.total_books - stats.issued_books;
-
-    // give total library cards
-    const totalCardsResult = await sql.query(`SELECT COUNT(*) FROM demo.id_cards`);
-    stats.total_cards = totalCardsResult.rows[0].count;
-
-    //give me totalavailabe copies per books
-    const totalAvailableCopiesResult = await sql.query(`SELECT title, available_copies FROM demo.books`);
-    // console.log('totalAvailableCopiesResult', totalAvailableCopiesResult);
-    
-    stats.total_available_copies = totalAvailableCopiesResult.rows;
-
     return stats;
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -88,27 +75,11 @@ const getDashboardStats = async () => {
   }
 };
 
- 
-const getOtherMetrics = async () => {
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-};
+const getOtherMetrics = async () => {};
 
-
-  
- 
 const fetchAll = async () => {
-    try {
-        const result = await sql.query(`         
+  try {
+    const result = await sql.query(`         
                 SELECT 
                     bi.*,
                     
@@ -142,16 +113,16 @@ const fetchAll = async () => {
                 WHERE bi.return_date IS NULL
                 AND bi.due_date BETWEEN NOW() AND (NOW() + INTERVAL '14 days');
             `);
-        return result.rows;
-    } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        throw error;
-    }
+    return result.rows;
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    throw error;
+  }
 };
 
 module.exports = {
-        init,
-    getDashboardStats,
-    getOtherMetrics,
-    fetchAll,
+  init,
+  getDashboardStats,
+  getOtherMetrics,  
+  fetchAll,
 };
