@@ -38,24 +38,24 @@ const ResizableTable = ({
         if (currentPage === 1) {
             return safeData.slice(0, Math.min(visibleRows, safeData.length));
         } else {
- 
+
             return data.slice(startRecord, endRecord);
         }
     }, [safeData, startRecord, endRecord, visibleRows, currentPage]);
 
- 
+
     useEffect(() => {
         isResizingRef.current = isResizing;
     }, [isResizing]);
 
- 
+
     useEffect(() => {
         if (currentPage !== 1 || loading) return;
 
- 
+
         setVisibleRows(20);
 
- 
+
         if (observerRef.current) {
             observerRef.current.disconnect();
         }
@@ -64,7 +64,7 @@ const ResizableTable = ({
             (entries) => {
                 if (entries[0].isIntersecting && visibleRows < safeData.length && !isLoadingMore) {
                     setIsLoadingMore(true);
- 
+
                     setTimeout(() => {
                         setVisibleRows((prev) => Math.min(prev + 20, safeData.length));
                         setIsLoadingMore(false);
@@ -85,7 +85,7 @@ const ResizableTable = ({
         };
     }, [safeData.length, visibleRows, currentPage, loading, isLoadingMore]);
 
- 
+
     const handleSelectAll = (e) => {
         if (e.target.checked) {
             const allIds = paginatedData.map(record => record.id).filter(Boolean);
@@ -120,7 +120,7 @@ const ResizableTable = ({
         return selectedCount > 0 && selectedCount < paginatedIds.length;
     }, [paginatedData, selectedItems]);
 
- 
+
     const calculateTotalWidth = () => {
         let total = 0;
         if (showCheckbox) {
@@ -139,7 +139,7 @@ const ResizableTable = ({
         return total;
     };
 
- 
+
     const handleMouseDown = (e, columnIndex) => {
         e.preventDefault();
         e.stopPropagation();
@@ -178,7 +178,7 @@ const ResizableTable = ({
         document.addEventListener("mouseup", handleMouseUp);
     };
 
- 
+
     const renderPaginationItems = () => {
         const items = [];
         const maxVisiblePages = 5;
@@ -190,7 +190,7 @@ const ResizableTable = ({
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
 
- 
+
         if (startPage > 1) {
             items.push(
                 <Pagination.Item key={1} onClick={() => onPageChange(1)}>
@@ -202,7 +202,7 @@ const ResizableTable = ({
             }
         }
 
- 
+
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
@@ -215,7 +215,7 @@ const ResizableTable = ({
             );
         }
 
- 
+
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 items.push(<Pagination.Ellipsis key="end-ellipsis" />);
@@ -263,9 +263,9 @@ const ResizableTable = ({
                     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                     width: "100%",
                     maxWidth: "100%",
- 
- 
- 
+
+
+
                     position: "relative",
                     display: "block",
                     isolation: "isolate",
@@ -298,8 +298,8 @@ const ResizableTable = ({
                                             fontWeight: "600",
                                             color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
- 
- 
+
+
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -340,8 +340,8 @@ const ResizableTable = ({
                                             color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
- 
- 
+
+
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -384,8 +384,8 @@ const ResizableTable = ({
                                                 color: "var(--primary-color)",
                                                 borderBottom: "2px solid #e9d5ff",
                                                 padding: "12px 8px",
- 
- 
+
+
                                                 letterSpacing: "0.5px"
                                             }}
                                         >
@@ -419,8 +419,8 @@ const ResizableTable = ({
                                             color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
- 
- 
+
+
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -452,7 +452,7 @@ const ResizableTable = ({
                                         }
                                         className="text-center py-5 text-muted"
                                         style={{
- 
+
                                             color: "#6c757d"
                                         }}
                                     >
@@ -527,27 +527,27 @@ const ResizableTable = ({
                                                     : (
                                                         <div className="d-flex gap-2 justify-content-center">
                                                             <button
- 
- 
+
+
                                                                 className="custom-btn-edit"
- 
- 
- 
- 
- 
+
+
+
+
+
                                                                 title="Edit"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-edit"></i>
                                                             </button>
                                                             <button
- 
- 
+
+
                                                                 className="custom-btn-delete"
- 
- 
- 
- 
- 
+
+
+
+
+
                                                                 title="Delete"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-trash"></i>

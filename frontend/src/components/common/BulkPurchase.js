@@ -91,7 +91,7 @@ const BulkPurchasePage = () => {
 
     const fetchStats = async () => {
         try {
-            const issuedApi = new DataApi("issued");
+            const issuedApi = new DataApi("bookissue");
             const issuedResponse = await issuedApi.fetchAll();
 
             const purchaseApi = new DataApi("purchase");
@@ -100,32 +100,63 @@ const BulkPurchasePage = () => {
             const bookApi = new DataApi("book");
             const bookResponse = await bookApi.fetchAll();
 
-            let issuedCount = 0;
+            let currentIssuedCount = 0;
+            let totalIssuedRecords = 0;
+            let returnedCount = 0;
             let purchasedCount = 0;
             let availableCount = 0;
+            let totalBooksCount = 0;
+
 
             if (issuedResponse.data && Array.isArray(issuedResponse.data)) {
-                issuedCount = issuedResponse.data.length;
+                totalIssuedRecords = issuedResponse.data.length;
+
+                currentIssuedCount = issuedResponse.data.filter(issue =>
+                    issue.status.toLowerCase() === "issued"
+                ).length;
+
+                returnedCount = issuedResponse.data.filter(issue =>
+                    issue.status.toLowerCase() === "returned"
+                ).length;
+
+                console.log(`Total Issue Records: ${totalIssuedRecords}`);
+                console.log(`Currently Issued: ${currentIssuedCount}`);
+                console.log(`Returned: ${returnedCount}`);
             }
+
 
             if (purchaseResponse.data && Array.isArray(purchaseResponse.data)) {
-                purchasedCount = purchaseResponse.data.reduce((sum, purchase) => sum + (purchase.quantity || 0), 0);
+                purchasedCount = purchaseResponse.data.reduce((sum, purchase) =>
+                    sum + (parseInt(purchase.quantity) || 0), 0);
+                console.log(`Total Purchased Quantity: ${purchasedCount}`);
             }
+
 
             if (bookResponse.data && Array.isArray(bookResponse.data)) {
-                availableCount = bookResponse.data.reduce((sum, book) => sum + (book.available_copies || 0), 0);
+                totalBooksCount = bookResponse.data.length;
+
+                availableCount = bookResponse.data.reduce((sum, book) =>
+                    sum + (parseInt(book.available_copies) || 0), 0);
+
+                console.log(`Total Books: ${totalBooksCount}`);
+                console.log(`Total Available Copies: ${availableCount}`);
             }
 
+
             setStats({
-                issued: issuedCount,
+                issued: currentIssuedCount,
                 purchased: purchasedCount,
-                available: availableCount
+                available: availableCount,
+
+                totalIssuedRecords: totalIssuedRecords,
+                returnedBooks: returnedCount,
+                totalBooks: totalBooksCount
             });
+
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
     };
-
     const handleFileChange = (file) => {
         if (file) {
             setSelectedFile(file);
@@ -916,7 +947,6 @@ const BulkPurchasePage = () => {
                                             menu: (base) => ({
                                                 ...base,
                                                 zIndex: 9999,
-                                                position: 'absolute'
                                             }),
                                             menuPortal: (base) => ({
                                                 ...base,
@@ -924,6 +954,7 @@ const BulkPurchasePage = () => {
                                             })
                                         }}
                                         menuPortalTarget={document.body}
+                                        menuShouldScrollIntoView={false}
                                     />
                                 </Form.Group>
                             </Col>
@@ -967,10 +998,8 @@ const BulkPurchasePage = () => {
                 {/* Table Header with Add Button */}
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h6 className="mb-0">
-
                         Purchase Items ({multiInsertRows.length})
                     </h6>
-
                 </div>
 
                 {/* Table with Horizontal and Vertical Scroll - FIXED */}
@@ -978,9 +1007,16 @@ const BulkPurchasePage = () => {
                     maxHeight: 'calc(100vh - 400px)',
                     overflow: 'auto',
                     backgroundColor: 'white',
-                    width: '100%'
+                    width: '100%',
+                    position: 'relative',
+                    zIndex: 1
                 }}>
-                    <div style={{ minWidth: '1200px', width: '100%' }}>
+                    <div style={{
+                        minWidth: '1200px',
+                        width: '100%',
+                        position: 'relative',
+                        zIndex: 1
+                    }}>
                         <Table bordered hover className="mb-0" style={{ width: '100%', tableLayout: 'fixed' }}>
                             <thead style={{
                                 position: 'sticky',
@@ -1055,8 +1091,14 @@ const BulkPurchasePage = () => {
                                                             menu: (base) => ({
                                                                 ...base,
                                                                 zIndex: 9999,
+                                                            }),
+                                                            menuPortal: (base) => ({
+                                                                ...base,
+                                                                zIndex: 9999
                                                             })
                                                         }}
+                                                        menuPortalTarget={document.body}
+                                                        menuShouldScrollIntoView={false}
                                                     />
                                                 </div>
                                                 <Button
@@ -1095,8 +1137,14 @@ const BulkPurchasePage = () => {
                                                             menu: (base) => ({
                                                                 ...base,
                                                                 zIndex: 9999,
+                                                            }),
+                                                            menuPortal: (base) => ({
+                                                                ...base,
+                                                                zIndex: 9999
                                                             })
                                                         }}
+                                                        menuPortalTarget={document.body}
+                                                        menuShouldScrollIntoView={false}
                                                     />
                                                 </div>
                                                 <Button
@@ -1347,27 +1395,7 @@ const BulkPurchasePage = () => {
             }}>
                 {/* Header with Stats Cards on Right Side */}
                 <Row className="mb-4">
-
-                    {/* <div className="text-end">
-                        <Badge bg="light" text="dark" className="px-3 py-2 border">
-                            <i className="fa-solid fa-table me-2"></i>
-                            {multiInsertRows.length} Items
-                        </Badge>
-                    </div>
-                    <Col lg={8}>
-                        <div className="mb-3">
-                            <h4 className="fw-bold text-dark mb-1">
-                                <i className="fa-solid fa-cart-plus me-2 text-primary"></i>
-                                Bulk Purchase Entry
-                            </h4>
-                            <p className="text-muted mb-0">
-                                Add multiple book purchases in one go. Start by selecting a vendor or importing from file.
-                            </p>
-                        </div>
-                    </Col> */}
-
                     {/* Stats Cards on Right Side - Horizontal */}
-
                 </Row>
 
                 {/* Improved Styled Tabs */}
@@ -1395,7 +1423,6 @@ const BulkPurchasePage = () => {
                             eventKey="import"
                             title={
                                 <div className="d-flex align-items-center px-3 py-2">
-
                                     Import File
                                 </div>
                             }
@@ -1445,30 +1472,9 @@ const BulkPurchasePage = () => {
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
                                                 placeholder="Enter contact person name"
                                                 required
-
                                             />
                                         </Form.Group>
                                     </Col>
-
-                                    {/* <Col md={4}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Country Code <span className="text-danger">*</span></Form.Label>
-                                            <Form.Select
-                                                name="country_code"
-                                                value={vendorFormData.country_code || defaultCountryCode}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, country_code: e.target.value })}
-                                                required
-                                                 
-                                            >
-                                                <option value="">Select Code</option>
-                                                {COUNTRY_CODES.map((country, index) => (
-                                                    <option key={index} value={country.country_code}>
-                                                        {country.country_code} - {country.country}
-                                                    </option>
-                                                ))}
-                                            </Form.Select>
-                                        </Form.Group>
-                                    </Col> */}
 
                                     <Col md={4}>
                                         <Form.Group className="mb-3">
@@ -1479,7 +1485,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.phone}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
                                                 placeholder="Enter phone number"
-
                                             />
                                             {vendorFormData.phone && !/^[0-9+\-\s()]{10,15}$/.test(vendorFormData.phone) && (
                                                 <small className="text-danger">Please enter a valid phone number</small>
@@ -1496,7 +1501,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.email}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
                                                 placeholder="Enter email address"
-
                                             />
                                             {vendorFormData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vendorFormData.email) && (
                                                 <small className="text-danger">Please enter a valid email</small>
@@ -1523,7 +1527,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.company_name}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, company_name: e.target.value })}
                                                 placeholder="Enter company name"
-
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1537,7 +1540,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.gst_number}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, gst_number: e.target.value })}
                                                 placeholder="Enter GST number"
-
                                                 maxLength={15}
                                             />
                                             {vendorFormData.gst_number && vendorFormData.gst_number.length !== 15 && (
@@ -1555,7 +1557,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.pan_number}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, pan_number: e.target.value.toUpperCase() })}
                                                 placeholder="Enter PAN number (e.g., ABCDE1234F)"
-
                                                 maxLength={10}
                                             />
                                             {vendorFormData.pan_number && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(vendorFormData.pan_number) && (
@@ -1574,7 +1575,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.address}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, address: e.target.value })}
                                                 placeholder="Enter address"
-
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1588,57 +1588,9 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.country || "India"}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, country: e.target.value })}
                                                 placeholder="Enter country"
-
                                             />
                                         </Form.Group>
                                     </Col>
-
-                                    {/* <Col md={4}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>State</Form.Label>
-                                            <Form.Select
-                                                name="state"
-                                                value={vendorFormData.state}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, state: e.target.value, city: "" })}
-                                                style={{ border: "2px solid #c084fc", borderRadius: "8px" }}
-                                            >
-                                                <option value="">Select State</option>
-                                                {states.map(state => (
-                                                    <option key={state.value} value={state.value}>
-                                                        {state.label}
-                                                    </option>
-                                                ))}
-                                            </Form.Select>
-                                        </Form.Group>
-                                    </Col>
-
-                                    <Col md={4}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>City</Form.Label>
-                                            <select
-                                                className="form-control"
-                                                name="city"
-                                                value={vendorFormData.city || ''}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, city: e.target.value })}
-                                                disabled={!vendorFormData.state}
-                                                style={{
-                                                    border: "2px solid #c084fc",
-                                                    borderRadius: "8px",
-                                                    opacity: vendorFormData.state ? 1 : 0.6
-                                                }}
-                                            >
-                                                <option value="">Select City</option>
-                                                {allCities
-                                                    .filter(city => city.state === vendorFormData.state)
-                                                    .map(city => (
-                                                        <option key={city.value} value={city.value}>
-                                                            {city.label}
-                                                        </option>
-                                                    ))
-                                                }
-                                            </select>
-                                        </Form.Group>
-                                    </Col> */}
 
                                     <Col md={4}>
                                         <Form.Group className="mb-3">
@@ -1649,7 +1601,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.pincode}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                                                 placeholder="Enter pincode"
-
                                                 maxLength={6}
                                             />
                                             {vendorFormData.pincode && vendorFormData.pincode.length !== 6 && (
@@ -1665,7 +1616,6 @@ const BulkPurchasePage = () => {
                                                 name="status"
                                                 value={vendorFormData.status || "active"}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, status: e.target.value })}
-
                                             >
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
@@ -1693,7 +1643,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.website}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, website: e.target.value })}
                                                 placeholder="https://example.com"
-
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1707,7 +1656,6 @@ const BulkPurchasePage = () => {
                                                 value={vendorFormData.payment_terms}
                                                 onChange={(e) => setVendorFormData({ ...vendorFormData, payment_terms: e.target.value })}
                                                 placeholder="e.g., Net 30 days"
-
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1727,7 +1675,6 @@ const BulkPurchasePage = () => {
                                 </>
                             ) : (
                                 <>
-
                                     Add Vendor
                                 </>
                             )}
@@ -1851,8 +1798,14 @@ const BulkPurchasePage = () => {
                                                 menu: (base) => ({
                                                     ...base,
                                                     zIndex: 9999,
+                                                }),
+                                                menuPortal: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
                                                 })
                                             }}
+                                            menuPortalTarget={document.body}
+                                            menuShouldScrollIntoView={false}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -1873,8 +1826,14 @@ const BulkPurchasePage = () => {
                                                 menu: (base) => ({
                                                     ...base,
                                                     zIndex: 9999,
+                                                }),
+                                                menuPortal: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
                                                 })
                                             }}
+                                            menuPortalTarget={document.body}
+                                            menuShouldScrollIntoView={false}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -1977,6 +1936,18 @@ const BulkPurchasePage = () => {
                 }
                 .table-row-light:hover {
                     background-color: #f0f0f0;
+                }
+                
+                /* नया CSS जोड़ें - Dropdown को ऊपर लाने के लिए */
+                .react-select__menu {
+                    z-index: 9999 !important;
+                }
+                .react-select__menu-portal {
+                    z-index: 9999 !important;
+                }
+                .table-container {
+                    position: relative;
+                    z-index: 1;
                 }
             `}</style>
             </Container>

@@ -203,7 +203,7 @@ module.exports = (app) => {
       const previousImagePath = existingCard.image;
 
       if (req.file) cardData.image = `/uploads/librarycards/${req.file.filename}`;
-
+console.log("cardDatacardData",cardData)
       const card = await LibraryCard.updateById(req.params.id, cardData, userId);
       if (!card) return res.status(400).json({ errors: "Failed to update library card" });
 

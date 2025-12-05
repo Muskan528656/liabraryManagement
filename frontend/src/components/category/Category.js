@@ -8,8 +8,11 @@ import DynamicCRUD from "../common/DynaminCrud";
 import { getCategoryConfig } from "./categoryconfig";
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Category = (props) => {
+  const { timeZone } = useTimeZone();
+
   const baseConfig = getCategoryConfig();
 
   const { data, loading, error } = useDataManager(
@@ -36,14 +39,14 @@ const Category = (props) => {
     );
   }
 
- 
+
   const allData = {
     ...data,
     ...props
   };
 
- 
-  const finalConfig = getCategoryConfig(allData);
+
+  const finalConfig = getCategoryConfig(allData, timeZone);
 
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags"/>;
 };

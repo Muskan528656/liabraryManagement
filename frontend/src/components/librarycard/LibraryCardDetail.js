@@ -23,6 +23,7 @@ import ConfirmationModal from "../common/ConfirmationModal";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const LibraryCardDetail = ({
   onEdit = null,
@@ -54,7 +55,7 @@ const LibraryCardDetail = ({
   const [subscriptionProgress, setSubscriptionProgress] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [companyCountryCode, setCompanyCountryCode] = useState("");
-  const [timeZone , setTimeZone] = useState(null);
+  const { timeZone } = useTimeZone();
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -69,41 +70,6 @@ const LibraryCardDetail = ({
     () => new Set(["user_email", "card_number"]),
     []
   );
-
-
-   function getCompanyIdFromToken() {
-    const token = sessionStorage.getItem("token");
-    if (!token) return null;
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.companyid || payload.companyid || null;
-  }
-
-  const fetchCompany = async () => {
-    try {
-      const companyid = getCompanyIdFromToken();
-
-      if (!companyid) {
-        console.error("Company ID not found in token");
-        return;
-      }
-
-      const companyApi = new DataApi("company");
-      const response = await companyApi.fetchById(companyid);
-
-      if (response.data) {
-        setTimeZone(response.data.time_zone);
-        
-        console.log("Company------12222:", response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching company by ID:", error);
-    }
-  };
-
-  useEffect(()=>{
-    fetchCompany();
-  },[])
 
   const EDITABLE_FIELDS = useMemo(
     () => [
@@ -570,7 +536,7 @@ const LibraryCardDetail = ({
         colSize: 3,
       },
       {
-        key: "allowed_book",
+        key: "allowed_books",
         label: "Allowed Book",
         type: "text",
         colSize: 3,
@@ -645,7 +611,7 @@ const LibraryCardDetail = ({
           borderRadius: "15px",
           overflow: "hidden",
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          height: "900px",
+          height: "700px",
         }}
       >
         <div
@@ -776,7 +742,6 @@ const LibraryCardDetail = ({
             </p>
           </div>
 
-          {/* Barcode Section - यहाँ सही reference use करें */}
           <div
             style={{
               border: "1px solid #e9ecef",
@@ -846,32 +811,7 @@ const LibraryCardDetail = ({
             </div>
           </div>
 
-          {/* Status Badge */}
-          <div className="text-center mt-3">
-            <Badge bg={data?.is_active ? "success" : "secondary"} className="px-3 py-2" style={{ fontSize: "14px" }}>
-              <i className={`fa-solid ${data?.is_active ? "fa-check-circle" : "fa-times-circle"} me-2`}></i>
-              {data?.is_active ? "Active Member" : "Inactive Member"}
-            </Badge>
-          </div>
-
-          {/* Footer Note */}
-          <div
-            style={{
-              marginTop: "15px",
-              padding: "10px",
-              background: "#fff3cd",
-              borderRadius: "8px",
-              fontSize: "11px",
-              color: "#856404",
-              textAlign: "center",
-              border: "1px solid #ffc107",
-            }}
-          >
-            <p style={{ margin: 0 }}>
-              <i className="fa-solid fa-info-circle me-1"></i>
-              Scan barcode to verify membership
-            </p>
-          </div>
+      
         </Card.Body>
       </Card>
     );
@@ -1040,18 +980,17 @@ const LibraryCardDetail = ({
 
     if (field.type === "date") {
       try {
-        const date = new Date(value);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day} ${month} ${year}`;
+        const converted = convertToUserTimezone(value, timeZone);
+        const datePart = converted.split(' ')[0];
+        const [year, month, day] = datePart.split('-');
+        return `${day}/${month}/${year}`;
       } catch {
-        return value;
+        return "Invalid Date";
       }
     }
     if (field.type === "datetime") {
       try {
-        return new Date(value).toLocaleString();
+        return convertToUserTimezone(value, timeZone);
       } catch {
         return value;
       }

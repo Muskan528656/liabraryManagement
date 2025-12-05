@@ -1,5 +1,8 @@
  
-export const getCategoryConfig = (externalData = {}, props = {}) => {
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+
+export const getCategoryConfig = (externalData = {}, timeZone) => {
+    console.log("0898989qwer6tyui", timeZone)
     return {
         moduleName: "categories",
         moduleLabel: "Category",
@@ -66,8 +69,8 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         details: [
             { key: "name", label: "Category Name", type: "text" },
             { key: "description", label: "Description", type: "text" },
-            { key: "created_at", label: "Created At", type: "date" },
-            { key: "updated_at", label: "Updated At", type: "date" },
+            { key: "created_at", label: "Created At", type: "date", render: (value) =>{  return convertToUserTimezone(value, timeZone) }},
+            { key: "updated_at", label: "Updated At", type: "date", render: (value) =>{ return convertToUserTimezone(value, timeZone) }},
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {

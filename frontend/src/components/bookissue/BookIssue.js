@@ -17,8 +17,11 @@ import PubSub from "pubsub-js";
 import ResizableTable from "../common/ResizableTable";
 import BulkIssue from "./BulkIssue";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import moment from "moment";
 const BookIssue = () => {
   const navigate = useNavigate();
+  const { timeZone } = useTimeZone();
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedLibraryCard, setSelectedLibraryCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -38,48 +41,15 @@ const BookIssue = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
   const [durationDays, setDurationDays] = useState(7);
-  const [timeZone, setTimeZone] = useState(null);
 
   const bookInputRef = useRef(null);
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
 
-
-   function getCompanyIdFromToken() {
-    const token = sessionStorage.getItem("token");
-    if (!token) return null;
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.companyid || payload.companyid || null;
-  }
-
-  const fetchCompany = async () => {
-    try {
-      const companyid = getCompanyIdFromToken();
-
-      if (!companyid) {
-        console.error("Company ID not found in token");
-        return;
-      }
-
-      const companyApi = new DataApi("company");
-      const response = await companyApi.fetchById(companyid);
-
-      if (response.data) {
-        setTimeZone(response.data.time_zone);
-        
-      }
-    } catch (error) {
-      console.error("Error fetching company by ID:", error);
-    }
-  };
-
-
   useEffect(() => {
     fetchIssuedBooks();
     fetchLibrarySettings();
-    fetchCompany();
  
     setTimeout(() => {
       const bookSelect = bookInputRef.current?.querySelector("input");
@@ -463,7 +433,7 @@ const BookIssue = () => {
       // render: (value) => formatDate(value),
       render: (value) => {
         // console.log(" timeZone", timeZone);
-        return convertToUserTimezone(value, timeZone)
+        return moment(convertToUserTimezone(value, timeZone)).format('l')
       }
     },
     {
@@ -475,7 +445,7 @@ const BookIssue = () => {
         if (!value) return "—";
 
         // 2. Format the date for Display (Visual) using the dynamic timezone
-        const displayDate = convertToUserTimezone(value, timeZone);
+        const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
 
         // 3. Logic: Calculate Days Remaining
         // We create Date objects and reset time to midnight to compare "Calendar Days"

@@ -10,7 +10,7 @@ function init(schema_name) {
   schema = schema_name;
 }
 
- 
+
 async function findAll() {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
@@ -25,7 +25,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findById(id) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
@@ -38,7 +38,7 @@ async function findById(id) {
   }
 }
 
- 
+
 async function create(data) {
   try {
     const query = `
@@ -65,7 +65,7 @@ async function create(data) {
   }
 }
 
- 
+
 async function update(id, data) {
   try {
     const query = `
@@ -96,7 +96,7 @@ async function update(id, data) {
   }
 }
 
- 
+
 async function remove(id) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");

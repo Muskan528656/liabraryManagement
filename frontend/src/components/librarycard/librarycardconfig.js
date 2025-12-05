@@ -119,21 +119,37 @@ export const getLibraryCardConfig = async (externalData = {}) => {
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
         {
-            field: "subscription_id",
+            field: "subscription_display",
             label: "Subscription",
             sortable: true,
             render: (value, row) => {
-                const subscription = (externalData.subscriptions?.data || []).find(
-                    sub => sub.id === row.subscription_id
+                // Check if row has subscription_name
+                if (row.subscription_name && row.subscription_name.trim() !== "") {
+                    return row.subscription_name;
+                }
+
+                // Check if subscription_id exists and is valid
+                const subId = row.subscription_id;
+                if (!subId || subId === "null" || subId === "undefined" || String(subId).trim() === "") {
+                    return "";
+                }
+
+                // Try to find subscription from external data
+                const subs = safeSubscriptions || [];
+                const subscription = subs.find(sub =>
+                    String(sub.id) === String(subId)
                 );
 
-                return subscription
-                    ? subscription.plan_name || subscription.name
-                    : "No Subscription";
+                if (subscription) {
+                    return subscription.plan_name || subscription.name || "";
+                }
+
+                // Return empty if nothing found
+                return "";
             }
         },
         {
-            field: "allowed_book",
+            field: "allowed_books",
             label: "Allowed Books",
             sortable: true,
 
@@ -142,16 +158,29 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             field: "status",
             label: "Status",
             sortable: true,
-            render: (value) => {
+            render: (value, row) => {
+                const possibleStatusFields = ['status', 'is_active', 'active'];
+                possibleStatusFields.forEach(field => {
+                    if (row[field] !== undefined) {
+                        console.log(`Field ${field}:`, row[field], "Type:", typeof row[field]);
+                    }
+                });
+
+                const isActive =
+                    value === true ||
+                    value === "true" ||
+                    value === "active" ||
+                    value === 1 ||
+                    row.is_active === true ||
+                    row.active === true;
+
                 return (
-                    <Badge
-                        bg={value === true || value === "active" ? "success" : "secondary"}
-                    >
-                        {value === true || value === "active" ? "Active" : "Inactive"}
+                    <Badge bg={isActive ? "success" : "secondary"}>
+                        {isActive ? "Active" : "Inactive"}
                     </Badge>
                 );
-            },
-        },
+            }
+        }
     ];
 
     return {
@@ -254,7 +283,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 displayKey: "plan_name"
             },
             {
-                name: "allowed_book",
+                name: "allowed_books",
                 label: "Allowed Books (Override)",
                 type: "number",
                 required: false,
@@ -263,7 +292,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 min: 0,
                 max: 100,
                 helperText: "Leave empty to use subscription limit. 0 = unlimited?",
-            
+
             },
             {
                 name: "image",
@@ -388,14 +417,17 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             { key: "registration_date", label: "Registration Date", type: "date" },
             { key: "type", label: "Type", type: "text" },
             {
-                key: "subscription_id",
+                key: "subscription_display",
                 label: "Subscription",
                 type: "text",
                 render: (value, data) => {
-                    return data.subscription_name ||
-                        data.subscription?.name ||
-                        data.subscription?.plan_name ||
-                        "No Subscription";
+                    // Check if data has subscription_name
+                    if (data.subscription_name && data.subscription_name.trim() !== "") {
+                        return data.subscription_name;
+                    }
+
+                    // Return empty for no subscription
+                    return "";
                 }
             },
             {
@@ -426,7 +458,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             formatDateToDDMMYYYY,
             handleBarcodePreview,
 
-
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
                     data.forEach((item) => {
@@ -434,18 +465,31 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                             item.status = item.is_active ? "active" : "inactive";
                         }
 
-                        if (item.subscription_id) {
-                            const subscription = safeSubscriptions.find(
-                                sub => sub.id === item.subscription_id
+                        // Handle subscription mapping
+                        const subId = item.subscription_id;
+
+                        // Check if subscription_id is valid
+                        if (subId && subId !== null && subId !== undefined &&
+                            subId !== "null" && subId !== "undefined" &&
+                            String(subId).trim() !== "") {
+
+                            // Try to find subscription
+                            const subscription = safeSubscriptions.find(sub =>
+                                String(sub.id) === String(subId)
                             );
-                            item.subscription_name = subscription?.plan_name || subscription?.name || '';
 
-
-
+                            // Set subscription_name if found
+                            item.subscription_name = subscription?.plan_name || subscription?.name || "";
+                        } else {
+                            // Clear subscription_name if no valid subscription_id
+                            item.subscription_name = "";
                         }
 
                         if (!item.first_name) item.first_name = "-";
                         if (!item.last_name) item.last_name = "-";
+
+                        // Add subscription_display field for table
+                        item.subscription_display = item.subscription_name || "";
                     });
                 }
             },
@@ -456,15 +500,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     label: `${sub.plan_name || sub.name} (Books: ${sub.allowed_books || 5})`
                 }));
             },
-
-
-
-
-
-
-
-
-
         },
 
         beforeSubmit: (formData, isEditing) => {
@@ -483,7 +518,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 errors.push("Image size must be less than 2MB");
             }
 
-
             return errors;
         },
 
@@ -500,20 +534,36 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 const subs = externalData.subscriptions?.data || [];
                 if (Array.isArray(data) && subs.length > 0) {
                     data = data.map(item => {
-                        if (item.subscription_id) {
-                            const subscription = safeSubscriptions.find(
-                                sub => sub.id === item.subscription_id
+                        // Handle subscription mapping
+                        const subId = item.subscription_id;
+
+                        if (subId && subId !== "null" && subId !== "undefined" && String(subId).trim() !== "") {
+                            const subscription = subs.find(sub =>
+                                String(sub.id) === String(subId)
                             );
+
                             if (subscription) {
                                 return {
                                     ...item,
-                                    subscription_name: subscription.plan_name || subscription.name,
-
+                                    subscription_name: subscription.plan_name || subscription.name || "",
+                                    subscription_display: subscription.plan_name || subscription.name || ""
+                                };
+                            } else {
+                                // Subscription not found
+                                return {
+                                    ...item,
+                                    subscription_name: "",
+                                    subscription_display: ""
                                 };
                             }
+                        } else {
+                            // No subscription_id
+                            return {
+                                ...item,
+                                subscription_name: "",
+                                subscription_display: ""
+                            };
                         }
-
-                        return item;
                     });
                 }
 
@@ -521,7 +571,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             }
             return response;
         },
-
 
         exportConfig: {
             includeFields: [

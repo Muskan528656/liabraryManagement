@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import moment from "moment";
 
 const BookDetail = () => {
+  const { timeZone } = useTimeZone();
   const [externalData, setExternalData] = useState({ authors: [], categories: [] });
 
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
- 
+
         const authorApi = new DataApi("author");
         const authorsResponse = await authorApi.fetchAll();
         const authors = authorsResponse?.data?.data || authorsResponse?.data || [];
 
- 
+
         const categoryApi = new DataApi("category");
         const categoriesResponse = await categoryApi.fetchAll();
         const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
@@ -57,8 +61,8 @@ const BookDetail = () => {
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
+      { key: "createddate", label: "Created Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
     ],
   };

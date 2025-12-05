@@ -7,15 +7,18 @@ import {
   Button,
   Badge,
   Form,
+  Modal,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
+import Loader from "./Loader";
 import ScrollToTop from "./ScrollToTop";
 import PubSub from "pubsub-js";
 import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
-import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -41,8 +44,6 @@ const LOOKUP_ENDPOINT_MAP = {
   subscription: "subscriptions",
 };
 
-
-
 const normalizeListResponse = (payload) => {
   if (!payload) return [];
   if (Array.isArray(payload)) return payload;
@@ -57,8 +58,6 @@ const normalizeListResponse = (payload) => {
 
 const getOptionValue = (option = {}) => {
   return (
-    // Prefer role_name when present so role fields stored as role_name match option values
-    option.role_name ??
     option.id ??
     option.value ??
     option.code ??
@@ -75,9 +74,7 @@ const getOptionValue = (option = {}) => {
 };
 
 const getOptionDisplayLabel = (option = {}) => {
-  if (!option) return "Item";
   if (option.label) return option.label;
-  if (option.role_name) return option.role_name;
   if (option.name) return option.name;
   if (option.title) return option.title;
   if (option.firstname || option.lastname) {
@@ -120,11 +117,11 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
-  onFieldChange = null,
 }) => {
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { timeZone } = useTimeZone();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -133,6 +130,8 @@ const ModuleDetail = ({
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [lookupOptions, setLookupOptions] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [userNames, setUserNames] = useState({});
@@ -143,7 +142,7 @@ const ModuleDetail = ({
   const nonEditableFields = useMemo(() => [
     'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
     'created_by', 'created_at', 'modified_by', 'modified_at',
-    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat' , 'allowed_books',
+    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat' ,
   ], []);
 
   const allFieldGroups = useMemo(() => {
@@ -270,23 +269,20 @@ const ModuleDetail = ({
       console.log(`Fetched `, response);
       if (response && response.data) {
         const responseData = response.data;
-        // determine finalData from multiple possible response shapes
-        let finalData = null;
-        if (responseData && responseData.success && responseData.data) {
-          finalData = responseData.data;
+        if (responseData.success && responseData.data) {
+          setData(responseData.data);
         } else if (
-          responseData &&
           responseData.data &&
           responseData.data.success &&
           responseData.data.data
         ) {
-          finalData = responseData.data.data;
-        } else if (responseData && responseData.data) {
-          finalData = responseData.data;
-        } else if (responseData && responseData.id) {
-          finalData = responseData;
+          setData(responseData.data.data);
+        } else if (responseData.data) {
+          setData(responseData.data);
+        } else if (responseData.id) {
+          setData(responseData);
         } else if (Array.isArray(responseData) && responseData.length > 0) {
-          finalData = responseData[0];
+          setData(responseData[0]);
         } else {
           setData(responseData);
         }
@@ -430,14 +426,11 @@ const ModuleDetail = ({
     };
 
     loadLookupData();
+
     return () => {
       isMounted = false;
     };
-  }, []);
-
-
-
-
+  }, [selectOptionKeys, externalData]);
 
   const normalizeLookupPath = (path = "") => {
     return path.replace(/^\/+|\/+$/g, "");
@@ -488,49 +481,18 @@ const ModuleDetail = ({
   };
 
   const getSelectOptions = useCallback(
-    (field, currentData) => {
+    (field) => {
       if (!field || field.type !== "select" || !field.options) {
         return [];
       }
       if (Array.isArray(field.options)) {
         return field.options;
       }
-      let options = externalData?.[field.options] || lookupOptions?.[field.options] || [];
-
-      // Filter states based on selected country
-      if (field.options === 'states' && currentData?.country) {
-        options = options.filter(opt => opt.country === currentData.country);
-      }
-
-      // Filter cities based on selected country and state
-      if (field.options === 'cities') {
-        if (currentData?.country) {
-          options = options.filter(opt => opt.country === currentData.country);
-        }
-        if (currentData?.state) {
-          options = options.filter(opt => opt.state === currentData.state);
-        }
-      }
-      if (field.options === 'phonecode' && currentData?.country) {
-        options = options.filter(opt => opt.countryName === currentData.country);
-      }
-
-      if (field.options === 'countrycode' && currentData?.country) {
-        console.log("countrycode =", currentData.country);
-        options = options.filter(opt => opt.countryName === currentData.country);
-      }
-
-      if (field.options === 'currency' && currentData?.country) {
-        options = options.filter(opt => opt.countryName === currentData.country);
-      }
-
-      if (field.options === 'timezone' && currentData?.country) {
-        options = options.filter(opt => opt.countryName === currentData.country);
-      }
-
-      console.log("options ", options);
-
-      return options;
+      return (
+        externalData?.[field.options] ||
+        lookupOptions?.[field.options] ||
+        []
+      );
     },
     [externalData, lookupOptions]
   );
@@ -621,16 +583,19 @@ const ModuleDetail = ({
 
     if (field.type === "date") {
       try {
-        return new Date(value).toLocaleDateString();
+        const converted = convertToUserTimezone(value, timeZone);
+        const datePart = converted.split(' ')[0];
+        const [year, month, day] = datePart.split('-');
+        return `${day}/${month}/${year}`;
       } catch {
-        return value;
+        return "Invalid Date";
       }
     }
     if (field.type === "datetime") {
       try {
-        return new Date(value).toLocaleString();
+        return convertToUserTimezone(value, timeZone);
       } catch {
-        return value;
+        return "Invalid DateTime";
       }
     }
     if (field.type === "boolean") {
@@ -664,9 +629,7 @@ const ModuleDetail = ({
   }, [location?.state?.isEdit]);
 
   const handleEdit = () => {
-    // let Id = location?.state.id; 
     if (onEdit) {
-      console.log("onEdit called with data:", data);
       onEdit(data);
     } else {
       setIsEditing(true);
@@ -683,33 +646,14 @@ const ModuleDetail = ({
       setSaving(true);
       const api = new DataApi(moduleApi);
       const response = await api.update(tempData, id);
-      console.log("Update response:", response);
 
-      // Normalize various response shapes
-      let updatedRecord = null;
       if (response && response.data) {
-        const payload = response.data;
-        if (payload.success && payload.data) updatedRecord = payload.data;
-        else if (payload.data && (payload.data.id || typeof payload.data === "object")) updatedRecord = payload.data;
-        else if (payload.id || payload.uuid) updatedRecord = payload;
-      }
-
-      if (updatedRecord) {
-        // Update local state optimistically
-        setData((prev) => ({ ...(prev || {}), ...(updatedRecord || {}) }));
-        PubSub.publish("RECORD_SAVED_TOAST", {
-          title: "Success",
-          message: `${moduleLabel} updated successfully`,
-        });
-        setIsEditing(false);
-        setTempData(null);
-      } else if (response && (response.status === 200 || response.status === 201)) {
-        // Fallback: re-fetch from server if update returned no usable payload but HTTP status OK
         await fetchData();
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
         });
+
         setIsEditing(false);
         setTempData(null);
       } else {
@@ -749,34 +693,12 @@ const ModuleDetail = ({
       }
 
       setTempData(updatedData);
-
-      // Call onFieldChange if provided
-      if (onFieldChange) {
-        onFieldChange(fieldKey, value, setTempData);
-      }
     }
   };
 
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
-    // Try to resolve the value from multiple possible keys so we tolerate different API shapes
-    const resolveFieldValue = (obj, key) => {
-      if (!obj) return undefined;
-      if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
-      // common alternatives
-      const camel = key.replace(/_([a-z])/g, (m, p1) => p1.toUpperCase());
-      if (Object.prototype.hasOwnProperty.call(obj, camel)) return obj[camel];
-      const noscore = key.replace(/_/g, "");
-      if (Object.prototype.hasOwnProperty.call(obj, noscore)) return obj[noscore];
-      // generic fallbacks
-      if (key.toLowerCase().includes("role") && Object.prototype.hasOwnProperty.call(obj, "role_name")) return obj["role_name"];
-      if (key.toLowerCase().includes("role") && Object.prototype.hasOwnProperty.call(obj, "role")) return obj["role"];
-      if ((key.toLowerCase().includes("name") || key.toLowerCase().includes("title")) && Object.prototype.hasOwnProperty.call(obj, "name")) return obj["name"];
-      if (Object.prototype.hasOwnProperty.call(obj, "id")) return obj["id"];
-      return obj[key];
-    };
-
-    const value = resolveFieldValue(currentData, field.key);
+    const value = currentData[field.key];
 
     if (isEditing) {
 
@@ -870,13 +792,9 @@ const ModuleDetail = ({
     details: fields?.details || [],
   };
 
-  console.log("normalizedFields", normalizedFields);
-  
-  
   const normalizedOtherFields = {
     other: fields?.other || [],
   };
-  console.log("normalizedOtherFields", normalizedOtherFields);
 
   const normalizedAddressFields = {
     address: fields?.address || [],
@@ -999,7 +917,7 @@ const ModuleDetail = ({
     }
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field, currentData);
+      const options = getSelectOptions(field);
       const rawValue = currentData ? currentData[field.key] : null;
       const currentValue = rawValue === undefined || rawValue === null ? "" : rawValue.toString();
 

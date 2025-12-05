@@ -108,7 +108,7 @@ async function create(cardData, userId) {
         registration_date,
         type,
         country_code,
-        allowed_book,
+        allowed_books,
         createddate,
         lastmodifieddate,
         createdbyid,
@@ -150,14 +150,14 @@ async function create(cardData, userId) {
     throw error;
   }
 }
-
 async function updateById(id, cardData, userId) {
   try {
     const updates = [];
     const values = [];
     let idx = 1;
-    console.log("cardDatacardData", cardData)
+    console.log("cardDatacardData", cardData);
 
+    // Field names as they come in cardData
     const fields = [
       "card_number",
       "is_active",
@@ -173,24 +173,23 @@ async function updateById(id, cardData, userId) {
       "registration_date",
       "type",
       "country_code",
-      "allowed_book"
+      "allowed_book",
     ];
-
 
     fields.forEach(f => {
       if (cardData[f] !== undefined) {
-        updates.push(`${f} = $${idx}`);
+
+        const dbFieldName = (f === "allowed_books") ? "allowed_books" : f;
+        updates.push(`${dbFieldName} = $${idx}`);
         values.push(cardData[f]);
         idx++;
       }
     });
 
-
     updates.push(`lastmodifieddate = CURRENT_TIMESTAMP`);
     updates.push(`lastmodifiedbyid = $${idx}`);
     values.push(userId);
     idx++;
-
 
     values.push(id);
 
@@ -201,7 +200,11 @@ async function updateById(id, cardData, userId) {
       RETURNING *
     `;
 
+    console.log("Query:", query);
+    console.log("Values:", values);
+
     const result = await sql.query(query, values);
+    console.log("RESULTTT", result.rows[0]);
     return result.rows[0] || null;
 
   } catch (error) {
@@ -209,8 +212,6 @@ async function updateById(id, cardData, userId) {
     throw error;
   }
 }
-
-
 
 
 async function deleteById(id) {

@@ -1,6 +1,7 @@
 /**
  * Subscription Routes
  * Author: Muskan Khan
+ * changes: Aabid
  * Date: DEC, 2025
  * Copyright: www.ibirdsservices.com
  */
@@ -75,7 +76,7 @@ module.exports = (app) => {
                 const errorMessages = errors.array().map(e => e.msg).join(", ");
                 return res.status(400).json({ success: false, error: errorMessages });
             }
-
+            console.log("REq body", req.body)
             try {
                 const updatedSub = await Subscription.updateById(req.params.id, req.body, req.userinfo?.id);
                 if (!updatedSub) return res.status(404).json({ success: false, error: "Subscription not found" });

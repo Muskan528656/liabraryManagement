@@ -1,10 +1,8 @@
 const sql = require("./db.js");
-
-function init(schema_name, company_id = null) {
-
+function init(schema_name) {
   this.schema = schema_name;
-  this.companyId = company_id;
 }
+
 
 async function createUser(newUser) {
   const {
@@ -81,7 +79,6 @@ async function createUser(newUser) {
   }
   return null;
 }
-
 async function findByEmail(email) {
   if (!this.schema) {
     console.error("Error: Schema not initialized in findByEmail");
@@ -89,71 +86,115 @@ async function findByEmail(email) {
   }
 
   const emailLower = email ? email.toLowerCase().trim() : "";
+  console.log(`Finding user by email: ${emailLower} in schema: ${this.schema}`);
 
-  const userCheck = await sql.query(`
-    SELECT * FROM ${this.schema}.user 
-    WHERE LOWER(TRIM(email)) = $1 AND isactive = true
-    LIMIT 1
-  `, [emailLower]);
-
-  if (!userCheck || userCheck.rows.length === 0) {
-    console.log("User not found in schema:", this.schema, "for email:", emailLower);
-    return null;
-  }
-
-  const result = await sql.query(`
-    WITH user_info AS (
-      SELECT *
-      FROM ${this.schema}.user
+  try {
+    // First, check if user exists
+    const userCheck = await sql.query(`
+      SELECT * FROM ${this.schema}.user 
       WHERE LOWER(TRIM(email)) = $1 AND isactive = true
       LIMIT 1
-    ),
-    company_info AS (
-      SELECT *
-      FROM public.company
-      WHERE id = (SELECT companyid FROM user_info)
-        AND isactive = true
-      LIMIT 1
-    )
+    `, [emailLower]);
 
-    SELECT json_build_object(
-      'id', u.id,
-      'firstname', u.firstname,
-      'lastname', u.lastname,
-      'email', u.email,
-      'phone', u.phone,  -- Changed from whatsapp_number to phone
-      'country_code', u.country_code,
-      'password', u.password,
-      'userrole', u.userrole,
-      'companyid', u.companyid,
-    
-      -- Removed whatsapp_settings as it doesn't exist in table
+    if (!userCheck || userCheck.rows.length === 0) {
+      console.log("User not found in schema:", this.schema, "for email:", emailLower);
+      return null;
+    }
 
-      -- company info
-        'time_zone', c.time_zone,
-      'companyname', c.name,
-      'companystreet', c.street,
-      'companycity', c.city,
-      'companypincode', c.pincode,
-      'companystate', c.state,
-      'companycountry', c.country,
-      'tenantcode', c.tenantcode,
-      'logourl', c.logourl
-    ) AS userinfo
+    const user = userCheck.rows[0];
+    console.log("User found:", { id: user.id, companyid: user.companyid, email: user.email });
 
-    FROM user_info u
-    LEFT JOIN company_info c ON c.id = u.companyid
-    LIMIT 1;
-  `, [emailLower]);
+    // Now get user with company info - FIXED QUERY
+    const result = await sql.query(`
+      WITH user_info AS (
+        SELECT 
+          id, firstname, lastname, email, phone, country_code, 
+          password, userrole, companyid, isactive
+        FROM ${this.schema}.user
+        WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+        LIMIT 1
+      )
+      
+      SELECT json_build_object(
+        -- User info
+        'id', u.id,
+        'firstname', u.firstname,
+        'lastname', u.lastname,
+        'email', u.email,
+        'phone', COALESCE(u.phone, ''),  -- Use phone field
+        'country_code', COALESCE(u.country_code, ''),
+        'password', u.password,
+        'userrole', u.userrole,
+        'companyid', u.companyid,
+        'isactive', u.isactive,
+        
+        -- Company info - using COALESCE to handle null values
+        'time_zone', COALESCE(c.time_zone, 'UTC'),
+        'companyname', COALESCE(c.name, ''),
+        'companystreet', COALESCE(c.street, ''),
+        'companycity', COALESCE(c.city, ''),
+        'companypincode', COALESCE(c.pincode, ''),
+        'companystate', COALESCE(c.state, ''),
+        'companycountry', COALESCE(c.country, ''),
+        'tenantcode', COALESCE(c.tenantcode, ''),
+        'logourl', COALESCE(c.logourl, '')
+      ) AS userinfo
+      
+      FROM user_info u
+      LEFT JOIN public.company c ON c.id = u.companyid
+      LIMIT 1;
+    `, [emailLower]);
 
-  return result.rows.length > 0 ? result.rows[0] : null;
+    if (result.rows.length > 0) {
+      const userData = result.rows[0].userinfo;
+      console.log("User data with company:", {
+        id: userData.id,
+        companyid: userData.companyid,
+        companyname: userData.companyname,
+        tenantcode: userData.tenantcode,
+        time_zone: userData.time_zone
+      });
+      return result.rows[0];
+    }
+
+    // Fallback: Return user without company info
+    console.log("Company info not found, returning user only");
+    return {
+      userinfo: {
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        phone: user.phone || '',
+        country_code: user.country_code || '',
+        password: user.password,
+        userrole: user.userrole,
+        companyid: user.companyid,
+        time_zone: '',
+        companyname: '',
+        companystreet: '',
+        companycity: '',
+        companypincode: '',
+        companystate: '',
+        companycountry: '',
+        tenantcode: '',
+        logourl: ''
+      }
+    };
+
+  } catch (error) {
+    console.error("Error in findByEmail:", error);
+    throw error;
+  }
 }
 
 async function findById(id) {
+  console.log("id=>>>", this.schema)
   try {
-    let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM ${this.schema}.user u`;
+    let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM demo.user u`;
     query += ` WHERE u.id = $1`;
     const result = await sql.query(query, [id]);
+    console.log("result->>", result)
     if (result.rows.length > 0) return result.rows[0];
   } catch (error) {
     console.log("error ", error);

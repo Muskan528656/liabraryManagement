@@ -26,6 +26,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, async (req, res) => {
     try {
+      console.log("reeeeeeeeeee",req.userinfo.tenantcode)
       Purchase.init(req.userinfo.tenantcode);
       const purchases = await Purchase.findAll();
       return res.status(200).json(purchases);

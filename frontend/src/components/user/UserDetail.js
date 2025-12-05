@@ -106,37 +106,37 @@ const UserDetail = () => {
         },
       },
       { key: "phone", label: "Phone", type: "text" },
-      {
-        key: "companyid",
-        label: "Company",
-        type: "select",
-        options: companyOptions,
-        displayKey: "company_name", // यह add करें
-        render: (value, data) => {
+      // {
+      //   key: "companyid",
+      //   label: "Company",
+      //   type: "select",
+      //   options: companyOptions,
+      //   displayKey: "company_name", // यह add करें
+      //   render: (value, data) => {
 
-          const companyName = data.company_name || 
-                             data.company?.name || 
-                             data.companyid_name;
-          if (companyName) return companyName;
-          
+      //     const companyName = data.company_name || 
+      //                        data.company?.name || 
+      //                        data.companyid_name;
+      //     if (companyName) return companyName;
 
-          const company = externalData.companies.find((c) => c.id === value);
-          return company ? company.name : value || 'N/A';
-        },
-      },
+
+      //     const company = externalData.companies.find((c) => c.id === value);
+      //     return company ? company.name : value || 'N/A';
+      //   },
+      // },
       {
         key: "userrole",
         label: "User Role",
         type: "select",
         options: userRoleOptions,
-        displayKey: "role_name", // यह add करें - यही main fix है
+        displayKey: "role_name", 
         render: (value, data) => {
 
-          const roleName = data.role_name || 
-                          data.userrole_name || 
-                          data.user_role_name;
+          const roleName = data.role_name ||
+            data.userrole_name ||
+            data.user_role_name;
           if (roleName) return roleName;
-          
+
 
           const role = externalData.userRoles.find((r) => r.id === value);
           return role ? role.role_name : value || 'N/A';

@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       const authors = await Author.findAll();
@@ -34,11 +34,11 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
+        Author.init(req.userinfo.tenantcode);
       const author = await Author.findById(req.params.id);
-      console.log("Fetched author:", author);
       if (!author) {
         return res.status(404).json({ errors: "Author not found" });
       }
@@ -49,15 +49,15 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
-  
+
     [
- 
+
       body("name").optional().custom((value) => {
- 
+
         return true;
       }),
     ],
@@ -68,7 +68,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
- 
+
         if (req.body.email) {
           const existingAuthor = await Author.findByEmail(req.body.email);
           if (existingAuthor) {
@@ -91,11 +91,11 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
-    
+
     [
       body("name").notEmpty().withMessage("Name is required"),
     ],
@@ -105,14 +105,14 @@ module.exports = (app) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-
- 
+        console.log("req.userinfo.tenantcodereq.userinfo.tenantcode", req.userinfo.tenantcode)
+        Author.init(req.userinfo.tenantcode);
         const existingAuthor = await Author.findById(req.params.id);
         if (!existingAuthor) {
           return res.status(404).json({ errors: "Author not found" });
         }
 
- 
+
         if (req.body.email) {
           const duplicateAuthor = await Author.findByEmail(
             req.body.email,
@@ -138,8 +138,8 @@ module.exports = (app) => {
     }
   );
 
- 
-  router.delete("/:id", fetchUser,  async (req, res) => {
+
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const result = await Author.deleteById(req.params.id);
       if (!result.success) {
@@ -152,7 +152,7 @@ module.exports = (app) => {
     }
   });
 
- 
-  app.use(process.env.BASE_API_URL+"/api/author", router);
+
+  app.use(process.env.BASE_API_URL + "/api/author", router);
 };
 

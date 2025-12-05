@@ -1,3 +1,4 @@
+import moment from "moment";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
@@ -43,7 +44,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             sortable: true,
             // render: (value) => value ? new Date(value).toLocaleDateString() : "-"
               render: (value) => {
-                return convertToUserTimezone(value, timeZone);
+                return moment(convertToUserTimezone(value, timeZone)).format('l');
               }
         },
         {

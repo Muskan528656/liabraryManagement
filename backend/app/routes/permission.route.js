@@ -1,8 +1,5 @@
 /**
  * Permissions Routes
- * Author: Muskan Khan
- * Date: NOV, 2025
- * Copyright: www.ibirdsservices.com
  */
 
 const express = require("express");
@@ -13,90 +10,112 @@ const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {
 
+    // fetch all permissions (admin only use)
     router.get("/", fetchUser, async (req, res) => {
         try {
             const perms = await Permission.findAll();
-            res.status(200).json({ success: true, data: perms });
-        } catch (error) {
-            res.status(500).json({ success: false, error: error.message });
+            res.json({ success: true, data: perms });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
         }
     });
 
-    
-    router.get("/:id", fetchUser, async (req, res) => {
+    // find permissions by role
+    router.get("/role/:roleId", fetchUser, async (req, res) => {
         try {
-            const perm = await Permission.findById(req.params.id);
-            if (!perm) return res.status(404).json({ success: false, error: "Permission not found" });
-            res.status(200).json({ success: true, data: perm });
-        } catch (error) {
-            res.status(500).json({ success: false, error: error.message });
+            const perms = await Permission.findByRole(req.params.roleId);
+            res.json({ success: true, data: perms });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
         }
     });
 
+    // create permission row
     router.post(
         "/",
         fetchUser,
         [
-            body("module_id").optional().isUUID(),
-            body("allow_view").optional().isBoolean(),
-            body("allow_create").optional().isBoolean(),
-            body("allow_edit").optional().isBoolean(),
-            body("allow_delete").optional().isBoolean()
+            body("role_id").isUUID(),
+            body("module_id").isUUID()
         ],
         async (req, res) => {
             const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages = errors.array().map(e => e.msg).join(", ");
-                return res.status(400).json({ success: false, error: errorMessages });
-            }
+            if (!errors.isEmpty())
+                return res.status(400).json({ success: false, error: errors.array() });
 
             try {
-                const newPerm = await Permission.create(req.body, req.userinfo?.id);
-                res.status(200).json({ success: true, data: newPerm });
-            } catch (error) {
-                res.status(500).json({ success: false, error: error.message });
+                const perm = await Permission.create(req.body, req.userinfo?.id);
+                res.json({ success: true, data: perm });
+            } catch (e) {
+                res.status(500).json({ success: false, error: e.message });
             }
         }
     );
-
-    
-    router.put(
-        "/:id",
-        fetchUser,
-        [
-            body("module_id").optional().isUUID(),
-            body("allow_view").optional().isBoolean(),
-            body("allow_create").optional().isBoolean(),
-            body("allow_edit").optional().isBoolean(),
-            body("allow_delete").optional().isBoolean()
-        ],
-        async (req, res) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages = errors.array().map(e => e.msg).join(", ");
-                return res.status(400).json({ success: false, error: errorMessages });
-            }
-
-            try {
-                const updatedPerm = await Permission.updateById(req.params.id, req.body, req.userinfo?.id);
-                if (!updatedPerm) return res.status(404).json({ success: false, error: "Permission not found" });
-                res.status(200).json({ success: true, data: updatedPerm });
-            } catch (error) {
-                res.status(500).json({ success: false, error: error.message });
-            }
-        }
-    );
-
-   
-    router.delete("/:id", fetchUser, async (req, res) => {
+    // ✅ Bulk update permissions for a role
+    router.put("/role/:roleId", fetchUser, async (req, res) => {
         try {
-            const result = await Permission.deleteById(req.params.id);
-            res.status(200).json(result);
-        } catch (error) {
-            res.status(500).json({ success: false, error: error.message });
+            const { roleId } = req.params;
+            const { permissions } = req.body;
+
+            if (!permissions || !Array.isArray(permissions)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Permissions array is required"
+                });
+            }
+
+            const result = await Permission.updateMultiple(roleId, permissions, req.userinfo.id);
+
+            res.json({
+                success: true,
+                message: `${result.length} permissions updated successfully`,
+                data: result
+            });
+        } catch (e) {
+            console.error("Error updating permissions:", e);
+            res.status(500).json({
+                success: false,
+                error: e.message
+            });
         }
     });
 
-   
+    // ✅ Get permissions by role ID
+    router.get("/role/:roleId", fetchUser, async (req, res) => {
+        try {
+            const { roleId } = req.params;
+            const permissions = await Permission.findByRoleId(roleId);
+
+            res.json({
+                success: true,
+                data: permissions
+            });
+        } catch (e) {
+            console.error("Error fetching permissions:", e);
+            res.status(500).json({
+                success: false,
+                error: e.message
+            });
+        }
+    });
+    // update flags
+    router.put("/:id", fetchUser, async (req, res) => {
+        try {
+            const perm = await Permission.updateById(req.params.id, req.body, req.userinfo?.id);
+            res.json({ success: true, data: perm });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    router.delete("/:id", fetchUser, async (req, res) => {
+        try {
+            const out = await Permission.deleteById(req.params.id);
+            res.json(out);
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
     app.use(process.env.BASE_API_URL + "/api/permissions", router);
 };

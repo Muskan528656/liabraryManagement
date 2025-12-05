@@ -7,7 +7,7 @@
 const e = require("express");
 const Auth = require("../models/auth.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
- 
+
 const sql = require("../models/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -21,7 +21,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.post(
     "/createuser",
     fetchUser,
@@ -98,8 +98,8 @@ module.exports = (app) => {
         }
       }
 
- 
- 
+
+
 
 
       const currentUserCount = await Auth.getUserCount(req.userinfo.companyid);
@@ -151,7 +151,7 @@ module.exports = (app) => {
 
         console.log("newUser---", newUser);
         if (newUser) {
- 
+
           const tokenPayload = {
             id: newUser.id,
             tenantcode: req.userinfo?.tenantcode || null,
@@ -163,7 +163,7 @@ module.exports = (app) => {
 
           console.log("userrole---", userrole);
 
- 
+
           if (userrole === "USER") {
             const emailData = {
               name: `${firstname} ${lastname}`,
@@ -171,7 +171,7 @@ module.exports = (app) => {
               password: password,
               frontend_url: process.env.BASE_URL,
             };
- 
+
 
             try {
               await Mailer.sendEmail(email, emailData, null, "user_created");
@@ -194,11 +194,11 @@ module.exports = (app) => {
         });
       }
 
- 
+
     }
   );
 
- 
+
   router.post(
     "/login",
     [
@@ -207,23 +207,23 @@ module.exports = (app) => {
       body("tcode", "Please enter company code").exists(),
     ],
     async (req, res) => {
- 
- 
+
+
       let success = false;
       try {
- 
+
         const email = req.body.email ? req.body.email.trim().toLowerCase() : "";
- 
+
         const password = req.body.password || "";
         const tcode = req.body.tcode ? req.body.tcode.trim().toLowerCase() : "";
 
- 
+
         console.log("Login attempt - Email:", email, "Tcode:", tcode, "Password length:", password.length);
 
         const errors = validationResult(req);
- 
- 
- 
+
+
+
 
         if (!errors.isEmpty()) {
           const errorMessages = errors
@@ -246,14 +246,14 @@ module.exports = (app) => {
           });
         }
 
- 
+
         const companyData = checkForTcode[0];
         const actualTenantcode = companyData?.tenantcode || tcode;
         const companyId = companyData?.id || null;
 
         console.log("Initializing Auth with tenantcode:", actualTenantcode, "companyId:", companyId);
 
- 
+
         await Auth.init(actualTenantcode, companyId);
 
         const userRec = await Auth.findByEmail(email);
@@ -261,7 +261,7 @@ module.exports = (app) => {
           console.log("User not found for email:", email, "in schema:", actualTenantcode);
           console.log("Schema being used:", Auth.schema || "not set");
 
- 
+
           try {
             const inactiveCheck = await sql.query(`
               SELECT id, email, isactive FROM ${Auth.schema || actualTenantcode}.user 
@@ -287,7 +287,7 @@ module.exports = (app) => {
         }
         const userInfo = userRec.userinfo;
 
- 
+
         if (!userInfo || !userInfo.password) {
           console.log("Password not found in userInfo for email:", email);
           return res
@@ -295,7 +295,7 @@ module.exports = (app) => {
             .json({ success, errors: "User account error. Please contact administrator." });
         }
 
- 
+
         const passwordCompare = await bcrypt.compare(
           String(password),
           String(userInfo.password)
@@ -307,11 +307,11 @@ module.exports = (app) => {
             .json({ success, errors: "Try to login with correct credentials" });
         }
 
- 
-        delete userInfo.password;
- 
 
- 
+        delete userInfo.password;
+
+
+
         let username = userInfo.firstname + " " + userInfo.lastname;
         let userrole = userInfo.userrole || "USER"; // Ensure userrole exists
         let tenantcode = userInfo.tenantcode;
@@ -319,14 +319,14 @@ module.exports = (app) => {
         let modules = userInfo.modules || []; // Ensure modules are included
         let plan = userInfo.plan || null; // Plan information
 
- 
+
         delete userInfo.firstname;
         delete userInfo.lastname;
         delete userInfo.library_settings; // Remove library settings from token
         delete userInfo.subscription; // Remove subscription from token
         delete userInfo.addons; // Remove addons from token
 
- 
+
         userInfo.username = username;
         userInfo.userrole = userrole; // Ensure userrole is set
         userInfo.companyid = companyid; // Include companyid
@@ -414,7 +414,7 @@ module.exports = (app) => {
     }
   });
 
- 
-  app.use(process.env.BASE_API_URL + "/api/auth" , router);
+
+  app.use(process.env.BASE_API_URL + "/api/auth", router);
 
 };

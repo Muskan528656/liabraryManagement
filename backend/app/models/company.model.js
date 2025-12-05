@@ -1,6 +1,7 @@
 /**
  * @author      Muskan Khan
  * @date        DEC, 2025
+ * @change      Aabid, DEC-25
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
@@ -58,11 +59,11 @@ async function create(companyData, userId) {
       throw new Error("Tenant code is required");
     }
 
-    const query = `INSERT INTO public.company 
+    const query = `INSERT INTO public.company
                    (name, tenantcode, userlicenses, isactive, systememail, adminemail, phone_number,
-                    logourl, sidebarbgurl, sourceschema, city, street, pincode, state, 
-                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency , country_code) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19 , $20) 
+                    logourl, sidebarbgurl, sourceschema, city, street, pincode, state,
+                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency, country_code, time_zone)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
                    RETURNING *`;
 
     const values = [
@@ -87,7 +88,8 @@ async function create(companyData, userId) {
       companyData.is_external !== undefined ? companyData.is_external : false,
       companyData.has_wallet !== undefined ? companyData.has_wallet : false,
       companyData.currency || null,
-      companyData.country_code
+      companyData.country_code,
+      companyData.time_zone || null
     ];
 
     const result = await sql.query(query, values);
@@ -144,7 +146,7 @@ async function updateById(id, companyData, userId) {
       companyData.has_wallet ?? currentCompany.has_wallet,
       companyData.currency ?? currentCompany.currency,
       companyData.country_code ?? currentCompany.country_code,
-      companyData.time_zone ?? currentCompany.time_zone,
+      companyData.time_zone ?? currentCompany.time_zone
     ];
 
     const result = await sql.query(query, values);

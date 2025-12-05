@@ -129,8 +129,9 @@ const DynamicCRUD = ({
 
             if (enablePrefetch) {
                 try {
- 
+
                     if (isEdit) {
+                        console.log("isEdit->>>",isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
                             state: { isEdit: true, rowData: item },
                         });
@@ -138,7 +139,7 @@ const DynamicCRUD = ({
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
 
- 
+
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -153,7 +154,7 @@ const DynamicCRUD = ({
         setSelectedItem(null);
     }, []);
 
- 
+
     const getAutoDetailConfig = useCallback(() => {
         if (detailConfig) return detailConfig;
 
@@ -490,11 +491,11 @@ const DynamicCRUD = ({
         });
     }, [formFields, relatedData]);
 
- 
- 
- 
- 
- 
+
+
+
+
+
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {
@@ -549,10 +550,10 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
- 
- 
- 
- 
+
+
+
+
         console.log("onSubmitonSubmitonSubmitonSubmit,", formData)
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
@@ -855,7 +856,7 @@ const DynamicCRUD = ({
                                         totalCount={filteredData.length}
                                         totalLabel={moduleLabel}
                                         searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
-                                        
+
                                         searchValue={searchTerm}
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         showColumnVisibility={showColumnVisibility}
@@ -883,39 +884,30 @@ const DynamicCRUD = ({
                                             <div className="d-flex gap-2 justify-content-center">
                                                 {allowEdit && (
                                                     <button
- 
+
                                                         onClick={() => handleNameClick(item, true)}
                                                         title="Edit"
                                                         className="custom-btn-edit"
- 
- 
- 
- 
- 
+
                                                     >
                                                         <i className="fs-7 fa-solid fa-pen-to-square"></i>
                                                     </button>
                                                 )}
                                                 {allowDelete && (
                                                     <button
- 
+
                                                         onClick={() => handleDelete(item.id)}
                                                         title="Delete"
                                                         className="custom-btn-delete"
- 
- 
- 
- 
- 
                                                     >
                                                         <i className="fs-7 fa-solid fa-trash"></i>
                                                     </button>
                                                 )}
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
- 
+
                                                         className="custom-btn-edit"
- 
+
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >
