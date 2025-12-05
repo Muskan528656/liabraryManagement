@@ -1,18 +1,21 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
-
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import moment from "moment";
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },
   suspended: { variant: "warning", label: "Suspended" },
 };
- const countryCodeOptions = COUNTRY_CODES.map((country) => ({
-    value: country.country_code,
-    label: `${country.country_code} - ${country.country}`,
-  }));
+const countryCodeOptions = COUNTRY_CODES.map((country) => ({
+  value: country.country_code,
+  label: `${country.country_code} - ${country.country}`,
+}));
 
 const VendorDetail = () => {
+  const { timeZone } = useTimeZone();
   const fields = {
     title: "name",
     subtitle: "company_name",
@@ -57,8 +60,9 @@ const VendorDetail = () => {
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+
     ],
   };
 

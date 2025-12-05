@@ -1,6 +1,7 @@
 /**
  * @author      Muskan Khan
  * @date        DEC, 2025
+ * @change      Aabid, DEC-25
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
@@ -58,11 +59,11 @@ async function create(companyData, userId) {
       throw new Error("Tenant code is required");
     }
 
-    const query = `INSERT INTO public.company 
-                   (name, tenantcode, userlicenses, isactive, systememail, adminemail, 
-                    logourl, sidebarbgurl, sourceschema, city, street, pincode, state, 
-                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency , country_code) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19 , $20) 
+    const query = `INSERT INTO public.company
+                   (name, tenantcode, userlicenses, isactive, systememail, adminemail, phone_number,
+                    logourl, sidebarbgurl, sourceschema, city, street, pincode, state,
+                    country, platform_name, platform_api_endpoint, is_external, has_wallet, currency, country_code, time_zone)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
                    RETURNING *`;
 
     const values = [
@@ -72,6 +73,7 @@ async function create(companyData, userId) {
       companyData.isactive !== undefined ? companyData.isactive : true,
       companyData.systememail || 'admin@spark.indicrm.io',
       companyData.adminemail || 'admin@spark.indicrm.io',
+      companyData.phone_number || null,
       companyData.logourl || 'https://spark.indicrm.io/logos/client_logo.png',
       companyData.sidebarbgurl || 'https://spark.indicrm.io/logos/sidebar_background.jpg',
       companyData.sourceschema || null,
@@ -80,12 +82,14 @@ async function create(companyData, userId) {
       companyData.pincode || null,
       companyData.state || null,
       companyData.country || null,
+      companyData.country_code || null,
       companyData.platform_name || null,
       companyData.platform_api_endpoint || null,
       companyData.is_external !== undefined ? companyData.is_external : false,
       companyData.has_wallet !== undefined ? companyData.has_wallet : false,
       companyData.currency || null,
-      companyData.country_code
+      companyData.country_code,
+      companyData.time_zone || null
     ];
 
     const result = await sql.query(query, values);
@@ -109,7 +113,7 @@ async function updateById(id, companyData, userId) {
     if (!currentCompany) {
       throw new Error("Company not found");
     }
-
+console.log("companyDatacompanyData",companyData)
     const query = `UPDATE public.company 
                    SET name = $2, tenantcode = $3, userlicenses = $4, isactive = $5, 
                        systememail = $6, adminemail = $7, logourl = $8, sidebarbgurl = $9, 
@@ -141,8 +145,8 @@ async function updateById(id, companyData, userId) {
       companyData.is_external ?? currentCompany.is_external,
       companyData.has_wallet ?? currentCompany.has_wallet,
       companyData.currency ?? currentCompany.currency,
-      companyData.country_code ?? currentCompany.country_code,
-      companyData.time_zone_display ?? currentCompany.time_zone_display
+      companyData.country_code_display ?? currentCompany.country_code_display,
+      companyData.time_zone ?? currentCompany.time_zone
     ];
 
     const result = await sql.query(query, values);

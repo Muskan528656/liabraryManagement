@@ -31,7 +31,7 @@ const FormModal = ({
     return `${day}/${month}/${year}`;
   };
   const handleInputChange = (name, value) => {
- 
+ console.log("namamam",name , value)
     setFormData({ ...formData, [name]: value });
   };
 

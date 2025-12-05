@@ -17,6 +17,7 @@ import PubSub from "pubsub-js";
 import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
@@ -115,6 +116,8 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
+  // fetchBookData,
+  timeZone
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -579,10 +582,19 @@ const ModuleDetail = ({
     }
 
     if (field.type === "date") {
+      if (field.render && typeof field.render === "function") {
+        return field.render(value, data);
+      }
       try {
-        return new Date(value).toLocaleDateString();
+
+        const converted = convertToUserTimezone(value, timeZone);
+        const datePart = converted.split(' ')[0];
+        const [year, month, day] = datePart.split('-');
+        return `${day}/${month}/${year}`;
       } catch {
-        return value;
+        return "Invalid DateTime";
+
+
       }
     }
     if (field.type === "datetime") {
@@ -642,7 +654,10 @@ const ModuleDetail = ({
       const response = await api.update(tempData, id);
 
       if (response && response.data) {
+
+
         await fetchData();
+        // await fetchBookData(id);
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
@@ -813,6 +828,8 @@ const ModuleDetail = ({
   const [coladd1, coladd2, coladd3] = splitInto3(normalizedAddressFields?.address);
 
   const renderField = (field, index, currentData) => {
+    if (!field || !field.key) return null;
+
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
@@ -959,7 +976,8 @@ const ModuleDetail = ({
       );
     }
 
-    const fieldValue = getFieldValue(field, currentData);
+
+    const fieldValue = shouldShowAsReadOnly ? formatValue(currentData[field.key], field) : getFieldValue(field, currentData);
     const isElementValue = React.isValidElement(fieldValue);
     const controlType = (isEditing && !isNonEditableField)
       ? field.type === "number"

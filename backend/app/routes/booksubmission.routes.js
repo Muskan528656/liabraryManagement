@@ -24,13 +24,13 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       console.log("Fetching all book submissions for tenant:", req.userinfo.tenantcode);
       BookSubmission.init(req.userinfo.tenantcode);
       console.log('req.userinfo.tenantcode', req.userinfo.tenantcode);
-      
+
       const submissions = await BookSubmission.findAll();
       return res.status(200).json({ success: true, data: submissions });
     } catch (error) {
@@ -43,7 +43,7 @@ module.exports = (app) => {
 
     try {
       const notifications = await BookSubmission.checkbeforeDue();
-      
+
       return res.status(200).json({
         success: true,
         notifications,
@@ -61,7 +61,7 @@ module.exports = (app) => {
   });
 
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
@@ -76,7 +76,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/issue/:issueId", fetchUser, async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
@@ -88,7 +88,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get(
     "/date-range",
     fetchUser,
@@ -113,9 +113,9 @@ module.exports = (app) => {
     }
   );
 
-  
 
- 
+
+
   router.post(
     "/",
     fetchUser,
@@ -156,7 +156,7 @@ module.exports = (app) => {
               related_type: "book_submission"
             });
 
-        
+
             if (req.app.get('io')) {
               const io = req.app.get('io');
               io.to(`user_${submission.issued_to}`).emit("new_notification", notification);
@@ -164,7 +164,7 @@ module.exports = (app) => {
             }
           } catch (notifError) {
             console.error("Error creating notification for book submission:", notifError);
-            
+
           }
         }
 
@@ -176,7 +176,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.delete(
     "/:id",
     fetchUser,
@@ -198,7 +198,22 @@ module.exports = (app) => {
     }
   );
 
+  router.get("/:bookId/submit-count", fetchUser, async (req, res) => {
+    try {
+      const bookId = req.params.bookId;
 
+  
+      BookSubmission.init(req.userinfo.tenantcode);
+   
+      const submitCount = await BookSubmission.getSubmitCountByBookId(bookId);
+    
+      return res.status(200).json({ submit_count: submitCount });
 
-  app.use(process.env.BASE_API_URL+ "/api/book_submissions", router);
+    } catch (error) {
+      console.error("Error fetching submit count:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  app.use("/api/book_submissions", router);
 };

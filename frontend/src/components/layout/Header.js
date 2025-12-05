@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Dropdown, Button, InputGroup, Form } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import jwt_decode from "jwt-decode";
+import PubSub from "pubsub-js";
 
 import BookSubmitModal from "../common/BookSubmitModal";
 import * as constants from "../../constants/CONSTANT";
@@ -9,7 +10,6 @@ import helper from "../common/helper";
 import BookSubmit from "../booksubmit/BookSubmit";
 import DataApi from "../../api/dataApi";
 import Submodule from "./Submodule";
-import PubSub from "pubsub-js";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 
 export default function Header({ open, handleDrawerOpen, socket }) {
@@ -326,6 +326,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, []);
 
+
+  useEffect(() => {
+    const companyUpdateToken = PubSub.subscribe("COMPANY_UPDATED", (msg, data) => {
+      if (data.company) {
+        setCompany(data.company);
+      }
+    });
+
+    return () => {
+      PubSub.unsubscribe(companyUpdateToken);
+    };
+  }, []);
+
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("r-t");
@@ -410,6 +423,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
       if (response.data) {
         setCompany(response.data);
+        
         console.log("Company:", response.data);
       }
     } catch (error) {
@@ -419,7 +433,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   console.log("Company", Company);
 
-
+ 
   const markAsRead = async (notificationId) => {
     try {
       const response = await helper.fetchWithAuth(
@@ -554,6 +568,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
         {/* Right Side: Bell Icon + Admin Dropdown */}
         <div className="d-flex align-items-center gap-2">
+          {/* Country Flag */}
           {getCountryFlag() && (
             <img
               src={getCountryFlag()}

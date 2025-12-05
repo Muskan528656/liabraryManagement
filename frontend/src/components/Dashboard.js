@@ -1,10 +1,15 @@
+/*
+**@Author: Aabid 
+**@Date: NOV-2025
+*/
+
 import React, { useState, useEffect } from "react";
 import { Card, Col, Container, Row, Badge } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
 import Loader from "./common/Loader";
-import { useNavigate } from "react-router-dom";
+
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 
@@ -84,7 +89,7 @@ const InteractiveCard = ({ children, style, ...props }) => {
 
 
 const Dashboard = ({ userInfo: propUserInfo }) => {
-  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
@@ -115,7 +120,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
     setUserInfo(currentUserInfo);
     setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
-
     fetchDashboardData();
     fetchSubmissionAndIssueMetrics();
     fetchLibraryCounts();
@@ -145,7 +149,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const respStats = await DashboardApi.fetchStats();
       setTotalBooks(respStats?.data);
       const data = resp?.data || [];
-
       if (!Array.isArray(data) || data.length === 0) return;
 
       const metrics = data[0];
@@ -550,7 +553,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   {categories.map((cat, idx) => (
                     <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-4 py-3 border-light">
                       <div className="d-flex align-items-center">
-                        <div className="me-3" style={{ width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR }} className="rounded-circle d-flex align-items-center justify-content-center">
+                        <div className="me-3" style={{ width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR }} className="rounded-circle d-flex align-items-center justify-content-center" >
                           <i className={`fa-solid ${cat.icon}`}></i>
                         </div>
                         <span className="fw-semibold text-dark">{cat.name}</span>
@@ -613,3 +616,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 };
 
 export default Dashboard;
+
+
+
+

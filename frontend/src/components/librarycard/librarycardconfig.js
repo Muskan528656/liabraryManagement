@@ -19,7 +19,7 @@ const generateCardNumber = (card) => {
 };
 
 
-export const getLibraryCardConfig = async (externalData = {}) => {
+export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview =
         customHandlers.handleBarcodePreview ||
@@ -27,7 +27,10 @@ export const getLibraryCardConfig = async (externalData = {}) => {
     console.log("externalDataexternalData", externalData);
 
     let defaultCountryCode = "";
+    let safeSubscriptions = [];
+
     try {
+
         const companyApi = new DataApi("company");
         const companyResponse = await companyApi.fetchAll();
         if (
@@ -57,17 +60,49 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 console.log("Final defaultCountryCode:", defaultCountryCode);
             }
         }
+
+
+        const subscriptionApi = new DataApi("subscriptions");
+        const subscriptionResponse = await subscriptionApi.fetchAll();
+        console.log("Raw subscription response:", subscriptionResponse);
+
+        if (subscriptionResponse && subscriptionResponse.data) {
+
+            if (Array.isArray(subscriptionResponse.data)) {
+                safeSubscriptions = subscriptionResponse.data;
+            } else if (subscriptionResponse.data.data && Array.isArray(subscriptionResponse.data.data)) {
+                safeSubscriptions = subscriptionResponse.data.data;
+            } else if (subscriptionResponse.success && subscriptionResponse.data) {
+                safeSubscriptions = Array.isArray(subscriptionResponse.data)
+                    ? subscriptionResponse.data
+                    : [];
+            }
+        }
+
+        console.log("Processed subscriptions:", safeSubscriptions);
+
     } catch (error) {
-        console.error("Error fetching company data:", error);
+        console.error("Error fetching data:", error);
+
+        safeSubscriptions = externalData.subscriptions?.data ||
+            externalData.subscriptions ||
+            [];
     }
 
     console.log("defaultCountryCode", defaultCountryCode);
+    console.log("Safe subscriptions:", safeSubscriptions);
 
-    const safeSubscriptions =
-        externalData.subscriptions?.data ||
-        externalData.subscriptions ||
-        [];
-    console.log("Safe subs", safeSubscriptions);
+
+    const subscriptionOptions = Array.isArray(safeSubscriptions)
+        ? safeSubscriptions
+            .filter(sub => sub && sub.id)  // Filter out invalid entries
+            .map(sub => ({
+                value: String(sub.id),  // Ensure value is string
+                label: `${sub.plan_name || sub.name || "Unnamed"} (Books: ${sub.allowed_books || sub.book_limit || 0})`
+            }))
+        : [];
+
+    console.log("Subscription options:", subscriptionOptions);
 
     const defaultColumns = [
         {
@@ -118,61 +153,73 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             },
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
-        {
-            field: "subscription_display",
-            label: "Subscription",
-            sortable: true,
-            render: (value, row) => {
-                // Check if row has subscription_name
-                if (row.subscription_name && row.subscription_name.trim() !== "") {
-                    return row.subscription_name;
-                }
+        // {
+        //     field: "subscription_display",
+        //     label: "Subscription",
+        //     sortable: true,
+        //     render: (value, row) => {
 
-                // Check if subscription_id exists and is valid
-                const subId = row.subscription_id;
-                if (!subId || subId === "null" || subId === "undefined" || String(subId).trim() === "") {
-                    return "";
-                }
+        //         if (row.subscription_name && row.subscription_name.trim() !== "") {
+        //             return row.subscription_name;
+        //         }
 
-                // Try to find subscription from external data
-                const subs = safeSubscriptions || [];
-                const subscription = subs.find(sub =>
-                    String(sub.id) === String(subId)
-                );
 
-                if (subscription) {
-                    return subscription.plan_name || subscription.name || "";
-                }
+        //         const subId = row.subscription_id;
+        //         if (!subId || subId === "null" || subId === "undefined" || String(subId).trim() === "") {
+        //             return "-";
+        //         }
 
-                // Return empty if nothing found
-                return "";
-            }
-        },
-        {
-            field: "allowed_books",
-            label: "Allowed Books",
-            sortable: true,
 
-        },
+        //         const subs = safeSubscriptions || [];
+        //         const subscription = subs.find(sub =>
+        //             String(sub.id) === String(subId)
+        //         );
+
+        //         if (subscription) {
+        //             return subscription.plan_name || subscription.name || "Unknown";
+        //         }
+
+
+        //         return "-";
+        //     }
+        // },
+        // {
+        //     field: "allowed_books",
+        //     label: "Allowed Books",
+        //     sortable: true,
+        //     render: (value, row) => {
+
+        //         if (value !== null && value !== undefined && value !== "") {
+        //             return value;
+        //         }
+
+
+        //         const subId = row.subscription_id;
+        //         if (subId && safeSubscriptions.length > 0) {
+        //             const subscription = safeSubscriptions.find(sub =>
+        //                 String(sub.id) === String(subId)
+        //             );
+        //             if (subscription) {
+        //                 return subscription.allowed_books || subscription.book_limit || "Subscription default";
+        //             }
+        //         }
+
+        //         return "-";
+        //     }
+        // },
         {
             field: "status",
             label: "Status",
             sortable: true,
             render: (value, row) => {
-                const possibleStatusFields = ['status', 'is_active', 'active'];
-                possibleStatusFields.forEach(field => {
-                    if (row[field] !== undefined) {
-                        console.log(`Field ${field}:`, row[field], "Type:", typeof row[field]);
-                    }
-                });
-
                 const isActive =
                     value === true ||
                     value === "true" ||
                     value === "active" ||
                     value === 1 ||
                     row.is_active === true ||
-                    row.active === true;
+                    row.active === true ||
+                    row.status === "active";
 
                 return (
                     <Badge bg={isActive ? "success" : "secondary"}>
@@ -198,8 +245,8 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             phone_number: "",
             registration_date: new Date().toISOString().split("T")[0],
             type: "",
-            subscription_id: "",
-            allowed_book: null, // null means use subscription default
+            //       subscription_id: "",
+            allowed_books: null,
             issue_date: new Date().toISOString().split("T")[0],
             status: "active",
             image: null,
@@ -272,28 +319,66 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 placeholder: "Select type",
                 colSize: 6,
             },
-            {
-                name: "subscription_id",
-                label: "Subscription",
-                type: "select",
-                required: true,
-                options: "subscriptions",
-                placeholder: "Select subscription plan",
-                colSize: 6,
-                displayKey: "plan_name"
-            },
-            {
-                name: "allowed_books",
-                label: "Allowed Books (Override)",
-                type: "number",
-                required: false,
-                placeholder: "Leave empty to use subscription default",
-                colSize: 6,
-                min: 0,
-                max: 100,
-                helperText: "Leave empty to use subscription limit. 0 = unlimited?",
+            // {
+            //     name: "subscription_id",
+            //     label: "Subscription",
+            //     type: "select",
+            //     required: true,
+            //     options: subscriptionOptions,
+            //     placeholder: "Select subscription plan",
+            //     colSize: 6,
+            //     onChange: (value, formData, setFormData) => {
 
-            },
+            //         console.log("Subscription changed to:", value);
+            //         if (value && !formData.allowed_books_manual) {
+            //             const selectedSubscription = safeSubscriptions.find(sub =>
+            //                 String(sub.id) === String(value)
+            //             );
+            //             console.log("Selected subscription:", selectedSubscription);
+            //             if (selectedSubscription) {
+            //                 setFormData(prev => ({
+            //                     ...prev,
+            //                     allowed_books: selectedSubscription.allowed_books || selectedSubscription.book_limit || null
+            //                 }));
+            //             }
+            //         }
+            //     }
+            // },
+            // {
+            //     name: "allowed_books",
+            //     label: "Allowed Books (Override)",
+            //     type: "number",
+            //     required: false,
+            //     placeholder: "Leave empty to use subscription default",
+            //     colSize: 6,
+            //     min: 0,
+            //     max: 100,
+            //     step: 1,
+            //     helperText: "Leave empty to use subscription limit. 0 = unlimited?",
+            //     onChange: (value, formData, setFormData) => {
+            //         console.log("Allowed books changed:", value);
+
+            //         const isManual = value !== null && value !== "" && value !== undefined;
+            //         console.log("Is manual:", isManual);
+            //         setFormData(prev => ({
+            //             ...prev,
+            //             allowed_books_manual: isManual
+            //         }));
+
+
+            //         if (value === "" || value === null || value === undefined) {
+            //             setFormData(prev => ({
+            //                 ...prev,
+            //                 allowed_books: null
+            //             }));
+            //         } else {
+            //             setFormData(prev => ({
+            //                 ...prev,
+            //                 allowed_books: parseInt(value) || 0
+            //             }));
+            //         }
+            //     }
+            // },
             {
                 name: "image",
                 label: "User Photo",
@@ -304,7 +389,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 preview: true,
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
-
                 onChange: (file, formData, setFormData) => {
                     if (file) {
                         setFormData((prev) => ({
@@ -327,7 +411,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-            console.log("FormData", formData);
+            console.log("FormData in validation:", formData);
             const errors = {};
 
             if (!formData.user_id) {
@@ -349,8 +433,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 errors.user_id = "Member already has an active library card";
             }
 
-
-            if (formData.allowed_books !== null && formData.allowed_books !== undefined) {
+            if (formData.allowed_books !== null && formData.allowed_books !== undefined && formData.allowed_books !== "") {
                 const allowedBooks = parseInt(formData.allowed_books);
                 if (isNaN(allowedBooks) || allowedBooks < 0) {
                     errors.allowed_books = "Allowed books must be a positive number";
@@ -421,21 +504,48 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 label: "Subscription",
                 type: "text",
                 render: (value, data) => {
-                    // Check if data has subscription_name
+
                     if (data.subscription_name && data.subscription_name.trim() !== "") {
                         return data.subscription_name;
                     }
 
-                    // Return empty for no subscription
-                    return "";
+
+                    const subId = data.subscription_id;
+                    if (subId && safeSubscriptions.length > 0) {
+                        const subscription = safeSubscriptions.find(sub =>
+                            String(sub.id) === String(subId)
+                        );
+                        if (subscription) {
+                            return subscription.plan_name || subscription.name || "-";
+                        }
+                    }
+
+                    return "-";
                 }
             },
-            {
-                key: "allowed_books",
-                label: "Allowed Books",
-                type: "text",
+            // {
+            //     key: "allowed_books",
+            //     label: "Allowed Books",
+            //     type: "text",
+            //     render: (value, data) => {
+            //         if (value !== null && value !== undefined && value !== "") {
+            //             return value;
+            //         }
 
-            },
+
+            //         const subId = data.subscription_id;
+            //         if (subId && safeSubscriptions.length > 0) {
+            //             const subscription = safeSubscriptions.find(sub =>
+            //                 String(sub.id) === String(subId)
+            //             );
+            //             if (subscription) {
+            //                 return subscription.allowed_books || subscription.book_limit || "Subscription default";
+            //             }
+            //         }
+
+            //         return "-";
+            //     }
+            // },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
             {
@@ -460,65 +570,147 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
-                    data.forEach((item) => {
-                        if (item.hasOwnProperty("is_active")) {
-                            item.status = item.is_active ? "active" : "inactive";
+                    return data.map((item) => {
+                        const updatedItem = { ...item };
+
+
+                        if (updatedItem.hasOwnProperty("is_active")) {
+                            updatedItem.status = updatedItem.is_active ? "active" : "inactive";
+                        } else if (!updatedItem.status) {
+                            updatedItem.status = "active";
                         }
 
-                        // Handle subscription mapping
-                        const subId = item.subscription_id;
 
-                        // Check if subscription_id is valid
-                        if (subId && subId !== null && subId !== undefined &&
-                            subId !== "null" && subId !== "undefined" &&
+                        const subId = updatedItem.subscription_id;
+
+                        if (subId &&
+                            subId !== null &&
+                            subId !== undefined &&
+                            subId !== "null" &&
+                            subId !== "undefined" &&
                             String(subId).trim() !== "") {
 
-                            // Try to find subscription
+
                             const subscription = safeSubscriptions.find(sub =>
                                 String(sub.id) === String(subId)
                             );
 
-                            // Set subscription_name if found
-                            item.subscription_name = subscription?.plan_name || subscription?.name || "";
+
+                            if (subscription) {
+                                updatedItem.subscription_name = subscription.plan_name || subscription.name || "";
+                                updatedItem.subscription_display = subscription.plan_name || subscription.name || "";
+                            } else {
+                                updatedItem.subscription_name = "";
+                                updatedItem.subscription_display = "";
+                            }
                         } else {
-                            // Clear subscription_name if no valid subscription_id
-                            item.subscription_name = "";
+                            updatedItem.subscription_name = "";
+                            updatedItem.subscription_display = "";
                         }
 
-                        if (!item.first_name) item.first_name = "-";
-                        if (!item.last_name) item.last_name = "-";
 
-                        // Add subscription_display field for table
-                        item.subscription_display = item.subscription_name || "";
+                        if (!updatedItem.first_name) updatedItem.first_name = "-";
+                        if (!updatedItem.last_name) updatedItem.last_name = "-";
+
+
+                        if (!updatedItem.name) {
+                            updatedItem.name = `${updatedItem.first_name} ${updatedItem.last_name}`.trim();
+                        }
+
+                        return updatedItem;
                     });
                 }
+                return data;
             },
 
             getSubscriptionOptions: () => {
-                return safeSubscriptions.map(sub => ({
-                    value: sub.id,
-                    label: `${sub.plan_name || sub.name} (Books: ${sub.allowed_books || 5})`
-                }));
+                return subscriptionOptions;
             },
-        },
 
-        beforeSubmit: (formData, isEditing) => {
-            console.log("FORM DTA", formData)
-            const errors = [];
+            beforeEdit: (item) => {
 
-            if (!formData.user_id) {
-                errors.push("Please select a member");
+                const preparedData = { ...item };
+                console.log("Before edit - original item:", item);
+
+
+                if (preparedData.allowed_books !== null && preparedData.allowed_books !== undefined) {
+                    preparedData.allowed_books = String(preparedData.allowed_books);
+                } else {
+                    preparedData.allowed_books = ""; // Empty string for form
+                }
+
+
+                if (preparedData.hasOwnProperty("is_active")) {
+                    preparedData.status = preparedData.is_active;
+                }
+
+                console.log("Before edit - prepared data:", preparedData);
+                return preparedData;
+            },
+
+            beforeSubmit: (formData, isEditing, originalData) => {
+                console.log("=== BEFORE SUBMIT ===");
+                console.log("Form data:", formData);
+                console.log("Is editing:", isEditing);
+                console.log("Original data:", originalData);
+
+                const errors = [];
+
+
+                const submitData = { ...formData };
+                delete submitData.allowed_books_manual;
+
+
+                if (submitData.allowed_books === "" || submitData.allowed_books === null || submitData.allowed_books === undefined) {
+
+                    submitData.allowed_books = null;
+                } else {
+
+                    const allowedBooks = parseInt(submitData.allowed_books);
+                    if (isNaN(allowedBooks)) {
+                        errors.push("Allowed books must be a valid number");
+                    } else {
+                        submitData.allowed_books = allowedBooks;
+                    }
+                }
+
+
+                if (submitData.status !== undefined) {
+                    submitData.is_active = Boolean(submitData.status);
+                    delete submitData.status; // Remove status field
+                }
+
+
+                if (!submitData.user_id) {
+                    errors.push("Please select a member");
+                }
+
+                if (!submitData.issue_date) {
+                    errors.push("Issue date is required");
+                }
+
+                if (submitData.image && submitData.image.size > 2 * 1024 * 1024) {
+                    errors.push("Image size must be less than 2MB");
+                }
+
+                console.log("Processed submit data:", submitData);
+                console.log("Errors:", errors);
+
+
+                return {
+                    errors,
+                    processedData: submitData
+                };
+            },
+
+            afterSubmit: (response, formData, isEditing) => {
+                console.log("=== AFTER SUBMIT ===");
+                console.log("Response:", response);
+                console.log("Form data:", formData);
+                console.log("Is editing:", isEditing);
+
+                return response;
             }
-
-            if (!formData.issue_date) {
-                errors.push("Issue date is required");
-            }
-
-            if (formData.image && formData.image.size > 2 * 1024 * 1024) {
-                errors.push("Image size must be less than 2MB");
-            }
-
-            return errors;
         },
 
         transformResponse: (response) => {
@@ -531,39 +723,41 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     data = data.data;
                 }
 
-                const subs = externalData.subscriptions?.data || [];
-                if (Array.isArray(data) && subs.length > 0) {
+                if (Array.isArray(data) && safeSubscriptions.length > 0) {
                     data = data.map(item => {
-                        // Handle subscription mapping
-                        const subId = item.subscription_id;
+                        const updatedItem = { ...item };
+
+
+                        const subId = updatedItem.subscription_id;
 
                         if (subId && subId !== "null" && subId !== "undefined" && String(subId).trim() !== "") {
-                            const subscription = subs.find(sub =>
+                            const subscription = safeSubscriptions.find(sub =>
                                 String(sub.id) === String(subId)
                             );
 
                             if (subscription) {
-                                return {
-                                    ...item,
-                                    subscription_name: subscription.plan_name || subscription.name || "",
-                                    subscription_display: subscription.plan_name || subscription.name || ""
-                                };
+                                updatedItem.subscription_name = subscription.plan_name || subscription.name || "";
+                                updatedItem.subscription_display = subscription.plan_name || subscription.name || "";
                             } else {
-                                // Subscription not found
-                                return {
-                                    ...item,
-                                    subscription_name: "",
-                                    subscription_display: ""
-                                };
+                                updatedItem.subscription_name = "";
+                                updatedItem.subscription_display = "";
                             }
                         } else {
-                            // No subscription_id
-                            return {
-                                ...item,
-                                subscription_name: "",
-                                subscription_display: ""
-                            };
+                            updatedItem.subscription_name = "";
+                            updatedItem.subscription_display = "";
                         }
+
+
+                        if (!updatedItem.status && updatedItem.hasOwnProperty("is_active")) {
+                            updatedItem.status = updatedItem.is_active ? "active" : "inactive";
+                        }
+
+
+                        if (!updatedItem.name) {
+                            updatedItem.name = `${updatedItem.first_name || ""} ${updatedItem.last_name || ""}`.trim();
+                        }
+
+                        return updatedItem;
                     });
                 }
 
@@ -574,11 +768,13 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
         exportConfig: {
             includeFields: [
-                'card_number', 'first_name', 'last_name', 'email',
-                'phone_number', 'subscription_name', 'allowed_books_display', 'status'
+                'card_number', 'name', 'email', 'phone_number',
+                'subscription_name', 'allowed_books', 'status'
             ],
             fieldLabels: {
-                allowed_books_display: 'Allowed Books'
+                allowed_books: 'Allowed Books',
+                subscription_name: 'Subscription',
+                name: 'Full Name'
             }
         }
     };

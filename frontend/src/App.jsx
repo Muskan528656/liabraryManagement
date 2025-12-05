@@ -49,6 +49,7 @@ import AutoConfigDetail from "./components/autoconfig/AutoConfigDetail";
 import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
+import { TimeZoneProvider } from "./contexts/TimeZoneContext";
 
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -147,7 +148,7 @@ function App() {
   }
 
   return (
-    <>
+    <TimeZoneProvider>
       <ToastManager />
       <Router>
         <Routes>
@@ -187,7 +188,7 @@ function App() {
             {/* <Route path="requestbook" element={<RequestBook />} /> */}
             <Route path="librarycardtype" element={<LibrarySettings />} />
             <Route path="booksubmit" element={<BookSubmit />} />
-        
+
             <Route path="myprofile" element={<EditProfile />} />
             <Route path="Company" element={<Company />} />
             <Route path="/company/:id" element={<CompanyDetail />} />
@@ -197,7 +198,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-    </>
+    </TimeZoneProvider>
   );
 }
 

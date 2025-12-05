@@ -149,7 +149,6 @@ async function create(userData, userId) {
  
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
-
   try {
  
     if (userData.email) {

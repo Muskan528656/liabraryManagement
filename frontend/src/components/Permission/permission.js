@@ -113,7 +113,7 @@ const Permission = () => {
         }
     };
 
-    // Group permissions by role with proper role name
+
     const groupPermissionsByRole = () => {
         const grouped = {};
 
@@ -140,11 +140,11 @@ const Permission = () => {
 
     const rolePermissions = groupPermissionsByRole();
 
-    // Inline edit functions
+
     const handleInlineEdit = (roleId, roleName) => {
         const rolePerms = permissions.filter(p => p.role_id === roleId);
         
-        // Set initial form data for inline editing
+
         const initialData = {};
         rolePerms.forEach(perm => {
             initialData[perm.module_id] = {
@@ -232,7 +232,7 @@ const Permission = () => {
         }));
     };
 
-    // Expand all / Collapse all functionality
+
     const expandAllRoles = () => {
         const expanded = {};
         rolePermissions.forEach(role => {
@@ -287,7 +287,7 @@ const Permission = () => {
         const isExpanded = expandedRoles[role.role_id] || false;
         const isEditing = editingRow === role.role_id;
 
-        // Calculate permissions summary
+
         const viewCount = role.permissions.filter(p => p.allow_view).length;
         const createCount = role.permissions.filter(p => p.allow_create).length;
         const editCount = role.permissions.filter(p => p.allow_edit).length;

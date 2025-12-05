@@ -22,11 +22,13 @@ import ScrollToTop from "../common/ScrollToTop";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
   externalData = {},
+  timeZone
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -78,7 +80,7 @@ const LibraryCardDetail = ({
       "registration_date",
       "subscription_id",
       "is_active",
-      "allowed_book"
+      "allowed_books"
     ],
     []
   );
@@ -510,13 +512,13 @@ const LibraryCardDetail = ({
         type: "date",
         colSize: 3,
       },
-      {
-        key: "subscription_id",
-        label: "Subscription",
-        type: "select",
-        options: "subscriptions",
-        colSize: 3,
-      },
+      // {
+      //   key: "subscription_id",
+      //   label: "Subscription",
+      //   type: "select",
+      //   options: "subscriptions",
+      //   colSize: 3,
+      // },
       {
         key: "is_active",
         label: "Status",
@@ -529,19 +531,30 @@ const LibraryCardDetail = ({
         },
         colSize: 3,
       },
-      {
-        key: "allowed_books",
-        label: "Allowed Book",
-        type: "text",
-        colSize: 3,
-      },
+      // {
+      //   key: "allowed_books",
+      //   label: "Allowed Book",
+      //   type: "number",
+      //   colSize: 3,
+      // },
     ],
 
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      // { key: "createddate", label: "Created Date", type: "date" },
+      // { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+
+      {
+        key: "createddate", label: "Created Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
+      {
+        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
     ],
   };
 
@@ -796,7 +809,7 @@ const LibraryCardDetail = ({
             </div>
           </div>
 
-      
+
         </Card.Body>
       </Card>
     );
@@ -962,7 +975,9 @@ const LibraryCardDetail = ({
 
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
-
+    if (field.render && typeof field.render === "function") {
+      return field.render(value, data);
+    }
     if (field.type === "date") {
       try {
         const date = new Date(value);

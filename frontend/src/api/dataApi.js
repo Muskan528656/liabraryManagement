@@ -1,96 +1,181 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import * as constants from '../constants/CONSTANT';
 import axios from 'axios';
+
 export default class DataApi {
     constructor(path) {
         this.token = sessionStorage.getItem('token');
-
         this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
-
     }
+
+
+    getHeaders(contentType = false) {
+        const headers = {};
+
+        if (contentType) headers['Content-Type'] = 'application/json';
+
+        if (this.token) {
+            headers.Authorization = this.token.startsWith("Bearer ")
+                ? this.token
+                : `Bearer ${this.token}`;
+        }
+
+        return headers;
+    }
+
+
 
     fetchAll(queryString = '') {
         const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
-        console.log('fetchAll url: ', url);
-        return axios.get(url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.get(url, { headers: this.getHeaders() });
     }
-
 
     fetchById(id) {
         const url = id ? `${this.baseUrl}/${id}` : this.baseUrl;
-        return axios.get(url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.get(url, { headers: this.getHeaders() });
     }
 
-
     create(data) {
-        console.log('data', data);
-        return axios.post(this.baseUrl, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
     }
 
     post(url, data) {
-        return axios.post(this.baseUrl + url, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.post(this.baseUrl + url, data, { headers: this.getHeaders(true) });
     }
 
     put(url, data) {
-        return axios.put(this.baseUrl + url, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.put(this.baseUrl + url, data, { headers: this.getHeaders(true) });
     }
 
     get(url, config = {}) {
         return axios.get(this.baseUrl + url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-            ...config, // Allow passing additional config like responseType
+            headers: this.getHeaders(),
+            ...config
         });
     }
 
-
     update(data, id) {
-        console.log(`Update Method: ${this.baseUrl}/${id}`);
-        return axios.put(`${this.baseUrl}/${id}`, data, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        }); // Update
+        return axios.put(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders(true) });
     }
 
     delete(id) {
-        return axios.delete(`${this.baseUrl}/${id}`, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.delete(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
     }
-
 
     deleteWithBody(url, data) {
         return axios.delete(this.baseUrl + url, {
-            data: data,
-            headers: {
-                Authorization: `${this.token}`,
-                'Content-Type': 'application/json',
-            },
+            data,
+            headers: this.getHeaders(true)
         });
     }
+
 
     async search(params = {}) {
         const { display_fields, ...otherParams } = params;
@@ -102,21 +187,32 @@ export default class DataApi {
 
         const res = await axios.get(this.baseUrl, {
             params: queryParams,
-            headers: {
-                Authorization: `${this.token}`,
-            },
+            headers: this.getHeaders()
         });
 
         return res.data;
     }
 
 
-    upsert(data) {
-        console.log('upsert payload data: ', data);
-        return axios.post(this.baseUrl, data, {
+    fetchIssuedCountByBookId(bookId) {
+        console.log("AAAA", bookId)
+        if (!bookId) throw new Error("Book ID required");
+
+        const url = `${this.baseUrl}/${bookId}/issued-count`;  // ✅ FIXED SYNTAX
+        return axios.get(url, { headers: this.getHeaders() });
+    }
+  
+    fetchSubmitCountByBookId(bookId) {
+        console.log("bookId in api is", bookId);
+        const url = bookId ? `${this.baseUrl}/${bookId}/submit-count` : this.baseUrl;
+        return axios.get(url, {
             headers: {
                 Authorization: `${this.token}`,
             },
         });
+    }
+
+    upsert(data) {
+        return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
     }
 }

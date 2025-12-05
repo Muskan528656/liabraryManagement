@@ -1,4 +1,4 @@
- 
+
 export const getCategoryConfig = (externalData = {}, props = {}) => {
     return {
         moduleName: "categories",
@@ -41,7 +41,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
 
- 
+
             const duplicate = allCategories.find(
                 category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
                     category.id !== editingCategory?.id
@@ -74,7 +74,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
-              
+
                 console.log("Category saved:", response);
             }
         }

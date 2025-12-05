@@ -870,11 +870,11 @@ const BulkIssue = () => {
                             {memberSubscription.plan_name}
                             {memberSubscription.is_active ? " ✓" : " ✗"}
                           </Badge>
-                        
+
                         </div>
                       )}
 
-                   
+
                     </div>
 
                     <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />

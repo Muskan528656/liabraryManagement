@@ -18,6 +18,8 @@ const ResizableTable = ({
     selectedItems = [],
     onSelectionChange = () => { },
 }) => {
+
+    const safeData = Array.isArray(data) ? data : [];
     const [columnWidths, setColumnWidths] = useState({});
     const [isResizing, setIsResizing] = useState(false);
     const [resizeColumn, setResizeColumn] = useState(null);
@@ -28,18 +30,18 @@ const ResizableTable = ({
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
-    const totalPages = Math.ceil(data.length / recordsPerPage);
+    const totalPages = Math.ceil(safeData.length / recordsPerPage);
     const startRecord = (currentPage - 1) * recordsPerPage;
     const endRecord = startRecord + recordsPerPage;
 
     const paginatedData = useMemo(() => {
         if (currentPage === 1) {
-            return data.slice(0, Math.min(visibleRows, data.length));
+            return safeData.slice(0, Math.min(visibleRows, safeData.length));
         } else {
 
             return data.slice(startRecord, endRecord);
         }
-    }, [data, startRecord, endRecord, visibleRows, currentPage]);
+    }, [safeData, startRecord, endRecord, visibleRows, currentPage]);
 
 
     useEffect(() => {
@@ -60,11 +62,11 @@ const ResizableTable = ({
 
         observerRef.current = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && visibleRows < data.length && !isLoadingMore) {
+                if (entries[0].isIntersecting && visibleRows < safeData.length && !isLoadingMore) {
                     setIsLoadingMore(true);
 
                     setTimeout(() => {
-                        setVisibleRows((prev) => Math.min(prev + 20, data.length));
+                        setVisibleRows((prev) => Math.min(prev + 20, safeData.length));
                         setIsLoadingMore(false);
                     }, 300);
                 }
@@ -81,7 +83,7 @@ const ResizableTable = ({
                 observerRef.current.disconnect();
             }
         };
-    }, [data.length, visibleRows, currentPage, loading, isLoadingMore]);
+    }, [safeData.length, visibleRows, currentPage, loading, isLoadingMore]);
 
 
     const handleSelectAll = (e) => {
@@ -558,7 +560,7 @@ const ResizableTable = ({
                                 ))
                             )}
                             {/* Lazy Loading Trigger */}
-                            {currentPage === 1 && visibleRows < data.length && (
+                            {currentPage === 1 && visibleRows < safeData.length && (
                                 <tr ref={loadMoreRef}>
                                     <td
                                         colSpan={
@@ -608,8 +610,8 @@ const ResizableTable = ({
                     }}
                 >
                     <div>
-                        Showing {startRecord + 1} to {Math.min(endRecord, data.length)} of{" "}
-                        {data.length} records
+                        Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
+                        {safeData.length} records
                     </div>
                     <Pagination className="mb-0" style={{ marginBottom: 0 }}>
                         <Pagination.First

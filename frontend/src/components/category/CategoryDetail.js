@@ -1,7 +1,8 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
-const CategoryDetail = () => {
+const CategoryDetail = (timeZone) => {
   const fields = {
     title: "name",
 
@@ -12,9 +13,17 @@ const CategoryDetail = () => {
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
 
+      {
+        key: "createddate", label: "Created Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
+      {
+        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
     ],
   };
 
@@ -22,7 +31,7 @@ const CategoryDetail = () => {
     <ModuleDetail
       moduleName="category"
       moduleApi="category"
-      moduleLabel="Category Management"
+      moduleLabel="Category"
       icon="fa-solid fa-tags"
       fields={fields}
     />
@@ -30,4 +39,3 @@ const CategoryDetail = () => {
 };
 
 export default CategoryDetail;
-

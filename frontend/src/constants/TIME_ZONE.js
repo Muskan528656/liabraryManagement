@@ -1,87 +1,87 @@
-// export const TIME_ZONE = [
-//     { "label": "GMT+05:30 — India Standard Time (IST)", "value": "GMT+05:30" },
-//     { "label": "GMT+06:00 — Bangladesh Standard Time", "value": "GMT+06:00" },
-//     { "label": "GMT+05:45 — Nepal Time", "value": "GMT+05:45" },
-//     { "label": "GMT+05:00 — Pakistan Standard Time", "value": "GMT+05:00" },
-//     { "label": "GMT+04:30 — Afghanistan Time", "value": "GMT+04:30" },
-//     { "label": "GMT+04:00 — Gulf Standard Time (UAE)", "value": "GMT+04:00" },
-//     { "label": "GMT+03:00 — Arabia Standard Time (Saudi Arabia)", "value": "GMT+03:00" },
-//     { "label": "GMT+03:30 — Iran Standard Time", "value": "GMT+03:30" },
-//     { "label": "GMT+02:00 — Eastern European Time", "value": "GMT+02:00" },
-//     { "label": "GMT+01:00 — Central European Time", "value": "GMT+01:00" },
-//     { "label": "GMT+00:00 — Greenwich Mean Time", "value": "GMT+00:00" },
-//     { "label": "GMT-01:00 — Azores Time", "value": "GMT-01:00" },
-//     { "label": "GMT-02:00 — South Georgia Time", "value": "GMT-02:00" },
-//     { "label": "GMT-03:00 — Argentina/Brazil Time", "value": "GMT-03:00" },
-//     { "label": "GMT-03:30 — Newfoundland Time", "value": "GMT-03:30" },
-//     { "label": "GMT-04:00 — Atlantic Standard Time", "value": "GMT-04:00" },
-//     { "label": "GMT-05:00 — Eastern Standard Time (EST)", "value": "GMT-05:00" },
-//     { "label": "GMT-06:00 — Central Standard Time (CST)", "value": "GMT-06:00" },
-//     { "label": "GMT-07:00 — Mountain Standard Time (MST)", "value": "GMT-07:00" },
-//     { "label": "GMT-08:00 — Pacific Standard Time (PST)", "value": "GMT-08:00" },
-//     { "label": "GMT-09:00 — Alaska Time", "value": "GMT-09:00" },
-//     { "label": "GMT-10:00 — Hawaii-Aleutian Time", "value": "GMT-10:00" },
-//     { "label": "GMT-11:00 — Samoa Time", "value": "GMT-11:00" },
-//     { "label": "GMT+07:00 — Indochina Time (Vietnam, Thailand)", "value": "GMT+07:00" },
-//     { "label": "GMT+08:00 — China Standard Time", "value": "GMT+08:00" },
-//     { "label": "GMT+08:00 — Singapore Standard Time", "value": "GMT+08:00" },
-//     { "label": "GMT+09:00 — Japan Standard Time (JST)", "value": "GMT+09:00" },
-//     { "label": "GMT+09:30 — Australian Central Time", "value": "GMT+09:30" },
-//     { "label": "GMT+10:00 — Australian Eastern Time", "value": "GMT+10:00" },
-//     { "label": "GMT+12:00 — New Zealand Time", "value": "GMT+12:00" },
-//     { "label": "GMT+13:00 — Tonga Time", "value": "GMT+13:00" },
-//     { "label": "Africa/Abidjan (GMT+00:00)", "value": "Africa/Abidjan" },
-//     { "label": "Africa/Accra (GMT+00:00)", "value": "Africa/Accra" },
-//     { "label": "Africa/Addis Ababa (GMT+03:00)", "value": "Africa/Addis_Ababa" },
-//     { "label": "Africa/Algiers (GMT+01:00)", "value": "Africa/Algiers" },
-//     { "label": "Africa/Asmara (GMT+03:00)", "value": "Africa/Asmara" },
-//     { "label": "Africa/Bangui (GMT+01:00)", "value": "Africa/Bangui" },
-//     { "label": "Africa/Bissau (GMT+00:00)", "value": "Africa/Bissau" },
-//     { "label": "Africa/Cairo (GMT+02:00)", "value": "Africa/Cairo" },
-//     { "label": "Africa/Casablanca (GMT+01:00)", "value": "Africa/Casablanca" },
-//     { "label": "Africa/Harare (GMT+02:00)", "value": "Africa/Harare" },
-//     { "label": "Africa/Johannesburg (GMT+02:00)", "value": "Africa/Johannesburg" },
-//     { "label": "Africa/Lagos (GMT+01:00)", "value": "Africa/Lagos" },
-//     { "label": "Africa/Nairobi (GMT+03:00)", "value": "Africa/Nairobi" },
-//     { "label": "America/Chicago (GMT-06:00)", "value": "America/Chicago" },
-//     { "label": "America/Denver (GMT-07:00)", "value": "America/Denver" },
-//     { "label": "America/Los Angeles (GMT-08:00)", "value": "America/Los_Angeles" },
-//     { "label": "America/New York (GMT-05:00)", "value": "America/New_York" },
-//     { "label": "America/Phoenix (GMT-07:00)", "value": "America/Phoenix" },
-//     { "label": "America/Toronto (GMT-05:00)", "value": "America/Toronto" },
-//     { "label": "America/Vancouver (GMT-08:00)", "value": "America/Vancouver" },
-//     { "label": "Asia/Baghdad (GMT+03:00)", "value": "Asia/Baghdad" },
-//     { "label": "Asia/Bahrain (GMT+03:00)", "value": "Asia/Bahrain" },
-//     { "label": "Asia/Bangkok (GMT+07:00)", "value": "Asia/Bangkok" },
-//     { "label": "Asia/Dubai (GMT+04:00)", "value": "Asia/Dubai" },
-//     { "label": "Asia/Hong Kong (GMT+08:00)", "value": "Asia/Hong_Kong" },
-//     { "label": "Asia/Jakarta (GMT+07:00)", "value": "Asia/Jakarta" },
-//     { "label": "Asia/Kathmandu (GMT+05:45)", "value": "Asia/Kathmandu" },
-//     { "label": "Asia/Kolkata (GMT+05:30)", "value": "Asia/Kolkata" },
-//     { "label": "Asia/Kuala Lumpur (GMT+08:00)", "value": "Asia/Kuala_Lumpur" },
-//     { "label": "Asia/Qatar (GMT+03:00)", "value": "Asia/Qatar" },
-//     { "label": "Asia/Riyadh (GMT+03:00)", "value": "Asia/Riyadh" },
-//     { "label": "Asia/Singapore (GMT+08:00)", "value": "Asia/Singapore" },
-//     { "label": "Asia/Tokyo (GMT+09:00)", "value": "Asia/Tokyo" },
-//     { "label": "Australia/Brisbane (GMT+10:00)", "value": "Australia/Brisbane" },
-//     { "label": "Australia/Melbourne (GMT+10:00)", "value": "Australia/Melbourne" },
-//     { "label": "Australia/Sydney (GMT+10:00)", "value": "Australia/Sydney" },
-//     { "label": "Europe/Amsterdam (GMT+01:00)", "value": "Europe/Amsterdam" },
-//     { "label": "Europe/Athens (GMT+02:00)", "value": "Europe/Athens" },
-//     { "label": "Europe/Berlin (GMT+01:00)", "value": "Europe/Berlin" },
-//     { "label": "Europe/Brussels (GMT+01:00)", "value": "Europe/Brussels" },
-//     { "label": "Europe/Bucharest (GMT+02:00)", "value": "Europe/Bucharest" },
-//     { "label": "Europe/Helsinki (GMT+02:00)", "value": "Europe/Helsinki" },
-//     { "label": "Europe/Istanbul (GMT+03:00)", "value": "Europe/Istanbul" },
-//     { "label": "Europe/London (GMT+00:00)", "value": "Europe/London" },
-//     { "label": "Europe/Moscow (GMT+03:00)", "value": "Europe/Moscow" },
-//     { "label": "Europe/Paris (GMT+01:00)", "value": "Europe/Paris" },
-//     { "label": "Europe/Rome (GMT+01:00)", "value": "Europe/Rome" },
-//     { "label": "Europe/Zurich (GMT+01:00)", "value": "Europe/Zurich" },
-//     { "label": "Pacific/Auckland (GMT+12:00)", "value": "Pacific/Auckland" },
-//     { "label": "Pacific/Fiji (GMT+12:00)", "value": "Pacific/Fiji" },
-//     { "label": "Pacific/Honolulu (GMT-10:00)", "value": "Pacific/Honolulu" }
-// ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const TIME_ZONE =[
     { "label": "GMT+05:30 — India Standard Time (IST)", "value": "GMT+05:30", "timezone": "Asia/Kolkata" },

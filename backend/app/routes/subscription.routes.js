@@ -1,6 +1,7 @@
 /**
  * Subscription Routes
  * Author: Muskan Khan
+ * changes: Aabid
  * Date: DEC, 2025
  * Copyright: www.ibirdsservices.com
  */
@@ -40,7 +41,8 @@ module.exports = (app) => {
             body("start_date").optional().isISO8601(),
             body("end_date").optional().isISO8601(),
             body("is_active").optional().isBoolean(),
-            body("allowed_books").optional().isNumeric()
+            body("allowed_books").optional().isNumeric(),
+
         ],
         async (req, res) => {
             const errors = validationResult(req);

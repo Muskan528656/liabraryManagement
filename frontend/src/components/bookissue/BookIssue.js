@@ -16,8 +16,12 @@ import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 import ResizableTable from "../common/ResizableTable";
 import BulkIssue from "./BulkIssue";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import moment from "moment";
 const BookIssue = () => {
   const navigate = useNavigate();
+  const { timeZone } = useTimeZone();
   const [selectedBook, setSelectedBook] = useState(null);
   const [selectedLibraryCard, setSelectedLibraryCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -37,6 +41,7 @@ const BookIssue = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
   const [durationDays, setDurationDays] = useState(7);
+
   const bookInputRef = useRef(null);
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
@@ -45,7 +50,7 @@ const BookIssue = () => {
   useEffect(() => {
     fetchIssuedBooks();
     fetchLibrarySettings();
- 
+
     setTimeout(() => {
       const bookSelect = bookInputRef.current?.querySelector("input");
       if (bookSelect) {
@@ -81,7 +86,7 @@ const BookIssue = () => {
 
       const response = await settingsApi.get("/all");
       if (response.data && response.data.success && response.data.data) {
- 
+
       } else if (
         response.data &&
         typeof response.data === "object" &&
@@ -425,42 +430,61 @@ const BookIssue = () => {
       field: "issue_date",
       label: "Issue Date",
       width: 120,
-      render: (value) => formatDate(value),
+
+      render: (value) => {
+
+        return moment(convertToUserTimezone(value, timeZone)).format('l')
+      }
     },
     {
       field: "due_date",
       label: "Submission Date",
       width: 180,
       render: (value, record) => {
-        const daysRemaining = getDaysRemaining(value);
-        const isOverdue = daysRemaining !== null && daysRemaining < 0;
-        const isDueSoon =
-          daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3;
+
+        if (!value) return "—";
+
+        const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
+
+
+        const dueObj = new Date(value);
+        const nowObj = new Date();
+
+        dueObj.setHours(0, 0, 0, 0);
+        nowObj.setHours(0, 0, 0, 0);
+
+
+        const diffTime = dueObj - nowObj;
+
+        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const isOverdue = daysRemaining < 0;
+        const isDueSoon = daysRemaining >= 0 && daysRemaining <= 3;
 
         return (
           <div>
-            <div>{formatDate(value)}</div>
-            {daysRemaining !== null && (
-              <div className="small mt-1">
-                {isOverdue ? (
-                  <Badge bg="danger">
-                    Overdue by {Math.abs(daysRemaining)} day
-                    {Math.abs(daysRemaining) !== 1 ? "s" : ""}
-                  </Badge>
-                ) : isDueSoon ? (
-                  <Badge bg="warning" text="dark">
-                    {daysRemaining === 0
-                      ? "Due Today"
-                      : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
-                      } left`}
-                  </Badge>
-                ) : (
-                  <Badge bg="success">
-                    {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
-                  </Badge>
-                )}
-              </div>
-            )}
+
+            <div style={{ fontWeight: 500 }}>{displayDate}</div>
+
+            <div className="small mt-1">
+              {isOverdue ? (
+                <Badge bg="danger">
+                  Overdue by {Math.abs(daysRemaining)} day
+                  {Math.abs(daysRemaining) !== 1 ? "s" : ""}
+                </Badge>
+              ) : isDueSoon ? (
+                <Badge bg="warning" text="dark">
+                  {daysRemaining === 0
+                    ? "Due Today"
+                    : `${daysRemaining} day${daysRemaining !== 1 ? "s" : ""
+                    } left`}
+                </Badge>
+              ) : (
+                <Badge bg="success">
+                  {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
+                </Badge>
+              )}
+            </div>
           </div>
         );
       },
@@ -483,7 +507,7 @@ const BookIssue = () => {
       className="mt-4"
       style={{ marginTop: "90px", padding: "0 1.5rem" }}
     >
-      {/* Header Card */}
+
       <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
         <Card.Body className="">
           <Tab.Container

@@ -251,5 +251,5 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL+"/api/files", router);
+   app.use("/api/files", router);
 };

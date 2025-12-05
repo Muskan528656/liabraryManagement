@@ -10,7 +10,7 @@ const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {
 
-    // fetch all permissions (admin only use)
+
     router.get("/", fetchUser, async (req, res) => {
         try {
             const perms = await Permission.findAll();
@@ -20,7 +20,7 @@ module.exports = (app) => {
         }
     });
 
-    // find permissions by role
+
     router.get("/role/:roleId", fetchUser, async (req, res) => {
         try {
             const perms = await Permission.findByRole(req.params.roleId);
@@ -30,7 +30,7 @@ module.exports = (app) => {
         }
     });
 
-    // create permission row
+
     router.post(
         "/",
         fetchUser,
@@ -51,7 +51,7 @@ module.exports = (app) => {
             }
         }
     );
-    // ✅ Bulk update permissions for a role
+
     router.put("/role/:roleId", fetchUser, async (req, res) => {
         try {
             const { roleId } = req.params;
@@ -80,7 +80,7 @@ module.exports = (app) => {
         }
     });
 
-    // ✅ Get permissions by role ID
+
     router.get("/role/:roleId", fetchUser, async (req, res) => {
         try {
             const { roleId } = req.params;
@@ -98,7 +98,7 @@ module.exports = (app) => {
             });
         }
     });
-    // update flags
+
     router.put("/:id", fetchUser, async (req, res) => {
         try {
             const perm = await Permission.updateById(req.params.id, req.body, req.userinfo?.id);

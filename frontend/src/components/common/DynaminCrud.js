@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Table } from "react-bootstrap";
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
 import Loader from "./Loader";
@@ -46,7 +46,7 @@ const DynamicCRUD = ({
     recordsPerPage = 10,
     icon
 }) => {
-    const location = useLocation();
+
     const navigate = useNavigate();
 
     const {
@@ -83,6 +83,8 @@ const DynamicCRUD = ({
     const [isEditable, setIsEditable] = useState(false);
 
 
+    console.log("formData", formData)
+    console.log("Data",data)
 
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);

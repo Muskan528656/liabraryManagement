@@ -1,4 +1,3 @@
-import { useState } from "react";
 import * as constants from "../constants/CONSTANT";
 import helper from "../components/common/helper";
 const AuthApi = {
@@ -10,6 +9,7 @@ const AuthApi = {
         password: credentials.password || "",
         tcode: credentials.tcode ? credentials.tcode.trim().toLowerCase() : "",
       };
+      console.log("LOGIGIG",loginData)
       let response = await fetch(constants.API_BASE_URL + "/api/auth/login", {
         method: "POST",
         mode: "cors",
@@ -34,7 +34,7 @@ const AuthApi = {
   },
 
   async fetchMyImage() {
-    const token = sessionStorage.getItem("token");
+
 
     let response = await helper.fetchWithAuth(
       constants.API_BASE_URL + "/api/auth/myimage",
@@ -50,7 +50,7 @@ const AuthApi = {
   },
 
   async fetchUserImage(userid) {
-    const token = sessionStorage.getItem("token");
+
 
     let response = await helper.fetchWithAuth(
       constants.API_BASE_URL + "/api/auth/userimage/" + userid,

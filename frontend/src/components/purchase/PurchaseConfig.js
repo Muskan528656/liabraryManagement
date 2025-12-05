@@ -1,4 +1,7 @@
-export const getPurchaseConfig = (data = {}, props = {}) => {
+import moment from "moment";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+
+export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const { vendors = [], books = [], authors = [], categories = [] } = data;
 
     const allColumns = [
@@ -39,7 +42,10 @@ export const getPurchaseConfig = (data = {}, props = {}) => {
             field: "purchase_date",
             label: "Purchase Date",
             sortable: true,
-            render: (value) => value ? new Date(value).toLocaleDateString() : "-"
+
+              render: (value) => {
+                return moment(convertToUserTimezone(value, timeZone)).format('l');
+              }
         },
         {
             field: "notes",

@@ -960,14 +960,13 @@ const BulkPurchasePage = () => {
                             </Col>
                             <Col lg={2}></Col> {/* Empty column for spacing */}
                             <Col lg={2} className="d-flex justify-content-end">
-                                <Button
-                                    size="sm"
+                                <button
+                                    className="custom-btn-primary"
                                     onClick={handleAddBookRow}
-                                    className="mt-4 custom-btn-primary"
                                 >
                                     <i className="fa-solid fa-plus me-1"></i>
                                     Add New Row
-                                </Button>
+                                </button>
                             </Col>
                         </Row>
 
@@ -1393,15 +1392,10 @@ const BulkPurchasePage = () => {
                 minHeight: '100vh',
                 backgroundColor: '#f5f7fb'
             }}>
-                {/* Header with Stats Cards on Right Side */}
-                <Row className="mb-4">
-                    {/* Stats Cards on Right Side - Horizontal */}
-                </Row>
 
-                {/* Improved Styled Tabs */}
                 <div className="mb-1">
                     <h4 className="fw-bold text-dark mb-1">
-                        <i className="fa-solid fa-cart-plus me-2" style={{ color: '#6f42c1' }}></i>
+                        <i className="fa-solid fa-cart-plus " style={{ color: '#6f42c1' }}></i>
                         Bulk Purchase Entry
                     </h4>
                     <Tabs

@@ -129,7 +129,7 @@ const UserDetail = () => {
         label: "User Role",
         type: "select",
         options: userRoleOptions,
-        displayKey: "role_name", 
+        displayKey: "role_name",
         render: (value, data) => {
 
           const roleName = data.role_name ||
@@ -191,7 +191,7 @@ const UserDetail = () => {
     <ModuleDetail
       moduleName="user"
       moduleApi="user"
-      moduleLabel="User Management"
+      moduleLabel="User"
       icon="fa-solid fa-users"
       fields={fields}
       lookupNavigation={lookupNavigation}

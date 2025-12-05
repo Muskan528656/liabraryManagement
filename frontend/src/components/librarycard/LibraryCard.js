@@ -9,6 +9,7 @@ import DataApi from "../../api/dataApi";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { handleDownloadBarcode } from './LibraryCardDownload';
 import { handlePrintBarcode } from './LibrarycardPrint';
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -20,7 +21,9 @@ const LibraryCard = (props) => {
   const [usersData, setUsersData] = useState([]);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [configError, setConfigError] = useState(null);
+  const { timeZone } = useTimeZone();
 
+  console.log("sdfghjgfdewertyu", timeZone);
 
   const fetchSubscriptions = useCallback(async () => {
     try {
@@ -109,7 +112,7 @@ const LibraryCard = (props) => {
         });
 
 
-        const config = await getLibraryCardConfig(externalData);
+        const config = await getLibraryCardConfig(externalData, timeZone);
         setBaseConfig(config);
 
         console.log("Base config loaded successfully");
@@ -543,7 +546,6 @@ const LibraryCard = (props) => {
       <DynamicCRUD
         {...finalConfig}
         icon="fa-solid fa-id-card"
-
         subscriptionsData={subscriptionsData}
         usersData={usersData}
       />

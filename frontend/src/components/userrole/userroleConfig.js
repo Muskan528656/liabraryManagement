@@ -1,7 +1,18 @@
 import moment from 'moment';
 import { Badge } from "react-bootstrap";
-
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
+
+    const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0
+        ? externalData.countryCodeList.map(item => ({
+            value: item.id,
+            label: item.name
+        }))
+        : COUNTRY_CODES.map(item => ({
+            value: item.country_code,
+            label: `${item.country} (${item.country_code})`
+        }));
+
     return {
         moduleName: "user_roles",
         moduleLabel: "User Role",
@@ -10,6 +21,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         initialFormData: {
             role_name: "",
             is_active: true,
+            country_code: "",
         },
 
         columns: [
@@ -17,6 +29,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 field: "role_name",
                 label: "Role Name",
             },
+
 
             {
                 field: "is_active",

@@ -1,34 +1,6 @@
 import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-const convertUTCToTZ = (utcDate, tz) => {
-    if (!utcDate) return "";
-    try {
-        return new Date(utcDate).toLocaleString("en-US", {
-            timeZone: tz,
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-        });
-    } catch (e) {
-        return utcDate;
-    }
-};
-
-const convertTZToUTC = (localDate, tz) => {
-    if (!localDate) return null;
-    try {
-        const date = new Date(localDate);
-        const utcStr = date.toLocaleString("en-US", { timeZone: tz });
-        const utcDate = new Date(utcStr);
-        return utcDate.toISOString();
-    } catch (e) {
-        return localDate;
-    }
-};
-
+import moment from "moment";
 
 export const subscriptionDataDependencies = {
     company: "company",
@@ -40,14 +12,8 @@ const statusBadge = (value) => (
     </span>
 );
 
-
 export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, timeZone) => {
-    const companies = externalData?.company || [];
-
-    const COMPANY_TIMEZONE =
-        companies.length > 0 && companies[0].time_zone
-            ? companies[0].time_zone
-            : "America/New_York";
+    console.log("Config Timezone:", timeZone);
 
     return {
         moduleName: "subscriptions",
@@ -66,8 +32,22 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
         columns: [
             { field: "plan_name", label: "Plan Name" },
             { field: "renewal", label: "Renewal" },
-            // { field: "start_date_display", label: "Start Date" },
-            // { field: "end_date_display", label: "End Date" },
+            {
+
+                field: "start_date",
+                label: "Start Date",
+                render: (value) => {
+                    return moment(convertToUserTimezone(value, timeZone)).format('l');
+                }
+            },
+            {
+
+                field: "end_date",
+                label: "End Date",
+                render: (value) => {
+                    return moment(convertToUserTimezone(value, timeZone)).format('l');
+                },
+            },
             {
                 field: "allowed_books",
                 label: "Allowed Books",
@@ -78,24 +58,9 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
                 label: "Status",
                 render: (value) => {
                     const statusValue =
-                        value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
+                        value ||
+                        (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
                     return statusBadge(statusValue === "active" || statusValue === true);
-                },
-            },
-            {
-                field: "start_date_display",
-                label: "Start Date",
-                render: (value) => {
-                    // Pass the safe 'currentTz'
-                    return convertToUserTimezone(value, timeZone);
-                }
-            },
-            {
-                field: "end_date_display",
-                label: "End Date",
-                render: (value) => {
-                    // Pass the safe 'currentTz'
-                    return convertToUserTimezone(value, timeZone);
                 },
             },
         ],
@@ -115,7 +80,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
                 type: "number",
                 min: 0,
                 defaultValue: allowedBooks,
-                disabled: true,
+
                 placeholder: "Number of books allowed",
                 colSize: 6,
             },
@@ -136,7 +101,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
             {
                 name: "renewal",
                 label: "Renewal",
-                type: "number",
+                type: "text",
                 colSize: 6,
                 helpText: "Keep empty for never ending plans",
             },
@@ -160,10 +125,12 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
                 formData.start_date &&
                 formData.end_date &&
                 new Date(formData.end_date) < new Date(formData.start_date)
-            )
+            ) {
                 errors.push("End date cannot be before start date");
-            if (formData.allowed_books && Number(formData.allowed_books) < 0)
+            }
+            if (formData.allowed_books && Number(formData.allowed_books) < 0) {
                 errors.push("Allowed books must be positive");
+            }
             return errors;
         },
 
@@ -178,25 +145,37 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
             allowEdit: true,
         },
 
-
         details: [
             { key: "plan_name", label: "Plan Name" },
             { key: "allowed_books", label: "Allowed Books", disabled: true },
-            { key: "start_date_display", label: "Start Date" },
-            { key: "end_date_display", label: "End Date" },
+            {
+                key: "start_date_display", label: "Start Date",
+                render: (value) => {
+                    return moment(convertToUserTimezone(value, timeZone)).format('l');
+                },
+            },
+            {
+                key: "end_date_display", label: "End Date",
+                render: (value) => {
+                    return moment(convertToUserTimezone(value, timeZone)).format('l');
+                },
+            },
             { key: "status", label: "Status" },
+            {
+                key: "createddate", label: "Created Date",
+                render: (value) => {
+                    return convertToUserTimezone(value, timeZone)
+                },
+            }
         ],
 
         customHandlers: {
             beforeSave: (formData) => {
-                formData.start_date = convertTZToUTC(formData.start_date, COMPANY_TIMEZONE);
-                formData.end_date = convertTZToUTC(formData.end_date, COMPANY_TIMEZONE);
-
                 if (formData.plan_name === "") formData.plan_name = null;
                 if (formData.allowed_books === "") formData.allowed_books = null;
 
-                if (formData.status) {
-                    formData.is_active = formData.status === "active";
+                if (formData.status !== undefined) {
+                    formData.is_active = formData.status === "active" || formData.status === true;
                     delete formData.status;
                 }
 
@@ -204,35 +183,27 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
             },
 
             onDataLoad: (data) => {
-                if (Array.isArray(data)) {
-                    data.forEach((item) => {
-                        item.start_date_display = item.start_date
-                            ? convertUTCToTZ(item.start_date, COMPANY_TIMEZONE) + ` (${COMPANY_TIMEZONE})`
-                            : "";
+                const processItem = (item) => {
 
-                        item.end_date_display = item.end_date
-                            ? convertUTCToTZ(item.end_date, COMPANY_TIMEZONE) + ` (${COMPANY_TIMEZONE})`
-                            : "";
-
-                        if (item.hasOwnProperty("is_active")) {
-                            item.status = item.is_active ? "active" : "inactive";
-                        }
-                    });
-                } else if (data && typeof data === "object") {
-                    data.start_date_display = data.start_date
-                        ? convertUTCToTZ(data.start_date, COMPANY_TIMEZONE) + ` (${COMPANY_TIMEZONE})`
+                    item.start_date_display = item.start_date
+                        ? convertToUserTimezone(item.start_date, timeZone)
                         : "";
 
-                    data.end_date_display = data.end_date
-                        ? convertUTCToTZ(data.end_date, COMPANY_TIMEZONE) + ` (${COMPANY_TIMEZONE})`
+                    item.end_date_display = item.end_date
+                        ? convertToUserTimezone(item.end_date, timeZone)
                         : "";
-
-                    if (data.hasOwnProperty("is_active")) {
-                        data.status = data.is_active ? "active" : "inactive";
+                    if (item.hasOwnProperty("is_active")) {
+                        item.status = item.is_active ? "active" : "inactive";
                     }
 
-                    if (!data.plan_name) data.plan_name = "";
-                    if (!data.allowed_books) data.allowed_books = "";
+                    if (!item.plan_name) item.plan_name = "";
+                    if (!item.allowed_books) item.allowed_books = "";
+                };
+
+                if (Array.isArray(data)) {
+                    data.forEach(processItem);
+                } else if (data && typeof data === "object") {
+                    processItem(data);
                 }
             },
         },

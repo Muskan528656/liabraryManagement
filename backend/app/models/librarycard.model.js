@@ -157,7 +157,7 @@ async function updateById(id, cardData, userId) {
     let idx = 1;
     console.log("cardDatacardData", cardData);
 
-    // Field names as they come in cardData
+
     const fields = [
       "card_number",
       "is_active",
@@ -172,7 +172,7 @@ async function updateById(id, cardData, userId) {
       "registration_date",
       "type",
       "country_code",
-      "allowed_book",
+      "allowed_books",
     ];
 
     fields.forEach(f => {
@@ -264,5 +264,4 @@ module.exports = {
   updateById,
   deleteById,
 };
-
 

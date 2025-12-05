@@ -89,7 +89,7 @@ async function findByEmail(email) {
   console.log(`Finding user by email: ${emailLower} in schema: ${this.schema}`);
 
   try {
-    // First, check if user exists
+
     const userCheck = await sql.query(`
       SELECT * FROM ${this.schema}.user 
       WHERE LOWER(TRIM(email)) = $1 AND isactive = true
@@ -104,7 +104,7 @@ async function findByEmail(email) {
     const user = userCheck.rows[0];
     console.log("User found:", { id: user.id, companyid: user.companyid, email: user.email });
 
-    // Now get user with company info - FIXED QUERY
+
     const result = await sql.query(`
       WITH user_info AS (
         SELECT 
@@ -157,7 +157,7 @@ async function findByEmail(email) {
       return result.rows[0];
     }
 
-    // Fallback: Return user without company info
+
     console.log("Company info not found, returning user only");
     return {
       userinfo: {

@@ -14,7 +14,7 @@ function init(schema_name) {
 }
 
 
- 
+
 async function create(submissionData, userId) {
   console.log("Schema initialized for BookSubmission model:", schema);
   try {
@@ -49,13 +49,13 @@ async function create(submissionData, userId) {
     let penalty = 0;
     if (daysOverdue > 0) {
       try {
-       
+
         const penaltySettingsQuery = `SELECT * FROM ${schema}.penalty_masters WHERE is_active = true LIMIT 1`;
         const penaltyResult = await sql.query(penaltySettingsQuery);
         if (penaltyResult.rows.length > 0) {
           const settings = penaltyResult.rows[0];
-          
-         
+
+
           if (settings.rate_period === 'day') {
             penalty = settings.rate * daysOverdue;
           } else if (settings.rate_period === 'week') {
@@ -64,7 +64,7 @@ async function create(submissionData, userId) {
             penalty = settings.rate * Math.ceil(daysOverdue / 30);
           }
 
-          
+
           if (settings.concession_percentage > 0) {
             penalty = penalty * (1 - settings.concession_percentage / 100);
           }
@@ -79,13 +79,13 @@ async function create(submissionData, userId) {
       const conditionAfter = submissionData.condition_after.toLowerCase();
 
       if (conditionAfter === 'damaged' && conditionBefore !== 'damaged') {
-        penalty += 500; 
+        penalty += 500;
       } else if (conditionAfter === 'fair' && conditionBefore === 'good') {
-        penalty += 100; 
+        penalty += 100;
       }
     }
 
-    penalty = Math.round(penalty * 100) / 100; 
+    penalty = Math.round(penalty * 100) / 100;
 
     const submissionQuery = `INSERT INTO ${schema}.book_submissions 
   (issue_id, book_id, submitted_by, submit_date, condition_before, condition_after, remarks, penalty, createddate , createdbyid,lastmodifiedbyid)
@@ -120,18 +120,18 @@ async function create(submissionData, userId) {
 
     await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies + 1 WHERE id = $1`, [issue.book_id]);
 
-    await sql.query("COMMIT"); 
+    await sql.query("COMMIT");
     return submission;
   } catch (error) {
-    await sql.query("ROLLBACK"); 
+    await sql.query("ROLLBACK");
     console.error("Error in create submission:", error);
     throw error;
   } finally {
-    
+
   }
 }
 
- 
+
 async function findById(id) {
   try {
     if (!schema) {
@@ -164,7 +164,7 @@ async function findById(id) {
   }
 }
 
- 
+
 async function findAll() {
   console.log('schema', schema);
   console.log("findAll called for schema:", schema);
@@ -197,7 +197,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findByIssueId(issueId) {
   try {
     if (!schema) {
@@ -227,7 +227,7 @@ async function findByIssueId(issueId) {
   }
 }
 
- 
+
 async function findByBookId(bookId) {
   try {
     if (!schema) {
@@ -258,7 +258,7 @@ async function findByBookId(bookId) {
   }
 }
 
- 
+
 async function findByDateRange(startDate, endDate) {
   try {
     if (!schema) {
@@ -289,7 +289,7 @@ async function findByDateRange(startDate, endDate) {
   }
 }
 
- 
+
 async function findByLibrarian(librarianId) {
   try {
     if (!schema) {
@@ -320,7 +320,7 @@ async function findByLibrarian(librarianId) {
   }
 }
 
- 
+
 async function deleteById(id) {
   try {
     const query = `DELETE FROM ${schema}.book_submissions WHERE id = $1 RETURNING *`;
@@ -335,7 +335,7 @@ async function deleteById(id) {
   }
 }
 
- 
+
 async function getAllBooks() {
   try {
     const query = `SELECT 
@@ -375,7 +375,7 @@ async function checkbeforeDue() {
   let notifications = [];
   try {
     const response = await getAllBooks();
- 
+
 
     const submittedBooks = response.data;
 
@@ -387,7 +387,7 @@ async function checkbeforeDue() {
 
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
- 
+
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
@@ -406,11 +406,30 @@ async function checkbeforeDue() {
       }
     });
 
- 
+
     return notifications;
 
   } catch (error) {
     console.error("❌ Error:", error);
+  }
+} async function getSubmitCountByBookId(bookId) {
+  try {
+    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+
+    const query = `
+      SELECT COUNT(*) AS submit_count
+      FROM ${schema}.book_issues
+      WHERE book_id = $1 
+        AND return_date IS NOT NULL 
+        AND status = 'returned'
+    `;
+    const result = await sql.query(query, [bookId]);
+
+    return parseInt(result.rows[0].submit_count) || 0;
+
+  } catch (error) {
+    console.error("Error in getSubmitCountByBookId:", error);
+    throw error;
   }
 }
 
@@ -431,4 +450,5 @@ module.exports = {
   deleteById,
   checkbeforeDue,
   getAllBooks
+  , getSubmitCountByBookId
 };

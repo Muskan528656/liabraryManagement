@@ -91,7 +91,7 @@ async function updateById(id, data, userId) {
     const result = await sql.query(query, values);
     return result.rows[0];
 }
-// ✅ Find permissions by role ID
+
 async function findByRoleId(roleId) {
     try {
         const query = `
@@ -110,18 +110,18 @@ async function findByRoleId(roleId) {
     }
 }
 
-// ✅ Update multiple permissions for a role
+
 async function updateMultiple(roleId, permissions, userId) {
     try {
         const updatedPermissions = [];
 
-        // Begin transaction
+
         await sql.query('BEGIN');
 
         for (const perm of permissions) {
             const { module_id, allow_view, allow_create, allow_edit, allow_delete } = perm;
 
-            // Check if permission already exists
+
             const existingQuery = `
                 SELECT id FROM demo.permissions 
                 WHERE role_id = $1 AND module_id = $2
@@ -129,7 +129,7 @@ async function updateMultiple(roleId, permissions, userId) {
             const existingResult = await sql.query(existingQuery, [roleId, module_id]);
 
             if (existingResult.rows.length > 0) {
-                // Update existing permission
+
                 const updateQuery = `
                     UPDATE demo.permissions
                     SET 
@@ -156,7 +156,7 @@ async function updateMultiple(roleId, permissions, userId) {
                 const result = await sql.query(updateQuery, values);
                 updatedPermissions.push(result.rows[0]);
             } else {
-                // Insert new permission
+
                 const insertQuery = `
                     INSERT INTO demo.permissions 
                     (role_id, module_id, allow_view, allow_create, allow_edit, allow_delete, createdbyid, lastmodifiedbyid)
@@ -179,12 +179,12 @@ async function updateMultiple(roleId, permissions, userId) {
             }
         }
 
-        // Commit transaction
+
         await sql.query('COMMIT');
 
         return updatedPermissions;
     } catch (error) {
-        // Rollback on error
+
         await sql.query('ROLLBACK');
         console.error("Error in Permission.updateMultiple:", error);
         throw error;

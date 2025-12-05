@@ -4,7 +4,6 @@ export const API_BASE_URL =
     : `${window.location.protocol}//${window.location.hostname}/ibs`;
 
 export const FRONTEND_URL = `${window.location.protocol}//${window.location.hostname}`;
-
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
 export const EDIT_LEAD = "EDIT_LEAD";
