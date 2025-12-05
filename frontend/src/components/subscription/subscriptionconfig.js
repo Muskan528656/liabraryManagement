@@ -37,7 +37,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
         field: "start_date", 
         label: "Start Date",
         render: (value) => {
-          return moment(convertToUserTimezone(value, timeZone)).format('l');
+          return moment(convertToUserTimezone(value, timeZone)).format('L');
         }
       },
       {
@@ -45,7 +45,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
         field: "end_date",
         label: "End Date",
         render: (value) => {
-          return moment(convertToUserTimezone(value, timeZone)).format('l');
+          return moment(convertToUserTimezone(value, timeZone)).format('L');
         },
       },
       {
@@ -150,12 +150,12 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
       { key: "allowed_books", label: "Allowed Books", disabled: true },
       { key: "start_date_display", label: "Start Date",
          render: (value) => {
-          return moment(convertToUserTimezone(value, timeZone)).format('l');
+          return convertToUserTimezone(value, timeZone)
         },
        },
       { key: "end_date_display", label: "End Date",
             render: (value) => {
-          return moment(convertToUserTimezone(value, timeZone)).format('l');
+          return convertToUserTimezone(value, timeZone);
         },
        },
       { key: "status", label: "Status" },

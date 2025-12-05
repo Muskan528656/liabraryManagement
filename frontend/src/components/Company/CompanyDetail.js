@@ -2,7 +2,7 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
-const CompanyDetail = () => {
+const CompanyDetail = () => { 
   const fields = {
     title: "name",
     subtitle: "systememail",

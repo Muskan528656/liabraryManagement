@@ -1,7 +1,10 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const UserRoleDetail = () => {
+    const {timeZone} = useTimeZone()
     const fields = {
         title: "role_name",
         details: [
@@ -16,8 +19,8 @@ const UserRoleDetail = () => {
                     false_label: "Inactive",
                 },
             },
-            { key: "createddate", label: "Created At", type: "date" },
-            { key: "lastmodifieddate", label: "Updated At", type: "date" },
+            { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
+            { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
         ],
     };
 

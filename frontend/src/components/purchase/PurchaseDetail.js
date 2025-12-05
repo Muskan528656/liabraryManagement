@@ -95,9 +95,9 @@ const PurchaseDetail = () => {
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },      
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
+      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
     ],
   };
 

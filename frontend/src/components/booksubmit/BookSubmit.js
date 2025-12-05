@@ -7,6 +7,8 @@ import * as constants from "../../constants/CONSTANT";
 import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import moment from "moment";
+
 
 const BookSubmit = () => {
     const navigate = useNavigate();
@@ -651,7 +653,7 @@ const BookSubmit = () => {
             label: "Issue Date",
             width: 120,
             render: (value) => {
-            return convertToUserTimezone(value, timeZone);
+            return  moment(convertToUserTimezone(value, timeZone)).format('l');
             },
         },
         {
@@ -660,7 +662,7 @@ const BookSubmit = () => {
             width: 120,
             render: (value) => {
             if (!value) return "—";
-            const displayDate = convertToUserTimezone(value, timeZone);
+            const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
 
             const isOverdue = new Date(value) < new Date();
 
@@ -799,7 +801,7 @@ const BookSubmit = () => {
             width: 150,
             // render: (value) => formatDate(value)
             render: (value) => {
-              return  convertToUserTimezone(value, timeZone)
+              return convertToUserTimezone(value, timeZone)
             }
         },
         {

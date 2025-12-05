@@ -582,6 +582,9 @@ const ModuleDetail = ({
     }
 
     if (field.type === "date") {
+      if (field.render && typeof field.render === "function") {
+        return field.render(value, data);
+      }
       try {
         const converted = convertToUserTimezone(value, timeZone);
         const datePart = converted.split(' ')[0];
@@ -819,6 +822,7 @@ const ModuleDetail = ({
   const [coladd1, coladd2, coladd3] = splitInto3(normalizedAddressFields?.address);
 
   const renderField = (field, index, currentData) => {
+    if (!field || !field.key) return null;
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
@@ -965,7 +969,7 @@ const ModuleDetail = ({
       );
     }
 
-    const fieldValue = getFieldValue(field, currentData);
+    const fieldValue = shouldShowAsReadOnly ? formatValue(currentData[field.key], field) : getFieldValue(field, currentData);
     const isElementValue = React.isValidElement(fieldValue);
     const controlType = (isEditing && !isNonEditableField)
       ? field.type === "number"

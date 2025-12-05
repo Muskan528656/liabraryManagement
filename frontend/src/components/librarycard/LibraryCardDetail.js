@@ -545,18 +545,10 @@ const LibraryCardDetail = ({
 
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date",
-        render : (value) =>{
-          console.log("value, timeZone", value, timeZone)
-          return convertToUserTimezone(value, timeZone);
-        }
-       },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" ,
-         render : (value)=>{
-          return convertToUserTimezone(value, timeZone);
-         }
-      },
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },      
+      { key: "lastmodifieddate", label: "Last Modified By", type: "text", render : (value) => convertToUserTimezone(value, timeZone)},
+      { key: "createddate", label: "Created Date", type: "date", render : (value) => convertToUserTimezone(value, timeZone)},
+      
     ],
   };
 
@@ -979,6 +971,9 @@ const LibraryCardDetail = ({
     if (value === null || value === undefined || value === "") return "—";
 
     if (field.type === "date") {
+      if (field.render && typeof field.render === "function") {
+        return field.render(value, data);
+      }
       try {
         const converted = convertToUserTimezone(value, timeZone);
         const datePart = converted.split(' ')[0];

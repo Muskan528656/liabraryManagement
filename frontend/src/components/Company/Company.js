@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Form, Alert } from 'react-bootstrap';
-import DataApi from '../../api/dataApi';
-import PubSub from 'pubsub-js';
-import { Country, State, City } from 'country-state-city';
-import { COUNTRY_TIMEZONE } from '../../constants/COUNTRY_TIMEZONE';
+import React, { useState, useEffect, useMemo } from "react";
+import { Container, Row, Col, Card, Form, Alert } from "react-bootstrap";
+import DataApi from "../../api/dataApi";
+import PubSub from "pubsub-js";
+import { Country, State, City } from "country-state-city";
+import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Company = () => {
+  const { timeZone, setCompanyTimeZone } = useTimeZone();
+
+  console.log("timeZone = ", timeZone);
 
   const [Company, setCompany] = useState({
     name: "",
@@ -20,8 +24,8 @@ const Company = () => {
     city: "",
     street: "",
     pincode: "",
-    state: "",     
-    country: "",    
+    state: "",
+    country: "",
     platform_name: "",
     platform_api_endpoint: "",
     is_external: false,
@@ -40,9 +44,11 @@ const Company = () => {
   const allCountries = useMemo(() => Country.getAllCountries(), []);
 
   const currentCountryIso = useMemo(() => {
-    const countryName = isEditingCompany ? tempCompany.country : Company.country;
+    const countryName = isEditingCompany
+      ? tempCompany.country
+      : Company.country;
     if (!countryName) return "";
-    return allCountries.find(c => c.name === countryName)?.isoCode || "";
+    return allCountries.find((c) => c.name === countryName)?.isoCode || "";
   }, [isEditingCompany, tempCompany.country, Company.country, allCountries]);
 
   const availableStates = useMemo(() => {
@@ -52,7 +58,7 @@ const Company = () => {
   const currentStateIso = useMemo(() => {
     const stateName = isEditingCompany ? tempCompany.state : Company.state;
     if (!stateName) return "";
-    return availableStates.find(s => s.name === stateName)?.isoCode || "";
+    return availableStates.find((s) => s.name === stateName)?.isoCode || "";
   }, [isEditingCompany, tempCompany.state, Company.state, availableStates]);
 
   const availableCities = useMemo(() => {
@@ -60,21 +66,19 @@ const Company = () => {
     return City.getCitiesOfState(currentCountryIso, currentStateIso);
   }, [currentCountryIso, currentStateIso]);
 
-
-
   useEffect(() => {
     fetchCompany();
   }, []);
   useEffect(() => {
     if (currentCountryIso) {
-      const countryData = COUNTRY_TIMEZONE.find((c) => c.countryCode === currentCountryIso);
+      const countryData = COUNTRY_TIMEZONE.find(
+        (c) => c.countryCode === currentCountryIso
+      );
       setAvailableTimeZones(countryData ? countryData.timezones : []);
     } else {
       setAvailableTimeZones([]);
     }
   }, [currentCountryIso]);
-
-
 
   function getCompanyIdFromToken() {
     const token = sessionStorage.getItem("token");
@@ -110,11 +114,17 @@ const Company = () => {
       const companyApi = new DataApi("company");
       const response = await companyApi.update(tempCompany, companyId);
 
+
+
       if (response.data) {
         setCompany({ ...tempCompany });
         setIsEditingCompany(false);
         setAlertMessage("Company details updated successfully!");
         setShowAlert(true);
+
+        console.log('response.data ==>>', response.data)
+
+        setCompanyTimeZone(response.data.data.time_zone)
 
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
@@ -150,41 +160,46 @@ const Company = () => {
 
   const handleCountryUIChange = (e) => {
     const selectedIso = e.target.value;
-    const countryObj = allCountries.find(c => c.isoCode === selectedIso);
-    
-    if (countryObj) {
-      const tzData = COUNTRY_TIMEZONE.find(c => c.countryCode === selectedIso);
+    const countryObj = allCountries.find((c) => c.isoCode === selectedIso);
 
-      setTempCompany(prev => ({
+    if (countryObj) {
+      const tzData = COUNTRY_TIMEZONE.find(
+        (c) => c.countryCode === selectedIso
+      );
+
+      setTempCompany((prev) => ({
         ...prev,
-        country: countryObj.name, 
+        country: countryObj.name,
         country_code: `+${countryObj.phonecode}`,
         currency: tzData ? tzData.currency.code : countryObj.currency,
-        time_zone: tzData && tzData.timezones.length > 0 ? tzData.timezones[0].zoneName : "",
-        state: "", 
-        city: ""  
+        time_zone:
+          tzData && tzData.timezones.length > 0
+            ? tzData.timezones[0].zoneName
+            : "",
+        state: "",
+        city: "",
       }));
     }
   };
   const handleStateUIChange = (e) => {
-    const selectedStateIso = e.target.value; 
-    const stateObj = availableStates.find(s => s.isoCode === selectedStateIso);
+    const selectedStateIso = e.target.value;
+    const stateObj = availableStates.find(
+      (s) => s.isoCode === selectedStateIso
+    );
 
     if (stateObj) {
-      setTempCompany(prev => ({
+      setTempCompany((prev) => ({
         ...prev,
-        state: stateObj.name, 
-        city: ""
+        state: stateObj.name,
+        city: "",
       }));
     }
   };
-
 
   return (
     <Container fluid className="py-4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
-
           <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
               {/* --- HEADER --- */}
@@ -196,20 +211,32 @@ const Company = () => {
                   borderRadius: "10px",
                 }}
               >
-                <h5 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
+                <h5
+                  className="fw-bold mb-1"
+                  style={{ color: "var(--primary-color)" }}
+                >
                   <i className="fa-solid fa-store me-2"></i>
                   Company
                 </h5>
                 {!isEditingCompany ? (
-                  <button className="custom-btn-primary" onClick={handleCompanyEdit}>
+                  <button
+                    className="custom-btn-primary"
+                    onClick={handleCompanyEdit}
+                  >
                     <i className="fa-solid fa-edit me-2"></i> Edit Company
                   </button>
                 ) : (
                   <div className="d-flex gap-2">
-                    <button className="custom-btn-primary" onClick={handleCompanySave}>
+                    <button
+                      className="custom-btn-primary"
+                      onClick={handleCompanySave}
+                    >
                       <i className="fa-solid fa-check me-2"></i> Save
                     </button>
-                    <button className="custom-btn-secondary" onClick={handleCompanyCancel}>
+                    <button
+                      className="custom-btn-secondary"
+                      onClick={handleCompanyCancel}
+                    >
                       <i className="fa-solid fa-times me-2"></i> Cancel
                     </button>
                   </div>
@@ -234,72 +261,137 @@ const Company = () => {
                     <Row>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Company Name</Form.Label>
+                          <Form.Label className="fw-semibold">
+                            Company Name
+                          </Form.Label>
                           <Form.Control
                             type="text"
-                            value={isEditingCompany ? tempCompany.name : Company.name}
+                            value={
+                              isEditingCompany ? tempCompany.name : Company.name
+                            }
                             readOnly={!isEditingCompany}
-                            onChange={(e) => isEditingCompany && handleCompanyChange("name", e.target.value)}
-                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("name", e.target.value)
+                            }
+                            style={{
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Tenant Code</Form.Label>
+                          <Form.Label className="fw-semibold">
+                            Tenant Code
+                          </Form.Label>
                           <Form.Control
                             type="text"
-                            value={isEditingCompany ? tempCompany.tenantcode : Company.tenantcode}
+                            value={
+                              isEditingCompany
+                                ? tempCompany.tenantcode
+                                : Company.tenantcode
+                            }
                             readOnly={!isEditingCompany}
-                            onChange={(e) => isEditingCompany && handleCompanyChange("tenantcode", e.target.value)}
-                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("tenantcode", e.target.value)
+                            }
+                            style={{
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">User Licenses</Form.Label>
+                          <Form.Label className="fw-semibold">
+                            User Licenses
+                          </Form.Label>
                           <Form.Control
                             type="text"
-                            value={isEditingCompany ? tempCompany.userlicenses : Company.userlicenses}
+                            value={
+                              isEditingCompany
+                                ? tempCompany.userlicenses
+                                : Company.userlicenses
+                            }
                             readOnly={!isEditingCompany}
-                            onChange={(e) => isEditingCompany && handleCompanyChange("userlicenses", e.target.value)}
-                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange(
+                                "userlicenses",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">System Email</Form.Label>
+                          <Form.Label className="fw-semibold">
+                            System Email
+                          </Form.Label>
                           <Form.Control
                             type="text"
-                            value={isEditingCompany ? tempCompany.systememail : Company.systememail}
+                            value={
+                              isEditingCompany
+                                ? tempCompany.systememail
+                                : Company.systememail
+                            }
                             readOnly={!isEditingCompany}
-                            onChange={(e) => isEditingCompany && handleCompanyChange("systememail", e.target.value)}
-                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("systememail", e.target.value)
+                            }
+                            style={{
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Admin Email</Form.Label>
+                          <Form.Label className="fw-semibold">
+                            Admin Email
+                          </Form.Label>
                           <Form.Control
                             type="text"
-                            value={isEditingCompany ? tempCompany.adminemail : Company.adminemail}
+                            value={
+                              isEditingCompany
+                                ? tempCompany.adminemail
+                                : Company.adminemail
+                            }
                             readOnly={!isEditingCompany}
-                            onChange={(e) => isEditingCompany && handleCompanyChange("adminemail", e.target.value)}
-                            style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                            onChange={(e) =>
+                              isEditingCompany &&
+                              handleCompanyChange("adminemail", e.target.value)
+                            }
+                            style={{
+                              pointerEvents: isEditingCompany ? "auto" : "none",
+                              opacity: isEditingCompany ? 1 : 0.9,
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                        <Form.Label className="fw-semibold">Is Active</Form.Label>
+                        <Form.Label className="fw-semibold">
+                          Is Active
+                        </Form.Label>
                         <div
                           className="d-flex align-items-center justify-content-between p-2 border rounded"
                           style={{
                             borderRadius: "10px",
                             opacity: isEditingCompany ? 1 : 0.6,
-                            cursor: isEditingCompany ? "pointer" : "not-allowed",
+                            cursor: isEditingCompany
+                              ? "pointer"
+                              : "not-allowed",
                             transition: "0.2s",
                           }}
                         >
@@ -307,17 +399,20 @@ const Company = () => {
                             type="switch"
                             checked={tempCompany.isactive}
                             disabled={!isEditingCompany}
-                            onChange={(e) => handleCompanyChange("isactive", e.target.checked)}
+                            onChange={(e) =>
+                              handleCompanyChange("isactive", e.target.checked)
+                            }
                             style={{ transform: "scale(1.1)" }}
                           />
                         </div>
                       </Col>
-                     
                     </Row>
                   </Col>
 
                   <Col md={3}>
-                    <Form.Label className="fw-semibold">Company Logo</Form.Label>
+                    <Form.Label className="fw-semibold">
+                      Company Logo
+                    </Form.Label>
                     <div className="d-flex align-items-center justify-content-center">
                       <div
                         className="border border-dashed d-flex align-items-center justify-content-center position-relative overflow-hidden"
@@ -338,8 +433,8 @@ const Company = () => {
                             tempCompany.logourl
                               ? tempCompany.logourl
                               : Company?.logourl
-                                ? `${Company.logourl}?${new Date().getTime()}`
-                                : "/default-logo.png"
+                              ? `${Company.logourl}?${new Date().getTime()}`
+                              : "/default-logo.png"
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
@@ -371,7 +466,7 @@ const Company = () => {
                   </Col>
                 </Row>
               </Row>
-              
+
               <Row className="mt-4">
                 <Col md={12} className="mb-4">
                   <h6
@@ -400,7 +495,10 @@ const Company = () => {
                       >
                         <option value="">Select Country</option>
                         {COUNTRY_TIMEZONE.map((country) => (
-                          <option key={country.countryCode} value={country.countryCode}>
+                          <option
+                            key={country.countryCode}
+                            value={country.countryCode}
+                          >
                             {country.countryName}
                           </option>
                         ))}
@@ -434,8 +532,13 @@ const Company = () => {
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">City</Form.Label>
                       <Form.Select
-                        value={isEditingCompany ? tempCompany.city : Company.city}
-                        onChange={(e) => isEditingCompany && handleCompanyChange("city", e.target.value)}
+                        value={
+                          isEditingCompany ? tempCompany.city : Company.city
+                        }
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("city", e.target.value)
+                        }
                         disabled={!isEditingCompany || !currentStateIso}
                         style={{
                           pointerEvents: isEditingCompany ? "auto" : "none",
@@ -452,45 +555,61 @@ const Company = () => {
                     </Form.Group>
                   </Col>
 
-                   <Col md={4}>
-                        <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Currency</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={isEditingCompany ? tempCompany.currency : Company.currency}
-                            readOnly
-                            style={{ opacity: 0.9, backgroundColor: "#e9ecef" }}
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={4}>
-                        <Form.Group className="mb-3">
-                          <Form.Label className="fw-semibold">Time Zone</Form.Label>
-                          <Form.Select
-                            value={isEditingCompany ? tempCompany.time_zone : Company.time_zone}
-                            onChange={(e) => handleCompanyChange("time_zone", e.target.value)}
-                            disabled={!isEditingCompany}
-                          >
-                            <option value="">Select Time Zone</option>
-                            {availableTimeZones.map((zone) => (
-                              <option key={zone.zoneName} value={zone.zoneName}>
-                                {zone.zoneName} {zone.gmtOffset}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Currency</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={
+                          isEditingCompany
+                            ? tempCompany.currency
+                            : Company.currency
+                        }
+                        readOnly
+                        style={{ opacity: 0.9, backgroundColor: "#e9ecef" }}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">Time Zone</Form.Label>
+                      <Form.Select
+                        value={
+                          isEditingCompany
+                            ? tempCompany.time_zone
+                            : Company.time_zone
+                        }
+                        onChange={(e) =>
+                          handleCompanyChange("time_zone", e.target.value)
+                        }
+                        disabled={!isEditingCompany}
+                      >
+                        <option value="">Select Time Zone</option>
+                        {availableTimeZones.map((zone) => (
+                          <option key={zone.zoneName} value={zone.zoneName}>
+                            {zone.zoneName} {zone.gmtOffset}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
 
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-semibold">Country Phone Code</Form.Label>
+                      <Form.Label className="fw-semibold">
+                        Country Phone Code
+                      </Form.Label>
                       <Form.Control
                         type="text"
-                        value={isEditingCompany ? tempCompany.country_code : (Company.country_code || "")}
+                        value={
+                          isEditingCompany
+                            ? tempCompany.country_code
+                            : Company.country_code || ""
+                        }
                         readOnly
                         style={{
                           opacity: 0.9,
-                          backgroundColor: "#e9ecef"
+                          backgroundColor: "#e9ecef",
                         }}
                       />
                     </Form.Group>
@@ -500,10 +619,18 @@ const Company = () => {
                       <Form.Label className="fw-semibold">Street</Form.Label>
                       <Form.Control
                         type="text"
-                        value={isEditingCompany ? tempCompany.street : Company.street}
+                        value={
+                          isEditingCompany ? tempCompany.street : Company.street
+                        }
                         readOnly={!isEditingCompany}
-                        onChange={(e) => isEditingCompany && handleCompanyChange("street", e.target.value)}
-                        style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("street", e.target.value)
+                        }
+                        style={{
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
+                        }}
                       />
                     </Form.Group>
                   </Col>
@@ -513,14 +640,23 @@ const Company = () => {
                       <Form.Label className="fw-semibold">Pincode</Form.Label>
                       <Form.Control
                         type="text"
-                        value={isEditingCompany ? tempCompany.pincode : Company.pincode}
+                        value={
+                          isEditingCompany
+                            ? tempCompany.pincode
+                            : Company.pincode
+                        }
                         readOnly={!isEditingCompany}
-                        onChange={(e) => isEditingCompany && handleCompanyChange("pincode", e.target.value)}
-                        style={{ pointerEvents: isEditingCompany ? "auto" : "none", opacity: isEditingCompany ? 1 : 0.9 }}
+                        onChange={(e) =>
+                          isEditingCompany &&
+                          handleCompanyChange("pincode", e.target.value)
+                        }
+                        style={{
+                          pointerEvents: isEditingCompany ? "auto" : "none",
+                          opacity: isEditingCompany ? 1 : 0.9,
+                        }}
                       />
                     </Form.Group>
                   </Col>
-
                 </Row>
               </Row>
             </Card.Body>

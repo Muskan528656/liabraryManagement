@@ -3,7 +3,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import moment from "moment";
+
 
 const BookDetail = () => {
   const { timeZone } = useTimeZone();
@@ -61,8 +61,8 @@ const BookDetail = () => {
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
-      { key: "createddate", label: "Created Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
+      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
     ],
   };

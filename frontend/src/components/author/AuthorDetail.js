@@ -17,8 +17,8 @@ const AuthorDetail = () => {
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
+      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
     ],
   };
 
