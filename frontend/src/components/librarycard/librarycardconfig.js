@@ -276,7 +276,7 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 name: "subscription_id",
                 label: "Subscription",
                 type: "select",
-                required: false,
+                required: true,
                 options: "subscriptions",
                 placeholder: "Select subscription plan",
                 colSize: 6,

@@ -136,7 +136,7 @@ export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, time
             {
                 name: "renewal",
                 label: "Renewal",
-                type: "text",
+                type: "number",
                 colSize: 6,
                 helpText: "Keep empty for never ending plans",
             },

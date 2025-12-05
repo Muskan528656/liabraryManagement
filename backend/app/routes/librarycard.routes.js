@@ -72,7 +72,7 @@ const deleteFileIfExists = (filePath = "") => {
 };
 
 
- 
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, libraryCardUploadDir),
   filename: (req, file, cb) => {
@@ -95,7 +95,7 @@ module.exports = (app) => {
   var router = require("express").Router();
   router.get("/auto-config-card", async (req, res) => {
     try {
- 
+
       const cardNumber = await generateAutoNumberSafe("library_members", null);
       res.json({ card_number: cardNumber });
     } catch (err) {
@@ -103,7 +103,7 @@ module.exports = (app) => {
       res.status(500).json({ error: "Auto-config failed" });
     }
   });
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -115,7 +115,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -128,7 +128,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/card/:cardNumber", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -141,7 +141,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/student/:studentId", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -154,13 +154,13 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
     upload.single('image'),
     [
- 
+
       body("is_active").optional().isBoolean().withMessage("is_active must be boolean"),
       body("first_name").optional().isString(),
       body("last_name").optional().isString(),
@@ -190,7 +190,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -203,7 +203,7 @@ module.exports = (app) => {
       const previousImagePath = existingCard.image;
 
       if (req.file) cardData.image = `/uploads/librarycards/${req.file.filename}`;
-console.log("cardDatacardData",cardData)
+      console.log("cardDatacardData", cardData)
       const card = await LibraryCard.updateById(req.params.id, cardData, userId);
       if (!card) return res.status(400).json({ errors: "Failed to update library card" });
 
@@ -218,7 +218,7 @@ console.log("cardDatacardData",cardData)
     }
   });
 
- 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);

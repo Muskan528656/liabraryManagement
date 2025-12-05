@@ -9,7 +9,7 @@ const SubscriptionDetail = () => {
             { key: "is_active", label: "Active", type: "toggle" },
             { key: "start_date", label: "Start Date", type: "date" },
             { key: "end_date", label: "End Date", type: "date" },
-            { key: "renewal", label: "Renewal", type: "text" }
+            { key: "renewal", label: "Renewal", type: "number" }
         ],
         other: [
             { key: "createdbyid", label: "Created By", type: "text" },
