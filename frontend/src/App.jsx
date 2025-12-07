@@ -50,6 +50,8 @@ import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
 import { TimeZoneProvider } from "./contexts/TimeZoneContext";
+import Plan from "./components/plan/Plan";
+import PlanDetail from "./components/plan/PlanDetail";
 
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 function App() {
@@ -160,6 +162,8 @@ function App() {
             <Route index element={<Home userInfo={userInfo} />} />
 
             <Route path="userroles" element={<UserRole />} />
+            <Route path="plans" element={<Plan />} />
+            <Route path="plans/:id" element={<PlanDetail />} />
             <Route path="user-role/:id" element={<UserRoleDetail />} />
             {/* <Route path="autoconfig" element={<AutoConfig />} /> */}
             {/* <Route path="auto-config/:id" element={<AutoConfigDetail />} /> */}

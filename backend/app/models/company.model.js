@@ -145,7 +145,7 @@ console.log("companyDatacompanyData",companyData)
       companyData.is_external ?? currentCompany.is_external,
       companyData.has_wallet ?? currentCompany.has_wallet,
       companyData.currency ?? currentCompany.currency,
-      companyData.country_code_display ?? currentCompany.country_code_display,
+      companyData.country_code ?? currentCompany.country_code,
       companyData.time_zone ?? currentCompany.time_zone
     ];
 

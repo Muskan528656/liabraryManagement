@@ -11,16 +11,23 @@ function init(schema_name) {
 }
 
 
+
+
+
 async function findAll() {
   try {
     const query = `
       SELECT
         lc.*,
         u.firstname || ' ' || u.lastname AS user_name,
-        u.email AS user_email
+        u.email AS user_email,
+        p.plan_name,
+        p.duration_days
       FROM ${schema}.library_members lc
       LEFT JOIN ${schema}."user" u
         ON lc.createdbyid = u.id
+      LEFT JOIN ${schema}.plan p
+        ON lc.plan_id = p.id
       ORDER BY lc.createddate DESC
     `;
     const result = await sql.query(query);
@@ -40,10 +47,14 @@ async function findById(id) {
       SELECT
         lc.*,
         u.firstname || ' ' || u.lastname AS user_name,
-        u.email AS user_email
+        u.email AS user_email,
+        p.plan_name,
+        p.duration_days
       FROM ${schema}.library_members lc
       LEFT JOIN ${schema}."user" u
         ON lc.createdbyid = u.id
+      LEFT JOIN ${schema}.plan p
+        ON lc.plan_id = p.id
       WHERE lc.id = $1
     `;
     const result = await sql.query(query, [id]);
@@ -63,10 +74,14 @@ async function findByCardNumber(cardNumber) {
       SELECT
         lc.*,
         u.firstname || ' ' || u.lastname AS user_name,
-        u.email AS user_email
+        u.email AS user_email,
+        p.plan_name,
+        p.duration_days
       FROM ${schema}.library_members lc
       LEFT JOIN ${schema}."user" u
         ON lc.createdbyid = u.id
+      LEFT JOIN ${schema}.plan p
+        ON lc.plan_id = p.id
       WHERE lc.card_number = $1
     `;
     const result = await sql.query(query, [cardNumber]);
@@ -76,17 +91,35 @@ async function findByCardNumber(cardNumber) {
     throw error;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 async function create(cardData, userId) {
-  console.log("cardData:", cardData);
+  console.log("📥 Model.create() - Received cardData:", {
+    ...cardData,
+    image: cardData.image ? `${typeof cardData.image} - ${cardData.image.substring(0, 50)}...` : 'null/undefined'
+  });
+
+
+  console.log("🔍 Image field check:", {
+    hasImage: 'image' in cardData,
+    imageValue: cardData.image,
+    imageType: typeof cardData.image,
+    imageLength: cardData.image ? cardData.image.length : 0,
+    imageFirst100: cardData.image ? cardData.image.substring(0, 100) : 'N/A'
+  });
+
 
   if (!cardData.card_number) {
-    cardData.card_number = await generateAutoNumberSafe(
-      "library_members",
-      userId,
-      "LIB-",
-      5
-    );
-
+    cardData.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
     if (!cardData.card_number) {
       throw new Error("Failed to generate unique card number");
     }
@@ -95,68 +128,88 @@ async function create(cardData, userId) {
   try {
     const query = `
       INSERT INTO ${schema}.library_members
-      (
-        card_number,
-        is_active,
-        image,
-        subscription_id,
-        first_name,
-        last_name,
-        name,
-        email,
-        phone_number,
-        registration_date,
-        type,
-        country_code,
-        allowed_books,
-        createddate,
-        lastmodifieddate,
-        createdbyid,
-        lastmodifiedbyid
-      )
+      (card_number, is_active, image, subscription_id, plan_id,
+       first_name, last_name, name, email, phone_number,
+       registration_date, type,
+       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
       VALUES
-      (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9, $10,
-        $11, $12, $13,
-        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
-        $14, $14
-      )
+      ($1, $2, $3, $4, $5,
+       $6, $7, $8, $9, $10,
+       $11, $12,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $13, $13)
       RETURNING *
     `;
 
+
+    const imageValue = cardData.hasOwnProperty('image')
+      ? (cardData.image || null)
+      : null;
+
+    console.log("💾 Database insert values - Image:", {
+      rawValue: cardData.image,
+      finalValue: imageValue,
+      isNull: imageValue === null,
+      isUndefined: imageValue === undefined
+    });
+
     const values = [
-      cardData.card_number,             // $1
-      cardData.is_active ?? true,       // $2
-      cardData.image || null,           // $3
-      cardData.subscription_id || null, // $4
-      cardData.first_name || null,      // $5
-      cardData.last_name || null,       // $6
-      cardData.name || null,            // $7
-      cardData.email || null,           // $8
-      cardData.phone_number || null,    // $9
-      cardData.registration_date || null, // $10
-      cardData.type || null,            // $11
-      cardData.country_code || null,    // $12
-      cardData.allowed_book || null,    // $13
-      userId                            // $14
+      cardData.card_number,
+      cardData.is_active ?? true,
+      imageValue, // Use the fixed image value
+      cardData.subscription_id || null,
+      cardData.plan_id || null,
+      cardData.first_name || null,
+      cardData.last_name || null,
+      cardData.name || null,
+      cardData.email || null,
+      cardData.phone_number || null,
+      cardData.registration_date || null,
+      cardData.type || null,
+      userId,
     ];
 
+
+    console.log("📋 All insert values:", {
+      card_number: values[0],
+      is_active: values[1],
+      image: values[2],
+      subscription_id: values[3],
+      plan_id: values[4],
+      first_name: values[5],
+      last_name: values[6],
+      name: values[7],
+      email: values[8],
+      phone_number: values[9],
+      registration_date: values[10],
+      type: values[11],
+      userId: values[12]
+    });
+
     const result = await sql.query(query, values);
-    console.log("RESULT->>", result.rows[0])
+
+    console.log("✅ Insert successful. Returned row:", result.rows[0]);
+    console.log("✅ Inserted image:", result.rows[0]?.image);
+
     return result.rows[0] || null;
+
   } catch (error) {
-    console.error("Error in create:", error);
+    console.error("❌ Error in create:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail
+    });
     throw error;
   }
 }
+
+
 async function updateById(id, cardData, userId) {
   try {
     const updates = [];
     const values = [];
     let idx = 1;
-    console.log("cardDatacardData", cardData);
-
 
     const fields = [
       "card_number",
@@ -171,15 +224,12 @@ async function updateById(id, cardData, userId) {
       "phone_number",
       "registration_date",
       "type",
-      "country_code",
-      "allowed_books",
+      "country_code"
     ];
 
     fields.forEach(f => {
       if (cardData[f] !== undefined) {
-
-        const dbFieldName = (f === "allowed_books") ? "allowed_books" : f;
-        updates.push(`${dbFieldName} = $${idx}`);
+        updates.push(`${f} = $${idx}`);
         values.push(cardData[f]);
         idx++;
       }
@@ -191,7 +241,7 @@ async function updateById(id, cardData, userId) {
     idx++;
 
     values.push(id);
-
+    console.log("cardDatacardData", cardData)
     const query = `
       UPDATE ${schema}.library_members
       SET ${updates.join(", ")}
@@ -199,11 +249,7 @@ async function updateById(id, cardData, userId) {
       RETURNING *
     `;
 
-    console.log("Query:", query);
-    console.log("Values:", values);
-
     const result = await sql.query(query, values);
-    console.log("RESULTTT", result.rows[0]);
     return result.rows[0] || null;
 
   } catch (error) {
@@ -211,6 +257,8 @@ async function updateById(id, cardData, userId) {
     throw error;
   }
 }
+
+
 
 
 async function deleteById(id) {

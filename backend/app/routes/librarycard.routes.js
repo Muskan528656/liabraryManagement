@@ -1,4 +1,295 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Handles all incoming request for /api/librarycard endpoint
  * DB table: demo.library_members
@@ -155,18 +446,85 @@ module.exports = (app) => {
   });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   router.post(
     "/",
     fetchUser,
     upload.single('image'),
     [
-
       body("is_active").optional().isBoolean().withMessage("is_active must be boolean"),
       body("first_name").optional().isString(),
       body("last_name").optional().isString(),
       body("email").optional().isEmail(),
       body("phone_number").optional().isString(),
       body("type").optional().isString(),
+      
+      body("plan_id")
+  .optional()
+  .isUUID()
+  .withMessage("plan_id must be a valid UUID"),
     ],
     async (req, res) => {
       try {
@@ -177,49 +535,211 @@ module.exports = (app) => {
         const userId = req.userinfo?.id || null;
 
         const cardData = { ...req.body };
-        if (req.file) cardData.image = `/uploads/librarycards/${req.file.filename}`;
+
+
+        console.log("=== LIBRARY CARD CREATE DEBUG ===");
+        console.log("Request body keys:", Object.keys(req.body));
+        console.log("Request file details:", {
+          exists: !!req.file,
+          filename: req.file?.filename,
+          originalname: req.file?.originalname,
+          mimetype: req.file?.mimetype,
+          size: req.file?.size,
+          path: req.file?.path
+        });
+        console.log("Request headers:", req.headers['content-type']);
+        console.log("User ID:", userId);
+        console.log("Tenant Code:", req.userinfo.tenantcode);
+
+
+        if (req.file) {
+
+          const uploadedFileName = req.file.filename;
+          console.log("📁 Uploaded file name:", uploadedFileName);
+
+
+          const fullPath = path.join(libraryCardUploadDir, uploadedFileName);
+          const fileExists = fs.existsSync(fullPath);
+          console.log("📂 File exists at", fullPath, ":", fileExists);
+
+
+          cardData.image = `/uploads/librarycards/${uploadedFileName}`;
+          console.log("✅ File uploaded successfully. Image path:", cardData.image);
+
+
+          const publicPath = path.join(frontendPublicDir, cardData.image.replace(/^\//, ''));
+          console.log("🔍 Public path check:", publicPath, "exists:", fs.existsSync(publicPath));
+
+        } else if (req.body.image && typeof req.body.image === 'string' && req.body.image.trim() !== '') {
+
+          const imgStr = req.body.image;
+          console.log("📸 Image from body:", imgStr.substring(0, 100) + "...");
+          console.log("📸 Image length:", imgStr.length);
+
+
+          if (imgStr.startsWith('data:image/')) {
+            console.log("🔑 Base64 image detected");
+
+            try {
+              const matches = imgStr.match(/^data:image\/(\w+);base64,/);
+              if (matches) {
+                const ext = matches[1];
+                const base64Data = imgStr.replace(/^data:image\/\w+;base64,/, '');
+                const buffer = Buffer.from(base64Data, 'base64');
+
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                const fileName = `base64-${uniqueSuffix}.${ext}`;
+                const filePath = path.join(libraryCardUploadDir, fileName);
+
+                fs.writeFileSync(filePath, buffer);
+                cardData.image = `/uploads/librarycards/${fileName}`;
+                console.log("💾 Base64 image saved to:", cardData.image);
+              }
+            } catch (base64Err) {
+              console.error("❌ Base64 save error:", base64Err.message);
+              cardData.image = null;
+            }
+          } else {
+
+            cardData.image = req.body.image;
+          }
+        } else {
+
+          console.log("⚠️ No image provided");
+          cardData.image = null;
+        }
+
+
+        console.log("📦 Final cardData to be saved:", {
+          ...cardData,
+          image: cardData.image ? `${cardData.image.substring(0, 50)}...` : null
+        });
+
+
+        console.log("🛠 Creating library card with data keys:", Object.keys(cardData));
 
         const card = await LibraryCard.create(cardData, userId);
-        if (!card) return res.status(400).json({ errors: "Failed to create library card" });
 
-        return res.status(200).json({ success: true, data: card });
+        if (!card) {
+          console.log("❌ LibraryCard.create returned null/undefined");
+          return res.status(400).json({ errors: "Failed to create library card" });
+        }
+
+
+        const createdCard = await LibraryCard.findById(card.id);
+        console.log("✅ Created card image field:", createdCard?.image);
+
+        return res.status(200).json({
+          success: true,
+          data: createdCard,
+          message: "Library card created successfully"
+        });
+
       } catch (error) {
-        console.error("Error creating library card:", error);
-        return res.status(500).json({ errors: error.message });
+        console.error("❌ Error creating library card:", error);
+        console.error("Error stack:", error.stack);
+        return res.status(500).json({
+          errors: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
       }
     }
   );
-
-
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
-    console.log("workingggggggggggggggggg")
     try {
+      console.log("res=>>", req.body);
       LibraryCard.init(req.userinfo.tenantcode);
 
       const existingCard = await LibraryCard.findById(req.params.id);
       if (!existingCard) return res.status(404).json({ errors: "Library card not found" });
 
       const userId = req.userinfo?.id || null;
-      const cardData = { ...req.body };
+      let cardData = { ...req.body };
       const previousImagePath = existingCard.image;
 
-      if (req.file) cardData.image = `/uploads/librarycards/${req.file.filename}`;
-   
+      console.log("=== LIBRARY CARD UPDATE DEBUG ===");
+      console.log("1. Existing card image:", previousImagePath);
+      console.log("2. Request body image:", req.body.image);
+      console.log("3. Request file exists:", !!req.file);
+      console.log("4. Content-Type:", req.headers['content-type']);
+
+
+      if (cardData.image) {
+        console.log("5. Image field value:", cardData.image);
+        console.log("6. Image field type:", typeof cardData.image);
+
+
+        if (typeof cardData.image === 'string' &&
+          (cardData.image.includes('{"{}') ||
+            cardData.image.includes('{') && cardData.image.includes('}'))) {
+
+          console.log("7. Detected malformed JSON image string");
+
+
+          const pathMatch = cardData.image.match(/uploads\/[^"{}]+/);
+          if (pathMatch) {
+            cardData.image = `/${pathMatch[0]}`;
+            console.log("8. Extracted path:", cardData.image);
+          } else {
+
+            delete cardData.image;
+            console.log("9. Removed image field");
+          }
+        }
+
+
+        if (cardData.image === '' || cardData.image === 'null') {
+          cardData.image = null;
+          console.log("10. Set image to null");
+        }
+      }
+
+
+      if (req.file) {
+        cardData.image = `/uploads/librarycards/${req.file.filename}`;
+        console.log("11. New image from file:", cardData.image);
+      }
+
+
+
+      if (cardData.registration_date) {
+        try {
+          cardData.registration_date = new Date(cardData.registration_date).toISOString();
+        } catch (err) {
+          console.log("Date format error:", err.message);
+        }
+      }
+
+      console.log("12. Final cardData to save:", cardData);
+
+
       const card = await LibraryCard.updateById(req.params.id, cardData, userId);
       if (!card) return res.status(400).json({ errors: "Failed to update library card" });
 
+
       if (req.file && previousImagePath && previousImagePath !== cardData.image) {
-        deleteFileIfExists(previousImagePath);
+
+        if (typeof previousImagePath === 'string' && previousImagePath.includes('uploads')) {
+          deleteFileIfExists(previousImagePath);
+        }
       }
 
+
+      if (card.image && typeof card.image === 'string' && card.image.includes('{"')) {
+
+        const cleanPath = card.image.replace(/[{}"]/g, '');
+        if (cleanPath.includes('uploads')) {
+          card.image = cleanPath;
+        }
+      }
+
+      console.log("13. Response data:", card);
       return res.status(200).json({ success: true, data: card });
     } catch (error) {
       console.error("Error updating library card:", error);
       return res.status(500).json({ errors: error.message });
     }
   });
-
-
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);

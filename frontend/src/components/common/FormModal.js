@@ -31,13 +31,13 @@ const FormModal = ({
     return `${day}/${month}/${year}`;
   };
   const handleInputChange = (name, value) => {
- console.log("namamam",name , value)
+    console.log("namamam", name, value)
     setFormData({ ...formData, [name]: value });
   };
 
   const handleFieldChange = (field, value) => {
     console.log("asdfas", field)
- 
+
     if (field.onChange) {
       console.log("form")
       field.onChange(value, formData, setFormData);
@@ -286,7 +286,7 @@ const FormModal = ({
                 options={field.options || []}
                 isClearable={field.clearable !== false}
                 isDisabled={field.disabled}
-                placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
+
                 loadOptions={field.loadOptions}
                 defaultOptions={field.defaultOptions}
                 {...field.selectProps}
@@ -434,9 +434,9 @@ const FormModal = ({
       <Modal.Body>
         <Form>
           {fields.length > 0 ? (
- 
+
             fields.some(field => field.section) ? (
- 
+
               Object.entries(
                 fields.reduce((acc, field) => {
                   const sectionName = field.section || 'default';
@@ -483,7 +483,7 @@ const FormModal = ({
                 </div>
               ))
             ) : (
- 
+
               <Row>
                 {fields.map((field) => {
                   const colSize = field.colSize || 12;

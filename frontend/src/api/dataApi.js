@@ -192,16 +192,23 @@ export default class DataApi {
 
         return res.data;
     }
+     updateFormData(formData, id) {
+        return axios.put(`${this.baseUrl}/${this.endpoint}/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    }
 
 
     fetchIssuedCountByBookId(bookId) {
         console.log("AAAA", bookId)
         if (!bookId) throw new Error("Book ID required");
 
-        const url = `${this.baseUrl}/${bookId}/issued-count`;  // ✅ FIXED SYNTAX
+        const url = `${this.baseUrl}/${bookId}/issued-count`;
         return axios.get(url, { headers: this.getHeaders() });
     }
-  
+
     fetchSubmitCountByBookId(bookId) {
         console.log("bookId in api is", bookId);
         const url = bookId ? `${this.baseUrl}/${bookId}/submit-count` : this.baseUrl;

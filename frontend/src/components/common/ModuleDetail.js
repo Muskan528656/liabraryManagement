@@ -116,7 +116,7 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
-  // fetchBookData,
+
   timeZone
 }) => {
   const location = useLocation();
@@ -647,38 +647,176 @@ const ModuleDetail = ({
     }
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleSave = async () => {
     try {
       setSaving(true);
+
+
+      const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
+        if (key === "image") {
+          return value instanceof File || value === null || value === "null";
+        }
+        return false;
+      });
+
+      console.log("Saving data:", tempData);
+      console.log("Has file upload:", hasFileUpload);
+      console.log("Image value:", tempData.image);
+      console.log("Image type:", typeof tempData.image);
+
       const api = new DataApi(moduleApi);
-      const response = await api.update(tempData, id);
+      let response;
+
+      if (hasFileUpload) {
+
+        const formDataToSend = new FormData();
+
+        for (const [key, value] of Object.entries(tempData)) {
+          if (key === "image") {
+            if (value instanceof File) {
+              console.log("Appending new image file:", value.name);
+              formDataToSend.append("image", value);
+            } else if (value === null || value === "null") {
+              console.log("Removing image");
+              formDataToSend.append("image", "");
+            } else if (typeof value === "string" && value) {
+              console.log("Keeping existing image URL:", value);
+              formDataToSend.append("image", value);
+            }
+          } else {
+
+            if (value !== null && value !== undefined) {
+              if (typeof value === "object") {
+                formDataToSend.append(key, JSON.stringify(value));
+              } else {
+                formDataToSend.append(key, value);
+              }
+            }
+          }
+        }
+
+
+        console.log("FormData content:");
+        for (let pair of formDataToSend.entries()) {
+          console.log(pair[0] + ":", pair[1]);
+        }
+
+        console.log("Calling updateFormData with ID:", id);
+        response = await api.updateFormData(formDataToSend, id);
+      } else {
+
+
+        const cleanData = { ...tempData };
+        Object.keys(cleanData).forEach(key => {
+          if (cleanData[key] === "" || cleanData[key] === "null") {
+            cleanData[key] = null;
+          }
+        });
+
+        console.log("Calling simple update with ID:", id);
+        console.log("Update data (cleaned):", cleanData);
+        response = await api.update(cleanData, id);
+      }
+
+      console.log("Update response:", response);
 
       if (response && response.data) {
-
-
         await fetchData();
-        // await fetchBookData(id);
         PubSub.publish("RECORD_SAVED_TOAST", {
           title: "Success",
           message: `${moduleLabel} updated successfully`,
         });
-
         setIsEditing(false);
-        setTempData(null);
-      } else {
-        throw new Error("Failed to update");
       }
-    } catch (error) {
-      console.error(`Error updating ${moduleLabel}:`, error);
+
+    } catch (err) {
+      console.error("Update error:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+
       PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: `Failed to update ${moduleLabel}: ${error.message}`,
+        title: "Update Failed",
+        message: `Failed to update ${moduleLabel}: ${err.message}`,
       });
     } finally {
       setSaving(false);
     }
   };
-
   const handleCancel = () => {
     setIsEditing(false);
     setTempData(null);

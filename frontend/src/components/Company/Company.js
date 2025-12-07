@@ -131,7 +131,7 @@ const Company = () => {
           message: "Company details updated successfully!",
         });
 
-        // Publish event to update header and other components
+
         PubSub.publish("COMPANY_UPDATED", { company: { ...tempCompany } });
       }
     } catch (error) {

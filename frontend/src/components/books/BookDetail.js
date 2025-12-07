@@ -1,99 +1,99 @@
-// import React, { useState, useEffect } from "react";
-// import ModuleDetail from "../common/ModuleDetail";
-// import DataApi from "../../api/dataApi";
-// import { convertToUserTimezone } from "../../utils/convertTimeZone";
-// import { useTimeZone } from "../../contexts/TimeZoneContext";
-// import moment from "moment";
-
-// const BookDetail = () => {
-//   const { timeZone } = useTimeZone();
-//   const [externalData, setExternalData] = useState({ authors: [], categories: [] });
-
-//   useEffect(() => {
-//     const fetchExternalData = async () => {
-//       try {
-
-//         const authorApi = new DataApi("author");
-//         const authorsResponse = await authorApi.fetchAll();
-//         const authors = authorsResponse?.data?.data || authorsResponse?.data || [];
 
 
-//         const categoryApi = new DataApi("category");
-//         const categoriesResponse = await categoryApi.fetchAll();
-//         const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
 
-//         setExternalData({
-//           authors: Array.isArray(authors) ? authors : [],
-//           categories: Array.isArray(categories) ? categories : [],
-//         });
-//       } catch (error) {
-//         console.error("Error fetching external data:", error);
-//       }
-//     };
 
-//     fetchExternalData();
-//   }, []);
 
-//   const fields = {
-//     title: "title",
-//     subtitle: "isbn",
 
-//     details: [
-//       { key: "title", label: "Title", type: "text" },
-//       { key: "isbn", label: "ISBN", type: "text" },
-//       {
-//         key: "author_id",
-//         label: "Author",
-//         type: "select",
-//         options: "authors",
-//         displayKey: "author_name"
-//       },
-//       {
-//         key: "category_id",
-//         label: "Category",
-//         type: "select",
-//         options: "categories",
-//         displayKey: "category_name"
-//       },
-//       { key: "total_copies", label: "Total Copies", type: "number" },
-//       { key: "available_copies", label: "Available Copies", type: "number" },
 
-//     ],
-//     other: [
-//       { key: "createdbyid", label: "Created By", type: "text" },
-//       { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
-//       { key: "createddate", label: "Created Date", type: "date", render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l') },
-//       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-//     ],
-//   };
 
-//   const lookupNavigation = {
-//     author_name: {
-//       path: "author",
-//       idField: "author_id",
-//       labelField: "author_name"
-//     },
-//     category_name: {
-//       path: "category",
-//       idField: "category_id",
-//       labelField: "category_name"
-//     }
-//   };
 
-//   return (
-//     <ModuleDetail
-//       moduleName="book"
-//       moduleApi="book"
-//       moduleLabel="Book Management"
-//       icon="fa-solid fa-book"
-//       fields={fields}
-//       lookupNavigation={lookupNavigation}
-//       externalData={externalData}
-//     />
-//   );
-// };
 
-// export default BookDetail;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 import React, { useState, useEffect } from "react";
@@ -191,6 +191,7 @@ const BookDetail = (timeZone) => {
         displayKey: "category_name"
       },
       { key: "total_copies", label: "Total Copies", type: "number" },
+      { key: "language", label: "Language", type: "text" },
       { key: "available_copies", label: "Available Copies", type: "number" },
     ],
     other: [
@@ -224,19 +225,19 @@ const BookDetail = (timeZone) => {
   };
   const cardData = [
     {
-      title: "Total Books",
+      title: "Total Copies",
       value: totalBooks,
       icon: "fa-solid fa-layer-group",
       border: "border-start",
     },
     {
-      title: "Issued",
+      title: "Issued Copies",
       value: issuedBooksCount,
       icon: "fa-solid fa-book-open",
       border: "border-start",
     },
     {
-      title: "Available",
+      title: "Available Copies",
       value: availableBooks,
       icon: "fa-solid fa-cart-shopping",
       border: "border-start",

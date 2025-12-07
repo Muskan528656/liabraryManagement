@@ -25,7 +25,7 @@ const BulkIssue = () => {
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [users, setUsers] = useState([]);
   const [librarySettings, setLibrarySettings] = useState({});
-  const [subscriptions, setSubscriptions] = useState([]); // YEH ADD KARO
+  const [subscriptions, setSubscriptions] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -36,7 +36,6 @@ const BulkIssue = () => {
   const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
   const [totalAllowedBooks, setTotalAllowedBooks] = useState(6);
 
-  // YEH NEW STATES ADD KARO
   const [subscriptionAllowedBooks, setSubscriptionAllowedBooks] = useState(0);
   const [memberPersonalAllowedBooks, setMemberPersonalAllowedBooks] = useState(0);
   const [memberSubscription, setMemberSubscription] = useState(null);
@@ -70,9 +69,8 @@ const BulkIssue = () => {
     } else {
       resetMemberInfo();
     }
-  }, [selectedCard, systemMaxBooks, subscriptions]); // subscriptions ko bhi dependency mein add karo
+  }, [selectedCard, systemMaxBooks, subscriptions]);
 
-  // RESET MEMBER INFO FUNCTION ADD KARO
   const resetMemberInfo = () => {
     setMemberInfo(null);
     setMemberSubscription(null);
@@ -100,15 +98,11 @@ const BulkIssue = () => {
           subscriptionApi.fetchAll()
         ]);
 
-      console.log("Cards List Response:", cardsResp);
-      console.log("Subscription Response:", subscriptionResponse);
-
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
 
-      // Subscription data ko normalize karo
       let subscriptionsList = [];
       if (subscriptionResponse?.data?.data) {
         subscriptionsList = subscriptionResponse.data.data;
@@ -120,13 +114,10 @@ const BulkIssue = () => {
         subscriptionsList = subscriptionResponse;
       }
 
-      console.log("Normalized Subscriptions:", subscriptionsList);
-
       setBooks(booksList);
       setUsers(usersList);
-      setSubscriptions(subscriptionsList); // Subscriptions set karo
+      setSubscriptions(subscriptionsList);
 
-      // Sirf active cards filter karo
       const activeCards = cardsList.filter((c) =>
         c.is_active === true || c.is_active === "true" || c.is_active === 1
       );
@@ -139,53 +130,32 @@ const BulkIssue = () => {
       );
       setIssuedBooks(activeIssues);
 
-      // System defaults set karo (agar settings API nahi hai to)
       setDurationDays(7);
       setSystemMaxBooks(6);
       setTotalAllowedBooks(6);
 
-      // Cards list se kisi bhi member ka subscription check karo
-      // First card jo subscription_id rakhta hai uska data show karte hain demo ke liye
       const cardWithSubscription = cardsList.find(card => card.subscription_id);
 
       if (cardWithSubscription && subscriptionsList.length > 0) {
-        console.log("Found card with subscription:", cardWithSubscription);
-
         const matchedPlan = subscriptionsList.find(
           (p) => p.id === cardWithSubscription.subscription_id
         );
 
         if (matchedPlan) {
-          console.log("Matched Subscription Plan:", matchedPlan);
-
-          // Duration calculate karo (subscription ke start_date aur end_date se)
           if (matchedPlan.start_date && matchedPlan.end_date) {
             const start = new Date(matchedPlan.start_date);
             const end = new Date(matchedPlan.end_date);
             const dur = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
             setDurationDays(dur);
-            console.log("Subscription Duration:", dur, "days");
           }
 
-          // Allowed books subscription se lo
           const maxBooks = Number(matchedPlan.allowed_books) || 0;
           setSystemMaxBooks(maxBooks);
 
-          // Member ki personal allowance card list se lo
           const personalAllowance = Number(cardWithSubscription.allowed_books) || 0;
-
-          // Total calculate karo: subscription allowed + personal allowance
           const totalAllowed = maxBooks + personalAllowance;
           setTotalAllowedBooks(totalAllowed);
           setMemberExtraAllowance(personalAllowance);
-
-          console.log("Book Limits:", {
-            subscriptionAllowed: maxBooks,
-            personalAllowance: personalAllowance,
-            totalAllowed: totalAllowed
-          });
-        } else {
-          console.log("No matching plan found for subscription_id:", cardWithSubscription.subscription_id);
         }
       }
 
@@ -197,10 +167,7 @@ const BulkIssue = () => {
     }
   };
 
-  // Normalize function
   const normalize = (resp) => {
-    console.log("Normalizing response:", resp);
-
     if (Array.isArray(resp?.data)) return resp.data;
     if (Array.isArray(resp)) return resp;
     if (resp?.data && !Array.isArray(resp.data)) return [resp.data];
@@ -216,7 +183,6 @@ const BulkIssue = () => {
         const member = memberResp.data;
         setMemberInfo(member);
 
-        // Get member's personal allowed books (from library_members table)
         let personalAllowed = 0;
         if (member.allowed_books !== undefined && member.allowed_books !== null) {
           personalAllowed = parseInt(member.allowed_books);
@@ -233,7 +199,6 @@ const BulkIssue = () => {
         setMemberPersonalAllowedBooks(personalAllowed);
         setMemberExtraAllowance(personalAllowed);
 
-        // Find member's subscription from subscriptions list
         let subscription = null;
         let subscriptionBooks = 0;
 
@@ -243,20 +208,17 @@ const BulkIssue = () => {
           );
 
           if (subscription) {
-            // Subscription se allowed_books lena hai
             subscriptionBooks = parseInt(subscription.allowed_books || 0);
             if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
               subscriptionBooks = 0;
             }
 
-            // Check if subscription is active
             const isSubscriptionActive = subscription.is_active === true ||
               subscription.is_active === "true" ||
               subscription.is_active === 1;
 
             if (!isSubscriptionActive) {
               subscriptionBooks = 0;
-              console.log("Subscription is inactive:", subscription.plan_name);
             }
           }
         }
@@ -264,35 +226,19 @@ const BulkIssue = () => {
         setMemberSubscription(subscription);
         setSubscriptionAllowedBooks(subscriptionBooks);
 
-
         let totalAllowed = 0;
 
         if (subscriptionBooks > 0) {
-
           totalAllowed = subscriptionBooks;
         } else {
-
           totalAllowed = systemMaxBooks;
         }
-
 
         if (personalAllowed > 0) {
           totalAllowed += personalAllowed;
         }
 
         setTotalAllowedBooks(totalAllowed);
-
-        console.log("Member Info Loaded:", {
-          memberName: `${member.first_name || ''} ${member.last_name || ''}`,
-          cardNumber: member.card_number,
-          subscriptionId: member.subscription_id,
-          subscriptionPlan: subscription?.plan_name || "None",
-          subscriptionBooks: subscriptionBooks,
-          systemMaxBooks: systemMaxBooks,
-          personalAllowed: personalAllowed,
-          totalAllowed: totalAllowed,
-          formula: `${subscriptionBooks > 0 ? subscriptionBooks : systemMaxBooks} ${personalAllowed > 0 ? `+ ${personalAllowed} = ${totalAllowed}` : ''}`
-        });
 
       } else {
         console.warn("No member data found for card:", cardId);
@@ -303,17 +249,6 @@ const BulkIssue = () => {
       resetMemberInfo();
     }
   };
-
-  // const settingsRespTry = async (settingsApi) => {
-  //   try {
-  //     const r = await settingsApi.get("/all");
-  //     console.log("R->>>>>>>>>>>>>>", r)
-  //     if (r?.data && r.data.success && r.data.data) return r.data.data;
-  //     return r?.data || r;
-  //   } catch (e) {
-  //     return null;
-  //   }
-  // };
 
   const findUserByCardId = (cardId) => {
     if (!cardId) return null;
@@ -368,7 +303,6 @@ const BulkIssue = () => {
   const availableForSelect = (option) => {
     const b = option.data;
 
-    // Check available copies
     if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0) {
       return {
         ...option,
@@ -379,7 +313,6 @@ const BulkIssue = () => {
     }
 
     if (selectedCard) {
-      // Check if already issued to this card
       const alreadyIssued = isBookIssuedToSelectedCard(b.id);
 
       if (alreadyIssued) {
@@ -391,7 +324,6 @@ const BulkIssue = () => {
         };
       }
 
-      // Check if already selected in current selection
       const alreadySelected = selectedBooks.some(sel => sel.value.toString() === b.id.toString());
       if (alreadySelected) {
         return {
@@ -431,7 +363,6 @@ const BulkIssue = () => {
   };
 
   const validateIssuance = () => {
-    // 1. Basic validation
     if (!selectedCard) {
       showErrorToast("Please select a library card first.");
       return false;
@@ -442,7 +373,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 2. Check for duplicate book selection
     const bookIds = selectedBooks.map(b => b.value);
     const uniqueBookIds = [...new Set(bookIds)];
     if (bookIds.length !== uniqueBookIds.length) {
@@ -450,11 +380,9 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 3. Get current issued count
     const issuedCount = computeIssuedCountForCard(selectedCard.value);
     const toIssueCount = selectedBooks.length;
 
-    // 4. Check against total allowed books
     if (issuedCount + toIssueCount > totalAllowedBooks) {
       showErrorToast(
         `Maximum ${totalAllowedBooks} books allowed for this member. ` +
@@ -464,7 +392,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 5. Check for already issued books
     const alreadyIssuedBooks = [];
     selectedBooks.forEach(book => {
       if (isBookIssuedToSelectedCard(book.value)) {
@@ -480,7 +407,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 6. Check available copies
     const unavailableBooks = [];
     selectedBooks.forEach(book => {
       const bookData = book.data;
@@ -496,7 +422,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 7. Check if member is active
     if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;
@@ -506,7 +431,6 @@ const BulkIssue = () => {
   };
 
   const handleIssue = async () => {
-    // Validate before proceeding
     if (!validateIssuance()) {
       return;
     }
@@ -559,13 +483,11 @@ const BulkIssue = () => {
         }
       }
 
-      // Show success/error messages
       if (successBooks.length > 0) {
         const successTitles = successBooks.map(b => b.title);
         const newIssuedCount = computeIssuedCountForCard(selectedCard.value) + successBooks.length;
         const remaining = Math.max(0, totalAllowedBooks - newIssuedCount);
 
-        // Calculate system max remaining and extra remaining
         const systemMaxUsed = Math.min(newIssuedCount, systemMaxBooks);
         const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
 
@@ -598,7 +520,6 @@ const BulkIssue = () => {
         });
       }
 
-      // Reset and refresh
       if (failedBooks.length === 0) {
         setSelectedBooks([]);
         setRefreshTrigger(prev => prev + 1);
@@ -624,17 +545,14 @@ const BulkIssue = () => {
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
 
-  // Calculate remaining books
   const remainingForCard = Math.max(
     0,
     totalAllowedBooks - issuedCountForSelectedCard
   );
 
-  // Calculate how many from system max are used/remaining
   const systemMaxUsed = Math.min(issuedCountForSelectedCard, systemMaxBooks);
   const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
 
-  // Calculate extra allowance used/remaining
   const extraUsed = Math.max(0, issuedCountForSelectedCard - systemMaxBooks);
   const extraRemaining = Math.max(0, memberExtraAllowance - extraUsed);
 
@@ -645,12 +563,32 @@ const BulkIssue = () => {
     data: b,
   }));
 
-  const cardOptions = libraryCards.map((c) => ({
-    value: c.id,
-    label: `${c.card_number}`,
-    subLabel: c.user_name || c.student_name || "Unknown",
-    data: c,
-  }));
+
+  const cardOptions = libraryCards.map((c) => {
+
+    const getFullName = () => {
+      if (c.first_name || c.last_name) {
+        return `${c.first_name || ''} ${c.last_name || ''}`.trim();
+      } else if (c.user_name) {
+        return c.user_name;
+      } else if (c.student_name) {
+        return c.student_name;
+      } else if (c.name) {
+        return c.name;
+      }
+      return "Unknown Member";
+    };
+
+    const fullName = getFullName();
+    const cardNumber = c.card_number || "No Card Number";
+
+    return {
+      value: c.id,
+      label: `${cardNumber} - ${fullName}`, // Card number और full name एक साथ
+      subLabel: `Email: ${c.email || 'N/A'} | Phone: ${c.phone_number || 'N/A'}`,
+      data: c,
+    };
+  });
 
   const customSelectStyles = {
     control: (base) => ({
@@ -659,6 +597,16 @@ const BulkIssue = () => {
       boxShadow: "none",
       "&:hover": { borderColor: "#8b5cf6" },
       padding: "4px",
+      zIndex: 1,
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+      position: "absolute",
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
     option: (base, state) => ({
       ...base,
@@ -687,7 +635,6 @@ const BulkIssue = () => {
       (selectedCard.data.user_name || selectedCard.data.student_name || "Unknown User");
   };
 
-  // Tooltip for member limits
   const limitsTooltip = (props) => (
     <Tooltip id="limits-tooltip" {...props}>
       <div className="text-start">
@@ -764,7 +711,6 @@ const BulkIssue = () => {
                 <h6 className="fw-bold text-uppercase text-muted small mb-3">
                   Step 1: Select Member
                 </h6>
-                <Form.Label className="fw-bold">Find Library Card</Form.Label>
                 <Select
                   options={cardOptions}
                   value={selectedCard}
@@ -772,17 +718,71 @@ const BulkIssue = () => {
                     setSelectedCard(v);
                     setSelectedUser(null);
                     setSelectedBooks([]);
-                    resetMemberInfo(); // resetMemberInfo use karo
+                    resetMemberInfo();
                   }}
                   isClearable
-                  placeholder="Search by card number or name..."
+                  placeholder="Search by card number, name, email..."
                   styles={customSelectStyles}
-                  formatOptionLabel={({ label, subLabel }) => (
-                    <div className="d-flex flex-column">
-                      <span className="fw-bold">{label}</span>
-                      <span className="small text-muted">{subLabel}</span>
-                    </div>
-                  )}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  formatOptionLabel={({ label, subLabel, data }) => {
+
+                    const parts = label.split(' - ');
+                    const cardNumber = parts[0] || 'N/A';
+                    const memberName = parts.slice(1).join(' - ') || 'Unknown Member';
+
+                    return (
+                      <div className="d-flex flex-column">
+                        <div className="d-flex align-items-center">
+                          {/* Card Number */}
+                          <Badge
+                            bg="primary"
+                            className="me-2 px-2 py-1"
+                            style={{
+                              minWidth: '90px',
+                              fontSize: '0.55rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            <i className="fa-solid fa-id-card me-1"></i>
+                            {cardNumber}
+                          </Badge>
+
+                          {/* Member Name */}
+                          <div className="fw-bold" style={{ flex: 1 }}>
+                            {memberName}
+                          </div>
+                        </div>
+
+                        {/* Additional info */}
+                        {/* <div className="d-flex justify-content-between small text-muted mt-1">
+                          <div>
+                            {data?.type && (
+                              <span className="me-2">
+                                <i className="fa-solid fa-user-tag me-1"></i>
+                                {data.type}
+                              </span>
+                            )}
+                            <span>
+                              <i className="fa-solid fa-circle me-1" 
+                                style={{ 
+                                  color: data?.is_active ? '#28a745' : '#dc3545',
+                                  fontSize: '0.5rem'
+                                }}></i>
+                              {data?.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          
+                          {data?.email && (
+                            <div className="text-truncate" style={{ maxWidth: '150px' }}>
+                              <i className="fa-solid fa-envelope me-1"></i>
+                              {data.email}
+                            </div>
+                          )}
+                        </div> */}
+                      </div>
+                    );
+                  }}
                 />
               </Card.Body>
             </Card>
@@ -870,37 +870,11 @@ const BulkIssue = () => {
                             {memberSubscription.plan_name}
                             {memberSubscription.is_active ? " ✓" : " ✗"}
                           </Badge>
-
                         </div>
                       )}
-
-
                     </div>
 
                     <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />
-
-                    {/* Limits Information */}
-                    <div className="mb-3">
-                      <div className="small text-muted">
-                        {memberSubscription ? (
-                          <div className="text-success fw-bold small mb-1">
-                            <i className="fa-solid fa-crown me-1"></i>
-                            Subscription: {memberSubscription.plan_name} ({subscriptionAllowedBooks} books)
-                          </div>
-                        ) : (
-                          <div className="text-info small mb-1">
-                            <i className="fa-solid fa-info-circle me-1"></i>
-                            System Limit: {systemMaxBooks} books
-                          </div>
-                        )}
-                        {memberExtraAllowance > 0 && (
-                          <div className="text-success fw-bold small mb-1">
-                            <i className="fa-solid fa-plus-circle me-1"></i>
-                            Extra Allowance: +{memberExtraAllowance} books
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
                     {/* Stats Grid */}
                     <Row className="g-2 mb-3">
@@ -917,7 +891,6 @@ const BulkIssue = () => {
                           <div className="small text-muted">Total Allowed</div>
                           <div className="h5 mb-0 fw-bold text-dark">
                             {totalAllowedBooks}
-
                           </div>
                         </div>
                       </Col>
@@ -930,33 +903,6 @@ const BulkIssue = () => {
                         </div>
                       </Col>
                     </Row>
-
-                    {/* Detailed Usage Breakdown */}
-                    {/* <div className="mb-3 p-3 bg-light rounded-3">
-                      <div className="small text-muted mb-2">Usage Breakdown:</div>
-                      <div className="d-flex justify-content-between mb-1">
-                        <span className="small">
-                          {memberSubscription ? 'Subscription' : 'System'} Limit ({systemMaxBooks}):
-                        </span>
-                        <span className="small fw-bold">
-                          {systemMaxUsed}/{systemMaxBooks} books
-                        </span>
-                      </div>
-                      {memberExtraAllowance > 0 && (
-                        <div className="d-flex justify-content-between mb-1">
-                          <span className="small text-success">Extra Allowance ({memberExtraAllowance}):</span>
-                          <span className="small fw-bold text-success">
-                            {extraUsed}/{memberExtraAllowance} books
-                          </span>
-                        </div>
-                      )}
-                      <div className="d-flex justify-content-between mt-2 pt-2 border-top">
-                        <span className="small fw-bold">Total Used:</span>
-                        <span className="small fw-bold">
-                          {issuedCountForSelectedCard}/{totalAllowedBooks} books
-                        </span>
-                      </div>
-                    </div> */}
 
                     {/* Progress Bar */}
                     <div className="text-start">
@@ -1037,7 +983,6 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        // Filter out any books that are already issued to this member
                         const filtered = v.filter((sel) => {
                           return !isBookIssuedToSelectedCard(sel.value);
                         });
@@ -1070,6 +1015,8 @@ const BulkIssue = () => {
                       selectedBooks.length >= remainingForCard
                     }
                     styles={customSelectStyles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     formatOptionLabel={({ label, subLabel, isDisabled, data }) => (
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex flex-column">

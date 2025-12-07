@@ -34,6 +34,7 @@ const CategoryDetail = (timeZone) => {
       moduleLabel="Category"
       icon="fa-solid fa-tags"
       fields={fields}
+      initialIsEditable={false}
     />
   );
 };

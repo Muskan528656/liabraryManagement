@@ -530,39 +530,41 @@ const BookIssue = () => {
               {activeTab === "list" && (
                 <div
                   style={{
-                    position: "absolute",
-                    right: "0",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    paddingRight: "15px",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginRight: "20px",
+                    padding: "10px 0",
+                    alignItems: "center" 
                   }}
                 >
-                  <InputGroup style={{ maxWidth: "250px" }}>
-                    <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-                      <InputGroup.Text
-                        style={{
-                          background: "#f3e9fc",
-                          borderColor: "#e9ecef",
-                          padding: "0.375rem 0.75rem",
-                        }}
-                      >
-                        <i
-                          className="fa-solid fa-search"
-                          style={{ color: "#6f42c1", fontSize: "0.875rem" }}
-                        ></i>
-                      </InputGroup.Text>
+                  <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
+                    {/* Remove the nested InputGroup */}
+                    <InputGroup.Text
+                      style={{
+                        background: "#f3e9fc",
+                        borderColor: "#e9ecef",
+                        padding: "0.375rem 0.75rem",
+                        borderRight: "none" // Cleaner border
+                      }}
+                    >
+                      <i
+                        className="fa-solid fa-search"
+                        style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                      ></i>
+                    </InputGroup.Text>
 
-                      <Form.Control
-                        placeholder="Search books..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                          borderColor: "#e9ecef",
-                          fontSize: "0.875rem",
-                          padding: "0.375rem 0.75rem",
-                        }}
-                      />
-                    </InputGroup>
+                    <Form.Control
+                      placeholder="Search books..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        borderColor: "#e9ecef",
+                        fontSize: "0.875rem",
+                        padding: "0.375rem 0.75rem",
+                        borderLeft: "none", // Cleaner look
+                        borderRight: searchTerm ? "none" : "1px solid #e9ecef" // Button ke liye
+                      }}
+                    />
 
                     {searchTerm && (
                       <Button
@@ -570,9 +572,12 @@ const BookIssue = () => {
                         onClick={() => setSearchTerm("")}
                         style={{
                           border: "1px solid #d1d5db",
-                          borderRadius: "0 6px 6px 0",
-                          marginLeft: "-1px",
+                          borderLeft: "none",
                           height: "38px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0 12px"
                         }}
                       >
                         <i className="fa-solid fa-times"></i>

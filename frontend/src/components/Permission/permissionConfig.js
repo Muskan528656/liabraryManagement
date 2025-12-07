@@ -11,7 +11,7 @@ export const getPermissionConfig = (modules = []) => {
                 label: "User Role",
                 type: "select",
                 required: true,
-                placeholder: "Select Role",
+           
                 options: "option",
                 colSize: 12
             }
