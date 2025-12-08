@@ -424,167 +424,19 @@ module.exports = (app) => {
 
 
 
+  router.post("/issue", async (req, res) => {
+    try {
+      console.log("📩 Received Issue Book request:", req.body);
 
-  router.post(
-    "/issue",
-    fetchUser,
-    [
-      body("book_id").notEmpty().isUUID().withMessage("Book ID is required and must be a valid UUID"),
-      body("card_id").notEmpty().isUUID().withMessage("Card ID is required and must be a valid UUID"),
-      body("issue_date").optional().isISO8601().withMessage("Issue date must be a valid date"),
-      body("condition_before").optional().isString(),
-      body("remarks").optional().isString()
-    ],
-    async (req, res) => {
-      const startTime = Date.now();
-      console.log("\n========== 📘 ISSUE BOOK API HIT ==========");
-      console.log("📥 Request Body:", req.body);
+      const result = await BookIssue.issueBook(req);
 
-      try {
+      return res.status(result.success ? 200 : 400).json(result);
 
-        console.log("🔍 Step 1: Validating request...");
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          console.log("❌ Validation Failed:", errors.array());
-          return res.status(400).json({
-            success: false,
-            message: "Validation failed",
-            errors: errors.array()
-          });
-        }
-        console.log("✅ Validation OK");
-
-
-        const userId = req.userinfo?.id;
-        const tenantcode = req.userinfo?.tenantcode;
-
-        console.log("🔍 Auth Check → user:", userId, " tenant:", tenantcode);
-
-        if (!userId || !tenantcode) {
-          console.log("❌ Missing Auth/Tenant");
-          return res.status(401).json({ success: false, message: "Auth/Tenant missing" });
-        }
-
-
-        console.log("📌 Step 2: Fetching Member & Plan...");
-        const memberRes = await sql.query(
-          `SELECT m.id, m.card_number, m.plan_id, p.allowed_books 
-         FROM ${tenantcode}.library_members m
-         LEFT JOIN demo.plan p ON m.plan_id = p.id
-         WHERE m.id = $1`,
-          [req.body.card_id]
-        );
-
-        console.log("🔍 Member Query Result:", memberRes.rows);
-
-        if (memberRes.rows.length === 0) {
-          console.log("❌ Member not found");
-          return res.status(404).json({ success: false, message: "Member not found" });
-        }
-
-        const member = memberRes.rows[0];
-        console.log("👤 Member Found:", member);
-
-        if (!member.plan_id) {
-          console.log("❌ Member has no plan assigned");
-          return res.status(400).json({ success: false, message: "Member has no active plan" });
-        }
-
-        if (!member.allowed_books || member.allowed_books <= 0) {
-          console.log("❌ Plan Limit Zero");
-          return res.status(400).json({ success: false, message: "Plan does not allow issuing books" });
-        }
-
-
-        console.log("📌 Step 3: Checking Issued Book Count...");
-        const countIssuedRes = await sql.query(
-          `SELECT COUNT(*) AS total 
-         FROM ${tenantcode}.book_issues 
-         WHERE issued_to = $1 AND return_date IS NULL`,
-          [req.body.card_id]
-        );
-
-        const alreadyIssued = Number(countIssuedRes.rows[0].total);
-        console.log(`📚 Books Already Issued: ${alreadyIssued}/${member.allowed_books}`);
-
-        if (alreadyIssued >= member.allowed_books) {
-          console.log("❌ Book limit exceeded");
-          return res.status(400).json({
-            success: false,
-            message: "Book limit exceeded"
-          });
-        }
-
-
-        console.log("📌 Step 4: Checking Book Availability...");
-        const bookRes = await sql.query(
-          `SELECT id, title, isbn, available_copies 
-         FROM ${tenantcode}.books 
-         WHERE id = $1`,
-          [req.body.book_id]
-        );
-
-        console.log("🔍 Book Result:", bookRes.rows);
-
-        if (bookRes.rows.length === 0 || bookRes.rows[0].available_copies <= 0) {
-          console.log("❌ Book unavailable");
-          return res.status(400).json({
-            success: false,
-            message: "Book unavailable or not found"
-          });
-        }
-
-
-        console.log("📌 Step 5: Checking if Same Book Already Issued...");
-        const alreadyIssuedRes = await sql.query(
-          `SELECT id FROM ${tenantcode}.book_issues 
-         WHERE book_id = $1 AND issued_to = $2 AND return_date IS NULL`,
-          [req.body.book_id, req.body.card_id]
-        );
-
-        console.log("🔍 Duplicate Check Result:", alreadyIssuedRes.rows);
-
-        if (alreadyIssuedRes.rows.length > 0) {
-          console.log("❌ Duplicate Issue Blocked");
-          return res.status(409).json({
-            success: false,
-            message: "Book already issued"
-          });
-        }
-
-
-        console.log("📌 Step 6: Issuing Book...");
-
-        const issueData = {
-          book_id: req.body.book_id,
-          card_id: req.body.card_id,
-          issued_to: req.body.card_id,
-          issue_date: req.body.issue_date || new Date().toISOString().split("T")[0],
-          condition_before: req.body.condition_before || "Good",
-          remarks: req.body.remarks || ""
-        };
-
-        console.log("📝 Issue Payload:", issueData);
-
-        BookIssue.init(tenantcode);
-        const issue = await BookIssue.issueBook(issueData, userId);
-
-        console.log("✅ Book Issued Successfully:", issue);
-
-        console.log("⏳ Total Time:", Date.now() - startTime, "ms");
-
-        return res.status(200).json({
-          success: true,
-          message: "Book issued successfully",
-          data: issue
-        });
-
-      } catch (error) {
-        console.log("🔥 INTERNAL ERROR:", error);
-        return res.status(500).json({ success: false, message: "Internal server error" });
-      }
+    } catch (error) {
+      console.log("❌ Route Error:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
     }
-  );
+  });
 
   router.get("/allowance/:cardId", fetchUser, async (req, res) => {
     try {

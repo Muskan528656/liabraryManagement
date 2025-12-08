@@ -50,31 +50,88 @@ async function findById(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function create(data, userId) {
+    const {
+        plan_id,
+        member_id,
+        user_id,
+        card_id,
+        plan_name,
+        duration_days = 30,
+        allowed_books = 0,
+        start_date,
+        end_date,
+        is_active = true,
+        status = "active",
+        ...otherFields
+    } = data;
+
+
+    let finalEndDate = end_date;
+    if (!finalEndDate) {
+        const start = start_date ? new Date(start_date) : new Date();
+        const end = new Date(start);
+        end.setDate(end.getDate() + parseInt(duration_days));
+        finalEndDate = end.toISOString().split('T')[0];
+    }
+
+    const finalStartDate = start_date || new Date().toISOString().split('T')[0];
+
+    const subscriptionData = {
+        plan_id,
+        member_id,
+        user_id,
+        card_id,
+        plan_name,
+        duration_days,
+        allowed_books,
+        start_date: finalStartDate,
+        end_date: finalEndDate,
+        is_active,
+        status,
+        createdbyid: userId,
+        lastmodifiedbyid: userId,
+        createddate: new Date(),
+        lastmodifieddate: new Date(),
+        ...otherFields
+    };
+
+    const columns = Object.keys(subscriptionData);
+    const values = Object.values(subscriptionData);
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    const columnNames = columns.join(', ');
+
     const query = `
-        INSERT INTO demo.subscriptions
-        (plan_name, start_date, end_date, is_active, renewal, "allowed books",
-         createdbyid, lastmodifiedbyid, createddate, lastmodifieddate)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $7, NOW(), NOW())
+        INSERT INTO subscriptions (${columnNames})
+        VALUES (${placeholders})
         RETURNING *
     `;
 
-    const values = [
-        data.plan_name,
-        data.start_date?.trim() !== "" ? data.start_date : null,
-        data.end_date?.trim() !== "" ? data.end_date : null,
-        data.is_active || false,
-        parseInt(data.renewal) || 0,
-        parseInt(data.allowed_books ?? data["allowed books"]) || null,
-        userId || null
-    ];
-
-    const result = await sql.query(query, values);
-    return normalizeSubscriptionRow(result.rows[0] || null);
+    const result = await this.db.query(query, values);
+    return result.rows[0];
 }
-
-
-
 
 async function updateById(id, data, userId) {
     const current = await findById(id);

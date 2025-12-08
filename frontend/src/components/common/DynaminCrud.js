@@ -110,6 +110,19 @@ const DynamicCRUD = ({
         );
     }, []);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
     const handleEditClick = useCallback((item) => {
         console.log("Edit clicked for item:", item);
         console.log("Item ID:", item.id);
@@ -461,7 +474,9 @@ const DynamicCRUD = ({
 
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
-                } else if (typeof field.options === 'string') {
+                }
+
+                else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
@@ -471,6 +486,10 @@ const DynamicCRUD = ({
                     } else {
                         optionsArray = [];
                     }
+                }
+                else if (typeof field.options === 'function') {
+
+                    optionsArray = field.options(formData) || [];
                 } else {
                     console.warn(`Invalid options type for field ${field.name}:`, typeof field.options);
                     optionsArray = [];
@@ -504,13 +523,7 @@ const DynamicCRUD = ({
                 };
             }
         });
-    }, [formFields, relatedData]);
-
-
-
-
-
-
+    }, [formFields, relatedData, formData]);
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {

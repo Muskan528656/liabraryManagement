@@ -12,7 +12,7 @@ import Loader from "./common/Loader";
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 
-// Color Constants
+
 const PRIMARY_COLOR = "#4338ca";
 const ACCENT_COLOR = "#6366f1";
 const SUCCESS_COLOR = "#059669";
@@ -87,7 +87,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Consolidated state for all metrics
+
   const [metrics, setMetrics] = useState({
     dueSoonCount: 0,
     overdueCount: 0,
@@ -107,7 +107,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const [categories, setCategories] = useState([]);
   const [topAvailableBooks, setTopAvailableBooks] = useState([]);
 
-  // Formatting utilities
+
   const formatNumber = useCallback((num) => {
     if (num === null || num === undefined || isNaN(num)) return "0";
     return Number(num).toLocaleString('en-IN');
@@ -119,7 +119,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     return `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
 
-  // Initialize user info
+
   useEffect(() => {
     const initializeUser = () => {
       let currentUserInfo = propUserInfo;
@@ -140,7 +140,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     initializeUser();
   }, [propUserInfo]);
 
-  // Main data fetching effect
+
   useEffect(() => {
     let isMounted = true;
 
@@ -148,7 +148,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       try {
         setLoading(true);
 
-        // Use Promise.all to fetch all data in parallel but handle properly
+
         await Promise.all([
           fetchDashboardSummary(),
           fetchAlertMetrics(),
@@ -171,7 +171,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     };
   }, []);
 
-  // Fetch dashboard summary data
+
   const fetchDashboardSummary = async () => {
     try {
       const libraryApi = new DataApi("library");
@@ -196,7 +196,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
           }));
         }
 
-        // Set categories
+
         if (data.booksByCategory?.length > 0) {
           const topCategories = data.booksByCategory.slice(0, 5).map(item => ({
             name: item.category_name || "Unknown",
@@ -211,7 +211,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   };
 
-  // Fetch alert metrics (due soon, overdue, fines, damaged)
+
   const fetchAlertMetrics = async () => {
     try {
       const resp = await DashboardApi.fetchAll();
@@ -231,7 +231,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   };
 
-  // Fetch library details including card usage
+
   const fetchLibraryDetails = async () => {
     try {
       const bookApi = new DataApi("book");
@@ -239,12 +239,12 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const settingsApi = new DataApi("librarysettings");
       const cardApi = new DataApi("librarycard");
 
-      // Fetch books data for available books calculation
+
       const booksResp = await bookApi.fetchAll();
       const books = Array.isArray(booksResp?.data) ? booksResp.data :
         (booksResp?.data?.rows || booksResp || []);
 
-      // Calculate available books from direct API
+
       let availableCopies = 0;
       const booksWithAvailability = [];
 
@@ -262,19 +262,19 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         });
       }
 
-      // Get top 10 available books
+
       const sortedBooks = [...booksWithAvailability]
         .sort((a, b) => b.available_copies - a.available_copies)
         .slice(0, 10);
       setTopAvailableBooks(sortedBooks);
 
-      // Fetch active issues for card details
+
       const issuesResp = await issueApi.get("/active");
       const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data :
         (issuesResp?.data?.rows || issuesResp || []);
       const issuedCount = Array.isArray(activeIssues) ? activeIssues.length : 0;
 
-      // Fetch card limit
+
       let cardLimit = 6;
       try {
         const settingsResp = await settingsApi.get("/all");
@@ -292,7 +292,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
       setCardLimitSetting(cardLimit);
 
-      // Fetch and process card details
+
       await fetchCardDetails(cardApi, issueApi, cardLimit);
 
     } catch (error) {
@@ -300,7 +300,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   };
 
-  // Fetch and process library card details
+
   const fetchCardDetails = async (cardApi, issueApi, currentLimit) => {
     try {
       const cardsResp = await cardApi.fetchAll();
@@ -311,7 +311,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data :
         (issuesResp?.data?.rows || issuesResp || []);
 
-      // Count issues per card
+
       const countsByCard = {};
       activeIssues.forEach((issue) => {
         const cid = issue.card_id || issue.cardId || issue.cardid;
@@ -320,7 +320,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         }
       });
 
-      // Prepare card details
+
       const details = cards.map((c) => {
         const issued = countsByCard[c.id] || 0;
         const remaining = Math.max(0, currentLimit - issued);
@@ -332,7 +332,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         };
       });
 
-      // Sort by issued count and take top 10
+
       details.sort((a, b) => b.issued - a.issued);
       setCardDetails(details.slice(0, 10));
 
@@ -341,7 +341,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   };
 
-  // Chart configuration
+
   const getChartConfig = (filename) => ({
     toolbar: {
       show: true,
@@ -362,7 +362,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   });
 
-  // Library Card Bar Chart Options
+
   const libraryCardBarOptions = {
     chart: {
       type: 'bar',
@@ -418,7 +418,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     { name: 'Available Space', data: cardDetails.map(c => c.remaining) }
   ];
 
-  // Donut Chart Options
+
   const donutOptions = (colors, filename) => ({
     chart: {
       type: "donut",
@@ -474,7 +474,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     },
   });
 
-  // Available Books Bar Chart Options
+
   const availableBooksOptions = {
     chart: {
       type: 'bar',
@@ -550,7 +550,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     data: topAvailableBooks.map(b => parseInt(b.available_copies || 0))
   }];
 
-  // Calculate donut chart series
+
   const calculateDonutSeries = () => {
     if (metrics.totalBooks === 0) return [0, 0];
 
@@ -562,7 +562,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   const donutChartSeries = calculateDonutSeries();
 
-  // Prepare summary cards - Using single source of truth from metrics
+
   const summaryCards = [
     {
       title: "Total Books",
@@ -598,7 +598,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     },
   ];
 
-  // Prepare alert cards
+
   const alertCards = [
     {
       count: metrics.dueSoonCount,
@@ -643,7 +643,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     );
   }
 
-  // Student View
+
   if (userRole === "STUDENT") {
     return (
       <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
@@ -690,7 +690,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     );
   }
 
-  // Admin View
+
   return (
     <div style={{ background: "#f1f5f9", minHeight: "100vh", paddingBottom: "50px" }}>
       <ScrollToTop />

@@ -526,19 +526,19 @@ const BookIssue = () => {
                   <span>View Issued Books ({issuedBooks.length})</span>
                 </Nav.Link>
               </Nav.Item>
-              {/* Right aligned search bar */}
+
               {activeTab === "list" && (
                 <div
                   style={{
                     display: "flex",
                     justifyContent: "flex-end",
-                    marginRight: "20px",
                     padding: "10px 0",
-                    alignItems: "center" 
+                    alignItems: "center",
+                    width: "100%",
                   }}
                 >
                   <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-                    {/* Remove the nested InputGroup */}
+
                     <InputGroup.Text
                       style={{
                         background: "#f3e9fc",

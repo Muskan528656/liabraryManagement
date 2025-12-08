@@ -1196,6 +1196,7 @@ const LibraryCardDetail = ({
   };
 
   const handleSave = async () => {
+    console.log("working");
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);

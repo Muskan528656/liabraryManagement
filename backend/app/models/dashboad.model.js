@@ -14,36 +14,36 @@ const getDashboardStats = async () => {
     console.log("Fetching dashboard stats...");
     const stats = {};
 
-    // 1. Total books count
+
     const bookCountResult = await sql.query(`SELECT COUNT(*) FROM demo.books`);
     stats.total_books = parseInt(bookCountResult.rows[0].count) || 0;
 
-    // 2. Total submissions
+
     const booksubmission = await sql.query(
       `SELECT COUNT(*) FROM demo.book_submissions`
     );
     stats.total_submission = parseInt(booksubmission.rows[0].count) || 0;
 
-    // 3. Issued books (active issues)
+
     const issuedBooksResult = await sql.query(
       `SELECT COUNT(*) FROM demo.book_issues WHERE return_date IS NULL`
     );
     stats.issued_books = parseInt(issuedBooksResult.rows[0].count) || 0;
 
-    // 4. Books added today
+
     const dailyActivityResult = await sql.query(
       `SELECT COUNT(*) AS daily_activity FROM demo.books WHERE DATE(createddate) = CURRENT_DATE`
     );
     stats.daily_activity = parseInt(dailyActivityResult.rows[0].daily_activity) || 0;
 
-    // 5. Books added this month
+
     const monthlyActivityResult = await sql.query(
       `SELECT COUNT(*) AS monthly_activity FROM demo.books 
        WHERE DATE_TRUNC('month', createddate) = DATE_TRUNC('month', CURRENT_DATE)`
     );
     stats.monthly_activity = parseInt(monthlyActivityResult.rows[0].monthly_activity) || 0;
 
-    // 6. Books by category (summary)
+
     const booksByCategoryResult = await sql.query(`    
         SELECT 
             c.id,
@@ -57,7 +57,7 @@ const getDashboardStats = async () => {
     `);
     stats.books_by_category = booksByCategoryResult.rows;
 
-    // 7. Monthly trend
+
     const monthlyTrendResult = await sql.query(`    
         SELECT 
             TO_CHAR(createddate, 'YYYY-MM') AS month, 
@@ -69,17 +69,17 @@ const getDashboardStats = async () => {
     `);
     stats.monthly_trend = monthlyTrendResult.rows;
 
-    // 8. Available books calculation
-    // First get total copies from all books
+
+
     const totalCopiesResult = await sql.query(
       `SELECT COALESCE(SUM(total_copies), 0) FROM demo.books`
     );
     stats.total_copies = parseInt(totalCopiesResult.rows[0].coalesce) || 0;
 
-    // Calculate available copies (total copies - issued books)
+
     stats.available_copies = Math.max(0, stats.total_copies - stats.issued_books);
 
-    // Calculate percentages
+
     if (stats.total_copies > 0) {
       stats.available_percentage = Math.round((stats.available_copies / stats.total_copies) * 100);
       stats.issued_percentage = Math.round((stats.issued_books / stats.total_copies) * 100);
@@ -150,7 +150,7 @@ const fetchAll = async () => {
     if (result.rows && result.rows.length > 0) {
       return [result.rows[0]];
     } else {
-      // Return default values if no data
+
       return [{
         total_due_soon: 0,
         overdue_books: 0,
@@ -164,7 +164,7 @@ const fetchAll = async () => {
 
   } catch (error) {
     console.error("Error fetching dashboard metrics:", error);
-    // Return default values on error
+
     return [{
       total_due_soon: 0,
       overdue_books: 0,
@@ -177,12 +177,12 @@ const fetchAll = async () => {
   }
 };
 
-// Combined function for all dashboard data
+
 const getCompleteDashboardData = async () => {
   try {
     console.log("Fetching complete dashboard data...");
 
-    // Run both queries in parallel
+
     const [stats, metrics] = await Promise.all([
       getDashboardStats(),
       fetchAll()

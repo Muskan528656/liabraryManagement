@@ -1,3 +1,570 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
@@ -21,6 +588,7 @@ const UserAdd = () => {
   const [optionUsers, setOptionUsers] = useState([]);
   const [option, setoption] = useState();
   const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -69,7 +637,7 @@ const UserAdd = () => {
 
   const fetchCompanyCountryCode = async () => {
     try {
-      const response = await DataApi.fetchAll("/company"); 
+      const response = await DataApi.fetchAll("/company");
       if (response && response.country_code) {
         setCompanyCountryCode(response.country_code);
 
@@ -93,7 +661,7 @@ const UserAdd = () => {
     const isWhatsAppSettingsValid =
       user.userrole === "USER"
         ? Array.isArray(user.whatsapp_settings) &&
-          user.whatsapp_settings.length > 0
+        user.whatsapp_settings.length > 0
         : true;
 
     return (
@@ -105,12 +673,19 @@ const UserAdd = () => {
       Boolean(option?.value) &&
       !emailError &&
       passwordError === "" &&
+      confirmPasswordError === "" &&
       isWhatsAppSettingsValid
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+
+    if (user.password !== user.confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+      return;
+    }
 
     const finalUser = {
       ...user,
@@ -175,6 +750,20 @@ const UserAdd = () => {
         setPasswordError("Password cannot exceed 16 characters.");
       } else {
         setPasswordError("");
+      }
+
+      if (user.confirmPassword && value !== user.confirmPassword) {
+        setConfirmPasswordError("Passwords do not match.");
+      } else if (user.confirmPassword) {
+        setConfirmPasswordError("");
+      }
+    }
+
+    if (name === "confirmPassword") {
+      if (value !== user.password) {
+        setConfirmPasswordError("Passwords do not match.");
+      } else {
+        setConfirmPasswordError("");
       }
     }
 
@@ -339,11 +928,11 @@ const UserAdd = () => {
                   </Col>
                 </Row>
 
-                {/* Role + Password */}
+                {/* Role + Password + Confirm Password */}
                 {!user.id ? (
                   <>
                     <Row className="mb-3">
-                      <Col lg={6} sm={12} xs={12}>
+                      <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
                           <Form.Label htmlFor="userrole">Role</Form.Label>
                           <Form.Select
@@ -352,10 +941,13 @@ const UserAdd = () => {
                             value={user.userrole}
                             onChange={handleChange}
                             required
-                          ></Form.Select>
+                          >
+                            <option value="USER">USER</option>
+                            {loginUserRole === "ADMIN" && <option value="ADMIN">ADMIN</option>}
+                          </Form.Select>
                         </Form.Group>
                       </Col>
-                      <Col lg={6} sm={12} xs={12}>
+                      <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
                           <Form.Label htmlFor="password">Password</Form.Label>
                           <div className="d-flex align-items-center position-relative">
@@ -387,6 +979,25 @@ const UserAdd = () => {
                           {passwordError && (
                             <small className="text-danger">
                               {passwordError}
+                            </small>
+                          )}
+                        </Form.Group>
+                      </Col>
+                      <Col lg={4} sm={12} xs={12}>
+                        <Form.Group className="ms-3">
+                          <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            name="confirmPassword"
+                            placeholder="Confirm Password"
+                            value={user.confirmPassword || ""}
+                            onChange={handleChange}
+                            required
+                            style={{ height: "36px" }}
+                          />
+                          {confirmPasswordError && (
+                            <small className="text-danger">
+                              {confirmPasswordError}
                             </small>
                           )}
                         </Form.Group>
@@ -452,7 +1063,7 @@ const UserAdd = () => {
                           Assign WhatsApp Setting
                           {userPlan &&
                             userPlan.number_of_whatsapp_setting !==
-                              undefined && (
+                            undefined && (
                               <span
                                 className="text-muted"
                                 style={{
@@ -563,3 +1174,4 @@ const UserAdd = () => {
 };
 
 export default UserAdd;
+

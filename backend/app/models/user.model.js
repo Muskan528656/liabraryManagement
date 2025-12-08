@@ -7,20 +7,20 @@
 const sql = require("./db.js");
 let schema = "";
 
- 
+
 function init(schema_name) {
   this.schema = schema_name;
 }
 
- 
- 
- 
+
+
+
 async function findAll() {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
     const query = `
-      SELECT 
+      SELECT
         id,
         firstname,
         lastname,
@@ -28,6 +28,9 @@ async function findAll() {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid
       FROM ${this.schema}."user"
@@ -42,9 +45,9 @@ async function findAll() {
   }
 }
 
- 
- 
- 
+
+
+
 async function findById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -58,9 +61,9 @@ async function findById(id) {
   }
 }
 
- 
- 
- 
+
+
+
 async function findByEmail(email) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -74,9 +77,8 @@ async function findByEmail(email) {
   }
 }
 
- 
- 
- 
+
+
 async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -100,12 +102,15 @@ async function create(userData, userId) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid,
         createdbyid,
         lastmodifiedbyid
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
       RETURNING
         id,
         firstname,
@@ -114,6 +119,9 @@ async function create(userData, userId) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid,
         createdbyid,
@@ -128,6 +136,9 @@ async function create(userData, userId) {
       userData.userrole || "STUDENT",
       userData.phone || null,
       userData.country_code || null,
+      userData.country || null,        // नया field
+      userData.currency || null,       // नया field
+      userData.time_zone || null,      // नया field
       userData.isactive !== undefined ? userData.isactive : true,
       userData.companyid,
       userId,
@@ -143,14 +154,10 @@ async function create(userData, userId) {
   }
 }
 
-
- 
- 
- 
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
- 
+
     if (userData.email) {
       const existing = await this.findByEmail(userData.email);
       if (existing && existing.id !== id) {
@@ -172,10 +179,15 @@ async function updateById(id, userData) {
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);
-    add("password", userData.password);
+    if (userData.password) {  // Password को केवल तभी update करें जब provide किया गया हो
+      add("password", userData.password);
+    }
     add("userrole", userData.userrole);
     add("phone", userData.phone);
     add("country_code", userData.country_code);
+    add("country", userData.country);        // नया field
+    add("currency", userData.currency);      // नया field
+    add("time_zone", userData.time_zone);    // नया field
     add("isactive", userData.isactive);
     add("companyid", userData.companyid);
 
@@ -197,6 +209,9 @@ async function updateById(id, userData) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid
     `;
@@ -210,9 +225,6 @@ async function updateById(id, userData) {
   }
 }
 
- 
- 
- 
 async function deleteById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -229,7 +241,7 @@ async function deleteById(id) {
   }
 }
 
- 
+
 module.exports = {
   init,
   findAll,

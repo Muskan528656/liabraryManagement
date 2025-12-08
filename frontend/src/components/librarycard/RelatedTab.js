@@ -13,88 +13,154 @@ const RelatedTabContent = ({ id, data }) => {
     const [planAssignmentSuccess, setPlanAssignmentSuccess] = useState("");
 
     useEffect(() => {
-        console.log("wkorkrororo")
+        console.log("Component mounted with ID:", id, "Data:", data);
         if (id && data) {
             fetchRelatedData();
         }
     }, [id, data]);
 
     const fetchRelatedData = async () => {
-        console.log("complete this")
+        console.log("Fetching related data...");
         setLoadingRelated(true);
         try {
             console.log("Fetching plans from API...");
 
-            try {
-                const api = new DataApi('plans')
-                const response = await api.fetchAll();
-                console.log("responseresponse", response)
-                if (response.ok) {
-                    const apiData = await response.json();
-                    console.log("Direct fetch response:", apiData);
 
-                    if (apiData && apiData.data) {
-                        console.log("Setting plans from direct fetch:", apiData.data);
-                        setAllPlans(apiData.data);
-                    }
+            const api = new DataApi('plans');
+            const plansResponse = await api.fetchAll();
+            console.log("Plans API response:", plansResponse);
+
+            if (plansResponse && plansResponse.data) {
+                const plansData = plansResponse.data;
+                console.log("Plans data:", plansData);
+
+
+                let plansArray = [];
+                if (plansData.success && plansData.data && Array.isArray(plansData.data)) {
+                    plansArray = plansData.data;
+                } else if (Array.isArray(plansData)) {
+                    plansArray = plansData;
+                } else if (plansData.data && Array.isArray(plansData.data)) {
+                    plansArray = plansData.data;
                 }
-            } catch (fetchError) {
-                console.log("Direct fetch failed:", fetchError);
-            }
 
-            // METHOD 2: Try DataApi with different endpoints
-            const apiEndpoints = ["plans", "subscription-plans", "subscriptions/plans"];
+                console.log("Setting plans:", plansArray);
+                setAllPlans(plansArray);
 
-            for (const endpoint of apiEndpoints) {
+
+                console.log("Fetching subscriptions for card:", id);
                 try {
-                    console.log(`Trying endpoint: ${endpoint}`);
-                    const api = new DataApi(endpoint);
-                    const response = await api.fetchAll();
 
-                    console.log(`Response from ${endpoint}:`, response);
+                    const subscriptionEndpoints = [
+                        "subscriptions",
+                        "member-subscriptions",
+                        "subscriptions/list"
+                    ];
 
-                    if (response && response.data) {
-                        let plansData = response.data;
+                    let subscriptionsData = [];
 
-                        // Handle different response formats
-                        console.log(`Raw data from ${endpoint}:`, plansData);
+                    for (const endpoint of subscriptionEndpoints) {
+                        try {
+                            const subApi = new DataApi(endpoint);
+                            const subResponse = await subApi.fetchAll();
 
-                        if (plansData.success && plansData.data) {
-                            plansData = plansData.data;
-                        } else if (plansData.data && Array.isArray(plansData.data)) {
-                            plansData = plansData.data;
-                        } else if (Array.isArray(plansData)) {
-                            // Direct array
-                        } else if (plansData.rows && Array.isArray(plansData.rows)) {
-                            plansData = plansData.rows;
-                        }
+                            console.log(`Subscriptions response from ${endpoint}:`, subResponse);
 
-                        if (Array.isArray(plansData) && plansData.length > 0) {
-                            console.log(`Found ${plansData.length} plans from ${endpoint}:`, plansData);
-                            setAllPlans(plansData);
-                            break; // Stop if we found data
+                            if (subResponse && subResponse.data) {
+                                let responseData = subResponse.data;
+
+
+                                if (responseData.success && responseData.data && Array.isArray(responseData.data)) {
+                                    subscriptionsData = responseData.data;
+                                    break;
+                                } else if (Array.isArray(responseData)) {
+                                    subscriptionsData = responseData;
+                                    break;
+                                } else if (responseData.data && Array.isArray(responseData.data)) {
+                                    subscriptionsData = responseData.data;
+                                    break;
+                                }
+                            }
+                        } catch (subError) {
+                            console.log(`Endpoint ${endpoint} failed:`, subError.message);
                         }
                     }
-                } catch (apiError) {
-                    console.log(`API endpoint ${endpoint} failed:`, apiError.message);
+
+                    if (subscriptionsData.length > 0) {
+
+                        const memberSubscriptions = subscriptionsData.filter(sub => {
+                            return (
+                                sub.member_id == id ||
+                                sub.card_id == id ||
+                                sub.library_card_id == id ||
+                                sub.user_id == data?.user_id
+                            );
+                        });
+
+                        console.log("Found member subscriptions:", memberSubscriptions);
+
+
+                        const enrichedPlans = memberSubscriptions.map(subscription => {
+                            const plan = plansArray.find(p => p.id == subscription.plan_id);
+                            return {
+                                ...plan,
+                                ...subscription,
+                                subscription_id: subscription.id || subscription.subscription_id,
+                                assigned_date: subscription.start_date || subscription.assigned_date,
+                                expiry_date: subscription.end_date || subscription.expiry_date,
+                                is_active: subscription.is_active !== undefined ? subscription.is_active : true
+                            };
+                        });
+
+                        console.log("Enriched plans with subscription:", enrichedPlans);
+                        setRelatedPlans(enrichedPlans);
+                    } else {
+
+                        console.log("No subscription data found, checking card plan_id");
+
+                        if (data?.plan_id) {
+                            const cardPlan = plansArray.find(plan => plan.id === data.plan_id);
+                            if (cardPlan) {
+                                console.log("Found plan from card data:", cardPlan);
+                                setRelatedPlans([{
+                                    ...cardPlan,
+                                    assigned_date: data.createddate || new Date().toISOString()
+                                }]);
+                            } else {
+                                setRelatedPlans([]);
+                            }
+                        } else {
+                            setRelatedPlans([]);
+                        }
+                    }
+                } catch (subscriptionError) {
+                    console.log("Error fetching subscriptions:", subscriptionError);
+
+
+                    if (data?.plan_id) {
+                        const cardPlan = plansArray.find(plan => plan.id === data.plan_id);
+                        if (cardPlan) {
+                            setRelatedPlans([{
+                                ...cardPlan,
+                                assigned_date: data.createddate || new Date().toISOString()
+                            }]);
+                        } else {
+                            setRelatedPlans([]);
+                        }
+                    } else {
+                        setRelatedPlans([]);
+                    }
                 }
+            } else {
+                console.error("Failed to fetch plans");
+                setAllPlans([]);
+                setRelatedPlans([]);
             }
-
-            // Filter related plans from current allPlans
-            const filteredPlans = allPlans.filter(plan => {
-                return (
-                    plan.library_card_id == id ||
-                    plan.card_id == id ||
-                    plan.id == data?.plan_id ||
-                    plan.cardId == id
-                );
-            });
-
-            console.log("Filtered related plans:", filteredPlans);
-            setRelatedPlans(filteredPlans);
 
         } catch (error) {
             console.error("Error fetching related data:", error);
+            setAllPlans([]);
+            setRelatedPlans([]);
         } finally {
             setLoadingRelated(false);
         }
@@ -111,81 +177,64 @@ const RelatedTabContent = ({ id, data }) => {
         setPlanAssignmentSuccess("");
 
         try {
-            // Try multiple endpoints for assigning plan
-            const apiEndpoints = ["subscription", "assign-plan", "subscriptions/assign"];
 
-            let success = false;
-            let response = null;
-
-            for (const endpoint of apiEndpoints) {
-                try {
-                    console.log(`Trying to assign plan via ${endpoint}`);
-                    const api = new DataApi(endpoint);
-
-                    const requestData = {
-                        card_id: id,
-                        plan_id: selectedPlanId,
-                        user_id: data?.user_id || data?.id,
-                        start_date: new Date().toISOString().split('T')[0]
-                    };
-
-                    console.log("Sending request:", requestData);
-                    response = await api.create(requestData);
-                    console.log(`Response from ${endpoint}:`, response);
-
-                    if (response && response.data) {
-                        success = true;
-                        break;
-                    }
-                } catch (err) {
-                    console.log(`Endpoint ${endpoint} failed:`, err.message);
-                }
+            const selectedPlan = allPlans.find(p => p.id == selectedPlanId);
+            if (!selectedPlan) {
+                setPlanAssignmentError("Selected plan not found");
+                setAssigningPlan(false);
+                return;
             }
 
-            if (success && response && response.data) {
-                const responseData = response.data;
 
-                if (responseData.success || responseData.message) {
-                    const successMsg = responseData.message || "Plan assigned successfully!";
-                    setPlanAssignmentSuccess(successMsg);
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + (selectedPlan.duration_days || 30));
 
-                    // Reset form
-                    setSelectedPlanId("");
-                    setShowAddPlanModal(false);
 
-                    // Refresh data
-                    await fetchRelatedData();
+            const subscriptionData = {
+                plan_id: selectedPlanId,
+                member_id: id, // Library card ID
+                user_id: data?.user_id || data?.id, // User ID
+                card_id: id, // Card ID
+                plan_name: selectedPlan.plan_name || selectedPlan.name,
+                duration_days: selectedPlan.duration_days || 30,
+                allowed_books: selectedPlan.allowed_books || 0,
+                start_date: startDate.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0],
+                is_active: true,
+                status: "active"
+            };
 
-                    // Clear success message after 3 seconds
-                    setTimeout(() => setPlanAssignmentSuccess(""), 3000);
-                } else {
-                    setPlanAssignmentError(
-                        responseData.error || "Failed to assign plan. Please try again."
-                    );
-                }
-            } else {
-                // Simulate success for testing
-                // setPlanAssignmentSuccess("Plan assigned successfully! (Test Mode)");
+            console.log("Subscription data:", subscriptionData);
+
+
+            const api = new DataApi('subscriptions');
+            const response = await api.create(subscriptionData);
+
+            console.log("Subscription response:", response);
+
+            if (response && response.data && response.data.success) {
+                const successMessage = response.data.message || "Subscription created successfully!";
+                setPlanAssignmentSuccess(successMessage);
+
+
                 setSelectedPlanId("");
                 setShowAddPlanModal(false);
 
-                // Add to related plans for testing
-                const selectedPlan = allPlans.find(p => p.id == selectedPlanId);
-                if (selectedPlan) {
-                    const newPlan = {
-                        ...selectedPlan,
-                        assigned_date: new Date().toISOString(),
-                        expiry_date: new Date(Date.now() + (selectedPlan.duration_days || 30) * 24 * 60 * 60 * 1000).toISOString()
-                    };
-                    setRelatedPlans(prev => [...prev, newPlan]);
-                }
+
+                await fetchRelatedData();
+
 
                 setTimeout(() => setPlanAssignmentSuccess(""), 3000);
+            } else {
+                const errorMsg = response?.data?.error || "Failed to create subscription";
+                setPlanAssignmentError(errorMsg);
             }
-        } catch (err) {
-            console.error("Assign Error:", err);
 
-            let errorMessage = "Error assigning plan";
+        } catch (err) {
+            console.error("Subscription creation error:", err);
+
+            let errorMessage = "Error creating subscription";
             if (err.response?.data?.error) {
                 errorMessage = err.response.data.error;
             } else if (err.response?.data?.message) {
@@ -199,7 +248,6 @@ const RelatedTabContent = ({ id, data }) => {
             setAssigningPlan(false);
         }
     };
-
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -227,27 +275,34 @@ const RelatedTabContent = ({ id, data }) => {
         }
     };
 
-
+    const getStatusBadge = (isActive) => {
+        if (isActive === true || isActive === "true") {
+            return <Badge bg="success" className="px-2 py-1">Active</Badge>;
+        } else if (isActive === false || isActive === "false") {
+            return <Badge bg="danger" className="px-2 py-1">Inactive</Badge>;
+        } else {
+            return <Badge bg="warning" className="px-2 py-1">Unknown</Badge>;
+        }
+    };
 
     return (
         <div className="mt-4">
             {/* Success/Error Messages */}
             {planAssignmentSuccess && (
-                <Alert variant="success" className="d-flex align-items-center py-2 mb-3">
-                    <i className="fa-solid fa-check-circle me-2"></i>
+                <Alert variant="success" dismissible onClose={() => setPlanAssignmentSuccess("")}>
+                    <i className="fa-solid fa-circle-check me-2"></i>
                     {planAssignmentSuccess}
                 </Alert>
             )}
 
             {planAssignmentError && (
-                <Alert variant="danger" className="d-flex align-items-center py-2 mb-3">
-                    <i className="fa-solid fa-exclamation-circle me-2"></i>
+                <Alert variant="danger" dismissible onClose={() => setPlanAssignmentError("")}>
+                    <i className="fa-solid fa-circle-exclamation me-2"></i>
                     {planAssignmentError}
                 </Alert>
             )}
 
             <div className="d-flex justify-content-between align-items-center mb-3">
-
                 <div className="ms-auto">
                     <Button
                         variant="primary"
@@ -276,42 +331,85 @@ const RelatedTabContent = ({ id, data }) => {
                             <table className="table table-hover mb-0">
                                 <thead className="table-light">
                                     <tr>
-                                        <th style={{ width: '30%' }}>Plan Name</th>
-                                        <th style={{ width: '15%' }}>Price</th>
+                                        <th style={{ width: '25%' }}>Plan Details</th>
+                                        <th style={{ width: '25%' }}>Allowed Books</th>
                                         <th style={{ width: '15%' }}>Duration</th>
                                         <th style={{ width: '15%' }}>Status</th>
-                                        <th style={{ width: '25%' }}>Assigned Date</th>
+                                        <th style={{ width: '25%' }}>Subscription Period</th>
+                                        {/* <th style={{ width: '20%' }}>Actions</th> */}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {relatedPlans.map((plan) => (
-                                        <tr key={plan.id}>
+                                        <tr key={plan.subscription_id || plan.id}>
                                             <td>
-                                                <strong>{plan.plan_name || plan.name || `Plan ${plan.id}`}</strong>
-                                                {plan.description && (
-                                                    <div className="small text-muted mt-1">
-                                                        {plan.description.substring(0, 100)}
-                                                        {plan.description.length > 100 ? "..." : ""}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="fw-bold">
-                                                {formatCurrency(plan.price || plan.amount)}
+                                                <div className="d-flex flex-column">
+                                                    <strong>{plan.plan_name || plan.name || `Plan ${plan.id}`}</strong>
+
+
+                                                </div>
                                             </td>
                                             <td>
-                                                {plan.duration_days ? `${plan.duration_days} days` : "N/A"}
+                                                <div className="d-flex flex-column">
+
+                                                    {plan.allowed_books && (
+                                                        <small className="text-muted mt-1">
+                                                            {plan.allowed_books} books allowed
+                                                        </small>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td>
-                                                {plan.is_active}
+                                                <div className="d-flex flex-column">
+                                                    <span>{plan.duration_days ? `${plan.duration_days} days` : ""}</span>
+                                                </div>
                                             </td>
                                             <td>
-                                                {plan.assigned_date ? formatDate(plan.assigned_date, true) : "N/A"}
-                                                {plan.expiry_date && (
-                                                    <div className="small text-muted">
-                                                        Expires: {formatDate(plan.expiry_date)}
-                                                    </div>
-                                                )}
+                                                {getStatusBadge(plan.is_active)}
                                             </td>
+                                            <td>
+                                                <div className="d-flex flex-column">
+                                                    <small>
+                                                        <strong>Start:</strong> {formatDate(plan.start_date || plan.assigned_date || plan.createddate)}
+                                                    </small>
+                                                    <small>
+                                                        <strong>End:</strong> {formatDate(plan.end_date || plan.expiry_date)}
+                                                    </small>
+                                                    {plan.end_date && new Date(plan.end_date) < new Date() && (
+                                                        <small className="text-danger">
+                                                            <i className="fa-solid fa-clock me-1"></i>
+                                                            Expired
+                                                        </small>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            {/* <td>
+                                                <div className="d-flex gap-2">
+                                                    <Button
+                                                        variant="outline-primary"
+                                                        size="sm"
+                                                        onClick={() => {
+
+                                                            console.log("View subscription:", plan);
+                                                        }}
+                                                    >
+                                                        <i className="fa-solid fa-eye"></i>
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline-danger"
+                                                        size="sm"
+                                                        onClick={() => {
+
+                                                            if (window.confirm("Are you sure you want to cancel this subscription?")) {
+                                                                console.log("Cancel subscription:", plan.subscription_id || plan.id);
+                                                            }
+                                                        }}
+                                                        disabled={!plan.is_active}
+                                                    >
+                                                        <i className="fa-solid fa-ban"></i>
+                                                    </Button>
+                                                </div>
+                                            </td> */}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -321,7 +419,7 @@ const RelatedTabContent = ({ id, data }) => {
                         <div className="text-center py-5 text-muted">
                             <i className="fa-solid fa-clipboard-list fa-3x mb-3 opacity-50"></i>
                             <h6 className="mb-2">No Plans Assigned</h6>
-                            <p className="mb-0 small">Click "Add Plan" to assign a plan to this card</p>
+                            <p className="mb-0 small">Click "Add Plan" to assign a subscription plan to this card</p>
                         </div>
                     )}
                 </Card.Body>
@@ -334,14 +432,15 @@ const RelatedTabContent = ({ id, data }) => {
                     setShowAddPlanModal(false);
                     setSelectedPlanId("");
                     setPlanAssignmentError("");
+                    setPlanAssignmentSuccess("");
                 }}
                 centered
                 size="lg"
+                backdrop="static"
             >
                 <Modal.Header closeButton className="border-bottom">
                     <Modal.Title className="h5">
-                        <i className="fa-solid fa-plus-circle me-2 text-primary"></i>
-                        Assign Plan to Library Card
+                        Create New Subscription
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -352,81 +451,97 @@ const RelatedTabContent = ({ id, data }) => {
                             </Form.Label>
                             <Form.Select
                                 value={selectedPlanId}
-                                onChange={(e) => setSelectedPlanId(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedPlanId(e.target.value);
+                                    setPlanAssignmentError("");
+                                }}
                                 className="py-2"
                                 size="md"
                                 disabled={assigningPlan}
                             >
                                 <option value="">-- Select a Plan --</option>
                                 {allPlans.length > 0 ? (
-                                    allPlans.map((plan) => (
-                                        <option key={plan.id} value={plan.id}>
-                                            {plan.plan_name || plan.name || `Plan ${plan.id}`}
-                                            {plan.duration_days ? ` — ${plan.duration_days} days` : ""}
-                                        </option>
-                                    ))
+                                    allPlans
+                                        .filter(plan => plan.is_active !== false)
+                                        .map((plan) => (
+                                            <option key={plan.id} value={plan.id}>
+                                                {plan.plan_name || plan.name || `Plan ${plan.id}`}
+                                                {plan.duration_days ? ` — ${plan.duration_days} days` : ""}
+                                                {plan.allowed_books ? ` — ${plan.allowed_books} books` : ""}
+                                            </option>
+                                        ))
                                 ) : (
-                                    <option value="" disabled>No plans available</option>
+                                    <option value="" disabled>Loading plans...</option>
                                 )}
                             </Form.Select>
-
+                            <Form.Text className="text-muted">
+                                This will create a new subscription record in the database
+                            </Form.Text>
                         </Form.Group>
 
-
                         {selectedPlanId && allPlans.length > 0 && (
-                            <Card className="border-primary bg-light mb-4">
-                                <Card.Body className="p-3">
-                                    <h6 className="mb-2 text-primary">
+                            <>
+                                {/* Plan Details Card */}
+                                <Card className="bg-light mb-4">
+                                    <Card.Body className="p-3">
 
-                                        Selected Plan Details
-                                    </h6>
-                                    {(() => {
-                                        const selectedPlan = allPlans.find(p => p.id == selectedPlanId);
-                                        console.log("seletc plan->>>", selectedPlan)
-                                        if (!selectedPlan) {
+                                        {(() => {
+                                            const selectedPlan = allPlans.find(p => p.id == selectedPlanId);
+                                            if (!selectedPlan) {
+                                                return (
+                                                    <div className="text-center text-muted">
+                                                        <i className="fa-solid fa-exclamation-circle me-2"></i>
+                                                        Plan details not found
+                                                    </div>
+                                                );
+                                            }
+
+
+                                            const startDate = new Date();
+                                            const endDate = new Date(startDate);
+                                            endDate.setDate(startDate.getDate() + (selectedPlan.duration_days || 30));
+
                                             return (
-                                                <div className="text-center text-muted">
-                                                    <i className="fa-solid fa-exclamation-circle me-2"></i>
-                                                    Plan details not found
+                                                <div>
+                                                    <Row>
+                                                        <Col md={6}>
+                                                            <p className="mb-2">
+                                                                <strong>Plan Name:</strong><br />
+                                                                {selectedPlan.plan_name || selectedPlan.name || `Plan ${selectedPlan.id}`}
+                                                            </p>
+                                                            <p className="mb-2">
+                                                                <strong>Duration:</strong><br />
+                                                                {selectedPlan.duration_days || "30"} days
+                                                            </p>
+                                                            <p className="mb-2">
+                                                                <strong>Allowed Books:</strong><br />
+                                                                {selectedPlan.allowed_books || "Unlimited"}
+                                                            </p>
+                                                        </Col>
+                                                        <Col md={6}>
+                                                            <p className="mb-2">
+                                                                <strong>Status:</strong><br />
+                                                                {getStatusBadge(selectedPlan.is_active)}
+                                                            </p>
+                                                            <p className="mb-2">
+                                                                <strong>Start Date:</strong><br />
+                                                                {formatDate(startDate.toISOString())}
+                                                            </p>
+                                                            <p className="mb-0">
+                                                                <strong>End Date:</strong><br />
+                                                                {formatDate(endDate.toISOString())}
+                                                            </p>
+                                                        </Col>
+                                                    </Row>
+
+
                                                 </div>
                                             );
-                                        }
+                                        })()}
+                                    </Card.Body>
+                                </Card>
 
-                                        return (
-                                            <div>
-                                                <Row>
-                                                    <Col md={12}>
-                                                        <p className="mb-1">
-                                                            <strong>Plan:</strong> {selectedPlan.plan_name || selectedPlan.name || `Plan ${selectedPlan.id}`}
-                                                        </p>
-                                                        <p className="mb-1">
-                                                            <strong>Duration:</strong> {selectedPlan.duration_days || "N/A"} days
-                                                        </p>
-                                                        <p className="mb-0">
-                                                            <strong>Allowed Books:</strong> {selectedPlan.allowed_books}
-                                                        </p>
-                                                        <p className="mb-1">
-                                                            <strong>Plan:</strong> {selectedPlan.plan_name || selectedPlan.name || `Plan ${selectedPlan.id}`}
-                                                        </p>
-                                                        <p className="mb-1">
-                                                            <strong>Duration:</strong> {selectedPlan.duration_days || "N/A"} days
-                                                        </p>
-                                                        <p className="mb-0">
-                                                            <strong>Status:</strong> {selectedPlan.is_active}
-                                                        </p>
-                                                    </Col>
-
-                                                </Row>
-                                                {selectedPlan.description && (
-                                                    <p className="mb-0 mt-2 small">
-                                                        <strong>Description:</strong> {selectedPlan.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        );
-                                    })()}
-                                </Card.Body>
-                            </Card>
+                            </>
                         )}
                     </Form>
                 </Modal.Body>
@@ -437,6 +552,7 @@ const RelatedTabContent = ({ id, data }) => {
                             setShowAddPlanModal(false);
                             setSelectedPlanId("");
                             setPlanAssignmentError("");
+                            setPlanAssignmentSuccess("");
                         }}
                         disabled={assigningPlan}
                     >
@@ -451,12 +567,12 @@ const RelatedTabContent = ({ id, data }) => {
                         {assigningPlan ? (
                             <>
                                 <Spinner animation="border" size="sm" className="me-2" />
-                                Assigning...
+                                Creating Subscription...
                             </>
                         ) : (
                             <>
-                                <i className="fa-solid fa-check me-2"></i>
-                                Assign Plan
+                                <i className="fa-solid fa-check-circle me-2"></i>
+                                Create Subscription
                             </>
                         )}
                     </Button>

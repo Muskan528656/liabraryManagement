@@ -189,12 +189,10 @@ async function findByEmail(email) {
 }
 
 async function findById(id) {
-  console.log("id=>>>", this.schema)
   try {
     let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM demo.user u`;
     query += ` WHERE u.id = $1`;
     const result = await sql.query(query, [id]);
-    console.log("result->>", result)
     if (result.rows.length > 0) return result.rows[0];
   } catch (error) {
     console.log("error ", error);

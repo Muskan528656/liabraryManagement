@@ -2,9 +2,10 @@ import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getUserConfig } from "./userconfig";
 import { useDataManager } from "../common/userdatamanager";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Users = (props) => {
-
+  const { timeZone, companyInfo } = useTimeZone();
   const baseConfig = getUserConfig();
 
   console.log("users baseConfig", baseConfig);
@@ -26,7 +27,7 @@ const Users = (props) => {
 
   console.log("users data loaded", data);
 
-  const finalConfig = getUserConfig(data, props);
+  const finalConfig = getUserConfig(data, props, timeZone, companyInfo);
 
   console.log("users finalConfig", finalConfig);
 

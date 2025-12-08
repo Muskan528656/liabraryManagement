@@ -177,7 +177,7 @@ const Submodule = () => {
       expand="lg"
       style={{
         padding: "0.65rem 1.3rem",
-        // background: "dadde2",
+
         boxShadow: "none",
       }}
       className="bg-body-tertiary"
