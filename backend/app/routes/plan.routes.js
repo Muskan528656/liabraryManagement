@@ -82,8 +82,9 @@ module.exports = (app) => {
             });
 
             return res.status(201).json({
+                success: true,
                 message: "Plan inserted successfully",
-                plan_id: result.id,
+
             });
         } catch (err) {
             console.error(err);
@@ -139,9 +140,13 @@ module.exports = (app) => {
 
             Plan.init(req.userinfo.tenantcode);
 
-            await Plan.deletePlan(id);
+            const result = await Plan.deletePlan(id);
 
-            return res.status(200).json({ message: "Plan deleted successfully" });
+            return res.status(200).json({
+                success: true,
+                message: "Plan deleted successfully",
+                data: result
+            });
         } catch (err) {
             console.error(err);
             res.status(500).json({ errors: "Internal Server Error" });

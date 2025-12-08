@@ -2,7 +2,6 @@ import { Badge, Card, Row, Col } from "react-bootstrap";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import DataApi from "../../api/dataApi";
-import PlanDetailsTab from "./PlanDetailsTab";
 
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return "";
@@ -313,13 +312,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                         selectedPlan: formData.selectedPlan
                     });
 
-                    return (
-                        <div className="mt-3">
-                            <PlanDetailsTab
-                                libraryCardId={formData.id} // या selectedCardId
-                            />
-                        </div>
-                    );
+                
                 }
             },
             {

@@ -4,7 +4,7 @@ import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 export const getVendorConfig = (externalData = {}, props = {}) => {
     const { CityState = [], CityPincode = [] } = externalData;
 
- 
+
     let companies = [];
     if (externalData && externalData.companies) {
         companies = externalData.companies;
@@ -14,7 +14,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         companies = externalData["company"];
     }
 
- 
+
     let defaultCountryCode = "+91";
 
     console.log("Companies array in getVendorConfig:", companies);
@@ -27,7 +27,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             const countryCodeStr = String(companyWithCountryCode.country_code).trim();
             console.log("Original country_code string in vendor:", countryCodeStr);
 
- 
+
             const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
             console.log("Extracted code part in vendor:", codePart);
 
@@ -124,7 +124,69 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             }
         ],
         formFields: [
- 
+            {
+                name: "name",
+                label: "Contact Person Name",
+                type: "text",
+                required: true,
+                placeholder: "Enter contact person name",
+                colSize: 12,
+                section: "Contact Person Information"
+            },
+            {
+                name: "country_code",
+                label: "Country Code",
+                type: "select",
+                options: COUNTRY_CODES.map(country => ({
+                    value: country.country_code,
+                    label: `${country.country_code} - ${country.country}`
+                })),
+                required: true,
+                placeholder: "Select country code",
+                defaultValue: defaultCountryCode, // यहाँ company से default value
+                colSize: 4, // Changed to 4
+                section: "Contact Person Information"
+            },
+            {
+                name: "phone",
+                label: "Phone",
+                type: "tel",
+                placeholder: "Enter phone number",
+                colSize: 4, // Changed to 4
+                section: "Contact Person Information",
+                customValidation: (value) => {
+                    if (value && value.trim()) {
+                        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+                        if (!phoneRegex.test(value)) {
+                            return "Please enter a valid phone number";
+                        }
+                    }
+                    return null;
+                }
+            },
+            {
+                name: "email",
+                label: "Email",
+                type: "email",
+                placeholder: "Enter email address",
+                colSize: 4, // Changed to 4 (4+4+4 = 12)
+                section: "Contact Person Information",
+                customValidation: (value, formData, allVendors, editingVendor) => {
+                    if (value && value.trim()) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            return "Please enter a valid email address";
+                        }
+
+                        const duplicate = allVendors.find(
+                            vendor => vendor.email?.toLowerCase() === value?.toLowerCase() &&
+                                vendor.id !== editingVendor?.id
+                        );
+                        if (duplicate) return "Vendor with this email already exists";
+                    }
+                    return null;
+                }
+            },
             {
                 name: "company_name",
                 label: "Company Name",
@@ -180,12 +242,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 colSize: 4,
                 section: "Company Information",
                 render: (value, onChange, formData) => {
- 
+
                     const handleChange = (e) => {
                         if (typeof onChange === 'function') {
                             onChange(e);
                         } else if (onChange && typeof onChange.handleChange === 'function') {
- 
+
                             onChange.handleChange(e);
                         } else {
                             console.error('onChange is not a function', onChange);
@@ -224,12 +286,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                         ? allCities.filter(city => city.state === formData.state)
                         : allCities;
 
- 
+
                     const handleChange = (e) => {
                         if (typeof onChange === 'function') {
                             onChange(e);
                         } else if (onChange && typeof onChange.handleChange === 'function') {
- 
+
                             onChange.handleChange(e);
                         } else {
                             console.error('onChange is not a function', onChange);
@@ -299,70 +361,8 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 defaultValue: "active"
             },
 
- 
-            {
-                name: "name",
-                label: "Contact Person Name",
-                type: "text",
-                required: true,
-                placeholder: "Enter contact person name",
-                colSize: 12,
-                section: "Contact Person Information"
-            },
-            {
-                name: "country_code",
-                label: "Country Code",
-                type: "select",
-                options: COUNTRY_CODES.map(country => ({
-                    value: country.country_code,
-                    label: `${country.country_code} - ${country.country}`
-                })),
-                required: true,
-                placeholder: "Select country code",
-                defaultValue: defaultCountryCode, // यहाँ company से default value
-                colSize: 4, // Changed to 4
-                section: "Contact Person Information"
-            },
-            {
-                name: "phone",
-                label: "Phone",
-                type: "tel",
-                placeholder: "Enter phone number",
-                colSize: 4, // Changed to 4
-                section: "Contact Person Information",
-                customValidation: (value) => {
-                    if (value && value.trim()) {
-                        const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-                        if (!phoneRegex.test(value)) {
-                            return "Please enter a valid phone number";
-                        }
-                    }
-                    return null;
-                }
-            },
-            {
-                name: "email",
-                label: "Email",
-                type: "email",
-                placeholder: "Enter email address",
-                colSize: 4, // Changed to 4 (4+4+4 = 12)
-                section: "Contact Person Information",
-                customValidation: (value, formData, allVendors, editingVendor) => {
-                    if (value && value.trim()) {
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(value)) {
-                            return "Please enter a valid email address";
-                        }
 
-                        const duplicate = allVendors.find(
-                            vendor => vendor.email?.toLowerCase() === value?.toLowerCase() &&
-                                vendor.id !== editingVendor?.id
-                        );
-                        if (duplicate) return "Vendor with this email already exists";
-                    }
-                    return null;
-                }
-            },
+
         ],
         validationRules: (formData, allVendors, editingVendor) => {
             const errors = [];
@@ -452,7 +452,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     }
                 });
 
- 
+
                 if (cleanedData.country_code) {
                     const cleanValue = String(cleanedData.country_code).split(/[—\-]/)[0].trim();
                     if (cleanValue && !cleanValue.startsWith('+')) {
@@ -491,7 +491,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             ]
         },
 
- 
+
         initializeFormData: (existingData = null) => {
             if (existingData) {
                 return {

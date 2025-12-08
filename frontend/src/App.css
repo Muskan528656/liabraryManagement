@@ -793,7 +793,7 @@ th.fc-col-header-cell {
 
 .card-header {
   /* background-color: #546168 !important; */
-  background-color: rgb(255, 255, 255) !important;
+  background-color: --primary-color;
   color: rgb(92, 125, 201) !important;
 }
 

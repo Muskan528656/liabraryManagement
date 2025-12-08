@@ -107,23 +107,6 @@ const UserDetail = () => {
       },
       { key: "phone", label: "Phone", type: "text" },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {
         key: "userrole",
         label: "User Role",

@@ -531,17 +531,19 @@ const DynamicCRUD = ({
     }, [allowEdit, apiEndpoint, navigate]);
 
     const handleDelete = useCallback((id) => {
+        console.log("id->>>>>>>", id);
         if (!allowDelete) return;
         setDeleteId(id);
         setShowDeleteModal(true);
     }, [allowDelete]);
 
     const confirmDelete = useCallback(async () => {
+
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             const response = await api.delete(deleteId);
-
+            console.log("RESPOSN=>>>>>", response)
             if (response.data?.success) {
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
