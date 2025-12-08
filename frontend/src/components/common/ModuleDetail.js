@@ -136,6 +136,7 @@ const ModuleDetail = ({
   const [deleteId, setDeleteId] = useState(null);
   const [userNames, setUserNames] = useState({});
   const [userAvatars, setUserAvatars] = useState({});
+  const [roleNames, setRoleNames] = useState({});
 
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
 
@@ -262,6 +263,34 @@ const ModuleDetail = ({
     }
   };
 
+  const fetchRoleNames = async (roleIds) => {
+    try {
+      const roleApi = new DataApi("user-role");
+      const names = {};
+
+      const uniqueRoleIds = [...new Set(roleIds.filter(id => id && id !== ''))];
+
+      for (const roleId of uniqueRoleIds) {
+        try {
+          const response = await roleApi.fetchById(roleId);
+          if (response && response.data) {
+            const role = response.data.success ? response.data.data : response.data;
+            if (role) {
+              names[roleId] = role.role_name || role.name || `Role ${roleId}`;
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching role ${roleId}:`, error);
+          names[roleId] = `Role ${roleId}`;
+        }
+      }
+
+      setRoleNames(prev => ({ ...prev, ...names }));
+    } catch (error) {
+      console.error("Error fetching role names:", error);
+    }
+  };
+
   const fetchData = async () => {
     try {
       const api = new DataApi(moduleApi);
@@ -374,6 +403,7 @@ const ModuleDetail = ({
   useEffect(() => {
     if (data) {
       const userIds = [];
+      const roleIds = [];
 
       if (data.createdbyid) userIds.push(data.createdbyid);
       if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
@@ -387,10 +417,19 @@ const ModuleDetail = ({
             userIds.push(value);
           }
         }
+        if (key.includes('role') || key.includes('role_id')) {
+          const value = data[key];
+          if (value && typeof value === 'string' && value.trim() !== '') {
+            roleIds.push(value);
+          }
+        }
       });
 
       if (userIds.length > 0) {
         fetchUserNames(userIds);
+      }
+      if (roleIds.length > 0) {
+        fetchRoleNames(roleIds);
       }
     }
   }, [data]);
@@ -554,6 +593,13 @@ const ModuleDetail = ({
             clickable={true}
           />
         );
+      }
+    }
+
+    if (field.key.includes('role') || field.key.includes('role_id')) {
+      const roleId = value;
+      if (roleId && roleNames[roleId]) {
+        return roleNames[roleId];
       }
     }
 

@@ -1,14 +1,50 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
-import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const {timeZone} = useTimeZone();
+
+  console.log("0439534",timeZone);
+
+  // State for current country to compute options
+  const [currentCountry, setCurrentCountry] = useState(null);
+
+  // Get Company Defaults
+  const { companyInfo } = useTimeZone();
+
+  // Compute options based on current country
+  const currencyOptions = useMemo(() => {
+    if (!currentCountry) return [];
+    const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === currentCountry);
+    if (countryData) {
+      return [{
+        value: countryData.currency.code,
+        label: `${countryData.currency.code} - ${countryData.currency.name}`
+      }];
+    }
+    return [];
+  }, [currentCountry]);
+
+  const timeZoneOptions = useMemo(() => {
+    if (!currentCountry) return [];
+    const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === currentCountry);
+    if (countryData) {
+      return countryData.timezones.map(tz => ({
+        value: tz.zoneName,
+        label: `${tz.zoneName} (${tz.gmtOffset})`
+      }));
+    }
+    return [];
+  }, [currentCountry]);
+
   const [externalData, setExternalData] = useState({
     userRoles: [],
     companies: [],
-    defaultCountryCode: "+91",
   });
 
   useEffect(() => {
@@ -22,43 +58,16 @@ const UserDetail = () => {
           companyApi.fetchAll(),
         ]);
 
-        console.log("Role Response:", roleRes);
-        console.log("Company Response:", companyRes);
-
+        // Handle various API response structures
         const userRoles = roleRes?.data?.data || roleRes?.data || [];
         const companies = companyRes?.data?.data || companyRes?.data || [];
-
-        console.log("Fetched userRoles:", userRoles);
-        console.log("Fetched companies:", companies);
-
-
-        let defaultCountryCode = "+91";
-        if (Array.isArray(companies) && companies.length > 0) {
-          const company = companies.find((c) => c.country_code);
-          if (company) {
-            const countryCodeStr = String(company.country_code).trim();
-            console.log("Country code string:", countryCodeStr);
-
-            const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
-            console.log("Code part:", codePart);
-
-            if (codePart && !codePart.startsWith('+')) {
-              defaultCountryCode = '+' + codePart;
-            } else if (codePart) {
-              defaultCountryCode = codePart;
-            }
-          }
-        }
-
-        console.log("Final defaultCountryCode:", defaultCountryCode);
 
         setExternalData({
           userRoles: Array.isArray(userRoles) ? userRoles : [],
           companies: Array.isArray(companies) ? companies : [],
-          defaultCountryCode,
         });
       } catch (error) {
-        console.error("Error fetching user roles or companies:", error);
+        console.error("Error fetching external data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -67,125 +76,137 @@ const UserDetail = () => {
     fetchExternalData();
   }, []);
 
+  // --- Dynamic Handler for Country Change ---
+  const handleCountryChange = (countryName, formValues, setFormValues) => {
+    const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === countryName);
 
-  const countryCodeOptions = COUNTRY_CODES.map((country) => ({
-    value: country.country_code,
-    label: `${country.country_code} - ${country.country}`,
-  }));
+    if (countryData) {
+      // Set current country to trigger options recomputation
+      setCurrentCountry(countryName);
 
-
-  const userRoleOptions = externalData.userRoles.map((role) => ({
-    value: role.id,
-    label: role.role_name,
-  }));
-
-
-  const companyOptions = externalData.companies.map((company) => ({
-    value: company.id,
-    label: company.name,
-  }));
+      // Update Form Values
+      if (setFormValues) {
+        setFormValues({
+          ...formValues,
+          country: countryName,
+          country_code: countryData.phoneCode,
+          currency: countryData.currency.code,
+          time_zone: countryData.timezones[0]?.zoneName || ""
+        });
+      }
+    }
+  };
 
   const fields = {
     title: "firstname",
     subtitle: "email",
     status: "isactive",
+    
+    // --- LOAD HANDLER ---
+    onLoad: (record, setFormValues) => {
+        let countryToUse = record?.country;
+
+        if (!countryToUse && companyInfo?.country) {
+            countryToUse = companyInfo.country;
+            if(setFormValues) {
+                 const cData = COUNTRY_TIMEZONE.find(c => c.countryName === countryToUse);
+                 if(cData) {
+                    setFormValues({
+                        ...record,
+                        country: cData.countryName,
+                        country_code: cData.phoneCode,
+                        currency: cData.currency.code,
+                        time_zone: cData.timezones.some(t => t.zoneName === companyInfo.time_zone)
+                            ? companyInfo.time_zone
+                            : cData.timezones[0].zoneName
+                    });
+                 }
+            }
+        }
+
+        if (countryToUse) {
+            setCurrentCountry(countryToUse);
+        }
+    },
 
     details: [
       { key: "firstname", label: "First Name", type: "text" },
       { key: "lastname", label: "Last Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
       {
+        key: "country",
+        label: "Country",
+        type: "select",
+        options: COUNTRY_TIMEZONE.map(c => ({ 
+            value: c.countryName, 
+            label: `${c.flag} ${c.countryName}` 
+        })),
+        onChange: handleCountryChange
+      },
+      {
         key: "country_code",
         label: "Country Code",
-        type: "select",
-        options: countryCodeOptions,
-        render: (value) => {
-          const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
-          const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
-          return country ? `${country.country_code} (${country.country})` : value || 'N/A';
-        },
+        type: "text",
+        readOnly: true
       },
       { key: "phone", label: "Phone", type: "text" },
-      // {
-      //   key: "companyid",
-      //   label: "Company",
-      //   type: "select",
-      //   options: companyOptions,
-      //   displayKey: "company_name", // यह add करें
-      //   render: (value, data) => {
-
-      //     const companyName = data.company_name || 
-      //                        data.company?.name || 
-      //                        data.companyid_name;
-      //     if (companyName) return companyName;
-
-
-      //     const company = externalData.companies.find((c) => c.id === value);
-      //     return company ? company.name : value || 'N/A';
-      //   },
-      // },
+      {
+        key: "currency",
+        label: "Currency",
+        type: "select",
+        options: currencyOptions,
+        readOnly: true
+      },
+      {
+        key: "time_zone",
+        label: "Time Zone",
+        type: "select",
+        options: timeZoneOptions,
+        readOnly: false
+      },
       {
         key: "userrole",
         label: "User Role",
         type: "select",
-        options: userRoleOptions,
-        displayKey: "role_name",
+        // Map options for the edit dropdown
+        options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
+        // Custom Render to ensure Name is shown in View Mode
         render: (value, data) => {
-
-          const roleName = data.role_name ||
-            data.userrole_name ||
-            data.user_role_name;
-          if (roleName) return roleName;
-
-
-          const role = externalData.userRoles.find((r) => r.id === value);
-          return role ? role.role_name : value || 'N/A';
-        },
+             if (!externalData.userRoles || externalData.userRoles.length === 0) {
+               return <span className="text-muted">Loading...</span>;
+             }
+             // Handle both string and number ID comparison
+             const role = externalData.userRoles.find(r => 
+                 String(r.id) === String(value) || String(r._id) === String(value)
+             );
+             return role ? role.role_name : (value || <span className="text-muted">N/A</span>);
+        }
       },
       {
         key: "isactive",
         label: "Status",
         type: "toggle",
-        render: (value) => {
-          const isActive = value === true || value === "active" || value === 1;
-          return isActive ? "Active" : "Inactive";
-        },
         options: [
           { value: true, label: "Active" },
           { value: false, label: "Inactive" },
         ],
       },
     ],
-
     other: [
+      // The type "text" here combined with the key containing "byid" 
+      // will trigger ModuleDetail to fetch the user name automatically.
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date" },
+      { key: "createddate", label: "Created Date", type: "date",
+        render: (value) => convertToUserTimezone(value, timeZone)
+       },
     ],
   };
 
   const lookupNavigation = {
-    userrole: {
-      path: "user-role",
-      idField: "id",
-      labelField: "role_name",
-    },
-    companyid: {
-      path: "company",
-      idField: "id",
-      labelField: "name",
-    },
+    userrole: { path: "user-role", idField: "id", labelField: "role_name" },
   };
 
-  if (isLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "200px" }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <span className="ms-2">Loading user details...</span>
-      </div>
-    );
-  }
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <ModuleDetail
@@ -196,6 +217,7 @@ const UserDetail = () => {
       fields={fields}
       lookupNavigation={lookupNavigation}
       externalData={externalData}
+      timeZone={timeZone}
     />
   );
 };
