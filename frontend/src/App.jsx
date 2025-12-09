@@ -43,8 +43,7 @@ import LibraryCardDetail from "./components/librarycard/LibraryCardDetail";
 import UserRole from "./components/userrole/userrole";
 import UserRoleDetail from "./components/userrole/userroleDetail";
 import BulkPurchasePage from "./components/common/BulkPurchase";
-import AutoConfig from "./components/autoconfig/AutoConfig";
-import AutoConfigDetail from "./components/autoconfig/AutoConfigDetail";
+
 import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
@@ -114,17 +113,13 @@ function AppContent() {
       <ToastManager />
       <Router>
         <Routes>
-          {/* Login separate */}
           <Route path="/login" element={<Login />} />
-
-          {/* All other pages under Main layout */}
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Dashboard />} />
 
             <Route path="userroles" element={<UserRole />} />
             <Route path="user-role/:id" element={<UserRoleDetail />} />
-            {/* <Route path="autoconfig" element={<AutoConfig />} /> */}
-            {/* <Route path="auto-config/:id" element={<AutoConfigDetail />} /> */}
+
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
             <Route path="plans" element={<Plan />} />
@@ -141,7 +136,6 @@ function AppContent() {
             <Route path="subscriptions" element={<Subscription />} />
             <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
             <Route path="permissions" element={<Permission />} />
-            {/* <Route path="permissions/:id" element={<PermissionDetail />} /> */}
             <Route path="user" element={<User />} />
             <Route path="user/:id" element={<UserDetail />} />
             <Route path="librarycard" element={<LibraryCard />} />
@@ -149,7 +143,7 @@ function AppContent() {
             <Route path="bookissue" element={<BookIssue />} />
             <Route path="bookreturn" element={<BookSubmit />} />
             <Route path="librarysettings" element={<LibrarySettings />} />
-            {/* <Route path="requestbook" element={<RequestBook />} /> */}
+
             <Route path="librarycardtype" element={<LibrarySettings />} />
             <Route path="booksubmit" element={<BookSubmit />} />
 
@@ -157,7 +151,6 @@ function AppContent() {
             <Route path="Company" element={<Company />} />
             <Route path="/company/:id" element={<CompanyDetail />} />
 
-            {/* {bluk issued component route added here} */}
             <Route path="bulkissued" element={<BulkIssue />} />
           </Route>
         </Routes>

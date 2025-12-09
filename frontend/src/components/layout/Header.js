@@ -22,7 +22,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [dueNotifications, setDueNotifications] = useState([]); 
+  const [dueNotifications, setDueNotifications] = useState([]);
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
@@ -38,9 +38,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [Company, setCompany] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
 
-  // --- UPDATED: Fetch User Profile ---
+
   const fetchUserProfile = async () => {
-    // Safety check: Don't fetch if userInfo is not loaded yet
+
     if (!userInfo || !userInfo.id) return;
 
     try {
@@ -57,19 +57,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // --- UPDATED: PubSub Subscriptions ---
+
   useEffect(() => {
-    // 1. Subscribe to Company Updates
+
     const companyUpdateToken = PubSub.subscribe("COMPANY_UPDATED", (msg, data) => {
       if (data.company) {
         setCompany(data.company);
       }
     });
 
-    // 2. Subscribe to User Updates (Fix for dynamic flag update)
+
     const userUpdateToken = PubSub.subscribe("USER_UPDATED", (msg, data) => {
-       // Re-fetch profile to get the new Country
-       fetchUserProfile();
+
+      fetchUserProfile();
     });
 
     return () => {
@@ -78,17 +78,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     };
   }, [userInfo]); // Add userInfo as dependency so fetchUserProfile has access to ID
 
-  // --- UPDATED: Country Flag Logic ---
+
   const getCountryFlag = () => {
     if (userProfile?.country) {
-      // Normalize comparison (trim and lowercase) to ensure matches
+
       const searchName = userProfile.country.trim().toLowerCase();
-      
+
       const country = COUNTRY_TIMEZONE.find(
         (c) => c.countryName.toLowerCase() === searchName
       );
-      
-      // Fallback: try exact match if lowercase fails, or just return country.flagImg
+
+
       return country ? country.flagImg : "";
     }
     return "";
@@ -118,12 +118,23 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         `${constants.API_BASE_URL}/api/notifications/unread-count`,
         "GET"
       );
+
+      console.log("Unread Count API Response status:", response.status);
+      console.log("Unread Count API Response headers:", response.headers);
+
       const result = await response.json();
+      console.log("Unread Count API Result:", result);
+
       if (result.success) {
+        console.log("Setting unread count to:", result.count);
         setUnreadCount(result.count || 0);
+      } else {
+        console.error("Error in unread count API:", result.message);
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error("Error fetching unread count:", error);
+      setUnreadCount(0);
     }
   };
 
@@ -203,13 +214,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
-        console.log("user",user);
+        console.log("user", user);
         setUserInfo(user);
         fetchDueNotifications();
         fetchNotifications();
         fetchUnreadCount();
         fetchModulesFromDB();
-        // fetchUserProfile called in next useEffect when userInfo is set
+
       } else {
         localStorage.removeItem("cached_modules");
         localStorage.removeItem("cached_modules_timestamp");
@@ -219,10 +230,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, []);
 
-  // Separate effect to fetch profile once userInfo is set initially
+
   useEffect(() => {
-    if(userInfo && userInfo.id) {
-        fetchUserProfile();
+    if (userInfo && userInfo.id) {
+      fetchUserProfile();
     }
   }, [userInfo]);
 
@@ -585,9 +596,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }}
             />
           )}
-          {/* Notifications Bell Icon */}
+      
           <Dropdown
-            show={showNotifications} // ⬅️ controlled by showNotifications
+            show={showNotifications}
             onToggle={(isOpen) => {
               setShowNotifications(isOpen);
               if (isOpen) {

@@ -8,29 +8,51 @@ const AuthorDetail = () => {
   const fields = {
     title: "name",
     subtitle: "email",
+
     details: [
       { key: "name", label: "Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
-      { key: "bio", label: "Bio", type: "text" },
 
+      {
+        key: "bio",
+        label: "Bio",
+        type: "textarea",
+        render: (value) => (
+          <div
+            style={{
+              whiteSpace: "pre-wrap",
+              background: "#f8f9fa",
+              padding: "8px",
+              borderRadius: "6px",
+              minHeight: "60px",
+              maxHeight: "140px",
+              overflowY: "auto",
+              fontSize: "14px",
+              border: "1px solid #ddd",
+            }}
+          >
+            {value || "-"}
+          </div>
+        ),
+      },
     ],
+
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
 
-
-
-
-
       {
-        key: "createddate", label: "Created Date", type: "date", render: (value) => {
-          return convertToUserTimezone(value, timeZone)
-        },
+        key: "createddate",
+        label: "Created Date",
+        type: "date",
+        render: (value) => convertToUserTimezone(value, timeZone),
       },
+
       {
-        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
-          return convertToUserTimezone(value, timeZone)
-        },
+        key: "lastmodifieddate",
+        label: "Last Modified Date",
+        type: "date",
+        render: (value) => convertToUserTimezone(value, timeZone),
       },
     ],
   };

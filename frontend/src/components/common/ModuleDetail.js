@@ -1,3 +1,1657 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -8,6 +1662,7 @@ import {
   Badge,
   Form,
   Modal,
+  InputGroup,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
@@ -83,19 +1738,65 @@ const getOptionDisplayLabel = (option = {}) => {
   if (option.email) return option.email;
   if (option.value) return option.value;
   if (option.id) return option.id;
-  if (option.role_name) return option.role_name; if (option.firstname || option.lastname) {
-    const composed = `${option.firstname || ""} ${option.lastname || ""
-      }`.trim();
+  if (option.role_name) return option.role_name;
+  if (option.firstname || option.lastname) {
+    const composed = `${option.firstname || ""} ${option.lastname || ""}`.trim();
     if (composed) return composed;
   }
-
-
   return "Item";
 };
 
 const toStringSafe = (value) => {
   if (value === undefined || value === null) return "";
   return value.toString();
+};
+
+
+const getCountryInfo = (countryCode) => {
+  if (!countryCode) return { timezone: null, currency: null };
+
+
+  const cleanCode = countryCode.toString().trim();
+
+
+  const countryInfo = COUNTRY_CODES.find(country => {
+    if (!country) return false;
+
+
+    if (country.code && country.code.toString().toUpperCase() === cleanCode.toUpperCase()) {
+      return true;
+    }
+
+
+    if (country.name && typeof country.name === 'string') {
+      return country.name.toLowerCase() === cleanCode.toLowerCase();
+    }
+
+    return false;
+  });
+
+  if (countryInfo) {
+    return {
+      timezone: countryInfo.timezone || null,
+      currency: countryInfo.currency || null
+    };
+  }
+
+
+  const fallbackMap = {
+    'US': { timezone: 'America/New_York', currency: 'USD' },
+    'GB': { timezone: 'Europe/London', currency: 'GBP' },
+    'IN': { timezone: 'Asia/Kolkata', currency: 'INR' },
+    'AU': { timezone: 'Australia/Sydney', currency: 'AUD' },
+    'CA': { timezone: 'America/Toronto', currency: 'CAD' },
+    'DE': { timezone: 'Europe/Berlin', currency: 'EUR' },
+    'FR': { timezone: 'Europe/Paris', currency: 'EUR' },
+    'JP': { timezone: 'Asia/Tokyo', currency: 'JPY' },
+    'CN': { timezone: 'Asia/Shanghai', currency: 'CNY' },
+    'AF': { timezone: 'Asia/Kabul', currency: 'AFN' }, // Afghanistan
+  };
+
+  return fallbackMap[cleanCode] || { timezone: null, currency: null };
 };
 
 const ModuleDetail = ({
@@ -116,8 +1817,7 @@ const ModuleDetail = ({
   lookupNavigation = {},
   externalData = {},
   setIsEditable,
-
-  timeZone
+  timeZone,
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -126,7 +1826,9 @@ const ModuleDetail = ({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [relatedData, setRelatedData] = useState({});
-  const [isEditing, setIsEditing] = useState(location?.state?.isEdit ? location?.state?.isEdit : false);
+  const [isEditing, setIsEditing] = useState(
+    location?.state?.isEdit ? location?.state?.isEdit : false
+  );
   const [tempData, setTempData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [lookupOptions, setLookupOptions] = useState({});
@@ -137,13 +1839,28 @@ const ModuleDetail = ({
   const [userNames, setUserNames] = useState({});
   const [userAvatars, setUserAvatars] = useState({});
 
+
+  const [passwordVisibility, setPasswordVisibility] = useState({});
+
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
 
-  const nonEditableFields = useMemo(() => [
-    'createdbyid', 'createddate', 'lastmodifiedbyid', 'lastmodifieddate',
-    'created_by', 'created_at', 'modified_by', 'modified_at',
-    'createdby', 'createdat', 'lastmodifiedby', 'lastmodifiedat',
-  ], []);
+  const nonEditableFields = useMemo(
+    () => [
+      "createdbyid",
+      "createddate",
+      "lastmodifiedbyid",
+      "lastmodifieddate",
+      "created_by",
+      "created_at",
+      "modified_by",
+      "modified_at",
+      "createdby",
+      "createdat",
+      "lastmodifiedby",
+      "lastmodifiedat",
+    ],
+    []
+  );
 
   const allFieldGroups = useMemo(() => {
     const groups = [];
@@ -171,7 +1888,9 @@ const ModuleDetail = ({
 
   const UserAvatar = ({ userId, size = 32, showName = true, clickable = true }) => {
     const userName = userNames[userId] || `User ${userId}`;
-    const userAvatar = userAvatars[userId] || `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+    const userAvatar =
+      userAvatars[userId] ||
+      `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
 
     const handleUserClick = () => {
       if (clickable && userId) {
@@ -181,12 +1900,13 @@ const ModuleDetail = ({
 
     return (
       <div
-        className={`d-flex align-items-center ${clickable ? 'cursor-pointer' : ''}`}
+        className={`d-flex align-items-center ${clickable ? "cursor-pointer" : ""
+          }`}
         onClick={handleUserClick}
         style={{
-          cursor: clickable ? 'pointer' : 'default',
-          textDecoration: 'none',
-          gap: '8px'
+          cursor: clickable ? "pointer" : "default",
+          textDecoration: "none",
+          gap: "8px",
         }}
       >
         <img
@@ -196,22 +1916,22 @@ const ModuleDetail = ({
           style={{
             width: size,
             height: size,
-            objectFit: 'cover',
-            border: '2px solid #e9ecef'
+            objectFit: "cover",
+            border: "2px solid #e9ecef",
           }}
         />
         {showName && (
           <span
             className="fw-medium"
             style={{
-              color: clickable ? 'var(--primary-color)' : '#495057',
-              textDecoration: clickable ? 'none' : 'none'
+              color: clickable ? "var(--primary-color)" : "#495057",
+              textDecoration: clickable ? "none" : "none",
             }}
             onMouseEnter={(e) => {
-              if (clickable) e.target.style.textDecoration = 'underline';
+              if (clickable) e.target.style.textDecoration = "underline";
             }}
             onMouseLeave={(e) => {
-              if (clickable) e.target.style.textDecoration = 'none';
+              if (clickable) e.target.style.textDecoration = "none";
             }}
           >
             {userName}
@@ -227,36 +1947,46 @@ const ModuleDetail = ({
       const names = {};
       const avatars = {};
 
-      const uniqueUserIds = [...new Set(userIds.filter(id => id && id !== ''))];
+      const uniqueUserIds = [...new Set(userIds.filter((id) => id && id !== ""))];
 
       for (const userId of uniqueUserIds) {
         try {
           const response = await userApi.fetchById(userId);
           if (response && response.data) {
-            const user = response.data.success ? response.data.data : response.data;
+            const user = response.data.success
+              ? response.data.data
+              : response.data;
             if (user) {
-              const fullName = `${user.firstname || ''} ${user.lastname || ''}`.trim();
+              const fullName = `${user.firstname || ""} ${user.lastname || ""
+                }`.trim();
               names[userId] = fullName || user.email || `User ${userId}`;
 
               if (user.profile_picture) {
                 avatars[userId] = user.profile_picture;
               } else {
                 const initials = fullName
-                  ? fullName.split(' ').map(n => n[0]).join('').toUpperCase()
-                  : 'U';
-                avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=6f42c1&color=fff&size=32`;
+                  ? fullName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                  : "U";
+                avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  fullName || "User"
+                )}&background=6f42c1&color=fff&size=32`;
               }
             }
           }
         } catch (error) {
           console.error(`Error fetching user ${userId}:`, error);
           names[userId] = `User ${userId}`;
-          avatars[userId] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
+          avatars[userId] =
+            "https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32";
         }
       }
 
-      setUserNames(prev => ({ ...prev, ...names }));
-      setUserAvatars(prev => ({ ...prev, ...avatars }));
+      setUserNames((prev) => ({ ...prev, ...names }));
+      setUserAvatars((prev) => ({ ...prev, ...avatars }));
     } catch (error) {
       console.error("Error fetching user names:", error);
     }
@@ -329,7 +2059,8 @@ const ModuleDetail = ({
           }
         } catch (error) {
           console.error(
-            `Error fetching related ${relatedModule.label || relatedModule.key}:`,
+            `Error fetching related ${relatedModule.label || relatedModule.key
+            }:`,
             error
           );
           relatedDataObj[relatedModule.key] = [];
@@ -380,10 +2111,10 @@ const ModuleDetail = ({
       if (data.created_by) userIds.push(data.created_by);
       if (data.modified_by) userIds.push(data.modified_by);
 
-      Object.keys(data).forEach(key => {
-        if (key.includes('user') || key.includes('byid') || key.includes('by_id')) {
+      Object.keys(data).forEach((key) => {
+        if (key.includes("user") || key.includes("byid") || key.includes("by_id")) {
           const value = data[key];
-          if (value && typeof value === 'string' && value.trim() !== '') {
+          if (value && typeof value === "string" && value.trim() !== "") {
             userIds.push(value);
           }
         }
@@ -488,11 +2219,7 @@ const ModuleDetail = ({
       if (Array.isArray(field.options)) {
         return field.options;
       }
-      return (
-        externalData?.[field.options] ||
-        lookupOptions?.[field.options] ||
-        []
-      );
+      return externalData?.[field.options] || lookupOptions?.[field.options] || [];
     },
     [externalData, lookupOptions]
   );
@@ -523,6 +2250,14 @@ const ModuleDetail = ({
     navigate(targetUrl);
   };
 
+
+  const togglePasswordVisibility = (key) => {
+    setPasswordVisibility((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
 
@@ -533,7 +2268,6 @@ const ModuleDetail = ({
       field.type
     );
 
-
     if (field.type === "toggle") {
       const boolValue = Boolean(value);
       return (
@@ -543,16 +2277,15 @@ const ModuleDetail = ({
       );
     }
 
-    if (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id')) {
+    if (
+      field.key.includes("user") ||
+      field.key.includes("byid") ||
+      field.key.includes("by_id")
+    ) {
       const userId = value;
       if (userId && userNames[userId]) {
         return (
-          <UserAvatar
-            userId={userId}
-            size={32}
-            showName={true}
-            clickable={true}
-          />
+          <UserAvatar userId={userId} size={32} showName={true} clickable={true} />
         );
       }
     }
@@ -572,7 +2305,9 @@ const ModuleDetail = ({
               fontWeight: "500",
               cursor: "pointer",
             }}
-            onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+            onMouseEnter={(e) =>
+              (e.target.style.textDecoration = "underline")
+            }
             onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
           >
             {label}
@@ -586,15 +2321,12 @@ const ModuleDetail = ({
         return field.render(value, data);
       }
       try {
-
         const converted = convertToUserTimezone(value, timeZone);
-        const datePart = converted.split(' ')[0];
-        const [year, month, day] = datePart.split('-');
+        const datePart = converted.split(" ")[0];
+        const [year, month, day] = datePart.split("-");
         return `${day}/${month}/${year}`;
       } catch {
         return "Invalid DateTime";
-
-
       }
     }
     if (field.type === "datetime") {
@@ -641,88 +2373,14 @@ const ModuleDetail = ({
       setIsEditing(true);
       setTempData({
         ...data,
-
-        isactive: data.isactive !== undefined ? Boolean(data.isactive) : true
+        isactive: data.isactive !== undefined ? Boolean(data.isactive) : true,
       });
     }
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleSave = async () => {
     try {
       setSaving(true);
-
 
       const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
         if (key === "image") {
@@ -740,7 +2398,6 @@ const ModuleDetail = ({
       let response;
 
       if (hasFileUpload) {
-
         const formDataToSend = new FormData();
 
         for (const [key, value] of Object.entries(tempData)) {
@@ -756,7 +2413,6 @@ const ModuleDetail = ({
               formDataToSend.append("image", value);
             }
           } else {
-
             if (value !== null && value !== undefined) {
               if (typeof value === "object") {
                 formDataToSend.append(key, JSON.stringify(value));
@@ -767,7 +2423,6 @@ const ModuleDetail = ({
           }
         }
 
-
         console.log("FormData content:");
         for (let pair of formDataToSend.entries()) {
           console.log(pair[0] + ":", pair[1]);
@@ -776,10 +2431,8 @@ const ModuleDetail = ({
         console.log("Calling updateFormData with ID:", id);
         response = await api.updateFormData(formDataToSend, id);
       } else {
-
-
         const cleanData = { ...tempData };
-        Object.keys(cleanData).forEach(key => {
+        Object.keys(cleanData).forEach((key) => {
           if (cleanData[key] === "" || cleanData[key] === "null") {
             cleanData[key] = null;
           }
@@ -800,13 +2453,12 @@ const ModuleDetail = ({
         });
         setIsEditing(false);
       }
-
     } catch (err) {
       console.error("Update error:", err);
       console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
       });
 
       PubSub.publish("RECORD_ERROR_TOAST", {
@@ -817,10 +2469,12 @@ const ModuleDetail = ({
       setSaving(false);
     }
   };
+
   const handleCancel = () => {
     setIsEditing(false);
     setTempData(null);
   };
+
 
   const handleFieldChange = (fieldKey, value) => {
     if (isEditing && tempData) {
@@ -828,6 +2482,36 @@ const ModuleDetail = ({
         ...tempData,
         [fieldKey]: value,
       };
+
+
+      if (fieldKey === 'country' || fieldKey === 'country_code') {
+        const countryInfo = getCountryInfo(value);
+
+        console.log('Country changed to:', value, 'Country info:', countryInfo);
+
+
+        if (countryInfo.timezone) {
+
+          const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
+          timezoneFields.forEach(timezoneField => {
+            if (updatedData.hasOwnProperty(timezoneField)) {
+              updatedData[timezoneField] = countryInfo.timezone;
+            }
+          });
+        }
+
+
+        if (countryInfo.currency) {
+
+          const currencyFields = ['currency', 'currency_code', 'currencyCode'];
+          currencyFields.forEach(currencyField => {
+            if (updatedData.hasOwnProperty(currencyField)) {
+              updatedData[currencyField] = countryInfo.currency;
+            }
+          });
+        }
+      }
+
 
       if (moduleName === 'purchase') {
         if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
@@ -848,7 +2532,6 @@ const ModuleDetail = ({
     const value = currentData[field.key];
 
     if (isEditing) {
-
       if (field.type === "toggle") {
         return Boolean(value);
       }
@@ -922,10 +2605,7 @@ const ModuleDetail = ({
           <Card.Body className="text-center">
             <h4>No Data Found</h4>
             <p>Unable to load {moduleLabel} details.</p>
-            <Button
-              variant="primary"
-              onClick={() => navigate(`/${moduleName}`)}
-            >
+            <Button variant="primary" onClick={() => navigate(`/${moduleName}`)}>
               Back to List
             </Button>
           </Card.Body>
@@ -962,8 +2642,12 @@ const ModuleDetail = ({
   };
 
   const [col1, col2, col3] = splitInto3(normalizedFields.details);
-  const [colother1, colother2, colother3] = splitInto3(normalizedOtherFields.other);
-  const [coladd1, coladd2, coladd3] = splitInto3(normalizedAddressFields?.address);
+  const [colother1, colother2, colother3] = splitInto3(
+    normalizedOtherFields.other
+  );
+  const [coladd1, coladd2, coladd3] = splitInto3(
+    normalizedAddressFields?.address
+  );
 
   const renderField = (field, index, currentData) => {
     if (!field || !field.key) return null;
@@ -971,14 +2655,13 @@ const ModuleDetail = ({
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
-
     if (field.type === "toggle") {
       console.log("Toggle Field Debug:", {
         fieldName: field.key,
         fieldLabel: field.label,
         currentValue: currentData ? currentData[field.key] : "undefined",
         isEditing: isEditing,
-        currentData: currentData
+        currentData: currentData,
       });
     }
 
@@ -991,8 +2674,8 @@ const ModuleDetail = ({
           <Form.Label className="fw-semibold d-flex justify-content-between align-items-center">
             <span>{field.label}</span>
             {!isEditing && (
-              <span className={`badge ${value ? 'bg-success' : 'bg-danger'}`}>
-                {value ? 'Active' : 'Inactive'}
+              <span className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+                {value ? "Active" : "Inactive"}
               </span>
             )}
           </Form.Label>
@@ -1033,9 +2716,9 @@ const ModuleDetail = ({
               style={{
                 pointerEvents: "none",
                 opacity: 0.9,
-                backgroundColor: value ? '#d4edda' : '#f8d7da',
-                color: value ? '#155724' : '#721c24',
-                border: value ? '1px solid #c3e6cb' : '1px solid #f5c6cb'
+                backgroundColor: value ? "#d4edda" : "#f8d7da",
+                color: value ? "#155724" : "#721c24",
+                border: value ? "1px solid #c3e6cb" : "1px solid #f5c6cb",
               }}
             />
           )}
@@ -1044,14 +2727,17 @@ const ModuleDetail = ({
     }
 
 
-    if ((!isEditing || shouldShowAsReadOnly) && (field.key.includes('user') || field.key.includes('byid') || field.key.includes('by_id'))) {
+    if (
+      (!isEditing || shouldShowAsReadOnly) &&
+      (field.key.includes("user") ||
+        field.key.includes("byid") ||
+        field.key.includes("by_id"))
+    ) {
       const userId = currentData ? currentData[field.key] : null;
       if (userId) {
         return (
           <Form.Group key={index} className="mb-3">
-            <Form.Label className="fw-semibold">
-              {field.label}
-            </Form.Label>
+            <Form.Label className="fw-semibold">{field.label}</Form.Label>
             <div className="form-control-plaintext p-0 border-0">
               <UserAvatar
                 userId={userId}
@@ -1065,20 +2751,22 @@ const ModuleDetail = ({
       }
     }
 
+
     if (field.type === "select" && field.options) {
       const options = getSelectOptions(field);
       const rawValue = currentData ? currentData[field.key] : null;
-      const currentValue = rawValue === undefined || rawValue === null ? "" : rawValue.toString();
+      const currentValue =
+        rawValue === undefined || rawValue === null ? "" : rawValue.toString();
 
       return (
         <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">
-            {field.label}
-          </Form.Label>
+          <Form.Label className="fw-semibold">{field.label}</Form.Label>
           {isEditing && !isNonEditableField ? (
             <Form.Select
               value={currentValue}
-              onChange={(e) => handleFieldChange(field.key, e.target.value || null)}
+              onChange={(e) =>
+                handleFieldChange(field.key, e.target.value || null)
+              }
             >
               <option value="">Select {field.label}</option>
               {options.map((option) => {
@@ -1099,10 +2787,18 @@ const ModuleDetail = ({
                 if (field.displayKey && data) return data[field.displayKey] || "—";
                 const selected = options.find((opt) => {
                   const optionValue = toStringSafe(getOptionValue(opt));
-                  const optValue = opt.id || opt.value || opt.role_name || opt.name;
-                  return optionValue === currentValue || toStringSafe(optValue) === currentValue;
+                  const optValue =
+                    opt.id || opt.value || opt.role_name || opt.name;
+                  return (
+                    optionValue === currentValue ||
+                    toStringSafe(optValue) === currentValue
+                  );
                 });
-                return selected ? getOptionDisplayLabel(selected) : (field.displayKey && data ? (data[field.displayKey] || "—") : "—");
+                return selected
+                  ? getOptionDisplayLabel(selected)
+                  : field.displayKey && data
+                    ? data[field.displayKey] || "—"
+                    : "—";
               })()}
               style={{
                 pointerEvents: "none",
@@ -1115,36 +2811,78 @@ const ModuleDetail = ({
     }
 
 
-    const fieldValue = shouldShowAsReadOnly ? formatValue(currentData[field.key], field) : getFieldValue(field, currentData);
+    if (field.type === "password") {
+      const rawValue = currentData ? currentData[field.key] : "";
+      const isVisible = passwordVisibility[field.key] || false;
+
+      return (
+        <Form.Group key={index} className="mb-3">
+          <Form.Label className="fw-semibold">{field.label}</Form.Label>
+          {!isEditing || isNonEditableField ? (
+
+            <div className="form-control-plaintext">******</div>
+          ) : (
+            <InputGroup>
+              <Form.Control
+                type={isVisible ? "text" : "password"}
+                value={rawValue || ""}
+                onChange={(e) =>
+                  handleFieldChange(field.key, e.target.value)
+                }
+                style={{
+                  backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
+                  borderRight: "none",
+                }}
+              />
+              <InputGroup.Text
+                style={{
+                  backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
+                  borderLeft: "none",
+                  cursor: isNonEditableField ? "default" : "pointer",
+                }}
+                onClick={() =>
+                  !isNonEditableField && togglePasswordVisibility(field.key)
+                }
+              >
+                <i
+                  className={
+                    isVisible ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"
+                  }
+                ></i>
+              </InputGroup.Text>
+            </InputGroup>
+          )}
+        </Form.Group>
+      );
+    }
+
+    const fieldValue = shouldShowAsReadOnly
+      ? formatValue(currentData[field.key], field)
+      : getFieldValue(field, currentData);
     const isElementValue = React.isValidElement(fieldValue);
-    const controlType = (isEditing && !isNonEditableField)
-      ? field.type === "number"
-        ? "number"
-        : field.type === "date"
-          ? "date"
-          : field.type === "datetime"
-            ? "datetime-local"
-            : "text"
-      : "text";
+    const controlType =
+      isEditing && !isNonEditableField
+        ? field.type === "number"
+          ? "number"
+          : field.type === "date"
+            ? "date"
+            : field.type === "datetime"
+              ? "datetime-local"
+              : "text"
+        : "text";
 
     if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
       return (
         <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">
-            {field.label}
-          </Form.Label>
-          <div className="form-control-plaintext">
-            {fieldValue}
-          </div>
+          <Form.Label className="fw-semibold">{field.label}</Form.Label>
+          <div className="form-control-plaintext">{fieldValue}</div>
         </Form.Group>
       );
     }
 
     return (
       <Form.Group key={index} className="mb-3">
-        <Form.Label className="fw-semibold">
-          {field.label}
-        </Form.Label>
+        <Form.Label className="fw-semibold">{field.label}</Form.Label>
         <Form.Control
           type={controlType}
           value={isElementValue ? "" : fieldValue ?? ""}
@@ -1161,13 +2899,15 @@ const ModuleDetail = ({
             handleFieldChange(field.key, newValue);
           }}
           style={{
-            pointerEvents: (isEditing && !isNonEditableField) ? "auto" : "none",
-            opacity: (isEditing && !isNonEditableField) ? 1 : 0.9,
-            backgroundColor: isNonEditableField && isEditing ? '#f8f9fa' : 'white',
+            pointerEvents:
+              isEditing && !isNonEditableField ? "auto" : "none",
+            opacity: isEditing && !isNonEditableField ? 1 : 0.9,
+            backgroundColor:
+              isNonEditableField && isEditing ? "#f8f9fa" : "white",
           }}
         />
         {isNonEditableField && isEditing && (
-          <Form.Text className="text-muted" style={{ fontSize: '0.75rem' }}>
+          <Form.Text className="text-muted" style={{ fontSize: "0.75rem" }}>
             This field cannot be edited
           </Form.Text>
         )}
@@ -1184,7 +2924,6 @@ const ModuleDetail = ({
           <Col lg={12} xl={12}>
             <Card className="border-0 shadow-sm detail-h4">
               <Card.Body>
-
                 <div
                   className="d-flex justify-content-between align-items-center mb-4 p-2"
                   style={{
@@ -1193,7 +2932,6 @@ const ModuleDetail = ({
                     borderRadius: "10px",
                   }}
                 >
-
                   <div className="d-flex align-items-center gap-3">
                     <button
                       onClick={handleBack}
@@ -1202,7 +2940,10 @@ const ModuleDetail = ({
                       <i className="fa-solid fa-arrow-left"></i>
                     </button>
 
-                    <h5 className="fw-bold mb-0" style={{ color: "var(--primary-color)" }}>
+                    <h5
+                      className="fw-bold mb-0"
+                      style={{ color: "var(--primary-color)" }}
+                    >
                       {icon && <i className={`${icon} me-2 fs-6`}></i>}
                       {moduleLabel} Details
                     </h5>
@@ -1212,22 +2953,36 @@ const ModuleDetail = ({
                   <div className="d-flex gap-2">
                     {!isEditing ? (
                       <>
-                        <button className="custom-btn-primary" onClick={handleEdit}>
+                        <button
+                          className="custom-btn-primary"
+                          onClick={handleEdit}
+                        >
                           <i className="fa-solid fa-edit me-2"></i>
                           Edit {moduleLabel}
                         </button>
-                        <button className="custom-btn-delete-detail" onClick={handleDelete}>
+                        <button
+                          className="custom-btn-delete-detail"
+                          onClick={handleDelete}
+                        >
                           <i className="fa-solid fa-trash me-2"></i>
                           Delete
                         </button>
                       </>
                     ) : (
                       <div className="d-flex gap-2">
-                        <button className="custom-btn-primary" onClick={handleSave} disabled={saving}>
+                        <button
+                          className="custom-btn-primary"
+                          onClick={handleSave}
+                          disabled={saving}
+                        >
                           <i className="fa-solid fa-check me-2"></i>
                           {saving ? "Saving..." : "Save"}
                         </button>
-                        <button className="custom-btn-secondary" onClick={handleCancel} disabled={saving}>
+                        <button
+                          className="custom-btn-secondary"
+                          onClick={handleCancel}
+                          disabled={saving}
+                        >
                           <i className="fa-solid fa-times me-2"></i>
                           Cancel
                         </button>
@@ -1235,15 +2990,18 @@ const ModuleDetail = ({
                     )}
                   </div>
                 </div>
+
                 {/* Details Section */}
                 <Row className="mt-4">
                   <Col md={12} className="mb-4">
-                    <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                    <h6
+                      className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                       style={{
                         color: "var(--primary-color)",
                         background: "var(--header-highlighter-color)",
                         borderRadius: "10px",
-                      }}>
+                      }}
+                    >
                       {moduleLabel} Information
                     </h6>
                   </Col>
@@ -1253,7 +3011,11 @@ const ModuleDetail = ({
                         {[col1, col2, col3].map((columnFields, colIndex) => (
                           <Col md={4} key={colIndex}>
                             {columnFields.map((field, index) =>
-                              renderField(field, index, isEditing ? tempData : data)
+                              renderField(
+                                field,
+                                index,
+                                isEditing ? tempData : data
+                              )
                             )}
                           </Col>
                         ))}
@@ -1263,59 +3025,78 @@ const ModuleDetail = ({
                 </Row>
 
                 {/* Address Section */}
-                {normalizedAddressFields && normalizedAddressFields?.address?.length > 0 && (
-                  <Row className="mt-4">
-                    <Col md={12} className="mb-4">
-                      <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                        style={{
-                          color: "var(--primary-color)",
-                          background: "var(--header-highlighter-color)",
-                          borderRadius: "10px",
-                        }}>
-                        Address Information
-                      </h6>
-                    </Col>
-                    <Row className="px-5">
-                      {normalizedAddressFields && normalizedAddressFields.address && (
-                        <Row>
-                          {[coladd1, coladd2, coladd3].map((columnFields, colIndex) => (
-                            <Col md={4} key={colIndex}>
-                              {columnFields.map((field, index) =>
-                                renderField(field, index, isEditing ? tempData : data)
+                {normalizedAddressFields &&
+                  normalizedAddressFields?.address?.length > 0 && (
+                    <Row className="mt-4">
+                      <Col md={12} className="mb-4">
+                        <h6
+                          className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                          style={{
+                            color: "var(--primary-color)",
+                            background: "var(--header-highlighter-color)",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          Address Information
+                        </h6>
+                      </Col>
+                      <Row className="px-5">
+                        {normalizedAddressFields &&
+                          normalizedAddressFields.address && (
+                            <Row>
+                              {[coladd1, coladd2, coladd3].map(
+                                (columnFields, colIndex) => (
+                                  <Col md={4} key={colIndex}>
+                                    {columnFields.map((field, index) =>
+                                      renderField(
+                                        field,
+                                        index,
+                                        isEditing ? tempData : data
+                                      )
+                                    )}
+                                  </Col>
+                                )
                               )}
-                            </Col>
-                          ))}
-                        </Row>
-                      )}
+                            </Row>
+                          )}
+                      </Row>
                     </Row>
-                  </Row>
-                )}
+                  )}
 
                 {/* Other Section */}
                 {normalizedOtherFields.other.length > 0 && (
                   <Row className="mt-4">
                     <Col md={12} className="mb-4">
-                      <h6 className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                      <h6
+                        className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
                           background: "var(--header-highlighter-color)",
                           borderRadius: "10px",
-                        }}>
+                        }}
+                      >
                         Others
                       </h6>
                     </Col>
                     <Row className="px-5">
-                      {normalizedOtherFields && normalizedOtherFields.other && (
-                        <Row>
-                          {[colother1, colother2, colother3].map((columnFields, colIndex) => (
-                            <Col md={4} key={colIndex}>
-                              {columnFields.map((field, index) =>
-                                renderField(field, index, isEditing ? tempData : data)
-                              )}
-                            </Col>
-                          ))}
-                        </Row>
-                      )}
+                      {normalizedOtherFields &&
+                        normalizedOtherFields.other && (
+                          <Row>
+                            {[colother1, colother2, colother3].map(
+                              (columnFields, colIndex) => (
+                                <Col md={4} key={colIndex}>
+                                  {columnFields.map((field, index) =>
+                                    renderField(
+                                      field,
+                                      index,
+                                      isEditing ? tempData : data
+                                    )
+                                  )}
+                                </Col>
+                              )
+                            )}
+                          </Row>
+                        )}
                     </Row>
                   </Row>
                 )}
@@ -1324,27 +3105,34 @@ const ModuleDetail = ({
                 {relatedModules.length > 0 && (
                   <Row className="mb-4">
                     <Col>
-                      <Card style={{
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                        borderRadius: "12px",
-                        overflow: "hidden",
-                      }}>
+                      <Card
+                        style={{
+                          border: "none",
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                          borderRadius: "12px",
+                          overflow: "hidden",
+                        }}
+                      >
                         <Card.Body style={{ padding: 0 }}>
-                          <div style={{
-                            padding: "20px 24px",
-                            borderBottom: "1px solid #e9ecef",
-                            background: "linear-gradient(to right, #f8f9fa, #ffffff)",
-                          }}>
-                            <h6 style={{
-                              margin: 0,
-                              color: "var(--primary-color)",
-                              fontSize: "16px",
-                              fontWeight: "700",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}>
+                          <div
+                            style={{
+                              padding: "20px 24px",
+                              borderBottom: "1px solid #e9ecef",
+                              background:
+                                "linear-gradient(to right, #f8f9fa, #ffffff)",
+                            }}
+                          >
+                            <h6
+                              style={{
+                                margin: 0,
+                                color: "var(--primary-color)",
+                                fontSize: "16px",
+                                fontWeight: "700",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
                               <i className="fa-solid fa-link"></i>
                               Related Records
                             </h6>
@@ -1352,93 +3140,159 @@ const ModuleDetail = ({
 
                           <div style={{ padding: "24px" }}>
                             {relatedModules.map((relatedModule, idx) => {
-                              const normalizedModule = typeof relatedModule === "string"
-                                ? {
-                                  key: relatedModule,
-                                  label: relatedModule.charAt(0).toUpperCase() + relatedModule.slice(1),
-                                }
-                                : relatedModule;
+                              const normalizedModule =
+                                typeof relatedModule === "string"
+                                  ? {
+                                    key: relatedModule,
+                                    label:
+                                      relatedModule
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                      relatedModule.slice(1),
+                                  }
+                                  : relatedModule;
 
-                              const moduleKey = normalizedModule.key || normalizedModule;
-                              const moduleLabel = normalizedModule.label ||
+                              const moduleKey =
+                                normalizedModule.key || normalizedModule;
+                              const moduleLabel =
+                                normalizedModule.label ||
                                 (typeof normalizedModule === "string"
-                                  ? normalizedModule.charAt(0).toUpperCase() + normalizedModule.slice(1)
+                                  ? normalizedModule
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  normalizedModule.slice(1)
                                   : "Related");
 
                               return (
-                                <div key={idx} className={idx > 0 ? "mt-4 pt-4" : ""}
-                                  style={idx > 0 ? { borderTop: "1px solid #e9ecef" } : {}}>
-                                  <h6 style={{
-                                    marginBottom: "16px",
-                                    color: "#495057",
-                                    fontSize: "14px",
-                                    fontWeight: "600",
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.5px",
-                                  }}>
+                                <div
+                                  key={idx}
+                                  className={idx > 0 ? "mt-4 pt-4" : ""}
+                                  style={
+                                    idx > 0
+                                      ? { borderTop: "1px solid #e9ecef" }
+                                      : {}
+                                  }
+                                >
+                                  <h6
+                                    style={{
+                                      marginBottom: "16px",
+                                      color: "#495057",
+                                      fontSize: "14px",
+                                      fontWeight: "600",
+                                      textTransform: "uppercase",
+                                      letterSpacing: "0.5px",
+                                    }}
+                                  >
                                     {moduleLabel}
                                   </h6>
-                                  {relatedData[moduleKey] && relatedData[moduleKey].length > 0 ? (
+                                  {relatedData[moduleKey] &&
+                                    relatedData[moduleKey].length > 0 ? (
                                     normalizedModule.render ? (
-                                      normalizedModule.render(relatedData[moduleKey], data)
+                                      normalizedModule.render(
+                                        relatedData[moduleKey],
+                                        data
+                                      )
                                     ) : (
                                       <div className="table-responsive">
-                                        <table style={{
-                                          width: "100%",
-                                          fontSize: "14px",
-                                          borderCollapse: "collapse",
-                                        }}>
+                                        <table
+                                          style={{
+                                            width: "100%",
+                                            fontSize: "14px",
+                                            borderCollapse: "collapse",
+                                          }}
+                                        >
                                           <thead>
-                                            <tr style={{
-                                              background: "#f8f9fa",
-                                              borderBottom: "2px solid #e9ecef",
-                                            }}>
-                                              {normalizedModule.columns?.map((col, colIdx) => (
-                                                <th key={colIdx} style={{
-                                                  padding: "12px 16px",
-                                                  textAlign: "left",
-                                                  fontWeight: "600",
-                                                  color: "#495057",
-                                                }}>
-                                                  {col.label}
-                                                </th>
-                                              ))}
+                                            <tr
+                                              style={{
+                                                background: "#f8f9fa",
+                                                borderBottom:
+                                                  "2px solid #e9ecef",
+                                              }}
+                                            >
+                                              {normalizedModule.columns?.map(
+                                                (col, colIdx) => (
+                                                  <th
+                                                    key={colIdx}
+                                                    style={{
+                                                      padding: "12px 16px",
+                                                      textAlign: "left",
+                                                      fontWeight: "600",
+                                                      color: "#495057",
+                                                    }}
+                                                  >
+                                                    {col.label}
+                                                  </th>
+                                                )
+                                              )}
                                             </tr>
                                           </thead>
                                           <tbody>
-                                            {relatedData[moduleKey].map((item, itemIdx) => (
-                                              <tr key={itemIdx} style={{
-                                                borderBottom: "1px solid #e9ecef",
-                                                transition: "background-color 0.2s",
-                                              }}
-                                                onMouseEnter={(e) => e.target.parentElement.style.background = "#f8f9fa"}
-                                                onMouseLeave={(e) => e.target.parentElement.style.background = "transparent"}>
-                                                {normalizedModule.columns?.map((col, colIdx) => (
-                                                  <td key={colIdx} style={{ padding: "12px 16px", color: "#6c757d" }}>
-                                                    {item[col.key] || "N/A"}
-                                                  </td>
-                                                ))}
-                                              </tr>
-                                            ))}
+                                            {relatedData[moduleKey].map(
+                                              (item, itemIdx) => (
+                                                <tr
+                                                  key={itemIdx}
+                                                  style={{
+                                                    borderBottom:
+                                                      "1px solid #e9ecef",
+                                                    transition:
+                                                      "background-color 0.2s",
+                                                  }}
+                                                  onMouseEnter={(e) =>
+                                                  (e.target.parentElement.style.background =
+                                                    "#f8f9fa")
+                                                  }
+                                                  onMouseLeave={(e) =>
+                                                  (e.target.parentElement.style.background =
+                                                    "transparent")
+                                                  }
+                                                >
+                                                  {normalizedModule.columns?.map(
+                                                    (col, colIdx) => (
+                                                      <td
+                                                        key={colIdx}
+                                                        style={{
+                                                          padding:
+                                                            "12px 16px",
+                                                          color: "#6c757d",
+                                                        }}
+                                                      >
+                                                        {item[col.key] || "N/A"}
+                                                      </td>
+                                                    )
+                                                  )}
+                                                </tr>
+                                              )
+                                            )}
                                           </tbody>
                                         </table>
                                       </div>
                                     )
                                   ) : (
-                                    <div style={{
-                                      padding: "32px 16px",
-                                      textAlign: "center",
-                                      background: "#f8f9fa",
-                                      borderRadius: "8px",
-                                      border: "1px dashed #dee2e6",
-                                    }}>
-                                      <i className="fa-solid fa-inbox" style={{
-                                        fontSize: "32px",
-                                        color: "#adb5bd",
-                                        marginBottom: "8px",
-                                        display: "block",
-                                      }}></i>
-                                      <p style={{ color: "#6c757d", margin: 0, fontSize: "14px" }}>
+                                    <div
+                                      style={{
+                                        padding: "32px 16px",
+                                        textAlign: "center",
+                                        background: "#f8f9fa",
+                                        borderRadius: "8px",
+                                        border: "1px dashed #dee2e6",
+                                      }}
+                                    >
+                                      <i
+                                        className="fa-solid fa-inbox"
+                                        style={{
+                                          fontSize: "32px",
+                                          color: "#adb5bd",
+                                          marginBottom: "8px",
+                                          display: "block",
+                                        }}
+                                      ></i>
+                                      <p
+                                        style={{
+                                          color: "#6c757d",
+                                          margin: 0,
+                                          fontSize: "14px",
+                                        }}
+                                      >
                                         No {moduleLabel.toLowerCase()} found.
                                       </p>
                                     </div>

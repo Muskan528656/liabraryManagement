@@ -1,976 +1,5 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useRef } from "react";
-import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
+import { Modal, Button, Form, InputGroup, Alert, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
@@ -981,17 +10,47 @@ const UniversalBarcodeScanner = () => {
     const [barcodeInput, setBarcodeInput] = useState("");
     const [detectedData, setDetectedData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [bookDetails, setBookDetails] = useState({
+        title: "",
+        subtitle: "",
+        authors: [],
+        categories: [],
+        description: "",
+        pageCount: "",
+        publisher: "",
+        publishedDate: "",
+        language: "",
+        isbn10: "",
+        isbn13: "",
+        coverImage: ""
+    });
+    const [authorDetails, setAuthorDetails] = useState({
+        name: "",
+        bio: "",
+        email: "",
+        website: ""
+    });
+    const [categoryDetails, setCategoryDetails] = useState({
+        name: "",
+        description: ""
+    });
+    const [publisherDetails, setPublisherDetails] = useState({
+        name: "",
+        address: "",
+        website: ""
+    });
+    const [showAdvancedFields, setShowAdvancedFields] = useState(false);
     const navigate = useNavigate();
     const inputRef = useRef(null);
 
-
-    const GOOGLE_BOOKS_API_KEY = "YOUR_GOOGLE_BOOKS_API_KEY";
+    const GOOGLE_BOOKS_API_KEY = "AIzaSyAC2OqFGAIdOaCSWswm-mjiwoY-kzPJT-0";
 
     useEffect(() => {
         const token = PubSub.subscribe("OPEN_BARCODE_SCANNER", () => {
             setShowModal(true);
             setBarcodeInput("");
             setDetectedData(null);
+            resetAllDetails();
         });
 
         return () => {
@@ -1006,6 +65,38 @@ const UniversalBarcodeScanner = () => {
             }, 100);
         }
     }, [showModal]);
+
+    const resetAllDetails = () => {
+        setBookDetails({
+            title: "",
+            subtitle: "",
+            authors: [],
+            categories: [],
+            description: "",
+            pageCount: "",
+            publisher: "",
+            publishedDate: "",
+            language: "",
+            isbn10: "",
+            isbn13: "",
+            coverImage: ""
+        });
+        setAuthorDetails({
+            name: "",
+            bio: "",
+            email: "",
+            website: ""
+        });
+        setCategoryDetails({
+            name: "",
+            description: ""
+        });
+        setPublisherDetails({
+            name: "",
+            address: "",
+            website: ""
+        });
+    };
 
     const handleBarcodeInput = (value) => {
         setBarcodeInput(value);
@@ -1036,6 +127,8 @@ const UniversalBarcodeScanner = () => {
         if (!barcode || barcode.trim().length === 0) return;
 
         setLoading(true);
+        resetAllDetails();
+
         try {
             const detectedType = await detectDataType(barcode.trim());
             console.log("Detected data type:", detectedType);
@@ -1048,6 +141,11 @@ const UniversalBarcodeScanner = () => {
             }
 
             setDetectedData(detectedType);
+
+
+            if (detectedType && detectedType.type === "book") {
+                await extractAllBookDetails(detectedType.data);
+            }
         } catch (error) {
             console.error("Error detecting barcode data:", error);
             PubSub.publish("RECORD_ERROR_TOAST", {
@@ -1058,9 +156,234 @@ const UniversalBarcodeScanner = () => {
         }
     };
 
+    const extractAllBookDetails = async (bookData) => {
+        if (!bookData) return;
+
+
+        if (bookData.title) {
+            const titleParts = bookData.title.split(":");
+            setBookDetails(prev => ({
+                ...prev,
+                title: titleParts[0] || bookData.title,
+                subtitle: titleParts.slice(1).join(":").trim() || ""
+            }));
+        }
+
+        if (bookData.author_name) {
+            setBookDetails(prev => ({
+                ...prev,
+                authors: Array.isArray(bookData.author_name) ? bookData.author_name : [bookData.author_name]
+            }));
+
+
+            if (bookData.author_details) {
+                setAuthorDetails({
+                    name: bookData.author_details.name || bookData.author_name,
+                    bio: bookData.author_details.bio || "",
+                    email: bookData.author_details.email || "",
+                    website: bookData.author_details.website || ""
+                });
+            }
+        }
+
+        if (bookData.category_name) {
+            setBookDetails(prev => ({
+                ...prev,
+                categories: Array.isArray(bookData.category_name) ? bookData.category_name : [bookData.category_name]
+            }));
+
+
+            if (bookData.category_description) {
+                setCategoryDetails({
+                    name: bookData.category_name,
+                    description: bookData.category_description
+                });
+            }
+        }
+
+        if (bookData.description) {
+            setBookDetails(prev => ({
+                ...prev,
+                description: bookData.description
+            }));
+        }
+
+        if (bookData.pages) {
+            setBookDetails(prev => ({
+                ...prev,
+                pageCount: bookData.pages
+            }));
+        }
+
+        if (bookData.publisher) {
+            setBookDetails(prev => ({
+                ...prev,
+                publisher: bookData.publisher
+            }));
+
+
+            setPublisherDetails(prev => ({
+                ...prev,
+                name: bookData.publisher
+            }));
+        }
+
+        if (bookData.published_date) {
+            setBookDetails(prev => ({
+                ...prev,
+                publishedDate: bookData.published_date
+            }));
+        }
+
+        if (bookData.language) {
+            setBookDetails(prev => ({
+                ...prev,
+                language: bookData.language
+            }));
+        }
+
+        if (bookData.isbn) {
+            if (bookData.isbn.length === 10) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    isbn10: bookData.isbn
+                }));
+            } else if (bookData.isbn.length === 13) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    isbn13: bookData.isbn
+                }));
+            }
+        }
+
+        if (bookData.cover_image) {
+            setBookDetails(prev => ({
+                ...prev,
+                coverImage: bookData.cover_image
+            }));
+        }
+
+
+        const isbnCheck = isValidISBN(bookData.isbn || barcodeInput);
+        if (isbnCheck) {
+            await fetchCompleteBookDetails(isbnCheck.value);
+        }
+    };
+
+    const fetchCompleteBookDetails = async (isbn) => {
+        try {
+            const bookData = await fetchBookFromGoogleBooks(isbn);
+
+
+            if (bookData.title) {
+                const titleParts = bookData.title.split(":");
+                setBookDetails(prev => ({
+                    ...prev,
+                    title: titleParts[0] || bookData.title,
+                    subtitle: titleParts.slice(1).join(":").trim() || prev.subtitle
+                }));
+            }
+
+            if (bookData.author_name) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    authors: Array.isArray(bookData.author_name) ? bookData.author_name : [bookData.author_name]
+                }));
+
+
+                if (bookData.author_details) {
+                    setAuthorDetails(prev => ({
+                        ...prev,
+                        name: bookData.author_details.name || bookData.author_name,
+                        bio: bookData.author_details.bio || prev.bio,
+                        email: bookData.author_details.email || prev.email
+                    }));
+                }
+            }
+
+            if (bookData.category_name) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    categories: Array.isArray(bookData.category_name) ? bookData.category_name : [bookData.category_name]
+                }));
+
+
+                if (bookData.category_description) {
+                    setCategoryDetails(prev => ({
+                        name: bookData.category_name,
+                        description: bookData.category_description
+                    }));
+                }
+            }
+
+            if (bookData.description) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    description: bookData.description
+                }));
+            }
+
+            if (bookData.pages) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    pageCount: bookData.pages
+                }));
+            }
+
+            if (bookData.publisher) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    publisher: bookData.publisher
+                }));
+
+
+                setPublisherDetails(prev => ({
+                    ...prev,
+                    name: bookData.publisher
+                }));
+            }
+
+            if (bookData.published_date) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    publishedDate: bookData.published_date
+                }));
+            }
+
+            if (bookData.language) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    language: bookData.language
+                }));
+            }
+
+            if (bookData.isbn) {
+                if (bookData.isbn.length === 10) {
+                    setBookDetails(prev => ({
+                        ...prev,
+                        isbn10: bookData.isbn
+                    }));
+                } else if (bookData.isbn.length === 13) {
+                    setBookDetails(prev => ({
+                        ...prev,
+                        isbn13: bookData.isbn
+                    }));
+                }
+            }
+
+            if (bookData.cover_image) {
+                setBookDetails(prev => ({
+                    ...prev,
+                    coverImage: bookData.cover_image
+                }));
+            }
+        } catch (error) {
+            console.error("Error fetching complete book details:", error);
+        }
+    };
+
     const detectDataType = async (barcode) => {
         console.log("Processing barcode:", barcode);
-
 
         const cardNumberPattern = /^(LIB|LC-?)?[A-Z0-9]{6,20}$/i;
         const barcodeTrimmed = barcode.trim();
@@ -1092,16 +415,13 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-
         const isbnCheck = isValidISBN(barcode);
         if (isbnCheck) {
             console.log("Valid ISBN detected:", isbnCheck);
             const isbn = isbnCheck.value;
 
-
             const bookData = await fetchBookFromGoogleBooks(isbn);
             console.log("Fetched book data:", bookData);
-
 
             if (bookData.author_name) {
                 const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
@@ -1110,14 +430,12 @@ const UniversalBarcodeScanner = () => {
                 }
             }
 
-
             if (bookData.category_name) {
                 const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
                 if (categoryId) {
                     bookData.category_id = categoryId;
                 }
             }
-
 
             const cleanedBookData = { ...bookData };
             delete cleanedBookData.author_details;
@@ -1128,9 +446,9 @@ const UniversalBarcodeScanner = () => {
                 type: "book",
                 data: cleanedBookData,
                 module: "/book",
+                fullData: bookData // Include full data for details extraction
             };
         }
-
 
         try {
             const jsonData = JSON.parse(barcode);
@@ -1139,7 +457,6 @@ const UniversalBarcodeScanner = () => {
         } catch (e) {
 
         }
-
 
         if (barcode.includes("@") && barcode.includes(".")) {
             const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -1158,7 +475,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-
         if (/^\+?[\d\s-()]{10,}$/.test(barcode) && barcode.length >= 10) {
             return {
                 type: "supplier",
@@ -1166,7 +482,6 @@ const UniversalBarcodeScanner = () => {
                 module: "/supplier",
             };
         }
-
 
         if (/^[A-Za-z\s.]+$/.test(barcode) && (barcode.split(/\s+/).length >= 2 || barcode.length >= 3)) {
             const words = barcode.trim().split(/\s+/);
@@ -1179,7 +494,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-
         if (/^[A-Za-z]+$/.test(barcode) && barcode.length >= 3 && barcode.length <= 30) {
             return {
                 type: "category",
@@ -1187,7 +501,6 @@ const UniversalBarcodeScanner = () => {
                 module: "/category",
             };
         }
-
 
         if (/^[A-Za-z0-9\s&.,-]+$/.test(barcode) && barcode.length > 2) {
             const supplierKeywords = ["supplier", "vendor", "distributor", "company", "ltd", "inc", "corp"];
@@ -1201,7 +514,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
-
         if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
             const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
             if (possibleIsbns) {
@@ -1211,14 +523,11 @@ const UniversalBarcodeScanner = () => {
                         const isbn = isbnCheck.value;
                         const title = barcode.replace(possibleIsbn, "").trim();
 
-
                         const bookData = await fetchBookFromGoogleBooks(isbn);
-
 
                         if (title && !bookData.title) {
                             bookData.title = title;
                         }
-
 
                         if (bookData.author_name) {
                             const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
@@ -1227,14 +536,12 @@ const UniversalBarcodeScanner = () => {
                             }
                         }
 
-
                         if (bookData.category_name) {
                             const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
                             if (categoryId) {
                                 bookData.category_id = categoryId;
                             }
                         }
-
 
                         const cleanedBookData = { ...bookData };
                         delete cleanedBookData.author_details;
@@ -1245,12 +552,12 @@ const UniversalBarcodeScanner = () => {
                             type: "book",
                             data: cleanedBookData,
                             module: "/book",
+                            fullData: bookData
                         };
                     }
                 }
             }
         }
-
 
         if (barcode.length > 3) {
             return {
@@ -1269,21 +576,19 @@ const UniversalBarcodeScanner = () => {
             const authorsResponse = await authorApi.fetchAll();
 
             if (authorsResponse.data && Array.isArray(authorsResponse.data)) {
-
                 const authorNames = authorName.split(",").map(a => a.trim());
                 const primaryAuthorName = authorNames[0];
-
 
                 let foundAuthor = authorsResponse.data.find(a =>
                     a.name && a.name.toLowerCase() === primaryAuthorName.toLowerCase()
                 );
 
-
                 if (!foundAuthor) {
                     const authorData = {
                         name: primaryAuthorName,
                         email: authorDetails?.email || "",
-                        bio: authorDetails?.bio || ""
+                        bio: authorDetails?.bio || "",
+                        website: authorDetails?.website || ""
                     };
 
                     const newAuthorResponse = await authorApi.create(authorData);
@@ -1294,14 +599,16 @@ const UniversalBarcodeScanner = () => {
                         });
                     }
                 } else {
-
-                    if (authorDetails && (authorDetails.email || authorDetails.bio)) {
+                    if (authorDetails) {
                         const updateData = {};
                         if (authorDetails.email && !foundAuthor.email) {
                             updateData.email = authorDetails.email;
                         }
                         if (authorDetails.bio && !foundAuthor.bio) {
                             updateData.bio = authorDetails.bio;
+                        }
+                        if (authorDetails.website && !foundAuthor.website) {
+                            updateData.website = authorDetails.website;
                         }
                         if (Object.keys(updateData).length > 0) {
                             try {
@@ -1329,11 +636,9 @@ const UniversalBarcodeScanner = () => {
             const categoriesResponse = await categoryApi.fetchAll();
 
             if (categoriesResponse.data && Array.isArray(categoriesResponse.data)) {
-
                 let foundCategory = categoriesResponse.data.find(c =>
                     c.name && c.name.toLowerCase() === categoryName.toLowerCase()
                 );
-
 
                 if (!foundCategory) {
                     const categoryData = {
@@ -1349,7 +654,6 @@ const UniversalBarcodeScanner = () => {
                         });
                     }
                 } else {
-
                     if (categoryDescription && !foundCategory.description) {
                         try {
                             await categoryApi.update({ ...foundCategory, description: categoryDescription }, foundCategory.id);
@@ -1369,18 +673,85 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
+    const findOrCreatePublisher = async (publisherName, publisherDetails = null) => {
+        try {
+            const publisherApi = new DataApi("publisher");
+            const publishersResponse = await publisherApi.fetchAll();
+
+            if (publishersResponse.data && Array.isArray(publishersResponse.data)) {
+                let foundPublisher = publishersResponse.data.find(p =>
+                    p.name && p.name.toLowerCase() === publisherName.toLowerCase()
+                );
+
+                if (!foundPublisher) {
+                    const publisherData = {
+                        name: publisherName,
+                        address: publisherDetails?.address || "",
+                        website: publisherDetails?.website || "",
+                        contact_person: publisherDetails?.contact_person || ""
+                    };
+
+                    const newPublisherResponse = await publisherApi.create(publisherData);
+                    if (newPublisherResponse.data && newPublisherResponse.data.success) {
+                        foundPublisher = newPublisherResponse.data.data;
+                        PubSub.publish("RECORD_SAVED_TOAST", {
+                            message: `Publisher "${publisherName}" created successfully`,
+                        });
+                    }
+                } else {
+                    if (publisherDetails) {
+                        const updateData = {};
+                        if (publisherDetails.address && !foundPublisher.address) {
+                            updateData.address = publisherDetails.address;
+                        }
+                        if (publisherDetails.website && !foundPublisher.website) {
+                            updateData.website = publisherDetails.website;
+                        }
+                        if (publisherDetails.contact_person && !foundPublisher.contact_person) {
+                            updateData.contact_person = publisherDetails.contact_person;
+                        }
+                        if (Object.keys(updateData).length > 0) {
+                            try {
+                                await publisherApi.update({ ...foundPublisher, ...updateData }, foundPublisher.id);
+                            } catch (e) {
+                                console.log("Could not update publisher details:", e);
+                            }
+                        }
+                    }
+                }
+
+                if (foundPublisher) {
+                    return foundPublisher.id;
+                }
+            }
+        } catch (error) {
+            console.error("Error finding/creating publisher:", error);
+        }
+        return null;
+    };
+
     const fetchBookFromGoogleBooks = async (isbn) => {
         console.log("Fetching book data for ISBN from Google Books:", isbn);
 
         const bookData = {
             isbn: isbn,
             title: "",
+            subtitle: "",
+            authors: [],
+            categories: [],
+            description: "",
+            pageCount: 0,
+            publisher: "",
+            publishedDate: "",
+            language: "",
+            isbn10: "",
+            isbn13: "",
+            coverImage: "",
             total_copies: 1,
             available_copies: 1,
         };
 
         try {
-
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
             console.log("Calling Google Books API:", googleBooksUrl);
 
@@ -1393,60 +764,56 @@ const UniversalBarcodeScanner = () => {
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
 
-
                     bookData.title = volumeInfo.title || "";
-
-
-                    if (volumeInfo.subtitle) {
-                        bookData.title = `${bookData.title}: ${volumeInfo.subtitle}`;
-                    }
-
+                    bookData.subtitle = volumeInfo.subtitle || "";
 
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
+                        bookData.authors = volumeInfo.authors;
                         bookData.author_details = {
                             name: volumeInfo.authors[0],
                             bio: volumeInfo.description || "",
-                            email: ""
+                            email: "",
+                            website: ""
                         };
                     }
 
-
                     if (volumeInfo.categories && volumeInfo.categories.length > 0) {
-
                         const category = volumeInfo.categories[0];
                         bookData.category_name = category
                             .split("/")[0]
                             .split(",")[0]
                             .trim();
+                        bookData.categories = volumeInfo.categories;
                         bookData.category_description = volumeInfo.categories.join(", ");
                     }
-
 
                     if (volumeInfo.description) {
                         bookData.description = volumeInfo.description;
                     }
 
-
                     if (volumeInfo.pageCount) {
+                        bookData.pageCount = volumeInfo.pageCount;
                         bookData.pages = volumeInfo.pageCount;
                     }
 
-
                     if (volumeInfo.publisher) {
                         bookData.publisher = volumeInfo.publisher;
+                        bookData.publisher_details = {
+                            name: volumeInfo.publisher,
+                            address: "",
+                            website: ""
+                        };
                     }
-
 
                     if (volumeInfo.publishedDate) {
+                        bookData.publishedDate = volumeInfo.publishedDate;
                         bookData.published_date = volumeInfo.publishedDate;
                     }
-
 
                     if (volumeInfo.language) {
                         bookData.language = volumeInfo.language.toUpperCase();
                     }
-
 
                     if (volumeInfo.industryIdentifiers) {
                         const isbn13 = volumeInfo.industryIdentifiers.find(id => id.type === "ISBN_13");
@@ -1454,22 +821,25 @@ const UniversalBarcodeScanner = () => {
 
                         if (isbn13) {
                             bookData.isbn = isbn13.identifier;
+                            bookData.isbn13 = isbn13.identifier;
                         } else if (isbn10) {
                             bookData.isbn = isbn10.identifier;
+                            bookData.isbn10 = isbn10.identifier;
                         }
                     }
 
-
                     if (volumeInfo.imageLinks) {
-                        bookData.cover_image = volumeInfo.imageLinks.thumbnail ||
-                            volumeInfo.imageLinks.smallThumbnail;
+                        bookData.coverImage = volumeInfo.imageLinks.thumbnail ||
+                            volumeInfo.imageLinks.smallThumbnail ||
+                            volumeInfo.imageLinks.medium ||
+                            volumeInfo.imageLinks.large;
+                        bookData.cover_image = bookData.coverImage;
                     }
 
                     console.log("Final book data from Google Books:", bookData);
                     return bookData;
                 } else {
                     console.log("No book found for ISBN:", isbn);
-
                     bookData.title = `Book with ISBN: ${isbn}`;
                     return bookData;
                 }
@@ -1480,7 +850,6 @@ const UniversalBarcodeScanner = () => {
             }
         } catch (error) {
             console.error("Error fetching from Google Books API:", error);
-
             bookData.title = `Book with ISBN: ${isbn}`;
             return bookData;
         }
@@ -1489,17 +858,23 @@ const UniversalBarcodeScanner = () => {
     const analyzeJsonData = async (data) => {
         if (!data || typeof data !== "object") return null;
 
-
         if (data.isbn || data.title || data.bookTitle || data.book_title) {
             let bookData = {
                 title: data.title || data.bookTitle || data.book_title || "",
+                subtitle: data.subtitle || "",
                 isbn: data.isbn || data.ISBN || "",
                 author_id: data.author_id || data.authorId || "",
                 category_id: data.category_id || data.categoryId || "",
+                publisher_id: data.publisher_id || data.publisherId || "",
+                description: data.description || data.bookDescription || "",
+                pageCount: data.pageCount || data.pages || 0,
+                publisher: data.publisher || "",
+                publishedDate: data.publishedDate || data.published_date || "",
+                language: data.language || "",
+                coverImage: data.coverImage || data.cover_image || "",
                 total_copies: data.total_copies || data.totalCopies || 1,
                 available_copies: data.available_copies || data.availableCopies || 1,
             };
-
 
             if (bookData.isbn && !bookData.title) {
                 const fetchedData = await fetchBookFromGoogleBooks(bookData.isbn);
@@ -1510,9 +885,9 @@ const UniversalBarcodeScanner = () => {
                 type: "book",
                 data: bookData,
                 module: "/book",
+                fullData: bookData
             };
         }
-
 
         if (data.authorName || data.author_name || (data.name && !data.email && !data.phone)) {
             if (!data.email && !data.phone && !data.address) {
@@ -1520,12 +895,14 @@ const UniversalBarcodeScanner = () => {
                     type: "author",
                     data: {
                         name: data.name || data.authorName || data.author_name || data.author || "",
+                        bio: data.bio || "",
+                        email: data.email || "",
+                        website: data.website || ""
                     },
                     module: "/author",
                 };
             }
         }
-
 
         if (data.supplierName || data.supplier_name || data.supplier || (data.name && (data.email || data.phone))) {
             return {
@@ -1540,29 +917,36 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
-
         if (data.category || data.categoryName || data.category_name) {
             return {
                 type: "category",
                 data: {
                     name: data.category || data.categoryName || data.category_name || "",
+                    description: data.description || data.categoryDescription || ""
                 },
                 module: "/category",
             };
         }
 
-
         if (data.name) {
             if (data.name.split(/\s+/).length === 1 && data.name.length <= 30) {
                 return {
                     type: "category",
-                    data: { name: data.name },
+                    data: {
+                        name: data.name,
+                        description: data.description || ""
+                    },
                     module: "/category",
                 };
             }
             return {
                 type: "author",
-                data: { name: data.name },
+                data: {
+                    name: data.name,
+                    bio: data.bio || "",
+                    email: data.email || "",
+                    website: data.website || ""
+                },
                 module: "/author",
             };
         }
@@ -1584,33 +968,61 @@ const UniversalBarcodeScanner = () => {
 
 
             if (detectedData.type === "book") {
-                if (!dataToInsert.title) {
-                    dataToInsert.title = dataToInsert.isbn ? "" : "Scanned Book";
+
+                if (authorDetails.name) {
+                    const authorId = await findOrCreateAuthor(authorDetails.name, authorDetails);
+                    if (authorId) {
+                        dataToInsert.author_id = authorId;
+                    }
                 }
+
+
+                if (categoryDetails.name) {
+                    const categoryId = await findOrCreateCategory(categoryDetails.name, categoryDetails.description);
+                    if (categoryId) {
+                        dataToInsert.category_id = categoryId;
+                    }
+                }
+
+
+                if (publisherDetails.name) {
+                    const publisherId = await findOrCreatePublisher(publisherDetails.name, publisherDetails);
+                    if (publisherId) {
+                        dataToInsert.publisher_id = publisherId;
+                    }
+                }
+
+
+                dataToInsert.title = bookDetails.title || dataToInsert.title || (dataToInsert.isbn ? `Book with ISBN: ${dataToInsert.isbn}` : "Scanned Book");
+                dataToInsert.subtitle = bookDetails.subtitle || dataToInsert.subtitle || "";
+                dataToInsert.description = bookDetails.description || dataToInsert.description || "";
+                dataToInsert.pages = bookDetails.pageCount || dataToInsert.pages || 0;
+                dataToInsert.publisher = bookDetails.publisher || dataToInsert.publisher || "";
+                dataToInsert.published_date = bookDetails.publishedDate || dataToInsert.published_date || "";
+                dataToInsert.language = bookDetails.language || dataToInsert.language || "";
+                dataToInsert.isbn_10 = bookDetails.isbn10 || dataToInsert.isbn_10 || "";
+                dataToInsert.isbn_13 = bookDetails.isbn13 || dataToInsert.isbn_13 || "";
+                dataToInsert.cover_image = bookDetails.coverImage || dataToInsert.cover_image || "";
+
                 if (!dataToInsert.isbn) {
-                    dataToInsert.isbn = `SCAN-${Date.now()}`;
+                    dataToInsert.isbn = dataToInsert.isbn_13 || dataToInsert.isbn_10 || `SCAN-${Date.now()}`;
                 }
-                if (!dataToInsert.author_id) dataToInsert.author_id = null;
-                if (!dataToInsert.category_id) dataToInsert.category_id = null;
                 if (!dataToInsert.total_copies) dataToInsert.total_copies = 1;
                 if (!dataToInsert.available_copies) dataToInsert.available_copies = 1;
-
-
-                delete dataToInsert.author_name;
-                delete dataToInsert.category_name;
-                delete dataToInsert.description;
-                delete dataToInsert.author_details;
-                delete dataToInsert.category_description;
-                delete dataToInsert.publisher;
-                delete dataToInsert.published_date;
-                delete dataToInsert.language;
-                delete dataToInsert.pages;
-                delete dataToInsert.cover_image;
+                if (!dataToInsert.author_id) dataToInsert.author_id = null;
+                if (!dataToInsert.category_id) dataToInsert.category_id = null;
+                if (!dataToInsert.publisher_id) dataToInsert.publisher_id = null;
 
             } else if (detectedData.type === "author") {
                 if (!dataToInsert.name) dataToInsert.name = "Scanned Author";
+                dataToInsert.bio = authorDetails.bio || dataToInsert.bio || "";
+                dataToInsert.email = authorDetails.email || dataToInsert.email || "";
+                dataToInsert.website = authorDetails.website || dataToInsert.website || "";
+
             } else if (detectedData.type === "category") {
                 if (!dataToInsert.name) dataToInsert.name = "Scanned Category";
+                dataToInsert.description = categoryDetails.description || dataToInsert.description || "";
+
             } else if (detectedData.type === "supplier") {
                 if (!dataToInsert.name) dataToInsert.name = dataToInsert.email || dataToInsert.phone || "Scanned Supplier";
                 if (!dataToInsert.contact_info && (dataToInsert.email || dataToInsert.phone || dataToInsert.address)) {
@@ -1632,6 +1044,7 @@ const UniversalBarcodeScanner = () => {
                 setShowModal(false);
                 setBarcodeInput("");
                 setDetectedData(null);
+                resetAllDetails();
                 navigate(detectedData.module);
             } else {
                 const errorMsg = Array.isArray(response.data?.errors)
@@ -1661,6 +1074,635 @@ const UniversalBarcodeScanner = () => {
         if (barcodeInput.trim()) {
             detectAndProcessBarcode(barcodeInput.trim());
         }
+    };
+
+    const renderBookDetails = () => {
+        if (!detectedData || detectedData.type !== "book") return null;
+
+        return (
+            <div className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 style={{ color: "#6f42c1", fontWeight: "600" }}>
+                        <i className="fa-solid fa-book me-2"></i>Book Details
+                    </h6>
+                    <Button
+                        variant="link"
+                        onClick={() => setShowAdvancedFields(!showAdvancedFields)}
+                        style={{ color: "#8b5cf6", textDecoration: "none", fontSize: "14px" }}
+                    >
+                        <i className={`fa-solid fa-${showAdvancedFields ? "chevron-up" : "chevron-down"} me-2`}></i>
+                        {showAdvancedFields ? "Hide Details" : "Show Details"}
+                    </Button>
+                </div>
+
+                <Row className="mb-3">
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                Title <span className="text-danger">*</span>
+                            </Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={bookDetails.title}
+                                onChange={(e) => setBookDetails({ ...bookDetails, title: e.target.value })}
+                                placeholder="Book title"
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                Subtitle
+                            </Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={bookDetails.subtitle}
+                                onChange={(e) => setBookDetails({ ...bookDetails, subtitle: e.target.value })}
+                                placeholder="Book subtitle"
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                </Row>
+
+                <Row className="mb-3">
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                Authors
+                            </Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={bookDetails.authors.join(", ")}
+                                onChange={(e) => setBookDetails({ ...bookDetails, authors: e.target.value.split(",").map(a => a.trim()) })}
+                                placeholder="Enter authors, separated by commas"
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                ISBN-13
+                            </Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={bookDetails.isbn13}
+                                onChange={(e) => setBookDetails({ ...bookDetails, isbn13: e.target.value })}
+                                placeholder="13-digit ISBN"
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                </Row>
+
+                {showAdvancedFields && (
+                    <>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Categories
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.categories.join(", ")}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, categories: e.target.value.split(",").map(c => c.trim()) })}
+                                        placeholder="Enter categories, separated by commas"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        ISBN-10
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.isbn10}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, isbn10: e.target.value })}
+                                        placeholder="10-digit ISBN"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Publisher
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.publisher}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, publisher: e.target.value })}
+                                        placeholder="Publisher name"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Published Date
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.publishedDate}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, publishedDate: e.target.value })}
+                                        placeholder="YYYY-MM-DD"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Language
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.language}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, language: e.target.value })}
+                                        placeholder="e.g., EN, HI"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Page Count
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={bookDetails.pageCount}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, pageCount: e.target.value })}
+                                        placeholder="Number of pages"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Description
+                                    </Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows={3}
+                                        value={bookDetails.description}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, description: e.target.value })}
+                                        placeholder="Book description"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Cover Image URL
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={bookDetails.coverImage}
+                                        onChange={(e) => setBookDetails({ ...bookDetails, coverImage: e.target.value })}
+                                        placeholder="Cover image URL"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        {bookDetails.coverImage && (
+                            <div className="text-center mb-3">
+                                <img
+                                    src={bookDetails.coverImage}
+                                    alt="Book Cover"
+                                    style={{
+                                        maxWidth: "150px",
+                                        maxHeight: "200px",
+                                        borderRadius: "8px",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                            <i className="fa-solid fa-user-pen me-2"></i>Author Details
+                        </h6>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Author Name
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={authorDetails.name}
+                                        onChange={(e) => setAuthorDetails({ ...authorDetails, name: e.target.value })}
+                                        placeholder="Author name"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Author Email
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="email"
+                                        value={authorDetails.email}
+                                        onChange={(e) => setAuthorDetails({ ...authorDetails, email: e.target.value })}
+                                        placeholder="author@example.com"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Author Bio
+                                    </Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows={2}
+                                        value={authorDetails.bio}
+                                        onChange={(e) => setAuthorDetails({ ...authorDetails, bio: e.target.value })}
+                                        placeholder="Author biography"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                            <i className="fa-solid fa-tags me-2"></i>Category Details
+                        </h6>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Category Name
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={categoryDetails.name}
+                                        onChange={(e) => setCategoryDetails({ ...categoryDetails, name: e.target.value })}
+                                        placeholder="Category name"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Description
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={categoryDetails.description}
+                                        onChange={(e) => setCategoryDetails({ ...categoryDetails, description: e.target.value })}
+                                        placeholder="Category description"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                            <i className="fa-solid fa-building me-2"></i>Publisher Details
+                        </h6>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Publisher Name
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={publisherDetails.name}
+                                        onChange={(e) => setPublisherDetails({ ...publisherDetails, name: e.target.value })}
+                                        placeholder="Publisher name"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Website
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={publisherDetails.website}
+                                        onChange={(e) => setPublisherDetails({ ...publisherDetails, website: e.target.value })}
+                                        placeholder="Publisher website"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                        Address
+                                    </Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows={2}
+                                        value={publisherDetails.address}
+                                        onChange={(e) => setPublisherDetails({ ...publisherDetails, address: e.target.value })}
+                                        placeholder="Publisher address"
+                                        style={{ fontSize: "14px" }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </>
+                )}
+
+                <Row className="mb-3">
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                Total Copies
+                            </Form.Label>
+                            <Form.Control
+                                type="number"
+                                min="1"
+                                value={detectedData.data.total_copies || 1}
+                                onChange={(e) => setDetectedData({
+                                    ...detectedData,
+                                    data: {
+                                        ...detectedData.data,
+                                        total_copies: parseInt(e.target.value) || 1
+                                    }
+                                })}
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                        <Form.Group>
+                            <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                Available Copies
+                            </Form.Label>
+                            <Form.Control
+                                type="number"
+                                min="0"
+                                max={detectedData.data.total_copies || 1}
+                                value={detectedData.data.available_copies || 1}
+                                onChange={(e) => setDetectedData({
+                                    ...detectedData,
+                                    data: {
+                                        ...detectedData.data,
+                                        available_copies: parseInt(e.target.value) || 1
+                                    }
+                                })}
+                                style={{ fontSize: "14px" }}
+                            />
+                        </Form.Group>
+                    </Col>
+                </Row>
+            </div>
+        );
+    };
+
+    const renderOtherDetails = () => {
+        if (!detectedData || detectedData.type === "book") return null;
+
+        if (detectedData.type === "author") {
+            return (
+                <div className="mt-4">
+                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                        <i className="fa-solid fa-user-pen me-2"></i>Author Details
+                    </h6>
+                    <Row className="mb-3">
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Name <span className="text-danger">*</span>
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={authorDetails.name || detectedData.data.name || ""}
+                                    onChange={(e) => {
+                                        setAuthorDetails({ ...authorDetails, name: e.target.value });
+                                        setDetectedData({
+                                            ...detectedData,
+                                            data: { ...detectedData.data, name: e.target.value }
+                                        });
+                                    }}
+                                    placeholder="Author name"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Email
+                                </Form.Label>
+                                <Form.Control
+                                    type="email"
+                                    value={authorDetails.email || ""}
+                                    onChange={(e) => setAuthorDetails({ ...authorDetails, email: e.target.value })}
+                                    placeholder="author@example.com"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Website
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={authorDetails.website || ""}
+                                    onChange={(e) => setAuthorDetails({ ...authorDetails, website: e.target.value })}
+                                    placeholder="Author website"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mb-3">
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Bio
+                                </Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={authorDetails.bio || ""}
+                                    onChange={(e) => setAuthorDetails({ ...authorDetails, bio: e.target.value })}
+                                    placeholder="Author biography"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </div>
+            );
+        }
+
+        if (detectedData.type === "category") {
+            return (
+                <div className="mt-4">
+                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                        <i className="fa-solid fa-tags me-2"></i>Category Details
+                    </h6>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Name <span className="text-danger">*</span>
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={categoryDetails.name || detectedData.data.name || ""}
+                                    onChange={(e) => {
+                                        setCategoryDetails({ ...categoryDetails, name: e.target.value });
+                                        setDetectedData({
+                                            ...detectedData,
+                                            data: { ...detectedData.data, name: e.target.value }
+                                        });
+                                    }}
+                                    placeholder="Category name"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Description
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={categoryDetails.description || ""}
+                                    onChange={(e) => setCategoryDetails({ ...categoryDetails, description: e.target.value })}
+                                    placeholder="Category description"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </div>
+            );
+        }
+
+        if (detectedData.type === "supplier") {
+            return (
+                <div className="mt-4">
+                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                        <i className="fa-solid fa-truck me-2"></i>Supplier Details
+                    </h6>
+                    <Row className="mb-3">
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Name <span className="text-danger">*</span>
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={detectedData.data.name || ""}
+                                    onChange={(e) => setDetectedData({
+                                        ...detectedData,
+                                        data: { ...detectedData.data, name: e.target.value }
+                                    })}
+                                    placeholder="Supplier name"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Email
+                                </Form.Label>
+                                <Form.Control
+                                    type="email"
+                                    value={detectedData.data.email || ""}
+                                    onChange={(e) => setDetectedData({
+                                        ...detectedData,
+                                        data: { ...detectedData.data, email: e.target.value }
+                                    })}
+                                    placeholder="supplier@example.com"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Phone
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={detectedData.data.phone || ""}
+                                    onChange={(e) => setDetectedData({
+                                        ...detectedData,
+                                        data: { ...detectedData.data, phone: e.target.value }
+                                    })}
+                                    placeholder="Phone number"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mb-3">
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
+                                    Address
+                                </Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={detectedData.data.address || ""}
+                                    onChange={(e) => setDetectedData({
+                                        ...detectedData,
+                                        data: { ...detectedData.data, address: e.target.value }
+                                    })}
+                                    placeholder="Supplier address"
+                                    style={{ fontSize: "14px" }}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </div>
+            );
+        }
+
+        return null;
     };
 
     return (
@@ -1701,7 +1743,7 @@ const UniversalBarcodeScanner = () => {
             </Button>
 
             {/* Scanner Modal */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered scrollable>
                 <Modal.Header
                     closeButton
                     style={{
@@ -1711,12 +1753,12 @@ const UniversalBarcodeScanner = () => {
                     }}
                 >
                     <Modal.Title style={{ color: "#6f42c1", fontWeight: "600" }}>
-                        <i className="fa-solid fa-barcode me-2"></i>Book Detail Add
+                        <i className="fa-solid fa-barcode me-2"></i>Universal Data Scanner
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: "24px" }}>
                     <div className="mb-4">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "10px", fontSize: "10px" }}>
+                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "10px", fontSize: "14px" }}>
                             <i className="fa-solid fa-qrcode me-2" style={{ color: "#8b5cf6" }}></i>Scan or Enter Barcode/Data
                         </Form.Label>
                         <InputGroup>
@@ -1726,7 +1768,7 @@ const UniversalBarcodeScanner = () => {
                             <Form.Control
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Enter 10 or 13 digit ISBN, author name, supplier info, or paste JSON data..."
+                                placeholder="Enter ISBN, author name, supplier info, category, or paste JSON data..."
                                 value={barcodeInput}
                                 onChange={(e) => handleBarcodeInput(e.target.value)}
                                 onKeyPress={(e) => {
@@ -1737,8 +1779,7 @@ const UniversalBarcodeScanner = () => {
                                 style={{
                                     borderColor: "#e9ecef",
                                     borderRadius: "0",
-                                    fontSize: "12px",
-
+                                    fontSize: "14px",
                                 }}
                                 onFocus={(e) => e.target.style.borderColor = "#8b5cf6"}
                                 onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
@@ -1759,8 +1800,8 @@ const UniversalBarcodeScanner = () => {
                         </InputGroup>
                         <Form.Text className="text-muted" style={{ fontSize: "12px", marginTop: "6px", display: "block" }}>
                             <i className="fa-solid fa-info-circle me-1"></i>
-                            Enter ISBN (10 or 13 digits), author name, supplier info, or paste JSON data. ISBN detection is prioritized.
-                            Using Google Books API for ISBN lookup.
+                            Enter ISBN (10 or 13 digits), author name, supplier info, category, or paste JSON data.
+                            ISBN detection uses Google Books API for complete book details.
                         </Form.Text>
                     </div>
 
@@ -1779,8 +1820,8 @@ const UniversalBarcodeScanner = () => {
                             <i className="fa-solid fa-spinner fa-spin me-2"></i>
                             <strong>
                                 {isValidISBN(barcodeInput)
-                                    ? `Fetching book data from Google Books for ISBN: ${barcodeInput}...`
-                                    : "Detecting data type..."}
+                                    ? `Fetching complete book data from Google Books for ISBN: ${barcodeInput}...`
+                                    : "Detecting data type and fetching details..."}
                             </strong>
                         </Alert>
                     )}
@@ -1793,7 +1834,8 @@ const UniversalBarcodeScanner = () => {
                                 borderColor: "#2E7D32",
                                 color: "#2E7D32",
                                 borderRadius: "8px",
-                                padding: "16px"
+                                padding: "16px",
+                                marginBottom: "20px"
                             }}
                         >
                             <div className="d-flex align-items-center mb-3">
@@ -1820,21 +1862,12 @@ const UniversalBarcodeScanner = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="mt-3" style={{ background: "white", padding: "12px", borderRadius: "6px" }}>
-                                <strong style={{ fontSize: "14px", color: "#2E7D32" }}>Detected Fields:</strong>
-                                <div className="mt-2" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
-                                    {Object.entries(detectedData.data).filter(([_, value]) => value).map(([key, value]) => (
-                                        <div key={key} style={{ fontSize: "13px" }}>
-                                            <span style={{ fontWeight: "600", color: "#2E7D32" }}>
-                                                {key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}:
-                                            </span>{" "}
-                                            <span style={{ color: "#333" }}>{value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
                         </Alert>
                     )}
+
+                    {/* Render detailed form based on detected type */}
+                    {renderBookDetails()}
+                    {renderOtherDetails()}
 
                     {!detectedData && barcodeInput.length > 3 && !loading && (
                         <Alert
@@ -1866,6 +1899,7 @@ const UniversalBarcodeScanner = () => {
                             setShowModal(false);
                             setBarcodeInput("");
                             setDetectedData(null);
+                            resetAllDetails();
                         }}
                         style={{
                             borderColor: "#8b5cf6",
@@ -1899,7 +1933,7 @@ const UniversalBarcodeScanner = () => {
                         ) : (
                             <>
                                 <i className="fa-solid fa-plus me-2"></i>
-                                Insert into {detectedData?.type?.charAt(0).toUpperCase() + detectedData?.type?.slice(1) || "Module"}
+                                Insert {detectedData?.type?.charAt(0).toUpperCase() + detectedData?.type?.slice(1) || "Data"}
                             </>
                         )}
                     </Button>

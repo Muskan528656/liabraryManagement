@@ -19,7 +19,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
     let defaultTimeZone = "";
 
     if (companyInfo) {
-        const matchedCountry = COUNTRY_TIMEZONE.find(c => 
+        const matchedCountry = COUNTRY_TIMEZONE.find(c =>
             (companyInfo.country && c.countryName.toLowerCase() === companyInfo.country.toLowerCase()) ||
             (companyInfo.country_code && c.phoneCode === companyInfo.country_code)
         );
@@ -30,9 +30,9 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             defaultCurrency = matchedCountry.currency.code;
 
             const exactTz = matchedCountry.timezones.find(t => t.zoneName === companyInfo.time_zone);
-            
+
             defaultTimeZone = exactTz ? exactTz.zoneName : matchedCountry.timezones[0]?.zoneName;
-            console.log("defaultTimeZone",defaultTimeZone)
+            console.log("defaultTimeZone", defaultTimeZone)
         } else {
             defaultCountryName = companyInfo.country || "";
             defaultCountryCode = companyInfo.country_code || "";
@@ -45,7 +45,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         moduleName: "user",
         moduleLabel: "User Management",
         apiEndpoint: "user",
-        
+
         columns: [
             { field: "firstname", label: "First Name" },
             { field: "lastname", label: "Last Name" },
@@ -60,25 +60,25 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                     return country ? `${country.flag} ${country.countryName}` : value;
                 }
             },
-            { 
-                field: "country_code", 
+            {
+                field: "country_code",
                 label: "Code",
                 render: (value) => value || <span className="text-muted">N/A</span>
             },
             { field: "phone", label: "Phone" },
-            { 
-                field: "currency", 
+            {
+                field: "currency",
                 label: "Currency",
                 render: (value) => value || <span className="text-muted">N/A</span>
             },
-            { 
-                field: "time_zone", 
+            {
+                field: "time_zone",
                 label: "Time Zone",
                 render: (value) => {
-                     if (!value) return <span className="text-muted">N/A</span>;
-                     const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
-                     const tz = country?.timezones.find(t => t.zoneName === value);
-                     return tz ? `${tz.zoneName} (${tz.gmtOffset})` : value;
+                    if (!value) return <span className="text-muted">N/A</span>;
+                    const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
+                    const tz = country?.timezones.find(t => t.zoneName === value);
+                    return tz ? `${tz.zoneName} (${tz.gmtOffset})` : value;
                 }
             },
             {
@@ -220,13 +220,13 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 label: "Time Zone",
                 type: "select",
                 options: (formData) => {
-                    // FIX: If formData.country is not yet available (initial load), 
-                    // fallback to 'defaultCountryName' calculated above.
+
+
                     const currentCountryName = formData?.country || defaultCountryName;
                     console.log("currentCountryName", currentCountryName)
-                    
+
                     const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
-                    
+
                     if (countryData && countryData.timezones) {
                         return countryData.timezones.map(tz => ({
                             value: tz.zoneName,
@@ -302,7 +302,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             allowEdit: true,
             allowDelete: false,
         },
-        
+
         initializeFormData: (existingData) => {
             console.log(existingData)
             if (!existingData) return null;

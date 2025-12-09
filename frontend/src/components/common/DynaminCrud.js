@@ -447,7 +447,7 @@ const DynamicCRUD = ({
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
                 } else if (typeof field.options === 'function') {
-                    // Handle function-based options (e.g., time_zone depending on country)
+
                     optionsArray = field.options(formData) || [];
                 } else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];

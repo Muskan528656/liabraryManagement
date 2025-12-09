@@ -22,8 +22,25 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             {
                 field: "bio",
                 label: "Bio",
-                render: (value) => <span>{value || '-'}</span>,
+                render: (value) => (
+                    <div
+                        style={{
+                            whiteSpace: "pre-wrap",
+                            background: "#f8f9fa",
+                            padding: "8px",
+                            borderRadius: "6px",
+                            minHeight: "60px",
+                            maxHeight: "140px",
+                            overflowY: "auto",
+                            fontSize: "14px",
+                            border: "1px solid #ddd",
+                        }}
+                    >
+                        {value || "-"}
+                    </div>
+                ),
             }
+
         ],
         formFields: [
             {
@@ -45,10 +62,24 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 name: "bio",
                 label: "Bio",
                 type: "textarea",
-                rows: 3,
-                placeholder: "Enter author bio",
                 colSize: 12,
-            }
+
+                render: (value) => (
+                    <textarea
+                        value={value || "-"}
+                        readOnly
+                        rows={3}
+                        style={{
+                            width: "100%",
+                            resize: "none",
+                            background: "#f8f9fa",
+                            borderRadius: "6px",
+                            padding: "8px",
+                            border: "1px solid #ddd",
+                        }}
+                    />
+                ),
+            },
         ],
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];

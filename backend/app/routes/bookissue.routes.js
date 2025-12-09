@@ -424,10 +424,10 @@ module.exports = (app) => {
 
 
 
-  router.post("/issue", async (req, res) => {
+  router.post("/issue", fetchUser, async (req, res) => {
     try {
-      console.log("📩 Received Issue Book request:", req.body);
-
+      console.log("📩 Received Issue Book request:", req.userinfo);
+      BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);

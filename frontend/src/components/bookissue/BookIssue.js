@@ -152,7 +152,7 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
-
+console.log("reposne->>>",response)
       if (response.data && Array.isArray(response.data)) {
 
         const activeIssues = response.data.filter(
@@ -290,78 +290,64 @@ const BookIssue = () => {
         </a>
       ),
     },
-    {
-      field: "book_isbn",
-      label: "ISBN",
-      width: 150,
-      render: (value) => (
-        <code
-          style={{
-            background: "#f8f9fa",
-            padding: "4px 8px",
-            borderRadius: "4px",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   {
+  field: "issued_to_name",
+  label: "Issued To",
+  width: 200,
+  render: (value, record) => {
+
+    const displayName = 
+      record.issued_to_name || 
+      record.member_name || 
+      record.student_name || 
+      record.user_name || 
+      record.name || 
+      `${record.first_name || ''} ${record.last_name || ''}`.trim() || 
+      "N/A";
+    
+    const userId = record.issued_to || record.card_id;
+    
+    if (userId && displayName !== "N/A") {
+      return (
+        <a
+          href={`/librarycard/${userId}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navigate(`/librarycard/${userId}`, { state: record });
           }}
+          style={{
+            color: "#6f42c1",
+            textDecoration: "none",
+            fontWeight: 500,
+          }}
+          onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+          onMouseLeave={(e) => e.target.style.textDecoration = "none"}
         >
-          {value || "-"}
-        </code>
-      ),
-    },
-    {
-      field: "issued_to_name",
-      label: "Issued To",
-      width: 200,
-      render: (value, record) => {
-        const userId = record.card_id
-        const displayName = record.member_name || "N/A";
-
-        if (userId) {
-          return (
-            <a
-              href={`/librarycard/${userId}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  localStorage.setItem(
-                    `prefetch:user:${userId}`,
-                    JSON.stringify(record)
-                  );
-                } catch (err) { }
-                navigate(`/librarycard/${userId}`, { state: record });
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  localStorage.setItem(
-                    `prefetch:user:${userId}`,
-                    JSON.stringify(record)
-                  );
-                } catch (err) { }
-                window.open(`/librarycard/${userId}`, "_blank");
-              }}
-              style={{
-                color: "#6f42c1",
-                textDecoration: "none",
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.textDecoration = "underline";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.textDecoration = "none";
-              }}
-              title="Click to view library card details (Right-click to open in new tab)"
-            >
-              {displayName}
-            </a>
-          );
-        }
-
-        return displayName;
-      },
-    },
+          {displayName}
+        </a>
+      );
+    }
+    
+    return displayName;
+  },
+},
     {
       field: "issued_by",
       label: "Issued By",

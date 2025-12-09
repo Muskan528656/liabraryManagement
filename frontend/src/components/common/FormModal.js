@@ -299,6 +299,17 @@ const FormModal = ({
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               disabled={field.disabled}
+              readOnly={field.readOnly}         // ⭐ Added
+              style={
+                field.readOnly
+                  ? {
+                    background: "#f8f9fa",
+                    resize: "none",
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                  }
+                  : {}
+              }
               isInvalid={!!error}
               {...field.props}
             />

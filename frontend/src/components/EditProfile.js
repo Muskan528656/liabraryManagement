@@ -266,7 +266,7 @@ const EditProfile = ({ userId }) => {
 
         const result = await userApi.update(updateData, profile.id);
         if (result.data.success) {
-          toast.success("Profile updated successfully");
+
           PubSub.publish("RECORD_SAVED_TOAST", {
             title: "Success",
             message: "Profile updated successfully",

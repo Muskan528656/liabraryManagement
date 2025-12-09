@@ -1,5 +1,5 @@
 
-export const getBooksConfig = (externalData = {}, props = {},timeZone) => {
+export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
     const authors =
         props.authors ||
         externalData.authors ||
@@ -42,10 +42,10 @@ export const getBooksConfig = (externalData = {}, props = {},timeZone) => {
                 field: "isbn",
                 label: "ISBN",
             },
-            {
-                field: "total_copies",
-                label: "Total Copies",
-            },
+
+
+
+
             {
                 field: "available_copies",
                 label: "Available Copies",
