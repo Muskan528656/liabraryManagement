@@ -99,16 +99,16 @@ const Plan = {
     async deletePlan(id) {
 
         const query = `
-            UPDATE ${schema}.plan
-            SET is_active = false, lastmodifieddate = NOW()
-            WHERE id = $1
-            RETURNING id
-        `;
+        DELETE FROM ${schema}.plan
+        WHERE id = $1
+        RETURNING id;
+    `;
 
         const result = await sql.query(query, [id]);
-        console.log("Result->>", result)
+        console.log("Delete Result -> ", result);
+
         return result.rows[0];
-    },
+    }
 
 };
 

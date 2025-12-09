@@ -8,9 +8,8 @@ import DataApi from "../../api/dataApi";
 
 const Plan = (props) => {
     const [allowedDays, setAllowedDays] = useState(30); 
+    const [planConfig, setPlanConfig] = useState(null);
     const { timeZone } = useTimeZone();
-
-    console.log("Plan Timezone:", timeZone);
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -20,33 +19,36 @@ const Plan = (props) => {
 
                 if (res?.data) {
                     const data = Array.isArray(res.data) ? res.data[0] : res.data;
-
-                 
-                    if (data?.default_plan_days) {
-                        setAllowedDays(parseInt(data.default_plan_days));
-                    }
+                    if (data?.default_plan_days) setAllowedDays(parseInt(data.default_plan_days));
                 }
             } catch (err) {
-                console.error("Error:", err);
+                console.error("Error loading library settings:", err);
             }
         };
 
         loadSettings();
     }, []);
 
-  
-    const baseConfig = getPlanConfig({}, allowedDays);
+    useEffect(() => {
+        const loadConfig = async () => {
+            try {
+                const config = await getPlanConfig({}, allowedDays, timeZone);
+                setPlanConfig(config);
+            } catch (err) {
+                console.error("Error loading plan config:", err);
+            }
+        };
 
-  
-    const { data, loading, error } = useDataManager(baseConfig.dataDependencies, props);
+        if (timeZone) loadConfig();
+    }, [allowedDays, timeZone]);
 
-    if (loading) return <Loader message="Loading plans..." />;
+ 
+    const { data, loading, error } = useDataManager(planConfig?.dataDependencies, props);
+
+    if (!planConfig || loading) return <Loader message="Loading plans..." />;
     if (error) return <div className="alert alert-danger">{error}</div>;
 
-   
-    const finalConfig = getPlanConfig(data, allowedDays, timeZone);
-
-    return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags" />;
+    return <DynamicCRUD {...planConfig} icon="fa-solid fa-tags" />;
 };
 
 export default Plan;

@@ -6,8 +6,6 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Users = (props) => {
   const { timeZone, companyInfo } = useTimeZone();
-
-  console.log("woeweoiruweoiwe",timeZone);
   const baseConfig = getUserConfig();
 
   const { data, loading, error } = useDataManager(
@@ -18,8 +16,16 @@ const Users = (props) => {
   if (loading) return <div>Loading users data...</div>;
   if (error) return <div>Error loading users data: {error.message}</div>;
 
-  // Pass companyInfo so defaults can be calculated
+  if (error) {
+    console.log("users data error", error);
+    return <div>Error loading users data: {error.message}</div>;
+  }
+
+  console.log("users data loaded", data);
+
   const finalConfig = getUserConfig(data, props, timeZone, companyInfo);
+
+  console.log("users finalConfig", finalConfig);
 
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-user" />;
 };

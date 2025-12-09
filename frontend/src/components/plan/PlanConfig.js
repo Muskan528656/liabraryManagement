@@ -2,7 +2,6 @@ import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import DataApi from "../../api/dataApi";
 
-
 export const planDataDependencies = {
     company: "company",
 };
@@ -13,19 +12,25 @@ const statusBadge = (value) => (
     </span>
 );
 
-export const getPlanConfig = (externalData = {}, allowedDays = 30, timeZone) => {
+export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZone) => {
+    const SettingApi = new DataApi("librarysettings");
+    let SettingResponse;
 
-    const SettingApi = new DataApi("librarysettings"); // "plan" endpoint use करें, "plans" नहीं
-    const SettingResponse = SettingApi.fetchAll();
+    try {
+        SettingResponse = await SettingApi.fetchAll();
+        console.log("Plans API Response:", SettingResponse);
+    } catch (err) {
+        console.error("Error fetching library settings:", err);
+        SettingResponse = { success: false, data: [] };
+    }
 
-    console.log("Plans API Response:", SettingResponse);
+    let maxBooksDefault = 0;
 
-
-    let plansData = [];
-
-    if (SettingResponse.success && SettingResponse.data && Array.isArray(SettingResponse.data)) {
-
-        plansData = SettingResponse.data;
+    if (SettingResponse.success && Array.isArray(SettingResponse.data) && SettingResponse.data.length > 0) {
+        const settingItem = SettingResponse.data[0]; 
+        if (settingItem?.max_books !== undefined && settingItem?.max_books !== null) {
+            maxBooksDefault = Number(settingItem.max_books);
+        }
     }
 
     return {
@@ -33,40 +38,26 @@ export const getPlanConfig = (externalData = {}, allowedDays = 30, timeZone) => 
         moduleLabel: "Plan",
         apiEndpoint: "plans",
 
-
         initialFormData: {
             plan_name: "",
             duration_days: allowedDays,
-            allowed_books: 0,
+            allowed_books: maxBooksDefault,
             is_active: true,
         },
 
-
         columns: [
             { field: "plan_name", label: "Plan Name" },
-            {
-                field: "duration_days",
-                label: "Duration",
-                render: (value) => `${value} Days`
-            },
+            { field: "duration_days", label: "Duration", render: (value) => `${value} Days` },
             { field: "allowed_books", label: "Allowed Books" },
             {
                 name: "allowed_books",
                 label: "Allowed Books",
                 type: "select",
-
-
                 placeholder: "Select allowed books",
                 colSize: 6,
             },
-            {
-                field: "is_active",
-                label: "Status",
-                render: (value) => statusBadge(value === true)
-            },
+            { field: "is_active", label: "Status", render: (value) => statusBadge(value === true) },
         ],
-
-
 
         formFields: [
             {
@@ -92,7 +83,7 @@ export const getPlanConfig = (externalData = {}, allowedDays = 30, timeZone) => 
                 label: "Allowed Books",
                 type: "number",
                 min: 0,
-                defaultValue: 0,
+                defaultValue: maxBooksDefault,
                 placeholder: "Enter number of allowed books",
                 colSize: 6,
             },
@@ -108,19 +99,13 @@ export const getPlanConfig = (externalData = {}, allowedDays = 30, timeZone) => 
             },
         ],
 
-
         validationRules: (formData) => {
             const errors = [];
-
             if (!formData.plan_name?.trim()) errors.push("Plan name is required");
-            if (!formData.duration_days || formData.duration_days <= 0)
-                errors.push("Duration must be a positive number");
-            if (formData.allowed_books < 0)
-                errors.push("Allowed books cannot be negative");
-
+            if (!formData.duration_days || formData.duration_days <= 0) errors.push("Duration must be a positive number");
+            if (formData.allowed_books < 0) errors.push("Allowed books cannot be negative");
             return errors;
         },
-
 
         features: {
             showBulkInsert: false,
@@ -133,85 +118,43 @@ export const getPlanConfig = (externalData = {}, allowedDays = 30, timeZone) => 
             allowEdit: true,
         },
 
-
         details: [
             { key: "plan_name", label: "Plan Name" },
             { key: "duration_days", label: "Duration (Days)" },
             { key: "allowed_books", label: "Allowed Books" },
-            {
-                key: "is_active",
-                label: "Status",
-                render: (value) => (value ? "Active" : "Inactive"),
-            },
-            {
-                key: "createdbyid",
-                label: "Created By",
-            },
-            {
-                key: "createddate",
-                label: "Created Date",
-                render: (value) => convertToUserTimezone(value, timeZone),
-            },
-            {
-                key: "lastmodifiedbyid",
-                label: "Last Modified By",
-            },
-            {
-                key: "lastmodifieddate",
-                label: "Last Modified",
-                render: (value) =>
-                    value ? convertToUserTimezone(value, timeZone) : "—",
-            },
+            { key: "is_active", label: "Status", render: (value) => (value ? "Active" : "Inactive") },
+            { key: "createdbyid", label: "Created By" },
+            { key: "createddate", label: "Created Date", render: (value) => convertToUserTimezone(value, timeZone) },
+            { key: "lastmodifiedbyid", label: "Last Modified By" },
+            { key: "lastmodifieddate", label: "Last Modified", render: (value) => (value ? convertToUserTimezone(value, timeZone) : "—") },
         ],
-
 
         customHandlers: {
             beforeSave: (formData) => {
-
                 if (formData.plan_name === "") formData.plan_name = null;
                 if (formData.duration_days === "") formData.duration_days = null;
-                if (formData.allowed_books === "") formData.allowed_books = 0;
-
-
-                if (formData.is_active !== undefined) {
-                    formData.is_active = Boolean(formData.is_active);
-                }
-
+                if (formData.allowed_books === "") formData.allowed_books = maxBooksDefault;
+                formData.is_active = Boolean(formData.is_active);
                 return true;
             },
 
             onDataLoad: (data) => {
                 const processItem = (item) => {
-
-                    if (item.hasOwnProperty("is_active")) {
-                        item.is_active = item.is_active === true || item.is_active === "true" || item.is_active === 1;
-                    }
-
-
-                    if (!item.allowed_books && item.allowed_books !== 0) {
-                        item.allowed_books = 0;
-                    }
-
-
-                    if (!item.plan_name) item.plan_name = "";
-                    if (!item.duration_days) item.duration_days = "";
+                    item.is_active = item.is_active === true || item.is_active === "true" || item.is_active === 1;
+                    item.allowed_books = item.allowed_books ?? maxBooksDefault;
+                    item.plan_name = item.plan_name || "";
+                    item.duration_days = item.duration_days || "";
                 };
 
-                if (Array.isArray(data)) {
-                    data.forEach(processItem);
-                } else if (data && typeof data === "object") {
-                    processItem(data);
-                }
+                if (Array.isArray(data)) data.forEach(processItem);
+                else if (data && typeof data === "object") processItem(data);
             },
 
-
-            beforeEdit: (item) => {
-                return {
-                    ...item,
-                    is_active: Boolean(item.is_active),
-                    allowed_books: item.allowed_books || 0
-                };
-            }
+            beforeEdit: (item) => ({
+                ...item,
+                is_active: Boolean(item.is_active),
+                allowed_books: item.allowed_books ?? maxBooksDefault,
+            }),
         },
     };
 };

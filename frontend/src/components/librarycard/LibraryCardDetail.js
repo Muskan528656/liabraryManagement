@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -17,17 +16,20 @@ import {
   Container,
   Form,
   Tab,
-  Tabs,
+  Modal,
+  Nav,
+  InputGroup,
 } from "react-bootstrap";
 import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import ScrollToTop from "../common/ScrollToTop";
 import ConfirmationModal from "../common/ConfirmationModal";
-import PlanDetailsTab from "./PlanDetailsTab";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+import ResizableTable from "../../components/common/ResizableTable";
+import RelatedTabContent from '../../components/librarycard/RelatedTab'
 const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
@@ -59,7 +61,8 @@ const LibraryCardDetail = ({
   const [subscriptionProgress, setSubscriptionProgress] = useState(0);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [companyCountryCode, setCompanyCountryCode] = useState("");
-  const [activeTab, setActiveTab] = useState("details");
+  const [activeTab, setActiveTab] = useState("detail");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -99,196 +102,43 @@ const LibraryCardDetail = ({
     return window.location.origin;
   }, []);
 
-  const RelatedTabContent = () => {
-    const [relatedPlans, setRelatedPlans] = useState([]);
-    const [relatedSubscriptions, setRelatedSubscriptions] = useState([]);
-    const [loadingRelated, setLoadingRelated] = useState(false);
-
-    useEffect(() => {
-      if (data) {
-        fetchRelatedData();
-      }
-    }, [data]);
-
-    const fetchRelatedData = async () => {
-      setLoadingRelated(true);
-      try {
-
-        const plansApi = new DataApi("plans");
-        const plansResponse = await plansApi.fetchAll();
-
-        if (plansResponse && plansResponse.data) {
-          let plansData = plansResponse.data;
-          if (plansData.success && plansData.data) {
-            plansData = plansData.data;
-          }
 
 
-          const filteredPlans = Array.isArray(plansData)
-            ? plansData.filter(plan =>
-              plan.library_card_id === id ||
-              plan.card_id === id ||
-              plan.id === data.plan_id
-            )
-            : [];
-          setRelatedPlans(filteredPlans);
-        }
-
-
-        const subscriptionsApi = new DataApi("subscriptions");
-        const subsResponse = await subscriptionsApi.fetchAll();
-
-        if (subsResponse && subsResponse.data) {
-          let subsData = subsResponse.data;
-          if (subsData.success && subsData.data) {
-            subsData = subsData.data;
-          }
-
-
-          const filteredSubs = Array.isArray(subsData)
-            ? subsData.filter(sub =>
-              sub.library_card_id === id ||
-              sub.card_id === id ||
-              sub.card_number === data.card_number
-            )
-            : [];
-          setRelatedSubscriptions(filteredSubs);
-        }
-      } catch (error) {
-        console.error("Error fetching related data:", error);
-      } finally {
-        setLoadingRelated(false);
-      }
-    };
-
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR'
-      }).format(amount || 0);
-    };
-
-    const getStatusBadge = (status) => {
-      const statusMap = {
-        active: "success",
-        inactive: "secondary",
-        pending: "warning",
-        expired: "danger",
-        cancelled: "dark"
-      };
-      return (
-        <Badge bg={statusMap[status?.toLowerCase()] || "secondary"}>
-          {status?.toUpperCase() || "UNKNOWN"}
-        </Badge>
-      );
-    };
-
-    return (
-      <div className="mt-4">
-        <Row>
-          {/* Plans Table */}
-          <Col md={12}>
-            <Card className="shadow-sm">
-              <Card.Header className="bg-info text-white">
-                <h6 className="mb-0">
-                  <i className="fa-solid fa-clipboard-list me-2"></i>
-                  Related Plans
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                {loadingRelated ? (
-                  <div className="text-center py-4">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                  </div>
-                ) : relatedPlans.length > 0 ? (
-                  <div className="table-responsive">
-                    <table className="table table-hover">
-                      <thead>
-                        <tr>
-                          <th>Plan Name</th>
-                          <th>Duration</th>
-                          <th>Price</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {relatedPlans.map((plan) => (
-                          <tr key={plan.id}>
-                            <td>
-                              <strong>{plan.plan_name || plan.name || "N/A"}</strong>
-                            </td>
-                            <td>
-                              {plan.duration_days ? `${plan.duration_days} days` : "N/A"}
-                            </td>
-                            <td>{formatCurrency(plan.price)}</td>
-                            <td>{getStatusBadge(plan.status)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 text-muted">
-                    <i className="fa-solid fa-clipboard-list fa-2x mb-3"></i>
-                    <p>No related plans found</p>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-
-        </Row>
-
-      </div>
-    );
-  };
   const getImageUrl = useCallback(
     (imagePath) => {
       console.log("Getting image URL for:", imagePath);
-
 
       if (!imagePath) {
         return "/default-user.png";
       }
 
-
       if (typeof imagePath === "string" && imagePath.startsWith("blob:")) {
         return imagePath;
       }
-
 
       if (imagePath instanceof File) {
         return URL.createObjectURL(imagePath);
       }
 
-
       if (typeof imagePath === "string") {
-
         let cleanPath = imagePath;
         if (cleanPath.includes('{') || cleanPath.includes('[') || cleanPath.includes('}')) {
           cleanPath = cleanPath.replace(/[{}"\[\]\\]/g, '').trim();
         }
 
-
         if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
           return cleanPath;
         }
 
-
         if (cleanPath.startsWith("/") || cleanPath.includes("uploads")) {
-
           if (!cleanPath.startsWith("/uploads")) {
             cleanPath = `/uploads/librarycards/${cleanPath}`;
           }
-
 
           const fullUrl = `${normalizedFileHost}${cleanPath}`;
           console.log("Constructed image URL:", fullUrl);
           return fullUrl;
         }
-
 
         if (cleanPath && !cleanPath.includes('/')) {
           const fullUrl = `${normalizedFileHost}/uploads/librarycards/${cleanPath}`;
@@ -296,7 +146,6 @@ const LibraryCardDetail = ({
           return fullUrl;
         }
       }
-
 
       return "/default-user.png";
     },
@@ -707,20 +556,6 @@ const LibraryCardDetail = ({
         type: "date",
         colSize: 3,
       },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {
         key: "is_active",
         label: "Status",
@@ -733,14 +568,7 @@ const LibraryCardDetail = ({
         },
         colSize: 3,
       },
-
-
-
-
-
-
     ],
-
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
@@ -754,8 +582,6 @@ const LibraryCardDetail = ({
           return convertToUserTimezone(value, timeZone)
         },
       },
-
-
     ],
   };
 
@@ -775,13 +601,10 @@ const LibraryCardDetail = ({
   const IDCardPreview = () => {
     const barcodeContainerRef = useRef(null);
 
-
     useEffect(() => {
       if (barcodeContainerRef.current && data?.card_number) {
         try {
-
           barcodeContainerRef.current.innerHTML = '';
-
 
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           barcodeContainerRef.current.appendChild(svg);
@@ -886,8 +709,6 @@ const LibraryCardDetail = ({
                   <Form.Text className="text-muted d-block text-center">
                     JPG, PNG, WebP, GIF - max 2MB
                   </Form.Text>
-
-
 
                   {selectedImageFile && (
                     <div className="small text-center mt-1 text-success">
@@ -1013,12 +834,11 @@ const LibraryCardDetail = ({
               )}
             </div>
           </div>
-
-
         </Card.Body>
       </Card>
     );
   };
+
   const bookStatistics = [
     {
       title: "Book Statistics",
@@ -1244,6 +1064,7 @@ const LibraryCardDetail = ({
       await fetchLookupData();
     }
   };
+
   const fetchLookupData = async () => {
     try {
       const normalizedFields = {
@@ -1256,7 +1077,6 @@ const LibraryCardDetail = ({
         ...(normalizedFields.other || []),
       ];
 
-
       const lookupFields = allFields.filter(
         (field) => field.type === "select" && typeof field.options === "string"
       );
@@ -1268,7 +1088,6 @@ const LibraryCardDetail = ({
         subscriptions: "subscriptions",
         subscription: "subscriptions",
         plans: "plans",
-
       };
 
       for (const field of lookupFields) {
@@ -1285,7 +1104,6 @@ const LibraryCardDetail = ({
             if (response && response.data) {
               let data = response.data;
 
-
               if (data.data && Array.isArray(data.data)) {
                 data = data.data;
               } else if (data.success && data.data) {
@@ -1293,7 +1111,6 @@ const LibraryCardDetail = ({
               } else if (Array.isArray(data)) {
                 data = data;
               }
-
 
               if (endpoint === "subscriptions" && Array.isArray(data)) {
                 const transformedData = data.map((item) => {
@@ -1344,6 +1161,7 @@ const LibraryCardDetail = ({
       console.error("Error fetching lookup data:", error);
     }
   };
+
   const hasDataChanged = () => {
     if (!originalData || !tempData) return false;
 
@@ -1381,6 +1199,7 @@ const LibraryCardDetail = ({
   };
 
   const handleSave = async () => {
+    console.log("working");
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1391,9 +1210,6 @@ const LibraryCardDetail = ({
       setSaving(true);
       const api = new DataApi(moduleApi);
 
-
-
-
       let payload = {};
 
       EDITABLE_FIELDS.forEach(field => {
@@ -1401,7 +1217,6 @@ const LibraryCardDetail = ({
           let value = tempData[field];
 
           if (value === "" || value === undefined) value = null;
-
 
           if (field.includes("date") && value) {
             try {
@@ -1421,14 +1236,10 @@ const LibraryCardDetail = ({
       let response;
       let requestPayload = { ...payload }; // Alias for sending
 
-
-
-
       if (selectedImageFile) {
         console.log("CASE 1: New image uploaded");
 
         const formData = new FormData();
-
 
         Object.keys(payload).forEach(key => {
           if (payload[key] !== null && payload[key] !== undefined) {
@@ -1436,14 +1247,10 @@ const LibraryCardDetail = ({
           }
         });
 
-
         formData.append("image", selectedImageFile);
 
         console.log("FORMDATA SENT:");
         for (let p of formData.entries()) console.log(p[0], p[1]);
-
-
-
 
         const imageUrl = `/uploads/librarycards/${selectedImageFile.name}`;
         payload.image = imageUrl;
@@ -1451,10 +1258,7 @@ const LibraryCardDetail = ({
 
         console.log("Image URL set in payload:", payload.image);
         response = await api.update(requestPayload, id);
-      }
-
-
-      else {
+      } else {
         console.log("CASE 3: No new image, using existing");
 
         if (data?.image) {
@@ -1473,14 +1277,12 @@ const LibraryCardDetail = ({
         response = await api.update(requestPayload, id);
       }
 
-
       let updatedData =
         response?.data?.data ||
         response?.data ||
         response;
 
       console.log("Backend response:", updatedData);
-
 
       if (updatedData && typeof updatedData === 'object') {
         if (updatedData.image && typeof updatedData.image === "object" && Object.keys(updatedData.image).length === 0) {
@@ -1497,7 +1299,6 @@ const LibraryCardDetail = ({
       }
 
       console.log("FINAL updatedData:", updatedData);
-
 
       if (updatedData) {
         setData(updatedData);
@@ -1549,15 +1350,12 @@ const LibraryCardDetail = ({
   };
 
   const resetImageSelection = () => {
-
     if (imageObjectUrlRef.current) {
       URL.revokeObjectURL(imageObjectUrlRef.current);
       imageObjectUrlRef.current = null;
     }
 
-
     setSelectedImageFile(null);
-
 
     const fallbackImage = data?.image || cardData?.image;
     if (fallbackImage) {
@@ -1575,7 +1373,6 @@ const LibraryCardDetail = ({
       return;
     }
 
-
     if (file.size > MAX_IMAGE_SIZE) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Image Too Large",
@@ -1584,7 +1381,6 @@ const LibraryCardDetail = ({
       event.target.value = "";
       return;
     }
-
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
     if (!validTypes.includes(file.type)) {
@@ -1596,28 +1392,24 @@ const LibraryCardDetail = ({
       return;
     }
 
-
     if (imageObjectUrlRef.current) {
       URL.revokeObjectURL(imageObjectUrlRef.current);
       imageObjectUrlRef.current = null;
     }
 
-
     const previewUrl = URL.createObjectURL(file);
     imageObjectUrlRef.current = previewUrl;
 
-
     setSelectedImageFile(file);
     setImagePreview(previewUrl);
-
 
     handleFieldChange("image", file);
 
     console.log("Image selected:", file.name, file.size, file.type);
 
-
     event.target.value = "";
   };
+
   const getSelectOptions = (field) => {
     if (!field || field.type !== "select" || !field.options) {
       return [];
@@ -1706,7 +1498,6 @@ const LibraryCardDetail = ({
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
     const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField;
-
 
     if (field.key === "createdbyid" || field.key === "lastmodifiedbyid") {
       const userId = currentData[field.key];
@@ -1978,61 +1769,82 @@ const LibraryCardDetail = ({
                   )}
                 </div>
               </div>
-              <Tabs
-                activeKey={activeTab}
-                onSelect={(k) => setActiveTab(k)}
-                className="mb-4"
-              >
-                <Tab eventKey="details" title="Card Details">
-                  <Row className="mt-4 pe-0">
-                    {normalizedFields &&
-                      normalizedFields.details &&
-                      moduleName === "librarycard" && (
-                        <>
-                          <Col md={9}>
-                            <h6
-                              className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                              style={{
-                                color: "var(--primary-color)",
-                                background: "var(--header-highlighter-color)",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              {moduleLabel} Information
-                            </h6>
 
-                            {/* Fields in 3-3-3 Layout */}
-                            <Row className="px-5">
-                              {/* First Column: Card Number, First Name, Last Name */}
-                              <Col md={4}>
-                                {normalizedFields.details
-                                  .slice(0, 3)
-                                  .map((field, index) =>
-                                    renderFieldGroup(field, index)
-                                  )}
-                              </Col>
+              <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "detail")}>
+                <Nav variant="tabs" className="custom-nav-tabs">
+                  <Nav.Item>
+                    <Nav.Link eventKey="detail">
+                      <span>Detail</span>
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="related">
+                      <span>Related</span>
+                    </Nav.Link>
+                  </Nav.Item>
+                </Nav>
 
-                              {/* Second Column: Email, Country Code, Phone */}
-                              <Col md={4}>
-                                {normalizedFields.details
-                                  .slice(3, 6)
-                                  .map((field, index) =>
-                                    renderFieldGroup(field, index + 3)
-                                  )}
-                              </Col>
+                {/* Search bar only for related tab */}
+                {activeTab === "related" && (
+                  <div style={{
+                    position: "absolute",
+                    right: "0",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    paddingRight: "15px",
+                    marginTop: "-60px"
+                  }}>
 
-                              {/* Third Column: Registration Date, Subscription, Status, Allowed Books */}
-                              <Col md={4}>
-                                {normalizedFields.details
-                                  .slice(6)
-                                  .map((field, index) =>
-                                    renderFieldGroup(field, index + 6)
-                                  )}
-                              </Col>
-                            </Row>
+                    <InputGroup style={{ maxWidth: "250px" }}>
+                      <InputGroup.Text
+                        style={{
+                          background: "#f3e9fc",
+                          borderColor: "#e9ecef",
+                          padding: "0.375rem 0.75rem",
+                        }}
+                      >
+                        <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                      </InputGroup.Text>
+                      <Form.Control
+                        placeholder="Search books..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                          borderColor: "#e9ecef",
+                          fontSize: "0.875rem",
+                          padding: "0.375rem 0.75rem",
+                        }}
+                      />
 
-                            {/* Other Fields Section */}
-                            <Col className="pt-4">
+                      {searchTerm && (
+                        <Button
+                          variant="outline-secondary"
+                          onClick={() => setSearchTerm("")}
+                          style={{
+                            border: "1px solid #d1d5db",
+                            borderRadius: "0 6px 6px 0",
+                            height: "38px",
+                          }}
+                        >
+                          <i className="fa-solid fa-times"></i>
+                        </Button>
+                      )}
+
+                    </InputGroup>
+
+                  </div>
+
+                )}
+
+                {/* Tab Content */}
+                <Tab.Content>
+                  <Tab.Pane eventKey="detail">
+                    <Row>
+                      {normalizedFields &&
+                        normalizedFields.details &&
+                        moduleName === "librarycard" && (
+                          <>
+                            <Col md={9}>
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
@@ -2041,89 +1853,127 @@ const LibraryCardDetail = ({
                                   borderRadius: "10px",
                                 }}
                               >
-                                Others
+                                {moduleLabel} Information
                               </h6>
+
+                              {/* Fields in 3-3-3 Layout */}
                               <Row className="px-5">
-                                <Col md={6}>
-                                  {normalizedFields.other
-                                    ?.slice(0, 2)
+                                {/* First Column: Card Number, First Name, Last Name */}
+                                <Col md={4}>
+                                  {normalizedFields.details
+                                    .slice(0, 3)
                                     .map((field, index) =>
                                       renderFieldGroup(field, index)
                                     )}
                                 </Col>
-                                <Col md={6}>
-                                  {normalizedFields.other
-                                    ?.slice(2)
+
+                                {/* Second Column: Email, Country Code, Phone */}
+                                <Col md={4}>
+                                  {normalizedFields.details
+                                    .slice(3, 6)
                                     .map((field, index) =>
-                                      renderFieldGroup(field, index + 2)
+                                      renderFieldGroup(field, index + 3)
+                                    )}
+                                </Col>
+
+                                {/* Third Column: Registration Date, Subscription, Status, Allowed Books */}
+                                <Col md={4}>
+                                  {normalizedFields.details
+                                    .slice(6)
+                                    .map((field, index) =>
+                                      renderFieldGroup(field, index + 6)
                                     )}
                                 </Col>
                               </Row>
+
+                              {/* Other Fields Section */}
+                              <Col className="pt-4">
+                                <h6
+                                  className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                                  style={{
+                                    color: "var(--primary-color)",
+                                    background: "var(--header-highlighter-color)",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  Others
+                                </h6>
+                                <Row className="px-5">
+                                  <Col md={6}>
+                                    {normalizedFields.other
+                                      ?.slice(0, 2)
+                                      .map((field, index) =>
+                                        renderFieldGroup(field, index)
+                                      )}
+                                  </Col>
+                                  <Col md={6}>
+                                    {normalizedFields.other
+                                      ?.slice(2)
+                                      .map((field, index) =>
+                                        renderFieldGroup(field, index + 2)
+                                      )}
+                                  </Col>
+                                </Row>
+                              </Col>
+
+                              {/* Book Statistics Section */}
+                              {bookStatistics.length > 0 &&
+                                bookStatistics.map((section, idx) => (
+                                  <Col
+                                    md={section.colSize || 12}
+                                    key={idx}
+                                    className="mt-5"
+                                  >
+                                    <h6
+                                      className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                                      style={{
+                                        color: "var(--primary-color)",
+                                        background: "var(--header-highlighter-color)",
+                                        borderRadius: "10px",
+                                      }}
+                                    >
+                                      {section.title}
+                                    </h6>
+                                    {section.render
+                                      ? section.render(data)
+                                      : section.content}
+                                  </Col>
+                                ))}
                             </Col>
 
-                            {/* Book Statistics Section */}
-                            {bookStatistics.length > 0 &&
-                              bookStatistics.map((section, idx) => (
-                                <Col
-                                  md={section.colSize || 12}
-                                  key={idx}
-                                  className="mt-5"
-                                >
-                                  <h6
-                                    className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                                    style={{
-                                      color: "var(--primary-color)",
-                                      background: "var(--header-highlighter-color)",
-                                      borderRadius: "10px",
-                                    }}
-                                  >
-                                    {section.title}
-                                  </h6>
-                                  {section.render
-                                    ? section.render(data)
-                                    : section.content}
-                                </Col>
-                              ))}
-                          </Col>
+                            {/* ID Card Preview Section (Right Side) */}
+                            <Col md={3}>
+                              <h6
+                                className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                                style={{
+                                  color: "var(--primary-color)",
+                                  background: "var(--header-highlighter-color)",
+                                  borderRadius: "10px",
+                                }}
+                              >
+                                ID Card Preview
+                              </h6>
+                              <IDCardPreview />
+                            </Col>
+                          </>
+                        )}
+                    </Row>
+                  </Tab.Pane>
 
-                          {/* ID Card Preview Section (Right Side) */}
-                          <Col md={3}>
-                            <h6
-                              className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                              style={{
-                                color: "var(--primary-color)",
-                                background: "var(--header-highlighter-color)",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              ID Card Preview
-                            </h6>
-                            <IDCardPreview />
-                          </Col>
-                        </>
-                      )}
-                  </Row>
-                </Tab>
-
-                {/* {data && data.plan_id && ( */}
-                <Tab
-                  eventKey="plan"
-                  title={
-                    <>
-                      <i className="fa-solid fa-clipboard-list me-2"></i>
-                      Plan Details
-                    </>
-                  }
-                >
-                  <div className="mt-4">
-                    <PlanDetailsTab
-                      planData={data}
-                      loading={false}
-                    />
-                  </div>
-                </Tab>
-                {/* )} */}
-              </Tabs>
+                  <Tab.Pane eventKey="related">
+                    <Row>
+                      <Col lg={12}>
+                        <Card className="shadow-sm">
+                          <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+                            {/* Props pass karein */}
+                            <RelatedTabContent id={id} data={data} />
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    </Row>
+                  </Tab.Pane>
+                </Tab.Content>
+              </Tab.Container>
             </Card.Body>
           </Card>
         </Col>

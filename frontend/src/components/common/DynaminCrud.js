@@ -110,6 +110,24 @@ const DynamicCRUD = ({
         );
     }, []);
 
+
+
+
+    const handleEditClick = useCallback((item) => {
+        console.log("Edit clicked for item:", item);
+        console.log("Item ID:", item.id);
+
+
+        navigate(`/${apiEndpoint}/${item.id}`, {
+            state: {
+                isEdit: true,
+                rowData: item,
+                type: apiEndpoint
+            },
+        });
+    }, [apiEndpoint, navigate]);
+
+
     const handleNameClick = useCallback((item, isEdit) => {
         console.log("handleNameClick called with isEdit:", isEdit);
         setIsEditable(isEdit)
@@ -446,10 +464,9 @@ const DynamicCRUD = ({
 
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
-                } else if (typeof field.options === 'function') {
-                    // Handle function-based options (e.g., time_zone depending on country)
-                    optionsArray = field.options(formData) || [];
-                } else if (typeof field.options === 'string') {
+                }
+
+                else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
@@ -459,6 +476,10 @@ const DynamicCRUD = ({
                     } else {
                         optionsArray = [];
                     }
+                }
+                else if (typeof field.options === 'function') {
+
+                    optionsArray = field.options(formData) || [];
                 } else {
                     console.warn(`Invalid options type for field ${field.name}:`, typeof field.options);
                     optionsArray = [];
@@ -494,12 +515,6 @@ const DynamicCRUD = ({
         });
     }, [formFields, relatedData, formData]);
 
-
-
-
-
-
-
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {
             customHandlers.handleAdd(navigate);
@@ -519,17 +534,19 @@ const DynamicCRUD = ({
     }, [allowEdit, apiEndpoint, navigate]);
 
     const handleDelete = useCallback((id) => {
+        console.log("id->>>>>>>", id);
         if (!allowDelete) return;
         setDeleteId(id);
         setShowDeleteModal(true);
     }, [allowDelete]);
 
     const confirmDelete = useCallback(async () => {
+
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             const response = await api.delete(deleteId);
-
+            console.log("RESPOSN=>>>>>", response)
             if (response.data?.success) {
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",

@@ -133,7 +133,7 @@ export const getBooksConfig = (externalData = {}, props = {},timeZone) => {
             categories: "category"
         },
         features: {
-            showBulkInsert: true,
+            showBulkInsert: false,
             showImportExport: true,
             showDetailView: true,
             showSearch: true,

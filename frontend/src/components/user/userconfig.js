@@ -1,4 +1,5 @@
 import { Badge } from "react-bootstrap";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 
 export const getUserConfig = (externalData = {}, props = {}, timeZone, companyInfo, editingItem = null) => {
@@ -9,6 +10,50 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         if (source.data && Array.isArray(source.data)) return source.data;
         return [];
     };
+
+    const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
+    let userRoles = extractData(rawRoles);
+
+    let defaultCountryName = "";
+    let defaultCountryCode = "+91";
+    let defaultCurrency = "";
+    let defaultTimeZone = "";
+
+    if (companyInfo) {
+        const matchedCountry = COUNTRY_TIMEZONE.find(c =>
+            (companyInfo.country && c.countryName.toLowerCase() === companyInfo.country.toLowerCase()) ||
+            (companyInfo.country_code && c.phoneCode === companyInfo.country_code)
+        );
+
+        if (matchedCountry) {
+            defaultCountryName = matchedCountry.countryName;
+            defaultCountryCode = matchedCountry.phoneCode;
+            defaultCurrency = matchedCountry.currency.code;
+
+            const exactTz = matchedCountry.timezones.find(t => t.zoneName === companyInfo.time_zone);
+            defaultTimeZone = exactTz ? exactTz.zoneName : matchedCountry.timezones[0]?.zoneName;
+        } else {
+            defaultCountryName = companyInfo.country || "";
+            defaultCountryCode = companyInfo.country_code || "";
+            defaultCurrency = companyInfo.currency || "";
+            defaultTimeZone = companyInfo.time_zone || "";
+        }
+    }
+
+    console.log("Extracted userRoles in getUserConfig:", userRoles);
+    let companies = [];
+    if (externalData && externalData.companies) {
+        companies = externalData.companies;
+    } else if (props && props.companies) {
+        companies = props.companies;
+    } else if (externalData && externalData["company"]) {
+        companies = externalData["company"];
+    }
+
+    console.log("Companies array in getUserConfig:", companies);
+    if (Array.isArray(companies) && companies.length > 0) {
+        const companyWithCountryCode = companies.find(c => c && c.country_code);
+        console.log("Company with country code:", companyWithCountryCode);
 
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
@@ -40,6 +85,8 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             defaultTimeZone = companyInfo.time_zone || "";
         }
     }
+
+    const isEditMode = editingItem !== null;
 
     return {
         moduleName: "user",
@@ -84,9 +131,14 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             {
                 field: "userrole",
                 label: "Role",
-                render: (value) => {
-                    const role = userRoles.find(r => r.id == value || r._id == value);
-                    return role ? role.role_name : <span className="text-muted">N/A</span>;
+                render: (value, record, extData) => {
+                    const roles = extData?.userRoles || userRoles || [];
+                    const role = roles.find(r => {
+                        const roleId = r.id || r._id;
+                        const val = value || record?.userrole;
+                        return roleId === val || roleId === value;
+                    });
+                    return role ? role.role_name : value || 'N/A';
                 }
             },
             {
@@ -116,10 +168,12 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             currency: defaultCurrency,
             time_zone: defaultTimeZone,
             userrole: "",
-            isactive: true
+            isactive: true,
+           
         },
 
         formFields: [
+
             {
                 name: "firstname",
                 label: "First Name",
@@ -132,6 +186,22 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 label: "Last Name",
                 type: "text",
                 required: true,
+                colSize: 6,
+            },
+            {
+                name: "password",
+                label: "Password",
+                type: "password",
+                required: true,
+                placeholder: "Enter password",
+                colSize: 6,
+            },
+            {
+                name: "confirmPassword",
+                label: "Confirm Password",
+                type: "password",
+                required: true,
+                placeholder: "Confirm password",
                 colSize: 6,
             },
             {
@@ -181,47 +251,11 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 }
             },
             {
-                name: "country_code",
-                label: "Country Code",
-                type: "text",
-                readOnly: true,
-                colSize: 3,
-            },
-            {
                 name: "phone",
                 label: "Phone",
                 type: "text",
-                colSize: 3,
-            },
-            {
-                name: "currency",
-                label: "Currency",
-                type: "text",
-                readOnly: true,
-                colSize: 3,
-            },
-            {
-                name: "time_zone",
-                label: "Time Zone",
-                type: "select",
-                options: (formData) => {
-                    // FIX: If formData.country is not yet available (initial load), 
-                    // fallback to 'defaultCountryName' calculated above.
-                    const currentCountryName = formData?.country || defaultCountryName;
-                    console.log("currentCountryName", currentCountryName)
-                    
-                    const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
-                    
-                    if (countryData && countryData.timezones) {
-                        return countryData.timezones.map(tz => ({
-                            value: tz.zoneName,
-                            label: `${tz.zoneName} (${tz.gmtOffset})`
-                        }));
-                    }
-                    return [];
-                },
-                required: true,
-                colSize: 3,
+                placeholder: "Enter phone number",
+                colSize: 6,
             },
             {
                 name: "userrole",
@@ -243,7 +277,63 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                     { value: false, label: "Inactive" }
                 ],
                 colSize: 6,
-            }
+            },
+            {
+                name: "country",
+                label: "Country",
+                type: "select",
+                options: COUNTRY_TIMEZONE.map(country => ({
+                    value: country.countryName,
+                    label: `${country.flag} ${country.countryName}`
+                })),
+                required: true,
+                colSize: 6,
+                onChange: (value, formData, setFormData) => {
+                    const selectedCountry = COUNTRY_TIMEZONE.find(c => c.countryName === value);
+                    if (selectedCountry) {
+                        setFormData({
+                            ...formData,
+                            country: value,
+                            country_code: selectedCountry.phoneCode,
+                            currency: selectedCountry.currency.code,
+                            time_zone: selectedCountry.timezones[0]?.zoneName || ""
+                        });
+                    }
+                }
+            },
+            {
+                name: "country_code",
+                label: "Country Code",
+                type: "text",
+                readOnly: true,
+                colSize: 3,
+            },
+            {
+                name: "currency",
+                label: "Currency",
+                type: "text",
+                readOnly: true,
+                colSize: 3,
+            },
+            {
+                name: "time_zone",
+                label: "Time Zone",
+                type: "select",
+                options: (formData) => {
+                    const currentCountryName = formData?.country || defaultCountryName;
+                    const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
+
+                    if (countryData && countryData.timezones) {
+                        return countryData.timezones.map(tz => ({
+                            value: tz.zoneName,
+                            label: `${tz.zoneName} (${tz.gmtOffset})`
+                        }));
+                    }
+                    return [];
+                },
+                required: true,
+                colSize: 6,
+            },
         ],
 
         validationRules: (formData, allUsers, editingUser) => {
@@ -269,6 +359,15 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             );
             if (duplicate) errors.push("Email already exists");
 
+
+            if (!editingUser && (!formData.password || formData.password.length < 6)) {
+                errors.push("Password must be at least 6 characters");
+            }
+
+            if (!editingUser && formData.password !== formData.confirmPassword) {
+                errors.push("Passwords do not match");
+            }
+
             return errors;
         },
 
@@ -287,19 +386,62 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             allowEdit: true,
             allowDelete: false,
         },
-        
-        initializeFormData: (existingData) => {
-            console.log(existingData)
-            if (!existingData) return null;
+
+        transformSubmitData: (formData, isEdit) => {
+            const transformed = { ...formData };
+            transformed.isactive = Boolean(transformed.isactive);
+
+
+            delete transformed.confirmPassword;
+
+            if (transformed.country_code) {
+                const cleanValue = String(transformed.country_code).split(/[—\-]/)[0].trim();
+                if (cleanValue && !cleanValue.startsWith('+')) {
+                    transformed.country_code = '+' + cleanValue;
+                } else {
+                    transformed.country_code = cleanValue;
+                }
+            } else {
+                transformed.country_code = defaultCountryCode;
+            }
+
+            return transformed;
+        },
+
+        lookupNavigation: {
+            userrole: {
+                path: "userroles",
+                idField: "userrole",
+                labelField: "User Role"
+            },
+        },
+
+        initializeFormData: (existingData = null) => {
+            const isEdit = existingData !== null;
+
+            if (existingData) {
+                return {
+                    ...existingData,
+                    country_code: existingData.country_code || defaultCountryCode,
+                    password: "", // Clear password in edit mode
+                    confirmPassword: "" // Clear confirmPassword in edit mode
+                };
+            }
 
             return {
-                ...existingData,
-                isactive: existingData.isactive === 1 || existingData.isactive === true || existingData.isactive === "active",
-                country: existingData.country || defaultCountryName,
-                country_code: existingData.country_code || defaultCountryCode,
-                currency: existingData.currency || defaultCurrency,
-                time_zone: existingData.time_zone || defaultTimeZone
+                firstname: "",
+                lastname: "",
+                email: "",
+                country_code: defaultCountryCode,
+                phone: "",
+                userrole: "",
+                isactive: true,
+                password: "",
+                confirmPassword: "",
+                country: defaultCountryName || null,
+                currency: defaultCurrency || "",
+                time_zone: defaultTimeZone || null
             };
         }
     };
-};
+}};

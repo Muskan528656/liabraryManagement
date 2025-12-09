@@ -1,3 +1,974 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +985,8 @@ const UniversalBarcodeScanner = () => {
     const inputRef = useRef(null);
 
 
+    const GOOGLE_BOOKS_API_KEY = "YOUR_GOOGLE_BOOKS_API_KEY";
+
     useEffect(() => {
         const token = PubSub.subscribe("OPEN_BARCODE_SCANNER", () => {
             setShowModal(true);
@@ -26,7 +999,6 @@ const UniversalBarcodeScanner = () => {
         };
     }, []);
 
-
     useEffect(() => {
         if (showModal && inputRef.current) {
             setTimeout(() => {
@@ -37,20 +1009,18 @@ const UniversalBarcodeScanner = () => {
 
     const handleBarcodeInput = (value) => {
         setBarcodeInput(value);
-
     };
-
 
     const isValidISBN = (isbn) => {
         if (!isbn) return false;
         const cleanIsbn = isbn.replace(/[^\dX]/gi, '').toUpperCase();
+
         if (cleanIsbn.length === 10) {
             const isbn10Regex = /^[\d]{9}[\dX]$/;
             if (isbn10Regex.test(cleanIsbn)) {
                 return { type: 'isbn10', value: cleanIsbn };
             }
         }
-
 
         if (cleanIsbn.length === 13) {
             const isbn13Regex = /^[\d]{13}$/;
@@ -67,10 +1037,8 @@ const UniversalBarcodeScanner = () => {
 
         setLoading(true);
         try {
-
             const detectedType = await detectDataType(barcode.trim());
             console.log("Detected data type:", detectedType);
-
 
             if (detectedType && detectedType.type === "librarycard" && detectedType.navigate) {
                 setLoading(false);
@@ -94,21 +1062,17 @@ const UniversalBarcodeScanner = () => {
         console.log("Processing barcode:", barcode);
 
 
-
         const cardNumberPattern = /^(LIB|LC-?)?[A-Z0-9]{6,20}$/i;
         const barcodeTrimmed = barcode.trim();
         if (cardNumberPattern.test(barcodeTrimmed)) {
             try {
                 const cardApi = new DataApi("librarycard");
-
                 const allCards = await cardApi.fetchAll();
                 if (allCards && allCards.data) {
                     const cards = Array.isArray(allCards.data) ? allCards.data : (allCards.data.data || []);
                     const foundCard = cards.find(card => {
                         if (!card.card_number) return false;
-
                         if (card.card_number.toUpperCase() === barcodeTrimmed.toUpperCase()) return true;
-
                         if (card.card_number.toUpperCase().includes(barcodeTrimmed.toUpperCase()) ||
                             barcodeTrimmed.toUpperCase().includes(card.card_number.toUpperCase())) return true;
                         return false;
@@ -135,7 +1099,7 @@ const UniversalBarcodeScanner = () => {
             const isbn = isbnCheck.value;
 
 
-            const bookData = await fetchBookByISBN(isbn);
+            const bookData = await fetchBookFromGoogleBooks(isbn);
             console.log("Fetched book data:", bookData);
 
 
@@ -145,6 +1109,7 @@ const UniversalBarcodeScanner = () => {
                     bookData.author_id = authorId;
                 }
             }
+
 
             if (bookData.category_name) {
                 const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
@@ -204,7 +1169,6 @@ const UniversalBarcodeScanner = () => {
 
 
         if (/^[A-Za-z\s.]+$/.test(barcode) && (barcode.split(/\s+/).length >= 2 || barcode.length >= 3)) {
-
             const words = barcode.trim().split(/\s+/);
             if (words.length >= 1 && words.every(w => w.length >= 2)) {
                 return {
@@ -226,7 +1190,6 @@ const UniversalBarcodeScanner = () => {
 
 
         if (/^[A-Za-z0-9\s&.,-]+$/.test(barcode) && barcode.length > 2) {
-
             const supplierKeywords = ["supplier", "vendor", "distributor", "company", "ltd", "inc", "corp"];
             const lowerBarcode = barcode.toLowerCase();
             if (supplierKeywords.some((keyword) => lowerBarcode.includes(keyword))) {
@@ -240,7 +1203,6 @@ const UniversalBarcodeScanner = () => {
 
 
         if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
-
             const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
             if (possibleIsbns) {
                 for (const possibleIsbn of possibleIsbns) {
@@ -250,7 +1212,7 @@ const UniversalBarcodeScanner = () => {
                         const title = barcode.replace(possibleIsbn, "").trim();
 
 
-                        const bookData = await fetchBookByISBN(isbn);
+                        const bookData = await fetchBookFromGoogleBooks(isbn);
 
 
                         if (title && !bookData.title) {
@@ -264,6 +1226,7 @@ const UniversalBarcodeScanner = () => {
                                 bookData.author_id = authorId;
                             }
                         }
+
 
                         if (bookData.category_name) {
                             const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
@@ -300,7 +1263,6 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-
     const findOrCreateAuthor = async (authorName, authorDetails = null) => {
         try {
             const authorApi = new DataApi("author");
@@ -316,16 +1278,12 @@ const UniversalBarcodeScanner = () => {
                     a.name && a.name.toLowerCase() === primaryAuthorName.toLowerCase()
                 );
 
-                if (!foundAuthor) {
 
+                if (!foundAuthor) {
                     const authorData = {
                         name: primaryAuthorName,
                         email: authorDetails?.email || "",
-                        bio: authorDetails?.bio || (authorDetails?.fullData?.bio ?
-                            (typeof authorDetails.fullData.bio === "string"
-                                ? authorDetails.fullData.bio
-                                : authorDetails.fullData.bio.value || "")
-                            : "")
+                        bio: authorDetails?.bio || ""
                     };
 
                     const newAuthorResponse = await authorApi.create(authorData);
@@ -365,7 +1323,6 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-
     const findOrCreateCategory = async (categoryName, categoryDescription = null) => {
         try {
             const categoryApi = new DataApi("category");
@@ -377,8 +1334,8 @@ const UniversalBarcodeScanner = () => {
                     c.name && c.name.toLowerCase() === categoryName.toLowerCase()
                 );
 
-                if (!foundCategory) {
 
+                if (!foundCategory) {
                     const categoryData = {
                         name: categoryName,
                         description: categoryDescription || ""
@@ -412,10 +1369,8 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-
-    const fetchBookByISBN = async (isbn) => {
-        console.log("Fetching book data for ISBN:", isbn);
-
+    const fetchBookFromGoogleBooks = async (isbn) => {
+        console.log("Fetching book data for ISBN from Google Books:", isbn);
 
         const bookData = {
             isbn: isbn,
@@ -425,110 +1380,46 @@ const UniversalBarcodeScanner = () => {
         };
 
         try {
-            console.log("isbn->>>", isbn)
-            const openLibraryUrl = `https://openlibrary.org/isbn/${isbn}.json`;
-            console.log("Trying Open Library API:", openLibraryUrl);
 
-            const openLibraryResponse = await fetch(openLibraryUrl);
+            const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
+            console.log("Calling Google Books API:", googleBooksUrl);
 
-            if (openLibraryResponse.ok) {
-                const data = await openLibraryResponse.json();
-                console.log("Open Library response:", data);
+            const response = await fetch(googleBooksUrl);
 
-                bookData.title = data.title || "";
-                if (data.authors && data.authors.length > 0) {
-                    try {
-                        const authorPromises = data.authors.slice(0, 3).map(async (author) => {
-                            const authorKey = author.key || author;
-                            const authorUrl = `https://openlibrary.org${authorKey}.json`;
-                            const authorResponse = await fetch(authorUrl);
-                            if (authorResponse.ok) {
-                                const authorData = await authorResponse.json();
-                                return {
-                                    name: authorData.name || "",
-                                    bio: authorData.bio ? (typeof authorData.bio === "string" ? authorData.bio : authorData.bio.value || "") : "",
-                                    email: authorData.email || "",
-                                    fullData: authorData
-                                };
-                            }
-                            return { name: "", bio: "", email: "", fullData: null };
-                        });
-                        const authorDetails = await Promise.all(authorPromises);
-                        const validAuthors = authorDetails.filter(a => a.name);
-                        if (validAuthors.length > 0) {
-                            bookData.author_name = validAuthors.map(a => a.name).join(", ");
-                            bookData.author_details = validAuthors[0];
-                        }
-                    } catch (e) {
-                        console.log("Could not fetch author details:", e);
-                    }
-                }
-
-
-                if (data.subjects && data.subjects.length > 0) {
-                    const subject = data.subjects[0];
-                    const categoryName = subject
-                        .replace(/^Fiction\s*[-–—]\s*/i, "")
-                        .replace(/^Non-fiction\s*[-–—]\s*/i, "")
-                        .split(",")[0]
-                        .trim();
-                    bookData.category_name = categoryName;
-                    bookData.category_description = subject;
-                }
-
-
-                if (!bookData.category_name && data.subject_places && data.subject_places.length > 0) {
-                    bookData.category_name = data.subject_places[0];
-                    bookData.category_description = data.subject_places.join(", ");
-                }
-
-                if (!bookData.category_name && data.subject_people && data.subject_people.length > 0) {
-                    bookData.category_name = data.subject_people[0];
-                    bookData.category_description = data.subject_people.join(", ");
-                }
-
-                console.log("Final book data from Open Library:", bookData);
-                return bookData;
-            }
-        } catch (error) {
-            console.log("Open Library API failed:", error);
-        }
-
-
-        try {
-            const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
-            console.log("Trying Google Books API:", googleBooksUrl);
-
-            const googleResponse = await fetch(googleBooksUrl);
-
-            if (googleResponse.ok) {
-                const data = await googleResponse.json();
-                console.log("Google Books response:", data);
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Google Books API response:", data);
 
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
+
+
                     bookData.title = volumeInfo.title || "";
+
+
+                    if (volumeInfo.subtitle) {
+                        bookData.title = `${bookData.title}: ${volumeInfo.subtitle}`;
+                    }
 
 
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
                         bookData.author_details = {
                             name: volumeInfo.authors[0],
-                            bio: "",
-                            email: "",
-                            fullData: null
+                            bio: volumeInfo.description || "",
+                            email: ""
                         };
                     }
 
 
                     if (volumeInfo.categories && volumeInfo.categories.length > 0) {
+
                         const category = volumeInfo.categories[0];
-                        const categoryName = category
+                        bookData.category_name = category
                             .split("/")[0]
                             .split(",")[0]
                             .trim();
-                        bookData.category_name = categoryName;
-                        bookData.category_description = category;
+                        bookData.category_description = volumeInfo.categories.join(", ");
                     }
 
 
@@ -536,17 +1427,63 @@ const UniversalBarcodeScanner = () => {
                         bookData.description = volumeInfo.description;
                     }
 
+
+                    if (volumeInfo.pageCount) {
+                        bookData.pages = volumeInfo.pageCount;
+                    }
+
+
+                    if (volumeInfo.publisher) {
+                        bookData.publisher = volumeInfo.publisher;
+                    }
+
+
+                    if (volumeInfo.publishedDate) {
+                        bookData.published_date = volumeInfo.publishedDate;
+                    }
+
+
+                    if (volumeInfo.language) {
+                        bookData.language = volumeInfo.language.toUpperCase();
+                    }
+
+
+                    if (volumeInfo.industryIdentifiers) {
+                        const isbn13 = volumeInfo.industryIdentifiers.find(id => id.type === "ISBN_13");
+                        const isbn10 = volumeInfo.industryIdentifiers.find(id => id.type === "ISBN_10");
+
+                        if (isbn13) {
+                            bookData.isbn = isbn13.identifier;
+                        } else if (isbn10) {
+                            bookData.isbn = isbn10.identifier;
+                        }
+                    }
+
+
+                    if (volumeInfo.imageLinks) {
+                        bookData.cover_image = volumeInfo.imageLinks.thumbnail ||
+                            volumeInfo.imageLinks.smallThumbnail;
+                    }
+
                     console.log("Final book data from Google Books:", bookData);
                     return bookData;
+                } else {
+                    console.log("No book found for ISBN:", isbn);
+
+                    bookData.title = `Book with ISBN: ${isbn}`;
+                    return bookData;
                 }
+            } else {
+                console.log("Google Books API failed with status:", response.status);
+                bookData.title = `Book with ISBN: ${isbn}`;
+                return bookData;
             }
         } catch (error) {
-            console.log("Google Books API also failed:", error);
+            console.error("Error fetching from Google Books API:", error);
+
+            bookData.title = `Book with ISBN: ${isbn}`;
+            return bookData;
         }
-
-
-        console.log("Both APIs failed, returning basic data");
-        return bookData;
     };
 
     const analyzeJsonData = async (data) => {
@@ -565,7 +1502,7 @@ const UniversalBarcodeScanner = () => {
 
 
             if (bookData.isbn && !bookData.title) {
-                const fetchedData = await fetchBookByISBN(bookData.isbn);
+                const fetchedData = await fetchBookFromGoogleBooks(bookData.isbn);
                 bookData = { ...fetchedData, ...bookData };
             }
 
@@ -643,7 +1580,6 @@ const UniversalBarcodeScanner = () => {
 
         setLoading(true);
         try {
-
             let dataToInsert = { ...detectedData.data };
 
 
@@ -665,6 +1601,12 @@ const UniversalBarcodeScanner = () => {
                 delete dataToInsert.description;
                 delete dataToInsert.author_details;
                 delete dataToInsert.category_description;
+                delete dataToInsert.publisher;
+                delete dataToInsert.published_date;
+                delete dataToInsert.language;
+                delete dataToInsert.pages;
+                delete dataToInsert.cover_image;
+
             } else if (detectedData.type === "author") {
                 if (!dataToInsert.name) dataToInsert.name = "Scanned Author";
             } else if (detectedData.type === "category") {
@@ -769,12 +1711,12 @@ const UniversalBarcodeScanner = () => {
                     }}
                 >
                     <Modal.Title style={{ color: "#6f42c1", fontWeight: "600" }}>
-                        <i className="fa-solid fa-barcode me-2"></i>Universal Barcode Scanner
+                        <i className="fa-solid fa-barcode me-2"></i>Book Detail Add
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: "24px" }}>
                     <div className="mb-4">
-                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "10px", fontSize: "14px" }}>
+                        <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "10px", fontSize: "10px" }}>
                             <i className="fa-solid fa-qrcode me-2" style={{ color: "#8b5cf6" }}></i>Scan or Enter Barcode/Data
                         </Form.Label>
                         <InputGroup>
@@ -795,8 +1737,8 @@ const UniversalBarcodeScanner = () => {
                                 style={{
                                     borderColor: "#e9ecef",
                                     borderRadius: "0",
-                                    fontSize: "14px",
-                                    padding: "10px 12px"
+                                    fontSize: "12px",
+
                                 }}
                                 onFocus={(e) => e.target.style.borderColor = "#8b5cf6"}
                                 onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
@@ -818,6 +1760,7 @@ const UniversalBarcodeScanner = () => {
                         <Form.Text className="text-muted" style={{ fontSize: "12px", marginTop: "6px", display: "block" }}>
                             <i className="fa-solid fa-info-circle me-1"></i>
                             Enter ISBN (10 or 13 digits), author name, supplier info, or paste JSON data. ISBN detection is prioritized.
+                            Using Google Books API for ISBN lookup.
                         </Form.Text>
                     </div>
 
@@ -836,7 +1779,7 @@ const UniversalBarcodeScanner = () => {
                             <i className="fa-solid fa-spinner fa-spin me-2"></i>
                             <strong>
                                 {isValidISBN(barcodeInput)
-                                    ? `Fetching book data for ISBN: ${barcodeInput}...`
+                                    ? `Fetching book data from Google Books for ISBN: ${barcodeInput}...`
                                     : "Detecting data type..."}
                             </strong>
                         </Alert>

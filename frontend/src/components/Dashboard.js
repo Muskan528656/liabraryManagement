@@ -3,70 +3,64 @@
 **@Date: NOV-2025
 */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, Col, Container, Row, Badge } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
 import Loader from "./common/Loader";
-
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 
 
-const PRIMARY_COLOR = "#4338ca"; // Deep Indigo-800 for strong primary action
-const ACCENT_COLOR = "#6366f1"; // Lighter Indigo-500
-const SUCCESS_COLOR = "#059669"; // Deeper Green for success
-const WARNING_COLOR = "#f59e0b"; // Amber for warnings
-const DANGER_COLOR = "#dc2626"; // Stronger Red for immediate attention
-const INFO_COLOR = "#8b5cf6"; // Purple for secondary/info
+const PRIMARY_COLOR = "#4338ca";
+const ACCENT_COLOR = "#6366f1";
+const SUCCESS_COLOR = "#059669";
+const WARNING_COLOR = "#f59e0b";
+const DANGER_COLOR = "#dc2626";
+const INFO_COLOR = "#8b5cf6";
 
 const styles = {
-
   card: {
     border: "1px solid #e2e8f0",
-    borderRadius: "20px", // More rounded corners
-    boxShadow: "0 20px 50px rgba(0, 0, 0, 0.08)", // Softer, deeper shadow
+    borderRadius: "20px",
+    boxShadow: "0 20px 50px rgba(0, 0, 0, 0.08)",
     background: "#fff",
     height: "100%",
-    transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)", // Smooth animation curve
+    transition: "all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
     overflow: "hidden",
   },
   interactiveCard: {
-
     cursor: "pointer",
   },
   cardHeader: {
     background: "transparent",
     borderBottom: "1px solid #f1f5f9",
-    padding: "24px 30px",
-    borderRadius: "20px 20px 0 0"
+    borderRadius: "20px 20px 0 0",
+    padding: "15px 20px"
   },
   cardBody: {
-    padding: "30px"
+    padding: "20px"
   },
   sectionTitle: {
-    fontSize: "22px", // Larger title
-    fontWeight: "800",
-    color: "#0f172a", // Very dark text for headings
-    marginBottom: "25px",
-    marginTop: "30px",
+    fontSize: "17px",
+    fontWeight: "600",
+    color: "#0f172a",
+    marginBottom: "22px",
+    marginTop: "28px",
     display: "flex",
     alignItems: "center",
-    gap: "12px",
+    gap: "10px",
     paddingLeft: "5px"
   }
 };
 
-
-const AlertCardHoverStyle = (baseStyle) => ({
-  ...baseStyle,
+const AlertCardHoverStyle = {
   "&:hover": {
-    transform: "translateY(-5px) scale(1.01)", // Slight lift and scale
+    transform: "translateY(-5px) scale(1.01)",
     boxShadow: "0 25px 60px rgba(0, 0, 0, 0.15)",
   }
-});
-
+};
 
 const InteractiveCard = ({ children, style, ...props }) => {
   const [hover, setHover] = useState(false);
@@ -77,7 +71,7 @@ const InteractiveCard = ({ children, style, ...props }) => {
         ...styles.card,
         ...styles.interactiveCard,
         ...style,
-        ...(hover ? AlertCardHoverStyle(style)["&:hover"] : {}),
+        ...(hover ? AlertCardHoverStyle["&:hover"] : {}),
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -87,142 +81,247 @@ const InteractiveCard = ({ children, style, ...props }) => {
   );
 };
 
-
 const Dashboard = ({ userInfo: propUserInfo }) => {
-
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
 
-  const [dueSoonCount, setDueSoonCount] = useState(0);
-  const [overdueCount, setOverdueCount] = useState(0);
-  const [fineCollectedThisMonth, setFineCollectedThisMonth] = useState(0);
-  const [damagedCount, setDamagedCount] = useState(0);
-  const [totalBooks, setTotalBooks] = useState(0);
-
+  const [metrics, setMetrics] = useState({
+    dueSoonCount: 0,
+    overdueCount: 0,
+    fineCollectedThisMonth: 0,
+    damagedCount: 0,
+    totalBooks: 0,          // Total copies in library
+    totalTitles: 0,         // Total unique book titles
+    availableBooks: 0,      // Available copies
+    issuedBooks: 0,         // Issued copies
+    booksThisMonth: 0,
+    totalSubmissions: 0,
+    total_copies: 0,
+  });
 
   const [cardDetails, setCardDetails] = useState([]);
   const [cardLimitSetting, setCardLimitSetting] = useState(6);
+  const [categories, setCategories] = useState([]);
+  const [topAvailableBooks, setTopAvailableBooks] = useState([]);
+
+
+  const formatNumber = useCallback((num) => {
+    if (num === null || num === undefined || isNaN(num)) return "0";
+    return Number(num).toLocaleString('en-IN');
+  }, []);
+
+  const formatCurrency = useCallback((val) => {
+    const n = Number(val);
+    if (!isFinite(n)) return `₹0.00`;
+    return `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }, []);
+
 
   useEffect(() => {
-    let currentUserInfo = propUserInfo;
-    if (!currentUserInfo) {
-      try {
-        const token = sessionStorage.getItem("token");
-        if (token) {
-          currentUserInfo = jwt_decode(token);
+    const initializeUser = () => {
+      let currentUserInfo = propUserInfo;
+      if (!currentUserInfo) {
+        try {
+          const token = sessionStorage.getItem("token");
+          if (token) {
+            currentUserInfo = jwt_decode(token);
+          }
+        } catch (error) {
+          console.error("Error decoding token:", error);
         }
-      } catch (error) {
-        console.error("Error decoding token:", error);
       }
-    }
-    setUserInfo(currentUserInfo);
-    setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
-    fetchDashboardData();
-    fetchSubmissionAndIssueMetrics();
-    fetchLibraryCounts();
+      setUserInfo(currentUserInfo);
+      setUserRole(currentUserInfo?.userrole?.toUpperCase() || "ADMIN");
+    };
+
+    initializeUser();
   }, [propUserInfo]);
 
-  const fetchDashboardData = async () => {
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchAllDashboardData = async () => {
+      try {
+        setLoading(true);
+
+
+        await Promise.all([
+          fetchDashboardSummary(),
+          fetchAlertMetrics(),
+          fetchLibraryDetails()
+        ]);
+
+      } catch (error) {
+        console.error("Error in dashboard data fetch:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchAllDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+
+  const fetchDashboardSummary = async () => {
     try {
-      setLoading(true);
       const libraryApi = new DataApi("library");
-      const response = await libraryApi.get("/dashboard");
-      if (response.data && response.data.success) {
-        setDashboardData(response.data.data);
-        if (response.data.role) {
-          setUserRole(response.data.role === "student" ? "STUDENT" : "ADMIN");
+      const dashboardResponse = await libraryApi.get("/dashboard");
+
+      if (dashboardResponse.data?.success) {
+        const data = dashboardResponse.data.data;
+        setDashboardData(data);
+
+        console.log("Dashboard API Response:", data);
+
+        if (data.summary) {
+          setMetrics(prev => ({
+            ...prev,
+            totalBooks: data.summary.totalBooks || data.summary.total_copies || 0,
+            totalTitles: data.summary.totalTitles || data.summary.total_books || 0,
+            availableBooks: data.summary.availableBooks || data.summary.available_copies || 0,
+            issuedBooks: data.summary.issuedBooks || data.summary.issued_copies || 0,
+            booksThisMonth: data.summary.booksThisMonth || data.summary.books_this_month || 0,
+            totalSubmissions: data.summary.totalSubmissions || data.summary.total_submissions || 0,
+            total_copies: data.summary.total_copies || data.summary.total_copies || 0,
+          }));
+        }
+
+
+        if (data.booksByCategory?.length > 0) {
+          const topCategories = data.booksByCategory.slice(0, 5).map(item => ({
+            name: item.category_name || "Unknown",
+            icon: "fa-tag",
+            count: parseInt(item.book_count || 0),
+          }));
+          setCategories(topCategories);
         }
       }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching dashboard summary:", error);
     }
   };
 
-  const fetchSubmissionAndIssueMetrics = async () => {
+
+  const fetchAlertMetrics = async () => {
     try {
       const resp = await DashboardApi.fetchAll();
-      const respStats = await DashboardApi.fetchStats();
-      setTotalBooks(respStats?.data);
-      const data = resp?.data || [];
-      if (!Array.isArray(data) || data.length === 0) return;
+      const data = resp?.data?.[0] || {};
 
-      const metrics = data[0];
-      setDueSoonCount(metrics.total_due_soon || 0);
-      setOverdueCount(metrics.overdue_books || 0);
-      setFineCollectedThisMonth(metrics.fine_collected_this_month || 0);
-      setDamagedCount(metrics.damaged_missing_books || 0);
+      console.log("Alert Metrics API Response:", data);
 
+      setMetrics(prev => ({
+        ...prev,
+        dueSoonCount: data.total_due_soon || 0,
+        overdueCount: data.overdue_books || 0,
+        fineCollectedThisMonth: data.fine_collected_this_month || 0,
+        damagedCount: data.damaged_missing_books || 0,
+      }));
     } catch (err) {
-      console.error("Error fetching submission metrics:", err);
+      console.error("Error fetching alert metrics:", err);
     }
   };
 
-  const fetchLibraryCounts = async () => {
+
+  const fetchLibraryDetails = async () => {
     try {
       const bookApi = new DataApi("book");
       const issueApi = new DataApi("bookissue");
       const settingsApi = new DataApi("librarysettings");
+      const cardApi = new DataApi("librarycard");
+
 
       const booksResp = await bookApi.fetchAll();
-      const books = Array.isArray(booksResp?.data) ? booksResp.data : (booksResp?.data?.rows || booksResp || []);
-      let totalCopies = 0;
+      const books = Array.isArray(booksResp?.data) ? booksResp.data :
+        (booksResp?.data?.rows || booksResp || []);
+
+
       let availableCopies = 0;
+      const booksWithAvailability = [];
+
       if (Array.isArray(books)) {
         books.forEach((b) => {
-          const t = Number(b.total_copies ?? b.totalCopies ?? 0) || 0;
-          const a = Number(b.available_copies ?? b.availableCopies ?? t) || t;
-          totalCopies += t;
-          availableCopies += a;
+          const total = Number(b.total_copies ?? b.totalCopies ?? 0) || 0;
+          const available = Number(b.available_copies ?? b.availableCopies ?? total) || total;
+          availableCopies += available;
+
+          booksWithAvailability.push({
+            title: b.title || "Unknown",
+            available_copies: available,
+            total_copies: total
+          });
         });
       }
 
+
+      const sortedBooks = [...booksWithAvailability]
+        .sort((a, b) => b.available_copies - a.available_copies)
+        .slice(0, 10);
+      setTopAvailableBooks(sortedBooks);
+
+
       const issuesResp = await issueApi.get("/active");
-      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data : (issuesResp?.data?.rows || issuesResp || []);
+      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data :
+        (issuesResp?.data?.rows || issuesResp || []);
       const issuedCount = Array.isArray(activeIssues) ? activeIssues.length : 0;
+
 
       let cardLimit = 6;
       try {
         const settingsResp = await settingsApi.get("/all");
         const settingsData = settingsResp?.data?.data || settingsResp?.data || settingsResp;
         if (settingsData) {
-          cardLimit = Number(settingsData.max_books_per_card ?? settingsData.max_books ?? settingsData.max_books_per_card?.setting_value) || cardLimit;
+          cardLimit = Number(
+            settingsData.max_books_per_card ??
+            settingsData.max_books ??
+            settingsData.max_books_per_card?.setting_value
+          ) || cardLimit;
         }
-      } catch (err) { }
+      } catch (err) {
+        console.warn("Could not fetch card limit:", err);
+      }
 
-      setTotalBooks(prev => ({ ...prev, total_books: totalCopies, available_books: availableCopies, issued_books: issuedCount, card_limit: cardLimit }));
       setCardLimitSetting(cardLimit);
-      fetchLibraryCardDetails(cardLimit);
+
+
+      await fetchCardDetails(cardApi, issueApi, cardLimit);
 
     } catch (error) {
-      console.error("Error fetching library counts:", error);
+      console.error("Error fetching library details:", error);
     }
   };
 
-  const fetchLibraryCardDetails = async (currentLimit) => {
+
+  const fetchCardDetails = async (cardApi, issueApi, currentLimit) => {
     try {
-      const cardApi = new DataApi("librarycard");
-      const issueApi = new DataApi("bookissue");
-
       const cardsResp = await cardApi.fetchAll();
-      const cards = Array.isArray(cardsResp?.data) ? cardsResp.data : (cardsResp?.data?.rows || cardsResp || []);
-
       const issuesResp = await issueApi.get("/active");
-      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data : (issuesResp?.data?.rows || issuesResp || []);
+
+      const cards = Array.isArray(cardsResp?.data) ? cardsResp.data :
+        (cardsResp?.data?.rows || cardsResp || []);
+      const activeIssues = Array.isArray(issuesResp?.data) ? issuesResp.data :
+        (issuesResp?.data?.rows || issuesResp || []);
+
 
       const countsByCard = {};
-      (Array.isArray(activeIssues) ? activeIssues : []).forEach((issue) => {
-        const cid = issue.card_id || issue.cardId || issue.cardid || null;
+      activeIssues.forEach((issue) => {
+        const cid = issue.card_id || issue.cardId || issue.cardid;
         if (cid) {
           countsByCard[cid] = (countsByCard[cid] || 0) + 1;
         }
       });
 
-      const details = (Array.isArray(cards) ? cards : []).map((c) => {
+
+      const details = cards.map((c) => {
         const issued = countsByCard[c.id] || 0;
         const remaining = Math.max(0, currentLimit - issued);
         return {
@@ -233,22 +332,13 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         };
       });
 
+
       details.sort((a, b) => b.issued - a.issued);
-      setCardDetails(details.slice(0, 10)); // Top 10
+      setCardDetails(details.slice(0, 10));
+
     } catch (error) {
-      console.error("Error fetching library card details:", error);
+      console.error("Error fetching card details:", error);
     }
-  };
-
-  const formatNumber = (num) => {
-    if (num === null || num === undefined) return "0";
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  const formatCurrency = (val) => {
-    const n = Number(val);
-    if (!isFinite(n)) return `₹0.00`;
-    return `₹${formatNumber(n.toFixed(2))}`;
   };
 
 
@@ -279,13 +369,14 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       height: 350,
       stacked: true,
       fontFamily: 'inherit',
-      ...getChartConfig("Library_Card_Usage_Report").toolbar ? { toolbar: getChartConfig("Library_Card_Usage_Report").toolbar } : {}
+      ...(getChartConfig("Library_Card_Usage_Report").toolbar ?
+        { toolbar: getChartConfig("Library_Card_Usage_Report").toolbar } : {})
     },
     plotOptions: {
       bar: {
         horizontal: true,
-        borderRadius: 6, // Slightly larger radius
-        barHeight: '65%', // Thicker bars
+        borderRadius: 6,
+        barHeight: '65%',
         dataLabels: {
           total: {
             enabled: true,
@@ -298,24 +389,34 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     dataLabels: { enabled: false },
     grid: { show: true, borderColor: '#f1f5f9', xaxis: { lines: { show: true } } },
     xaxis: {
-      categories: cardDetails.map(c => c.user_name),
+      categories: cardDetails.map(c =>
+        c.user_name.length > 20 ? c.user_name.substring(0, 20) + "..." : c.user_name
+      ),
       max: cardLimitSetting,
       labels: { style: { colors: '#94a3b8', fontSize: '12px' } }
     },
     yaxis: {
-      labels: { style: { colors: "#334155", fontWeight: 700, fontSize: '14px' }, maxWidth: 180 }
+      labels: {
+        style: { colors: "#334155", fontWeight: 700, fontSize: '14px' },
+        maxWidth: 180
+      }
     },
     fill: { opacity: 1 },
     colors: [PRIMARY_COLOR, '#e2e8f0'],
     legend: { position: 'top', horizontalAlign: 'right', fontSize: '14px' },
-    tooltip: { theme: 'light', y: { formatter: (val) => `${val} Books` } }
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (val, { seriesIndex }) =>
+          `${val} Book${val !== 1 ? 's' : ''} (${seriesIndex === 0 ? 'Issued' : 'Available Space'})`
+      }
+    }
   };
 
   const libraryCardBarSeries = [
     { name: 'Issued Books', data: cardDetails.map(c => c.issued) },
     { name: 'Available Space', data: cardDetails.map(c => c.remaining) }
   ];
-
 
 
   const donutOptions = (colors, filename) => ({
@@ -326,7 +427,19 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       ...(filename ? getChartConfig(filename) : { toolbar: { show: false } })
     },
     colors: colors,
-    legend: { position: "bottom", fontSize: '13px', markers: { radius: 12 } },
+    legend: {
+      position: "bottom",
+      fontSize: '13px',
+      markers: {
+        radius: 12,
+        width: 12,
+        height: 12
+      },
+      itemMargin: {
+        horizontal: 10,
+        vertical: 5
+      }
+    },
     dataLabels: { enabled: false },
     plotOptions: {
       pie: {
@@ -335,28 +448,32 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
           labels: {
             show: true,
             total: {
-              show: true, // Show total in center
+              show: true,
               label: 'Total Copies',
               color: '#334155',
               fontWeight: 600,
-              formatter: (w) => formatNumber(totalBooks.total_books || 0)
+              fontSize: '14px',
+              formatter: () => formatNumber(metrics.totalBooks)
+            },
+            value: {
+              show: true,
+              fontSize: '22px',
+              fontWeight: 700,
+              color: '#1e293b'
             }
           }
         }
       }
     },
     stroke: { width: 0 },
-    tooltip: { theme: "light" },
+    tooltip: {
+      theme: "light",
+      y: {
+        formatter: (val) => `${val}%`
+      }
+    },
   });
 
-  const donutChart1Series = dashboardData ? [dashboardData.summary.availablePercentage || 0, dashboardData.summary.issuedPercentage || 0] : [0, 0];
-  const pieSeries = dashboardData && dashboardData.dailyActivity.length > 0 ? dashboardData.dailyActivity.map((item) => parseInt(item.count || 0)) : [1];
-
-
-  const rawAvailableBooks = totalBooks?.total_available_copies || [];
-  const topAvailableBooks = [...rawAvailableBooks]
-    .sort((a, b) => parseInt(b.available_copies || 0) - parseInt(a.available_copies || 0))
-    .slice(0, 10);
 
   const availableBooksOptions = {
     chart: {
@@ -365,47 +482,166 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       fontFamily: 'inherit',
       ...getChartConfig("Book_Status_Inventory_Report")
     },
-    plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '55%', distributed: true } },
+    plotOptions: {
+      bar: {
+        borderRadius: 6,
+        horizontal: true,
+        barHeight: '55%',
+        distributed: true
+      }
+    },
     dataLabels: {
-      enabled: true, textAnchor: 'start', style: { colors: ['#fff'] },
-      formatter: function (val) { return val + " copies" }, offsetX: 0,
+      enabled: true,
+      textAnchor: 'start',
+      style: {
+        colors: ['#fff'],
+        fontSize: '11px',
+        fontWeight: 600
+      },
+      formatter: function (val) { return val + " copies" },
+      offsetX: 5,
     },
     xaxis: {
-      categories: topAvailableBooks.map(b => b.title.length > 20 ? b.title.substring(0, 20) + "..." : b.title),
-      labels: { style: { colors: '#64748b' } }
+      categories: topAvailableBooks.map(b =>
+        b.title.length > 20 ? b.title.substring(0, 20) + "..." : b.title
+      ),
+      labels: {
+        style: {
+          colors: '#64748b',
+          fontSize: '12px'
+        }
+      },
+      title: {
+        text: 'Number of Copies',
+        style: {
+          color: '#64748b',
+          fontSize: '12px'
+        }
+      }
     },
-    yaxis: { labels: { style: { colors: '#334155', fontWeight: 600, fontSize: '13px' } } },
-    colors: ['#4f46e5', '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe', '#f3e8ff', '#f5f3ff', '#faf5ff'], // Tonal purple-blue palette
-    tooltip: { theme: 'light', y: { title: { formatter: () => 'Stock:' } } },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#334155',
+          fontWeight: 600,
+          fontSize: '13px'
+        }
+      }
+    },
+    colors: [
+      '#4f46e5', '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd',
+      '#ddd6fe', '#ede9fe', '#f3e8ff', '#f5f3ff', '#faf5ff'
+    ],
+    tooltip: {
+      theme: 'light',
+      y: {
+        title: {
+          formatter: () => 'Available Copies:'
+        },
+        formatter: (val) => `${val} copies available`
+      }
+    },
     legend: { show: false },
     grid: { show: false }
   };
-  const availableBooksSeries = [{ name: 'Copies Available', data: topAvailableBooks.map(b => parseInt(b.available_copies || 0)) }];
+
+  const availableBooksSeries = [{
+    name: 'Copies Available',
+    data: topAvailableBooks.map(b => parseInt(b.available_copies || 0))
+  }];
 
 
+  const calculateDonutSeries = () => {
+    if (metrics.totalBooks === 0) return [0, 0];
 
-  const summaryCards = dashboardData ? [
-    { title: "Total Books", value: formatNumber(totalBooks.total_books), icon: "fa-book", color: PRIMARY_COLOR, bgColor: "#e0e7ff" },
-    { title: "Available Books", value: formatNumber(totalBooks.available_books), icon: "fa-book-open", color: SUCCESS_COLOR, bgColor: "#d1fae5" },
-    { title: "Issued Books", value: formatNumber(totalBooks.issued_books), icon: "fa-user-pen", color: WARNING_COLOR, bgColor: "#fef3c7" },
-    { title: "Total Submissions", value: formatNumber(totalBooks.total_submission), icon: "fa-rotate-left", color: INFO_COLOR, bgColor: "#ede9fe" },
-  ] : [];
+    const issuedPercentage = Math.round((metrics.issuedBooks / metrics.totalBooks) * 100);
+    const availablePercentage = 100 - issuedPercentage;
 
-  const alertCards = [
-    { count: dueSoonCount, label: "Due Soon", icon: "fa-clock", bg: "#fff7ed", color: WARNING_COLOR },
-    { count: overdueCount, label: "Overdue", icon: "fa-circle-exclamation", bg: "#fef2f2", color: DANGER_COLOR },
-    { count: fineCollectedThisMonth, label: "Fine Collected (Mo.)", icon: "fa-indian-rupee-sign", bg: "#ecfdf5", color: SUCCESS_COLOR, isCurrency: true },
-    { count: damagedCount, label: "Damaged / Lost", icon: "fa-heart-crack", bg: "#fdf2f8", color: '#db2777' }
+    return [availablePercentage, issuedPercentage];
+  };
+
+  const donutChartSeries = calculateDonutSeries();
+
+
+  const summaryCards = [
+    {
+      title: "Total Books",
+      value: formatNumber(metrics.totalTitles || metrics.totalBooks),
+      icon: "fa-book",
+      color: PRIMARY_COLOR,
+      bgColor: "#e0e7ff",
+
+    },
+    {
+      title: "Total Copies",
+      value: formatNumber(metrics.total_copies),
+      icon: "fa-copy",
+      color: ACCENT_COLOR,
+      bgColor: "#e0e7ff",
+
+    },
+    {
+      title: "Available Copies",
+      value: formatNumber(metrics.availableBooks),
+      icon: "fa-book-open",
+      color: SUCCESS_COLOR,
+      bgColor: "#d1fae5",
+
+    },
+    {
+      title: "Issued Copies",
+      value: formatNumber(metrics.issuedBooks),
+      icon: "fa-user-pen",
+      color: WARNING_COLOR,
+      bgColor: "#fef3c7",
+
+    },
   ];
 
-  const categories = dashboardData && dashboardData.booksByCategory.length > 0
-    ? dashboardData.booksByCategory.slice(0, 5).map((item) => ({
-      name: item.category_name || "Unknown",
-      icon: "fa-tag",
-      count: parseInt(item.book_count || 0),
-    })) : [];
 
-  if (loading) return <div className="d-flex justify-content-center align-items-center vh-100 bg-light"><Loader /></div>;
+  const alertCards = [
+    {
+      count: metrics.dueSoonCount,
+      label: "Due Soon",
+      icon: "fa-clock",
+      bg: "#fff7ed",
+      color: WARNING_COLOR,
+      description: "Books due within 3 days"
+    },
+    {
+      count: metrics.overdueCount,
+      label: "Overdue",
+      icon: "fa-circle-exclamation",
+      bg: "#fef2f2",
+      color: DANGER_COLOR,
+      description: "Past due date"
+    },
+    {
+      count: metrics.fineCollectedThisMonth,
+      label: "Fine Collected",
+      icon: "fa-indian-rupee-sign",
+      bg: "#ecfdf5",
+      color: SUCCESS_COLOR,
+      isCurrency: true,
+      description: "This month"
+    },
+    {
+      count: metrics.damagedCount,
+      label: "Damaged / Lost",
+      icon: "fa-heart-crack",
+      bg: "#fdf2f8",
+      color: '#db2777',
+      description: "Requires attention"
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+        <Loader />
+      </div>
+    );
+  }
 
 
   if (userRole === "STUDENT") {
@@ -413,14 +649,42 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       <div style={{ background: "#f8fafc", minHeight: "100vh", padding: "25px" }}>
         <ScrollToTop />
         <Container fluid>
-          <Card style={{ ...styles.card, background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`, color: "white", marginBottom: "40px", border: 'none' }}>
+          <Card style={{
+            ...styles.card,
+            background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`,
+            color: "white",
+            marginBottom: "40px",
+            border: 'none'
+          }}>
             <Card.Body className="p-5">
-              <h1 className="fw-bolder mb-2">Welcome Back, {userInfo?.firstname}! 👋</h1>
-              <p className="mb-0 opacity-75" style={{ fontSize: '18px' }}>Your personalized library dashboard is ready. Check your borrowed books and upcoming deadlines.</p>
+              <h1 className="fw-bolder mb-2">
+                Welcome Back, {userInfo?.firstname || 'Student'}! 👋
+              </h1>
+              <p className="mb-0 opacity-75" style={{ fontSize: '18px' }}>
+                Your personalized library dashboard is ready. Check your borrowed books and upcoming deadlines.
+              </p>
             </Card.Body>
           </Card>
-          {/* Placeholder for student-specific content like currently issued books list, fines, etc. */}
-          <div className="text-center py-5 text-muted">Student-specific data visualization goes here.</div>
+
+          {/* Student-specific content */}
+          <Row>
+            <Col lg={8} className="mx-auto">
+              <Card style={styles.card}>
+                <Card.Header style={styles.cardHeader}>
+                  <h5 className="fw-bold mb-0">Your Currently Issued Books</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="text-center py-5">
+                    <i className="fa-solid fa-book-open-reader fa-3x text-muted mb-3"></i>
+                    <p className="text-muted">No books currently issued</p>
+                    <button className="btn btn-primary mt-2">
+                      Browse Library
+                    </button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
         </Container>
       </div>
     );
@@ -430,193 +694,355 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   return (
     <div style={{ background: "#f1f5f9", minHeight: "100vh", paddingBottom: "50px" }}>
       <ScrollToTop />
-      <Container fluid className="px-4 py-4">
-
+      <Container fluid className="px-3 py-3">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-2 mt-2">
+        <div className="d-flex justify-content-between align-items-center mb-4 mt-2">
           <div>
-            <h3 style={{ fontWeight: "900", color: "#1e293b", marginBottom: "4px" }}>📚 Library Management Overview</h3>
-            <p style={{ color: "#64748b", margin: 0, fontSize: '14px' }}>Actionable insights and operational metrics for system administrators.</p>
+            <h4 style={{ fontWeight: "400", color: "#1e293b", marginBottom: "4px" }}>
+              📚 Library Management Dashboard
+            </h4>
+            <p style={{ color: "#64748b", margin: 0, fontSize: '14px' }}>
+              Real-time analytics and operational metrics for efficient library management
+            </p>
           </div>
+
         </div>
 
-        {/* 1. Core Library Inventory (Main Stats Row) */}
+        {/* 1. Core Library Inventory */}
         <div style={styles.sectionTitle}>
-          <i className="fa-solid fa-boxes-stacked" style={{ color: PRIMARY_COLOR }}></i> Inventory & Capacity
+          <i className="fa-solid fa-boxes-stacked" style={{ color: PRIMARY_COLOR }}></i>
+          Inventory & Capacity Overview
         </div>
-        <Row className="mb-2 g-2">
+        <Row className="mb-4 g-3">
           {summaryCards.map((card, index) => (
             <Col lg={3} md={6} sm={12} key={index}>
               <Card style={styles.card}>
-                <Card.Body className="p-4 d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="mb-1 text-uppercase" style={{ fontSize: "12px", fontWeight: "600", color: "#64748b" }}>{card.title}</p>
-                    <h2 className="mb-0" style={{ color: card.color, fontSize: "36px", fontWeight: "800" }}>{card.value}</h2>
+                <Card.Body className="p-3">
+                  <div className="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                      <p className="mb-1 text-uppercase" style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        color: "#64748b"
+                      }}>
+                        {card.title}
+                      </p>
+                      <h2 className="mb-0" style={{
+                        color: card.color,
+                        fontSize: "22px",
+                        fontWeight: "800"
+                      }}>
+                        {card.value}
+                      </h2>
+                    </div>
+                    <div style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "12px",
+                      backgroundColor: card.bgColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "48px"
+                    }}>
+                      <i className={`fa-solid ${card.icon}`} style={{
+                        fontSize: "20px",
+                        color: card.color
+                      }}></i>
+                    </div>
                   </div>
-                  <div style={{ width: "55px", height: "55px", borderRadius: "14px", backgroundColor: card.bgColor, display: "flex", alignItems: "center", justifyContent: "center", minWidth: "55px" }}>
-                    <i className={`fa-solid ${card.icon}`} style={{ fontSize: "24px", color: card.color }}></i>
-                  </div>
+                  <p className="mb-0 small text-muted">{card.description}</p>
                 </Card.Body>
               </Card>
             </Col>
           ))}
         </Row>
 
-        {/* 2. Immediate Actions & Financial Metrics (Alerts & Financial Row) */}
+        {/* 2. Urgent Actions & Financial Metrics */}
         <div style={styles.sectionTitle}>
-          <i className="fa-solid fa-hand-point-up" style={{ color: WARNING_COLOR }}></i> Urgent Actions & Financial Metrics
+          <i className="fa-solid fa-hand-point-up" style={{ color: WARNING_COLOR }}></i>
+          Urgent Actions Required
         </div>
-        <Row className="g-4 mb-5">
+        <Row className="mb-4 g-3">
           {alertCards.map((item, idx) => (
             <Col xl={3} md={6} sm={12} key={idx}>
-              {/* Applying the Interactive Card component here */}
               <InteractiveCard style={{ borderLeft: `6px solid ${item.color}` }}>
-                <Card.Body className="p-4 d-flex align-items-center">
-                  <div className="me-3" style={{ width: 56, height: 56, borderRadius: '14px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', color: item.color, minWidth: '56px' }}>
-                    <i className={`fa-solid ${item.icon}`}></i>
+                <Card.Body className="p-3">
+                  <div className="d-flex align-items-center mb-2">
+                    <div className="me-3" style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: '10px',
+                      background: item.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      color: item.color,
+                      flexShrink: 0
+                    }}>
+                      <i className={`fa-solid ${item.icon}`}></i>
+                    </div>
+                    <div>
+                      <h4 className="mb-0 fw-bolder" style={{
+                        color: item.color,
+                        fontSize: "18px"
+                      }}>
+                        {item.isCurrency ? formatCurrency(item.count) : formatNumber(item.count)}
+                      </h4>
+                      <small className="text-muted fw-semibold" style={{ fontSize: '12px' }}>
+                        {item.label}
+                      </small>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="mb-0 fw-bolder" style={{ color: item.color }}>{item.isCurrency ? formatCurrency(item.count) : formatNumber(item.count)}</h4>
-                    <small className="text-muted fw-semibold" style={{ fontSize: '13px' }}>{item.label}</small>
-                  </div>
+                  <p className="mb-0 small text-muted">{item.description}</p>
                 </Card.Body>
               </InteractiveCard>
             </Col>
           ))}
         </Row>
 
-        {/* 3. Detailed Usage & Inventory Analytics (MAIN CHARTS) */}
+        {/* 3. Detailed Usage & Analytics */}
         <div style={styles.sectionTitle}>
-          <i className="fa-solid fa-chart-area" style={{ color: INFO_COLOR }}></i> Key Usage & Trends
+          <i className="fa-solid fa-chart-area" style={{ color: INFO_COLOR }}></i>
+          Key Usage & Trends
         </div>
-        <Row className="mb-5 g-4">
-          {/* CHART 1: Library Card Usage - Kept large for clarity */}
+        <Row className="mb-4 g-3">
+          {/* Chart 1: Library Card Usage */}
           <Col lg={6}>
             <Card style={styles.card}>
               <Card.Header style={styles.cardHeader}>
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <h5 className="mb-1 fw-bold text-dark">Top Borrower Card Usage</h5>
-                    <small className="text-muted">Max utilization of the borrowing limit (Top 10 users)</small>
+                    <h6 className="mb-1 fw-bold text-dark">Top Borrower Card Usage</h6>
+                    <small className="text-muted">
+                      Utilization of borrowing limit (Top 10 users)
+                    </small>
                   </div>
-                  <Badge className="px-3 py-2 text-white" style={{ borderRadius: '30px', fontSize: '13px', fontWeight: 700, background: PRIMARY_COLOR }}>
+                  <Badge className="px-2 py-1 text-white" style={{
+                    borderRadius: '30px',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    background: PRIMARY_COLOR
+                  }}>
                     LIMIT: {cardLimitSetting} BOOKS
                   </Badge>
                 </div>
               </Card.Header>
               <Card.Body style={styles.cardBody}>
                 {cardDetails.length > 0 ? (
-                  <Chart options={libraryCardBarOptions} series={libraryCardBarSeries} type="bar" height={360} />
+                  <Chart
+                    options={libraryCardBarOptions}
+                    series={libraryCardBarSeries}
+                    type="bar"
+                    height={320}
+                  />
                 ) : (
-                  <div className="text-center py-5 text-muted">No active data available</div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-
-          {/* CHART 5: Inventory Status (Top Available Books) */}
-          <Col lg={6} md={8}>
-            <Card style={styles.card}>
-              <Card.Header style={styles.cardHeader}>
-                <h6 className="fw-bold m-0 text-dark">Top Available Titles</h6>
-                <small className="text-muted">Books with the highest stock remaining</small>
-              </Card.Header>
-              <Card.Body className="p-3">
-                {topAvailableBooks.length > 0 ? (
-                  <Chart options={availableBooksOptions} series={availableBooksSeries} type="bar" height={320} />
-                ) : (
-                  <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-                    <i className="fa-solid fa-book-open-reader mb-2" style={{ fontSize: '24px' }}></i>
-                    <small>No detailed inventory data</small>
+                  <div className="text-center py-4">
+                    <i className="fa-solid fa-users-slash fa-2x text-muted mb-3"></i>
+                    <p className="text-muted">No active card data available</p>
                   </div>
                 )}
               </Card.Body>
             </Card>
           </Col>
 
+          {/* Chart 2: Top Available Books */}
+          <Col lg={6}>
+            <Card style={styles.card}>
+              <Card.Header style={styles.cardHeader}>
+                <div>
+                  <h6 className="fw-bold m-0 text-dark">Top Available Titles</h6>
+                  <small className="text-muted">Books with highest available stock</small>
+                </div>
+              </Card.Header>
+              <Card.Body className="p-3">
+                {topAvailableBooks.length > 0 ? (
+                  <Chart
+                    options={availableBooksOptions}
+                    series={availableBooksSeries}
+                    type="bar"
+                    height={300}
+                  />
+                ) : (
+                  <div className="d-flex flex-column align-items-center justify-content-center py-4 text-muted">
+                    <i className="fa-solid fa-book-open-reader fa-2x mb-2"></i>
+                    <small>No detailed inventory data available</small>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
 
         {/* 4. Secondary Analytics */}
         <div style={styles.sectionTitle}>
-          <i className="fa-solid fa-layer-group" style={{ color: PRIMARY_COLOR }}></i> Deep Dive Data
+          <i className="fa-solid fa-layer-group" style={{ color: PRIMARY_COLOR }}></i>
+          Deep Dive Analytics
         </div>
-        <Row className="g-4">
-
-          {/* Top Categories List */}
+        <Row className="g-3">
+          {/* Top Categories */}
           <Col lg={4} md={12}>
             <Card style={styles.card}>
               <Card.Header style={styles.cardHeader}>
                 <h6 className="fw-bold m-0 text-dark">Top 5 Categories by Stock</h6>
+                <small className="text-muted">Most populated categories</small>
               </Card.Header>
               <Card.Body className="p-0">
                 <div className="list-group list-group-flush">
-                  {categories.map((cat, idx) => (
-                    <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-4 py-3 border-light">
+                  {categories.length > 0 ? categories.map((cat, idx) => (
+                    <div key={idx} className="list-group-item d-flex align-items-center justify-content-between px-3 py-2 border-light">
                       <div className="d-flex align-items-center">
-                        <div className="me-3" style={{ width: 40, height: 40, background: '#e0e7ff', color: PRIMARY_COLOR }} className="rounded-circle d-flex align-items-center justify-content-center" >
+                        <div className="me-3 rounded-circle d-flex align-items-center justify-content-center"
+                          style={{
+                            width: 36,
+                            height: 36,
+                            background: '#e0e7ff',
+                            color: PRIMARY_COLOR
+                          }}>
                           <i className={`fa-solid ${cat.icon}`}></i>
                         </div>
-                        <span className="fw-semibold text-dark">{cat.name}</span>
+                        <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>
+                          {cat.name.length > 20 ? cat.name.substring(0, 20) + "..." : cat.name}
+                        </span>
                       </div>
-                      <Badge style={{ background: PRIMARY_COLOR, color: 'white', fontWeight: 700 }} className="rounded-pill px-3 py-2">{cat.count}</Badge>
+                      <Badge style={{
+                        background: PRIMARY_COLOR,
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '12px'
+                      }} className="rounded-pill px-2 py-1">
+                        {formatNumber(cat.count)}
+                      </Badge>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-4 text-muted">
+                      <i className="fa-solid fa-tags fa-lg mb-2"></i>
+                      <p className="mb-0">No category data available</p>
+                    </div>
+                  )}
                 </div>
               </Card.Body>
             </Card>
           </Col>
 
-          {/* Books This Month Panel (Visual interest) */}
+          {/* Monthly Activity */}
           <Col lg={4} md={6}>
-            <Card style={{ ...styles.card, background: `linear-gradient(145deg, ${PRIMARY_COLOR}, ${ACCENT_COLOR})`, color: 'white', border: 'none' }}>
-              <Card.Body className="d-flex flex-column justify-content-center text-center p-4">
-                <div className="mb-3"><i className="fa-solid fa-calendar-days" style={{ fontSize: '40px', opacity: 0.8 }}></i></div>
-                <h6 className="text-uppercase letter-spacing-2 opacity-75 mb-2" style={{ fontSize: '12px' }}>New Items Added</h6>
-                <h1 className="display-3 fw-bolder mb-4">{dashboardData ? formatNumber(dashboardData.summary.booksThisMonth) : "0"}</h1>
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '16px', padding: '10px' }}>
+            <Card style={{
+              ...styles.card,
+              background: `linear-gradient(145deg, ${PRIMARY_COLOR}, ${ACCENT_COLOR})`,
+              color: 'white',
+              border: 'none'
+            }}>
+              <Card.Body className="d-flex flex-column justify-content-center p-3">
+                <div className="mb-2 text-center">
+                  <i className="fa-solid fa-calendar-days" style={{ fontSize: '32px', opacity: 0.8 }}></i>
+                </div>
+                <h6 className="text-uppercase opacity-75 mb-2 text-center" style={{ fontSize: '11px' }}>
+                  New Items This Month
+                </h6>
+                <h2 className="fw-bolder mb-3 text-center" style={{ fontSize: '28px' }}>
+                  {formatNumber(metrics.booksThisMonth)}
+                </h2>
+                <div style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  borderRadius: '12px',
+                  padding: '8px',
+                  marginBottom: '10px'
+                }}>
                   <Chart
                     options={{
                       ...donutOptions(['#fff', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.3)'], null),
                       legend: { show: false },
                       stroke: { show: false },
-                      chart: { height: 180 },
-                      plotOptions: { pie: { donut: { labels: { total: { show: false } } } } }, // Hide total label for this specific chart
+                      chart: { height: 140 },
+                      plotOptions: {
+                        pie: {
+                          donut: {
+                            labels: {
+                              total: { show: false },
+                              value: { show: false }
+                            }
+                          }
+                        }
+                      },
                     }}
-                    series={pieSeries} type="pie" height={180}
+                    series={[100]}
+                    type="donut"
+                    height={140}
                   />
                 </div>
-                <p className="mt-3 mb-0 small opacity-75">Total books and copies processed/created in the last 30 days.</p>
+                <p className="mt-2 mb-0 small opacity-75 text-center" style={{ fontSize: '12px' }}>
+                  Books and copies added in the last 30 days
+                </p>
               </Card.Body>
             </Card>
           </Col>
 
-
-          {/* CHART 2: Availability Status Donut - Moved here for better visual flow */}
+          {/* Inventory Status Donut */}
           <Col lg={4}>
             <Card style={styles.card}>
-              <Card.Body className="text-center p-4">
-                <h6 className="fw-bold text-dark mb-4" style={{ fontSize: '16px' }}>Overall Inventory Status</h6>
+              <Card.Body className="text-center p-3">
+                <h6 className="fw-bold text-dark mb-2" style={{ fontSize: '14px' }}>
+                  Overall Inventory Status
+                </h6>
                 <Chart
                   options={donutOptions([SUCCESS_COLOR, PRIMARY_COLOR], "Overall_Availability_Report")}
-                  series={donutChart1Series}
+                  series={donutChartSeries}
                   type="donut"
-                  height={250}
+                  height={200}
                 />
                 <div className="mt-3">
-                  <h3 className="fw-bolder" style={{ color: WARNING_COLOR, fontSize: '24px' }}>{dashboardData ? `${dashboardData.summary.issuedPercentage}%` : "0%"}</h3>
-                  <small className="text-muted">of total inventory currently issued</small>
+                  <div className="d-flex justify-content-center align-items-center mb-2">
+                    <div className="me-2" style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: SUCCESS_COLOR
+                    }}></div>
+                    <span className="text-muted small me-3">Available: {donutChartSeries[0]}%</span>
+                    <div className="me-2" style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: PRIMARY_COLOR
+                    }}></div>
+                    <span className="text-muted small">Issued: {donutChartSeries[1]}%</span>
+                  </div>
+                  <h4 className="fw-bolder mt-2" style={{
+                    color: WARNING_COLOR,
+                    fontSize: '20px'
+                  }}>
+                    {donutChartSeries[1]}%
+                  </h4>
+                  <small className="text-muted">of total copies currently issued</small>
                 </div>
               </Card.Body>
             </Card>
           </Col>
         </Row>
+
+        {/* Debug Section - Can be removed in production */}
+        <div className="mt-4" style={{ display: 'none' }}>
+          <Card style={styles.card}>
+            <Card.Header>
+              <h6 className="mb-0">Debug Information</h6>
+            </Card.Header>
+            <Card.Body>
+              <pre style={{ fontSize: '12px' }}>
+                {JSON.stringify({
+                  metrics,
+                  cardDetailsCount: cardDetails.length,
+                  categoriesCount: categories.length,
+                  topAvailableBooksCount: topAvailableBooks.length
+                }, null, 2)}
+              </pre>
+            </Card.Body>
+          </Card>
+        </div>
       </Container>
     </div>
   );
 };
 
 export default Dashboard;
-
-
-
-

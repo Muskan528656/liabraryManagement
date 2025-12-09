@@ -591,7 +591,10 @@ const ModuleDetail = ({
                   </h6>
                 </Col>
                 <Row className="px-5">
-                   <Col md={4}>{col1.map((field, i) => renderField(field, i, dataToUse))}</Col>
+                   <Col style={{
+                      border: "2px solid blue"
+                   }}
+                    md={4}>{col1.map((field, i) => renderField(field, i, dataToUse))}</Col>
                    <Col md={4}>{col2.map((field, i) => renderField(field, i, dataToUse))}</Col>
                    <Col md={4}>{col3.map((field, i) => renderField(field, i, dataToUse))}</Col>
                 </Row>
