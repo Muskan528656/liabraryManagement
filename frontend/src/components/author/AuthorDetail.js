@@ -17,8 +17,21 @@ const AuthorDetail = () => {
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+
+
+
+
+
+      {
+        key: "createddate", label: "Created Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
+      {
+        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
     ],
   };
 
@@ -26,7 +39,7 @@ const AuthorDetail = () => {
     <ModuleDetail
       moduleName="author"
       moduleApi="author"
-      moduleLabel="Author Management"
+      moduleLabel="Author"
       icon="fa-solid fa-user-pen"
       fields={fields}
     />

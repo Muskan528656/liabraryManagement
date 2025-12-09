@@ -6,9 +6,8 @@ import "react-date-range/dist/theme/default.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
-import Home from "./components/Home";
+import Dashboard from "./components/Dashboard";
 import React, { useEffect, useState } from "react";
-import jwt_decode from "jwt-decode";
 import io from "socket.io-client";
 import Main from "./components/layout/Main";
 import EditProfile from "./components/EditProfile";
@@ -50,12 +49,14 @@ import Subscription from "./components/subscription/Subscription";
 import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
 import { TimeZoneProvider } from "./contexts/TimeZoneContext";
+import { UserProvider, useUser } from "./contexts/UserContext";
 
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
-function App() {
-  const [userInfo, setUserInfo] = useState(null); // null = not yet loaded
+
+function AppContent() {
+  const { userInfo, isLoading } = useUser();
   const [connectedSocket, setConnectedSocket] = useState();
-  const [deviceId, setDeviceId] = useState(() => {
+  const [deviceId] = useState(() => {
     let existingId = sessionStorage.getItem("deviceId");
     if (!existingId) {
       existingId = uuidv4();
@@ -63,77 +64,36 @@ function App() {
     }
     return existingId;
   });
+
   useEffect(() => {
-    try {
-      const token = sessionStorage.getItem("token");
-      if (token) {
-        let user;
-        try {
-          user = jwt_decode(token);
-          setUserInfo(user);
-        } catch (decodeError) {
-          console.error("Invalid token:", decodeError);
-          sessionStorage.removeItem("token");
-          sessionStorage.removeItem("r-t");
-          setUserInfo(false);
-          return;
-        }
+    if (userInfo) {
+      const socket = io(ENDPOINT, {
+        path: "/ibs/socket.io",
+        transports: ["websocket"],
+        reconnection: true,
+      });
 
-        let socket = io(ENDPOINT, {
-          path: "/ibs/socket.io",
-          transports: ["websocket"],
-          reconnection: true,
-
+      socket.on("connect", () => {
+        socket.emit("setup", {
+          ...userInfo,
+          deviceId,
         });
-
-        socket.on("connect", () => {
-          socket.emit("setup", {
-            ...user,
-            deviceId,
-          });
-
-          setConnectedSocket(socket);
-        });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         setConnectedSocket(socket);
+      });
 
-        return () => {
-          if (connectedSocket) {
-            connectedSocket.disconnect();
-          }
-        };
-      } else {
-        setUserInfo(false);
-
-
-      }
-    } catch (error) {
-      setUserInfo(false);
-
+      return () => {
+        if (connectedSocket) {
+          connectedSocket.disconnect();
+        }
+      };
     }
-  }, [sessionStorage.getItem("token")]);
+  }, [userInfo, deviceId]);
 
-  if (userInfo === null) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-
-  if (userInfo === false) {
+  if (!userInfo) {
     return (
       <>
         <ToastManager />
@@ -157,7 +117,7 @@ function App() {
 
           {/* All other pages under Main layout */}
           <Route path="/" element={<Main socket={connectedSocket} />}>
-            <Route index element={<Home userInfo={userInfo} />} />
+            <Route index element={<Dashboard />} />
 
             <Route path="userroles" element={<UserRole />} />
             <Route path="user-role/:id" element={<UserRoleDetail />} />
@@ -202,4 +162,13 @@ function App() {
   );
 }
 
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
+  );
+}
+
 export default App;
+

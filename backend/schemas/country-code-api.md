@@ -119,11 +119,11 @@ Country code picklist endpoints provide access to standardized country codes in 
 
 ### Company Component
 ```javascript
-// Fetch country codes
+
 const response = await companyApi.fetchAll("picklist/country-codes");
 const countryCodeList = response.data;
 
-// Use in dropdown
+
 <Form.Select value={country_code} onChange={handleChange}>
   {countryCodeList.map((item) => (
     <option key={item.id} value={item.id}>
@@ -135,7 +135,7 @@ const countryCodeList = response.data;
 
 ### User Role Config
 ```javascript
-// Country code options passed to config
+
 const config = getUserRoleConfig({
   countryCodeList: countryCodeList
 });

@@ -1,7 +1,8 @@
-import { Badge } from "react-bootstrap";
+import { Badge, Card, Row, Col } from "react-bootstrap";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import DataApi from "../../api/dataApi";
+import PlanDetailsTab from "./PlanDetailsTab";
 
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return "";
@@ -18,35 +19,30 @@ const generateCardNumber = (card) => {
     return `LIB${uuidPart}`;
 };
 
-
-export const getLibraryCardConfig = async (externalData = {}) => {
+export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview =
         customHandlers.handleBarcodePreview ||
         ((card) => console.warn("Barcode preview handler not provided", card));
-    console.log("externalDataexternalData", externalData);
+
+    console.log("External data:", externalData);
 
     let defaultCountryCode = "";
+    let plansList = [];
+
     try {
+
         const companyApi = new DataApi("company");
         const companyResponse = await companyApi.fetchAll();
-        if (
-            Array.isArray(companyResponse.data) &&
-            companyResponse.data.length > 0
-        ) {
+
+        if (companyResponse.data && Array.isArray(companyResponse.data) && companyResponse.data.length > 0) {
             const companyWithCountryCode = companyResponse.data.find(
                 (c) => c && c.country_code
             );
-            console.log("Company with country code:", companyWithCountryCode);
 
             if (companyWithCountryCode && companyWithCountryCode.country_code) {
-                const countryCodeStr = String(
-                    companyWithCountryCode.country_code
-                ).trim();
-                console.log("Original country_code string:", countryCodeStr);
-
+                const countryCodeStr = String(companyWithCountryCode.country_code).trim();
                 const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
-                console.log("Extracted code part:", codePart);
 
                 if (codePart && !codePart.startsWith("+")) {
                     defaultCountryCode = "+" + codePart;
@@ -54,20 +50,60 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     defaultCountryCode = codePart;
                 }
 
-                console.log("Final defaultCountryCode:", defaultCountryCode);
+                console.log("Default country code from company:", defaultCountryCode);
             }
         }
+
+
+        const plansApi = new DataApi("plans"); // Corrected from "plans" to "plan"
+        const plansResponse = await plansApi.fetchAll();
+
+        console.log("Plans API Response:", plansResponse);
+
+        let plansData = [];
+
+
+        if (plansResponse.success && plansResponse.data && Array.isArray(plansResponse.data)) {
+            plansData = plansResponse.data;
+        } else if (plansResponse.data && plansResponse.data.data && Array.isArray(plansResponse.data.data)) {
+            plansData = plansResponse.data.data;
+        } else if (plansResponse.data && Array.isArray(plansResponse.data)) {
+            plansData = plansResponse.data;
+        } else if (Array.isArray(plansResponse)) {
+            plansData = plansResponse;
+        }
+
+        console.log("Extracted plans data:", plansData);
+
+        if (plansData.length > 0) {
+            plansList = plansData
+                .filter(plan => {
+                    const isActive =
+                        plan.is_active === true ||
+                        plan.is_active === "true" ||
+                        plan.is_active === 1 ||
+                        plan.is_active === "1";
+
+                    console.log(`Plan ${plan.plan_name}: is_active = ${plan.is_active}, filtered = ${isActive}`);
+                    return isActive;
+                })
+                .map(plan => ({
+                    value: plan.id,
+                    label: `${plan.plan_name} (${plan.duration_days} days, ${plan.allowed_books || 0} books)`,
+                    data: plan // Store full plan data for details
+                }));
+
+            console.log("Filtered active plans list:", plansList);
+        } else {
+            console.warn("No plans data found");
+        }
     } catch (error) {
-        console.error("Error fetching company data:", error);
+        console.error("Error fetching data:", error);
+        defaultCountryCode = "+91"; // Default to India if company fetch fails
     }
 
-    console.log("defaultCountryCode", defaultCountryCode);
-
-    const safeSubscriptions =
-        externalData.subscriptions?.data ||
-        externalData.subscriptions ||
-        [];
-    console.log("Safe subs", safeSubscriptions);
+    console.log("Final defaultCountryCode:", defaultCountryCode);
+    console.log("Final plansList:", plansList);
 
     const defaultColumns = [
         {
@@ -118,61 +154,20 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             },
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
-        {
-            field: "subscription_display",
-            label: "Subscription",
-            sortable: true,
-            render: (value, row) => {
-                // Check if row has subscription_name
-                if (row.subscription_name && row.subscription_name.trim() !== "") {
-                    return row.subscription_name;
-                }
 
-                // Check if subscription_id exists and is valid
-                const subId = row.subscription_id;
-                if (!subId || subId === "null" || subId === "undefined" || String(subId).trim() === "") {
-                    return "";
-                }
-
-                // Try to find subscription from external data
-                const subs = safeSubscriptions || [];
-                const subscription = subs.find(sub =>
-                    String(sub.id) === String(subId)
-                );
-
-                if (subscription) {
-                    return subscription.plan_name || subscription.name || "";
-                }
-
-                // Return empty if nothing found
-                return "";
-            }
-        },
-        {
-            field: "allowed_books",
-            label: "Allowed Books",
-            sortable: true,
-
-        },
         {
             field: "status",
             label: "Status",
             sortable: true,
             render: (value, row) => {
-                const possibleStatusFields = ['status', 'is_active', 'active'];
-                possibleStatusFields.forEach(field => {
-                    if (row[field] !== undefined) {
-                        console.log(`Field ${field}:`, row[field], "Type:", typeof row[field]);
-                    }
-                });
-
                 const isActive =
                     value === true ||
                     value === "true" ||
                     value === "active" ||
                     value === 1 ||
                     row.is_active === true ||
-                    row.active === true;
+                    row.active === true ||
+                    row.status === "active";
 
                 return (
                     <Badge bg={isActive ? "success" : "secondary"}>
@@ -198,9 +193,9 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             phone_number: "",
             registration_date: new Date().toISOString().split("T")[0],
             type: "",
-            subscription_id: "",
-            allowed_book: null, // null means use subscription default
             issue_date: new Date().toISOString().split("T")[0],
+            plan_id: "",
+            selectedPlan: null, // Added selectedPlan to initial form data
             status: "active",
             image: null,
         },
@@ -239,7 +234,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     label: `${country.country_code} - ${country.country}`,
                 })),
                 required: true,
-                placeholder: "Select country code",
                 defaultValue: defaultCountryCode,
                 colSize: 3,
             },
@@ -269,30 +263,64 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     { value: "staff", label: "Staff" },
                     { value: "guest", label: "Guest" },
                 ],
-                placeholder: "Select type",
                 colSize: 6,
             },
             {
-                name: "subscription_id",
-                label: "Subscription",
+                name: "plan_id",
+                label: "Plan",
                 type: "select",
-                required: false,
-                options: "subscriptions",
-                placeholder: "Select subscription plan",
-                colSize: 6,
-                displayKey: "plan_name"
+                options: plansList,
+                required: true,
+                colSize: 12,
+                onChange: (value, formData, setFormData) => {
+                    console.log("Plan selected:", value);
+                    const selectedPlan = plansList.find(p => p.value == value)?.data;
+                    console.log("Selected plan data:", selectedPlan);
+
+                    const updatedFormData = {
+                        ...formData,
+                        plan_id: value,
+                        selectedPlan: selectedPlan || null
+                    };
+
+                    setFormData(updatedFormData);
+                    console.log("Form data updated with selected plan:", updatedFormData);
+                },
+                renderOptions: (options) => (
+                    <>
+                        <option value="">-- Select a plan --</option>
+                        {options.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                        {options.length === 0 && (
+                            <option value="" disabled>No active plans available</option>
+                        )}
+                    </>
+                ),
+                validationMessage: plansList.length === 0 ?
+                    "No active plans available. Please create a plan first." :
+                    ""
             },
             {
-                name: "allowed_books",
-                label: "Allowed Books (Override)",
-                type: "number",
-                required: false,
-                placeholder: "Leave empty to use subscription default",
-                colSize: 6,
-                min: 0,
-                max: 100,
-                helperText: "Leave empty to use subscription limit. 0 = unlimited?",
+                name: "plan_details",
+                type: "custom",
+                colSize: 12,
+                render: (formData, setFormData) => {
+                    console.log("Rendering PlanDetailsTab with:", {
+                        planId: formData.plan_id,
+                        selectedPlan: formData.selectedPlan
+                    });
 
+                    return (
+                        <div className="mt-3">
+                            <PlanDetailsTab
+                                libraryCardId={formData.id} // या selectedCardId
+                            />
+                        </div>
+                    );
+                }
             },
             {
                 name: "image",
@@ -304,7 +332,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 preview: true,
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
-
                 onChange: (file, formData, setFormData) => {
                     if (file) {
                         setFormData((prev) => ({
@@ -327,7 +354,6 @@ export const getLibraryCardConfig = async (externalData = {}) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-            console.log("FormData", formData);
             const errors = {};
 
             if (!formData.user_id) {
@@ -338,22 +364,23 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 errors.issue_date = "Issue date is required";
             }
 
-            const existingCard = allCards?.find(
-                (card) =>
-                    card.user_id === formData.user_id &&
-                    card.is_active &&
-                    card.id !== editingCard?.id
-            );
-
-            if (existingCard) {
-                errors.user_id = "Member already has an active library card";
+            if (formData.plan_id) {
+                const selectedPlan = plansList.find(p => p.value == formData.plan_id)?.data;
+                if (selectedPlan && !selectedPlan.is_active) {
+                    errors.plan_id = "Selected plan is inactive. Please select an active plan.";
+                }
             }
 
+            if (formData.user_id) {
+                const existingCard = allCards?.find(
+                    (card) =>
+                        card.user_id === formData.user_id &&
+                        (card.is_active === true || card.is_active === "true" || card.status === "active") &&
+                        card.id !== editingCard?.id
+                );
 
-            if (formData.allowed_books !== null && formData.allowed_books !== undefined) {
-                const allowedBooks = parseInt(formData.allowed_books);
-                if (isNaN(allowedBooks) || allowedBooks < 0) {
-                    errors.allowed_books = "Allowed books must be a positive number";
+                if (existingCard) {
+                    errors.user_id = "Member already has an active library card";
                 }
             }
 
@@ -362,8 +389,8 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
         dataDependencies: {
             users: "user",
-            subscriptions: "subscriptions",
             company: "company",
+            plans: "plan",
         },
 
         lookupNavigation: {
@@ -372,10 +399,10 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                 idField: "id",
                 labelField: "name",
             },
-            subscription_id: {
-                path: "subscriptions",
+            plan_id: {
+                path: "plan",
                 idField: "id",
-                labelField: "plan_name"
+                labelField: "plan_name",
             }
         },
 
@@ -416,28 +443,31 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             { key: "phone_number", label: "Phone Number", type: "text" },
             { key: "registration_date", label: "Registration Date", type: "date" },
             { key: "type", label: "Type", type: "text" },
-            {
-                key: "subscription_display",
-                label: "Subscription",
-                type: "text",
-                render: (value, data) => {
-                    // Check if data has subscription_name
-                    if (data.subscription_name && data.subscription_name.trim() !== "") {
-                        return data.subscription_name;
-                    }
-
-                    // Return empty for no subscription
-                    return "";
-                }
-            },
-            {
-                key: "allowed_books",
-                label: "Allowed Books",
-                type: "text",
-
-            },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
+            {
+                key: "plan",
+                label: "Plan",
+                render: (value, row) => {
+                    if (value && typeof value === 'object') {
+                        return (
+                            <div>
+                                <strong>{value.plan_name}</strong>
+                                <div className="small text-muted">
+                                    Duration: {value.duration_days} days |
+                                    Books: {value.allowed_books || 0} |
+                                    Status: <Badge bg={value.is_active ? "success" : "secondary"} size="sm">
+                                        {value.is_active ? "Active" : "Inactive"}
+                                    </Badge>
+                                </div>
+                            </div>
+                        );
+                    } else if (row.plan_name) {
+                        return row.plan_name;
+                    }
+                    return <span className="text-muted">No Plan</span>;
+                }
+            },
             {
                 key: "status",
                 label: "Status",
@@ -459,69 +489,119 @@ export const getLibraryCardConfig = async (externalData = {}) => {
             handleBarcodePreview,
 
             onDataLoad: (data) => {
+                console.log("onDataLoad called with:", data);
+
                 if (Array.isArray(data)) {
-                    data.forEach((item) => {
-                        if (item.hasOwnProperty("is_active")) {
-                            item.status = item.is_active ? "active" : "inactive";
+                    return data.map((item) => {
+                        const updatedItem = { ...item };
+
+                        if (updatedItem.hasOwnProperty("is_active")) {
+                            updatedItem.status = updatedItem.is_active ? "active" : "inactive";
+                        } else if (!updatedItem.status) {
+                            updatedItem.status = "active";
                         }
 
-                        // Handle subscription mapping
-                        const subId = item.subscription_id;
+                        if (!updatedItem.first_name) updatedItem.first_name = "-";
+                        if (!updatedItem.last_name) updatedItem.last_name = "-";
 
-                        // Check if subscription_id is valid
-                        if (subId && subId !== null && subId !== undefined &&
-                            subId !== "null" && subId !== "undefined" &&
-                            String(subId).trim() !== "") {
-
-                            // Try to find subscription
-                            const subscription = safeSubscriptions.find(sub =>
-                                String(sub.id) === String(subId)
-                            );
-
-                            // Set subscription_name if found
-                            item.subscription_name = subscription?.plan_name || subscription?.name || "";
-                        } else {
-                            // Clear subscription_name if no valid subscription_id
-                            item.subscription_name = "";
+                        if (!updatedItem.name) {
+                            updatedItem.name = `${updatedItem.first_name || ""} ${updatedItem.last_name || ""}`.trim();
                         }
 
-                        if (!item.first_name) item.first_name = "-";
-                        if (!item.last_name) item.last_name = "-";
-
-                        // Add subscription_display field for table
-                        item.subscription_display = item.subscription_name || "";
+                        return updatedItem;
                     });
                 }
+                return data;
             },
 
-            getSubscriptionOptions: () => {
-                return safeSubscriptions.map(sub => ({
-                    value: sub.id,
-                    label: `${sub.plan_name || sub.name} (Books: ${sub.allowed_books || 5})`
-                }));
+            beforeEdit: (item) => {
+                console.log("beforeEdit called with:", item);
+
+                const preparedData = { ...item };
+
+                if (preparedData.hasOwnProperty("is_active")) {
+                    preparedData.status = preparedData.is_active;
+                }
+
+
+                if (preparedData.plan_id) {
+                    const selectedPlan = plansList.find(p => p.value == preparedData.plan_id)?.data;
+                    if (selectedPlan) {
+                        preparedData.selectedPlan = selectedPlan;
+                        console.log("Loaded selectedPlan for editing:", selectedPlan);
+                    } else if (preparedData.plan && typeof preparedData.plan === 'object') {
+                        preparedData.selectedPlan = preparedData.plan;
+                        console.log("Loaded selectedPlan from item.plan:", preparedData.plan);
+                    }
+                }
+
+                console.log("Prepared data for edit:", preparedData);
+                return preparedData;
             },
-        },
 
-        beforeSubmit: (formData, isEditing) => {
-            console.log("FORM DTA", formData)
-            const errors = [];
+            beforeSubmit: (formData, isEditing, originalData) => {
+                console.log("=== BEFORE SUBMIT ===");
+                console.log("Form data:", formData);
+                console.log("Is editing:", isEditing);
+                console.log("Original data:", originalData);
 
-            if (!formData.user_id) {
-                errors.push("Please select a member");
+                const errors = [];
+                const submitData = { ...formData };
+
+
+                if (submitData.selectedPlan) {
+                    delete submitData.selectedPlan;
+                }
+
+                if (submitData.status !== undefined) {
+                    submitData.is_active = Boolean(submitData.status);
+                    delete submitData.status;
+                }
+
+
+                if (!submitData.user_id) {
+                    errors.push("Please select a member");
+                }
+
+                if (!submitData.issue_date) {
+                    errors.push("Issue date is required");
+                }
+
+
+                if (submitData.plan_id) {
+                    const selectedPlan = plansList.find(p => p.value == submitData.plan_id)?.data;
+                    if (selectedPlan && !selectedPlan.is_active) {
+                        errors.push("Selected plan is inactive. Please select an active plan.");
+                    }
+                }
+
+
+                if (submitData.image && submitData.image.size > 2 * 1024 * 1024) {
+                    errors.push("Image size must be less than 2MB");
+                }
+
+                console.log("Processed submit data:", submitData);
+                console.log("Errors:", errors);
+
+                return {
+                    errors,
+                    processedData: submitData
+                };
+            },
+
+            afterSubmit: (response, formData, isEditing) => {
+                console.log("=== AFTER SUBMIT ===");
+                console.log("Response:", response);
+                console.log("Form data:", formData);
+                console.log("Is editing:", isEditing);
+
+                return response;
             }
-
-            if (!formData.issue_date) {
-                errors.push("Issue date is required");
-            }
-
-            if (formData.image && formData.image.size > 2 * 1024 * 1024) {
-                errors.push("Image size must be less than 2MB");
-            }
-
-            return errors;
         },
 
         transformResponse: (response) => {
+            console.log("transformResponse called with:", response);
+
             if (response && response.data) {
                 let data = response.data;
 
@@ -531,39 +611,19 @@ export const getLibraryCardConfig = async (externalData = {}) => {
                     data = data.data;
                 }
 
-                const subs = externalData.subscriptions?.data || [];
-                if (Array.isArray(data) && subs.length > 0) {
+                if (Array.isArray(data)) {
                     data = data.map(item => {
-                        // Handle subscription mapping
-                        const subId = item.subscription_id;
+                        const updatedItem = { ...item };
 
-                        if (subId && subId !== "null" && subId !== "undefined" && String(subId).trim() !== "") {
-                            const subscription = subs.find(sub =>
-                                String(sub.id) === String(subId)
-                            );
-
-                            if (subscription) {
-                                return {
-                                    ...item,
-                                    subscription_name: subscription.plan_name || subscription.name || "",
-                                    subscription_display: subscription.plan_name || subscription.name || ""
-                                };
-                            } else {
-                                // Subscription not found
-                                return {
-                                    ...item,
-                                    subscription_name: "",
-                                    subscription_display: ""
-                                };
-                            }
-                        } else {
-                            // No subscription_id
-                            return {
-                                ...item,
-                                subscription_name: "",
-                                subscription_display: ""
-                            };
+                        if (!updatedItem.status && updatedItem.hasOwnProperty("is_active")) {
+                            updatedItem.status = updatedItem.is_active ? "active" : "inactive";
                         }
+
+                        if (!updatedItem.name) {
+                            updatedItem.name = `${updatedItem.first_name || ""} ${updatedItem.last_name || ""}`.trim();
+                        }
+
+                        return updatedItem;
                     });
                 }
 
@@ -574,11 +634,11 @@ export const getLibraryCardConfig = async (externalData = {}) => {
 
         exportConfig: {
             includeFields: [
-                'card_number', 'first_name', 'last_name', 'email',
-                'phone_number', 'subscription_name', 'allowed_books_display', 'status'
+                'card_number', 'name', 'email', 'phone_number', 'plan_name', 'status'
             ],
             fieldLabels: {
-                allowed_books_display: 'Allowed Books'
+                name: 'Full Name',
+                plan_name: 'Plan'
             }
         }
     };

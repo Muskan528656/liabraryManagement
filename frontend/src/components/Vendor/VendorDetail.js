@@ -9,10 +9,10 @@ const statusBadges = {
   inactive: { variant: "secondary", label: "Inactive" },
   suspended: { variant: "warning", label: "Suspended" },
 };
- const countryCodeOptions = COUNTRY_CODES.map((country) => ({
-    value: country.country_code,
-    label: `${country.country_code} - ${country.country}`,
-  }));
+const countryCodeOptions = COUNTRY_CODES.map((country) => ({
+  value: country.country_code,
+  label: `${country.country_code} - ${country.country}`,
+}));
 
 const VendorDetail = () => {
   const { timeZone } = useTimeZone();

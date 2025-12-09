@@ -64,7 +64,7 @@ async function create(data, userId) {
         data.start_date?.trim() !== "" ? data.start_date : null,
         data.end_date?.trim() !== "" ? data.end_date : null,
         data.is_active || false,
-        parseInt(data.renewal) || 0,                     
+        parseInt(data.renewal) || 0,
         parseInt(data.allowed_books ?? data["allowed books"]) || null,
         userId || null
     ];
@@ -79,7 +79,7 @@ async function create(data, userId) {
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Subscription not found");
-    console.log("datadata",data)
+    console.log("datadata", data)
     const query = `
         UPDATE demo.subscriptions
         SET plan_name = $2,
@@ -108,7 +108,6 @@ async function updateById(id, data, userId) {
     const result = await sql.query(query, values);
     return result.rows.length ? normalizeSubscriptionRow(result.rows[0]) : null;
 }
-
 
 
 

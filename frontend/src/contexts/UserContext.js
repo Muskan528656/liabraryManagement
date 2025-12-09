@@ -12,7 +12,7 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [userInfo, setUserInfo] = useState(null); 
+  const [userInfo, setUserInfo] = useState(null); // null = loading, false = not logged in
   const [isLoading, setIsLoading] = useState(true);
 
   const decodeToken = (token) => {

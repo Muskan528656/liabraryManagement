@@ -113,7 +113,7 @@ async function updateById(id, companyData, userId) {
     if (!currentCompany) {
       throw new Error("Company not found");
     }
-
+console.log("companyDatacompanyData",companyData)
     const query = `UPDATE public.company 
                    SET name = $2, tenantcode = $3, userlicenses = $4, isactive = $5, 
                        systememail = $6, adminemail = $7, logourl = $8, sidebarbgurl = $9, 

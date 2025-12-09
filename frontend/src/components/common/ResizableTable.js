@@ -18,7 +18,7 @@ const ResizableTable = ({
     selectedItems = [],
     onSelectionChange = () => { },
 }) => {
-    // Ensure data is always an array
+
     const safeData = Array.isArray(data) ? data : [];
     const [columnWidths, setColumnWidths] = useState({});
     const [isResizing, setIsResizing] = useState(false);

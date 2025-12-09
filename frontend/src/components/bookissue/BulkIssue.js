@@ -1,9 +1,4 @@
-/*
-**@Author: Aabid 
-**@Date: NOV-2025
-*/
 import React, { useEffect, useState } from "react";
-import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import {
   Container,
   Card,
@@ -11,12 +6,12 @@ import {
   Col,
   Button,
   Form,
+  Alert,
   Spinner,
   ProgressBar,
   Badge,
   Tooltip,
   OverlayTrigger,
-  Alert,
 } from "react-bootstrap";
 import Select from "react-select";
 import DataApi from "../../api/dataApi";
@@ -30,6 +25,7 @@ const BulkIssue = () => {
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [users, setUsers] = useState([]);
   const [librarySettings, setLibrarySettings] = useState({});
+  const [subscriptions, setSubscriptions] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -40,10 +36,14 @@ const BulkIssue = () => {
   const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
   const [totalAllowedBooks, setTotalAllowedBooks] = useState(6);
 
-  // Initialize with empty string, will populate once TZ is known
-  const [issueDate, setIssueDate] = useState("");
+  const [subscriptionAllowedBooks, setSubscriptionAllowedBooks] = useState(0);
+  const [memberPersonalAllowedBooks, setMemberPersonalAllowedBooks] = useState(0);
+  const [memberSubscription, setMemberSubscription] = useState(null);
+
+  const [issueDate, setIssueDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [dueDate, setDueDate] = useState("");
-  const [timeZone, setTimeZone] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -51,42 +51,34 @@ const BulkIssue = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    // If issueDate hasn't been set yet (waiting for company API), don't set default
-    if (!issueDate) {
-      // Optional: Set a temporary browser-based date if you don't want to wait
-      // setIssueDate(new Date().toISOString().split("T")[0]);
-    }
     fetchAll();
   }, [refreshTrigger]);
 
-  // Update Due Date whenever Issue Date or Duration changes
   useEffect(() => {
     if (issueDate) {
-      const duration = parseInt(durationDays) || 7;
-      
-      // Safe Date Addition: Parse YYYY-MM-DD, add days, format back
-      const resultDate = new Date(issueDate);
-      resultDate.setDate(resultDate.getDate() + duration);
-      
-      // Format back to YYYY-MM-DD for the input
-      // We use ISO slice here because Date arithmetic on YYYY-MM-DD strings 
-      // is usually treated as UTC midnight, which is safe for this operation.
-      const resultString = resultDate.toISOString().split("T")[0];
-      
-      setDueDate(resultString);
+      const duration = durationDays || 15;
+      const d = new Date(issueDate);
+      d.setDate(d.getDate() + duration);
+      setDueDate(d.toISOString().split("T")[0]);
     }
   }, [issueDate, durationDays]);
 
-  // Reset member info when card changes
   useEffect(() => {
     if (selectedCard) {
       loadMemberInfo(selectedCard.value);
     } else {
-      setMemberInfo(null);
-      setMemberExtraAllowance(0);
-      setTotalAllowedBooks(systemMaxBooks);
+      resetMemberInfo();
     }
-  }, [selectedCard, systemMaxBooks]);
+  }, [selectedCard, systemMaxBooks, subscriptions]);
+
+  const resetMemberInfo = () => {
+    setMemberInfo(null);
+    setMemberSubscription(null);
+    setSubscriptionAllowedBooks(0);
+    setMemberPersonalAllowedBooks(0);
+    setMemberExtraAllowance(0);
+    setTotalAllowedBooks(systemMaxBooks);
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -95,15 +87,15 @@ const BulkIssue = () => {
       const cardApi = new DataApi("librarycard");
       const userApi = new DataApi("user");
       const issueApi = new DataApi("bookissue");
-      const settingsApi = new DataApi("librarysettings");
+      const subscriptionApi = new DataApi("subscriptions");
 
-      const [booksResp, cardsResp, usersResp, issuesResp, settingsResp] =
+      const [booksResp, cardsResp, usersResp, issuesResp, subscriptionResponse] =
         await Promise.all([
           bookApi.fetchAll(),
           cardApi.fetchAll(),
           userApi.fetchAll(),
           issueApi.fetchAll(),
-          settingsRespTry(settingsApi),
+          subscriptionApi.fetchAll()
         ]);
 
       const booksList = normalize(booksResp);
@@ -111,11 +103,25 @@ const BulkIssue = () => {
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
 
+      let subscriptionsList = [];
+      if (subscriptionResponse?.data?.data) {
+        subscriptionsList = subscriptionResponse.data.data;
+      } else if (subscriptionResponse?.data) {
+        subscriptionsList = Array.isArray(subscriptionResponse.data) ?
+          subscriptionResponse.data :
+          [subscriptionResponse.data];
+      } else if (Array.isArray(subscriptionResponse)) {
+        subscriptionsList = subscriptionResponse;
+      }
+
       setBooks(booksList);
       setUsers(usersList);
-      setLibraryCards(
-        cardsList.filter((c) => String(c.is_active) === "true" || c.is_active === true)
+      setSubscriptions(subscriptionsList);
+
+      const activeCards = cardsList.filter((c) =>
+        c.is_active === true || c.is_active === "true" || c.is_active === 1
       );
+      setLibraryCards(activeCards);
 
       const activeIssues = issuesList.filter(
         (issue) =>
@@ -124,28 +130,48 @@ const BulkIssue = () => {
       );
       setIssuedBooks(activeIssues);
 
-      if (settingsResp && typeof settingsResp === "object") {
-        const dur =
-          parseInt(settingsResp.duration_days) ||
-          parseInt(settingsResp?.data?.duration_days) ||
-          7;
-        const maxBooks =
-          parseInt(settingsResp.max_books_per_card) ||
-          parseInt(settingsResp?.data?.max_books_per_card) ||
-          6;
-        setDurationDays(dur);
-        setSystemMaxBooks(maxBooks);
-        setLibrarySettings(settingsResp);
-        // Initialize
-        setMemberExtraAllowance(0);
-        setTotalAllowedBooks(maxBooks);
+      setDurationDays(7);
+      setSystemMaxBooks(6);
+      setTotalAllowedBooks(6);
+
+      const cardWithSubscription = cardsList.find(card => card.subscription_id);
+
+      if (cardWithSubscription && subscriptionsList.length > 0) {
+        const matchedPlan = subscriptionsList.find(
+          (p) => p.id === cardWithSubscription.subscription_id
+        );
+
+        if (matchedPlan) {
+          if (matchedPlan.start_date && matchedPlan.end_date) {
+            const start = new Date(matchedPlan.start_date);
+            const end = new Date(matchedPlan.end_date);
+            const dur = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            setDurationDays(dur);
+          }
+
+          const maxBooks = Number(matchedPlan.allowed_books) || 0;
+          setSystemMaxBooks(maxBooks);
+
+          const personalAllowance = Number(cardWithSubscription.allowed_books) || 0;
+          const totalAllowed = maxBooks + personalAllowance;
+          setTotalAllowedBooks(totalAllowed);
+          setMemberExtraAllowance(personalAllowance);
+        }
       }
+
     } catch (err) {
       console.error("Error fetching lists:", err);
       showErrorToast("Failed to load data. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const normalize = (resp) => {
+    if (Array.isArray(resp?.data)) return resp.data;
+    if (Array.isArray(resp)) return resp;
+    if (resp?.data && !Array.isArray(resp.data)) return [resp.data];
+    return [];
   };
 
   const loadMemberInfo = async (cardId) => {
@@ -157,61 +183,70 @@ const BulkIssue = () => {
         const member = memberResp.data;
         setMemberInfo(member);
 
-        // Get member's extra allowance (allowed_books field)
-        let extraAllowance = 0; // Default to 0
-
+        let personalAllowed = 0;
         if (member.allowed_books !== undefined && member.allowed_books !== null) {
-          extraAllowance = parseInt(member.allowed_books);
+          personalAllowed = parseInt(member.allowed_books);
         } else if (member.allowedBooks !== undefined && member.allowedBooks !== null) {
-          extraAllowance = parseInt(member.allowedBooks);
+          personalAllowed = parseInt(member.allowedBooks);
         } else if (member.allowed !== undefined && member.allowed !== null) {
-          extraAllowance = parseInt(member.allowed);
+          personalAllowed = parseInt(member.allowed);
         }
 
-        // Ensure it's a valid number
-        if (isNaN(extraAllowance) || extraAllowance < 0) {
-          extraAllowance = 0;
+        if (isNaN(personalAllowed) || personalAllowed < 0) {
+          personalAllowed = 0;
         }
 
-        setMemberExtraAllowance(extraAllowance);
+        setMemberPersonalAllowedBooks(personalAllowed);
+        setMemberExtraAllowance(personalAllowed);
 
-        // NEW CORRECT LOGIC:
-        // 1. System Max = fixed (from settings, e.g., 6)
-        // 2. Member's Extra Allowance = from member.allowed_books field (e.g., 4)
-        // 3. Total Allowed = System Max + Member's Extra Allowance (6 + 4 = 10)
+        let subscription = null;
+        let subscriptionBooks = 0;
 
-        const totalAllowed = systemMaxBooks + extraAllowance;
+        if (member.subscription_id && subscriptions.length > 0) {
+          subscription = subscriptions.find(
+            sub => sub.id.toString() === member.subscription_id.toString()
+          );
+
+          if (subscription) {
+            subscriptionBooks = parseInt(subscription.allowed_books || 0);
+            if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
+              subscriptionBooks = 0;
+            }
+
+            const isSubscriptionActive = subscription.is_active === true ||
+              subscription.is_active === "true" ||
+              subscription.is_active === 1;
+
+            if (!isSubscriptionActive) {
+              subscriptionBooks = 0;
+            }
+          }
+        }
+
+        setMemberSubscription(subscription);
+        setSubscriptionAllowedBooks(subscriptionBooks);
+
+        let totalAllowed = 0;
+
+        if (subscriptionBooks > 0) {
+          totalAllowed = subscriptionBooks;
+        } else {
+          totalAllowed = systemMaxBooks;
+        }
+
+        if (personalAllowed > 0) {
+          totalAllowed += personalAllowed;
+        }
 
         setTotalAllowedBooks(totalAllowed);
 
-        
       } else {
         console.warn("No member data found for card:", cardId);
-        // Fallback to system max only
-        setMemberExtraAllowance(0);
-        setTotalAllowedBooks(systemMaxBooks);
+        resetMemberInfo();
       }
     } catch (err) {
       console.error("Error loading member info:", err);
-      // Fallback to system max only
-      setMemberExtraAllowance(0);
-      setTotalAllowedBooks(systemMaxBooks);
-    }
-  };
-
-  const normalize = (resp) => {
-    if (Array.isArray(resp?.data)) return resp.data;
-    if (Array.isArray(resp)) return resp;
-    return [];
-  };
-
-  const settingsRespTry = async (settingsApi) => {
-    try {
-      const r = await settingsApi.get("/all");
-      if (r?.data && r.data.success && r.data.data) return r.data.data;
-      return r?.data || r;
-    } catch (e) {
-      return null;
+      resetMemberInfo();
     }
   };
 
@@ -268,7 +303,6 @@ const BulkIssue = () => {
   const availableForSelect = (option) => {
     const b = option.data;
 
-    // Check available copies
     if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0) {
       return {
         ...option,
@@ -279,7 +313,6 @@ const BulkIssue = () => {
     }
 
     if (selectedCard) {
-      // Check if already issued to this card
       const alreadyIssued = isBookIssuedToSelectedCard(b.id);
 
       if (alreadyIssued) {
@@ -291,7 +324,6 @@ const BulkIssue = () => {
         };
       }
 
-      // Check if already selected in current selection
       const alreadySelected = selectedBooks.some(sel => sel.value.toString() === b.id.toString());
       if (alreadySelected) {
         return {
@@ -331,7 +363,6 @@ const BulkIssue = () => {
   };
 
   const validateIssuance = () => {
-    // 1. Basic validation
     if (!selectedCard) {
       showErrorToast("Please select a library card first.");
       return false;
@@ -342,7 +373,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 2. Check for duplicate book selection
     const bookIds = selectedBooks.map(b => b.value);
     const uniqueBookIds = [...new Set(bookIds)];
     if (bookIds.length !== uniqueBookIds.length) {
@@ -350,11 +380,9 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 3. Get current issued count
     const issuedCount = computeIssuedCountForCard(selectedCard.value);
     const toIssueCount = selectedBooks.length;
 
-    // 4. Check against total allowed books
     if (issuedCount + toIssueCount > totalAllowedBooks) {
       showErrorToast(
         `Maximum ${totalAllowedBooks} books allowed for this member. ` +
@@ -364,7 +392,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 5. Check for already issued books
     const alreadyIssuedBooks = [];
     selectedBooks.forEach(book => {
       if (isBookIssuedToSelectedCard(book.value)) {
@@ -380,7 +407,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 6. Check available copies
     const unavailableBooks = [];
     selectedBooks.forEach(book => {
       const bookData = book.data;
@@ -396,7 +422,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // 7. Check if member is active
     if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;
@@ -406,7 +431,6 @@ const BulkIssue = () => {
   };
 
   const handleIssue = async () => {
-    // Validate before proceeding
     if (!validateIssuance()) {
       return;
     }
@@ -459,13 +483,11 @@ const BulkIssue = () => {
         }
       }
 
-      // Show success/error messages
       if (successBooks.length > 0) {
         const successTitles = successBooks.map(b => b.title);
         const newIssuedCount = computeIssuedCountForCard(selectedCard.value) + successBooks.length;
         const remaining = Math.max(0, totalAllowedBooks - newIssuedCount);
 
-        // Calculate system max remaining and extra remaining
         const systemMaxUsed = Math.min(newIssuedCount, systemMaxBooks);
         const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
 
@@ -498,7 +520,6 @@ const BulkIssue = () => {
         });
       }
 
-      // Reset and refresh
       if (failedBooks.length === 0) {
         setSelectedBooks([]);
         setRefreshTrigger(prev => prev + 1);
@@ -524,17 +545,14 @@ const BulkIssue = () => {
     ? computeIssuedCountForCard(selectedCard.value)
     : 0;
 
-  // Calculate remaining books
   const remainingForCard = Math.max(
     0,
     totalAllowedBooks - issuedCountForSelectedCard
   );
 
-  // Calculate how many from system max are used/remaining
   const systemMaxUsed = Math.min(issuedCountForSelectedCard, systemMaxBooks);
   const systemMaxRemaining = Math.max(0, systemMaxBooks - systemMaxUsed);
 
-  // Calculate extra allowance used/remaining
   const extraUsed = Math.max(0, issuedCountForSelectedCard - systemMaxBooks);
   const extraRemaining = Math.max(0, memberExtraAllowance - extraUsed);
 
@@ -545,12 +563,32 @@ const BulkIssue = () => {
     data: b,
   }));
 
-  const cardOptions = libraryCards.map((c) => ({
-    value: c.id,
-    label: `${c.card_number}`,
-    subLabel: c.user_name || c.student_name || "Unknown",
-    data: c,
-  }));
+
+  const cardOptions = libraryCards.map((c) => {
+
+    const getFullName = () => {
+      if (c.first_name || c.last_name) {
+        return `${c.first_name || ''} ${c.last_name || ''}`.trim();
+      } else if (c.user_name) {
+        return c.user_name;
+      } else if (c.student_name) {
+        return c.student_name;
+      } else if (c.name) {
+        return c.name;
+      }
+      return "Unknown Member";
+    };
+
+    const fullName = getFullName();
+    const cardNumber = c.card_number || "No Card Number";
+
+    return {
+      value: c.id,
+      label: `${cardNumber} - ${fullName}`, // Card number और full name एक साथ
+      subLabel: `Email: ${c.email || 'N/A'} | Phone: ${c.phone_number || 'N/A'}`,
+      data: c,
+    };
+  });
 
   const customSelectStyles = {
     control: (base) => ({
@@ -559,6 +597,16 @@ const BulkIssue = () => {
       boxShadow: "none",
       "&:hover": { borderColor: "#8b5cf6" },
       padding: "4px",
+      zIndex: 1,
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+      position: "absolute",
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
     }),
     option: (base, state) => ({
       ...base,
@@ -587,22 +635,51 @@ const BulkIssue = () => {
       (selectedCard.data.user_name || selectedCard.data.student_name || "Unknown User");
   };
 
-  // Tooltip for member limits
   const limitsTooltip = (props) => (
     <Tooltip id="limits-tooltip" {...props}>
       <div className="text-start">
         <strong>Limits Breakdown:</strong>
         <div className="small">
-          <div>System Maximum: {systemMaxBooks}</div>
-          <div>Member's Extra Allowance: {memberExtraAllowance}</div>
-          {/* <div className="fw-bold">Total Allowed: {totalAllowedBooks}</div> */}
-          <hr className="my-1" />
-          <div>Currently Issued: {issuedCountForSelectedCard}</div>
-          <div>From System Max: {systemMaxUsed}/{systemMaxBooks}</div>
-          {memberExtraAllowance > 0 && (
-            <div>From Extra Allowance: {extraUsed}/{memberExtraAllowance}</div>
+          {memberSubscription ? (
+            <>
+              <div className="fw-bold text-success">Subscription Plan:</div>
+              <div className="ps-2">
+                <div>Plan: {memberSubscription.plan_name}</div>
+                <div>Allowed: {subscriptionAllowedBooks} books</div>
+                <div>Status: {memberSubscription.is_active ? "Active ✓" : "Inactive ✗"}</div>
+              </div>
+              <hr className="my-1" />
+            </>
+          ) : (
+            <>
+              <div className="fw-bold text-info">System Default:</div>
+              <div className="ps-2">
+                <div>No active subscription</div>
+                <div>System Maximum: {systemMaxBooks} books</div>
+              </div>
+              <hr className="my-1" />
+            </>
           )}
-          <div className="fw-bold mt-1">Can Issue More: {remainingForCard}</div>
+
+          {memberExtraAllowance > 0 && (
+            <>
+              <div className="fw-bold text-info">Personal Allowance:</div>
+              <div className="ps-2">
+                <div>Extra Books: {memberExtraAllowance} books</div>
+              </div>
+              <hr className="my-1" />
+            </>
+          )}
+
+          <div className="fw-bold">Current Status:</div>
+          <div className="ps-2">
+            <div>Currently Issued: {issuedCountForSelectedCard}</div>
+            <div>From System Max: {systemMaxUsed}/{systemMaxBooks}</div>
+            {memberExtraAllowance > 0 && (
+              <div>From Extra Allowance: {extraUsed}/{memberExtraAllowance}</div>
+            )}
+            <div className="fw-bold mt-1">Can Issue More: {remainingForCard}</div>
+          </div>
         </div>
       </div>
     </Tooltip>
@@ -634,7 +711,6 @@ const BulkIssue = () => {
                 <h6 className="fw-bold text-uppercase text-muted small mb-3">
                   Step 1: Select Member
                 </h6>
-                <Form.Label className="fw-bold">Find Library Card</Form.Label>
                 <Select
                   options={cardOptions}
                   value={selectedCard}
@@ -642,17 +718,71 @@ const BulkIssue = () => {
                     setSelectedCard(v);
                     setSelectedUser(null);
                     setSelectedBooks([]);
-                    setMemberInfo(null);
+                    resetMemberInfo();
                   }}
                   isClearable
-                  placeholder="Search by card number or name..."
+                  placeholder="Search by card number, name, email..."
                   styles={customSelectStyles}
-                  formatOptionLabel={({ label, subLabel }) => (
-                    <div className="d-flex flex-column">
-                      <span className="fw-bold">{label}</span>
-                      <span className="small text-muted">{subLabel}</span>
-                    </div>
-                  )}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  formatOptionLabel={({ label, subLabel, data }) => {
+
+                    const parts = label.split(' - ');
+                    const cardNumber = parts[0] || 'N/A';
+                    const memberName = parts.slice(1).join(' - ') || 'Unknown Member';
+
+                    return (
+                      <div className="d-flex flex-column">
+                        <div className="d-flex align-items-center">
+                          {/* Card Number */}
+                          <Badge
+                            bg="primary"
+                            className="me-2 px-2 py-1"
+                            style={{
+                              minWidth: '90px',
+                              fontSize: '0.55rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            <i className="fa-solid fa-id-card me-1"></i>
+                            {cardNumber}
+                          </Badge>
+
+                          {/* Member Name */}
+                          <div className="fw-bold" style={{ flex: 1 }}>
+                            {memberName}
+                          </div>
+                        </div>
+
+                        {/* Additional info */}
+                        {/* <div className="d-flex justify-content-between small text-muted mt-1">
+                          <div>
+                            {data?.type && (
+                              <span className="me-2">
+                                <i className="fa-solid fa-user-tag me-1"></i>
+                                {data.type}
+                              </span>
+                            )}
+                            <span>
+                              <i className="fa-solid fa-circle me-1" 
+                                style={{ 
+                                  color: data?.is_active ? '#28a745' : '#dc3545',
+                                  fontSize: '0.5rem'
+                                }}></i>
+                              {data?.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          
+                          {data?.email && (
+                            <div className="text-truncate" style={{ maxWidth: '150px' }}>
+                              <i className="fa-solid fa-envelope me-1"></i>
+                              {data.email}
+                            </div>
+                          )}
+                        </div> */}
+                      </div>
+                    );
+                  }}
                 />
               </Card.Body>
             </Card>
@@ -675,43 +805,76 @@ const BulkIssue = () => {
                 ) : (
                   <>
                     <div className="text-center mb-3">
-                      <div className="mb-2">
-                        <i className="fa-solid fa-user-circle fa-2x text-primary"></i>
-                      </div>
+                      {/* Member Photo or Avatar */}
+                      {memberInfo?.image ? (
+                        <div className="mb-2">
+                          <img
+                            src={memberInfo.image}
+                            alt={getMemberName()}
+                            className="rounded-circle"
+                            style={{
+                              width: "80px",
+                              height: "80px",
+                              objectFit: "cover",
+                              border: "3px solid #8b5cf6"
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="mb-2">
+                          <i className="fa-solid fa-user-circle fa-3x text-primary"></i>
+                        </div>
+                      )}
+
                       <h5 className="fw-bold mb-1">
                         {getMemberName()}
                       </h5>
 
-                      {/* Debug info - only in development */}
-                      {process.env.NODE_ENV === 'development' && memberInfo && (
-                        <div className="mt-2 small text-muted">
-                          <div>System Max: {systemMaxBooks}</div>
-                          <div>Allowed Books : {memberExtraAllowance}</div>
-                          <div>Total Allowed: {totalAllowedBooks}</div>
-                          {/* <div>Formula: {systemMaxBooks} + {memberExtraAllowance} = {totalAllowedBooks}</div> */}
+                      {/* Card Number */}
+                      {memberInfo?.card_number && (
+                        <div className="text-muted small mb-2">
+                          <i className="fa-solid fa-id-card me-1"></i>
+                          Card: {memberInfo.card_number}
+                        </div>
+                      )}
+
+                      {/* Basic Contact Info in Compact Form */}
+                      <div className="small text-muted">
+                        {memberInfo?.email && (
+                          <div className="mb-1">
+                            <i className="fa-solid fa-envelope me-1"></i>
+                            <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                              {memberInfo.email}
+                            </span>
+                          </div>
+                        )}
+
+                        {memberInfo?.phone_number && (
+                          <div>
+                            <i className="fa-solid fa-phone me-1"></i>
+                            {memberInfo.phone_number}
+                            {memberInfo?.country_code && (
+                              <span className="ms-1">({memberInfo.country_code})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Subscription Info Badge */}
+                      {memberSubscription && (
+                        <div className="mt-2">
+                          <Badge
+                            bg={memberSubscription.is_active ? "success" : "danger"}
+                            className="mb-1"
+                          >
+                            {memberSubscription.plan_name}
+                            {memberSubscription.is_active ? " ✓" : " ✗"}
+                          </Badge>
                         </div>
                       )}
                     </div>
 
                     <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />
-
-                    {/* Limits Information */}
-                    <div className="mb-3">
-                      <div className="small text-muted">
-                        {memberExtraAllowance > 0 && (
-                          <div className="text-success fw-bold small mb-1">
-                            <i className="fa-solid fa-crown me-1"></i>
-                            This member gets {memberExtraAllowance} extra book(s) beyond system limit
-                          </div>
-                        )}
-                        {memberExtraAllowance === 0 && (
-                          <div className="text-info small mb-1">
-                            <i className="fa-solid fa-info-circle me-1"></i>
-                            This member gets standard system limit only
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
                     {/* Stats Grid */}
                     <Row className="g-2 mb-3">
@@ -728,11 +891,6 @@ const BulkIssue = () => {
                           <div className="small text-muted">Total Allowed</div>
                           <div className="h5 mb-0 fw-bold text-dark">
                             {totalAllowedBooks}
-                            {memberExtraAllowance > 0 && (
-                              <small className="text-success ms-1">
-
-                              </small>
-                            )}
                           </div>
                         </div>
                       </Col>
@@ -745,31 +903,6 @@ const BulkIssue = () => {
                         </div>
                       </Col>
                     </Row>
-
-                    {/* Detailed Usage Breakdown */}
-                    <div className="mb-3 p-3 bg-light rounded-3">
-                      <div className="small text-muted mb-2">Usage Breakdown:</div>
-                      <div className="d-flex justify-content-between mb-1">
-                        <span className="small">System Limit ({systemMaxBooks}):</span>
-                        <span className="small fw-bold">
-                          {systemMaxUsed}/{systemMaxBooks} books
-                        </span>
-                      </div>
-                      {memberExtraAllowance > 0 && (
-                        <div className="d-flex justify-content-between mb-1">
-                          <span className="small text-success">Extra Allowance ({memberExtraAllowance}):</span>
-                          <span className="small fw-bold text-success">
-                            {extraUsed}/{memberExtraAllowance} books
-                          </span>
-                        </div>
-                      )}
-                      <div className="d-flex justify-content-between mt-2 pt-2 border-top">
-                        <span className="small fw-bold">Total Used:</span>
-                        <span className="small fw-bold">
-                          {issuedCountForSelectedCard}/{totalAllowedBooks} books
-                        </span>
-                      </div>
-                    </div>
 
                     {/* Progress Bar */}
                     <div className="text-start">
@@ -850,7 +983,6 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        // Filter out any books that are already issued to this member
                         const filtered = v.filter((sel) => {
                           return !isBookIssuedToSelectedCard(sel.value);
                         });
@@ -883,6 +1015,8 @@ const BulkIssue = () => {
                       selectedBooks.length >= remainingForCard
                     }
                     styles={customSelectStyles}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     formatOptionLabel={({ label, subLabel, isDisabled, data }) => (
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex flex-column">
@@ -948,7 +1082,7 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {/* Show limits info
+                  {/* Show limits info */}
                   {selectedCard && remainingForCard > 0 && (
                     <Form.Text className="text-muted small">
                       <i className="fa-solid fa-info-circle me-1"></i>
@@ -959,7 +1093,7 @@ const BulkIssue = () => {
                         </span>
                       </OverlayTrigger>
                     </Form.Text>
-                  )} */}
+                  )}
 
                   {/* Info about disabled books */}
                   {selectedCard && (
@@ -1052,11 +1186,6 @@ const BulkIssue = () => {
                       value={issueDate}
                       onChange={(e) => setIssueDate(e.target.value)}
                     />
-                    {timeZone && (
-                      <Form.Text className="text-muted small">
-                        Zone: {timeZone}
-                      </Form.Text>
-                    )}
                   </Col>
                   <Col md={4}>
                     <Form.Label className="fw-bold small text-muted text-uppercase">
@@ -1123,7 +1252,7 @@ const BulkIssue = () => {
                             <span className="text-success">
                               <br />
                               <i className="fa-solid fa-calculator me-1"></i>
-                              {systemMaxBooks} (System) + {memberExtraAllowance} (Extra) = {totalAllowedBooks}
+                              {systemMaxBooks} ({memberSubscription ? 'Subscription' : 'System'}) + {memberExtraAllowance} (Extra) = {totalAllowedBooks}
                             </span>
                           )}
                         </span>

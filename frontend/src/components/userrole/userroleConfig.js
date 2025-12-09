@@ -2,16 +2,16 @@ import moment from 'moment';
 import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 export const getUserRoleConfig = (externalData = {}, props = {}) => {
-    // Get country code options from props or fallback to local JSON
-    const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0 
+
+    const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0
         ? externalData.countryCodeList.map(item => ({
             value: item.id,
             label: item.name
-          }))
+        }))
         : COUNTRY_CODES.map(item => ({
             value: item.country_code,
             label: `${item.country} (${item.country_code})`
-          }));
+        }));
 
     return {
         moduleName: "user_roles",
@@ -30,16 +30,8 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 label: "Role Name",
             },
 
+
             {
-                field: "country_code",
-                label: "Country Code",
-                render: (value) => {
-                    if (!value) return "—";
-                    const country = COUNTRY_CODES.find(c => c.country_code === value);
-                    return country ? `${country.country} (${country.country_code})` : value;
-                }
-            },
-         {
                 field: "is_active",
                 label: "Status",
                 sortable: true,

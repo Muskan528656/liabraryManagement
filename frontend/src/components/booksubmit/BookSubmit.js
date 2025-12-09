@@ -8,8 +8,6 @@ import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import moment from "moment";
-
-
 const BookSubmit = () => {
     const navigate = useNavigate();
     const [isbn, setIsbn] = useState("");
@@ -44,7 +42,7 @@ const BookSubmit = () => {
 
     useEffect(() => {
         fetchAllIssuedBooks();
-        // fetchCompany();
+
     }, []);
 
     const fetchAllIssuedBooks = async () => {
@@ -87,7 +85,7 @@ const BookSubmit = () => {
     };
 
     const getUserDisplayName = (record) => {
-        // सभी possible name fields check करें
+
         const nameFields = [
             record.issued_to_name,
             record.student_name,
@@ -99,7 +97,7 @@ const BookSubmit = () => {
             record.user_id ? `User ${record.user_id}` : null
         ];
 
-        // पहला non-empty value return करें
+
         for (let name of nameFields) {
             if (name && name.trim() !== "" && name !== "undefined undefined" && name !== " ") {
                 return name.trim();
@@ -653,7 +651,7 @@ const BookSubmit = () => {
             label: "Issue Date",
             width: 120,
             render: (value) => {
-            return  moment(convertToUserTimezone(value, timeZone)).format('l');
+                return moment(convertToUserTimezone(value, timeZone)).format('l');
             },
         },
         {
@@ -661,21 +659,21 @@ const BookSubmit = () => {
             label: "Due Date",
             width: 120,
             render: (value) => {
-            if (!value) return "—";
-            const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
+                if (!value) return "—";
+                const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
 
-            const isOverdue = new Date(value) < new Date();
+                const isOverdue = new Date(value) < new Date();
 
-            return (
-                <span
-                style={{
-                    color: isOverdue ? "#dc3545" : "#28a745",
-                    fontWeight: "bold",
-                }}
-                >
-                {displayDate}
-                </span>
-            );
+                return (
+                    <span
+                        style={{
+                            color: isOverdue ? "#dc3545" : "#28a745",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        {displayDate}
+                    </span>
+                );
             },
         },
         {
@@ -799,9 +797,9 @@ const BookSubmit = () => {
             field: "submit_date",
             label: "Submit Date",
             width: 150,
-            // render: (value) => formatDate(value)
+
             render: (value) => {
-              return convertToUserTimezone(value, timeZone)
+                return convertToUserTimezone(value, timeZone)
             }
         },
         {
@@ -843,7 +841,7 @@ const BookSubmit = () => {
                                             top: "50%",
                                             transform: "translateY(-50%)",
                                             paddingRight: "15px",
-                                            marginTop: "-40px"
+                                            marginTop: "-63px"
                                         }}
                                     >
                                         <InputGroup style={{ maxWidth: "250px" }}>

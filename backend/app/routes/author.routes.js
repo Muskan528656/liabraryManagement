@@ -37,7 +37,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
-        Author.init(req.userinfo.tenantcode);
+      Author.init(req.userinfo.tenantcode);
       const author = await Author.findById(req.params.id);
       if (!author) {
         return res.status(404).json({ errors: "Author not found" });

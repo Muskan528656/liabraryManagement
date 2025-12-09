@@ -7,45 +7,45 @@ const PurchaseDetail = () => {
   const [externalData, setExternalData] = useState({ vendors: [], books: [] });
   const [timeZone, setTimeZone] = useState(null);
 
-   function getCompanyIdFromToken() {
-        const token = sessionStorage.getItem("token");
-        if (!token) return null;
-    
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        return payload.companyid || payload.companyid || null;
+  function getCompanyIdFromToken() {
+    const token = sessionStorage.getItem("token");
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.companyid || payload.companyid || null;
+  }
+
+  const fetchCompany = async () => {
+    try {
+      const companyid = getCompanyIdFromToken();
+
+      if (!companyid) {
+        console.error("Company ID not found in token");
+        return;
       }
-    
-      const fetchCompany = async () => {
-        try {
-          const companyid = getCompanyIdFromToken();
-    
-          if (!companyid) {
-            console.error("Company ID not found in token");
-            return;
-          }
-    
-          const companyApi = new DataApi("company");
-          const response = await companyApi.fetchById(companyid);
-    
-          if (response.data) {
-            setTimeZone(response.data.time_zone);
-            
-            // console.log("Company:", response.data);
-          }
-        } catch (error) {
-          console.error("Error fetching company by ID:", error);
-        }
-      };
+
+      const companyApi = new DataApi("company");
+      const response = await companyApi.fetchById(companyid);
+
+      if (response.data) {
+        setTimeZone(response.data.time_zone);
+
+
+      }
+    } catch (error) {
+      console.error("Error fetching company by ID:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
- 
+
         const vendorApi = new DataApi("vendor");
         const vendorsResponse = await vendorApi.fetchAll();
         const vendors = vendorsResponse?.data?.data || vendorsResponse?.data || [];
 
- 
+
         const bookApi = new DataApi("book");
         const booksResponse = await bookApi.fetchAll();
         const books = booksResponse?.data?.data || booksResponse?.data || [];
@@ -86,18 +86,20 @@ const PurchaseDetail = () => {
       { key: "quantity", label: "Quantity", type: "number" },
       { key: "unit_price", label: "Unit Price", type: "number" },
       { key: "total_amount", label: "Total Amount", type: "number" },
-      { key: "purchase_date", label: "Purchase Date", type: "date",
-        render: (value) =>{
+      {
+        key: "purchase_date", label: "Purchase Date", type: "date",
+        render: (value) => {
           return convertToUserTimezone(value, timeZone)
         }
-       },
+      },
       { key: "notes", label: "Notes", type: "textarea" },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },      
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+
     ],
   };
 
@@ -118,7 +120,7 @@ const PurchaseDetail = () => {
     <ModuleDetail
       moduleName="purchase"
       moduleApi="purchase"
-      moduleLabel="Purchase Management"
+      moduleLabel="Purchase"
       icon="fa-solid fa-shopping-cart"
       fields={fields}
       lookupNavigation={lookupNavigation}

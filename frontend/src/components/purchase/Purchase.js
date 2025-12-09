@@ -18,7 +18,7 @@ const Purchase = (props) => {
     return <div>Loading purchase data...</div>;
   }
 
-  const finalConfig = getPurchaseConfig(data, props,timeZone);
+  const finalConfig = getPurchaseConfig(data, props, timeZone);
   console.log("Final Purchase Config:", finalConfig);
 
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-shopping-cart" />;

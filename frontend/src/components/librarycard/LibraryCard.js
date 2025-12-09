@@ -9,6 +9,7 @@ import DataApi from "../../api/dataApi";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { handleDownloadBarcode } from './LibraryCardDownload';
 import { handlePrintBarcode } from './LibrarycardPrint';
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -16,16 +17,13 @@ const LibraryCard = (props) => {
   const [barcodeError, setBarcodeError] = useState(null);
   const [baseConfig, setBaseConfig] = useState(null);
   const [finalConfig, setFinalConfig] = useState(null);
-
-
-  const dataDependencies = baseConfig?.dataDependencies || [];
-  const { data, loading, error } = useDataManager(dataDependencies, props);
-
   const [subscriptionsData, setSubscriptionsData] = useState([]);
   const [usersData, setUsersData] = useState([]);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [configError, setConfigError] = useState(null);
+  const { timeZone } = useTimeZone();
 
+  console.log("sdfghjgfdewertyu", timeZone);
 
   const fetchSubscriptions = useCallback(async () => {
     try {
@@ -114,7 +112,7 @@ const LibraryCard = (props) => {
         });
 
 
-        const config = await getLibraryCardConfig(externalData);
+        const config = await getLibraryCardConfig(externalData, timeZone);
         setBaseConfig(config);
 
         console.log("Base config loaded successfully");
@@ -425,76 +423,6 @@ const LibraryCard = (props) => {
     buildFinalConfig();
   }, [baseConfig, subscriptionsData, usersData, loadingConfig]);
 
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const config = await getLibraryCardConfig();
-        setBaseConfig(config);
-      } catch (error) {
-        console.error("Error fetching library card config:", error);
-      }
-    };
-    fetchConfig();
-  }, []);
-
-  useEffect(() => {
-    if (data && baseConfig) {
-      const buildFinalConfig = async () => {
-        try {
-          const allData = { ...(data || {}), ...props };
-          const config = await getLibraryCardConfig(allData);
-          const final = {
-            ...config,
-            onSubmit: async (formData, setFormData) => {
-              if (!formData.user_id) {
-                alert("Please select a user");
-                return false;
-              }
-
-              if (!formData.card_number) {
-                const cardNumber = await handleAutoConfig(setFormData);
-                if (!cardNumber) return false;
-              }
-
-              formData.isbn_code = generateDefaultISBN({ id: formData.card_number });
-
-              try {
-                const response = await DataApi.createLibraryCard(formData);
-
-                if (!response?.data?.success || !response.data.data) {
-                  alert("Failed to create library card");
-                  return false;
-                }
-
-                const newCard = response.data.data;
-
-                handleModalOpen(newCard);
-
-                if (setFormData) setFormData({});
-
-                return true;
-              } catch (err) {
-                console.error("Error creating card:", err);
-                alert("Error creating library card");
-                return false;
-              }
-            },
-
-            customHandlers: {
-              ...config.customHandlers,
-              handleBarcodePreview: handleModalOpen,
-              formatDateToDDMMYYYY: formatDate,
-              generateISBN13Number: generateDefaultISBN
-            }
-          };
-          setFinalConfig(final);
-        } catch (error) {
-          console.error("Error building final config:", error);
-        }
-      };
-      buildFinalConfig();
-    }
-  }, [data, baseConfig, props]);
 
   useEffect(() => {
     if (showBarcodeModal && selectedCard) {
@@ -592,19 +520,11 @@ const LibraryCard = (props) => {
 
   const generateCardNumber = (card) => card.card_number || 'N/A';
 
-  if (loading || !finalConfig) return <Loader message="Loading library cards data..." />;
-  if (error) return (
-    <div className="alert alert-danger m-3">
-      <h4>Error Loading Library Cards</h4>
-      <p>{error.message}</p>
-      <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>Retry</button>
-    </div>
-  );
-
 
   if (loadingConfig) {
     return <Loader message="Loading library card configuration..." />;
   }
+
   if (configError) {
     return (
       <div className="alert alert-danger m-3">
@@ -626,7 +546,6 @@ const LibraryCard = (props) => {
       <DynamicCRUD
         {...finalConfig}
         icon="fa-solid fa-id-card"
-
         subscriptionsData={subscriptionsData}
         usersData={usersData}
       />

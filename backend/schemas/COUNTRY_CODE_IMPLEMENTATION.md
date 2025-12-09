@@ -82,7 +82,7 @@ const [countryCodeDisplay, setCountryCodeDisplay] = useState("");
 
 **New Functions:**
 ```javascript
-// Fetch country codes from API
+
 const fetchCountryCodesList = async () => {
   try {
     const companyApi = new DataApi("company");
@@ -91,7 +91,7 @@ const fetchCountryCodesList = async () => {
       setCountryCodeList(response.data);
     }
   } catch (error) {
-    // Fallback to local JSON
+
     setCountryCodeList(CountryCode.map(...));
   }
 };
@@ -197,11 +197,11 @@ Save selection via POST/PUT
 const companyApi = new DataApi("company");
 const response = await companyApi.fetchAll("picklist/country-codes");
 const countryCodeList = response.data;
-// countryCodeList = [
-//   { id: "+91", name: "India (+91)", country: "India", country_code: "+91" },
-//   { id: "+1", name: "Canada (+1)", country: "Canada", country_code: "+1" },
-//   ...
-// ]
+
+
+
+
+
 ```
 
 ### Fetch Company with Country Code Display
@@ -209,8 +209,8 @@ const countryCodeList = response.data;
 const companyApi = new DataApi("company");
 const response = await companyApi.fetchById(1);
 const company = response.data;
-// company.country_code = "+91"
-// company.country_code_display = "India (+91)"
+
+
 ```
 
 ### Update Company with Country Code

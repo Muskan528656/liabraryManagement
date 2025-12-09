@@ -20,7 +20,7 @@ async function findAll() {
 
   try {
     const query = `
-      SELECT 
+      SELECT
         id,
         firstname,
         lastname,
@@ -28,6 +28,9 @@ async function findAll() {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid
       FROM ${this.schema}."user"
@@ -100,12 +103,16 @@ async function create(userData, userId) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid,
         createdbyid,
-        lastmodifiedbyid
+        lastmodifiedbyid,
+        createddate
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
       RETURNING
         id,
         firstname,
@@ -114,10 +121,14 @@ async function create(userData, userId) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid,
         createdbyid,
-        lastmodifiedbyid
+        lastmodifiedbyid,
+        createddate
     `;
 
     const values = [
@@ -128,6 +139,9 @@ async function create(userData, userId) {
       userData.userrole || "STUDENT",
       userData.phone || null,
       userData.country_code || null,
+      userData.country || null,
+      userData.currency || null,
+      userData.time_zone || null,
       userData.isactive !== undefined ? userData.isactive : true,
       userData.companyid,
       userId,
@@ -176,6 +190,9 @@ async function updateById(id, userData) {
     add("userrole", userData.userrole);
     add("phone", userData.phone);
     add("country_code", userData.country_code);
+    add("country", userData.country);
+    add("currency", userData.currency);
+    add("time_zone", userData.time_zone);
     add("isactive", userData.isactive);
     add("companyid", userData.companyid);
 
@@ -197,6 +214,9 @@ async function updateById(id, userData) {
         userrole,
         phone,
         country_code,
+        country,
+        currency,
+        time_zone,
         isactive,
         companyid
     `;

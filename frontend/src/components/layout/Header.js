@@ -12,17 +12,17 @@ import DataApi from "../../api/dataApi";
 import Submodule from "./Submodule";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 
+
 export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
 
-
   const [showBookSubmitModal, setShowBookSubmitModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [dueNotifications, setDueNotifications] = useState([]); // ⬅️ always an array
+  const [dueNotifications, setDueNotifications] = useState([]); 
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
@@ -36,29 +36,64 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [searchBarcode, setSearchBarcode] = useState("");
 
   const [Company, setCompany] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
 
+  // --- UPDATED: Fetch User Profile ---
+  const fetchUserProfile = async () => {
+    // Safety check: Don't fetch if userInfo is not loaded yet
+    if (!userInfo || !userInfo.id) return;
+
+    try {
+      const response = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/user/${userInfo.id}`,
+        "GET"
+      );
+      const result = await response.json();
+      if (result) {
+        setUserProfile(result);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+
+  // --- UPDATED: PubSub Subscriptions ---
   useEffect(() => {
+    // 1. Subscribe to Company Updates
     const companyUpdateToken = PubSub.subscribe("COMPANY_UPDATED", (msg, data) => {
       if (data.company) {
         setCompany(data.company);
       }
     });
 
+    // 2. Subscribe to User Updates (Fix for dynamic flag update)
+    const userUpdateToken = PubSub.subscribe("USER_UPDATED", (msg, data) => {
+       // Re-fetch profile to get the new Country
+       fetchUserProfile();
+    });
+
     return () => {
       PubSub.unsubscribe(companyUpdateToken);
+      PubSub.unsubscribe(userUpdateToken);
     };
-  }, []);
+  }, [userInfo]); // Add userInfo as dependency so fetchUserProfile has access to ID
+
+  // --- UPDATED: Country Flag Logic ---
   const getCountryFlag = () => {
-    if (Company?.country) {
-      const searchName = Company.country.trim().toLowerCase();
+    if (userProfile?.country) {
+      // Normalize comparison (trim and lowercase) to ensure matches
+      const searchName = userProfile.country.trim().toLowerCase();
+      
       const country = COUNTRY_TIMEZONE.find(
-        (c) => c.countryName.trim().toLowerCase() === searchName
+        (c) => c.countryName.toLowerCase() === searchName
       );
+      
+      // Fallback: try exact match if lowercase fails, or just return country.flagImg
       return country ? country.flagImg : "";
     }
-
     return "";
   };
+
   const fetchNotifications = async () => {
     try {
       const response = await helper.fetchWithAuth(
@@ -77,7 +112,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-
   const fetchUnreadCount = async () => {
     try {
       const response = await helper.fetchWithAuth(
@@ -95,7 +129,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const fetchModulesFromDB = async () => {
     try {
-
       const cachedModules = localStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
@@ -107,7 +140,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           console.error("Error parsing cached modules:", e);
         }
       }
-
 
       const api = new DataApi("module");
       const resp = await api.fetchAll();
@@ -124,19 +156,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
       if (modules.length > 0) {
         setModulesFromDB(modules);
-
         localStorage.setItem("cached_modules", JSON.stringify(modules));
         localStorage.setItem(
           "cached_modules_timestamp",
           Date.now().toString()
         );
       } else if (!cachedModules) {
-
         setModulesFromDB([]);
       }
     } catch (error) {
       console.error("Error fetching modules from DB:", error);
-
       const cachedModules = localStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
@@ -174,16 +203,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
+        console.log("user",user);
         setUserInfo(user);
         fetchDueNotifications();
         fetchNotifications();
         fetchUnreadCount();
         fetchModulesFromDB();
-
-
-
+        // fetchUserProfile called in next useEffect when userInfo is set
       } else {
-
         localStorage.removeItem("cached_modules");
         localStorage.removeItem("cached_modules_timestamp");
       }
@@ -192,17 +219,22 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, []);
 
+  // Separate effect to fetch profile once userInfo is set initially
+  useEffect(() => {
+    if(userInfo && userInfo.id) {
+        fetchUserProfile();
+    }
+  }, [userInfo]);
+
 
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "token" && e.newValue) {
-
         fetchModulesFromDB();
       }
     };
 
     const handleVisibilityChange = () => {
-
       if (document.visibilityState === "visible") {
         const token = sessionStorage.getItem("token");
         if (token) {
@@ -254,15 +286,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const screenWidth = window.innerWidth;
       const availableWidth = screenWidth * 0.7; // 70% of screen width
 
-
       const avgModuleWidth = 110;
       const moreButtonWidth = 80; // "More" button width
-
 
       const maxModules = Math.floor(
         (availableWidth - moreButtonWidth) / avgModuleWidth
       );
-
 
       const currentMenuItems = getMenuItems();
       if (currentMenuItems.length > 0) {
@@ -298,8 +327,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
 
-
-
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(notification.title, {
             body: notification.message,
@@ -326,19 +353,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, []);
 
-  // Listen for company updates
-  useEffect(() => {
-    const companyUpdateToken = PubSub.subscribe("COMPANY_UPDATED", (msg, data) => {
-      if (data.company) {
-        setCompany(data.company);
-      }
-    });
-
-    return () => {
-      PubSub.unsubscribe(companyUpdateToken);
-    };
-  }, []);
-
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("r-t");
@@ -358,17 +372,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const getUserInitials = () => {
     if (userInfo) {
-
       if (userInfo.username) {
         const firstLetter = userInfo.username.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
-
       if (userInfo.firstname) {
         const firstLetter = userInfo.firstname.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
-
       if (userInfo.email) {
         const firstLetter = userInfo.email.trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
@@ -379,7 +390,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const getUserName = () => {
     if (userInfo) {
-
       if (userInfo.userrole) {
         return userInfo.userrole;
       }
@@ -412,28 +422,20 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const fetchCompany = async () => {
     try {
       const companyid = getCompanyIdFromToken();
-
       if (!companyid) {
         console.error("Company ID not found in token");
         return;
       }
-
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
-
       if (response.data) {
         setCompany(response.data);
-        
-        console.log("Company:", response.data);
       }
     } catch (error) {
       console.error("Error fetching company by ID:", error);
     }
   };
 
-  console.log("Company", Company);
-
- 
   const markAsRead = async (notificationId) => {
     try {
       const response = await helper.fetchWithAuth(
@@ -578,6 +580,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 width: "30px",
                 marginRight: "8px",
                 borderRadius: "2px",
+                objectFit: "cover",
+                border: "1px solid #eee"
               }}
             />
           )}

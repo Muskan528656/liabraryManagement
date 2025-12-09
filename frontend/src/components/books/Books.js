@@ -3,9 +3,12 @@ import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
 import { useDataManager } from "../common/userdatamanager";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Books = (props) => {
+  const { timeZone } = useTimeZone();
 
+  console.log("sdfghjgfdewertyu", timeZone);
   const baseConfig = getBooksConfig();
 
   console.log("books baseConfig", baseConfig);
@@ -20,7 +23,7 @@ const Books = (props) => {
   }
   console.log("books data", loading);
 
-  const finalConfig = getBooksConfig(data, props);
+  const finalConfig = getBooksConfig(data, props, timeZone);
 
   console.log("books finalConfig", finalConfig);
 

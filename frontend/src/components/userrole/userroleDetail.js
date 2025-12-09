@@ -2,9 +2,8 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-
 const UserRoleDetail = () => {
-    const {timeZone} = useTimeZone()
+    const { timeZone } = useTimeZone()
     const fields = {
         title: "role_name",
         details: [
@@ -19,8 +18,16 @@ const UserRoleDetail = () => {
                     false_label: "Inactive",
                 },
             },
-            { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
-            { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
+            {
+                key: "createddate", label: "Created Date", type: "date", render: (value) => {
+                    return convertToUserTimezone(value, timeZone)
+                },
+            },
+            {
+                key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+                    return convertToUserTimezone(value, timeZone)
+                },
+            },
         ],
     };
 
@@ -28,7 +35,7 @@ const UserRoleDetail = () => {
         <ModuleDetail
             moduleName="userroles"
             moduleApi="user-role"
-            moduleLabel="User Role Management"
+            moduleLabel="User Role"
             icon="fas fa-chalkboard-teacher"
             fields={fields}
         />

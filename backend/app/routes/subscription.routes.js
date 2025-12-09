@@ -41,8 +41,8 @@ module.exports = (app) => {
             body("start_date").optional().isISO8601(),
             body("end_date").optional().isISO8601(),
             body("is_active").optional().isBoolean(),
-            body("renewal").optional().isNumeric(),
-            body("allowed_books").optional().isNumeric()
+            body("allowed_books").optional().isNumeric(),
+
         ],
         async (req, res) => {
             const errors = validationResult(req);

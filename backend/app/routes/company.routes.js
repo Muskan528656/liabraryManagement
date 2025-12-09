@@ -18,13 +18,67 @@ const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js
 const Company = require("../models/company.model.js");
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
-  
-  // Load country codes
+
   const countryCodesPath = path.join(__dirname, "../constants/CountryCode.json");
   const CountryCode = JSON.parse(fs.readFileSync(countryCodesPath, "utf8"));
+
+
+  const rootDir = path.resolve(__dirname, "../../..");
+  const frontendPublicDir = path.join(rootDir, "frontend", "public");
+  const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
+  const companyUploadDir = path.join(frontendUploadsDir, "companies");
+
+  const ensureDirectory = (dirPath) => {
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+  };
+  [frontendPublicDir, frontendUploadsDir, companyUploadDir].forEach(ensureDirectory);
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, companyUploadDir),
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'company-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('Only image files are allowed'));
+    }
+  });
+
+  const deleteFileIfExists = (filePath = "") => {
+    if (!filePath || typeof filePath !== "string") return;
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) return;
+
+    let normalized = filePath.replace(/\\/g, "/");
+    if (normalized.startsWith("/")) normalized = normalized.slice(1);
+
+    const candidatePaths = [
+      path.join(frontendPublicDir, normalized),
+      path.join(__dirname, "../../", normalized),
+      path.join(companyUploadDir, path.basename(normalized)),
+    ];
+
+    const visited = new Set();
+    candidatePaths.forEach((absolutePath) => {
+      if (!absolutePath || visited.has(absolutePath)) return;
+      visited.add(absolutePath);
+
+      try {
+        if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+      } catch (err) {
+        console.error("Error removing company image:", absolutePath, err.message);
+      }
+    });
+  };
 
   var router = require("express").Router();
 
@@ -48,7 +102,7 @@ module.exports = (app) => {
       if (!company) {
         return res.status(404).json({ errors: "Company not found" });
       }
-      // Add country code default display
+
       if (company.country_code) {
         const countryInfo = CountryCode.find(c => c.country_code === company.country_code);
         if (countryInfo) {
@@ -123,6 +177,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
+    upload.single('image'),
     [
       body("name").notEmpty().withMessage("Company name is required"),
       body("userlicenses").isInt({ min: 0 }).withMessage("User licenses must be a non-negative integer"),
@@ -139,12 +194,10 @@ module.exports = (app) => {
 
         Company.init(req.userinfo.tenantcode);
 
-
         const existingCompany = await Company.findById(req.params.id);
         if (!existingCompany) {
           return res.status(404).json({ errors: "Company not found" });
         }
-
 
         const duplicateCompany = await Company.findByName(
           req.body.name,
@@ -157,11 +210,24 @@ module.exports = (app) => {
         }
 
         const userId = req.userinfo?.id || null;
-        console.log("requusus->>",req.body)
-        const company = await Company.updateById(req.params.id, req.body, userId);
+        const companyData = { ...req.body };
+        const previousImagePath = existingCompany.logourl;
+
+        if (req.file) {
+          companyData.logourl = `/uploads/companies/${req.file.filename}`;
+        }
+
+        console.log("company update data->>", companyData)
+        const company = await Company.updateById(req.params.id, companyData, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to update company" });
         }
+
+
+        if (req.file && previousImagePath && previousImagePath !== companyData.logourl) {
+          deleteFileIfExists(previousImagePath);
+        }
+
         return res.status(200).json({ success: true, data: company });
       } catch (error) {
         console.error("Error updating company:", error);

@@ -1,5 +1,5 @@
 
-export const getBooksConfig = (externalData = {}, props = {}) => {
+export const getBooksConfig = (externalData = {}, props = {},timeZone) => {
     const authors =
         props.authors ||
         externalData.authors ||

@@ -1,10 +1,8 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-import { useTimeZone } from "../../contexts/TimeZoneContext";
 
-const CategoryDetail = () => {
-  const {timeZone} = useTimeZone()
+const CategoryDetail = (timeZone) => {
   const fields = {
     title: "name",
 
@@ -14,9 +12,18 @@ const CategoryDetail = () => {
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone)},
-      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+
+      {
+        key: "createddate", label: "Created Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
+      {
+        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+          return convertToUserTimezone(value, timeZone)
+        },
+      },
     ],
   };
 
@@ -24,9 +31,10 @@ const CategoryDetail = () => {
     <ModuleDetail
       moduleName="category"
       moduleApi="category"
-      moduleLabel="Category Management"
+      moduleLabel="Category"
       icon="fa-solid fa-tags"
       fields={fields}
+      initialIsEditable={false}
     />
   );
 };

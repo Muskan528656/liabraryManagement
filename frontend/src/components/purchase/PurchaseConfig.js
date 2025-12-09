@@ -42,7 +42,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             field: "purchase_date",
             label: "Purchase Date",
             sortable: true,
-            // render: (value) => value ? new Date(value).toLocaleDateString() : "-"
+
               render: (value) => {
                 return moment(convertToUserTimezone(value, timeZone)).format('l');
               }

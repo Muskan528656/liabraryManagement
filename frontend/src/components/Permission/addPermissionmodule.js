@@ -20,7 +20,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
     const [loading, setLoading] = useState(false);
 
-    // Reset form when modal closes
+
     useEffect(() => {
         if (!show) {
             setFormData({
@@ -48,11 +48,11 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         if (editingItem && modules.length > 0 && roles.length > 0) {
             console.log("Editing item received:", editingItem);
 
-            // Find the role in roles list
+
             const selectedRole = roles.find(r => r.id === editingItem.role_id);
 
             if (selectedRole) {
-                // Create merged permissions with all modules
+
                 const mergedPermissions = modules.map(module => {
                     const existing = editingItem.permissions?.find(p => p.module_id === module.id);
                     return {
@@ -74,7 +74,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                 updateSelectAllState(mergedPermissions);
             }
         } else if (!editingItem && modules.length > 0) {
-            // New permission mode
+
             const defaultPermissions = modules.map(m => ({
                 module_id: m.id,
                 module_name: m.name,
@@ -113,7 +113,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
             const modulesArray = Array.isArray(response?.data?.records) ? response.data.records : [];
 
-            // Sort modules by order_no
+
             const sortedModules = [...modulesArray].sort((a, b) => {
                 return (a.order_no || 999) - (b.order_no || 999);
             });
@@ -143,7 +143,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         const selectedRole = roles.find(r => r.id === roleId);
 
         if (selectedRole) {
-            // Reset all permissions when role changes
+
             const resetPermissions = modules.map(m => ({
                 module_id: m.id,
                 module_name: m.name,
@@ -214,7 +214,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         return permission ? permission[permissionType] : false;
     };
 
-    // Render permission cell with icon
+
     const renderPermissionCell = (moduleId, permissionType) => {
         const isChecked = getPermissionValue(moduleId, permissionType);
 
@@ -235,7 +235,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         );
     };
 
-    // Render select all checkbox
+
     const renderSelectAllCheckbox = (permissionType, label) => {
         const isChecked = selectAll[permissionType];
 

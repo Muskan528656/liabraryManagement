@@ -1,6 +1,35 @@
 import React, { useState } from "react";
-import { Modal, Button, Form, Row, Col } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, InputGroup } from "react-bootstrap";
 import Select from "react-select";
+
+const EyeIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    fill="currentColor"
+    viewBox="0 0 16 16"
+    style={{ color: "#6c757d" }}
+  >
+    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
+  </svg>
+);
+
+const EyeSlashIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    fill="currentColor"
+    viewBox="0 0 16 16"
+    style={{ color: "#6c757d" }}
+  >
+    <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z" />
+    <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z" />
+    <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z" />
+  </svg>
+);
 
 const FormModal = ({
   show,
@@ -20,26 +49,22 @@ const FormModal = ({
   children,
 }) => {
   const [filePreviews, setFilePreviews] = useState({});
-  const formatDateDDMMYYYY = (date) => {
-    if (!date) return "";
 
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
+  const [passwordVisibility, setPasswordVisibility] = useState({});
 
-    return `${day}/${month}/${year}`;
+  const togglePasswordVisibility = (fieldName) => {
+    setPasswordVisibility((prev) => ({
+      ...prev,
+      [fieldName]: !prev[fieldName],
+    }));
   };
+
   const handleInputChange = (name, value) => {
- 
     setFormData({ ...formData, [name]: value });
   };
 
   const handleFieldChange = (field, value) => {
-    console.log("asdfas", field)
- 
     if (field.onChange) {
-      console.log("form")
       field.onChange(value, formData, setFormData);
     } else {
       handleInputChange(field.name, value);
@@ -52,90 +77,69 @@ const FormModal = ({
 
     if (!file) {
       handleInputChange(fieldName, null);
-      setFilePreviews(prev => ({
-        ...prev,
-        [fieldName]: null
-      }));
+      setFilePreviews((prev) => ({ ...prev, [fieldName]: null }));
       return;
     }
 
     if (field.maxSize && file.size > field.maxSize) {
       alert(`File size must be less than ${field.maxSize / 1024 / 1024}MB`);
-      event.target.value = '';
+      event.target.value = "";
       return;
     }
 
     if (field.accept) {
-      const allowedTypes = field.accept.split(',').map(type => type.trim());
+      const allowedTypes = field.accept.split(",").map((type) => type.trim());
       const isFileValid = isFileTypeValid(file, allowedTypes);
 
       if (!isFileValid) {
         alert(`Only ${field.accept} files are allowed`);
-        event.target.value = '';
+        event.target.value = "";
         return;
       }
     }
 
-
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setFilePreviews(prev => ({
+        setFilePreviews((prev) => ({
           ...prev,
-          [fieldName]: e.target.result
+          [fieldName]: e.target.result,
         }));
       };
       reader.readAsDataURL(file);
     }
 
-
     handleInputChange(fieldName, file);
   };
 
-
   const isFileTypeValid = (file, allowedTypes) => {
     for (const allowedType of allowedTypes) {
-
-      if (allowedType.includes('/*')) {
-        const [category] = allowedType.split('/*');
-        if (category === '*' || file.type.startsWith(`${category}/`)) {
+      if (allowedType.includes("/*")) {
+        const [category] = allowedType.split("/*");
+        if (category === "*" || file.type.startsWith(`${category}/`)) {
           return true;
         }
-      }
-
-
-      else if (file.type === allowedType) {
+      } else if (file.type === allowedType) {
         return true;
-      }
-
-
-      else if (allowedType.startsWith('.')) {
+      } else if (allowedType.startsWith(".")) {
         const fileName = file.name.toLowerCase();
         if (fileName.endsWith(allowedType.toLowerCase())) {
           return true;
         }
-      }
-
-
-      else if (allowedType.includes('/')) {
+      } else if (allowedType.includes("/")) {
         if (file.type === allowedType) {
           return true;
         }
       }
     }
-
     return false;
   };
 
   const removeFile = (fieldName) => {
     handleInputChange(fieldName, null);
-    setFilePreviews(prev => ({
-      ...prev,
-      [fieldName]: null
-    }));
-
+    setFilePreviews((prev) => ({ ...prev, [fieldName]: null }));
     const fileInput = document.getElementById(`file-${fieldName}`);
-    if (fileInput) fileInput.value = '';
+    if (fileInput) fileInput.value = "";
   };
 
   const renderField = (field) => {
@@ -146,7 +150,7 @@ const FormModal = ({
 
     switch (field.type) {
       case "file":
-        const hasExistingFile = editingItem && typeof value === 'string' && value;
+        const hasExistingFile = editingItem && typeof value === "string" && value;
         const showPreview = filePreviews[field.name] || hasExistingFile;
 
         return (
@@ -154,51 +158,48 @@ const FormModal = ({
             <Form.Label>
               {field.label} {isRequired && <span className="text-danger">*</span>}
             </Form.Label>
-
-
             {showPreview && (
               <div className="mb-3 text-center">
-                {field.accept?.includes('image') ? (
+                {field.accept?.includes("image") ? (
                   <div style={{ position: "relative", display: "inline-block" }}>
                     <img
                       src={filePreviews[field.name] || value}
                       alt="Preview"
                       style={{
-                        width: '150px',
-                        height: '150px',
-                        objectFit: 'cover',
-                        borderRadius: '50%',
-                        border: '4px solid #6f42c1',
-                        boxShadow: '0 4px 12px rgba(111, 66, 193, 0.3)'
+                        width: "150px",
+                        height: "150px",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                        border: "4px solid #6f42c1",
+                        boxShadow: "0 4px 12px rgba(111, 66, 193, 0.3)",
                       }}
                     />
-                    <div style={{
-                      position: "absolute",
-                      bottom: "5px",
-                      right: "5px",
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      background: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                      cursor: "pointer"
-                    }} onClick={() => removeFile(field.name)}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "5px",
+                        right: "5px",
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => removeFile(field.name)}
+                    >
                       <i className="fa-solid fa-times" style={{ color: "#dc3545", fontSize: "16px" }}></i>
                     </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-light rounded">
                     <i className="fa-solid fa-file me-2"></i>
-                    {hasExistingFile ? 'Existing file' : 'File selected'}
+                    {hasExistingFile ? "Existing file" : "File selected"}
                     <div className="mt-2">
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => removeFile(field.name)}
-                      >
+                      <Button variant="outline-danger" size="sm" onClick={() => removeFile(field.name)}>
                         <i className="fa-solid fa-trash me-1"></i>
                         Remove
                       </Button>
@@ -207,7 +208,6 @@ const FormModal = ({
                 )}
               </div>
             )}
-
             <Form.Control
               type="file"
               id={`file-${field.name}`}
@@ -217,11 +217,7 @@ const FormModal = ({
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helperText && (
-              <Form.Text className="text-muted">
-                {field.helperText}
-              </Form.Text>
-            )}
+            {field.helperText && <Form.Text className="text-muted">{field.helperText}</Form.Text>}
           </Form.Group>
         );
 
@@ -246,6 +242,45 @@ const FormModal = ({
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
+            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+          </Form.Group>
+        );
+
+      case "password":
+        const isVisible = passwordVisibility[field.name];
+        return (
+          <Form.Group className="mb-3" key={field.name}>
+            <Form.Label>
+              {field.label} {isRequired && <span className="text-danger">*</span>}
+            </Form.Label>
+            <InputGroup>
+              <Form.Control
+                type={isVisible ? "text" : "password"}
+                name={field.name}
+                id={fieldId}
+                placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                value={value}
+                onChange={(e) => handleFieldChange(field, e.target.value)}
+                disabled={field.disabled}
+                isInvalid={!!error}
+                style={{ borderRight: "none" }} // Seamless look
+                {...field.props}
+              />
+              <InputGroup.Text
+                onClick={() => togglePasswordVisibility(field.name)}
+                style={{
+                  backgroundColor: "white",
+                  borderLeft: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {isVisible ? <EyeSlashIcon /> : <EyeIcon />}
+              </InputGroup.Text>
+              {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
+            </InputGroup>
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
@@ -301,9 +336,7 @@ const FormModal = ({
                 isInvalid={!!error}
                 {...field.props}
               >
-                {field.placeholder && (
-                  <option value="">{field.placeholder}</option>
-                )}
+                {field.placeholder && <option value="">{field.placeholder}</option>}
                 {field.options?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -352,27 +385,10 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-      case "toggle":
-        return (
-          <div className={`col-md-${field.colSize || 6} mb-3`} key={field.name}>
-            <label className="form-label d-block">{field.label}</label>
-            <div className="form-check form-switch">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                checked={formData[field.name] || false}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    [field.name]: e.target.checked
-                  })
-                }
-              />
-            </div>
-          </div>
-        );
+
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
+
       case "toggle":
         return (
           <Form.Group className="mb-3" key={field.name}>
@@ -380,16 +396,12 @@ const FormModal = ({
               <span>
                 {field.label} {field.required && <span className="text-danger">*</span>}
               </span>
-              <span className="fw-bold">
-                {formData[field.name] ? "Yes" : "No"}
-              </span>
+              <span className="fw-bold">{formData[field.name] ? "Yes" : "No"}</span>
             </Form.Label>
 
             <div
               className="custom-toggle"
-              onClick={() =>
-                handleFieldChange(field, !formData[field.name])
-              }
+              onClick={() => handleFieldChange(field, !formData[field.name])}
               style={{
                 width: "55px",
                 height: "28px",
@@ -434,12 +446,10 @@ const FormModal = ({
       <Modal.Body>
         <Form>
           {fields.length > 0 ? (
- 
-            fields.some(field => field.section) ? (
- 
+            fields.some((field) => field.section) ? (
               Object.entries(
                 fields.reduce((acc, field) => {
-                  const sectionName = field.section || 'default';
+                  const sectionName = field.section || "default";
                   if (!acc[sectionName]) {
                     acc[sectionName] = [];
                   }
@@ -454,18 +464,20 @@ const FormModal = ({
                       background: "linear-gradient(to right, #f3e9fc, #ffffff)",
                       borderLeft: "4px solid #6f42c1",
                       marginBottom: "20px",
-                      borderRadius: "6px"
+                      borderRadius: "6px",
                     }}
                   >
-                    <h6 style={{
-                      margin: 0,
-                      color: "#6f42c1",
-                      fontSize: "16px",
-                      fontWeight: "700",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px"
-                    }}>
+                    <h6
+                      style={{
+                        margin: 0,
+                        color: "#6f42c1",
+                        fontSize: "16px",
+                        fontWeight: "700",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <i className="fa-solid fa-info-circle"></i>
                       {sectionName}
                     </h6>
@@ -483,7 +495,6 @@ const FormModal = ({
                 </div>
               ))
             ) : (
- 
               <Row>
                 {fields.map((field) => {
                   const colSize = field.colSize || 12;
@@ -522,8 +533,10 @@ const FormModal = ({
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   {editingItem ? "Updating..." : "Saving..."}
                 </>
+              ) : editingItem ? (
+                "Update"
               ) : (
-                editingItem ? "Update" : "Save"
+                "Save"
               )}
             </Button>
           </>

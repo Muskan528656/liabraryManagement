@@ -9,7 +9,7 @@ import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
 import Loader from "./common/Loader";
-// import { useNavigate } from "react-router-dom";
+
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 
@@ -89,7 +89,7 @@ const InteractiveCard = ({ children, style, ...props }) => {
 
 
 const Dashboard = ({ userInfo: propUserInfo }) => {
-  // const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [userInfo, setUserInfo] = useState(null);

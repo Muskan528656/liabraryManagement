@@ -11,11 +11,11 @@ async function runMigration() {
   try {
     console.log("🚀 Starting migration: Add phone_number column to company table...\n");
 
-    // Read the migration SQL file
+
     const migrationPath = path.join(__dirname, "./schemas/migration_add_phone_number_to_company.sql");
     const migrationSQL = fs.readFileSync(migrationPath, "utf8");
 
-    // Execute the migration
+
     const result = await db.query(migrationSQL);
 
     console.log("✅ Migration completed successfully!");
@@ -36,5 +36,5 @@ async function runMigration() {
   }
 }
 
-// Run migration
+
 runMigration();

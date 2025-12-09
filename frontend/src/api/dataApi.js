@@ -1,77 +1,181 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import * as constants from '../constants/CONSTANT';
 import axios from 'axios';
+
 export default class DataApi {
     constructor(path) {
         this.token = sessionStorage.getItem('token');
-
         this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
-
     }
+
+
+    getHeaders(contentType = false) {
+        const headers = {};
+
+        if (contentType) headers['Content-Type'] = 'application/json';
+
+        if (this.token) {
+            headers.Authorization = this.token.startsWith("Bearer ")
+                ? this.token
+                : `Bearer ${this.token}`;
+        }
+
+        return headers;
+    }
+
+
 
     fetchAll(queryString = '') {
         const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
-        console.log('fetchAll url: ', url);
-        const headers = {};
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.get(url, { headers });
+        return axios.get(url, { headers: this.getHeaders() });
     }
-
 
     fetchById(id) {
         const url = id ? `${this.baseUrl}/${id}` : this.baseUrl;
-        return axios.get(url, {
-            headers: {
-                Authorization: `${this.token}`,
-            },
-        });
+        return axios.get(url, { headers: this.getHeaders() });
     }
 
-
     create(data) {
-        console.log('data', data);
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.post(this.baseUrl, data, { headers });
+        return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
     }
 
     post(url, data) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.post(this.baseUrl + url, data, { headers });
+        return axios.post(this.baseUrl + url, data, { headers: this.getHeaders(true) });
     }
 
     put(url, data) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.put(this.baseUrl + url, data, { headers });
+        return axios.put(this.baseUrl + url, data, { headers: this.getHeaders(true) });
     }
 
     get(url, config = {}) {
-        const headers = {};
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.get(this.baseUrl + url, { headers, ...config });
+        return axios.get(this.baseUrl + url, {
+            headers: this.getHeaders(),
+            ...config
+        });
     }
 
-
     update(data, id) {
-        console.log(`Update Method: ${this.baseUrl}/${id}`);
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.put(`${this.baseUrl}/${id}`, data, { headers }); // Update
+        return axios.put(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders(true) });
     }
 
     delete(id) {
-        const headers = {};
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.delete(`${this.baseUrl}/${id}`, { headers });
+        return axios.delete(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
     }
-
 
     deleteWithBody(url, data) {
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.delete(this.baseUrl + url, { data: data, headers });
+        return axios.delete(this.baseUrl + url, {
+            data,
+            headers: this.getHeaders(true)
+        });
     }
+
 
     async search(params = {}) {
         const { display_fields, ...otherParams } = params;
@@ -81,18 +185,41 @@ export default class DataApi {
             ...(display_fields && { display_fields }),
         };
 
-        const headers = {};
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        const res = await axios.get(this.baseUrl, { params: queryParams, headers });
+        const res = await axios.get(this.baseUrl, {
+            params: queryParams,
+            headers: this.getHeaders()
+        });
 
         return res.data;
     }
+     updateFormData(formData, id) {
+        return axios.put(`${this.baseUrl}/${this.endpoint}/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    }
 
+
+    fetchIssuedCountByBookId(bookId) {
+        console.log("AAAA", bookId)
+        if (!bookId) throw new Error("Book ID required");
+
+        const url = `${this.baseUrl}/${bookId}/issued-count`;
+        return axios.get(url, { headers: this.getHeaders() });
+    }
+
+    fetchSubmitCountByBookId(bookId) {
+        console.log("bookId in api is", bookId);
+        const url = bookId ? `${this.baseUrl}/${bookId}/submit-count` : this.baseUrl;
+        return axios.get(url, {
+            headers: {
+                Authorization: `${this.token}`,
+            },
+        });
+    }
 
     upsert(data) {
-        console.log('upsert payload data: ', data);
-        const headers = { 'Content-Type': 'application/json' };
-        if (this.token) headers.Authorization = this.token.startsWith('Bearer ') ? this.token : `Bearer ${this.token}`;
-        return axios.post(this.baseUrl, data, { headers });
+        return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
     }
 }

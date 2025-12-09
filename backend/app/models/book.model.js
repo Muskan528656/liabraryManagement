@@ -10,7 +10,7 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
- 
+
 async function findAll() {
   try {
     if (!this.schema) {
@@ -32,7 +32,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -57,7 +57,7 @@ async function findById(id) {
   }
 }
 
- 
+
 async function create(bookData, userId) {
   try {
     if (!this.schema) {
@@ -74,10 +74,10 @@ async function create(bookData, userId) {
     if (availableCopies > totalCopies) {
       throw new Error(`Available copies (${availableCopies}) cannot exceed total copies (${totalCopies})`);
     }
-
+    console.log("bookdataaa->>>", bookData)
     const query = `INSERT INTO ${this.schema}.books 
-                   (title, author_id, category_id, isbn, total_copies, available_copies, company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8) 
+                   (title, author_id, category_id, isbn, total_copies, available_copies, company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid , language) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8 , $9) 
                    RETURNING *`;
 
     const values = [
@@ -89,6 +89,7 @@ async function create(bookData, userId) {
       availableCopies,
       bookData.company_id || bookData.companyId || null,
       userId || null,
+      bookData.language || null,
     ];
 
     const result = await sql.query(query, values);
@@ -100,7 +101,7 @@ async function create(bookData, userId) {
   }
 }
 
- 
+
 async function updateById(id, bookData, userId) {
   try {
     if (!this.schema) {
@@ -121,7 +122,7 @@ async function updateById(id, bookData, userId) {
     const query = `UPDATE ${this.schema}.books 
                    SET title = $2, author_id = $3, category_id = $4, isbn = $5, 
                        total_copies = $6, available_copies = $7, 
-                       lastmodifieddate = NOW(), lastmodifiedbyid = $8
+                       lastmodifieddate = NOW(), lastmodifiedbyid = $8 ,language = $9
                    WHERE id = $1 
                    RETURNING *`;
     const values = [
@@ -133,6 +134,7 @@ async function updateById(id, bookData, userId) {
       totalCopies,
       availableCopies,
       userId || null,
+      bookData.language || null,
     ];
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
@@ -145,7 +147,7 @@ async function updateById(id, bookData, userId) {
   }
 }
 
- 
+
 async function deleteById(id) {
   try {
     if (!this.schema) {

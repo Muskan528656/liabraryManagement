@@ -6,6 +6,7 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = () => {
+  
   const [isLoading, setIsLoading] = useState(true);
   const {timeZone} = useTimeZone();
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Table } from "react-bootstrap";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
 import Loader from "./Loader";
@@ -46,7 +46,7 @@ const DynamicCRUD = ({
     recordsPerPage = 10,
     icon
 }) => {
-    // const location = useLocation();
+
     const navigate = useNavigate();
 
     const {
@@ -84,7 +84,7 @@ const DynamicCRUD = ({
 
 
     console.log("formData", formData)
-    console.log("Data",data)
+    console.log("Data", data)
 
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
@@ -113,7 +113,7 @@ const DynamicCRUD = ({
     const handleNameClick = useCallback((item, isEdit) => {
         console.log("handleNameClick called with isEdit:", isEdit);
         setIsEditable(isEdit)
-        console.log("isEditable in DynamicCRUD:", isEditable);
+        console.log("isEditable in DynamicCRUD:", item);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
@@ -446,6 +446,9 @@ const DynamicCRUD = ({
 
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
+                } else if (typeof field.options === 'function') {
+                    // Handle function-based options (e.g., time_zone depending on country)
+                    optionsArray = field.options(formData) || [];
                 } else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
@@ -489,7 +492,7 @@ const DynamicCRUD = ({
                 };
             }
         });
-    }, [formFields, relatedData]);
+    }, [formFields, relatedData, formData]);
 
 
 
@@ -550,11 +553,8 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
+        console.log("onSubmitonSubmitonSubmitonSubmit,", formData);
 
-
-
-
-        console.log("onSubmitonSubmitonSubmitonSubmit,", formData)
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
             if (customResult === false) return;
@@ -609,6 +609,8 @@ const DynamicCRUD = ({
                 });
 
                 if (editingItem) {
+                    delete submitData.password;
+                    delete submitData.confirmPassword;
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);

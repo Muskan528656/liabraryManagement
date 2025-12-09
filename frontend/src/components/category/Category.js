@@ -11,9 +11,8 @@ import Loader from "../common/Loader";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const Category = (props) => {
-  const { timeZone } = useTimeZone();
-
   const baseConfig = getCategoryConfig();
+   const { timeZone } = useTimeZone();
 
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
@@ -46,9 +45,9 @@ const Category = (props) => {
   };
 
 
-  const finalConfig = getCategoryConfig(allData, timeZone);
+  const finalConfig = getCategoryConfig(allData,timeZone);
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags"/>;
+  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-tags" />;
 };
 
 export default Category;

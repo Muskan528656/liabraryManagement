@@ -1,5 +1,8 @@
+
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import DataApi from "../api/dataApi";
+import { useUser } from "./UserContext";
 
 const TimeZoneContext = createContext();
 
@@ -13,35 +16,27 @@ export const useTimeZone = () => {
 
 export const TimeZoneProvider = ({ children }) => {
   const [timeZone, setTimeZone] = useState("UTC");
+  const [companyInfo, setCompanyInfo] = useState(null);
+  const { userInfo } = useUser();
 
-  function getCompanyIdFromToken() {
-    const token = sessionStorage.getItem("token");
-    if (!token) return null;
-
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.companyid || payload.companyid || null;
-  }
-
-  const setCompanyTimeZone = (timeZone) => {
-    console.log('setCompanyTimeZone called = ', timeZone)
-    setTimeZone(timeZone);
-  }
+  const setCompanyTimeZone = (tz) => {
+    console.log("setCompanyTimeZone called =", tz);
+    setTimeZone(tz);
+  };
 
   const fetchCompanyDetails = async () => {
     try {
-      const companyid = getCompanyIdFromToken();
-
-      if (!companyid) {
-        console.error("Company ID not found in token");
+      if (!userInfo?.companyid) {
+        console.error("Company ID not found in user info");
         return;
       }
 
-      const companyApi = new DataApi("company");
-      const response = await companyApi.fetchById(companyid);
-      console.log("Company=>",response.data)
-      if (response.data) {
-        
-        setTimeZone(response.data.time_zone || "UTC");
+      const UserApi = new DataApi("user");
+      const response = await UserApi.fetchById(userInfo.id);
+      if (response?.data) {
+        console.log("resposne ===", response.data?.time_zone)
+        setTimeZone(response.data?.time_zone || "UTC");
+        setCompanyInfo(response.data);
       }
     } catch (error) {
       console.error("Error fetching company by ID:", error);
@@ -49,13 +44,15 @@ export const TimeZoneProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    console.log("FETCH COMPANY");
-    fetchCompanyDetails();
-  }, []);
+    if (userInfo) {
+      console.log("FETCH COMPANY");
+      fetchCompanyDetails();
+    }
+  }, [userInfo]);
 
   return (
     <TimeZoneContext.Provider
-      value={{ timeZone, fetchCompanyDetails, setCompanyTimeZone }}
+      value={{ timeZone, fetchCompanyDetails, setCompanyTimeZone, companyInfo }}
     >
       {children}
     </TimeZoneContext.Provider>
