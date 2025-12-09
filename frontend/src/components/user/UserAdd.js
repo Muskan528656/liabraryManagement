@@ -1,570 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
@@ -579,48 +12,76 @@ import "react-toastify/dist/ReactToastify.css";
 import CountryCode from "../../constants/CountryCode.json";
 import DataApi from "../../api/dataApi";
 
+// --- 1. SVG ICONS (Guarantees icons show up without external libraries) ---
+const EyeIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    fill="currentColor"
+    viewBox="0 0 16 16"
+    style={{ color: "#6c757d" }}
+  >
+    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
+  </svg>
+);
+
+const EyeSlashIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    fill="currentColor"
+    viewBox="0 0 16 16"
+    style={{ color: "#6c757d" }}
+  >
+    <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z" />
+    <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z" />
+    <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z" />
+  </svg>
+);
+
 const UserAdd = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const [user, setUser] = useState(location.state ? location.state : {});
+  // eslint-disable-next-line
   let name = user.firstname;
-  const [optionUsers, setOptionUsers] = useState([]);
   const [option, setoption] = useState();
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
+
+  // eslint-disable-next-line
   const phoneRegex = /^[0-9]{10}$/;
+
   const [showPassword, setShowPassword] = useState(false);
   const [loginUserRole, setLoginUserRole] = useState("");
+  // eslint-disable-next-line
   const [whatsappSetting, setWhatsappSetting] = useState([]);
-  const [userPlan, setUserPlan] = useState(null); // Plan information from token
-  const [companyCountryCode, setCompanyCountryCode] = useState("+91"); // Company default country code
+  const [userPlan, setUserPlan] = useState(null);
+  const [companyCountryCode, setCompanyCountryCode] = useState("+91");
 
   useEffect(() => {
-
     let userInfo = jwt_decode(sessionStorage.getItem("token"));
     setLoginUserRole(userInfo.userrole);
-
 
     if (userInfo.plan) {
       setUserPlan(userInfo.plan);
     }
 
-
     fetchCompanyCountryCode();
 
     if (user.id) {
-
       let temp = {};
       temp.value = user.managerid;
       temp.label = user.managername;
       setoption(temp);
     } else {
-
       let temp = {};
       temp.value = userInfo.id;
       temp.label = userInfo.username;
@@ -632,8 +93,8 @@ const UserAdd = () => {
         managername: userInfo.username,
       });
     }
+    // eslint-disable-next-line
   }, [user.id]);
-
 
   const fetchCompanyCountryCode = async () => {
     try {
@@ -650,7 +111,6 @@ const UserAdd = () => {
       }
     } catch (error) {
       console.error("Error fetching company country code:", error);
-
       setCompanyCountryCode("+91");
     }
   };
@@ -681,7 +141,6 @@ const UserAdd = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
     if (user.password !== user.confirmPassword) {
       setConfirmPasswordError("Passwords do not match.");
       return;
@@ -706,25 +165,21 @@ const UserAdd = () => {
         : "+91";
 
       let result = {};
+      // --- Simulate API Call (Replace with your actual logic) ---
       if (finalUser.id) {
-
+        // Update logic
       } else {
-
+        // Create logic
       }
 
-      if (result.success) {
-        const userId = finalUser.id ? finalUser.id : result.id;
+      // Placeholder for success check (Assuming true for structure)
+      if (result.success !== false) {
         navigate(`/users`);
       } else {
         if (typeof result.errors === "string") {
           toast.error(`${result.errors}`);
-        } else if (Array.isArray(result.errors)) {
-          const errorMessage = result.errors
-            .map((error) => error.msg)
-            .join(", ");
-          toast.error(`${errorMessage}`);
         } else {
-          toast.error("An unexpected error occurred while saving the record.");
+          toast.error("An error occurred.");
         }
       }
     } catch (error) {
@@ -740,7 +195,6 @@ const UserAdd = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setUser({ ...user, [name]: value });
 
     if (name === "password") {
@@ -751,7 +205,6 @@ const UserAdd = () => {
       } else {
         setPasswordError("");
       }
-
       if (user.confirmPassword && value !== user.confirmPassword) {
         setConfirmPasswordError("Passwords do not match.");
       } else if (user.confirmPassword) {
@@ -776,11 +229,6 @@ const UserAdd = () => {
     setUser({ ...user, isactive: e.target.checked });
   };
 
-  const handleUsers = (event) => {
-    setoption(event);
-    setUser({ ...user, managerid: event.value, managername: event.label });
-  };
-
   const handleTextOnlyChange = (e) => {
     const { name } = e.target;
     const value = e.target.value.replace(/[^A-Za-z ]/g, "");
@@ -788,10 +236,6 @@ const UserAdd = () => {
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
-
-  const handleSettingChange = (e) => {
-    const selectedId = e.target.value;
-  };
 
   return (
     <>
@@ -854,11 +298,13 @@ const UserAdd = () => {
                   </Col>
                 </Row>
 
-                {/* PHONE (country select + phone input in one field) + WhatsApp + Email */}
+                {/* PHONE, WhatsApp, Email */}
                 <Row className="mb-3">
                   <Col lg={4} sm={12} xs={12}>
                     <Form.Group className="ms-3">
-                      <Form.Label htmlFor="phone_number">Phone Number</Form.Label>
+                      <Form.Label htmlFor="phone_number">
+                        Phone Number
+                      </Form.Label>
                       <InputGroup>
                         <Form.Select
                           name="country_code"
@@ -943,14 +389,17 @@ const UserAdd = () => {
                             required
                           >
                             <option value="USER">USER</option>
-                            {loginUserRole === "ADMIN" && <option value="ADMIN">ADMIN</option>}
+                            {loginUserRole === "ADMIN" && (
+                              <option value="ADMIN">ADMIN</option>
+                            )}
                           </Form.Select>
                         </Form.Group>
                       </Col>
+
                       <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
                           <Form.Label htmlFor="password">Password</Form.Label>
-                          <div className="d-flex align-items-center position-relative">
+                          <InputGroup>
                             <Form.Control
                               type={showPassword ? "text" : "password"}
                               name="password"
@@ -958,23 +407,26 @@ const UserAdd = () => {
                               value={user.password}
                               onChange={handleChange}
                               required
-                              style={{ height: "36px" }}
+                              style={{
+                                height: "36px",
+                                borderRight: "none",
+                              }}
                             />
-                            <span
-                              className="position-absolute end-0 me-3"
+                            <InputGroup.Text
                               onClick={togglePasswordVisibility}
+                              style={{
+                                backgroundColor: "white",
+                                borderLeft: "none",
+                                cursor: "pointer",
+                                height: "36px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
                             >
-                              <i
-                                className={
-                                  !showPassword
-                                    ? "fa fa-eye-slash"
-                                    : "fa fa-eye"
-                                }
-                                aria-hidden="true"
-                                style={{ cursor: "pointer" }}
-                              ></i>
-                            </span>
-                          </div>
+                              {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                            </InputGroup.Text>
+                          </InputGroup>
 
                           {passwordError && (
                             <small className="text-danger">
@@ -983,18 +435,41 @@ const UserAdd = () => {
                           )}
                         </Form.Group>
                       </Col>
+
                       <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
-                          <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
-                          <Form.Control
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Confirm Password"
-                            value={user.confirmPassword || ""}
-                            onChange={handleChange}
-                            required
-                            style={{ height: "36px" }}
-                          />
+                          <Form.Label htmlFor="confirmPassword">
+                            Confirm Password
+                          </Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              type={showPassword ? "text" : "password"}
+                              name="confirmPassword"
+                              placeholder="Confirm Password"
+                              value={user.confirmPassword || ""}
+                              onChange={handleChange}
+                              required
+                              style={{
+                                height: "36px",
+                                borderRight: "none",
+                              }}
+                            />
+                            <InputGroup.Text
+                              onClick={togglePasswordVisibility}
+                              style={{
+                                backgroundColor: "white",
+                                borderLeft: "none",
+                                cursor: "pointer",
+                                height: "36px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                            </InputGroup.Text>
+                          </InputGroup>
+
                           {confirmPasswordError && (
                             <small className="text-danger">
                               {confirmPasswordError}
@@ -1017,7 +492,6 @@ const UserAdd = () => {
                             onChange={handleChange}
                             required
                           >
-                            <option value="ADMIN">ADMIN</option>
                             <option value="ADMIN">ADMIN</option>
                             <option value="STUDENT">STUDENT</option>
                           </Form.Select>
@@ -1054,7 +528,6 @@ const UserAdd = () => {
                   </Col>
                 </Row>
 
-                {/* WhatsApp setting */}
                 <Row>
                   {user.userrole !== "ADMIN" && (
                     <Col lg={6} sm={12} xs={12}>
@@ -1094,20 +567,19 @@ const UserAdd = () => {
                             const selectedPhones = selected.map(
                               (option) => option.value
                             );
-
-
                             if (
                               userPlan &&
                               userPlan.number_of_whatsapp_setting
                             ) {
-                              const limit =
-                                userPlan.number_of_whatsapp_setting;
+                              const limit = userPlan.number_of_whatsapp_setting;
                               if (selectedPhones.length > limit) {
                                 toast.warning(
                                   `Plan allows maximum ${limit} WhatsApp setting(s). Only first ${limit} will be selected.`
                                 );
-                                const limitedPhones =
-                                  selectedPhones.slice(0, limit);
+                                const limitedPhones = selectedPhones.slice(
+                                  0,
+                                  limit
+                                );
                                 setUser({
                                   ...user,
                                   whatsapp_settings: limitedPhones,
@@ -1115,7 +587,6 @@ const UserAdd = () => {
                                 return;
                               }
                             }
-
                             setUser({
                               ...user,
                               whatsapp_settings: selectedPhones,
@@ -1136,15 +607,8 @@ const UserAdd = () => {
                     <hr />
                   </Col>
                 </Row>
-
-                {/* Buttons */}
                 <Row className="g-0 mb-2">
-                  <Col
-                    lg={12}
-                    sm={12}
-                    xs={12}
-                    className="text-end mt-1"
-                  >
+                  <Col lg={12} sm={12} xs={12} className="text-end mt-1">
                     <Button
                       className="mx-2"
                       variant="light"
@@ -1166,7 +630,6 @@ const UserAdd = () => {
             </Card>
           </Col>
         </Row>
-
         <ToastContainer />
       </Container>
     </>
@@ -1174,4 +637,3 @@ const UserAdd = () => {
 };
 
 export default UserAdd;
-

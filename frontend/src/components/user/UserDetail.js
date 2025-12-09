@@ -6,17 +6,19 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = () => {
+
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
 
   console.log("0439534", timeZone);
 
-
+  // State for current country to compute options
   const [currentCountry, setCurrentCountry] = useState(null);
 
-
+  // Get Company Defaults
   const { companyInfo } = useTimeZone();
 
+  // Compute options based on current country
   const currencyOptions = useMemo(() => {
     if (!currentCountry) return [];
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === currentCountry);
@@ -57,6 +59,7 @@ const UserDetail = () => {
           companyApi.fetchAll(),
         ]);
 
+        // Handle various API response structures
         const userRoles = roleRes?.data?.data || roleRes?.data || [];
         const companies = companyRes?.data?.data || companyRes?.data || [];
 
@@ -74,14 +77,15 @@ const UserDetail = () => {
     fetchExternalData();
   }, []);
 
+  // --- Dynamic Handler for Country Change ---
   const handleCountryChange = (countryName, formValues, setFormValues) => {
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === countryName);
 
     if (countryData) {
-
+      // Set current country to trigger options recomputation
       setCurrentCountry(countryName);
 
-
+      // Update Form Values
       if (setFormValues) {
         setFormValues({
           ...formValues,
@@ -99,6 +103,7 @@ const UserDetail = () => {
     subtitle: "email",
     status: "isactive",
 
+    // --- LOAD HANDLER ---
     onLoad: (record, setFormValues) => {
       let countryToUse = record?.country;
 
@@ -137,28 +142,13 @@ const UserDetail = () => {
           value: c.countryName,
           label: `${c.flag} ${c.countryName}`
         })),
-        onChange: handleCountryChange,
-        render: (value) => {
-          if (value) {
-            const country = COUNTRY_TIMEZONE.find(c => c.countryName === value);
-            return country ? `${country.flag} ${country.countryName}` : value;
-          }
-
-          if (companyInfo?.country) {
-            const defaultCountry = COUNTRY_TIMEZONE.find(c =>
-              c.countryName.toLowerCase() === companyInfo.country.toLowerCase()
-            );
-            return defaultCountry ? `${defaultCountry.flag} ${defaultCountry.countryName}` : companyInfo.country;
-          }
-          return <span className="text-muted">N/A</span>;
-        }
+        onChange: handleCountryChange
       },
       {
         key: "country_code",
         label: "Country Code",
         type: "text",
-        readOnly: true,
-        render: (value) => value || (companyInfo?.country_code ? companyInfo.country_code : <span className="text-muted">N/A</span>)
+        readOnly: true
       },
       { key: "phone", label: "Phone", type: "text" },
       {
@@ -166,45 +156,27 @@ const UserDetail = () => {
         label: "Currency",
         type: "select",
         options: currencyOptions,
-        readOnly: true,
-        render: (value) => {
-          if (value) return value;
-          if (companyInfo?.currency) return companyInfo.currency;
-          return <span className="text-muted">N/A</span>;
-        }
+        readOnly: true
       },
       {
         key: "time_zone",
         label: "Time Zone",
         type: "select",
         options: timeZoneOptions,
-        readOnly: false,
-        render: (value) => {
-          if (value) {
-            const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
-            const tz = country?.timezones.find(t => t.zoneName === value);
-            return tz ? `${tz.zoneName} (${tz.gmtOffset})` : value;
-          }
-          if (companyInfo?.time_zone) {
-            const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === companyInfo.time_zone));
-            const tz = country?.timezones.find(t => t.zoneName === companyInfo.time_zone);
-            return tz ? `${tz.zoneName} (${tz.gmtOffset})` : companyInfo.time_zone;
-          }
-          return <span className="text-muted">N/A</span>;
-        }
+        readOnly: false
       },
       {
         key: "userrole",
         label: "User Role",
         type: "select",
-
+        // Map options for the edit dropdown
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
-
+        // Custom Render to ensure Name is shown in View Mode
         render: (value, data) => {
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
             return <span className="text-muted">Loading...</span>;
           }
-
+          // Handle both string and number ID comparison
           const role = externalData.userRoles.find(r =>
             String(r.id) === String(value) || String(r._id) === String(value)
           );
@@ -222,6 +194,7 @@ const UserDetail = () => {
       },
     ],
     other: [
+
       { key: "createdbyid", label: "Created By", type: "text" },
       {
         key: "createddate", label: "Created Date", type: "date",

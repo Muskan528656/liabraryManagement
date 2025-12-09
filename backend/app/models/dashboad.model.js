@@ -130,11 +130,6 @@ const fetchAll = async () => {
        FROM demo.books b
       ) AS total_book_copies,
 
-    (SELECT COUNT(DISTINCT member_id)
- FROM demo.book_issues 
- WHERE return_date IS NULL
-) AS active_borrowers,
-      
       (SELECT COALESCE(AVG(EXTRACT(DAY FROM (return_date - issue_date))), 0)
        FROM demo.book_issues 
        WHERE return_date IS NOT NULL

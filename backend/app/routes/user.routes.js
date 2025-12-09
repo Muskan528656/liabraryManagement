@@ -1,3 +1,4 @@
+
 /**
  * Handles all incoming request for /api/user endpoint
  * DB table for this demo.user
@@ -98,7 +99,7 @@ module.exports = (app) => {
           });
         }
 
- 
+
         let finalCompanyId = companyid;
         if (!finalCompanyId) {
           try {
@@ -127,7 +128,7 @@ module.exports = (app) => {
         User.init(tenantcode);
         const userId = req.userinfo?.id || null;
 
- 
+
         let hashedPassword = req.body.password;
         if (req.body.password) {
           const salt = bcrypt.genSaltSync(10);
@@ -136,7 +137,7 @@ module.exports = (app) => {
 
 
 
- 
+
         const userData = {
           ...req.body,
           password: hashedPassword,
@@ -155,7 +156,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
@@ -173,16 +174,16 @@ module.exports = (app) => {
         }
 
         User.init(req.userinfo.tenantcode);
- 
+
         const existingUser = await User.findById(req.params.id);
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
 
- 
+
         const updateData = { ...req.body };
         if (updateData.password) {
- 
+
           if (!updateData.password.startsWith('$2a$') && !updateData.password.startsWith('$2b$')) {
             const salt = bcrypt.genSaltSync(10);
             updateData.password = bcrypt.hashSync(updateData.password, salt);
@@ -202,7 +203,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.post("/:id/upload-image", fetchUser, async (req, res) => {
     try {
       if (!req.files || !req.files.file) {
@@ -212,19 +213,19 @@ module.exports = (app) => {
       const userId = req.params.id;
       const file = req.files.file;
 
- 
+
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({ errors: "Invalid file type. Only JPEG, PNG, and GIF images are allowed." });
       }
 
- 
+
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
         return res.status(400).json({ errors: "File size too large. Maximum size is 5MB." });
       }
 
- 
+
       const uploadPath = path.join(
         process.env.FILE_UPLOAD_PATH || './public',
         req.userinfo.tenantcode,
@@ -232,20 +233,20 @@ module.exports = (app) => {
         userId
       );
 
- 
+
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
 
- 
+
       const fileExtension = path.extname(file.name) || '.jpg';
       const fileName = `profile${fileExtension}`;
       const filePath = path.join(uploadPath, fileName);
 
- 
+
       try {
         if (file.mv) {
- 
+
           await new Promise((resolve, reject) => {
             file.mv(filePath, (err) => {
               if (err) reject(err);
@@ -253,16 +254,16 @@ module.exports = (app) => {
             });
           });
         } else if (file.data) {
- 
+
           fs.writeFileSync(filePath, file.data);
         } else if (Buffer.isBuffer(file)) {
- 
+
           fs.writeFileSync(filePath, file);
         } else {
           return res.status(400).json({ errors: "Invalid file format" });
         }
 
- 
+
         const relativePath = `/public/${req.userinfo.tenantcode}/users/${userId}/${fileName}`;
         return res.status(200).json({
           success: true,
@@ -279,7 +280,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
@@ -294,6 +295,6 @@ module.exports = (app) => {
     }
   });
 
-   app.use(process.env.BASE_API_URL + "/api/user", router);
+  app.use(process.env.BASE_API_URL + "/api/user", router);
 };
 
