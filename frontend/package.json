@@ -31,6 +31,7 @@
     "currency-formatter-react": "^1.1.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
+    "font-awesome": "^4.7.0",
     "google-maps-react": "^2.0.6",
     "html-react-parser": "^4.0.0",
     "html-to-pdfmake": "^2.4.22",

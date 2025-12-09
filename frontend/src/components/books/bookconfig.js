@@ -1,5 +1,5 @@
 
-export const getBooksConfig = (externalData = {}, props = {}) => {
+export const getBooksConfig = (externalData = {}, props = {},timeZone) => {
     const authors =
         props.authors ||
         externalData.authors ||
@@ -29,10 +29,6 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
             {
                 field: "title",
                 label: "Title",
-            },
-            {
-                field: "language",
-                label: "Language",
             },
             {
                 field: "author_name",
@@ -70,6 +66,7 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
                 type: "select",
                 options: "authors",
                 required: true,
+                placeholder: "Select author",
                 colSize: 6,
             },
             {
@@ -78,6 +75,7 @@ export const getBooksConfig = (externalData = {}, props = {}) => {
                 type: "select",
                 options: "categories",
                 required: true,
+                placeholder: "Select category",
                 colSize: 6,
             },
             {

@@ -110,34 +110,6 @@ const DynamicCRUD = ({
         );
     }, []);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const handleEditClick = useCallback((item) => {
-        console.log("Edit clicked for item:", item);
-        console.log("Item ID:", item.id);
-
-
-        navigate(`/${apiEndpoint}/${item.id}`, {
-            state: {
-                isEdit: true,
-                rowData: item,
-                type: apiEndpoint
-            },
-        });
-    }, [apiEndpoint, navigate]);
-
-
     const handleNameClick = useCallback((item, isEdit) => {
         console.log("handleNameClick called with isEdit:", isEdit);
         setIsEditable(isEdit)
@@ -159,7 +131,7 @@ const DynamicCRUD = ({
                 try {
 
                     if (isEdit) {
-                        console.log("isEdit->>>", isEdit)
+                        console.log("isEdit->>>",isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
                             state: { isEdit: true, rowData: item },
                         });
@@ -474,9 +446,10 @@ const DynamicCRUD = ({
 
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
-                }
-
-                else if (typeof field.options === 'string') {
+                } else if (typeof field.options === 'function') {
+                    // Handle function-based options (e.g., time_zone depending on country)
+                    optionsArray = field.options(formData) || [];
+                } else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];
                     if (Array.isArray(relatedOptions)) {
                         optionsArray = relatedOptions.map(item => ({
@@ -524,6 +497,12 @@ const DynamicCRUD = ({
             }
         });
     }, [formFields, relatedData, formData]);
+
+
+
+
+
+
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {
@@ -579,102 +558,6 @@ const DynamicCRUD = ({
         }
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const handleSave = useCallback(async () => {
         console.log("onSubmitonSubmitonSubmitonSubmit,", formData);
 
@@ -698,23 +581,7 @@ const DynamicCRUD = ({
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             let response;
-
-
-            const hasImageFile = formData.image && formData.image instanceof File;
-            const hasImageUrl = formData.image && typeof formData.image === 'string' && formData.image.startsWith('/uploads/');
-            const hasBase64Image = formData.image && typeof formData.image === 'string' && formData.image.startsWith('data:image/');
-
-
-            const hasFileUpload = formFields.some(field => field && field.type === 'file') || hasImageFile || hasBase64Image;
-
-            console.log("📸 Image Debug:", {
-                hasImageFile,
-                hasImageUrl,
-                hasBase64Image,
-                imageValue: formData.image,
-                imageType: typeof formData.image,
-                isFileInstance: formData.image instanceof File
-            });
+            const hasFileUpload = formFields.some(field => field && field.type === 'file');
 
             if (hasFileUpload) {
                 const submitData = new FormData();
@@ -722,83 +589,34 @@ const DynamicCRUD = ({
                 Object.keys(formData).forEach(key => {
                     if (formData[key] !== null && formData[key] !== undefined) {
                         const fieldConfig = formFields.find(f => f && f.name === key);
-
-
-                        if (key === 'image') {
-                            if (formData[key] instanceof File) {
-
-                                console.log("📁 Appending image file:", formData[key].name);
-                                submitData.append('image', formData[key]);
-
-
-                                if (editingItem?.image && typeof editingItem.image === 'string') {
-                                    submitData.append('existing_image_url', editingItem.image);
-                                }
-                            }
-                            else if (hasImageUrl) {
-
-                                console.log("🔗 Appending image URL:", formData[key]);
-                                submitData.append('image', formData[key]);
-                            }
-                            else if (hasBase64Image) {
-
-                                console.log("🖼 Appending base64 image (string)");
-                                submitData.append('image', formData[key]);
-                            }
-                            else if (typeof formData[key] === 'string' && formData[key].trim() !== '') {
-
-                                console.log("📝 Appending image string");
-                                submitData.append('image', formData[key]);
-                            }
-                        }
-
-                        else if (fieldConfig && fieldConfig.type === 'file') {
+                        if (fieldConfig && fieldConfig.type === 'file') {
                             if (formData[key] instanceof File) {
                                 submitData.append(key, formData[key]);
                             } else if (formData[key]) {
                                 submitData.append(key, formData[key]);
                             }
-                        }
-
-                        else {
-
-                            if (typeof formData[key] === 'object' && formData[key] !== null) {
-                                submitData.append(key, JSON.stringify(formData[key]));
-                            } else {
-                                submitData.append(key, formData[key]);
-                            }
+                        } else {
+                            submitData.append(key, formData[key]);
                         }
                     }
                 });
 
-
-                console.log("📦 FormData content:");
-                for (let pair of submitData.entries()) {
-                    console.log(pair[0] + ': ', typeof pair[1] === 'string' ?
-                        (pair[1].substring(0, 100) + (pair[1].length > 100 ? '...' : '')) :
-                        pair[1]);
-                }
-
-
-                console.log("✅ Sending FormData with image");
-
                 if (editingItem) {
                     response = await api.update(submitData, editingItem.id);
                 } else {
+                    console.log("submitDatasubmitData", submitData)
                     response = await api.create(submitData);
+                    console.log("Respinse", response)
                 }
-                console.log("📨 Response:", response);
-
             } else {
-
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
                 });
 
-                console.log("📤 Sending JSON data (no file):", submitData);
-
                 if (editingItem) {
+                    delete submitData.password;
+                    delete submitData.confirmPassword;
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);
@@ -831,6 +649,7 @@ const DynamicCRUD = ({
             setLoading(false);
         }
     }, [customHandlers, validationRules, formData, editingItem, data, apiEndpoint, formFields, moduleLabel, fetchData, initialFormData]);
+
     const handleBulkInsert = useCallback(() => {
         setMultiInsertRows([{ ...initialFormData }]);
         setShowBulkInsertModal(true);

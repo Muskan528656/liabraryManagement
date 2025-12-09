@@ -1002,6 +1002,9 @@ const LibraryCardDetail = ({
     if (value === null || value === undefined || value === "") return "—";
 
     if (field.type === "date") {
+      if (field.render && typeof field.render === "function") {
+        return field.render(value, data);
+      }
       try {
         const date = new Date(value);
         const day = String(date.getDate()).padStart(2, "0");

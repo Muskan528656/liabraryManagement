@@ -1,109 +1,13 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import { Card, Col, Row } from "react-bootstrap";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
 
-const BookDetail = (timeZone) => {
+const BookDetail = () => {
+
   const { id } = useParams();
   const [externalData, setExternalData] = useState({ authors: [], categories: [] });
   const [book, setBook] = useState(null);
@@ -113,7 +17,7 @@ const BookDetail = (timeZone) => {
   const [submitBooksCount, setSubmitBooksCount] = useState(0);
 
   console.log("Book ID from URL:", id);
-
+const { timeZone } = useTimeZone();
   const fetchBookData = async (bookId) => {
     try {
 
@@ -191,7 +95,6 @@ const BookDetail = (timeZone) => {
         displayKey: "category_name"
       },
       { key: "total_copies", label: "Total Copies", type: "number" },
-      { key: "language", label: "Language", type: "text" },
       { key: "available_copies", label: "Available Copies", type: "number" },
     ],
     other: [
@@ -225,19 +128,19 @@ const BookDetail = (timeZone) => {
   };
   const cardData = [
     {
-      title: "Total Copies",
+      title: "Total Books",
       value: totalBooks,
       icon: "fa-solid fa-layer-group",
       border: "border-start",
     },
     {
-      title: "Issued Copies",
+      title: "Issued",
       value: issuedBooksCount,
       icon: "fa-solid fa-book-open",
       border: "border-start",
     },
     {
-      title: "Available Copies",
+      title: "Available",
       value: availableBooks,
       icon: "fa-solid fa-cart-shopping",
       border: "border-start",

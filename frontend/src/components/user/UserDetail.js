@@ -6,11 +6,11 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = () => {
-
+  
   const [isLoading, setIsLoading] = useState(true);
-  const { timeZone } = useTimeZone();
+  const {timeZone} = useTimeZone();
 
-  console.log("0439534", timeZone);
+  console.log("0439534",timeZone);
 
   // State for current country to compute options
   const [currentCountry, setCurrentCountry] = useState(null);
@@ -102,6 +102,33 @@ const UserDetail = () => {
     title: "firstname",
     subtitle: "email",
     status: "isactive",
+    
+    // --- LOAD HANDLER ---
+    onLoad: (record, setFormValues) => {
+        let countryToUse = record?.country;
+
+        if (!countryToUse && companyInfo?.country) {
+            countryToUse = companyInfo.country;
+            if(setFormValues) {
+                 const cData = COUNTRY_TIMEZONE.find(c => c.countryName === countryToUse);
+                 if(cData) {
+                    setFormValues({
+                        ...record,
+                        country: cData.countryName,
+                        country_code: cData.phoneCode,
+                        currency: cData.currency.code,
+                        time_zone: cData.timezones.some(t => t.zoneName === companyInfo.time_zone)
+                            ? companyInfo.time_zone
+                            : cData.timezones[0].zoneName
+                    });
+                 }
+            }
+        }
+
+        if (countryToUse) {
+            setCurrentCountry(countryToUse);
+        }
+    },
 
     // --- LOAD HANDLER ---
     onLoad: (record, setFormValues) => {
@@ -138,9 +165,9 @@ const UserDetail = () => {
         key: "country",
         label: "Country",
         type: "select",
-        options: COUNTRY_TIMEZONE.map(c => ({
-          value: c.countryName,
-          label: `${c.flag} ${c.countryName}`
+        options: COUNTRY_TIMEZONE.map(c => ({ 
+            value: c.countryName, 
+            label: `${c.flag} ${c.countryName}` 
         })),
         onChange: handleCountryChange
       },
@@ -173,14 +200,14 @@ const UserDetail = () => {
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
         // Custom Render to ensure Name is shown in View Mode
         render: (value, data) => {
-          if (!externalData.userRoles || externalData.userRoles.length === 0) {
-            return <span className="text-muted">Loading...</span>;
-          }
-          // Handle both string and number ID comparison
-          const role = externalData.userRoles.find(r =>
-            String(r.id) === String(value) || String(r._id) === String(value)
-          );
-          return role ? role.role_name : (value || <span className="text-muted">N/A</span>);
+             if (!externalData.userRoles || externalData.userRoles.length === 0) {
+               return <span className="text-muted">Loading...</span>;
+             }
+             // Handle both string and number ID comparison
+             const role = externalData.userRoles.find(r => 
+                 String(r.id) === String(value) || String(r._id) === String(value)
+             );
+             return role ? role.role_name : (value || <span className="text-muted">N/A</span>);
         }
       },
       {
@@ -194,12 +221,12 @@ const UserDetail = () => {
       },
     ],
     other: [
-
+      // The type "text" here combined with the key containing "byid" 
+      // will trigger ModuleDetail to fetch the user name automatically.
       { key: "createdbyid", label: "Created By", type: "text" },
-      {
-        key: "createddate", label: "Created Date", type: "date",
+      { key: "createddate", label: "Created Date", type: "date",
         render: (value) => convertToUserTimezone(value, timeZone)
-      },
+       },
     ],
   };
 

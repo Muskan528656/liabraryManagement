@@ -7,7 +7,8 @@ const SubscriptionDetail = () => {
     console.log("its running are not")
     const { timeZone } = useTimeZone();
 
-    console.log("time-------",timeZone)
+    console.log('timeZone ===>>> ', timeZone)
+
 
     const fields = {
         details: [
@@ -22,12 +23,15 @@ const SubscriptionDetail = () => {
             { key: "createdbyid", label: "Created By", type: "text" },
             { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
             { key: "createddate", label: "Created Date", type: "date",
-                 render: (value) =>{ 
-                        console.log("value", value)
-                return convertToUserTimezone(value, timeZone)
+                 render: (value) =>{
+                return  convertToUserTimezone(value, timeZone);
             }
              },
-            { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) }
+            { key: "lastmodifieddate", label: "Last Modified Date", type: "date",
+                render: (value) => {
+                return convertToUserTimezone(value, timeZone);
+                }
+            }
         ]
     };
 

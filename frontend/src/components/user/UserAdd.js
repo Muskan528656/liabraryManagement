@@ -55,10 +55,17 @@ const UserAdd = () => {
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
+<<<<<<< HEAD
 
   // eslint-disable-next-line
   const phoneRegex = /^[0-9]{10}$/;
 
+=======
+  
+  // eslint-disable-next-line
+  const phoneRegex = /^[0-9]{10}$/;
+  
+>>>>>>> 8d8eb03351f1ccfeb04667fa96d706073b4e8598
   const [showPassword, setShowPassword] = useState(false);
   const [loginUserRole, setLoginUserRole] = useState("");
   // eslint-disable-next-line
@@ -409,7 +416,7 @@ const UserAdd = () => {
                               required
                               style={{
                                 height: "36px",
-                                borderRight: "none",
+                                borderRight: "none", 
                               }}
                             />
                             <InputGroup.Text
