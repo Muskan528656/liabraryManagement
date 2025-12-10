@@ -51,15 +51,15 @@ const FormModal = ({
   const [filePreviews, setFilePreviews] = useState({});
   const [passwordVisibility, setPasswordVisibility] = useState({});
 
-  const handleInputChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
-  };
-
   const togglePasswordVisibility = (fieldName) => {
     setPasswordVisibility((prev) => ({
       ...prev,
       [fieldName]: !prev[fieldName],
     }));
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleFieldChange = (field, value) => {
@@ -222,6 +222,7 @@ const FormModal = ({
 
       case "text":
       case "email":
+      // REMOVED "password" from here
       case "number":
       case "tel":
         return (
@@ -440,7 +441,6 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-
       default:
         return null;
     }

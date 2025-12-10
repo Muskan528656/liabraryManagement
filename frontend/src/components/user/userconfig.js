@@ -82,21 +82,6 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 }
             },
             {
-                field: "currency",
-                label: "Currency",
-                render: (value) => value || <span className="text-muted">N/A</span>
-            },
-            {
-                field: "time_zone",
-                label: "Time Zone",
-                render: (value) => {
-                    if (!value) return <span className="text-muted">N/A</span>;
-                    const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
-                    const tz = country?.timezones.find(t => t.zoneName === value);
-                    return tz ? `${tz.zoneName} (${tz.gmtOffset})` : value;
-                }
-            },
-            {
                 field: "userrole",
                 label: "Role",
                 render: (value) => {

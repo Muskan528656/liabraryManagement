@@ -1,8 +1,24 @@
 import moment from "moment";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-
+import { createModel } from "../common/UniversalCSVXLSXImporter";
 export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const { vendors = [], books = [], authors = [], categories = [] } = data;
+
+
+    const PurchaseModel = createModel({
+        modelName: "Purchase",
+        fields: {
+        Vendor: "string",        
+        Book: "string",           
+        ISBN: "string",           
+        Quantity: "number",
+        "Unit Price": "number",
+        "Total Amount": "number", 
+        "Purchase Date": "string",
+        Notes: "string",
+        },
+        required: ["Vendor", "Book", "Quantity", "Unit Price", "Purchase Date"],
+    });
 
     const allColumns = [
         {
@@ -67,20 +83,22 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             label: "Vendor",
             type: "select",
             required: true,
-            options: vendors.map(vendor => ({
-                value: vendor.id,
-                label: vendor.name
-            }))
+            options: "vendors",
+            // options: vendors.map(vendor => ({
+            //     value: vendor.id,
+            //     label: vendor.name
+            // }))
         },
         {
             name: "book_id",
             label: "Book",
             type: "select",
             required: true,
-            options: books.map(book => ({
-                value: book.id,
-                label: book.title
-            }))
+            options: "books", 
+            // options: books.map(book => ({
+            //     value: book.id,
+            //     label: book.title
+            // }))
         },
         {
             name: "quantity",
@@ -145,7 +163,8 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: false
+            allowDelete: false,
+            showImportButton: true,
         },
         dataDependencies: {
             vendors: "vendor",

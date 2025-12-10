@@ -17,13 +17,12 @@ const RelatedTabContent = ({ id, data }) => {
     useEffect(() => {
         if (id) {
             fetchRelatedData();
-        }
+        } 
     }, [id, data]);
 
     const fetchRelatedData = async () => {
         setLoadingRelated(true);
         try {
-
             const api = new DataApi('plans');
             const plansResponse = await api.fetchAll();
             let plansArray = [];
@@ -75,7 +74,6 @@ const RelatedTabContent = ({ id, data }) => {
                 };
             }).filter(Boolean);
 
-
             if (data && data.plan_id) {
                 const alreadyExists = finalPlansList.some(p => String(p.real_plan_id) === String(data.plan_id));
 
@@ -98,7 +96,6 @@ const RelatedTabContent = ({ id, data }) => {
                     }
                 }
             }
-
 
             finalPlansList.sort((a, b) => {
                 const aActive = new Date(a.expiry_date) > new Date();

@@ -27,7 +27,7 @@ const Books = (props) => {
 
   console.log("books finalConfig", finalConfig);
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book" />;
+  return <DynamicCRUD {...finalConfig} importModel={finalConfig.BookModel} icon="fa-solid fa-book" />;
 };
 
 export default Books;

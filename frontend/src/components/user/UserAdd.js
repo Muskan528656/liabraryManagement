@@ -55,17 +55,10 @@ const UserAdd = () => {
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
-<<<<<<< HEAD
 
 
   const phoneRegex = /^[0-9]{10}$/;
-
-=======
   
-
-  const phoneRegex = /^[0-9]{10}$/;
-  
->>>>>>> 8d8eb03351f1ccfeb04667fa96d706073b4e8598
   const [showPassword, setShowPassword] = useState(false);
   const [loginUserRole, setLoginUserRole] = useState("");
 

@@ -148,6 +148,7 @@ const getCountryInfo = (countryCode) => {
 };
 
 const ModuleDetail = ({
+  moduleHeader,
   moduleName,
   moduleApi,
   moduleLabel,
@@ -1673,4 +1674,4 @@ const ModuleDetail = ({
   );
 };
 
-export default ModuleDetail;
+export default ModuleDetail;  

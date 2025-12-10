@@ -1,4 +1,6 @@
 
+import { createModel } from "../common/UniversalCSVXLSXImporter";
+
 export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
     const authors =
         props.authors ||
@@ -11,6 +13,20 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         externalData.categories ||
         externalData.category ||
         [];
+
+    const BookModel = createModel({
+        modelName: "Book",
+        fields: {
+            Title: "string",
+            Author: "string",
+            Category: "string",
+            ISBN: "string",
+            Language: "string",
+            TotalCopies: "number",
+            AvailableCopies: "number",
+        },
+        required: ["Title", "Author", "ISBN"],
+    });
 
     return {
         moduleName: "book",
@@ -42,10 +58,6 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 field: "isbn",
                 label: "ISBN",
             },
-
-
-
-
             {
                 field: "available_copies",
                 label: "Available Copies",
@@ -143,7 +155,6 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
-            // showImportButton: true,
         },
 
 
@@ -158,7 +169,8 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 idField: "category_id",
                 labelField: "category_name"
             }
-        }
+        },
+        BookModel
 
     };
 

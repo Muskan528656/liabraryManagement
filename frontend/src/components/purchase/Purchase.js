@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getPurchaseConfig } from "./PurchaseConfig";
 import { useDataManager } from "../common/userdatamanager";
@@ -21,7 +20,13 @@ const Purchase = (props) => {
   const finalConfig = getPurchaseConfig(data, props, timeZone);
   console.log("Final Purchase Config:", finalConfig);
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-shopping-cart" />;
+  return (
+    <DynamicCRUD
+      {...finalConfig}
+      importModel={finalConfig.PurchaseModel}
+      icon="fa-solid fa-shopping-cart"
+    />
+  );
 };
 
 export default Purchase;
