@@ -70,6 +70,7 @@ export const handleDownloadBarcode = (
             }
 
             const drawDetailsAndBarcode = () => {
+                console.log("card->>>>>", card)
 
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#000";
@@ -79,8 +80,10 @@ export const handleDownloadBarcode = (
                 let y = 120;
 
                 ctx.fillText(`Card Number: ${cardNumber}`, startX, y); y += 25;
-                ctx.fillText(`Name: ${card.user_name || "N/A"}`, startX, y); y += 25;
-                ctx.fillText(`Email: ${card.user_email || "N/A"}`, startX, y); y += 25;
+                ctx.fillText(`Name: ${card.first_name || "N/A"}`, startX, y); y += 25;
+                ctx.fillText(`Last Name: ${card.last_name || "N/A"}`, startX, y); y += 25;
+                ctx.fillText(`Email: ${card.email || "N/A"}`, startX, y); y += 25;
+                ctx.fillText(`Country Code: ${card.country_code || "N/A"}`, startX, y); y += 25;
                 ctx.fillText(`Registration Date: ${formatDate(card.registration_date)}`, startX, y); y += 25;
                 ctx.fillStyle = card.is_active ? "green" : "red";
                 ctx.fillText(`Status: ${card.is_active ? "Active" : "Inactive"}`, startX, y);

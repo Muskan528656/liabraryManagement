@@ -166,7 +166,7 @@ module.exports = (app) => {
       body("email").optional().isEmail(),
       body("phone_number").optional().isString(),
       body("type").optional().isString(),
-      body("plan_id").optional().isUUID(),
+      // body("plan_id").optional().isUUID(),
     ],
     async (req, res) => {
       try {

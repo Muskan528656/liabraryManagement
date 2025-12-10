@@ -264,44 +264,44 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 ],
                 colSize: 6,
             },
-            {
-                name: "plan_id",
-                label: "Plan",
-                type: "select",
-                options: plansList,
-                required: true,
-                colSize: 12,
-                onChange: (value, formData, setFormData) => {
-                    console.log("Plan selected:", value);
-                    const selectedPlan = plansList.find(p => p.value == value)?.data;
-                    console.log("Selected plan data:", selectedPlan);
+            // {
+            //     name: "plan_id",
+            //     label: "Plan",
+            //     type: "select",
+            //     options: plansList,
+            //     required: true,
+            //     colSize: 12,
+            //     onChange: (value, formData, setFormData) => {
+            //         console.log("Plan selected:", value);
+            //         const selectedPlan = plansList.find(p => p.value == value)?.data;
+            //         console.log("Selected plan data:", selectedPlan);
 
-                    const updatedFormData = {
-                        ...formData,
-                        plan_id: value,
-                        selectedPlan: selectedPlan || null
-                    };
+            //         const updatedFormData = {
+            //             ...formData,
+            //             plan_id: value,
+            //             selectedPlan: selectedPlan || null
+            //         };
 
-                    setFormData(updatedFormData);
-                    console.log("Form data updated with selected plan:", updatedFormData);
-                },
-                renderOptions: (options) => (
-                    <>
-                        <option value="">-- Select a plan --</option>
-                        {options.map(option => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                        {options.length === 0 && (
-                            <option value="" disabled>No active plans available</option>
-                        )}
-                    </>
-                ),
-                validationMessage: plansList.length === 0 ?
-                    "No active plans available. Please create a plan first." :
-                    ""
-            },
+            //         setFormData(updatedFormData);
+            //         console.log("Form data updated with selected plan:", updatedFormData);
+            //     },
+            //     renderOptions: (options) => (
+            //         <>
+            //             <option value="">-- Select a plan --</option>
+            //             {options.map(option => (
+            //                 <option key={option.value} value={option.value}>
+            //                     {option.label}
+            //                 </option>
+            //             ))}
+            //             {options.length === 0 && (
+            //                 <option value="" disabled>No active plans available</option>
+            //             )}
+            //         </>
+            //     ),
+            //     validationMessage: plansList.length === 0 ?
+            //         "No active plans available. Please create a plan first." :
+            //         ""
+            // },
             {
                 name: "plan_details",
                 type: "custom",
@@ -392,11 +392,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 idField: "id",
                 labelField: "name",
             },
-            plan_id: {
-                path: "plan",
-                idField: "id",
-                labelField: "plan_name",
-            }
+            // plan_id: {
+            //     path: "plan",
+            //     idField: "id",
+            //     labelField: "plan_name",
+            // }
         },
 
         features: {
@@ -409,6 +409,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
+            showImportButton: false,
         },
 
         details: [
@@ -438,29 +439,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             { key: "type", label: "Type", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
-            {
-                key: "plan",
-                label: "Plan",
-                render: (value, row) => {
-                    if (value && typeof value === 'object') {
-                        return (
-                            <div>
-                                <strong>{value.plan_name}</strong>
-                                <div className="small text-muted">
-                                    Duration: {value.duration_days} days |
-                                    Books: {value.allowed_books || 0} |
-                                    Status: <Badge bg={value.is_active ? "success" : "secondary"} size="sm">
-                                        {value.is_active ? "Active" : "Inactive"}
-                                    </Badge>
-                                </div>
-                            </div>
-                        );
-                    } else if (row.plan_name) {
-                        return row.plan_name;
-                    }
-                    return <span className="text-muted">No Plan</span>;
-                }
-            },
+            // {
+            //     key: "plan",
+            //     label: "Plan",
+            //     render: (value, row) => {
+            //         if (value && typeof value === 'object') {
+            //             return (
+            //                 <div>
+            //                     <strong>{value.plan_name}</strong>
+            //                     <div className="small text-muted">
+            //                         Duration: {value.duration_days} days |
+            //                         Books: {value.allowed_books || 0} |
+            //                         Status: <Badge bg={value.is_active ? "success" : "secondary"} size="sm">
+            //                             {value.is_active ? "Active" : "Inactive"}
+            //                         </Badge>
+            //                     </div>
+            //                 </div>
+            //             );
+            //         } else if (row.plan_name) {
+            //             return row.plan_name;
+            //         }
+            //         return <span className="text-muted">No Plan</span>;
+            //     }
+            // },
             {
                 key: "status",
                 label: "Status",

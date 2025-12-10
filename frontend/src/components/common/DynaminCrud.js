@@ -11,6 +11,7 @@ import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import jwt_decode from "jwt-decode";
 import ModuleDetail from "./ModuleDetail";
+import ImportDataModal from "../librarycard/ImportData";
 
 const normalizeListResponse = (payload) => {
     if (!payload) return [];
@@ -44,12 +45,14 @@ const DynamicCRUD = ({
     enablePrefetch = true,
     autoFetchRelated = true,
     recordsPerPage = 10,
-    icon
+    icon,
+
 }) => {
 
     const navigate = useNavigate();
 
     const {
+        showImportButton = false,
         showBulkInsert = false,
         showImportExport = true,
         showDetailView = true,
@@ -82,6 +85,7 @@ const DynamicCRUD = ({
     const [relatedData, setRelatedData] = useState({});
     const [isEditable, setIsEditable] = useState(false);
 
+    const [showImportModal, setShowImportModal] = useState(false);
 
     console.log("formData", formData)
     console.log("Data", data)
@@ -131,7 +135,7 @@ const DynamicCRUD = ({
                 try {
 
                     if (isEdit) {
-                        console.log("isEdit->>>",isEdit)
+                        console.log("isEdit->>>", isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
                             state: { isEdit: true, rowData: item },
                         });
@@ -783,13 +787,25 @@ const DynamicCRUD = ({
                 },
             });
         }
+        if (showImportButton) {
+            buttons.push({
+                size: "sm",
+                icon: "fa-solid fa-plus",
+                label: `Import Data`,
+                onClick: () => setShowImportModal(true),
+                style: {
+                    background: "var(--primary-color)",
+                    border: "none",
+                },
+            });
+        }
 
         if (customActionButtons.length > 0) {
             buttons.push(...customActionButtons);
         }
 
         return buttons;
-    }, [showImportExport, showBulkInsert, showAddButton, moduleLabel, handleExport, handleBulkInsert, handleAdd, customActionButtons]);
+    }, [showImportExport, showBulkInsert, showAddButton, showImportButton, moduleLabel, handleExport, handleBulkInsert, handleAdd, customActionButtons]);
 
     const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);
     const actionButtons = useMemo(() => getActionButtons(), [getActionButtons]);
@@ -1095,7 +1111,15 @@ const DynamicCRUD = ({
                     </Modal.Footer>
                 </Modal>
             )}
+            {showImportModal && (
+                <ImportDataModal
+                    show={showImportModal}
+                    onClose={() => setShowImportModal(false)}
+
+                />
+            )}
         </Container>
+
     );
 };
 

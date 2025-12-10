@@ -7,13 +7,6 @@
 
 const AutoConfig = require("../models/autoconfig.model.js");
 
- 
- 
- 
- 
- 
- 
- 
 async function getNextAutoNumber(tableName, defaults = {}, userId = null) {
     if (!tableName) {
         throw new Error("tableName is required for auto number generation");

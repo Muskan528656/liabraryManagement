@@ -10,10 +10,6 @@ function init(schema_name) {
   schema = schema_name;
 }
 
-
-
-
-
 async function findAll() {
   try {
     const query = `
@@ -37,8 +33,6 @@ async function findAll() {
     throw error;
   }
 }
-
-
 
 
 async function findById(id) {
@@ -65,9 +59,6 @@ async function findById(id) {
   }
 }
 
-
-
-
 async function findByCardNumber(cardNumber) {
   try {
     const query = `
@@ -91,16 +82,6 @@ async function findByCardNumber(cardNumber) {
     throw error;
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 async function create(cardData, userId) {
   console.log("📥 Model.create() - Received cardData:", {
@@ -128,15 +109,15 @@ async function create(cardData, userId) {
   try {
     const query = `
       INSERT INTO ${schema}.library_members
-      (card_number, is_active, image, subscription_id, plan_id,
+      (card_number, is_active, image, subscription_id, 
        first_name, last_name, name, email, phone_number,
        registration_date, type,
        createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
       VALUES
       ($1, $2, $3, $4, $5,
        $6, $7, $8, $9, $10,
-       $11, $12,
-       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $13, $13)
+       $11, 
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $12, $12)
       RETURNING *
     `;
 
@@ -157,7 +138,7 @@ async function create(cardData, userId) {
       cardData.is_active ?? true,
       imageValue, // Use the fixed image value
       cardData.subscription_id || null,
-      cardData.plan_id || null,
+      // cardData.plan_id || null,
       cardData.first_name || null,
       cardData.last_name || null,
       cardData.name || null,
@@ -174,7 +155,7 @@ async function create(cardData, userId) {
       is_active: values[1],
       image: values[2],
       subscription_id: values[3],
-      plan_id: values[4],
+      // plan_id: values[4],
       first_name: values[5],
       last_name: values[6],
       name: values[7],
@@ -187,8 +168,7 @@ async function create(cardData, userId) {
 
     const result = await sql.query(query, values);
 
-    console.log("✅ Insert successful. Returned row:", result.rows[0]);
-    console.log("✅ Inserted image:", result.rows[0]?.image);
+
 
     return result.rows[0] || null;
 

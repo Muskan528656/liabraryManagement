@@ -527,7 +527,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           {Company?.logourl ? (
             <img
               src={Company.logourl}
-              alt="Company Logo"
+
               className="object-contain rounded-lg transition-transform group-hover:scale-105"
               style={{ height: "40px", width: "40px" }}
             />
@@ -536,11 +536,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <i className="fa-solid fa-book-open text-lg"></i>
             </div>
           )}
-          <span className="hidden md:block font-extrabold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-900 to-indigo-600 tracking-tight">
-            {Company?.name || " Library"}
-          </span>
+          <span>{Company?.company_name || "Library System"}</span>
         </Navbar.Brand>
-
         {/* Search Bar */}
         <div style={{ flex: 1, maxWidth: "500px", margin: "0 2rem" }}>
           <Form onSubmit={handleBarcodeSearch}>
@@ -596,7 +593,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }}
             />
           )}
-      
+
           <Dropdown
             show={showNotifications}
             onToggle={(isOpen) => {
