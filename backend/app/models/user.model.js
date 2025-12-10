@@ -1,3 +1,4 @@
+
 /**
  * @author      Muskan Khan
  * @date        DEC, 2025
@@ -79,6 +80,7 @@ async function findByEmail(email) {
 
 
 
+
 async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
@@ -111,7 +113,7 @@ async function create(userData, userId) {
         lastmodifiedbyid,
         createddate
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
       RETURNING
         id,
         firstname,
@@ -156,6 +158,10 @@ async function create(userData, userId) {
   }
 }
 
+
+
+
+
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
@@ -181,9 +187,7 @@ async function updateById(id, userData) {
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);
-    if (userData.password) { 
-      add("password", userData.password);
-    }
+    add("password", userData.password);
     add("userrole", userData.userrole);
     add("phone", userData.phone);
     add("country_code", userData.country_code);
@@ -226,6 +230,9 @@ async function updateById(id, userData) {
     throw error;
   }
 }
+
+
+
 
 async function deleteById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");

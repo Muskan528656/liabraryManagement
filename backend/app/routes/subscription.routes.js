@@ -38,7 +38,6 @@ module.exports = (app) => {
         [
             body("plan_id", "plan_id is required").notEmpty(),
             body("member_id", "member_id is required").notEmpty(),
-
             body("plan_name", "plan_name is required").notEmpty(),
             body("duration_days").optional().isNumeric(),
             body("allowed_books").optional().isNumeric(),
@@ -57,15 +56,16 @@ module.exports = (app) => {
             try {
                 const {
                     plan_id,
+                    user_id,
+                    card_id,
                     member_id,
-
                     plan_name,
                     duration_days,
                     allowed_books,
                     start_date,
                     end_date,
                     is_active = true,
-                    status = "active",
+                  
                 } = req.body;
 
                 console.log("Creating subscription with data:", req.body);
@@ -84,26 +84,16 @@ module.exports = (app) => {
                 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
                 const existingSubscription = await sql.query(
-                    `SELECT id FROM demo.subscriptions 
-                 WHERE member_id = $1 
-                 AND plan_id = $2 
-                 AND is_active = true 
+                    `SELECT id FROM demo.subscriptions
+                 WHERE member_id = $1
+                 AND plan_id = $2
+                 AND user_id = $3
+                 AND user_id = $4
+                 AND duration_days = $5
+                 AND is_active = true
                  AND (end_date IS NULL OR end_date > CURRENT_DATE)`,
-                    [member_id, plan_id]
+                    [member_id, plan_id, user_id,card_id, duration_days]
                 );
 
                 if (existingSubscription.rows.length > 0) {
@@ -126,16 +116,15 @@ module.exports = (app) => {
 
                 const subscriptionData = {
                     plan_id,
-                    member_id,
-
-
+                    member_id: member_id,
+                    user_id,
+                    card_id,
                     plan_name,
-
-
+                    duration_days,
+                    allowed_books,
                     start_date: subscriptionStartDate,
                     end_date: subscriptionEndDate,
                     is_active,
-
                     createdbyid: req.userinfo?.id,
                     lastmodifiedbyid: req.userinfo?.id,
                     createddate: new Date(),
@@ -166,8 +155,8 @@ module.exports = (app) => {
 
 
                 await sql.query(
-                    "UPDATE demo.library_members SET plan_id = $1 ",
-                    [plan_id]
+                    "UPDATE demo.library_members SET plan_id = $1 WHERE id = $2",
+                    [plan_id, member_id]
                 );
 
                 res.status(201).json({

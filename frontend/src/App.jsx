@@ -50,6 +50,8 @@ import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
 import { TimeZoneProvider } from "./contexts/TimeZoneContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
+import Plan from "./components/plan/Plan";
+import PlanDetail from "./components/plan/PlanDetail";
 
 const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
 
@@ -125,6 +127,8 @@ function AppContent() {
             {/* <Route path="auto-config/:id" element={<AutoConfigDetail />} /> */}
             <Route path="author" element={<Author />} />
             <Route path="author/:id" element={<AuthorDetail />} />
+            <Route path="plans" element={<Plan />} />
+            <Route path="plans/:id" element={<PlanDetail />} />
             <Route path="book" element={<Books />} />
             <Route path="book/:id" element={<BookDetail />} />
             <Route path="category" element={<Category />} />

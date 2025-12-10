@@ -49,7 +49,6 @@ const FormModal = ({
   children,
 }) => {
   const [filePreviews, setFilePreviews] = useState({});
-
   const [passwordVisibility, setPasswordVisibility] = useState({});
 
   const togglePasswordVisibility = (fieldName) => {
@@ -223,6 +222,7 @@ const FormModal = ({
 
       case "text":
       case "email":
+      // REMOVED "password" from here
       case "number":
       case "tel":
         return (
@@ -263,7 +263,7 @@ const FormModal = ({
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 disabled={field.disabled}
                 isInvalid={!!error}
-                style={{ borderRight: "none" }} // Seamless look
+                style={{ borderRight: "none" }}
                 {...field.props}
               />
               <InputGroup.Text
@@ -430,30 +430,6 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-
-      case "password":
-        return (
-          <Form.Group className="mb-3" key={field.name}>
-            <Form.Label>
-              {field.label} {isRequired && <span className="text-danger">*</span>}
-            </Form.Label>
-            <Form.Control
-              type="password"
-              name={field.name}
-              id={fieldId}
-              placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
-              value={value}
-              onChange={(e) => handleFieldChange(field, e.target.value)}
-              disabled={field.disabled}
-              isInvalid={!!error}
-              autoComplete={field.autoComplete || "new-password"}
-              {...field.props}
-            />
-            {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
-          </Form.Group>
-        );
-
       default:
         return null;
     }

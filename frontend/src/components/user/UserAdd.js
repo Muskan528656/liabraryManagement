@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Col, Container, Row, Card } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
@@ -53,7 +52,6 @@ const UserAdd = () => {
   const [option, setoption] = useState();
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -391,10 +389,13 @@ const UserAdd = () => {
                             required
                           >
                             <option value="USER">USER</option>
-                            {loginUserRole === "ADMIN" && <option value="ADMIN">ADMIN</option>}
+                            {loginUserRole === "ADMIN" && (
+                              <option value="ADMIN">ADMIN</option>
+                            )}
                           </Form.Select>
                         </Form.Group>
                       </Col>
+
                       <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
                           <Form.Label htmlFor="password">Password</Form.Label>
@@ -434,18 +435,41 @@ const UserAdd = () => {
                           )}
                         </Form.Group>
                       </Col>
+
                       <Col lg={4} sm={12} xs={12}>
                         <Form.Group className="ms-3">
-                          <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
-                          <Form.Control
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Confirm Password"
-                            value={user.confirmPassword || ""}
-                            onChange={handleChange}
-                            required
-                            style={{ height: "36px" }}
-                          />
+                          <Form.Label htmlFor="confirmPassword">
+                            Confirm Password
+                          </Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              type={showPassword ? "text" : "password"}
+                              name="confirmPassword"
+                              placeholder="Confirm Password"
+                              value={user.confirmPassword || ""}
+                              onChange={handleChange}
+                              required
+                              style={{
+                                height: "36px",
+                                borderRight: "none",
+                              }}
+                            />
+                            <InputGroup.Text
+                              onClick={togglePasswordVisibility}
+                              style={{
+                                backgroundColor: "white",
+                                borderLeft: "none",
+                                cursor: "pointer",
+                                height: "36px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                            </InputGroup.Text>
+                          </InputGroup>
+
                           {confirmPasswordError && (
                             <small className="text-danger">
                               {confirmPasswordError}
@@ -613,4 +637,3 @@ const UserAdd = () => {
 };
 
 export default UserAdd;
-
