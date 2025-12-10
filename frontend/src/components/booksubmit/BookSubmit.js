@@ -1,3 +1,1529 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, InputGroup, Table, Modal, Tab, Nav } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +1534,7 @@ import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import moment from "moment";
+
 const BookSubmit = () => {
     const navigate = useNavigate();
     const [isbn, setIsbn] = useState("");
@@ -42,7 +1569,8 @@ const BookSubmit = () => {
 
     useEffect(() => {
         fetchAllIssuedBooks();
-
+        const storedTimeZone = localStorage.getItem('userTimeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        setTimeZone(storedTimeZone);
     }, []);
 
     const fetchAllIssuedBooks = async () => {
@@ -59,6 +1587,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
+            console.log("All issued books:", issues);
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -73,21 +1602,18 @@ const BookSubmit = () => {
     const formatDate = (dateStr) => {
         if (!dateStr) return "-";
         try {
-            const d = new Date(dateStr);
-            if (isNaN(d)) return dateStr;
-            const dd = String(d.getDate()).padStart(2, "0");
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const yyyy = d.getFullYear();
-            return `${dd}-${mm}-${yyyy}`;
+            return moment(dateStr).format('DD-MM-YYYY');
         } catch (e) {
             return dateStr;
         }
     };
 
     const getUserDisplayName = (record) => {
-
+        if (!record) return "Unknown User";
+        
         const nameFields = [
             record.issued_to_name,
+            record.member_name,
             record.student_name,
             record.user_name,
             record.full_name,
@@ -96,7 +1622,6 @@ const BookSubmit = () => {
             record.issued_to ? `User ${record.issued_to}` : null,
             record.user_id ? `User ${record.user_id}` : null
         ];
-
 
         for (let name of nameFields) {
             if (name && name.trim() !== "" && name !== "undefined undefined" && name !== " ") {
@@ -107,28 +1632,32 @@ const BookSubmit = () => {
         return "Unknown User";
     };
 
-    const handleNameClick = (userId, userName, issueData, e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+    const getSubmittedByDisplayName = (record) => {
+        if (!record) return "Unknown User";
+        
+        console.log("Submitted book record:", record);
+        
+
+        const nameFields = [
+            record.student_name,
+            record.issued_to_name,
+            record.user_name,
+            record.member_name,
+            record.submitted_by,
+            record.cardholder_name,
+            record.name,
+            record.full_name,
+            `${record.first_name || ""} ${record.last_name || ""}`.trim(),
+            record.issued_to ? `User ${record.issued_to}` : null
+        ];
+
+        for (let name of nameFields) {
+            if (name && name.trim() !== "" && name !== "undefined undefined" && name !== " ") {
+                return name.trim();
+            }
         }
 
-        if (userId) {
-            try {
-                const prefetchData = issueData || { id: userId, name: userName };
-                localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(prefetchData));
-            } catch (err) {
-                console.warn("Failed to store prefetch data:", err);
-            }
-
-            if (e && (e.button === 2 || e.ctrlKey || e.metaKey)) {
-                window.open(`/librarycard/${userId}`, '_blank');
-            } else {
-                navigate(`/librarycard/${userId}`, {
-                    state: { userName: userName, ...issueData },
-                });
-            }
-        }
+        return "Unknown User";
     };
 
     useEffect(() => {
@@ -140,15 +1669,52 @@ const BookSubmit = () => {
     const fetchSubmittedBooks = async () => {
         try {
             setLoadingSubmitted(true);
-            const submissionApi = new DataApi("book_submissions");
-            const response = await submissionApi.fetchAll();
+
+
+            const submissionsResp = await helper.fetchWithAuth(
+                `${constants.API_BASE_URL}/api/book_submissions`,
+                "GET"
+            );
+
+            if (!submissionsResp.ok) {
+                throw new Error(`HTTP ${submissionsResp.status}`);
+            }
+
+            const response = await submissionsResp.json();
+            console.log("Submitted Books API Response:", response);
+
             let submissions = [];
-            if (response.data && response.data.success && Array.isArray(response.data.data)) {
-                submissions = response.data.data;
-            } else if (Array.isArray(response.data)) {
+
+
+            if (response.success !== undefined) {
+
+                if (Array.isArray(response.data)) {
+                    submissions = response.data;
+                }
+
+                else if (response.data && Array.isArray(response.data.data)) {
+                    submissions = response.data.data;
+                }
+            }
+
+            else if (Array.isArray(response)) {
+                submissions = response;
+            }
+
+            else if (response.data && Array.isArray(response.data)) {
                 submissions = response.data;
             }
+
+            console.log("Processed Submitted Books:", submissions);
+            
+
+            if (submissions.length > 0) {
+                console.log("First submitted book record fields:", Object.keys(submissions[0]));
+                console.log("First submitted book record values:", submissions[0]);
+            }
+            
             setSubmittedBooks(submissions);
+
         } catch (error) {
             console.error("Error fetching submitted books:", error);
             PubSub.publish("RECORD_ERROR_TOAST", {
@@ -184,10 +1750,17 @@ const BookSubmit = () => {
             setLoading(true);
 
             if (searchType === "card") {
-                const cardResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(value.trim().toUpperCase())}`, "GET");
+                const cardResp = await helper.fetchWithAuth(
+                    `${constants.API_BASE_URL}/api/librarycard/card/${encodeURIComponent(value.trim().toUpperCase())}`,
+                    "GET"
+                );
+
                 if (!cardResp.ok) {
                     const err = await cardResp.json().catch(() => ({}));
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "Not Found", message: err.errors || "Library card not found" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "Not Found",
+                        message: err.errors || "Library card not found"
+                    });
                     setLibraryCard(null);
                     setCardIssues([]);
                     setBook(null);
@@ -197,22 +1770,33 @@ const BookSubmit = () => {
                 }
 
                 const cardData = await cardResp.json();
-                console.log("Library Card Data:", cardData); // Debug log
+                console.log("Library Card Data:", cardData);
                 setLibraryCard(cardData);
 
-                const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/card/${cardData.id}`, "GET");
+                const issuesResp = await helper.fetchWithAuth(
+                    `${constants.API_BASE_URL}/api/bookissue/card/${cardData.id}`,
+                    "GET"
+                );
+
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "Error", message: err.errors || "Failed to fetch issue records" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "Error",
+                        message: err.errors || "Failed to fetch issue records"
+                    });
                     setCardIssues([]);
                     setDisplayedIssuedBooks(allIssuedBooks);
                     return;
                 }
 
                 const issues = await issuesResp.json();
-                console.log("Card Issues Data:", issues); // Debug log
+                console.log("Card Issues Data:", issues);
+
                 if (!issues || !Array.isArray(issues) || issues.length === 0) {
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "No Active Issue", message: "No active issued record found for this library card" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "No Active Issue",
+                        message: "No active issued record found for this library card"
+                    });
                     setCardIssues([]);
                     setDisplayedIssuedBooks(allIssuedBooks);
                     return;
@@ -224,10 +1808,17 @@ const BookSubmit = () => {
                 setBookIssues([]);
 
             } else {
-                const bookResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(value.trim())}`, "GET");
+                const bookResp = await helper.fetchWithAuth(
+                    `${constants.API_BASE_URL}/api/book/isbn/${encodeURIComponent(value.trim())}`,
+                    "GET"
+                );
+
                 if (!bookResp.ok) {
                     const err = await bookResp.json().catch(() => ({}));
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "Not Found", message: err.errors || "Book not found" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "Not Found",
+                        message: err.errors || "Book not found"
+                    });
                     setBook(null);
                     setIssue(null);
                     setBookIssues([]);
@@ -236,13 +1827,20 @@ const BookSubmit = () => {
                 }
 
                 const bookData = await bookResp.json();
-                console.log("Book Data:", bookData); // Debug log
+                console.log("Book Data:", bookData);
                 setBook(bookData);
 
-                const issuesResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/book/${bookData.id}`, "GET");
+                const issuesResp = await helper.fetchWithAuth(
+                    `${constants.API_BASE_URL}/api/bookissue/book/${bookData.id}`,
+                    "GET"
+                );
+
                 if (!issuesResp.ok) {
                     const err = await issuesResp.json().catch(() => ({}));
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "Error", message: err.errors || "Failed to fetch issue records" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "Error",
+                        message: err.errors || "Failed to fetch issue records"
+                    });
                     setIssue(null);
                     setBookIssues([]);
                     setDisplayedIssuedBooks(allIssuedBooks);
@@ -250,9 +1848,13 @@ const BookSubmit = () => {
                 }
 
                 const issues = await issuesResp.json();
-                console.log("Book Issues Data:", issues); // Debug log
+                console.log("Book Issues Data:", issues);
+
                 if (!issues || !Array.isArray(issues) || issues.length === 0) {
-                    PubSub.publish("RECORD_ERROR_TOAST", { title: "No Active Issue", message: "No active issued record found for this ISBN" });
+                    PubSub.publish("RECORD_ERROR_TOAST", {
+                        title: "No Active Issue",
+                        message: "No active issued record found for this ISBN"
+                    });
                     setIssue(null);
                     setBookIssues([]);
                     setDisplayedIssuedBooks(allIssuedBooks);
@@ -264,7 +1866,11 @@ const BookSubmit = () => {
                 const activeIssue = issues[0];
                 setIssue(activeIssue);
 
-                const penaltyResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue/penalty/${activeIssue.id}`, "GET");
+                const penaltyResp = await helper.fetchWithAuth(
+                    `${constants.API_BASE_URL}/api/bookissue/penalty/${activeIssue.id}`,
+                    "GET"
+                );
+
                 if (penaltyResp.ok) {
                     const penaltyData = await penaltyResp.json();
                     if (penaltyData && penaltyData.success) {
@@ -284,7 +1890,10 @@ const BookSubmit = () => {
 
         } catch (error) {
             console.error("Error searching:", error);
-            PubSub.publish("RECORD_ERROR_TOAST", { title: "Error", message: error.message || "Error searching" });
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: error.message || "Error searching"
+            });
             setBook(null);
             setIssue(null);
             setBookIssues([]);
@@ -467,36 +2076,72 @@ const BookSubmit = () => {
 
         try {
             setLoading(true);
-            const body = JSON.stringify({
+            
+
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            
+            const submitData = {
                 issue_id: selectedIssue.id,
+                book_id: selectedIssue.book_id || book?.id,
+                book_title: selectedIssue.book_title || book?.title,
+                book_isbn: selectedIssue.book_isbn || book?.isbn,
+                issued_to: selectedIssue.issued_to,
+                issued_to_name: getUserDisplayName(selectedIssue),
+                card_number: selectedIssue.card_number,
                 condition_before: selectedIssue.condition_before || conditionBefore || 'Good',
                 condition_after: conditionAfter || 'Good',
                 remarks: remarks || '',
-                submit_date: new Date().toISOString().split('T')[0]
-            });
+                penalty_amount: penalty.penalty || 0,
+                days_overdue: penalty.daysOverdue || 0,
+                submit_date: new Date().toISOString(),
+                submitted_by: userData?.name || userData?.username || 'System'
+            };
 
-            const resp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/book_submissions`, "POST", body);
+            console.log("Submitting book data:", submitData);
+
+            const resp = await helper.fetchWithAuth(
+                `${constants.API_BASE_URL}/api/book_submissions`,
+                "POST",
+                JSON.stringify(submitData)
+            );
+
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                PubSub.publish("RECORD_SAVED_TOAST", { title: "Error", message: err.errors || "Failed to submit book", type: "error" });
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Error",
+                    message: err.errors || "Failed to submit book",
+                    type: "error"
+                });
                 return;
             }
 
             const result = await resp.json();
+            console.log("Submit response:", result);
+            
             if (result && result.success) {
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
-                    message: `Book submitted successfully for ${selectedIssue.issued_to_name || selectedIssue.student_name || selectedIssue.issued_to}`
+                    message: `Book submitted successfully for ${getUserDisplayName(selectedIssue)}`
                 });
 
-                setBookIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
-                setCardIssues(prev => prev.filter(item => item.id !== selectedIssue.id));
-                setAllIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
-                setDisplayedIssuedBooks(prev => prev.filter(item => item.id !== selectedIssue.id));
+
+                const updatedBookIssues = bookIssues.filter(item => item.id !== selectedIssue.id);
+                const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
+                const updatedAllIssues = allIssuedBooks.filter(item => item.id !== selectedIssue.id);
+                const updatedDisplayedIssues = displayedIssuedBooks.filter(item => item.id !== selectedIssue.id);
+                
+                setBookIssues(updatedBookIssues);
+                setCardIssues(updatedCardIssues);
+                setAllIssuedBooks(updatedAllIssues);
+                setDisplayedIssuedBooks(updatedDisplayedIssues);
+
+
+                setSubmittedBooks(prev => [...prev, submitData]);
 
                 handleModalClose();
 
-                if (bookIssues.length === 1 && cardIssues.length === 0) {
+
+                if (updatedBookIssues.length === 0 && updatedCardIssues.length === 0) {
                     setIsbn("");
                     setBook(null);
                     setIssue(null);
@@ -542,7 +2187,7 @@ const BookSubmit = () => {
         const query = searchTerm.toLowerCase();
         const bookTitle = (submission.book_title || "").toLowerCase();
         const isbn = (submission.book_isbn || "").toLowerCase();
-        const studentName = (submission.student_name || "").toLowerCase();
+        const studentName = getSubmittedByDisplayName(submission).toLowerCase();
         return (
             bookTitle.includes(query) ||
             isbn.includes(query) ||
@@ -609,29 +2254,25 @@ const BookSubmit = () => {
             width: 200,
             render: (value, record) => {
                 const displayName = getUserDisplayName(record);
-                const userId = record.issued_to || record.user_id || record.student_id;
+                const userId = record.issued_to || record.card_id || record.member_id;
 
-                if (userId) {
+                if (userId && displayName !== "Unknown User") {
                     return (
                         <a
                             href={`/librarycard/${userId}`}
                             onClick={(e) => {
                                 e.preventDefault();
-                                handleNameClick(userId, displayName, record, e);
-                            }}
-                            onContextMenu={(e) => {
-                                e.preventDefault();
-                                handleNameClick(userId, displayName, record, { ...e, button: 2 });
+                                e.stopPropagation();
+                                navigate(`/librarycard/${userId}`, { state: record });
                             }}
                             style={{
                                 color: "#6f42c1",
                                 textDecoration: "none",
-                                fontWeight: "500",
+                                fontWeight: 500,
                                 cursor: "pointer"
                             }}
                             onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
                             onMouseLeave={(e) => e.target.style.textDecoration = "none"}
-                            title="Click to view user details (Right-click to open in new tab)"
                         >
                             {displayName}
                         </a>
@@ -651,8 +2292,8 @@ const BookSubmit = () => {
             label: "Issue Date",
             width: 120,
             render: (value) => {
-                return moment(convertToUserTimezone(value, timeZone)).format('l');
-            },
+                return value ? moment(value).format('DD-MM-YYYY') : "-";
+            }
         },
         {
             field: "due_date",
@@ -660,8 +2301,7 @@ const BookSubmit = () => {
             width: 120,
             render: (value) => {
                 if (!value) return "—";
-                const displayDate = moment(convertToUserTimezone(value, timeZone)).format('l');
-
+                const displayDate = moment(value).format('DD-MM-YYYY');
                 const isOverdue = new Date(value) < new Date();
 
                 return (
@@ -674,7 +2314,7 @@ const BookSubmit = () => {
                         {displayDate}
                     </span>
                 );
-            },
+            }
         },
         {
             field: "actions",
@@ -751,40 +2391,30 @@ const BookSubmit = () => {
             )
         },
         {
-            field: "student_name",
+            field: "issued_to_name",
             label: "Submitted By",
             width: 200,
             render: (value, record) => {
-                const userId = record.issued_to;
-                const displayName = getUserDisplayName(record);
-                if (userId) {
+                const displayName = getSubmittedByDisplayName(record);
+                const userId = record.issued_to || record.user_id || record.member_id;
+
+                if (userId && displayName !== "Unknown User") {
                     return (
                         <a
                             href={`/librarycard/${userId}`}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                try {
-                                    localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-                                } catch (err) { }
                                 navigate(`/librarycard/${userId}`, { state: record });
                             }}
-                            onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                try {
-                                    localStorage.setItem(`prefetch:user:${userId}`, JSON.stringify(record));
-                                } catch (err) { }
-                                window.open(`/librarycard/${userId}`, '_blank');
+                            style={{
+                                color: "#6f42c1",
+                                textDecoration: "none",
+                                fontWeight: 500,
+                                cursor: "pointer"
                             }}
-                            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 500, cursor: "pointer" }}
-                            onMouseEnter={(e) => {
-                                e.target.style.textDecoration = "underline";
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.textDecoration = "none";
-                            }}
-                            title="Click to view user details (Right-click to open in new tab)"
+                            onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                            onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
                         >
                             {displayName}
                         </a>
@@ -797,9 +2427,13 @@ const BookSubmit = () => {
             field: "submit_date",
             label: "Submit Date",
             width: 150,
-
             render: (value) => {
-                return convertToUserTimezone(value, timeZone)
+                if (!value) return "-";
+                try {
+                    return moment(value).format('DD-MM-YYYY HH:mm');
+                } catch (e) {
+                    return value;
+                }
             }
         },
         {
@@ -837,11 +2471,10 @@ const BookSubmit = () => {
                                     <div
                                         style={{
                                             position: "absolute",
-                                            right: "0",
+                                            right: "20px",
                                             top: "50%",
                                             transform: "translateY(-50%)",
-                                            paddingRight: "15px",
-                                            marginTop: "-63px"
+                                            marginTop: "10px"
                                         }}
                                     >
                                         <InputGroup style={{ maxWidth: "250px" }}>
@@ -856,7 +2489,7 @@ const BookSubmit = () => {
                                             </InputGroup.Text>
 
                                             <Form.Control
-                                                placeholder="Search books..."
+                                                placeholder="Search submitted books..."
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 style={{
@@ -1171,10 +2804,7 @@ const BookSubmit = () => {
                                                     searchTerm={searchTerm}
                                                     currentPage={currentPage}
                                                     recordsPerPage={recordsPerPage}
-                                                    onPageChange={(page) => {
-                                                        console.log("Current data in table:", filteredIssuedBooks);
-                                                        setCurrentPage(page);
-                                                    }}
+                                                    onPageChange={(page) => setCurrentPage(page)}
                                                     emptyMessage={
                                                         book && bookIssues && bookIssues.length === 0
                                                             ? <div className="text-center py-4">
@@ -1206,6 +2836,7 @@ const BookSubmit = () => {
                                     <Row>
                                         <Col lg={12}>
                                             <Card className="shadow-sm">
+                                               
                                                 <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                                                     <ResizableTable
                                                         data={filteredSubmittedBooks}
@@ -1218,7 +2849,14 @@ const BookSubmit = () => {
                                                         currentPage={currentPage}
                                                         recordsPerPage={recordsPerPage}
                                                         onPageChange={(page) => setCurrentPage(page)}
-                                                        emptyMessage={searchTerm ? "No submitted books found matching your search" : "No books have been submitted yet"}
+                                                        emptyMessage={loadingSubmitted ?
+                                                            <div className="text-center py-5">
+                                                                <Spinner animation="border" variant="primary" />
+                                                                <p className="mt-2">Loading submitted books...</p>
+                                                            </div>
+                                                            : searchTerm ?
+                                                                "No submitted books found matching your search"
+                                                                : "No books have been submitted yet"}
                                                     />
                                                 </Card.Body>
                                             </Card>
@@ -1231,6 +2869,7 @@ const BookSubmit = () => {
                 </Card>
             </Container>
 
+            {/* Scan Modal */}
             <Modal show={showScanModal} onHide={() => setShowScanModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>
@@ -1292,6 +2931,7 @@ const BookSubmit = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Submit Modal */}
             <Modal show={showSubmitModal} onHide={handleModalClose} centered size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>
@@ -1304,8 +2944,8 @@ const BookSubmit = () => {
                         <div>
                             <h6 className="mb-3">Book Return Details</h6>
 
-                            <Card className="mb-3 ">
-                                <Card.Header className="  py-2">
+                            <Card className="mb-3">
+                                <Card.Header className="py-2">
                                     <h6 className="mb-0 small">Issue Information</h6>
                                 </Card.Header>
                                 <Card.Body className="py-2">
@@ -1323,20 +2963,7 @@ const BookSubmit = () => {
                                         <Col md={6}>
                                             <strong className="small">Issued To:</strong>
                                             <div className="text-secondary small">
-                                                <Button
-                                                    variant="link"
-                                                    className="p-0 text-decoration-none"
-                                                    onClick={(e) => handleNameClick(
-                                                        selectedIssue.issued_to || selectedIssue.user_id || selectedIssue.student_id,
-                                                        getUserDisplayName(selectedIssue),
-                                                        selectedIssue,
-                                                        e
-                                                    )}
-                                                    title="View User Details"
-                                                >
-                                                    <i className="fa-solid fa-user me-1 text-primary"></i>
-                                                    {getUserDisplayName(selectedIssue)}
-                                                </Button>
+                                                {getUserDisplayName(selectedIssue)}
                                             </div>
                                         </Col>
                                         <Col md={6}>
@@ -1357,8 +2984,8 @@ const BookSubmit = () => {
                                 </Card.Body>
                             </Card>
 
-                            <Card className="mb-3 ">
-                                <Card.Header className=" py-2">
+                            <Card className="mb-3">
+                                <Card.Header className="py-2">
                                     <h6 className="mb-0 small">Condition Assessment</h6>
                                 </Card.Header>
                                 <Card.Body className="py-2">

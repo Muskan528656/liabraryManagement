@@ -155,143 +155,281 @@ module.exports = (app) => {
     }
   });
 
-
   router.post(
     "/",
     fetchUser,
-    upload.single('image'),
+    upload.single("image"),
     [
-      body("is_active").optional().isBoolean().withMessage("is_active must be boolean"),
+      body("is_active").optional().isBoolean(),
       body("first_name").optional().isString(),
       body("last_name").optional().isString(),
       body("email").optional().isEmail(),
       body("phone_number").optional().isString(),
       body("type").optional().isString(),
-      
-      body("plan_id")
-  .optional()
-  .isUUID()
-  .withMessage("plan_id must be a valid UUID"),
+      body("plan_id").optional().isUUID(),
     ],
     async (req, res) => {
       try {
         const errors = validationResult(req);
-        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+        if (!errors.isEmpty())
+          return res.status(400).json({ errors: errors.array() });
 
         LibraryCard.init(req.userinfo.tenantcode);
         const userId = req.userinfo?.id || null;
 
         const cardData = { ...req.body };
 
+        console.log("=== IMAGE HANDLING START ===");
 
-        console.log("=== LIBRARY CARD CREATE DEBUG ===");
-        console.log("Request body keys:", Object.keys(req.body));
-        console.log("Request file details:", {
-          exists: !!req.file,
-          filename: req.file?.filename,
-          originalname: req.file?.originalname,
-          mimetype: req.file?.mimetype,
-          size: req.file?.size,
-          path: req.file?.path
-        });
-        console.log("Request headers:", req.headers['content-type']);
-        console.log("User ID:", userId);
-        console.log("Tenant Code:", req.userinfo.tenantcode);
+
 
 
         if (req.file) {
+          console.log("📁 Uploaded file detected");
 
           const uploadedFileName = req.file.filename;
-          console.log("📁 Uploaded file name:", uploadedFileName);
-
-
-          const fullPath = path.join(libraryCardUploadDir, uploadedFileName);
-          const fileExists = fs.existsSync(fullPath);
-          console.log("📂 File exists at", fullPath, ":", fileExists);
-
-
           cardData.image = `/uploads/librarycards/${uploadedFileName}`;
-          console.log("✅ File uploaded successfully. Image path:", cardData.image);
+
+          console.log("➡ Stored:", cardData.image);
+        }
 
 
-          const publicPath = path.join(frontendPublicDir, cardData.image.replace(/^\//, ''));
-          console.log("🔍 Public path check:", publicPath, "exists:", fs.existsSync(publicPath));
-
-        } else if (req.body.image && typeof req.body.image === 'string' && req.body.image.trim() !== '') {
-
-          const imgStr = req.body.image;
-          console.log("📸 Image from body:", imgStr.substring(0, 100) + "...");
-          console.log("📸 Image length:", imgStr.length);
 
 
-          if (imgStr.startsWith('data:image/')) {
-            console.log("🔑 Base64 image detected");
+        else if (
+          req.body.image &&
+          typeof req.body.image === "string" &&
+          req.body.image.startsWith("data:image/")
+        ) {
+          console.log("🟡 Base64 detected");
 
-            try {
-              const matches = imgStr.match(/^data:image\/(\w+);base64,/);
-              if (matches) {
-                const ext = matches[1];
-                const base64Data = imgStr.replace(/^data:image\/\w+;base64,/, '');
-                const buffer = Buffer.from(base64Data, 'base64');
+          try {
+            const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
+            if (matches) {
+              const ext = matches[1];
+              const base64Data = req.body.image.replace(
+                /^data:image\/\w+;base64,/,
+                ""
+              );
+              const buffer = Buffer.from(base64Data, "base64");
 
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                const fileName = `base64-${uniqueSuffix}.${ext}`;
-                const filePath = path.join(libraryCardUploadDir, fileName);
+              const uniqueFile = `base64-${Date.now()}-${Math.random()
+                .toString()
+                .slice(2)}.${ext}`;
+              const filePath = path.join(libraryCardUploadDir, uniqueFile);
 
-                fs.writeFileSync(filePath, buffer);
-                cardData.image = `/uploads/librarycards/${fileName}`;
-                console.log("💾 Base64 image saved to:", cardData.image);
-              }
-            } catch (base64Err) {
-              console.error("❌ Base64 save error:", base64Err.message);
-              cardData.image = null;
+              fs.writeFileSync(filePath, buffer);
+
+              cardData.image = `/uploads/librarycards/${uniqueFile}`;
+              console.log("💾 Base64 saved:", cardData.image);
             }
-          } else {
-
-            cardData.image = req.body.image;
+          } catch (err) {
+            console.error("❌ Base64 error:", err);
+            cardData.image = null;
           }
-        } else {
+        }
 
-          console.log("⚠️ No image provided");
+
+
+
+        else if (
+          req.body.image &&
+          typeof req.body.image === "string" &&
+          fs.existsSync(req.body.image)
+        ) {
+          console.log("📂 Local file path detected:", req.body.image);
+
+          const originalPath = req.body.image;
+          const ext = path.extname(originalPath) || ".png";
+
+          const newFileName = `copied-${Date.now()}-${Math.random()
+            .toString()
+            .slice(2)}${ext}`;
+          const newFilePath = path.join(libraryCardUploadDir, newFileName);
+
+          fs.copyFileSync(originalPath, newFilePath);
+
+          cardData.image = `/uploads/librarycards/${newFileName}`;
+
+          console.log("📥 Copied local file to upload folder:", cardData.image);
+        }
+
+
+
+
+
+        else if (req.body.image) {
+          if (typeof req.body.image === "string") {
+            console.log("🔗 URL or string path provided");
+            cardData.image = req.body.image.trim();
+          } else {
+            console.warn("⚠ Ignoring non-string image value:", req.body.image);
+            cardData.image = null;
+          }
+        }
+
+
+
+
+        else {
+          console.log("⚠ No image provided");
           cardData.image = null;
         }
 
+        console.log("=== IMAGE HANDLING END ===");
 
-        console.log("📦 Final cardData to be saved:", {
-          ...cardData,
-          image: cardData.image ? `${cardData.image.substring(0, 50)}...` : null
-        });
-
-
-        console.log("🛠 Creating library card with data keys:", Object.keys(cardData));
 
         const card = await LibraryCard.create(cardData, userId);
-
-        if (!card) {
-          console.log("❌ LibraryCard.create returned null/undefined");
-          return res.status(400).json({ errors: "Failed to create library card" });
-        }
-
-
         const createdCard = await LibraryCard.findById(card.id);
-        console.log("✅ Created card image field:", createdCard?.image);
 
         return res.status(200).json({
           success: true,
           data: createdCard,
-          message: "Library card created successfully"
+          message: "Library card created successfully",
         });
-
       } catch (error) {
         console.error("❌ Error creating library card:", error);
-        console.error("Error stack:", error.stack);
-        return res.status(500).json({
-          errors: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        return res.status(500).json({ errors: error.message });
       }
     }
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
     try {
       console.log("res=>>", req.body);

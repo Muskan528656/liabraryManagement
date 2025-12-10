@@ -10,33 +10,28 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
- 
 async function getDashboardStats() {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
- 
+
     const totalBooksQuery = `SELECT COUNT(*) as count FROM ${this.schema}.books`;
     const totalBooksResult = await sql.query(totalBooksQuery);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
- 
     const availableBooksQuery = `SELECT SUM(available_copies) as count FROM ${this.schema}.books WHERE available_copies > 0`;
     const availableBooksResult = await sql.query(availableBooksQuery);
     const availableBooks = parseInt(availableBooksResult.rows[0]?.count || 0);
 
- 
     const totalAuthorsQuery = `SELECT COUNT(*) as count FROM ${this.schema}.authors`;
     const totalAuthorsResult = await sql.query(totalAuthorsQuery);
     const totalAuthors = parseInt(totalAuthorsResult.rows[0]?.count || 0);
 
- 
     const totalCategoriesQuery = `SELECT COUNT(*) as count FROM ${this.schema}.categories`;
     const totalCategoriesResult = await sql.query(totalCategoriesQuery);
     const totalCategories = parseInt(totalCategoriesResult.rows[0]?.count || 0);
 
- 
     const booksByCategoryQuery = `
       SELECT 
         c.name as category_name,
@@ -49,7 +44,6 @@ async function getDashboardStats() {
     `;
     const booksByCategoryResult = await sql.query(booksByCategoryQuery);
 
- 
     const booksByAuthorQuery = `
       SELECT 
         a.name as author_name,
@@ -62,15 +56,15 @@ async function getDashboardStats() {
     `;
     const booksByAuthorResult = await sql.query(booksByAuthorQuery);
 
- 
+
     const totalCopiesQuery = `SELECT SUM(total_copies) as total FROM ${this.schema}.books`;
     const totalCopiesResult = await sql.query(totalCopiesQuery);
     const totalCopies = parseInt(totalCopiesResult.rows[0]?.total || 0);
+
     const issuedBooks = totalCopies - availableBooks;
     const issuedPercentage = totalCopies > 0 ? Math.round((issuedBooks / totalCopies) * 100) : 0;
     const availablePercentage = totalCopies > 0 ? Math.round((availableBooks / totalCopies) * 100) : 0;
 
- 
     const monthlyTrendQuery = `
       SELECT 
         TO_CHAR(createddate, 'Mon YYYY') as month,
@@ -83,7 +77,6 @@ async function getDashboardStats() {
     `;
     const monthlyTrendResult = await sql.query(monthlyTrendQuery);
 
- 
     const booksThisMonthQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.books 
@@ -92,7 +85,6 @@ async function getDashboardStats() {
     const booksThisMonthResult = await sql.query(booksThisMonthQuery);
     const booksThisMonth = parseInt(booksThisMonthResult.rows[0]?.count || 0);
 
- 
     const dailyActivityQuery = `
       SELECT 
         DATE(createddate) as date,
@@ -107,12 +99,13 @@ async function getDashboardStats() {
     return {
       summary: {
         totalBooks,
+        totalCopies,          // ⭐ Added here
         availableBooks,
-        totalAuthors,
-        totalCategories,
         issuedBooks,
         issuedPercentage,
         availablePercentage,
+        totalAuthors,
+        totalCategories,
         booksThisMonth,
       },
       booksByCategory: booksByCategoryResult.rows,
@@ -126,19 +119,19 @@ async function getDashboardStats() {
   }
 }
 
- 
+
 async function getStudentDashboardStats(userId) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
- 
+
     const totalBooksQuery = `SELECT COUNT(*) as count FROM ${this.schema}.books WHERE available_copies > 0`;
     const totalBooksResult = await sql.query(totalBooksQuery);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
- 
+
     const issuedBooksQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.book_issues 
@@ -147,7 +140,7 @@ async function getStudentDashboardStats(userId) {
     const issuedBooksResult = await sql.query(issuedBooksQuery, [userId]);
     const issuedBooks = parseInt(issuedBooksResult.rows[0]?.count || 0);
 
- 
+
     const pendingRequestsQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.book_requests 
@@ -156,7 +149,7 @@ async function getStudentDashboardStats(userId) {
     const pendingRequestsResult = await sql.query(pendingRequestsQuery, [userId]);
     const pendingRequests = parseInt(pendingRequestsResult.rows[0]?.count || 0);
 
- 
+
     const approvedRequestsQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.book_requests 
@@ -165,7 +158,7 @@ async function getStudentDashboardStats(userId) {
     const approvedRequestsResult = await sql.query(approvedRequestsQuery, [userId]);
     const approvedRequests = parseInt(approvedRequestsResult.rows[0]?.count || 0);
 
- 
+
     const overdueBooksQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.book_issues 
@@ -177,7 +170,7 @@ async function getStudentDashboardStats(userId) {
     const overdueBooksResult = await sql.query(overdueBooksQuery, [userId]);
     const overdueBooks = parseInt(overdueBooksResult.rows[0]?.count || 0);
 
- 
+
     const totalFinesQuery = `
       SELECT COALESCE(SUM(penalty_amount), 0) as total_fines
       FROM ${this.schema}.book_issues 
@@ -188,7 +181,7 @@ async function getStudentDashboardStats(userId) {
     const totalFinesResult = await sql.query(totalFinesQuery, [userId]);
     const totalFines = parseFloat(totalFinesResult.rows[0]?.total_fines || 0);
 
- 
+
     const recentIssuedQuery = `
       SELECT 
         bi.*,
@@ -205,7 +198,7 @@ async function getStudentDashboardStats(userId) {
     `;
     const recentIssuedResult = await sql.query(recentIssuedQuery, [userId]);
 
- 
+
     const recentRequestsQuery = `
       SELECT 
         br.*,
@@ -219,7 +212,7 @@ async function getStudentDashboardStats(userId) {
     `;
     const recentRequestsResult = await sql.query(recentRequestsQuery, [userId]);
 
- 
+
     const dueSoonQuery = `
       SELECT COUNT(*) as count 
       FROM ${this.schema}.book_issues 

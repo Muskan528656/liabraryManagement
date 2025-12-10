@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -8,7 +10,7 @@ import {
   Badge,
   Form,
   Modal,
-  InputGroup, // ✅ Added for password field
+  InputGroup,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
@@ -97,6 +99,54 @@ const toStringSafe = (value) => {
   return value.toString();
 };
 
+
+const getCountryInfo = (countryCode) => {
+  if (!countryCode) return { timezone: null, currency: null };
+
+
+  const cleanCode = countryCode.toString().trim();
+
+
+  const countryInfo = COUNTRY_CODES.find(country => {
+    if (!country) return false;
+
+
+    if (country.code && country.code.toString().toUpperCase() === cleanCode.toUpperCase()) {
+      return true;
+    }
+
+
+    if (country.name && typeof country.name === 'string') {
+      return country.name.toLowerCase() === cleanCode.toLowerCase();
+    }
+
+    return false;
+  });
+
+  if (countryInfo) {
+    return {
+      timezone: countryInfo.timezone || null,
+      currency: countryInfo.currency || null
+    };
+  }
+
+
+  const fallbackMap = {
+    'US': { timezone: 'America/New_York', currency: 'USD' },
+    'GB': { timezone: 'Europe/London', currency: 'GBP' },
+    'IN': { timezone: 'Asia/Kolkata', currency: 'INR' },
+    'AU': { timezone: 'Australia/Sydney', currency: 'AUD' },
+    'CA': { timezone: 'America/Toronto', currency: 'CAD' },
+    'DE': { timezone: 'Europe/Berlin', currency: 'EUR' },
+    'FR': { timezone: 'Europe/Paris', currency: 'EUR' },
+    'JP': { timezone: 'Asia/Tokyo', currency: 'JPY' },
+    'CN': { timezone: 'Asia/Shanghai', currency: 'CNY' },
+    'AF': { timezone: 'Asia/Kabul', currency: 'AFN' }, // Afghanistan
+  };
+
+  return fallbackMap[cleanCode] || { timezone: null, currency: null };
+};
+
 const ModuleDetail = ({
   moduleName,
   moduleApi,
@@ -137,7 +187,7 @@ const ModuleDetail = ({
   const [userNames, setUserNames] = useState({});
   const [userAvatars, setUserAvatars] = useState({});
 
-  // ✅ NEW: password visibility map
+
   const [passwordVisibility, setPasswordVisibility] = useState({});
 
   const moduleNameFromUrl = window.location.pathname.split("/")[1];
@@ -198,9 +248,8 @@ const ModuleDetail = ({
 
     return (
       <div
-        className={`d-flex align-items-center ${
-          clickable ? "cursor-pointer" : ""
-        }`}
+        className={`d-flex align-items-center ${clickable ? "cursor-pointer" : ""
+          }`}
         onClick={handleUserClick}
         style={{
           cursor: clickable ? "pointer" : "default",
@@ -256,9 +305,8 @@ const ModuleDetail = ({
               ? response.data.data
               : response.data;
             if (user) {
-              const fullName = `${user.firstname || ""} ${
-                user.lastname || ""
-              }`.trim();
+              const fullName = `${user.firstname || ""} ${user.lastname || ""
+                }`.trim();
               names[userId] = fullName || user.email || `User ${userId}`;
 
               if (user.profile_picture) {
@@ -266,10 +314,10 @@ const ModuleDetail = ({
               } else {
                 const initials = fullName
                   ? fullName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
                   : "U";
                 avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   fullName || "User"
@@ -359,8 +407,7 @@ const ModuleDetail = ({
           }
         } catch (error) {
           console.error(
-            `Error fetching related ${
-              relatedModule.label || relatedModule.key
+            `Error fetching related ${relatedModule.label || relatedModule.key
             }:`,
             error
           );
@@ -551,7 +598,7 @@ const ModuleDetail = ({
     navigate(targetUrl);
   };
 
-  // ✅ helper to toggle password visibility
+
   const togglePasswordVisibility = (key) => {
     setPasswordVisibility((prev) => ({
       ...prev,
@@ -776,6 +823,7 @@ const ModuleDetail = ({
     setTempData(null);
   };
 
+
   const handleFieldChange = (fieldKey, value) => {
     if (isEditing && tempData) {
       let updatedData = {
@@ -783,8 +831,38 @@ const ModuleDetail = ({
         [fieldKey]: value,
       };
 
-      if (moduleName === "purchase") {
-        if (fieldKey === "quantity" || fieldKey === "unit_price") {
+
+      if (fieldKey === 'country' || fieldKey === 'country_code') {
+        const countryInfo = getCountryInfo(value);
+
+        console.log('Country changed to:', value, 'Country info:', countryInfo);
+
+
+        if (countryInfo.timezone) {
+
+          const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
+          timezoneFields.forEach(timezoneField => {
+            if (updatedData.hasOwnProperty(timezoneField)) {
+              updatedData[timezoneField] = countryInfo.timezone;
+            }
+          });
+        }
+
+
+        if (countryInfo.currency) {
+
+          const currencyFields = ['currency', 'currency_code', 'currencyCode'];
+          currencyFields.forEach(currencyField => {
+            if (updatedData.hasOwnProperty(currencyField)) {
+              updatedData[currencyField] = countryInfo.currency;
+            }
+          });
+        }
+      }
+
+
+      if (moduleName === 'purchase') {
+        if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
           const quantity = parseFloat(updatedData.quantity) || 0;
           const unitPrice = parseFloat(updatedData.unit_price) || 0;
           const totalAmount = quantity * unitPrice;
@@ -935,7 +1013,7 @@ const ModuleDetail = ({
       });
     }
 
-    // TOGGLE FIELD
+
     if (field.type === "toggle") {
       const value = currentData ? Boolean(currentData[field.key]) : false;
 
@@ -996,7 +1074,7 @@ const ModuleDetail = ({
       );
     }
 
-    // USER fields - show avatar
+
     if (
       (!isEditing || shouldShowAsReadOnly) &&
       (field.key.includes("user") ||
@@ -1021,7 +1099,7 @@ const ModuleDetail = ({
       }
     }
 
-    // SELECT FIELD
+
     if (field.type === "select" && field.options) {
       const options = getSelectOptions(field);
       const rawValue = currentData ? currentData[field.key] : null;
@@ -1067,8 +1145,8 @@ const ModuleDetail = ({
                 return selected
                   ? getOptionDisplayLabel(selected)
                   : field.displayKey && data
-                  ? data[field.displayKey] || "—"
-                  : "—";
+                    ? data[field.displayKey] || "—"
+                    : "—";
               })()}
               style={{
                 pointerEvents: "none",
@@ -1080,7 +1158,7 @@ const ModuleDetail = ({
       );
     }
 
-    // ✅ PASSWORD FIELD
+
     if (field.type === "password") {
       const rawValue = currentData ? currentData[field.key] : "";
       const isVisible = passwordVisibility[field.key] || false;
@@ -1089,7 +1167,7 @@ const ModuleDetail = ({
         <Form.Group key={index} className="mb-3">
           <Form.Label className="fw-semibold">{field.label}</Form.Label>
           {!isEditing || isNonEditableField ? (
-            // Never show actual password in view / read-only
+
             <div className="form-control-plaintext">******</div>
           ) : (
             <InputGroup>
@@ -1135,10 +1213,10 @@ const ModuleDetail = ({
         ? field.type === "number"
           ? "number"
           : field.type === "date"
-          ? "date"
-          : field.type === "datetime"
-          ? "datetime-local"
-          : "text"
+            ? "date"
+            : field.type === "datetime"
+              ? "datetime-local"
+              : "text"
         : "text";
 
     if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
@@ -1413,13 +1491,13 @@ const ModuleDetail = ({
                               const normalizedModule =
                                 typeof relatedModule === "string"
                                   ? {
-                                      key: relatedModule,
-                                      label:
-                                        relatedModule
-                                          .charAt(0)
-                                          .toUpperCase() +
-                                        relatedModule.slice(1),
-                                    }
+                                    key: relatedModule,
+                                    label:
+                                      relatedModule
+                                        .charAt(0)
+                                        .toUpperCase() +
+                                      relatedModule.slice(1),
+                                  }
                                   : relatedModule;
 
                               const moduleKey =
@@ -1428,9 +1506,9 @@ const ModuleDetail = ({
                                 normalizedModule.label ||
                                 (typeof normalizedModule === "string"
                                   ? normalizedModule
-                                      .charAt(0)
-                                      .toUpperCase() +
-                                    normalizedModule.slice(1)
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  normalizedModule.slice(1)
                                   : "Related");
 
                               return (
@@ -1456,7 +1534,7 @@ const ModuleDetail = ({
                                     {moduleLabel}
                                   </h6>
                                   {relatedData[moduleKey] &&
-                                  relatedData[moduleKey].length > 0 ? (
+                                    relatedData[moduleKey].length > 0 ? (
                                     normalizedModule.render ? (
                                       normalizedModule.render(
                                         relatedData[moduleKey],
@@ -1508,12 +1586,12 @@ const ModuleDetail = ({
                                                       "background-color 0.2s",
                                                   }}
                                                   onMouseEnter={(e) =>
-                                                    (e.target.parentElement.style.background =
-                                                      "#f8f9fa")
+                                                  (e.target.parentElement.style.background =
+                                                    "#f8f9fa")
                                                   }
                                                   onMouseLeave={(e) =>
-                                                    (e.target.parentElement.style.background =
-                                                      "transparent")
+                                                  (e.target.parentElement.style.background =
+                                                    "transparent")
                                                   }
                                                 >
                                                   {normalizedModule.columns?.map(
@@ -1595,4 +1673,4 @@ const ModuleDetail = ({
   );
 };
 
-export default ModuleDetail;
+export default ModuleDetail;  

@@ -12,7 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CountryCode from "../../constants/CountryCode.json";
 import DataApi from "../../api/dataApi";
 
-// --- 1. SVG ICONS (Guarantees icons show up without external libraries) ---
+
 const EyeIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +47,7 @@ const UserAdd = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(location.state ? location.state : {});
-  // eslint-disable-next-line
+
   let name = user.firstname;
   const [option, setoption] = useState();
   const [passwordError, setPasswordError] = useState("");
@@ -55,13 +55,13 @@ const UserAdd = () => {
   const [whatsappError, setWhatsappError] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailError, setEmailError] = useState("");
-  
-  // eslint-disable-next-line
+
+
   const phoneRegex = /^[0-9]{10}$/;
   
   const [showPassword, setShowPassword] = useState(false);
   const [loginUserRole, setLoginUserRole] = useState("");
-  // eslint-disable-next-line
+
   const [whatsappSetting, setWhatsappSetting] = useState([]);
   const [userPlan, setUserPlan] = useState(null);
   const [companyCountryCode, setCompanyCountryCode] = useState("+91");
@@ -93,7 +93,7 @@ const UserAdd = () => {
         managername: userInfo.username,
       });
     }
-    // eslint-disable-next-line
+
   }, [user.id]);
 
   const fetchCompanyCountryCode = async () => {
@@ -165,14 +165,14 @@ const UserAdd = () => {
         : "+91";
 
       let result = {};
-      // --- Simulate API Call (Replace with your actual logic) ---
+
       if (finalUser.id) {
-        // Update logic
+
       } else {
-        // Create logic
+
       }
 
-      // Placeholder for success check (Assuming true for structure)
+
       if (result.success !== false) {
         navigate(`/users`);
       } else {

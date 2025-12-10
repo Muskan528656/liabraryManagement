@@ -14,6 +14,9 @@ const getDashboardStats = async () => {
     console.log("Fetching dashboard stats...");
     const stats = {};
 
+    const totoalcopies = await sql.query(`SELECT COUNT(*) FROM demo.total_copies`);
+    stats.totoalcopies = parseInt(totoalcopies.rows[0].count) || 0;
+
 
     const bookCountResult = await sql.query(`SELECT COUNT(*) FROM demo.books`);
     stats.total_books = parseInt(bookCountResult.rows[0].count) || 0;
@@ -96,81 +99,92 @@ const getDashboardStats = async () => {
     throw error;
   }
 };
-
 const fetchAll = async () => {
   try {
     console.log("Fetching alert metrics...");
 
-    const result = await sql.query(` 
-  SELECT 
-      (SELECT COUNT(*) 
-       FROM demo.book_issues 
-       WHERE return_date IS NULL
-       AND due_date BETWEEN NOW() AND (NOW() + INTERVAL '14 days')
-      ) AS total_due_soon,
+    const result = await sql.query(`
+      SELECT 
+   
+        (
+          SELECT COUNT(*) 
+          FROM demo.book_issues 
+          WHERE return_date IS NULL
+          AND due_date BETWEEN NOW() AND (NOW() + INTERVAL '14 days')
+        ) AS total_due_soon,
 
-      (SELECT COUNT(*) 
-       FROM demo.book_issues 
-       WHERE return_date IS NULL
-       AND due_date < NOW()
-      ) AS overdue_books,
+        /* Overdue books */
+        (
+          SELECT COUNT(*) 
+          FROM demo.book_issues 
+          WHERE return_date IS NULL
+          AND due_date < NOW()
+        ) AS overdue_books,
 
-      (SELECT COALESCE(SUM(bs.penalty), 0)
-       FROM demo.book_submissions bs
-       WHERE DATE_TRUNC('month', bs.submit_date) = DATE_TRUNC('month', CURRENT_DATE)
-      ) AS fine_collected_this_month,
+        /* Total fine collected this month */
+        (
+          SELECT COALESCE(SUM(bs.penalty), 0)
+          FROM demo.book_submissions bs
+          WHERE DATE_TRUNC('month', bs.submit_date) = DATE_TRUNC('month', CURRENT_DATE)
+        ) AS fine_collected_this_month,
 
-      (SELECT COUNT(*) 
-       FROM demo.book_submissions bs
-       WHERE bs.condition_after IN ('damaged', 'missing')
-       AND bs.submit_date >= CURRENT_DATE - INTERVAL '30 days'
-      ) AS damaged_missing_books,
+        /* Books marked damaged or missing in last 30 days */
+        (
+          SELECT COUNT(*)
+          FROM demo.book_submissions bs
+          WHERE bs.condition_after IN ('damaged', 'missing')
+          AND bs.submit_date >= CURRENT_DATE - INTERVAL '30 days'
+        ) AS damaged_missing_books,
 
-      (SELECT COALESCE(SUM(b.total_copies), 0)
-       FROM demo.books b
-      ) AS total_book_copies,
+        /* Total copies in library */
+        (
+          SELECT COALESCE(SUM(b.total_copies), 0)
+          FROM demo.books b
+        ) AS total_book_copies,
 
-      (SELECT COALESCE(AVG(EXTRACT(DAY FROM (return_date - issue_date))), 0)
-       FROM demo.book_issues 
-       WHERE return_date IS NOT NULL
-       AND issue_date >= CURRENT_DATE - INTERVAL '30 days'
-      ) AS avg_return_days
-  FROM demo.books
-  LIMIT 1;
-`);
-
+        /* Avg return days in last 30 days (FIXED) */
+        (
+          SELECT COALESCE(AVG(EXTRACT(DAY FROM ((return_date - issue_date) * INTERVAL '1 day'))), 0)
+          FROM demo.book_issues
+          WHERE return_date IS NOT NULL
+          AND issue_date >= CURRENT_DATE - INTERVAL '30 days'
+        ) AS avg_return_days
+      FROM demo.books
+      LIMIT 1;
+    `);
 
     console.log("Alert metrics fetched:", result);
 
     if (result.rows && result.rows.length > 0) {
       return [result.rows[0]];
     } else {
+      return [
+        {
+          total_due_soon: 0,
+          overdue_books: 0,
+          fine_collected_this_month: 0,
+          damaged_missing_books: 0,
+          total_book_copies: 0,
+          avg_return_days: 0,
+        },
+      ];
+    }
+  } catch (error) {
+    console.error("Error fetching dashboard metrics:", error);
 
-      return [{
+    return [
+      {
         total_due_soon: 0,
         overdue_books: 0,
         fine_collected_this_month: 0,
         damaged_missing_books: 0,
         total_book_copies: 0,
-        active_borrowers: 0,
-        avg_return_days: 0
-      }];
-    }
-
-  } catch (error) {
-    console.error("Error fetching dashboard metrics:", error);
-
-    return [{
-      total_due_soon: 0,
-      overdue_books: 0,
-      fine_collected_this_month: 0,
-      damaged_missing_books: 0,
-      total_book_copies: 0,
-      active_borrowers: 0,
-      avg_return_days: 0
-    }];
+        avg_return_days: 0,
+      },
+    ];
   }
 };
+
 
 
 const getCompleteDashboardData = async () => {
@@ -182,9 +196,10 @@ const getCompleteDashboardData = async () => {
       getDashboardStats(),
       fetchAll()
     ]);
-
+    console.log("statstatsstatss", stats)
     const completeData = {
       summary: {
+        totoalcopies: stats.totoalcopies,
         totalBooks: stats.total_books,
         totalCopies: stats.total_copies,
         availableBooks: stats.available_copies,

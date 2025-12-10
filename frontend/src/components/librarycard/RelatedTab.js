@@ -6,10 +6,10 @@ const RelatedTabContent = ({ id, data }) => {
     const [relatedPlans, setRelatedPlans] = useState([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
     const [allPlans, setAllPlans] = useState([]);
-    
-    const [isAddingPlan, setIsAddingPlan] = useState(false); 
-    const [expandedPlanId, setExpandedPlanId] = useState(null); 
-    
+
+    const [isAddingPlan, setIsAddingPlan] = useState(false);
+    const [expandedPlanId, setExpandedPlanId] = useState(null);
+
     const [selectedPlanId, setSelectedPlanId] = useState("");
     const [assigningPlan, setAssigningPlan] = useState(false);
     const [notification, setNotification] = useState({ type: "", message: "" });
@@ -23,7 +23,6 @@ const RelatedTabContent = ({ id, data }) => {
     const fetchRelatedData = async () => {
         setLoadingRelated(true);
         try {
-            // A. Fetch Master Plan List
             const api = new DataApi('plans');
             const plansResponse = await api.fetchAll();
             let plansArray = [];
@@ -32,15 +31,15 @@ const RelatedTabContent = ({ id, data }) => {
             } else if (Array.isArray(plansResponse?.data)) {
                 plansArray = plansResponse.data;
             } else if (plansResponse?.data && Array.isArray(plansResponse.data)) {
-                 plansArray = plansResponse.data;
+                plansArray = plansResponse.data;
             }
             setAllPlans(plansArray);
 
-            // B. Fetch Subscription History
+
             const subApi = new DataApi('subscriptions');
             const subResponse = await subApi.fetchAll();
             let subscriptionsData = [];
-            
+
             if (subResponse?.data?.data) {
                 subscriptionsData = subResponse.data.data;
             } else if (Array.isArray(subResponse?.data)) {
@@ -49,15 +48,15 @@ const RelatedTabContent = ({ id, data }) => {
                 subscriptionsData = subResponse.data;
             }
 
-            // Filter for THIS member
-            let memberSubscriptions = subscriptionsData.filter(sub => 
+
+            let memberSubscriptions = subscriptionsData.filter(sub =>
                 String(sub.member_id) === String(id) ||
                 String(sub.card_id) === String(id) ||
-                String(sub.library_card_id) === String(id) || 
+                String(sub.library_card_id) === String(id) ||
                 (data?.user_id && String(sub.user_id) === String(data.user_id))
             );
 
-            // C. Merge Subscriptions with Plan Details
+
             let finalPlansList = memberSubscriptions.map(subscription => {
                 const planDetails = plansArray.find(p => String(p.id) === String(subscription.plan_id));
                 if (!planDetails) return null;
@@ -75,7 +74,6 @@ const RelatedTabContent = ({ id, data }) => {
                 };
             }).filter(Boolean);
 
-            // D. Handle Profile Data
             if (data && data.plan_id) {
                 const alreadyExists = finalPlansList.some(p => String(p.real_plan_id) === String(data.plan_id));
 
@@ -99,7 +97,6 @@ const RelatedTabContent = ({ id, data }) => {
                 }
             }
 
-            // Sort: Active first
             finalPlansList.sort((a, b) => {
                 const aActive = new Date(a.expiry_date) > new Date();
                 const bActive = new Date(b.expiry_date) > new Date();
@@ -131,7 +128,7 @@ const RelatedTabContent = ({ id, data }) => {
 
             const subscriptionData = {
                 plan_id: selectedPlanId,
-                member_id: id, 
+                member_id: id,
                 card_id: id,
                 user_id: data?.user_id || data?.id,
                 plan_name: selectedPlan.plan_name || selectedPlan.name,
@@ -170,10 +167,10 @@ const RelatedTabContent = ({ id, data }) => {
     const isPlanActive = (plan) => {
         if (!plan) return false;
         const notExpired = plan.expiry_date ? new Date(plan.expiry_date) >= new Date() : true;
-        const recordStatus = String(plan.is_active) === "true" || 
-                             plan.is_active === true || 
-                             plan.is_active === 1 || 
-                             String(plan.status) === "active";
+        const recordStatus = String(plan.is_active) === "true" ||
+            plan.is_active === true ||
+            plan.is_active === 1 ||
+            String(plan.status) === "active";
 
         return notExpired && recordStatus;
     };
@@ -186,25 +183,25 @@ const RelatedTabContent = ({ id, data }) => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <p className="text-muted small mb-0">
-                        {hasActivePlan ? 
+                        {hasActivePlan ?
                             <span style={{ color: "var(--primary-color)" }} className="fw-bold">
-                                <i className="fa-solid fa-circle-check me-1"></i> 
+                                <i className="fa-solid fa-circle-check me-1"></i>
                                 Plan Active (New assignment disabled)
-                            </span> : 
+                            </span> :
                             "No active plans. You can assign a new one."}
                     </p>
                 </div>
-                
+
                 {!isAddingPlan && (
-                    <Button 
+                    <Button
                         style={{
-                            backgroundColor: " #f3e9fc", 
+                            backgroundColor: " #f3e9fc",
                             borderColor: " #6f42c1",
                             color: "#fff"
                         }}
                         className="rounded px-4 shadow-sm"
                         onClick={() => setIsAddingPlan(true)}
-                        disabled={hasActivePlan} 
+                        disabled={hasActivePlan}
                         title={hasActivePlan ? "Current plan must expire before adding a new one" : "Assign a new plan"}
                     >
                         <i className="fa-solid fa-plus me-2" ></i> Assign Plan
@@ -214,7 +211,7 @@ const RelatedTabContent = ({ id, data }) => {
 
             {/* Notifications */}
             {notification.message && (
-                <Alert variant={notification.type} onClose={() => setNotification({type:"", message:""})} dismissible>
+                <Alert variant={notification.type} onClose={() => setNotification({ type: "", message: "" })} dismissible>
                     {notification.message}
                 </Alert>
             )}
@@ -235,12 +232,12 @@ const RelatedTabContent = ({ id, data }) => {
                                         <i className="fa-solid fa-xmark"></i> Close
                                     </Button>
                                 </div>
-                                
+
                                 <Row className="g-3 align-items-end">
                                     <Col md={8}>
                                         <Form.Label className="small text-muted fw-bold text-uppercase">Available Plans</Form.Label>
-                                        <Form.Select 
-                                            value={selectedPlanId} 
+                                        <Form.Select
+                                            value={selectedPlanId}
                                             onChange={(e) => setSelectedPlanId(e.target.value)}
                                             className="form-control-lg border-0 shadow-sm"
                                         >
@@ -256,11 +253,11 @@ const RelatedTabContent = ({ id, data }) => {
                                         </Form.Select>
                                     </Col>
                                     <Col md={4}>
-                                        <Button 
+                                        <Button
                                             style={{
-                                                backgroundColor: "var(--primary-color)", 
+                                                backgroundColor: "var(--primary-color)",
                                                 borderColor: "var(--primary-color)"
-                                            }} 
+                                            }}
                                             className="w-100 py-3 shadow-sm fw-bold"
                                             onClick={handleAssignPlan}
                                             disabled={!selectedPlanId || assigningPlan}
@@ -276,33 +273,33 @@ const RelatedTabContent = ({ id, data }) => {
             </Collapse>
 
             {/* Plans List */}
-            { relatedPlans.length > 0 ? (
+            {relatedPlans.length > 0 ? (
                 <div className="d-flex flex-column gap-3">
                     {relatedPlans.map((plan) => {
                         const active = isPlanActive(plan);
                         const isExpanded = expandedPlanId === plan.unique_key;
-                        
+
                         return (
-                            <Card 
-                                key={plan.unique_key} 
+                            <Card
+                                key={plan.unique_key}
                                 className={`border-0 shadow-sm transition-all ${active ? '' : 'opacity-75 bg-light'}`}
-                                style={{ 
+                                style={{
                                     overflow: 'hidden',
-                                    // Use primary color for the border if active
+
                                     borderLeft: active ? '5px solid var(--primary-color)' : 'none'
                                 }}
                             >
-                                <div 
+                                <div
                                     className="p-3 d-flex align-items-center justify-content-between"
                                     onClick={() => setExpandedPlanId(isExpanded ? null : plan.unique_key)}
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <div className="d-flex align-items-center gap-3">
                                         {/* Icon Container with Custom Colors */}
-                                        <div 
+                                        <div
                                             className="rounded-circle p-2 d-flex align-items-center justify-content-center"
                                             style={{
-                                                width: '45px', 
+                                                width: '45px',
                                                 height: '45px',
                                                 backgroundColor: active ? "var(--primary-background-color)" : "#e9ecef",
                                                 color: active ? "var(--primary-color)" : "#6c757d"
@@ -319,8 +316,8 @@ const RelatedTabContent = ({ id, data }) => {
                                     </div>
                                     <div className="d-flex align-items-center gap-3">
                                         {active && (
-                                            <Badge 
-                                                className="rounded-pill px-3" 
+                                            <Badge
+                                                className="rounded-pill px-3"
                                                 style={{ backgroundColor: "var(--primary-color)" }}
                                             >
                                                 Active
@@ -337,18 +334,18 @@ const RelatedTabContent = ({ id, data }) => {
                                                 <Col xs={6} md={3}>
                                                     <div className="small text-muted text-uppercase fw-bold mb-1">Duration</div>
                                                     <div className="fw-semibold text-dark">
-                                                        <i className="fa-regular fa-calendar me-2" style={{color: "var(--primary-color)"}}></i>
+                                                        <i className="fa-regular fa-calendar me-2" style={{ color: "var(--primary-color)" }}></i>
                                                         {plan.duration_days} Days
                                                     </div>
                                                 </Col>
                                                 <Col xs={6} md={3}>
                                                     <div className="small text-muted text-uppercase fw-bold mb-1">Book Limit</div>
                                                     <div className="fw-semibold text-dark">
-                                                        <i className="fa-solid fa-book-open me-2" style={{color: "var(--primary-color)"}}></i>
+                                                        <i className="fa-solid fa-book-open me-2" style={{ color: "var(--primary-color)" }}></i>
                                                         {plan.allowed_books} Books
                                                     </div>
                                                 </Col>
-                                                
+
                                                 <Col xs={6} md={3}>
                                                     <div className="small text-muted text-uppercase fw-bold mb-1">Source</div>
                                                     <Badge bg="light" text="dark" className="border fw-normal">

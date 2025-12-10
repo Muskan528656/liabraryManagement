@@ -1,4 +1,5 @@
 
+
 /**
  * @author      Muskan Khan
  * @date        DEC, 2025
@@ -93,6 +94,7 @@ async function create(userData, userId) {
     if (!userData.companyid) {
       throw new Error("Company ID is required for user creation.");
     }
+    console.log("userData", userData)
 
     const query = `
       INSERT INTO ${this.schema}."user"
@@ -165,7 +167,6 @@ async function create(userData, userId) {
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
-
     if (userData.email) {
       const existing = await this.findByEmail(userData.email);
       if (existing && existing.id !== id) {

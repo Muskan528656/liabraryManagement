@@ -12,7 +12,7 @@ const statusBadge = (value) => (
     </span>
 );
 
-export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZone) => {
+export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) => {
     const SettingApi = new DataApi("librarysettings");
     let SettingResponse;
 
@@ -27,7 +27,7 @@ export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZon
     let maxBooksDefault = 0;
 
     if (SettingResponse.success && Array.isArray(SettingResponse.data) && SettingResponse.data.length > 0) {
-        const settingItem = SettingResponse.data[0]; 
+        const settingItem = SettingResponse.data[0];
         if (settingItem?.max_books !== undefined && settingItem?.max_books !== null) {
             maxBooksDefault = Number(settingItem.max_books);
         }
@@ -40,8 +40,8 @@ export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZon
 
         initialFormData: {
             plan_name: "",
-            duration_days: allowedDays,
-            allowed_books: maxBooksDefault,
+            duration_days: "",
+            allowed_books: allowedBooks,
             is_active: true,
         },
 
@@ -73,7 +73,7 @@ export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZon
                 label: "Duration (Days)",
                 type: "number",
                 min: 1,
-                defaultValue: allowedDays,
+                defaultValue: "",
                 required: true,
                 placeholder: "Enter duration in days",
                 colSize: 6,
@@ -83,7 +83,7 @@ export const getPlanConfig = async (externalData = {}, allowedDays = 30, timeZon
                 label: "Allowed Books",
                 type: "number",
                 min: 0,
-                defaultValue: maxBooksDefault,
+                defaultValue: allowedBooks,
                 placeholder: "Enter number of allowed books",
                 colSize: 6,
             },

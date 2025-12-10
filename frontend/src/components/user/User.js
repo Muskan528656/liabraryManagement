@@ -18,7 +18,7 @@ const Users = (props) => {
   if (loading) return <div>Loading users data...</div>;
   if (error) return <div>Error loading users data: {error.message}</div>;
 
-  // Pass companyInfo so defaults can be calculated
+
   const finalConfig = getUserConfig(data, props, timeZone, companyInfo);
 
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-user" />;

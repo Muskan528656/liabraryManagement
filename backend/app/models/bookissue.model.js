@@ -116,7 +116,7 @@ async function findByCardId(cardId) {
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued'
                    ORDER BY bi.issue_date DESC`;
-    
+
     const result = await sql.query(query, [cardId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -124,18 +124,24 @@ async function findByCardId(cardId) {
     throw error;
   }
 }
-
 async function issueBook(req) {
   console.log("Starting issue book process...");
-  
-  try {
 
+  try {
     const tenantcode = req.headers.tenantcode || 'demo';
-    schema = tenantcode; // Set schema for this operation
+    schema = tenantcode;
 
     console.log("Using schema:", schema);
     console.log("Request body:", req.body);
 
+
+    console.log("=== DEBUG REQ OBJECT ===");
+    console.log("req.userinfo:", req.userinfo);
+    console.log("req.user:", req.user);
+    console.log("req.auth:", req.auth);
+    console.log("req.headers:", req.headers);
+    console.log("req.cookies:", req.cookies);
+    console.log("=== END DEBUG ===");
 
     if (!req.body.card_id) {
       return { success: false, message: "Card ID is required" };
@@ -145,10 +151,37 @@ async function issueBook(req) {
     }
 
 
+    let userId = null;
 
+
+    if (req.userinfo && req.userinfo.id) {
+      userId = req.userinfo.id;
+      console.log("User ID from req.userinfo.id:", userId);
+    }
+
+    else if (req.user && req.user.id) {
+      userId = req.user.id;
+      console.log("User ID from req.user.id:", userId);
+    }
+
+    else if (req.headers['x-user-id']) {
+      userId = req.headers['x-user-id'];
+      console.log("User ID from headers x-user-id:", userId);
+    }
+
+    else if (req.auth && req.auth.userId) {
+      userId = req.auth.userId;
+      console.log("User ID from req.auth.userId:", userId);
+    }
+
+    else {
+      console.warn("⚠️ No user ID found in request. Using default user ID 1 for testing.");
+      userId = 1; // Default admin user ID
+    }
+
+    console.log("Final User ID to be used:", userId);
 
     console.log("Step 2: Fetching Member + Plan...");
-
     const memberRes = await sql.query(
       `SELECT 
         m.id AS member_id, 
@@ -184,11 +217,7 @@ async function issueBook(req) {
       return { success: false, message: "This plan does not allow issuing books" };
     }
 
-
-
-
     console.log("Step 3: Counting already issued books...");
-
     const issuedRes = await sql.query(
       `SELECT COUNT(*) AS total 
        FROM ${schema}.book_issues 
@@ -200,17 +229,13 @@ async function issueBook(req) {
     console.log(`Already Issued: ${alreadyIssued}/${member.allowed_books}`);
 
     if (alreadyIssued >= member.allowed_books) {
-      return { 
-        success: false, 
-        message: `Book limit exceeded. You can issue maximum ${member.allowed_books} books.` 
+      return {
+        success: false,
+        message: `Book limit exceeded. You can issue maximum ${member.allowed_books} books.`
       };
     }
 
-
-
-
-    console.log("Step 4: Checking if book exists...");
-
+    console.log("Step 4: Checking if book exists and has available copies...");
     const bookRes = await sql.query(
       `SELECT * FROM ${schema}.books WHERE id = $1`,
       [req.body.book_id]
@@ -222,12 +247,26 @@ async function issueBook(req) {
 
     const book = bookRes.rows[0];
     console.log("Book found:", book.title);
+    console.log("Available copies:", book.available_copies);
+    console.log("Total copies:", book.total_copies);
 
+    if (!book.available_copies || book.available_copies <= 0) {
+      return {
+        success: false,
+        message: "This book is not available. All copies are currently issued."
+      };
+    }
 
-
+    if (book.available_copies > book.total_copies) {
+      console.warn("Warning: available_copies is greater than total_copies. Resetting...");
+      await sql.query(
+        `UPDATE ${schema}.books SET available_copies = total_copies WHERE id = $1`,
+        [req.body.book_id]
+      );
+      book.available_copies = book.total_copies;
+    }
 
     console.log("Step 5: Checking if this member already has this book...");
-
     const memberHasBookRes = await sql.query(
       `SELECT COUNT(*) as count FROM ${schema}.book_issues 
        WHERE book_id = $1 
@@ -238,21 +277,16 @@ async function issueBook(req) {
     );
 
     if (parseInt(memberHasBookRes.rows[0].count) > 0) {
-      return { 
-        success: false, 
-        message: "This member already has this book issued. Cannot issue same book again." 
+      return {
+        success: false,
+        message: "This member already has this book issued. Cannot issue same book again."
       };
     }
 
-
-
-
     console.log("Step 6: Calculating dates...");
-
-    const issueDate = req.body.issue_date 
-      ? new Date(req.body.issue_date) 
+    const issueDate = req.body.issue_date
+      ? new Date(req.body.issue_date)
       : new Date();
-    
 
     let dueDate;
     if (req.body.due_date) {
@@ -265,29 +299,21 @@ async function issueBook(req) {
     console.log("Issue Date:", issueDate.toISOString().split('T')[0]);
     console.log("Due Date:", dueDate.toISOString().split('T')[0]);
 
-
-
-
     console.log("Step 7: Preparing issue data...");
-
     const issueData = {
       book_id: req.body.book_id,
       issued_to: req.body.card_id,
-      issued_by: req.userinfo?.id,
+      issued_by: userId, // ✅ Use the extracted user ID
       issue_date: issueDate.toISOString().split('T')[0],
       due_date: dueDate.toISOString().split('T')[0],
       status: 'issued',
-      createdbyid: req.userinfo?.id,
-      lastmodifiedbyid: req.userinfo?.id,
+      createdbyid: userId, // ✅ Use the extracted user ID
+      lastmodifiedbyid: userId, // ✅ Use the extracted user ID
     };
 
     console.log("Issue Data:", issueData);
 
-
-
-
     console.log("Step 8: Inserting record into book_issues");
-
     const columns = Object.keys(issueData);
     const values = Object.values(issueData);
     const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -299,17 +325,80 @@ async function issueBook(req) {
     `;
 
     console.log("Insert Query:", insertQuery);
-    console.log("Values:", values);
-
     const insertRes = await sql.query(insertQuery, values);
     const newIssue = insertRes.rows[0];
     console.log("Book issued successfully! Issue ID:", newIssue.id);
 
 
+    console.log("Step 9: Updating book quantity...");
+    const updateBookQuery = `
+      UPDATE ${schema}.books 
+      SET 
+        available_copies = available_copies - 1,
+        lastmodifiedbyid = $2,
+        lastmodifieddate = CURRENT_TIMESTAMP
+      WHERE id = $1 
+      AND available_copies > 0
+      RETURNING available_copies, total_copies
+    `;
+
+    const updateBookRes = await sql.query(updateBookQuery, [
+      req.body.book_id,
+      userId // ✅ Use the extracted user ID
+    ]);
+
+    if (updateBookRes.rows.length === 0) {
+      await sql.query(`DELETE FROM ${schema}.book_issues WHERE id = $1`, [newIssue.id]);
+      return {
+        success: false,
+        message: "Failed to update book quantity. No available copies left. Issue record deleted."
+      };
+    }
+
+    const updatedBook = updateBookRes.rows[0];
+    console.log(`Book quantity updated. New available copies: ${updatedBook.available_copies}`);
 
 
-    console.log("Step 9: Returning success response");
+    try {
+      const updateIssuedCountQuery = `
+        UPDATE ${schema}.books 
+        SET 
+          issued_count = COALESCE(issued_count, 0) + 1,
+          lastmodifiedbyid = $2,
+          lastmodifieddate = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `;
+      await sql.query(updateIssuedCountQuery, [
+        req.body.book_id,
+        userId // ✅ Use the extracted user ID
+      ]);
+      console.log("Issued count updated successfully");
+    } catch (err) {
+      console.warn("Could not update issued count:", err.message);
+    }
 
+
+    console.log("Step 11: Updating member's issued book count...");
+    try {
+      const updateMemberQuery = `
+        UPDATE ${schema}.library_members 
+        SET 
+          issued_books_count = COALESCE(issued_books_count, 0) + 1,
+          last_issued_date = CURRENT_TIMESTAMP,
+          lastmodifiedbyid = $2,
+          lastmodifieddate = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `;
+      await sql.query(updateMemberQuery, [
+        req.body.card_id,
+        userId // ✅ Use the extracted user ID
+      ]);
+      console.log("Member's issued book count updated");
+    } catch (err) {
+      console.warn("Could not update member issued count:", err.message);
+    }
+
+    console.log("Step 12: Returning success response");
     return {
       success: true,
       message: "Book issued successfully",
@@ -318,15 +407,20 @@ async function issueBook(req) {
         book_title: book.title,
         member_name: `${member.first_name} ${member.last_name}`,
         card_number: member.card_number,
-        due_date: dueDate.toISOString().split('T')[0]
+        due_date: dueDate.toISOString().split('T')[0],
+        book_details: {
+          old_available_copies: book.available_copies,
+          new_available_copies: updatedBook.available_copies,
+          total_copies: updatedBook.total_copies
+        }
       }
     };
 
   } catch (err) {
     console.error("❌ ERROR in issueBook:", err);
-    return { 
-      success: false, 
-      message: "Error issuing book", 
+    return {
+      success: false,
+      message: "Error issuing book",
       error: err.message,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     };
@@ -344,13 +438,13 @@ async function returnBook(issueId, returnData, userId) {
        WHERE bi.id = $1`,
       [issueId]
     );
-    
+
     if (issueCheck.rows.length === 0) {
       throw new Error("Issue record not found");
     }
-    
+
     const issue = issueCheck.rows[0];
-    
+
     if (issue.return_date) {
       throw new Error("Book already returned");
     }
@@ -374,11 +468,11 @@ async function returnBook(issueId, returnData, userId) {
       WHERE id = $1 
       RETURNING *
     `;
-    
+
     const updateResult = await sql.query(updateQuery, [
-      issueId, 
-      returnDate, 
-      status, 
+      issueId,
+      returnDate,
+      status,
       userId || 'system'
     ]);
 
@@ -401,19 +495,19 @@ async function calculatePenalty(issueId) {
     const dueDate = new Date(issue.due_date); // expiry_date नहीं, due_date है
     const today = new Date();
     const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
-    
+
     if (daysOverdue === 0) {
       return { penalty: 0, daysOverdue: 0 };
     }
 
 
     let finePerDay = 10; // Default
-    
+
     try {
       const settingsRes = await sql.query(
         `SELECT fine_per_day FROM ${schema}.library_settings LIMIT 1`
       );
-      
+
       if (settingsRes.rows.length > 0 && settingsRes.rows[0].fine_per_day) {
         finePerDay = parseFloat(settingsRes.rows[0].fine_per_day);
       }
@@ -422,8 +516,8 @@ async function calculatePenalty(issueId) {
     }
 
     const penalty = finePerDay * daysOverdue;
-    return { 
-      penalty: Math.round(penalty * 100) / 100, 
+    return {
+      penalty: Math.round(penalty * 100) / 100,
       daysOverdue,
       finePerDay,
       dueDate: dueDate.toISOString().split('T')[0]
@@ -443,21 +537,21 @@ async function deleteById(id) {
       `SELECT * FROM ${schema}.book_issues WHERE id = $1`,
       [id]
     );
-    
+
     if (issueRes.rows.length === 0) {
       return { success: false, message: "Book issue not found" };
     }
 
     const issue = issueRes.rows[0];
-    
+
 
     const deleteResult = await sql.query(
       `DELETE FROM ${schema}.book_issues WHERE id = $1 RETURNING *`,
       [id]
     );
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Book issue deleted successfully",
       data: deleteResult.rows[0]
     };
@@ -512,11 +606,11 @@ async function getMemberAllowance(cardId) {
     let subscriptionIssued = 0;
     let hasActiveSubscription = false;
 
-    if (member.subscription_id && 
-        member.subscription_active === true && 
-        member.subscription_allowed_books &&
-        member.start_date && member.end_date) {
-      
+    if (member.subscription_id &&
+      member.subscription_active === true &&
+      member.subscription_allowed_books &&
+      member.start_date && member.end_date) {
+
       const currentDate = new Date();
       const startDate = new Date(member.start_date);
       const endDate = new Date(member.end_date);
@@ -550,7 +644,7 @@ async function getMemberAllowance(cardId) {
 
 
     const canIssueMore = totalRemaining > 0;
-    const nextBookSource = canIssueMore 
+    const nextBookSource = canIssueMore
       ? (remainingFromSubscription > 0 ? 'subscription' : 'personal')
       : 'none';
 

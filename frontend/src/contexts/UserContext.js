@@ -46,7 +46,7 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     refreshUserInfo();
 
-    // Listen for token changes (e.g., login/logout)
+
     const handleStorageChange = (e) => {
       if (e.key === "token") {
         refreshUserInfo();

@@ -35,6 +35,7 @@ module.exports = (app) => {
             console.log('stats router connect');
 
             const result = await Dashboard.getDashboardStats();
+            console.log("result->>>",result)
             res.status(200).json({ success: true, data: result });
 
         } catch (error) {
