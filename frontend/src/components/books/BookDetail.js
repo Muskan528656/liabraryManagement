@@ -15,6 +15,9 @@ const BookDetail = () => {
   const [totalBooks, setTotalBooks] = useState(0);
   const [issuedBooksCount, setIssuedBooksCount] = useState(0);
   const [submitBooksCount, setSubmitBooksCount] = useState(0);
+  const [showImporter, setShowImporter] = useState(false);
+
+
 
   console.log("Book ID from URL:", id);
   const { timeZone } = useTimeZone();
@@ -152,7 +155,6 @@ const BookDetail = () => {
       border: "border-start",
     }
   ];
-
 
 
   return (

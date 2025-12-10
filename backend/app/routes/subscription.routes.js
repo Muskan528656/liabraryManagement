@@ -33,8 +33,8 @@ module.exports = (app) => {
             body("user_id", "user_id is required").notEmpty(),
             body("card_id", "card_id is required").notEmpty(),
             body("plan_name", "plan_name is required").notEmpty(),
-            body("duration_days").optional().isNumeric(),
-            body("allowed_books").optional().isNumeric(),
+            body("duration_days").notEmpty(),
+            body("allowed_books").notEmpty(),
             body("start_date").optional().isISO8601(),
             body("end_date").optional().isISO8601(),
             body("is_active").optional().isBoolean()
@@ -62,7 +62,6 @@ module.exports = (app) => {
 
                 console.log("Creating subscription with data:", req.body);
 
-
                 const planExists = await sql.query(
                     "SELECT id FROM demo.plan WHERE id = $1",
                     [plan_id]
@@ -74,7 +73,6 @@ module.exports = (app) => {
                         error: "Plan not found"
                     });
                 }
-
 
                 const memberExists = await sql.query(
                     "SELECT id FROM demo.library_members WHERE id = $1",

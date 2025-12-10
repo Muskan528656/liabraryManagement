@@ -148,6 +148,7 @@ const getCountryInfo = (countryCode) => {
 };
 
 const ModuleDetail = ({
+  moduleHeader,
   moduleName,
   moduleApi,
   moduleLabel,
