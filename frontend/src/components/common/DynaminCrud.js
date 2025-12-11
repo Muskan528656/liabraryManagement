@@ -2746,7 +2746,8 @@ import PubSub from "pubsub-js";
 import { exportToExcel } from "../../utils/excelExport";
 import jwt_decode from "jwt-decode";
 import ModuleDetail from "./ModuleDetail";
-
+import UniversalCSVXLSXImporter from "./UniversalCSVXLSXImporter";
+import { saveImportedData } from "../../utils/importHelpers";
 const normalizeListResponse = (payload) => {
     if (!payload) return [];
     if (Array.isArray(payload)) return payload;
@@ -2779,12 +2780,16 @@ const DynamicCRUD = ({
     enablePrefetch = true,
     autoFetchRelated = true,
     recordsPerPage = 10,
-    icon
+    icon,
+    importMatchFields = [],
+    autoCreateRelated = {},
+    importModel,
 }) => {
 
     const navigate = useNavigate();
 
     const {
+        showImportButton = false,
         showBulkInsert = false,
         showImportExport = true,
         showDetailView = true,
@@ -2817,7 +2822,7 @@ const DynamicCRUD = ({
     const [relatedData, setRelatedData] = useState({});
     const [isEditable, setIsEditable] = useState(false);
 
-
+    const [showImportModal, setShowImportModal] = useState(false);
     console.log("formData", formData)
     console.log("Data", data)
 
@@ -3513,6 +3518,19 @@ const DynamicCRUD = ({
             });
         }
 
+        if (showImportButton) {
+            buttons.push({
+                size: "sm",
+                icon: "fa-solid fa-plus",
+                label: `Import Data`,
+                onClick: () => setShowImportModal(true),
+                style: {
+                    background: "var(--primary-color)",
+                    border: "none",
+                },
+            });
+        }
+
         if (customActionButtons.length > 0) {
             buttons.push(...customActionButtons);
         }
@@ -3823,7 +3841,43 @@ const DynamicCRUD = ({
                         </Button>
                     </Modal.Footer>
                 </Modal>
+
+
+
             )}
+            <Modal
+                show={showImportModal}
+                onHide={() => setShowImportModal(false)}
+                size="lg"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Import {moduleLabel} Data</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <UniversalCSVXLSXImporter
+                        model={importModel}
+                        onDataParsed={async (parsedData) => {
+                            await saveImportedData({
+                                data: parsedData,
+                                apiEndpoint,
+                                formFields,
+                                relatedData,
+                                moduleLabel,
+                                existingRecords: data,
+                                importMatchFields,
+                                autoCreateRelated,
+                                afterSave: () => {
+                                    fetchData();
+                                    setShowImportModal(false);
+                                },
+                            });
+                        }}
+                    />
+                </Modal.Body>
+            </Modal>
+
         </Container>
     );
 };

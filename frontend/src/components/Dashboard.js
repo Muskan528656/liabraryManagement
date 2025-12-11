@@ -7667,7 +7667,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       type: "totalBooks"
     },
     {
-      title: "Book Copies Status",
+      title: "Book Copies Availability",
       value: `${formatNumber(metrics.total_copies)}/${formatNumber(metrics.availableBooks)}`,
       // subtitle: "Total/Available",
       icon: "fa-layer-group",
@@ -8223,7 +8223,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
           </Col>
 
           {/* Quick Stats - Clickable Card */}
-          <Col lg={4}>
+          {/* <Col lg={4}>
             <InteractiveCard onClick={handleQuickStatsClick}>
               <Card.Header style={styles.cardHeader}>
                 <div className="d-flex justify-content-between align-items-center">
@@ -8329,7 +8329,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                 </div>
               </Card.Body>
             </InteractiveCard>
-          </Col>
+          </Col> */}
         </Row>
       </Container>
     </div>

@@ -464,7 +464,7 @@ const LibraryCardDetail = ({
         const issues = Array.isArray(issuesResponse.data)
           ? issuesResponse.data
           : issuesResponse.data?.data || [];
-
+console.log("WOKRI",issues)
         const cardIssues = issues.filter((issue) => {
           const matchesCard =
             issue.card_id === cardId ||

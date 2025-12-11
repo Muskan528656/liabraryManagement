@@ -1,38 +1,38 @@
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
-    const authors =  props.authors ||  externalData.authors || externalData.author ||   [];
+    const authors = props.authors || externalData.authors || externalData.author || [];
 
-    const categories = props.categories ||  externalData.categories ||  externalData.category || [];
+    const categories = props.categories || externalData.categories || externalData.category || [];
 
     const BookModel = createModel({
         modelName: "Book",
         fields: {
             Title: "string",
-            Author: "string",    
-            Category: "string",  
+            Author: "string",
+            Category: "string",
             ISBN: "string",
             Language: "string",
             TotalCopies: "number",
             AvailableCopies: "number",
         },
-        required: ["Title", "Author", "ISBN"], 
+        required: ["Title", "Author", "ISBN"],
     });
 
     return {
         moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
-        
-        importMatchFields: ["isbn"], 
+
+        importMatchFields: ["isbn"],
 
         autoCreateRelated: {
-            authors: { 
-                endpoint: "author",  
+            authors: {
+                endpoint: "author",
                 labelField: "author_name"
             },
-            categories: { 
-                endpoint: "category", 
-                labelField: "category_name" 
+            categories: {
+                endpoint: "category",
+                labelField: "category_name"
             }
         },
 
@@ -65,7 +65,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "author_id",
                 label: "Author",
                 type: "select",
-                options: "authors", 
+                options: "authors",
                 required: true,
                 placeholder: "Select author",
                 colSize: 6,
@@ -74,7 +74,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "category_id",
                 label: "Category",
                 type: "select",
-                options: "categories", 
+                options: "categories",
                 required: true,
                 placeholder: "Select category",
                 colSize: 6,
@@ -140,6 +140,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
+            showImportButton: true,
         },
         lookupNavigation: {
             author_name: {
