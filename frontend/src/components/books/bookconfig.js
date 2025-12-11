@@ -25,7 +25,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             TotalCopies: "number",
             AvailableCopies: "number",
         },
-        required: ["Title", "Author", "ISBN"],
+        required: ["Title", "Author","ISBN"],
     });
 
     return {
