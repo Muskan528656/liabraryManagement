@@ -140,6 +140,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
+            showImportButton:true,
         },
         lookupNavigation: {
             author_name: {

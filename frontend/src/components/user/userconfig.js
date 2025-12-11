@@ -286,6 +286,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
+            showImportButton:false,
         },
 
         initializeFormData: (existingData) => {

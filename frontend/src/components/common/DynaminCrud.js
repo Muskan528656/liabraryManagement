@@ -69,7 +69,7 @@ const DynamicCRUD = ({
 
 
   const {
-    showImportButton = true,
+    showImportButton = false,
     showBulkInsert = false,
     showImportExport = true,
     showDetailView = true,
