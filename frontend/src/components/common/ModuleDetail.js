@@ -241,7 +241,8 @@ const ModuleDetail = ({
       userAvatars[userId] ||
       `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
 
-    const handleUserClick = () => {
+    const handleUserClick = (e) => {
+      e.stopPropagation();
       if (clickable && userId) {
         navigate(`/user/${userId}`);
       }

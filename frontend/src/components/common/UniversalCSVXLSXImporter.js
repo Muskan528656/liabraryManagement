@@ -1,96 +1,58 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
+import '../../App.css'
 
 export const createModel = ({ modelName, fields = {}, required = [], validators = {} }) => {
   return { modelName, fields, required, validators };
 };
 
-const styles = {
-  container: {
-    fontFamily: "Arial, sans-serif",
-    color: "#333",
-  },
-  errorBox: {
-    padding: "10px",
-    backgroundColor: "#ffebee",
-    color: "#c62828",
-    border: "1px solid #ffcdd2",
-    borderRadius: "4px",
-    marginBottom: "15px",
-  },
-  uploadBox: {
-    height: "200px",
-    border: "2px dashed #ccc",
-    borderRadius: "8px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fafafa",
-    cursor: "pointer",
-    position: "relative",
-  },
-  fileInput: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    opacity: 0,
-    cursor: "pointer",
-  },
-  row: {
-    display: "flex",
-    alignItems: "center",
-    padding: "8px",
-    borderBottom: "1px solid #eee",
-  },
-  headerRow: {
-    display: "flex",
-    fontWeight: "bold",
-    padding: "8px",
-    backgroundColor: "#f8f9fa",
-    borderBottom: "2px solid #ddd",
-    fontSize: "12px",
-    textTransform: "uppercase",
-    color: "#666",
-  },
-  select: {
-    width: "100%",
-    padding: "6px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-  },
-  tableWrapper: {
-    overflowX: "auto",
-    border: "1px solid #eee",
-    borderRadius: "4px",
-    maxHeight: "300px",
-  },
-  actions: {
-    marginTop: "20px",
-    paddingTop: "15px",
-    borderTop: "1px solid #eee",
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: "10px",
-  },
-  btn: {
-    padding: "8px 16px",
-    borderRadius: "4px",
-    border: "none",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  btnPrimary: { backgroundColor: "#0d6efd", color: "white" },
-  btnSuccess: { backgroundColor: "#198754", color: "white" },
-  btnSecondary: { backgroundColor: "#6c757d", color: "white" },
-};
 const IconUpload = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0d6efd" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
 );
-const IconArrow = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+const IconFile = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 );
+const IconArrowRight = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+);
+const IconCheck = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+);
+const IconAlert = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+);
+
+
+const UploadBox = ({ onChange }) => {
+  return (
+    <div className="ui-upload-zone">
+      <input type="file" accept=".csv, .xls, .xlsx" className="ui-file-input" onChange={onChange} />
+      <div className="ui-upload-icon-wrapper">
+        <IconUpload />
+      </div>
+      <p className="ui-upload-text-main">
+        Click or drop file here
+      </p>
+      <p className="ui-upload-text-sub">
+        Supports CSV, Excel (.xls, .xlsx)
+      </p>
+    </div>
+  );
+};
+
+const Button = ({ children, variant = "secondary", onClick, disabled }) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`ui-btn ui-btn-${variant}`}
+    >
+      {children}
+    </button>
+  );
+};
+
 
 export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   const activeFields = model ? Object.keys(model.fields).reduce((acc, key) => {
@@ -99,6 +61,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   }, {}) : {};
 
   const activeRequired = model ? model.required : [];
+  const fieldLabels = model ? model.fields : {};
 
   const [step, setStep] = useState(0);
   const [rawHeaders, setRawHeaders] = useState([]);
@@ -109,13 +72,35 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   const handleFile = (uploadedFile) => {
     setError(null);
     if (!uploadedFile) return;
-
     const ext = uploadedFile.name.split(".").pop().toLowerCase();
+    
+    const handleResult = (data) => {
+      if (!data || data.length < 2) {
+        setError("File appears empty.");
+        return;
+      }
+      const headers = data[0].map((h) => (h ? h.toString().trim() : "Untitled"));
+      const rows = data.slice(1);
+      setRawHeaders(headers);
+      setRawRows(rows);
+
+      const initialMap = {};
+      headers.forEach((h) => {
+        const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const match = Object.keys(activeFields).find((key) => {
+            const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            return key.toLowerCase() === normH || label === normH;
+        });
+        if (match) initialMap[h] = match;
+      });
+      setMap(initialMap);
+      setStep(1);
+    };
 
     if (ext === "csv") {
       Papa.parse(uploadedFile, {
         skipEmptyLines: true,
-        complete: (res) => processData(res.data),
+        complete: (res) => handleResult(res.data),
         error: () => setError("Failed to parse CSV."),
       });
     } else if (["xls", "xlsx"].includes(ext)) {
@@ -125,157 +110,165 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
           const workbook = XLSX.read(e.target.result, { type: "array" });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-          processData(json);
-        } catch (err) {
-          setError("Failed to parse Excel file.");
-        }
+          handleResult(json);
+        } catch (err) { setError("Failed to parse Excel file."); }
       };
       reader.readAsArrayBuffer(uploadedFile);
     } else {
-      setError("Unsupported file format. Please use CSV or Excel.");
+      setError("Unsupported format.");
     }
-  };
-
-  const processData = (data) => {
-    if (!data || data.length < 2) {
-      setError("File appears empty.");
-      return;
-    }
-    const headers = data[0].map((h) => (h ? h.toString().trim() : "Untitled"));
-    const rows = data.slice(1);
-    setRawHeaders(headers);
-    setRawRows(rows);
-
-    // Auto-match
-    const initialMap = {};
-    headers.forEach((h) => {
-      const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const match = Object.keys(activeFields).find(
-        (k) =>
-          k.toLowerCase() === normH ||
-          activeFields[k].toLowerCase().replace(/[^a-z0-9]/g, "") === normH
-      );
-      if (match) initialMap[h] = match;
-    });
-    setMap(initialMap);
-    setStep(1);
   };
 
   const handleImport = () => {
-    const finalData = rawRows.map((row) => {
+    const missing = activeRequired.filter(req => !Object.values(map).includes(req));
+    if (missing.length > 0) {
+      setError(`Required fields missing: ${missing.map(k => fieldLabels[k] || k).join(", ")}`);
+      return;
+    }
+    const finalData = rawRows.map(row => {
       const obj = {};
-      rawHeaders.forEach((header, index) => {
-        const systemKey = map[header];
-        if (systemKey) obj[systemKey] = row[index];
+      rawHeaders.forEach((h, i) => {
+        if(map[h]) obj[map[h]] = row[i];
       });
       return obj;
     });
-
-    const missingFields = activeRequired.filter((reqKey) => !Object.values(map).includes(reqKey));
-    if (missingFields.length > 0) {
-      setError(`Missing required column mapping: ${missingFields.join(", ")}`);
-      return;
-    }
-
     if(onDataParsed) onDataParsed(finalData);
   };
 
-  const reset = () => {
-    setStep(0);
-    setRawHeaders([]);
-    setRawRows([]);
-    setMap({});
-    setError(null);
-  };
+  const steps = ["Upload File", "Map Columns", "Preview"];
 
   return (
-    <div style={styles.container}>
-      {error && <div style={styles.errorBox}><strong>Error:</strong> {error}</div>}
+    <div className="ui-importer-container">
 
-      {step === 0 && (
-        <div style={styles.uploadBox}>
-          <input
-            type="file"
-            accept=".csv, .xls, .xlsx"
-            style={styles.fileInput}
-            onChange={(e) => handleFile(e.target.files[0])}
-          />
-          <IconUpload />
-          <p style={{ marginTop: "15px", fontSize: "16px", color: "#555" }}>Click or Drag file to upload</p>
-          <p style={{ color: "#999", fontSize: "13px" }}>Supports CSV and Excel</p>
+      <div className="ui-header">
+        <div className="ui-stepper-container">
+          <div className="ui-step-line"></div>
+          {steps.map((label, idx) => {
+             const active = step === idx;
+             const completed = step > idx;
+             let circleClass = "ui-step-circle";
+             if(active) circleClass += " active";
+             if(completed) circleClass += " completed";
+
+             let labelClass = "ui-step-label";
+             if(active || completed) labelClass += " active";
+
+             return (
+               <div key={idx} className="ui-step-item">
+                 <div className={circleClass}>
+                   {completed ? <IconCheck /> : idx + 1}
+                 </div>
+                 <div className={labelClass}>{label}</div>
+               </div>
+             )
+          })}
         </div>
-      )}
+        <h2 className="ui-title">{steps[step]}</h2>
+        <p className="ui-subtitle">
+          {step === 0 && "Upload your data to get started. We support CSV and Excel files."}
+          {step === 1 && "Match your file columns to the database fields below."}
+          {step === 2 && "Review the data snapshot before finalizing the import."}
+        </p>
+      </div>
 
-      {step === 1 && (
-        <div>
-          <h5 style={{marginBottom: "10px"}}>Map Columns</h5>
-          <div style={styles.headerRow}>
-            <span style={{ flex: 2 }}>File Header</span>
-            <span style={{ flex: 1, textAlign: "center" }}>Map To</span>
-            <span style={{ flex: 2 }}>System Field</span>
+      <div className="ui-body">
+        {error && (
+          <div className="ui-error-box">
+            <IconAlert /> <strong>Error:</strong> {error}
           </div>
-          <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-            {rawHeaders.map((header, idx) => (
-              <div key={idx} style={styles.row}>
-                <div style={{ flex: 2, fontWeight: "500" }}>{header}</div>
-                <div style={{ flex: 1, display: "flex", justifyContent: "center" }}><IconArrow /></div>
-                <div style={{ flex: 2 }}>
-                  <select
-                    style={{ ...styles.select, backgroundColor: map[header] ? "#e3f2fd" : "white" }}
-                    value={map[header] || ""}
-                    onChange={(e) => setMap({ ...map, [header]: e.target.value })}
-                  >
-                    <option value="">-- Ignore --</option>
-                    {Object.keys(activeFields).map((key) => (
-                      <option key={key} value={key}>
-                        {activeFields[key]} {activeRequired.includes(key) ? "*" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div style={styles.actions}>
-            <button onClick={reset} style={{ ...styles.btn, ...styles.btnSecondary }}>Cancel</button>
-            <button onClick={() => setStep(2)} style={{ ...styles.btn, ...styles.btnPrimary }}>Review Data &rarr;</button>
-          </div>
-        </div>
-      )}
+        )}
 
-      {step === 2 && (
-        <div>
-          <h5 style={{marginBottom: "10px"}}>Preview Data (First 5 Rows)</h5>
-          <div style={styles.tableWrapper}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+        {step === 0 && (
+          <UploadBox onChange={(e) => handleFile(e.target.files[0])} />
+        )}
+
+        {step === 1 && (
+          <div>
+            <div className="ui-mapping-header">
+              <span style={{ flex: 2 }}>File Column</span>
+              <span style={{ flex: 0.5 }}></span>
+              <span style={{ flex: 2 }}>Target Field</span>
+            </div>
+            <div className="ui-mapping-list">
+              {rawHeaders.map((header, idx) => {
+                const isMapped = !!map[header];
+                return (
+                  <div key={idx} className={`ui-map-card ${isMapped ? "mapped" : ""}`}>
+                    <div className="ui-map-source">
+                      <div className="ui-map-icon">
+                        <IconFile />
+                      </div>
+                      {header}
+                    </div>
+                    <div className="ui-map-arrow"><IconArrowRight /></div>
+                    <div className="ui-map-target">
+                      <select
+                        className={`ui-select ${isMapped ? "active" : ""}`}
+                        value={map[header] || ""}
+                        onChange={(e) => setMap({ ...map, [header]: e.target.value })}
+                      >
+                        <option value="">Do not import</option>
+                        {Object.keys(activeFields).map((key) => (
+                          <option key={key} value={key}>
+                            {fieldLabels[key] || key} {activeRequired.includes(key) ? "*" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="ui-table-wrapper">
+            <table className="ui-table">
               <thead>
-                <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #ddd" }}>
-                  {Object.values(activeFields).map((label, i) => (
-                    <th key={i} style={{ padding: "10px", textAlign: "left", whiteSpace: "nowrap" }}>{label}</th>
+                <tr>
+                  {Object.values(activeFields).map((key, i) => (
+                    <th key={i}>{fieldLabels[key] || key}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rawRows.slice(0, 5).map((row, rIdx) => (
-                  <tr key={rIdx} style={{ borderBottom: "1px solid #eee" }}>
+                  <tr key={rIdx}>
                     {Object.keys(activeFields).map((key, cIdx) => {
                       const header = Object.keys(map).find(h => map[h] === key);
                       const index = rawHeaders.indexOf(header);
-                      return <td key={cIdx} style={{ padding: "8px" }}>{index !== -1 ? row[index] : "-"}</td>;
+                      return (
+                        <td key={cIdx}>
+                          {index !== -1 ? row[index] : <span className="ui-empty-cell">-</span>}
+                        </td>
+                      );
                     })}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
 
-          <div style={styles.actions}>
-            <button onClick={() => setStep(1)} style={{ ...styles.btn, ...styles.btnSecondary }}>&larr; Back</button>
-            <button onClick={handleImport} style={{ ...styles.btn, ...styles.btnSuccess }}>Import Data</button>
+        {step > 0 && (
+          <div className="ui-footer">
+            <Button onClick={() => { setError(null); setStep(step - 1); }}>
+              Back
+            </Button>
+            {step === 1 && (
+              <Button variant="primary" onClick={() => setStep(2)}>
+                Review Data <IconArrowRight />
+              </Button>
+            )}
+            {step === 2 && (
+              <Button variant="success" onClick={handleImport}>
+                Complete Import <IconCheck />
+              </Button>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

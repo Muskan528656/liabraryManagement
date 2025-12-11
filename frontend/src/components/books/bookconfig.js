@@ -1,37 +1,41 @@
-
 import { createModel } from "../common/UniversalCSVXLSXImporter";
-
 export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
-    const authors =
-        props.authors ||
-        externalData.authors ||
-        externalData.author ||
-        [];
+    const authors =  props.authors ||  externalData.authors || externalData.author ||   [];
 
-    const categories =
-        props.categories ||
-        externalData.categories ||
-        externalData.category ||
-        [];
+    const categories = props.categories ||  externalData.categories ||  externalData.category || [];
 
     const BookModel = createModel({
         modelName: "Book",
         fields: {
             Title: "string",
-            Author: "string",
-            Category: "string",
+            Author: "string",    
+            Category: "string",  
             ISBN: "string",
             Language: "string",
             TotalCopies: "number",
             AvailableCopies: "number",
         },
-        required: ["Title", "Author","ISBN"],
+        required: ["Title", "Author", "ISBN"], 
     });
 
     return {
         moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
+        
+        importMatchFields: ["isbn"], 
+
+        autoCreateRelated: {
+            authors: { 
+                endpoint: "author",  
+                labelField: "author_name"
+            },
+            categories: { 
+                endpoint: "category", 
+                labelField: "category_name" 
+            }
+        },
+
         initialFormData: {
             title: "",
             author_id: "",
@@ -42,26 +46,11 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             language: ""
         },
         columns: [
-            {
-                field: "title",
-                label: "Title",
-            },
-            {
-                field: "author_name",
-                label: "Author",
-            },
-            {
-                field: "category_name",
-                label: "Category",
-            },
-            {
-                field: "isbn",
-                label: "ISBN",
-            },
-            {
-                field: "available_copies",
-                label: "Available Copies",
-            }
+            { field: "title", label: "Title" },
+            { field: "author_name", label: "Author" },
+            { field: "category_name", label: "Category" },
+            { field: "isbn", label: "ISBN" },
+            { field: "available_copies", label: "Available Copies" }
         ],
         formFields: [
             {
@@ -76,7 +65,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "author_id",
                 label: "Author",
                 type: "select",
-                options: "authors",
+                options: "authors", 
                 required: true,
                 placeholder: "Select author",
                 colSize: 6,
@@ -85,7 +74,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "category_id",
                 label: "Category",
                 type: "select",
-                options: "categories",
+                options: "categories", 
                 required: true,
                 placeholder: "Select category",
                 colSize: 6,
@@ -111,9 +100,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "number",
                 placeholder: "Enter total copies",
                 colSize: 6,
-                props: {
-                    min: 1
-                }
+                props: { min: 1 }
             },
             {
                 name: "available_copies",
@@ -121,9 +108,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "number",
                 placeholder: "Enter available copies",
                 colSize: 6,
-                props: {
-                    min: 0
-                }
+                props: { min: 0 }
             }
         ],
         validationRules: (formData, allBooks, editingBook) => {
@@ -146,7 +131,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         features: {
             showBulkInsert: false,
-            showImportExport: true,
+            showImportExport: true, // MUST BE TRUE
             showDetailView: true,
             showSearch: true,
             showColumnVisibility: true,
@@ -156,8 +141,6 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             allowEdit: true,
             allowDelete: false,
         },
-
-
         lookupNavigation: {
             author_name: {
                 path: "author",
@@ -170,8 +153,6 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 labelField: "category_name"
             }
         },
-        BookModel
-
+        importModel: BookModel
     };
-
 };
