@@ -35,7 +35,7 @@ export default class DataApi {
     }
 
     create(data) {
-        // const isFormData = data instanceof FormData;
+        const isFormData = data instanceof FormData;
         return axios.post(this.baseUrl, data, {
             headers: isFormData ? this.getHeaders() : this.getHeaders(true)
         });
@@ -87,7 +87,7 @@ export default class DataApi {
 
         return res.data;
     }
-     updateFormData(formData, id) {
+    updateFormData(formData, id) {
         return axios.put(`${this.baseUrl}/${this.endpoint}/${id}`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",

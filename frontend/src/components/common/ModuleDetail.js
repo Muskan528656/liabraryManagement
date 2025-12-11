@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Container,
@@ -668,9 +666,9 @@ const ModuleDetail = ({
     }
 
     if (field.type === "date") {
-    if (field.render && typeof field.render === "function") {
-      return field.render(value, data, externalData);
-    }
+      if (field.render && typeof field.render === "function") {
+        return field.render(value, data, externalData);
+      }
       try {
         const converted = convertToUserTimezone(value, timeZone);
         const datePart = converted.split(" ")[0];

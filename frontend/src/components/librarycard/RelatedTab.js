@@ -17,7 +17,7 @@ const RelatedTabContent = ({ id, data }) => {
     useEffect(() => {
         if (id) {
             fetchRelatedData();
-        } 
+        }
     }, [id, data]);
 
     const fetchRelatedData = async () => {
@@ -209,18 +209,13 @@ const RelatedTabContent = ({ id, data }) => {
                 )}
             </div>
 
-            {/* Notifications */}
-            {notification.message && (
-                <Alert variant={notification.type} onClose={() => setNotification({ type: "", message: "" })} dismissible>
-                    {notification.message}
-                </Alert>
-            )}
+
 
             {/* Add Plan Panel (Accordion) */}
             <Collapse in={isAddingPlan}>
                 <div className="mb-4">
                     <Card className="border-0 shadow-sm bg-light overflow-hidden">
-                        {/* Using custom primary color for the left border strip */}
+              
                         <div className="border-start border-5 h-100" style={{ borderColor: "var(--primary-color)" }}>
                             <Card.Body className="p-4">
                                 <div className="d-flex justify-content-between align-items-center mb-3">

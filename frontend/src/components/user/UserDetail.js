@@ -54,6 +54,7 @@ const UserDetail = () => {
         const companyApi = new DataApi("company");
        
 
+
         const [roleRes, companyRes] = await Promise.all([
           roleApi.fetchAll(),
           companyApi.fetchAll(),
@@ -76,7 +77,7 @@ const UserDetail = () => {
     fetchExternalData();
   }, []);
 
-  console.log("externalData",externalData);
+  console.log("externalData", externalData);
 
   const handleCountryChange = (countryName, formValues, setFormValues) => {
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === countryName);
@@ -207,7 +208,6 @@ const UserDetail = () => {
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
         
         render: (value, data) => {
-   
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
             return "Loading...";
           }

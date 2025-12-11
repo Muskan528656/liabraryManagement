@@ -433,8 +433,8 @@ const Company = () => {
                             tempCompany.logourl
                               ? tempCompany.logourl
                               : Company?.logourl
-                              ? `${Company.logourl}?${new Date().getTime()}`
-                              : "/default-logo.png"
+                                ? `${Company.logourl}?${new Date().getTime()}`
+                                : "/default-logo.png"
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
