@@ -3,23 +3,21 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
-    // Destructure dependencies
+   
     const { vendors = [], books = [], authors = [], categories = [] } = data;
 
-    // 1. IMPORT MODEL
-    // Defines the columns expected in the Excel/CSV file
+   
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-            Vendor: "string",        // Maps to formField label "Vendor"
-            Book: "string",          // Maps to formField label "Book"
-            Quantity: "number",      // Maps to formField label "Quantity"
-            "Unit Price": "number",  // Maps to formField label "Unit Price"
-            "Purchase Date": "string", // Maps to formField label "Purchase Date"
+            Vendor: "string",       
+            Book: "string",          
+            Quantity: "number",      
+            "Unit Price": "number",  
+            "Purchase Date": "string", 
             Notes: "string",
         },
-        // 'ISBN' and 'Total Amount' removed from required/fields if not direct inputs, 
-        // but if you want to import them, ensure they match a form field or handle logic.
+    
         required: ["Vendor", "Book", "Quantity", "Unit Price", "Purchase Date"],
     });
 
@@ -82,17 +80,17 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         },
         {
             name: "vendor_id",
-            label: "Vendor", // Matches PurchaseModel 'Vendor'
+            label: "Vendor", 
             type: "select",
             required: true,
-            options: "vendors", // Used in autoCreateRelated below
+            options: "vendors",
         },
         {
             name: "book_id",
-            label: "Book", // Matches PurchaseModel 'Book'
+            label: "Book", 
             type: "select",
             required: true,
-            options: "books", // Used in autoCreateRelated below
+            options: "books", 
         },
         {
             name: "quantity",
@@ -139,23 +137,19 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         moduleLabel: "Purchase",
         apiEndpoint: "purchase",
         
-        // 2. IMPORT SETTINGS
-        // Empty array means we allow duplicate rows (since you can buy the same book twice).
-        // If you want to prevent duplicates based on a field (like serial no), add it here: ["purchase_serial_no"]
+      
         importMatchFields: [], 
 
-        // 3. AUTO-CREATE LOGIC
-        // If the imported Vendor or Book doesn't exist, create it.
+    
         autoCreateRelated: {
             vendors: {
                 endpoint: "vendor",
-                labelField: "vendor_name" // Ensure your Vendor API accepts { "vendor_name": "Name" }
+                labelField: "vendor_name" 
             },
             books: {
                 endpoint: "book",
-                labelField: "title" // Ensure your Book API accepts { "title": "Book Name" }
-                // Note: Creating a book usually requires Author/Category. 
-                // If your Book API fails without those, auto-creation here will fail gracefully.
+                labelField: "title"
+              
             }
         },
 
@@ -165,7 +159,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
 
         features: {
             showBulkInsert: false,
-            showImportExport: true, // Enabled Import
+            showImportExport: true, 
             showSearch: true,
             showColumnVisibility: true,
             showCheckbox: true,
@@ -237,6 +231,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             }
         },
          importModel: PurchaseModel 
-        // PurchaseModel
+       
     };
 };

@@ -4,19 +4,20 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
 
     const categories = props.categories ||  externalData.categories ||  externalData.category || [];
 
-    const BookModel = createModel({
+   const BookModel = createModel({
         modelName: "Book",
         fields: {
-            Title: "string",
-            Author: "string",    
-            Category: "string",  
-            ISBN: "string",
-            Language: "string",
-            TotalCopies: "number",
-            AvailableCopies: "number",
+            title: "Title",
+            author_id: "Author",
+            category_id: "Category",
+            isbn: "ISBN",
+            language: "Language",
+            total_copies: "Total Copies",
+            available_copies: "Available Copies",
         },
-        required: ["Title", "Author", "ISBN"], 
+        required: ["title", "author_id", "category_id", "isbn"]
     });
+
 
     return {
         moduleName: "book",
@@ -28,11 +29,11 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         autoCreateRelated: {
             authors: { 
                 endpoint: "author",  
-                labelField: "author_name"
+                labelField: "name"
             },
             categories: { 
                 endpoint: "category", 
-                labelField: "category_name" 
+                labelField: "name" 
             }
         },
 

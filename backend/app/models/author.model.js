@@ -46,7 +46,7 @@ async function create(authorData, userId) {
                    RETURNING *`;
 
     const values = [
-      authorData.name || "Scanned Author",
+      authorData.name ,
       authorData.email || null,
       authorData.bio || null,
       userId || null,
