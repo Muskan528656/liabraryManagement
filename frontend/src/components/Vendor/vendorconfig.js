@@ -395,7 +395,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true,
+            allowDelete: false,
             searchFields: [
                 "name",
                 "company_name",

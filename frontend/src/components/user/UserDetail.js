@@ -53,6 +53,7 @@ const UserDetail = () => {
         const roleApi = new DataApi("user-role");
         const companyApi = new DataApi("company");
 
+
         const [roleRes, companyRes] = await Promise.all([
           roleApi.fetchAll(),
           companyApi.fetchAll(),
@@ -74,6 +75,8 @@ const UserDetail = () => {
 
     fetchExternalData();
   }, []);
+
+  console.log("externalData", externalData);
 
   const handleCountryChange = (countryName, formValues, setFormValues) => {
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === countryName);
@@ -127,32 +130,6 @@ const UserDetail = () => {
       }
     },
 
-    onLoad: (record, setFormValues) => {
-      let countryToUse = record?.country;
-
-      if (!countryToUse && companyInfo?.country) {
-        countryToUse = companyInfo.country;
-        if (setFormValues) {
-          const cData = COUNTRY_TIMEZONE.find(c => c.countryName === countryToUse);
-          if (cData) {
-            setFormValues({
-              ...record,
-              country: cData.countryName,
-              country_code: cData.phoneCode,
-              currency: cData.currency.code,
-              time_zone: cData.timezones.some(t => t.zoneName === companyInfo.time_zone)
-                ? companyInfo.time_zone
-                : cData.timezones[0].zoneName
-            });
-          }
-        }
-      }
-
-      if (countryToUse) {
-        setCurrentCountry(countryToUse);
-      }
-    },
-
     details: [
       { key: "firstname", label: "First Name", type: "text" },
       { key: "lastname", label: "Last Name", type: "text" },
@@ -178,7 +155,7 @@ const UserDetail = () => {
             );
             return defaultCountry ? `${defaultCountry.flag} ${defaultCountry.countryName}` : companyInfo.country;
           }
-          return <span className="text-muted">N/A</span>;
+          return "N/A";
         }
       },
       {
@@ -186,7 +163,7 @@ const UserDetail = () => {
         label: "Country Code",
         type: "text",
         readOnly: true,
-        render: (value) => value || (companyInfo?.country_code ? companyInfo.country_code : <span className="text-muted">N/A</span>)
+        render: (value) => value || (companyInfo?.country_code ? companyInfo.country_code : "N/A")
       },
       { key: "phone", label: "Phone", type: "text" },
       {
@@ -198,7 +175,7 @@ const UserDetail = () => {
         render: (value) => {
           if (value) return value;
           if (companyInfo?.currency) return companyInfo.currency;
-          return <span className="text-muted">N/A</span>;
+          return "N/A";
         }
       },
       {
@@ -218,25 +195,27 @@ const UserDetail = () => {
             const tz = country?.timezones.find(t => t.zoneName === companyInfo.time_zone);
             return tz ? `${tz.zoneName} (${tz.gmtOffset})` : companyInfo.time_zone;
           }
-          return <span className="text-muted">N/A</span>;
+          return "N/A";
         }
       },
       {
         key: "userrole",
         label: "User Role",
         type: "select",
+        readOnly: true,
 
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
 
         render: (value, data) => {
+
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
-            return <span className="text-muted">Loading...</span>;
+            return "Loading...";
           }
 
           const role = externalData.userRoles.find(r =>
             String(r.id) === String(value) || String(r._id) === String(value)
           );
-          return role ? role.role_name : (value || <span className="text-muted">N/A</span>);
+          return role ? role.role_name : (value || "N/A");
         }
       },
       {
@@ -276,6 +255,11 @@ const UserDetail = () => {
       lookupNavigation={lookupNavigation}
       externalData={externalData}
       timeZone={timeZone}
+      onTempDataChange={(tempData) => {
+        if (tempData?.country) {
+          setCurrentCountry(tempData.country);
+        }
+      }}
     />
   );
 };

@@ -4,7 +4,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
 
     const categories = props.categories || externalData.categories || externalData.category || [];
 
-   const BookModel = createModel({
+    const BookModel = createModel({
         modelName: "Book",
         fields: {
             title: "Title",
@@ -27,13 +27,13 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         importMatchFields: ["isbn"],
 
         autoCreateRelated: {
-            authors: { 
-                endpoint: "author",  
+            authors: {
+                endpoint: "author",
                 labelField: "name"
             },
-            categories: { 
-                endpoint: "category", 
-                labelField: "name" 
+            categories: {
+                endpoint: "category",
+                labelField: "name"
             }
         },
 
