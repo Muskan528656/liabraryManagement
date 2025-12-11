@@ -1413,15 +1413,7 @@ const BulkPurchasePage = () => {
                             }
                             className="pt-3"
                         />
-                        <Tab
-                            eventKey="import"
-                            title={
-                                <div className="d-flex align-items-center px-3 py-2">
-                                    Import File
-                                </div>
-                            }
-                            className="pt-1"
-                        />
+                   
                     </Tabs>
                 </div>
 

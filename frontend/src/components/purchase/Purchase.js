@@ -23,7 +23,6 @@ const Purchase = (props) => {
   return (
     <DynamicCRUD
       {...finalConfig}
-      importModel={finalConfig.PurchaseModel}
       icon="fa-solid fa-shopping-cart"
     />
   );
