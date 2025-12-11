@@ -122,6 +122,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                             src={imgSrc}
                             alt={row.first_name || "User"}
                             className="table-user-image"
+                            style={{
+                                width: "39px",
+                                height: "39px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                                border: "2px solid #e2e8f0"
+                            }}
                         />
                     );
                 }
