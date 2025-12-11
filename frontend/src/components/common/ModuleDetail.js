@@ -167,6 +167,7 @@ const ModuleDetail = ({
   externalData = {},
   setIsEditable,
   timeZone,
+  onTempDataChange = null,
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -667,9 +668,9 @@ const ModuleDetail = ({
     }
 
     if (field.type === "date") {
-      if (field.render && typeof field.render === "function") {
-        return field.render(value, data);
-      }
+    if (field.render && typeof field.render === "function") {
+      return field.render(value, data, externalData);
+    }
       try {
         const converted = convertToUserTimezone(value, timeZone);
         const datePart = converted.split(" ")[0];
@@ -706,7 +707,7 @@ const ModuleDetail = ({
       return parseFloat(value).toLocaleString("en-IN");
     }
     if (field.render && typeof field.render === "function") {
-      return field.render(value, data);
+      return field.render(value, data, externalData);
     }
     return String(value);
   };
@@ -826,8 +827,14 @@ const ModuleDetail = ({
   };
 
 
-  const handleFieldChange = (fieldKey, value) => {
+  const handleFieldChange = (fieldKey, value, field) => {
     if (isEditing && tempData) {
+      // If the field has a custom onChange handler, use it instead of generic logic
+      if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
+        field.onChange(value, tempData, setTempData);
+        return;
+      }
+
       let updatedData = {
         ...tempData,
         [fieldKey]: value,
@@ -1115,7 +1122,7 @@ const ModuleDetail = ({
             <Form.Select
               value={currentValue}
               onChange={(e) =>
-                handleFieldChange(field.key, e.target.value || null)
+                handleFieldChange(field.key, e.target.value || null, field)
               }
             >
               <option value="">Select {field.label}</option>
@@ -1133,7 +1140,7 @@ const ModuleDetail = ({
             <Form.Control
               type="text"
               readOnly
-              value={(() => {
+              value={field.render ? field.render(currentValue, currentData, externalData) : (() => {
                 if (field.displayKey && data) return data[field.displayKey] || "—";
                 const selected = options.find((opt) => {
                   const optionValue = toStringSafe(getOptionValue(opt));

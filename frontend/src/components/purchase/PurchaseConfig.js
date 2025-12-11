@@ -6,67 +6,47 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
    
     const { vendors = [], books = [], authors = [], categories = [] } = data;
 
-   
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-            Vendor: "string",       
-            Book: "string",          
-            Quantity: "number",      
-            "Unit Price": "number",  
-            "Purchase Date": "string", 
-            Notes: "string",
+            "Purchase Serial No": "Purchase Serial No",       
+            "Vendor": "Vendor",     
+            "Book": "Book",          
+            "ISBN": "ISBN",          
+            "Quantity": "Quantity",  
+            "Unit Price": "Unit Price",
+            "Total Amount": "Total Amount",
+            "Purchase Date": "Purchase Date", 
+            "Notes": "Notes",
         },
-    
-        required: ["Vendor", "Book", "Quantity", "Unit Price", "Purchase Date"],
+        required: ["Vendor", "Book", "Quantity", "Purchase Date"],
     });
 
     const allColumns = [
-        {
-            field: "purchase_serial_no",
-            label: "Purchase Serial No",
-            sortable: true,
-        },
-        {
-            field: "vendor_name",
-            label: "Vendor",
-            sortable: true,
-        },
-        {
-            field: "book_title",
-            label: "Book",
-            sortable: true,
-        },
+        { field: "purchase_serial_no", label: "Purchase Serial No", sortable: true },
+        { field: "vendor_name", label: "Vendor", sortable: true },
+        { field: "book_title", label: "Book", sortable: true },
         { field: "book_isbn", label: "ISBN" },
-        {
-            field: "quantity",
-            label: "Quantity",
-            sortable: true,
-        },
-        {
-            field: "unit_price",
-            label: "Unit Price",
-            sortable: true,
+        { field: "quantity", label: "Quantity", sortable: true },
+        { 
+            field: "unit_price", 
+            label: "Unit Price", 
+            sortable: true, 
             render: (value, record) => `₹${parseFloat(record.unit_price || 0).toFixed(2)}`
         },
-        {
-            field: "total_amount",
-            label: "Total Amount",
-            sortable: true,
+        { 
+            field: "total_amount", 
+            label: "Total Amount", 
+            sortable: true, 
             render: (value, record) => `₹${parseFloat(record.total_amount || 0).toFixed(2)}`
         },
         {
             field: "purchase_date",
             label: "Purchase Date",
             sortable: true,
-            render: (value) => {
-                return moment(convertToUserTimezone(value, timeZone)).format('l');
-            }
+            render: (value) => moment(convertToUserTimezone(value, timeZone)).format('l')
         },
-        {
-            field: "notes",
-            label: "Notes",
-        },
+        { field: "notes", label: "Notes" },
     ];
 
     const formFields = [
@@ -80,14 +60,14 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         },
         {
             name: "vendor_id",
-            label: "Vendor", 
+            label: "Vendor",   
             type: "select",
             required: true,
             options: "vendors",
         },
         {
             name: "book_id",
-            label: "Book", 
+            label: "Book",    
             type: "select",
             required: true,
             options: "books", 
@@ -137,19 +117,16 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         moduleLabel: "Purchase",
         apiEndpoint: "purchase",
         
-      
         importMatchFields: [], 
 
-    
         autoCreateRelated: {
             vendors: {
                 endpoint: "vendor",
-                labelField: "vendor_name" 
+                labelField: "name" 
             },
             books: {
                 endpoint: "book",
-                labelField: "title"
-              
+                labelField: "title" 
             }
         },
 
@@ -175,15 +152,10 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             authors: "author",
             categories: "category"
         },
-
+        
         customHandlers: {
-            handleBulkInsert: () => {
-                window.location.href = '/purchase/bulk';
-            },
-            handleAdd: (navigate) => {
-                navigate('/purchase/bulk');
-            },
-
+            handleBulkInsert: () => { window.location.href = '/purchase/bulk'; },
+            handleAdd: (navigate) => { navigate('/purchase/bulk'); },
             onFormDataChange: (formData, setFormData) => {
                 const quantity = parseFloat(formData.quantity) || 0;
                 const unitPrice = parseFloat(formData.unit_price) || 0;
@@ -197,6 +169,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                 }
             }
         },
+        
         exportColumns: [
             { key: "vendor_name", header: "Vendor", width: 20 },
             { key: "book_title", header: "Book", width: 20 },
@@ -209,28 +182,9 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         ],
 
         lookupNavigation: {
-            author_name: {
-                path: "author",
-                idField: "author_id",
-                labelField: "author_name"
-            },
-            category_name: {
-                path: "category",
-                idField: "category_id",
-                labelField: "category_name"
-            },
-            vendor_name: {
-                path: "vendor",
-                idField: "vendor_id",
-                labelField: "vendor_name"
-            },
-            book_title: {
-                path: "book",
-                idField: "book_id",
-                labelField: "book_title"
-            }
+            vendor_name: { path: "vendor", idField: "vendor_id", labelField: "vendor_name" },
+            book_title: { path: "book", idField: "book_id", labelField: "book_title" }
         },
-         importModel: PurchaseModel 
-       
+        importModel: PurchaseModel 
     };
 };

@@ -1,111 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import * as constants from '../constants/CONSTANT';
 import axios from 'axios';
 
@@ -143,7 +35,10 @@ export default class DataApi {
     }
 
     create(data) {
-        return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
+        // const isFormData = data instanceof FormData;
+        return axios.post(this.baseUrl, data, {
+            headers: isFormData ? this.getHeaders() : this.getHeaders(true)
+        });
     }
 
     post(url, data) {
@@ -221,5 +116,28 @@ export default class DataApi {
 
     upsert(data) {
         return axios.post(this.baseUrl, data, { headers: this.getHeaders(true) });
+    }
+
+    createLibraryCard(formData) {
+        const data = new FormData();
+
+        // Append all form fields except image
+        Object.keys(formData).forEach(key => {
+            if (key !== 'image' && formData[key] !== null && formData[key] !== undefined) {
+                data.append(key, formData[key]);
+            }
+        });
+
+        // Handle image separately
+        if (formData.image && formData.image instanceof File) {
+            data.append('image', formData.image);
+        }
+
+        return axios.post(this.baseUrl, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...this.getHeaders()
+            }
+        });
     }
 }
