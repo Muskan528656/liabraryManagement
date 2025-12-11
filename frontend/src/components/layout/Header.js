@@ -37,10 +37,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   const [Company, setCompany] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
+  const [userRoleName, setUserRoleName] = useState("");
+  const [userDisplayName, setUserDisplayName] = useState("");
 
 
   const fetchUserProfile = async () => {
-
     if (!userInfo || !userInfo.id) return;
 
     try {
@@ -51,24 +52,169 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const result = await response.json();
       if (result) {
         setUserProfile(result);
+
+        // Set user display name
+        const fullName = `${result.firstname || ""} ${result.lastname || ""}`.trim();
+        setUserDisplayName(fullName || result.username || result.email || "User");
+
+        // Fetch role name
+        if (result.role_id || result.role) {
+          await fetchUserRoleName(result.role_id || result.role);
+        }
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
   };
 
+  const fetchUserRoleName = async (roleId) => {
+    try {
+      if (!roleId) {
+        setUserRoleName("");
+        return;
+      }
+
+      // First, check token for role name
+      const token = sessionStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwt_decode(token);
+          // Check multiple possible fields for role name
+          const possibleRoleFields = [
+            'role_name',
+            'userrole_name',
+            'user_role_name',
+            'roleName',
+            'role'
+          ];
+
+          for (const field of possibleRoleFields) {
+            if (decoded[field] && typeof decoded[field] === 'string') {
+              const roleName = decoded[field];
+              setUserRoleName(roleName.toUpperCase());
+              return;
+            }
+          }
+        } catch (tokenError) {
+          console.error("Error decoding token:", tokenError);
+        }
+      }
+
+      // Check cache
+      const cachedRoles = localStorage.getItem("cached_roles");
+      if (cachedRoles) {
+        try {
+          const roles = JSON.parse(cachedRoles);
+          const role = roles.find(r =>
+            r.id === roleId ||
+            r._id === roleId ||
+            r.role_id === roleId
+          );
+          if (role) {
+            setUserRoleName((role.role_name || role.name || "").toUpperCase());
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing cached roles:", e);
+        }
+      }
+
+      // Try to fetch role from API
+      try {
+        const roleApi = new DataApi("role");
+        const response = await roleApi.fetchById(roleId);
+
+        if (response.data) {
+          const roleName = response.data.role_name || response.data.name || "";
+          setUserRoleName(roleName.toUpperCase());
+
+          // Cache it
+          const existingRoles = cachedRoles ? JSON.parse(cachedRoles) : [];
+          if (!existingRoles.some(r => r.id === roleId || r._id === roleId)) {
+            existingRoles.push({
+              id: roleId,
+              role_name: roleName,
+              name: roleName
+            });
+            localStorage.setItem("cached_roles", JSON.stringify(existingRoles));
+          }
+          return;
+        }
+      } catch (roleError) {
+        console.error("Error fetching role by ID:", roleError);
+      }
+
+      // Try to fetch all roles and find the one
+      try {
+        const roleApi = new DataApi("role");
+        const response = await roleApi.fetchAll();
+
+        if (response.data) {
+          let allRoles = [];
+
+          if (response.data.success && Array.isArray(response.data.records)) {
+            allRoles = response.data.records;
+          } else if (Array.isArray(response.data.records)) {
+            allRoles = response.data.records;
+          } else if (Array.isArray(response.data)) {
+            allRoles = response.data;
+          } else if (Array.isArray(response.data.data)) {
+            allRoles = response.data.data;
+          }
+
+          const foundRole = allRoles.find(role =>
+            role.id === roleId ||
+            role._id === roleId ||
+            role.role_id === roleId
+          );
+
+          if (foundRole) {
+            const roleName = foundRole.role_name || foundRole.name || "";
+            setUserRoleName(roleName.toUpperCase());
+
+            // Cache it
+            const existingRoles = cachedRoles ? JSON.parse(cachedRoles) : [];
+            if (!existingRoles.some(r => r.id === roleId || r._id === roleId)) {
+              existingRoles.push({
+                id: roleId,
+                role_name: roleName,
+                name: roleName
+              });
+              localStorage.setItem("cached_roles", JSON.stringify(existingRoles));
+            }
+            return;
+          }
+        }
+      } catch (allRolesError) {
+        console.error("Error fetching all roles:", allRolesError);
+      }
+
+      // If nothing works, check userInfo for direct role name
+      if (userInfo) {
+        const possibleFields = ['role_name', 'userrole_name', 'user_role', 'roleName'];
+        for (const field of possibleFields) {
+          if (userInfo[field] && typeof userInfo[field] === 'string') {
+            setUserRoleName(userInfo[field].toUpperCase());
+            return;
+          }
+        }
+      }
+
+      setUserRoleName("");
+    } catch (error) {
+      console.error("Error fetching role name:", error);
+      setUserRoleName("");
+    }
+  };
 
   useEffect(() => {
-
     const companyUpdateToken = PubSub.subscribe("COMPANY_UPDATED", (msg, data) => {
       if (data.company) {
         setCompany(data.company);
       }
     });
 
-
     const userUpdateToken = PubSub.subscribe("USER_UPDATED", (msg, data) => {
-
       fetchUserProfile();
     });
 
@@ -76,19 +222,15 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       PubSub.unsubscribe(companyUpdateToken);
       PubSub.unsubscribe(userUpdateToken);
     };
-  }, [userInfo]); // Add userInfo as dependency so fetchUserProfile has access to ID
+  }, [userInfo]);
 
 
   const getCountryFlag = () => {
     if (userProfile?.country) {
-
       const searchName = userProfile.country.trim().toLowerCase();
-
       const country = COUNTRY_TIMEZONE.find(
         (c) => c.countryName.toLowerCase() === searchName
       );
-
-
       return country ? country.flagImg : "";
     }
     return "";
@@ -102,7 +244,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
-
         setNotifications(result.notifications || []);
       } else {
         console.error("Error fetching notifications:", result.message);
@@ -214,8 +355,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
-        console.log("user", user);
+        console.log("Decoded user from token:", user);
         setUserInfo(user);
+
+        // Check if token has role name directly
+        if (user.role_name || user.userrole_name) {
+          setUserRoleName((user.role_name || user.userrole_name).toUpperCase());
+        }
+
         fetchDueNotifications();
         fetchNotifications();
         fetchUnreadCount();
@@ -369,6 +516,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     sessionStorage.removeItem("r-t");
     sessionStorage.removeItem("myimage");
     sessionStorage.removeItem("lead_status");
+    localStorage.removeItem("cached_roles");
     window.location.href = "/login";
   };
 
@@ -399,14 +547,33 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return "U";
   };
 
-  const getUserName = () => {
-    if (userInfo) {
-      if (userInfo.userrole) {
-        return userInfo.userrole;
-      }
-      return `${userInfo.firstname || ""} ${userInfo.lastname || ""}`.trim() || "User";
+  const getUserRoleDisplay = () => {
+    // Priority 1: Role name from state
+    if (userRoleName) {
+      return userRoleName;
     }
-    return "User";
+
+    // Priority 2: Check userInfo for direct role name (not ID)
+    if (userInfo) {
+      const possibleFields = ['role_name', 'userrole_name', 'roleName', 'user_role'];
+      for (const field of possibleFields) {
+        if (userInfo[field] && typeof userInfo[field] === 'string') {
+          // Check if it's not an ID (not too long and doesn't look like MongoDB ID)
+          if (userInfo[field].length < 30 && !userInfo[field].match(/^[0-9a-fA-F]{24}$/)) {
+            return userInfo[field].toUpperCase();
+          }
+        }
+      }
+    }
+
+    // Priority 3: Check userProfile
+    if (userProfile) {
+      if (userProfile.role_name && typeof userProfile.role_name === 'string') {
+        return userProfile.role_name.toUpperCase();
+      }
+    }
+
+    return "USER";
   };
 
 
@@ -514,7 +681,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           href="#"
           className="fw-bold"
           style={{
-            fontSize: "1.9rem",
+            fontSize: "1.7rem",
             fontWeight: "900",
             color: "var(--primary-color)",
             letterSpacing: "0.8px",
@@ -524,20 +691,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             gap: "0.5rem",
           }}
         >
-          {Company?.logourl ? (
-            <img
-              src={Company.logourl}
+          {/* Static Image for now */}
+          <img
+            src="/ibirds.png"
+      
+            style={{ height: "60px", marginLeft: '20px', objectFit: "contain" }}
+          />
 
-              className="object-contain rounded-lg transition-transform group-hover:scale-105"
-              style={{ height: "40px", width: "40px" }}
-            />
-          ) : (
-            <div className="h-10 w-10 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-              <i className="fa-solid fa-book-open text-lg"></i>
-            </div>
-          )}
           <span>{Company?.company_name || "Library System"}</span>
         </Navbar.Brand>
+
         {/* Search Bar */}
         <div style={{ flex: 1, maxWidth: "500px", margin: "0 2rem" }}>
           <Form onSubmit={handleBarcodeSearch}>
@@ -833,23 +996,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                         userInfo?.username ||
                         "user@example.com"}
                     </div>
-                    {userInfo?.secondary_email && (
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          color: "#6b7280",
-                          marginBottom: "4px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {userInfo.secondary_email}
-                      </div>
-                    )}
                     <div style={{ fontSize: "12px", color: "#6b7280" }}>
                       <div style={{ marginBottom: "2px" }}>
-                        {getUserName() || "User"}
+                        {userDisplayName || "User"}
                       </div>
                       <div
                         style={{
@@ -857,10 +1006,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           color: "#374151",
                         }}
                       >
-                        {userInfo?.userrole?.toUpperCase() ||
-                          userInfo?.role?.toUpperCase() ||
-                          userInfo?.user_type?.toUpperCase() ||
-                          "USER"}
+                        {getUserRoleDisplay()}
                       </div>
                     </div>
                   </div>
