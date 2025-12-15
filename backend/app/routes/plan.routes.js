@@ -17,6 +17,7 @@
 const express = require("express");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const Plan = require("../models/plan.model.js");
+const sql = require("../models/db.js");
 
 module.exports = (app) => {
     const router = express.Router();
@@ -114,8 +115,34 @@ module.exports = (app) => {
                 is_active,
                 duration_days,
                 allowed_books,
-                lastmodifiedbyid: lastModifiedBy, // Changed from lastmodifiedby to lastmodifiedbyid
+                lastmodifiedbyid: lastModifiedBy, 
             });
+
+            const schema = req.userinfo.tenantcode;
+            const updateFields = {};
+            if (plan_name !== undefined) updateFields.plan_name = plan_name;
+            if (duration_days !== undefined) updateFields.duration_days = duration_days;
+            if (allowed_books !== undefined) updateFields.allowed_books = allowed_books;
+
+            if (Object.keys(updateFields).length > 0) {
+                updateFields.lastmodifiedbyid = lastModifiedBy;
+                updateFields.lastmodifieddate = new Date();
+
+                const setClause = Object.keys(updateFields).map((key, index) => `"${key}" = $${index + 2}`).join(', ');
+                const values = [id, ...Object.values(updateFields)];
+
+                const updateQuery = `UPDATE ${schema}.subscriptions SET ${setClause} WHERE plan_id = $1`;
+                await sql.query(updateQuery, values);
+            }
+
+            if (duration_days !== undefined) {
+                const recalcQuery = `
+                    UPDATE ${schema}.subscriptions
+                    SET end_date = start_date + INTERVAL '${duration_days} days'
+                    WHERE plan_id = $1
+                `;
+                await sql.query(recalcQuery, [id]);
+            }
 
             return res.status(200).json({
                 message: "Plan updated successfully",

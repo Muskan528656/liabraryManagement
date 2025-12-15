@@ -93,6 +93,7 @@ const Plan = {
         `;
 
         const result = await sql.query(query, values);
+
         return result.rows[0];
     },
 

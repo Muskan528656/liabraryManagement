@@ -28,6 +28,10 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     }, [refresh]);
 
    
+    useEffect(()=>{
+        fetchPlansOnly();
+    })
+   
     const fetchPlansOnly = async () => {
         try {
             const api = new DataApi('plans');
@@ -147,15 +151,20 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     };
 
     const getDaysRemaining = (expiryDate) => {
+
         if(!expiryDate) return 0;
         const total = Date.parse(expiryDate) - Date.parse(new Date());
         const days = Math.ceil(total / (1000 * 60 * 60 * 24));
+        console.log("getDaysRemaining=>", days);
+
         return days > 0 ? days : 0;
     };
 
     const calculateTotalDuration = (start, end) => {
+        console.log("start => ",start ,"end => ", end)
         if(!start || !end) return 0;
         const diff = new Date(end) - new Date(start);
+        console.log("diff=>",diff,"Math.ceil(diff / (1000 * 60 * 60 * 24))",Math.ceil(diff / (1000 * 60 * 60 * 24)));
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }
 
@@ -282,9 +291,9 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                     )}
 
                     {!isAddingPlan && !activePlan && (
-                        <Card className="border-0 shadow-sm h-100 text-center" style={{ borderRadius: "20px", border: '2px dashed #e9ecef' }}>
-                            <Card.Body className="p-5 d-flex flex-column align-items-center justify-content-center">
-                                <div className="mb-3 p-3 rounded-circle shadow-sm" style={{ backgroundColor: '#fff', color: '#adb5bd' }}>
+                        <Card className="border-0 shadow-sm text-center" style={{ borderRadius: "20px", border: '2px dashed #e9ecef',height:'300px' }}>
+                            <Card.Body className="p-3 d-flex flex-column align-items-center justify-content-center">
+                                <div className="mb-2 p-2 rounded-circle shadow-sm" style={{ backgroundColor: '#fff', color: '#adb5bd' }}>
                                     <i className="fa-solid fa-file-circle-plus fa-3x"></i>
                                 </div>
                                 <h5 className="fw-bold text-dark">No Active Plan</h5>
@@ -292,11 +301,11 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                     Member has no subscription. Assign a plan to start.
                                 </p>
                                 <Button 
-                                    onClick={handleOpenAddPlan} // Use the new handler that refreshes data
-                                    className="px-4 py-2 rounded-pill fw-bold text-white shadow-sm"
+                                    onClick={handleOpenAddPlan} 
+                                    className="px-5 py-2 rounded-pill fw-bold text-white shadow-sm"
                                     style={{ background: 'linear-gradient(45deg, #6f42c1, #a059f5)', border: 'none' }}
                                 >
-                                    <i className="fa-solid fa-plus me-2"></i> Assign Subscription
+                                    <i className="fa-solid fa-plus me-1"></i> Assign Subscription
                                 </Button>
                             </Card.Body>
                         </Card>
@@ -353,7 +362,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                 )}
 
                                 <Button 
-                                    className="w-100 py-2 fw-bold text-white shadow" 
+                                    className="w-100 py- fw-bold text-white shadow" 
                                     size="lg"
                                     onClick={handleAssignPlan}
                                     disabled={!selectedPlanId || assigningPlan}

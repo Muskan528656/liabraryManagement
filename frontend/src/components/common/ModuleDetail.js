@@ -451,29 +451,21 @@ const ModuleDetail = ({
     }
   }, [id, moduleApi, moduleLabel]);
 
-  useEffect(() => {
-    if (data) {
-      const userIds = [];
+ useEffect(() => {
+  if (!data) return;
 
-      if (data.createdbyid) userIds.push(data.createdbyid);
-      if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
-      if (data.created_by) userIds.push(data.created_by);
-      if (data.modified_by) userIds.push(data.modified_by);
+  const userIds = [];
 
-      Object.keys(data).forEach((key) => {
-        if (key.includes("user") || key.includes("byid") || key.includes("by_id")) {
-          const value = data[key];
-          if (value && typeof value === "string" && value.trim() !== "") {
-            userIds.push(value);
-          }
-        }
-      });
+  if (data.createdbyid) userIds.push(data.createdbyid);
+  if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
+  if (data.created_by) userIds.push(data.created_by);
+  if (data.modified_by) userIds.push(data.modified_by);
 
-      if (userIds.length > 0) {
-        fetchUserNames(userIds);
-      }
-    }
-  }, [data]);
+  if (userIds.length > 0) {
+    fetchUserNames(userIds);
+  }
+}, [data]);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -800,6 +792,9 @@ const ModuleDetail = ({
           title: "Success",
           message: `${moduleLabel} updated successfully`,
         });
+        if (moduleName === "user") {
+          PubSub.publish("USER_UPDATED", { user: response.data });
+        }
         setIsEditing(false);
       }
     } catch (err) {
@@ -1007,6 +1002,8 @@ const ModuleDetail = ({
   const renderField = (field, index, currentData) => {
     if (!field || !field.key) return null;
 
+    
+
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
@@ -1083,10 +1080,8 @@ const ModuleDetail = ({
 
 
     if (
-      (!isEditing || shouldShowAsReadOnly) &&
-      (field.key.includes("user") ||
-        field.key.includes("byid") ||
-        field.key.includes("by_id"))
+    (!isEditing || shouldShowAsReadOnly) &&
+    (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
     ) {
       const userId = currentData ? currentData[field.key] : null;
       if (userId) {

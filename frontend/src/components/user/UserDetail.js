@@ -10,14 +10,8 @@ const UserDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
 
-  console.log("0439534", timeZone);
-
-
   const [currentCountry, setCurrentCountry] = useState(null);
-
-
   const { companyInfo } = useTimeZone();
-
   const currencyOptions = useMemo(() => {
     if (!currentCountry) return [];
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === currentCountry);
@@ -52,17 +46,12 @@ const UserDetail = () => {
       try {
         const roleApi = new DataApi("user-role");
         const companyApi = new DataApi("company");
-       
-
-
         const [roleRes, companyRes] = await Promise.all([
           roleApi.fetchAll(),
           companyApi.fetchAll(),
         ]);
-
         const userRoles = roleRes?.data?.data || roleRes?.data || [];
         const companies = companyRes?.data?.data || companyRes?.data || [];
-
         setExternalData({
           userRoles: Array.isArray(userRoles) ? userRoles : [],
           companies: Array.isArray(companies) ? companies : [],
@@ -76,8 +65,6 @@ const UserDetail = () => {
 
     fetchExternalData();
   }, []);
-
-  console.log("externalData", externalData);
 
   const handleCountryChange = (countryName, formValues, setFormValues) => {
     const countryData = COUNTRY_TIMEZONE.find(ct => ct.countryName === countryName);
@@ -149,7 +136,6 @@ const UserDetail = () => {
             const country = COUNTRY_TIMEZONE.find(c => c.countryName === value);
             return country ? `${country.flag} ${country.countryName}` : value;
           }
-
           if (companyInfo?.country) {
             const defaultCountry = COUNTRY_TIMEZONE.find(c =>
               c.countryName.toLowerCase() === companyInfo.country.toLowerCase()
@@ -239,10 +225,6 @@ const UserDetail = () => {
     ],
   };
 
-  const lookupNavigation = {
-    userrole: { path: "user-role", idField: "id", labelField: "role_name" },
-  };
-
   if (isLoading) return <div>Loading...</div>;
 
   return (
@@ -252,7 +234,6 @@ const UserDetail = () => {
       moduleLabel="User"
       icon="fa-solid fa-users"
       fields={fields}
-      lookupNavigation={lookupNavigation}
       externalData={externalData}
       timeZone={timeZone}
       onTempDataChange={(tempData) => {
