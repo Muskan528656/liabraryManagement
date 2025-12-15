@@ -6,31 +6,23 @@ const RelatedTabContent = ({ id, data, refresh }) => {
    
     const [relatedPlans, setRelatedPlans] = useState([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
-    
-   
     const [allPlans, setAllPlans] = useState([]); 
 
     const [isAddingPlan, setIsAddingPlan] = useState(false);
     const [selectedPlanId, setSelectedPlanId] = useState("");
     const [assigningPlan, setAssigningPlan] = useState(false);
 
- 
     useEffect(() => {
-        if (id) {
-            fetchRelatedData();
-        }
+        if (id) fetchRelatedData();
     }, [id, data]);
 
     useEffect(() => {
-        if (refresh > 0) {
-            fetchRelatedData();
-        }
+        if (refresh > 0) fetchRelatedData();
     }, [refresh]);
 
-   
     useEffect(()=>{
         fetchPlansOnly();
-    })
+    }, [])
    
     const fetchPlansOnly = async () => {
         try {
@@ -89,6 +81,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
             setLoadingRelated(false);
         }
     };
+
     const handleOpenAddPlan = async () => {
         setIsAddingPlan(true);
         await fetchPlansOnly(); 
@@ -140,7 +133,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
 
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        return new Date(dateString).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
     const isPlanActive = (plan) => {
@@ -151,20 +144,15 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     };
 
     const getDaysRemaining = (expiryDate) => {
-
         if(!expiryDate) return 0;
         const total = Date.parse(expiryDate) - Date.parse(new Date());
         const days = Math.ceil(total / (1000 * 60 * 60 * 24));
-        console.log("getDaysRemaining=>", days);
-
         return days > 0 ? days : 0;
     };
 
     const calculateTotalDuration = (start, end) => {
-        console.log("start => ",start ,"end => ", end)
         if(!start || !end) return 0;
         const diff = new Date(end) - new Date(start);
-        console.log("diff=>",diff,"Math.ceil(diff / (1000 * 60 * 60 * 24))",Math.ceil(diff / (1000 * 60 * 60 * 24)));
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }
 
@@ -178,195 +166,125 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     return (
         <div className="container-fluid px-0 mt-3 font-sans">
             <Row className="g-4">
-                
                 <Col lg={7}>
                     <div className="d-flex align-items-center justify-content-between mb-3">
-                        <h6 className="fw-bold small m-0 text-uppercase" style={{color: '#6c757d'}}>
-                            {isAddingPlan ? "New Subscription" : "Current Subscription"}
+                        <h6 className="fw-bold small m-0 text-secondary text-uppercase tracking-wide">
+                            {isAddingPlan ? "Setup Subscription" : "Wallet Pass"}
                         </h6>
                     </div>
 
                     {!isAddingPlan && activePlan && (
                         <div 
-                            className="position-relative overflow-hidden"
+                            className="rounded-4 p-4 text-white position-relative overflow-hidden shadow"
                             style={{ 
-                                background: "linear-gradient(135deg, #ffffff 50%, #f3e6ff 100%)",
-                                borderRadius: "20px",
-                                boxShadow: "0 10px 30px rgba(111, 66, 193, 0.15)",
-                                border: "1px solid rgba(255,255,255,0.8)",
-                                minHeight: "260px"
+                                background: 'radial-gradient(circle at 100% 0%, #565e6eff 0%, #252c3dff 100%)', 
+                                minHeight: '250px'
                             }}
                         >
-                            <div style={{
-                                position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px",
-                                borderRadius: "50%", background: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
-                                opacity: "0.2", filter: "blur(40px)"
-                            }}></div>
-
-                            <div className="p-4 p-md-5 position-relative" style={{ zIndex: 1 }}>
-                      
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'url("https://www.transparenttextures.com/patterns/hexellence.png")', opacity: 0.2 }}></div>
+                            
+                            <div className="position-relative z-2 h-100 d-flex flex-column justify-content-between">
+                               
                                 <div className="d-flex justify-content-between align-items-start mb-4">
-                                    <div>
-                                        <Badge className="px-3 py-2 mb-2 rounded-pill shadow-sm" 
-                                               style={{ background: "linear-gradient(45deg, #6f42c1, #a059f5)", border: "none" }}>
-                                            <i className="fa-solid fa-bolt me-1"></i> ACTIVE
-                                        </Badge>
-                                        <h2 className="fw-bold text-dark m-0" style={{ letterSpacing: '-0.5px' }}>
-                                            {activePlan.plan_name || activePlan.name}
-                                        </h2>
+                                    <div className="d-flex flex-column">
+                                        <i className="fa-solid fa-microchip fs-2 text-white opacity-75 mb-2"></i>
+                                        <small className="text-white opacity-50 small letter-spacing-2">MEMBER PASS</small>
                                     </div>
-                                    <div className="text-end">
-                                        <div className="text-muted small fw-bold">EXPIRING ON</div>
-                                        <div className="text-dark fw-bold fs-5">{formatDate(activePlan.expiry_date)}</div>
+                                    <Badge bg="white" text="dark" className="px-3 py-2 fw-bold shadow-sm">ACTIVE</Badge>
+                                </div>
+
+                                <div className="mb-4">
+                                    <h2 className="display-6 fw-bold mb-0 text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                        {activePlan.plan_name || activePlan.name}
+                                    </h2>
+                                    <div className="d-flex align-items-center gap-3 mt-2 text-white opacity-75">
+                                        <span className="small"><i className="fa-solid fa-book me-1"></i> {activePlan.allowed_books} Books</span>
+                                        <span className="small">|</span>
+                                        <span className="small"><i className="fa-regular fa-clock me-1"></i> {activePlan.duration_days} Days</span>
                                     </div>
                                 </div>
 
-                                <Row className="g-3 mb-4">
-                                    <Col xs={6}>
-                                        <div className="p-3 rounded-4 d-flex align-items-center h-100" 
-                                             style={{ 
-                                                 backgroundColor: "rgba(255, 255, 255, 0.7)", 
-                                                 backdropFilter: "blur(10px)",
-                                                 border: "1px solid rgba(255,255,255,0.9)",
-                                                 boxShadow: "0 4px 6px rgba(0,0,0,0.02)"
-                                             }}>
-                                            <div className="me-3">
-                                                <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                                     style={{ width: '40px', height: '40px', background: '#f3e6ff', color: '#6f42c1' }}>
-                                                    <i className="fa-solid fa-book-open"></i>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="fw-bold text-dark fs-5 lh-1">{activePlan.allowed_books}</div>
-                                                <small className="text-muted" style={{fontSize: '0.75rem'}}>Book Limit</small>
-                                            </div>
-                                        </div>
-                                    </Col>
-                                    <Col xs={6}>
-                                        <div className="p-3 rounded-4 d-flex align-items-center h-100" 
-                                             style={{ 
-                                                 backgroundColor: "rgba(255, 255, 255, 0.7)", 
-                                                 backdropFilter: "blur(10px)",
-                                                 border: "1px solid rgba(255,255,255,0.9)",
-                                                 boxShadow: "0 4px 6px rgba(0,0,0,0.02)"
-                                             }}>
-                                            <div className="me-3">
-                                                <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                                                     style={{ width: '40px', height: '40px', background: '#e0f7fa', color: '#00bcd4' }}>
-                                                    <i className="fa-regular fa-clock"></i>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="fw-bold text-dark fs-5 lh-1">
-                                                    {calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)}
-                                                </div>
-                                                <small className="text-muted" style={{fontSize: '0.75rem'}}>Days Validity</small>
-                                            </div>
-                                        </div>
-                                    </Col>
-                                </Row>
-                                <div>
-                                    <div className="d-flex justify-content-between small mb-2 align-items-end">
-                                        <span className="text-muted">Started: <strong>{formatDate(activePlan.assigned_date)}</strong></span>
-                                        <span className="text-primary fw-bold">
-                                            <i className="fa-solid fa-hourglass-half me-1"></i>
-                                            {getDaysRemaining(activePlan.expiry_date)} days left
-                                        </span>
+                                <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(5px)' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <small className="text-white opacity-75">Expires {formatDate(activePlan.expiry_date)}</small>
+                                        <small className="text-warning fw-bold">{getDaysRemaining(activePlan.expiry_date)} Days Left</small>
                                     </div>
-                                    
-                                    <div className="progress" style={{ height: "10px", borderRadius: "10px", backgroundColor: "#e9ecef" }}>
-                                        <div 
-                                            className="progress-bar" 
-                                            role="progressbar" 
-                                            style={{ 
-                                                width: `${Math.min(100, Math.max(0, (getDaysRemaining(activePlan.expiry_date) / calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)) * 100))}%`,
-                                                background: "linear-gradient(90deg, #6f42c1 0%, #00bcd4 100%)",
-                                                borderRadius: "10px"
-                                            }}
-                                        ></div>
-                                    </div>
+                                    <ProgressBar 
+                                        now={Math.min(100, Math.max(0, (getDaysRemaining(activePlan.expiry_date) / calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)) * 100))}
+                                        variant="warning"
+                                        style={{ height: '4px', background: 'rgba(255,255,255,0.2)' }}
+                                    />
                                 </div>
                             </div>
                         </div>
                     )}
 
+                    {/* 2. VIEW: EMPTY STATE */}
                     {!isAddingPlan && !activePlan && (
-                        <Card className="border-0 shadow-sm text-center" style={{ borderRadius: "20px", border: '2px dashed #e9ecef',height:'300px' }}>
-                            <Card.Body className="p-3 d-flex flex-column align-items-center justify-content-center">
-                                <div className="mb-2 p-2 rounded-circle shadow-sm" style={{ backgroundColor: '#fff', color: '#adb5bd' }}>
-                                    <i className="fa-solid fa-file-circle-plus fa-3x"></i>
-                                </div>
-                                <h5 className="fw-bold text-dark">No Active Plan</h5>
-                                <p className="text-muted small mb-4">
-                                    Member has no subscription. Assign a plan to start.
-                                </p>
-                                <Button 
-                                    onClick={handleOpenAddPlan} 
-                                    className="px-5 py-2 rounded-pill fw-bold text-white shadow-sm"
-                                    style={{ background: 'linear-gradient(45deg, #6f42c1, #a059f5)', border: 'none' }}
-                                >
-                                    <i className="fa-solid fa-plus me-1"></i> Assign Subscription
-                                </Button>
-                            </Card.Body>
-                        </Card>
+                        <div className="h-100 d-flex flex-column align-items-center justify-content-center text-center p-5 rounded-4 border border-2 border-dashed" style={{ backgroundColor: '#f8f9fa' }}>
+                            <div className="text-muted opacity-25 mb-3">
+                                <i className="fa-regular fa-credit-card fa-4x"></i>
+                            </div>
+                            <h5 className="fw-bold text-dark">No Active Pass</h5>
+                            <p className="text-muted small mb-4">Assign a subscription plan to generate a member pass.</p>
+                            <Button 
+                                variant="dark" 
+                                className="px-4 py-2 rounded-pill fw-bold shadow"
+                                onClick={handleOpenAddPlan}
+                            >
+                                <i className="fa-solid fa-plus me-2"></i> Assign Plan
+                            </Button>
+                        </div>
                     )}
 
                     {isAddingPlan && (
-                        <Card className="border-0 shadow h-100 rounded-4 overflow-hidden bg-white">
-                            <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
-                                <h6 className="fw-bold m-0 text-dark">
-                                    <i className="fa-solid fa-layer-group me-2" style={{ color: '#6f42c1' }}></i>Select Membership
-                                </h6>
-                                <Button variant="light" className="btn-close" size="sm" onClick={() => setIsAddingPlan(false)}></Button>
+                        <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
+                            <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 className="fw-bold m-0 text-dark">New Subscription</h6>
+                                <Button variant="light" className="rounded-circle p-2 lh-1" onClick={() => setIsAddingPlan(false)}>
+                                    <i className="fa-solid fa-times"></i>
+                                </Button>
                             </div>
                             <Card.Body className="p-4">
-                                <Form.Label className="text-secondary small fw-bold text-uppercase">Available Plans</Form.Label>
+                                <Form.Label className="small fw-bold text-muted mb-2">SELECT PLAN</Form.Label>
                                 <Form.Select 
-                                    size="lg"
-                                    className="mb-4 shadow-sm"
-                                    style={{ borderColor: '#dee2e6', fontSize: '0.95rem' }}
+                                    className="p-3 border shadow-sm rounded-3 mb-4 fw-bold text-dark"
                                     value={selectedPlanId}
                                     onChange={(e) => setSelectedPlanId(e.target.value)}
                                 >
-                                    <option value="">-- Choose a Plan --</option>
+                                    <option value="">-- Choose a tier --</option>
                                     {allPlans.filter(p => p.is_active !== false).map(p => (
                                         <option key={p.id} value={p.id}>{p.plan_name || p.name}</option>
                                     ))}
                                 </Form.Select>
 
                                 {previewPlan ? (
-                                    <div className="p-3 mb-4 rounded-3" style={{ backgroundColor: '#f3e9fc', border: '1px solid #e0cffc' }}>
-                                        <div className="d-flex align-items-center mb-3">
-                                            <span className="badge me-2" style={{ backgroundColor: '#6f42c1' }}>Selected</span>
-                                            <strong style={{ color: '#4a2c85' }}>{previewPlan.plan_name || previewPlan.name}</strong>
+                                    <div className="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style={{ backgroundColor: '#f1f5f9' }}>
+                                        <div className="rounded-3 d-flex align-items-center justify-content-center bg-white shadow-sm text-dark fw-bold fs-4" style={{ width: 60, height: 60 }}>
+                                            {previewPlan.duration_days}d
                                         </div>
-                                        <Row className="g-2 text-center">
-                                            <Col xs={6}>
-                                                <div className="bg-white p-2 rounded shadow-sm">
-                                                    <div className="small text-muted text-uppercase" style={{fontSize: '0.7rem'}}>Duration</div>
-                                                    <div className="fw-bold text-dark">{previewPlan.duration_days} Days</div>
-                                                </div>
-                                            </Col>
-                                            <Col xs={6}>
-                                                <div className="bg-white p-2 rounded shadow-sm">
-                                                    <div className="small text-muted text-uppercase" style={{fontSize: '0.7rem'}}>Limit</div>
-                                                    <div className="fw-bold text-dark">{previewPlan.allowed_books} Books</div>
-                                                </div>
-                                            </Col>
-                                        </Row>
+                                        <div>
+                                            <h6 className="fw-bold m-0 text-dark">{previewPlan.plan_name || previewPlan.name}</h6>
+                                            <small className="text-muted">{previewPlan.allowed_books} Book Limit • Full Access</small>
+                                        </div>
+                                        <div className="ms-auto">
+                                            <i className="fa-solid fa-circle-check text-success fs-4"></i>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center p-4 mb-4 bg-light rounded border border-dashed text-muted small">
-                                        Select a plan to see details
+                                    <div className="p-4 mb-4 text-center rounded-3 bg-light border border-dashed text-muted small">
+                                        Select a plan to preview
                                     </div>
                                 )}
 
-                                <Button 
-                                    className="w-100 py- fw-bold text-white shadow" 
-                                    size="lg"
+                               <Button 
+                                    className="w-100 py-3 rounded-3 fw-bold shadow-sm text-white "
                                     onClick={handleAssignPlan}
                                     disabled={!selectedPlanId || assigningPlan}
-                                    style={{ background: 'linear-gradient(45deg, #6f42c1, #a059f5)', border: 'none' }}
+                                    style={{ 
+                                        backgroundColor: "var(--primary-color, #6f42c1)", 
+                                        borderColor: "var(--primary-color, #6f42c1)"      
+                                    }}
                                 >
                                     {assigningPlan ? <Spinner size="sm" animation="border" /> : "Confirm & Activate"}
                                 </Button>
@@ -374,63 +292,45 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                         </Card>
                     )}
                 </Col>
-
                 <Col lg={5}>
                     <div className="d-flex align-items-center justify-content-between mb-3">
-                         <h6 className="fw-bold small m-0 text-uppercase" style={{color: '#6c757d'}}>History</h6>
+                         <h6 className="fw-bold small m-0 text-secondary text-uppercase tracking-wide">Activity Log</h6>
                     </div>
                     
-                    <Card className="border-0 shadow-sm rounded-4" style={{ minHeight: '300px', backgroundColor: '#fff' }}>
-                        <Card.Body className="p-0">
-                            {historyPlans.length > 0 ? (
-                                <div className="p-3">
-                                    {historyPlans.map((plan, index) => (
-                                        <div key={plan.unique_key} className="d-flex position-relative pb-4">
-                                          
-                                            {index !== historyPlans.length - 1 && (
-                                                <div 
-                                                    style={{ 
-                                                        position: "absolute", left: "19px", top: "35px", bottom: "0", 
-                                                        width: "2px", backgroundColor: "#f0f0f0" 
-                                                    }} 
-                                                />
-                                            )}
-                                            <div className="me-3 z-1">
-                                                <div 
-                                                    className="rounded-circle d-flex align-items-center justify-content-center border shadow-sm"
-                                                    style={{ width: "40px", height: "40px", backgroundColor: '#fff', color: '#adb5bd' }}
-                                                >
-                                                    <i className="fa-solid fa-clock-rotate-left small"></i>
-                                                </div>
-                                            </div>
-                                          
-                                            <div className="flex-grow-1">
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <h6 className="mb-0 fw-bold text-dark" style={{fontSize: '0.95rem'}}>
-                                                        {plan.plan_name || plan.name}
-                                                    </h6>
-                                                    <Badge bg="light" text="dark" className="border fw-normal" style={{ fontSize: '0.65rem' }}>EXPIRED</Badge>
-                                                </div>
-                                                <div className="small text-muted mb-1">
-                                                    {calculateTotalDuration(plan.assigned_date, plan.expiry_date)} Days · {plan.allowed_books} Books
-                                                </div>
-                                                <div className="small p-1 px-2 rounded d-inline-block text-secondary border" style={{ backgroundColor: '#f8f9fa' }}>
-                                                    {formatDate(plan.assigned_date)} — {formatDate(plan.expiry_date)}
-                                                </div>
-                                            </div>
+                    <div className="p-4 bg-white rounded-4 shadow-sm border" style={{ minHeight: '250px' }}>
+                        {historyPlans.length > 0 ? (
+                            <div className="position-relative ps-3">
+                                {/* Vertical Timeline Line */}
+                                <div style={{ position: 'absolute', left: '0', top: '10px', bottom: '10px', width: '2px', background: '#e9ecef' }}></div>
+                                
+                                {historyPlans.map((plan, i) => (
+                                    <div key={plan.unique_key} className="position-relative ps-4 mb-4">
+                                        {/* Dot */}
+                                        <div 
+                                            className="rounded-circle bg-white border border-2 border-secondary position-absolute"
+                                            style={{ width: '12px', height: '12px', left: '-5px', top: '5px' }}
+                                        ></div>
+
+                                        <div className="d-flex justify-content-between align-items-start">
+                                            <h6 className="fw-bold text-dark m-0">{plan.plan_name || plan.name}</h6>
+                                            <small className="text-muted text-uppercase" style={{ fontSize: '0.65rem' }}>Expired</small>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-5">
-                                    <div className="mb-3 text-muted opacity-25">
-                                        <i className="fa-regular fa-calendar-xmark fa-3x"></i>
+                                        <div className="small text-muted mt-1">
+                                            {formatDate(plan.assigned_date)} <i className="fa-solid fa-arrow-right mx-1 small"></i> {formatDate(plan.expiry_date)}
+                                        </div>
+                                        <div className="mt-2">
+                                            <Badge bg="light" text="dark" className="border fw-normal me-1">{plan.allowed_books} Books</Badge>
+                                            <Badge bg="light" text="dark" className="border fw-normal">{calculateTotalDuration(plan.assigned_date, plan.expiry_date)} Days</Badge>
+                                        </div>
                                     </div>
-                                    <p className="text-muted small">No previous subscriptions.</p>
-                                </div>
-                            )}
-                        </Card.Body>
-                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-5">
+                                <p className="text-muted small m-0">No history available.</p>
+                            </div>
+                        )}
+                    </div>
                 </Col>
             </Row>
         </div>
