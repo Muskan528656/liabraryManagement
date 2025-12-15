@@ -120,20 +120,25 @@ export default class DataApi {
 
     createLibraryCard(formData) {
         const data = new FormData();
-
-        // Append all form fields except image
         Object.keys(formData).forEach(key => {
             if (key !== 'image' && formData[key] !== null && formData[key] !== undefined) {
                 data.append(key, formData[key]);
             }
         });
-
-        // Handle image separately
         if (formData.image && formData.image instanceof File) {
             data.append('image', formData.image);
         }
 
         return axios.post(this.baseUrl, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                ...this.getHeaders()
+            }
+        });
+    }
+
+    updateLibraryCard(formData, id) {
+        return axios.put(`${this.baseUrl}/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 ...this.getHeaders()

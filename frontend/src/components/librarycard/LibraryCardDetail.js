@@ -63,6 +63,7 @@ const LibraryCardDetail = ({
   const [companyCountryCode, setCompanyCountryCode] = useState("");
   const [activeTab, setActiveTab] = useState("detail");
   const [searchTerm, setSearchTerm] = useState("");
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -158,7 +159,8 @@ const LibraryCardDetail = ({
     const circumference = radius * 2 * Math.PI;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-    const getProgressColor = (progress) => {
+    const getProgressColor = (progress, daysRemaining) => {
+      if (daysRemaining < 0) return "#dc3545";
       if (progress > 70) return "#28a745";
       if (progress > 30) return "#ffc107";
       return "#dc3545";
@@ -177,7 +179,7 @@ const LibraryCardDetail = ({
               cy={size / 2}
             />
             <circle
-              stroke={getProgressColor(progress)}
+              stroke={getProgressColor(progress, daysRemaining)}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               fill="transparent"
@@ -195,7 +197,7 @@ const LibraryCardDetail = ({
           >
             <div
               className="fw-bold"
-              style={{ fontSize: "20px", color: getProgressColor(progress) }}
+              style={{ fontSize: "20px", color: getProgressColor(progress, daysRemaining) }}
             >
               {daysRemaining}
             </div>
@@ -205,16 +207,18 @@ const LibraryCardDetail = ({
         <div className="mt-2">
           <Badge
             bg={
-              progress > 70 ? "success" : progress > 30 ? "warning" : "danger"
+              daysRemaining < 0 ? "danger" : progress > 70 ? "success" : progress > 30 ? "warning" : "danger"
             }
             className="px-2 py-1"
             style={{ fontSize: "12px" }}
           >
-            {progress > 70
-              ? "Good"
-              : progress > 30
-                ? "Warning"
-                : "Expiring Soon"}
+            {daysRemaining < 0
+              ? "Expired"
+              : progress > 70
+                ? "Good"
+                : progress > 30
+                  ? "Warning"
+                  : "Expiring Soon"}
           </Badge>
         </div>
       </div>
@@ -243,13 +247,13 @@ const LibraryCardDetail = ({
     const remainingDuration = endDate - today;
 
     let progress = (elapsedDuration / totalDuration) * 100;
-    progress = Math.max(0, Math.min(100, progress));
+    progress = Math.max(0, progress);
 
     const daysRemaining = Math.ceil(remainingDuration / (1000 * 60 * 60 * 24));
 
     return {
       progress: Math.round(progress),
-      daysRemaining: Math.max(0, daysRemaining),
+      daysRemaining: daysRemaining,
     };
   }, []);
 
@@ -792,7 +796,6 @@ console.log("WOKRI",issues)
             ></div>
           </div>
 
-          {/* Subscription Status */}
           <div style={{
             background: "#f8f9fa",
             padding: "15px",
@@ -1234,7 +1237,7 @@ console.log("WOKRI",issues)
       console.log("Selected file:", selectedImageFile);
 
       let response;
-      let requestPayload = { ...payload }; // Alias for sending
+      let requestPayload = { ...payload }; 
 
       if (selectedImageFile) {
         console.log("CASE 1: New image uploaded");
@@ -1252,12 +1255,8 @@ console.log("WOKRI",issues)
         console.log("FORMDATA SENT:");
         for (let p of formData.entries()) console.log(p[0], p[1]);
 
-        const imageUrl = `/uploads/librarycards/${selectedImageFile.name}`;
-        payload.image = imageUrl;
-        requestPayload.image = imageUrl;
-
-        console.log("Image URL set in payload:", payload.image);
-        response = await api.update(requestPayload, id);
+        console.log("Using updateLibraryCard for image upload");
+        response = await api.updateLibraryCard(formData, id);
       } else {
         console.log("CASE 3: No new image, using existing");
 
@@ -1313,6 +1312,8 @@ console.log("WOKRI",issues)
 
       resetImageSelection();
       await fetchCardData();
+
+      setRefreshCounter(prev => prev + 1);
 
       setIsEditing(false);
       setTempData(null);
@@ -1382,11 +1383,14 @@ console.log("WOKRI",issues)
       return;
     }
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/x-bmp', 'image/x-ms-bmp', 'image/tiff', 'image/tif', 'image/x-tiff', 'image/svg+xml', 'image/heic', 'image/heif', 'image/avif', 'image/x-icon', 'image/vnd.microsoft.icon'];
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'svg', 'heic', 'heif', 'avif', 'ico'];
+
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Invalid File Type",
-        message: "Please select a valid image file (JPEG, PNG, WebP, GIF).",
+        message: "Please select a valid image file (JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, HEIC, HEIF, AVIF, ICO).",
       });
       event.target.value = "";
       return;
@@ -1916,7 +1920,6 @@ console.log("WOKRI",issues)
                                 </Row>
                               </Col>
 
-                              {/* Book Statistics Section */}
                               {bookStatistics.length > 0 &&
                                 bookStatistics.map((section, idx) => (
                                   <Col
@@ -1966,7 +1969,7 @@ console.log("WOKRI",issues)
                         <Card className="shadow-sm">
                           <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                             {/* Props pass karein */}
-                            <RelatedTabContent id={id} data={data} />
+                            <RelatedTabContent id={id} data={data} refresh={refreshCounter} />
                           </Card.Body>
                         </Card>
                       </Col>
