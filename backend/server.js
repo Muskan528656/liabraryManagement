@@ -102,7 +102,7 @@ require("./app/routes/subscription.routes.js")(app);
 require("./app/routes/rolepermission.routes.js")(app);
 require("./app/routes/permission.route.js")(app);
 require("./app/routes/plan.routes.js")(app);
-require("./app/routes/Publisher.routes.js")(app);
+require("./app/routes/publisher.routes.js")(app);
 
  
 require("./app/routes/dashbard.router.js")(app);
