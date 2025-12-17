@@ -248,88 +248,88 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                             )}
 
                             {!isAddingPlan && activePlan && (
-                                // <div 
-                                //     className="rounded-4 p-4 position-relative text-white overflow-hidden "
-                                //     style={{ 
-                                //         background: 'linear-gradient(135deg, #8582edff 0%, #beb9c6ff 100%)',
+                                <div 
+                                    className="rounded-4 p-4 position-relative text-white overflow-hidden "
+                                    style={{ 
+                                        background: 'var(--primary-color)',
                                         
-                                //     }}
-                                // >
+                                    }}
+                                >
                                    
-                                //     <div className="position-absolute" style={{ top: '-20px', right: '-20px', opacity: '0.1', transform: 'rotate(15deg)' }}>
-                                //         <i className="fa-solid fa-book-reader fa-8x"></i>
-                                //     </div>
+                                    <div className="position-absolute" style={{ top: '-20px', right: '-20px', opacity: '0.1', transform: 'rotate(15deg)' }}>
+                                        <i className="fa-solid fa-book-reader fa-8x"></i>
+                                    </div>
 
-                                //     <div className="d-flex justify-content-between align-items-start position-relative z-1 mb-4">
-                                //         <div className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
-                                //             Library Card
-                                //         </div>
-                                //         <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{width: 40, height: 40}}>
-                                //             <i className="fa-solid fa-check"></i>
-                                //         </div>
-                                //     </div>
+                                    <div className="d-flex justify-content-between align-items-start position-relative z-1 mb-4">
+                                        <div className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
+                                            Library Card
+                                        </div>
+                                        <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{width: 40, height: 40}}>
+                                            <i className="fa-solid fa-check"></i>
+                                        </div>
+                                    </div>
 
-                                //     <div className="mb-4 position-relative z-1">
-                                //         <div className="text-white-50 small text-uppercase fw-bold mb-1">Active Plan</div>
-                                //         <h4 className="fw-bold mb-2">{activePlan.plan_name || activePlan.name}</h4>
-                                //         <div className="d-inline-flex align-items-center bg-white text-primary px-3 py-1 rounded-pill shadow-sm small fw-bold">
-                                //             <i className="fa-solid fa-hourglass-half me-2"></i>
-                                //             {getDaysRemaining(activePlan.expiry_date)} days remaining
-                                //         </div>
-                                //     </div>
+                                    <div className="mb-4 position-relative z-1">
+                                        <div className="text-white-50 small text-uppercase fw-bold mb-1">Active Plan</div>
+                                        <h4 className="fw-bold mb-2">{activePlan.plan_name || activePlan.name}</h4>
+                                        <div className="d-inline-flex align-items-center bg-white text-primary px-3 py-1 rounded-pill shadow-sm small fw-bold">
+                                            <i className="fa-solid fa-hourglass-half me-2"></i>
+                                            {getDaysRemaining(activePlan.expiry_date)} days remaining
+                                        </div>
+                                    </div>
 
-                                //     <div className="d-flex justify-content-between border-top border-white border-opacity-25 pt-3 mt-1 position-relative z-1">
+                                    <div className="d-flex justify-content-between border-top border-white border-opacity-25 pt-3 mt-1 position-relative z-1">
+                                        <div>
+                                            <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Started</small>
+                                            <span className="fw-bold">{formatDate(activePlan.assigned_date)}</span>
+                                        </div>
+                                        <div className="text-end">
+                                            <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Expires</small>
+                                            <span className="fw-bold">{formatDate(activePlan.expiry_date)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                // <div className="card shadow-sm border rounded-4 overflow-hidden" style={{height:'290px'}}>
+                                // <div className="card-body p-4">
+                                //     {/* Header: Plan Name & Status */}
+                                //     <div className="d-flex justify-content-between align-items-start mb-3">
                                 //         <div>
-                                //             <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Started</small>
-                                //             <span className="fw-bold">{formatDate(activePlan.assigned_date)}</span>
+                                //             <small className="text-muted text-uppercase fw-bold" style={{fontSize: '0.75rem'}}>Current Subscription</small>
+                                //             <h4 className="fw-bold text-dark mb-0 mt-1">{activePlan.plan_name || activePlan.name}</h4>
                                 //         </div>
-                                //         <div className="text-end">
-                                //             <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Expires</small>
-                                //             <span className="fw-bold">{formatDate(activePlan.expiry_date)}</span>
+                                //         <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
+                                //             Active
+                                //         </span>
+                                //     </div>
+
+                                //     {/* Middle: Time Remaining Visual */}
+                                //     <div className="p-3 bg-light rounded-3 mb-4 border">
+                                //         <div className="d-flex justify-content-between align-items-center mb-2">
+                                //             <span className="fw-bold text-dark">{getDaysRemaining(activePlan.expiry_date)} Days Left</span>
+                                //             <small className="text-muted">{activePlan.allowed_books} Books Limit</small>
+                                //         </div>
+                                //         <ProgressBar 
+                                //             now={Math.min(100, Math.max(0, (getDaysRemaining(activePlan.expiry_date) / calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)) * 100))}
+                                //             variant="primary"
+                                //             style={{ height: '6px' }}
+                                //             className="mb-0"
+                                //         />
+                                //     </div>
+
+                                //     {/* Footer: Dates */}
+                                //     <div className="row g-0">
+                                //         <div className="col-6 border-end pe-3">
+                                //             <small className="text-muted d-block" style={{fontSize: '11px'}}>START DATE</small>
+                                //             <span className="fw-semibold text-dark small">{formatDate(activePlan.assigned_date)}</span>
+                                //         </div>
+                                //         <div className="col-6 ps-3">
+                                //             <small className="text-muted d-block" style={{fontSize: '11px'}}>EXPIRY DATE</small>
+                                //             <span className="fw-semibold text-dark small">{formatDate(activePlan.expiry_date)}</span>
                                 //         </div>
                                 //     </div>
                                 // </div>
-
-                                <div className="card shadow-sm border rounded-4 overflow-hidden" style={{height:'290px'}}>
-                                <div className="card-body p-4">
-                                    {/* Header: Plan Name & Status */}
-                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <small className="text-muted text-uppercase fw-bold" style={{fontSize: '0.75rem'}}>Current Subscription</small>
-                                            <h4 className="fw-bold text-dark mb-0 mt-1">{activePlan.plan_name || activePlan.name}</h4>
-                                        </div>
-                                        <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
-                                            Active
-                                        </span>
-                                    </div>
-
-                                    {/* Middle: Time Remaining Visual */}
-                                    <div className="p-3 bg-light rounded-3 mb-4 border">
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                            <span className="fw-bold text-dark">{getDaysRemaining(activePlan.expiry_date)} Days Left</span>
-                                            <small className="text-muted">{activePlan.allowed_books} Books Limit</small>
-                                        </div>
-                                        <ProgressBar 
-                                            now={Math.min(100, Math.max(0, (getDaysRemaining(activePlan.expiry_date) / calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)) * 100))}
-                                            variant="primary"
-                                            style={{ height: '6px' }}
-                                            className="mb-0"
-                                        />
-                                    </div>
-
-                                    {/* Footer: Dates */}
-                                    <div className="row g-0">
-                                        <div className="col-6 border-end pe-3">
-                                            <small className="text-muted d-block" style={{fontSize: '11px'}}>START DATE</small>
-                                            <span className="fw-semibold text-dark small">{formatDate(activePlan.assigned_date)}</span>
-                                        </div>
-                                        <div className="col-6 ps-3">
-                                            <small className="text-muted d-block" style={{fontSize: '11px'}}>EXPIRY DATE</small>
-                                            <span className="fw-semibold text-dark small">{formatDate(activePlan.expiry_date)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                </div>
+                                // </div>
                             )}
 
                             {!isAddingPlan && !activePlan && (
@@ -422,7 +422,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="5" className="text-center py-5">
+                                                <td colSpan="6" className="text-center py-5" style={{}}>
                                                     <div className="text-muted opacity-50 mb-2">
                                                         <i className="fa-regular fa-folder-open fa-2x"></i>
                                                     </div>

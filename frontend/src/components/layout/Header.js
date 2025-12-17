@@ -779,12 +779,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }}
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
-              {unreadCount > 0 && (
+              {dueNotifications.length > 0 && (
                 <span
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                   style={{ fontSize: "10px", padding: "2px 5px" }}
                 >
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {dueNotifications.length > 99 ? "99+" : dueNotifications.length}
                 </span>
               )}
             </Dropdown.Toggle>

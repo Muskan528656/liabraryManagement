@@ -26,7 +26,7 @@ const IconAlert = () => (
 
 const UploadBox = ({ onChange }) => {
   return (
-    <div className="ui-upload-zone">
+    <div className="ui-upload-zone h-25">
       <input type="file" accept=".csv, .xls, .xlsx" className="ui-file-input" onChange={onChange} />
       <div className="ui-upload-icon-wrapper">
         <IconUpload />
@@ -140,13 +140,13 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   return (
     <div className="ui-importer-container">
 
-      <div className="ui-header">
+      <div className="ui-header" style={{color:'var(--primary-color)'}}>
         <div className="ui-stepper-container">
           <div className="ui-step-line"></div>
           {steps.map((label, idx) => {
              const active = step === idx;
              const completed = step > idx;
-             let circleClass = "ui-step-circle";
+             let circleClass = "ui-step-circle ";
              if(active) circleClass += " active";
              if(completed) circleClass += " completed";
 
@@ -154,8 +154,8 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
              if(active || completed) labelClass += " active";
 
              return (
-               <div key={idx} className="ui-step-item">
-                 <div className={circleClass}>
+               <div key={idx} className="ui-step-item" style={{color:'var(--primary-color)'}}>
+                 <div className={circleClass} style={{background:'var(--primary-color)'}}>
                    {completed ? <IconCheck /> : idx + 1}
                  </div>
                  <div className={labelClass}>{label}</div>
@@ -163,7 +163,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
              )
           })}
         </div>
-        <h2 className="ui-title">{steps[step]}</h2>
+        <h2 className="ui-title" style={{color:'var(--primary-color)'}}>{steps[step]}</h2>
         <p className="ui-subtitle">
           {step === 0 && "Upload your data to get started. We support CSV and Excel files."}
           {step === 1 && "Match your file columns to the database fields below."}
