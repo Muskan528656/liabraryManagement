@@ -1966,8 +1966,8 @@ console.log("WOKRI",issues)
                   <Tab.Pane eventKey="related">
                     <Row>
                       <Col lg={12}>
-                        <Card className="shadow-sm">
-                          <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+                        <Card border="0">
+                          <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%"}}>
                             {/* Props pass karein */}
                             <RelatedTabContent id={id} data={data} refresh={refreshCounter} />
                           </Card.Body>
