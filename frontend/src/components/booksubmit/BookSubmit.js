@@ -84,7 +84,7 @@ const BookSubmit = () => {
 
     const getUserDisplayName = (record) => {
         if (!record) return "Unknown User";
-        
+
         const nameFields = [
             record.issued_to_name,
             record.member_name,
@@ -108,9 +108,9 @@ const BookSubmit = () => {
 
     const getSubmittedByDisplayName = (record) => {
         if (!record) return "Unknown User";
-        
+
         console.log("Submitted book record:", record);
-        
+
 
         const nameFields = [
             record.student_name,
@@ -180,13 +180,13 @@ const BookSubmit = () => {
             }
 
             console.log("Processed Submitted Books:", submissions);
-            
+
 
             if (submissions.length > 0) {
                 console.log("First submitted book record fields:", Object.keys(submissions[0]));
                 console.log("First submitted book record values:", submissions[0]);
             }
-            
+
             setSubmittedBooks(submissions);
 
         } catch (error) {
@@ -588,10 +588,10 @@ const BookSubmit = () => {
 
         try {
             setLoading(true);
-            
+
 
             const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-            
+
             const submitData = {
                 issue_id: selectedIssue.id,
                 book_id: selectedIssue.book_id || book?.id,
@@ -629,7 +629,7 @@ const BookSubmit = () => {
 
             const result = await resp.json();
             console.log("Submit response:", result);
-            
+
             if (result && result.success) {
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
@@ -641,7 +641,7 @@ const BookSubmit = () => {
                 const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedAllIssues = allIssuedBooks.filter(item => item.id !== selectedIssue.id);
                 const updatedDisplayedIssues = displayedIssuedBooks.filter(item => item.id !== selectedIssue.id);
-                
+
                 setBookIssues(updatedBookIssues);
                 setCardIssues(updatedCardIssues);
                 setAllIssuedBooks(updatedAllIssues);
@@ -1349,7 +1349,7 @@ const BookSubmit = () => {
                                     <Row>
                                         <Col lg={12}>
                                             <Card className="shadow-sm">
-                                               
+
                                                 <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                                                     <ResizableTable
                                                         data={filteredSubmittedBooks}
