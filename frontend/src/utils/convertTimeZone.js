@@ -82,7 +82,7 @@ export function convertToUserTimezone(dateInput, timeZone) {
 
     console.log("formatter ", formatter);
     console.log("formatter2333 ", formatter.format(date).replace(", ", " "));
-  
+
     return formatter.format(date).replace(", ", " ");
   } catch (err) {
     console.error(`Invalid Timezone "${targetTimeZone}". Using system timezone.`);
