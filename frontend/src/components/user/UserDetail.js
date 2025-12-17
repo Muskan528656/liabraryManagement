@@ -197,7 +197,7 @@ const UserDetail = () => {
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
             return "Loading...";
           }
-
+          
           const role = externalData.userRoles.find(r =>
             String(r.id) === String(value) || String(r._id) === String(value)
           );

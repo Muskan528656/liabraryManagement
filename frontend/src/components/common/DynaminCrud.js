@@ -3849,13 +3849,14 @@ const DynamicCRUD = ({
                 show={showImportModal}
                 onHide={() => setShowImportModal(false)}
                 size="lg"
-                centered
+                centered 
+                className=""
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Import {moduleLabel} Data</Modal.Title>
+                    <Modal.Title style={{color:'var(--primary-color)'}}> Import {moduleLabel} Data</Modal.Title>
                 </Modal.Header>
 
-                <Modal.Body>
+                <Modal.Body className="mb-5">
                     <UniversalCSVXLSXImporter
                         model={importModel}
                         onDataParsed={async (parsedData) => {
