@@ -1853,7 +1853,7 @@ console.log("WOKRI",issues)
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
-                                  background: "var(--header-highlighter-color)",
+                                  // background: "var(--header-highlighter-color)",
                                   borderRadius: "10px",
                                 }}
                               >
@@ -1896,7 +1896,7 @@ console.log("WOKRI",issues)
                                   className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                   style={{
                                     color: "var(--primary-color)",
-                                    background: "var(--header-highlighter-color)",
+                                    // background: "var(--p)",
                                     borderRadius: "10px",
                                   }}
                                 >

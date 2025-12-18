@@ -22,6 +22,7 @@ app.use(
 );
 
 const path = require("path");
+const sendMail = require("./app/utils/mailer");
 const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
@@ -103,52 +104,13 @@ require("./app/routes/rolepermission.routes.js")(app);
 require("./app/routes/permission.route.js")(app);
 require("./app/routes/plan.routes.js")(app);
 require("./app/routes/publisher.routes.js")(app);
+require("./app/routes/mail.routes.js")(app);
 
- 
 require("./app/routes/dashbard.router.js")(app);
+
 
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
   console.log(`🌐 Base API URL: ${process.env.BASE_API_URL}`);
 });
 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 

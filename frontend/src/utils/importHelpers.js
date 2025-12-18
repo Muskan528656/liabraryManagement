@@ -24,7 +24,7 @@ export const saveImportedData = async ({
   try {
     console.log("data =>", data);
     console.log("relatedData =>", relatedData);
-    
+
     const mainApi = new DataApi(apiEndpoint);
 
     let createdCount = 0;
@@ -87,7 +87,7 @@ export const saveImportedData = async ({
       const api = relatedApiCache[optionKey];
 
       const labelField = cfg.labelField || "name";
-      const extraPayload = cfg.extraPayload || {}; 
+      const extraPayload = cfg.extraPayload || {};
       const payload = {
         ...extraPayload,
         [labelField]: labelValue,
@@ -124,7 +124,7 @@ export const saveImportedData = async ({
           (f) =>
             f.label?.toLowerCase() === key.toLowerCase() ||
             f.name?.toLowerCase().replace(/[^a-z0-9]/g, "") ===
-              key.toLowerCase().replace(/[^a-z0-9]/g, "")
+            key.toLowerCase().replace(/[^a-z0-9]/g, "")
         );
 
         if (!formField) {
@@ -192,18 +192,18 @@ export const saveImportedData = async ({
         // These codes usually mean Validation Failed or Duplicate Entry on server
         if (err.response && (err.response.status === 400 || err.response.status === 409 || err.response.status === 422)) {
           console.warn("Skipping row due to server validation/duplicate:", item, err.response.data);
-          skippedCount++; 
+          skippedCount++;
         } else {
           // If it's a critical error (500), strictly speaking, we might want to stop.
           // But for imports, usually better to skip and continue.
           console.error("Critical error saving row:", err);
-          errorCount++; 
+          errorCount++;
         }
       }
     }
 
     // --- 3. Final Toast & Callback ---
-    
+
     let message = `Import Processed: ${createdCount} created.`;
     if (skippedCount > 0) message += ` ${skippedCount} skipped (duplicate/empty).`;
     if (errorCount > 0) message += ` ${errorCount} failed.`;
@@ -221,7 +221,7 @@ export const saveImportedData = async ({
         message: "No new records created. All data were duplicates or empty.",
       });
     } else {
-       PubSub.publish("RECORD_ERROR_TOAST", {
+      PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Import Failed",
         message: "Could not import data. Please check file format.",
       });
@@ -235,6 +235,6 @@ export const saveImportedData = async ({
       title: "System Error",
       message: `Failed to initialize import for ${moduleLabel}`,
     });
-    throw globalError; 
+    throw globalError;
   }
 };

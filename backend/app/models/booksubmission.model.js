@@ -6,6 +6,8 @@
 
 const sql = require("./db.js");
 const cron = require("node-cron");
+const sendMail = require("../utils/mailer");
+const { dueTemplate, overdueTemplate } = require("../../app/utils/ReminderTemplate");
 
 let schema = "";
 
@@ -432,8 +434,289 @@ async function checkbeforeDue() {
     throw error;
   }
 }
+async function sendDueReminder() {
+  try {
+    console.log("🔔 Running due reminder test...");
 
-cron.schedule("* * * * *", checkbeforeDue);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const dd = String(tomorrow.getDate()).padStart(2, "0");
+    const tomorrowStr = `${yyyy}-${mm}-${dd}`;
+
+    const query = `
+      SELECT bi.*, b.title AS book_title, b.author_id
+      FROM demo.book_issues bi
+      LEFT JOIN demo.books b ON bi.book_id = b.id
+      WHERE bi.due_date = $1 AND bi.return_date IS NULL
+    `;
+    const result = await sql.query(query, [tomorrowStr]);
+
+    const groupedByStudent = {};
+
+    for (const book of result.rows) {
+      if (!groupedByStudent[book.issued_to]) {
+        groupedByStudent[book.issued_to] = [];
+      }
+
+      groupedByStudent[book.issued_to].push({
+        name: book.book_title,
+        author: book.author || "-",
+        dueDate: book.due_date,
+      });
+    }
+    for (const issuedTo in groupedByStudent) {
+      let student_email = null;
+      let student_name = null;
+
+      const userQuery = `
+        SELECT *
+        FROM demo.library_members
+        WHERE id = $1
+      `;
+      const userResult = await sql.query(userQuery, [issuedTo]);
+
+      if (userResult.rows.length > 0 && userResult.rows[0].email) {
+        student_email = userResult.rows[0].email;
+        student_name = userResult.rows[0].first_name + ' ' + userResult.rows[0].last_name;
+      } else {
+        const memberQuery = `
+          SELECT email, first_name || ' ' || last_name AS student_name
+          FROM demo.library_members
+          WHERE id = $1 AND is_active = true
+        `;
+        const memberResult = await sql.query(memberQuery, [issuedTo]);
+
+        if (memberResult.rows.length > 0) {
+          student_email = memberResult.rows[0].email;
+          student_name = memberResult.rows[0].student_name;
+        }
+      }
+
+      if (!student_email) {
+        console.warn(` No email found for user: ${issuedTo}`);
+        continue;
+      }
+      console.log(` Sending mail to: ${student_email} for user: ${issuedTo} , student name: ${student_name}`);
+
+      const html = dueTemplate({
+        studentName: student_name,
+        books: groupedByStudent[issuedTo],
+      });
+
+      await sendMail({
+        to: student_email,
+        subject: "📘 Library Reminder: Books due tomorrow",
+        html,
+      });
+
+      console.log(`Due reminder sent to ${student_email}`);
+    }
+
+  } catch (err) {
+    console.error(" Error in due reminder:", err);
+  }
+}
+
+// async function sendDueReminder() {
+//   try {
+//     console.log("🔔 Running due reminder test...");
+
+//     const today = new Date();
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(today.getDate() + 1);
+
+//     const yyyy = tomorrow.getFullYear();
+//     const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+//     const dd = String(tomorrow.getDate()).padStart(2, "0");
+//     const tomorrowStr = `${yyyy}-${mm}-${dd}`;
+//     console.log("🗓 Tomorrow:", tomorrowStr);
+
+//     // 1️⃣ Get all books due tomorrow
+//     const query = `
+//       SELECT bi.*, b.title AS book_title
+//       FROM demo.book_issues bi
+//       LEFT JOIN demo.books b ON bi.book_id = b.id
+//       WHERE bi.due_date = $1 AND bi.return_date IS NULL
+//     `;
+//     const result = await sql.query(query, [tomorrowStr]);
+//     const dueBooks = result.rows;
+
+//     console.log(`🔔 Found ${dueBooks.length} books due tomorrow.`);
+
+//     for (const book of dueBooks) {
+//       let student_email = null;
+//       let student_name = null;
+
+//       // 2️⃣ Try to get email from user table
+//       const userQuery = `
+//         SELECT email, firstname || ' ' || lastname AS student_name
+//         FROM demo."user"
+//         WHERE id = $1
+//       `;
+//       const userResult = await sql.query(userQuery, [book.issued_to]);
+//       if (userResult.rows.length > 0 && userResult.rows[0].email) {
+//         student_email = userResult.rows[0].email;
+//         student_name = userResult.rows[0].student_name;
+//       } else {
+
+//         const memberQuery = `
+//           SELECT *
+//           FROM demo.library_members
+//           WHERE id = $1 AND is_active = true
+//         `;
+//         const memberResult = await sql.query(memberQuery, [book.issued_to]);
+//         console.log('Member Result:', memberResult.rows);
+//         if (memberResult.rows.length > 0 && memberResult.rows[0].email) {
+//           student_email = memberResult.rows[0].email;
+//           student_name = memberResult.rows[0].student_name;
+//         }
+//       }
+
+//       if (!student_email) {
+//         console.warn(`⚠️ No email found for issued_to: ${book.issued_to}, Book: ${book.book_title}`);
+//         continue; // skip this record
+//       }
+
+//       console.log(`✉️ Sending mail to: ${student_email}, Book: ${book.book_title}`);
+
+//       const html = dueTemplate({
+//         studentName: student_name,
+//         bookName: book.book_title,
+//         dueDate: book.due_date,
+//       });
+
+//       await sendMail({
+//         to: student_email,
+//         subject: `📘 Reminder: "${book.book_title}" is due tomorrow`,
+//         html,
+//       });
+
+//       console.log(`✅ Test mail sent to ${student_email}`);
+//     }
+
+//     console.log(`🔔 Total test reminders processed: ${dueBooks.length}`);
+//   } catch (err) {
+//     console.error("❌ Error in due reminder test:", err);
+//   }
+// }
+async function sendOverdueReminder() {
+  try {
+    console.log(" Running overdue reminder test...");
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    console.log("🗓 Today:", todayStr);
+
+
+    const query = `
+      SELECT bi.*, b.title AS book_title
+      FROM demo.book_issues bi
+      LEFT JOIN demo.books b ON bi.book_id = b.id
+      WHERE bi.due_date < $1 AND bi.return_date IS NULL
+    `;
+    const result = await sql.query(query, [todayStr]);
+    const overdueBooks = result.rows;
+
+    console.log(`Found ${overdueBooks.length} overdue books.`);
+
+    for (const book of overdueBooks) {
+      let student_email = null;
+      let student_name = null;
+
+      const userQuery = `
+        SELECT email, firstname || ' ' || lastname AS student_name
+        FROM demo."user"
+        WHERE id = $1
+      `;
+      const userResult = await sql.query(userQuery, [book.issued_to]);
+      if (userResult.rows.length > 0 && userResult.rows[0].email) {
+        student_email = userResult.rows[0].email;
+        student_name = userResult.rows[0].student_name;
+      } else {
+
+        const memberQuery = `
+          SELECT email, firstname || ' ' || lastname AS student_name
+          FROM demo.library_members
+          WHERE user_id = $1 AND is_active = true
+        `;
+        const memberResult = await sql.query(memberQuery, [book.issued_to]);
+        if (memberResult.rows.length > 0 && memberResult.rows[0].email) {
+          student_email = memberResult.rows[0].email;
+          student_name = memberResult.rows[0].student_name;
+        }
+      }
+
+      if (!student_email) {
+        console.warn(` No email found for issued_to: ${book.issued_to}, Book: ${book.book_title}`);
+        continue;
+      }
+
+      const dueDate = new Date(book.due_date);
+      const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+      let penalty = 0;
+      try {
+        const penaltySettingsQuery = `
+          SELECT *
+          FROM demo.penalty_masters
+          WHERE is_active = true
+          LIMIT 1
+        `;
+        const penaltyResult = await sql.query(penaltySettingsQuery);
+        if (penaltyResult.rows.length > 0) {
+          const settings = penaltyResult.rows[0];
+          if (settings.rate_period === 'day') {
+            penalty = settings.rate * daysOverdue;
+          } else if (settings.rate_period === 'week') {
+            penalty = settings.rate * Math.ceil(daysOverdue / 7);
+          } else if (settings.rate_period === 'month') {
+            penalty = settings.rate * Math.ceil(daysOverdue / 30);
+          }
+          if (settings.concession_percentage > 0) {
+            penalty = penalty * (1 - settings.concession_percentage / 100);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch penalty settings, using 0 penalty");
+      }
+
+      const html = overdueTemplate({
+        studentName: student_name,
+        bookName: book.book_title,
+        dueDate: book.due_date,
+        overdueDays: daysOverdue,
+        penaltyAmount: penalty,
+      });
+
+      console.log(`Sending overdue mail to: ${student_email}, Book: ${book.book_title}`);
+
+      await sendMail({
+        to: student_email,
+        subject: `📕 Overdue Notice: "${book.book_title}"`,
+        html,
+      });
+
+      console.log(` Overdue mail sent to ${student_email}`);
+    }
+
+    console.log(` Total overdue reminders processed: ${overdueBooks.length}`);
+  } catch (err) {
+    console.error(" Error in overdue reminder test:", err);
+  }
+}
+
+
+// ------------------------
+// Cron job for daily reminders (actual deployment)
+// cron.schedule("*/10 * * * * *", sendDueReminder);
+cron.schedule("*/10 * * * *", sendDueReminder);
+cron.schedule("0 10 * * *", sendOverdueReminder);
 
 
 

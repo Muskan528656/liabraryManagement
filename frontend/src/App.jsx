@@ -100,12 +100,14 @@ function AppContent() {
     return (
       <>
         <ToastManager />
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Login />} />
-          </Routes>
-        </Router>
+        <div className="app-watermark">
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<Login />} />
+            </Routes>
+          </Router>
+        </div>
       </>
     );
   }

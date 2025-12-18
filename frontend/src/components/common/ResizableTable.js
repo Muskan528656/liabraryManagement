@@ -379,7 +379,7 @@ const ResizableTable = ({
                                                 position: "relative",
                                                 textAlign: "center",
                                                 userSelect: "none",
-                                                background: "#f3e9fc",
+                                                background: "var(--primary-background-color)",
                                                 fontWeight: "600",
                                                 color: "var(--primary-color)",
                                                 borderBottom: "2px solid #e9d5ff",

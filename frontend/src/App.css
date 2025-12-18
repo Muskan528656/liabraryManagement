@@ -4,16 +4,122 @@
 
 }
 
+/* Pulse animation for attention */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+  }
+
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+  }
+}
+
+.pulse-button {
+  animation: pulse 1.5s infinite;
+}
+
 /* Application color palette (limited to two main colors for a cleaner UI) */
 :root {
-  --primary-color: #6f42c1;
-  --primary-background-color: #f3e9fc;
-  --header-highlighter-color: #f8f9fa;
-  --header-list-item-color: #6b7280;
-  --light-purple: #f3e9fc;
-  --light-blue: rgb(111, 66, 193);
+  /* ===== Brand / Primary Colors ===== */
+  --primary-color: #11439b;
+  /* Dark Blue - buttons, headings */
+  --secondary-color: #c9e9fc;
+  /* Light Red/Pink - highlights, icons, badges */
+  --danger-color: #ff0000;
+  /* Alerts / errors */
+
+  /* ===== Backgrounds ===== */
+  /* --primary-background-color: #c9e9fc; */
+  --primary-background-color: #ecf2ff;
+  /* White page background */
+  --secondary-background-color: #ffffff;
+  /* White cards / forms */
+
+  /* ===== Header / Navigation ===== */
+  --header-highlighter-color: var(--secondary-color);
+  --header-list-item-color: #4b5563;
+  /* Dark text for menu items */
+
+  /* ===== Text ===== */
+  --text-primary: #1a1a1a;
+  /* Dark text */
+  --text-muted: #555555;
+  /* Muted text */
+
+  /* ===== Borders / UI elements ===== */
+  --border-light: #f0f0f0;
+  /* Light gray borders */
   --ui-white: #ffffff;
-  --muted-text: #3b3b48;
+  /* White for cards / modals */
+}
+
+.btn-primary-custom {
+  background-color: var(--primary-color) !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 8px;
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover:not(:disabled) {
+  background-color: #0f387f;
+  /* Darker shade for hover */
+}
+
+.btn-primary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Secondary / Cancel Button ===== */
+.btn-secondary-custom {
+  background-color: var(--secondary-background-color) !important;
+  color: var(--primary-color) !important;
+  border: 1px solid var(--primary-color) !important;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 8px;
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary-custom:hover:not(:disabled) {
+  background-color: #dbe4fc;
+}
+
+.btn-secondary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.app-watermark::before {
+  content: "Library Management System";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 48px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 9999;
 }
 
 .detail-h1 {
@@ -1924,15 +2030,23 @@ textarea.form-control[required] {
 
 :root {
   /* Theme Variables */
-  --ui-primary: #6366f1;       /* Indigo 500 */
-  --ui-primary-hover: #4f46e5; /* Indigo 600 */
-  --ui-success: #10b981;       /* Emerald 500 */
-  --ui-success-hover: #059669; /* Emerald 600 */
-  --ui-bg: #f8fafc;            /* Slate 50 */
+  --ui-primary: #6366f1;
+  /* Indigo 500 */
+  --ui-primary-hover: #4f46e5;
+  /* Indigo 600 */
+  --ui-success: #10b981;
+  /* Emerald 500 */
+  --ui-success-hover: #059669;
+  /* Emerald 600 */
+  --ui-bg: #f8fafc;
+  /* Slate 50 */
   --ui-surface: #ffffff;
-  --ui-text-main: #1e293b;     /* Slate 800 */
-  --ui-text-sub: #64748b;      /* Slate 500 */
-  --ui-border: #e2e8f0;        /* Slate 200 */
+  --ui-text-main: #1e293b;
+  /* Slate 800 */
+  --ui-text-sub: #64748b;
+  /* Slate 500 */
+  --ui-border: #e2e8f0;
+  /* Slate 200 */
   --ui-error-bg: #fef2f2;
   --ui-error-text: #dc2626;
   --ui-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -2129,7 +2243,7 @@ textarea.form-control[required] {
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: border-color 0.2s, background-color 0.2s;
 }
 
@@ -2255,6 +2369,7 @@ textarea.form-control[required] {
   color: var(--ui-text-main);
   border: 1px solid var(--ui-border);
 }
+
 .ui-btn-secondary:hover:not(:disabled) {
   background-color: #f1f5f9;
 }
@@ -2264,8 +2379,9 @@ textarea.form-control[required] {
   background-color: var(--ui-primary);
   color: white;
   border: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .ui-btn-primary:hover:not(:disabled) {
   background-color: var(--ui-primary-hover);
 }
@@ -2275,8 +2391,9 @@ textarea.form-control[required] {
   background-color: var(--ui-success);
   color: white;
   border: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .ui-btn-success:hover:not(:disabled) {
   background-color: var(--ui-success-hover);
 }

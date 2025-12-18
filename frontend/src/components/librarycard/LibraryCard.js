@@ -555,7 +555,7 @@ const LibraryCard = (props) => {
         <Modal.Header
           closeButton
           style={{
-            background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+            background: "var(--primar-color)",
             color: "white",
             borderBottom: "none"
           }}

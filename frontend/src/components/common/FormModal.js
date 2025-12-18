@@ -472,8 +472,8 @@ const FormModal = ({
                   <div
                     style={{
                       padding: "12px 16px",
-                      background: "linear-gradient(to right, #f3e9fc, #ffffff)",
-                      borderLeft: "4px solid #6f42c1",
+                      // background: "linear-gradient(to right, #f3e9fc, #ffffff)",
+                      // borderLeft: "4px solid #6f42c1",
                       marginBottom: "20px",
                       borderRadius: "6px",
                     }}
@@ -531,17 +531,25 @@ const FormModal = ({
               Cancel
             </Button>
             <Button
-              variant="primary"
               onClick={onSubmit}
               disabled={loading}
+              className="d-flex align-items-center justify-content-center"
               style={{
-                background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                background: "var(--primary-color)",
                 border: "none",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                fontWeight: 600,
+                minWidth: "120px",
               }}
             >
               {loading ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
                   {editingItem ? "Updating..." : "Saving..."}
                 </>
               ) : editingItem ? (

@@ -6,7 +6,8 @@ const Footer = () => {
     <footer
       className="p-3 w-100"
       style={{
-        background: "white",
+        backgroundColor: "var(--primary-background-color)",
+        // background: "white",
         borderTop: "1px solid #e2e8f0",
         position: "fixed",
         zIndex: 999,
@@ -14,9 +15,9 @@ const Footer = () => {
         boxShadow: "0 -2px 8px rgba(0,0,0,0.05)",
       }}
     >
-      <Row className="g-0 align-items-center">
+      <Row className="g-0 align-items-center" >
         <Col lg={6} xs={12} className="text-center text-lg-start">
-          <span className="detail-h3">
+          <span className="detail-h3" >
             © {new Date().getFullYear()} Library Management System. All Rights Reserved.
           </span>
         </Col>

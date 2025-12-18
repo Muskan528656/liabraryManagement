@@ -86,16 +86,19 @@ const BookSubmit = () => {
         if (!record) return "Unknown User";
 
         const nameFields = [
-            record.issued_to_name,
-            record.member_name,
+            record.submitted_by_name,
             record.student_name,
+            record.issued_to_name,
             record.user_name,
-            record.full_name,
+            record.member_name,
+            record.submitted_by,
+            record.cardholder_name,
             record.name,
+            record.full_name,
             `${record.first_name || ""} ${record.last_name || ""}`.trim(),
-            record.issued_to ? `User ${record.issued_to}` : null,
-            record.user_id ? `User ${record.user_id}` : null
+            record.issued_to ? `User ${record.issued_to}` : null
         ];
+
 
         for (let name of nameFields) {
             if (name && name.trim() !== "" && name !== "undefined undefined" && name !== " ") {
@@ -736,7 +739,7 @@ const BookSubmit = () => {
                             } catch (err) { }
                             window.open(`/book/${bookId}`, '_blank');
                         }}
-                        style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
+                        style={{ color: "var(--primary-color)", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
                         onMouseEnter={(e) => {
                             e.target.style.textDecoration = "underline";
                         }}
@@ -778,7 +781,7 @@ const BookSubmit = () => {
                                 navigate(`/librarycard/${userId}`, { state: record });
                             }}
                             style={{
-                                color: "#6f42c1",
+                                color: "var(--primary-color)",
                                 textDecoration: "none",
                                 fontWeight: 500,
                                 cursor: "pointer"
@@ -879,7 +882,7 @@ const BookSubmit = () => {
                             } catch (err) { }
                             window.open(`/book/${bookId}`, '_blank');
                         }}
-                        style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
+                        style={{ color: "var(--primary-color)", textDecoration: "none", fontWeight: 600, cursor: "pointer" }}
                         onMouseEnter={(e) => {
                             e.target.style.textDecoration = "underline";
                         }}
@@ -921,7 +924,7 @@ const BookSubmit = () => {
                                 navigate(`/librarycard/${userId}`, { state: record });
                             }}
                             style={{
-                                color: "#6f42c1",
+                                color: "var(--primary-color)",
                                 textDecoration: "none",
                                 fontWeight: 500,
                                 cursor: "pointer"
@@ -993,12 +996,12 @@ const BookSubmit = () => {
                                         <InputGroup style={{ maxWidth: "250px" }}>
                                             <InputGroup.Text
                                                 style={{
-                                                    background: "#f3e9fc",
+                                                    background: "var(--primary-color)",
                                                     borderColor: "#e9ecef",
                                                     padding: "0.375rem 0.75rem"
                                                 }}
                                             >
-                                                <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                                                <i className="fa-solid fa-search" style={{ color: "var(--primary-color)" }}></i>
                                             </InputGroup.Text>
 
                                             <Form.Control
@@ -1035,7 +1038,8 @@ const BookSubmit = () => {
                                         <Col lg={3} md={12}>
                                             <Card className="mb-4 shadow-sm" style={{ background: "#f3e8ff", border: "1px solid #d8b4fe", borderRadius: "8px" }}>
                                                 <Card.Header style={{
-                                                    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                                    backgroundColor: "var(--primary-background-color)",
+                                                    // background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
                                                     border: "none",
                                                     borderBottom: "2px solid #d1d5db",
                                                     padding: "15px 20px"
@@ -1045,7 +1049,7 @@ const BookSubmit = () => {
                                                         fontSize: "16px",
                                                         letterSpacing: "0.3px"
                                                     }}>
-                                                        <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
+                                                       
                                                         Book Identification
                                                     </h3>
                                                 </Card.Header>
@@ -1146,7 +1150,7 @@ const BookSubmit = () => {
                                                 <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                     <Card.Header className="py-3 px-4" style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #6f42c1" }}>
                                                         <div className="d-flex justify-content-between align-items-center">
-                                                            <h6 className="mb-0 fw-bold" style={{ color: "#6f42c1", fontSize: "1rem" }}>
+                                                            <h6 className="mb-0 fw-bold" style={{ color: "var(--primary-color)", fontSize: "1rem" }}>
                                                                 <i className="fa-solid fa-id-card me-2"></i>
                                                                 Library Card: {libraryCard.card_number}
                                                             </h6>
@@ -1204,7 +1208,7 @@ const BookSubmit = () => {
                                                                                 e.preventDefault();
                                                                                 navigate(`/book/${book.id}`);
                                                                             }}
-                                                                            style={{ color: "#6f42c1", textDecoration: "none", fontWeight: 600 }}
+                                                                            style={{ color: "var(--primary-color)", textDecoration: "none", fontWeight: 600 }}
                                                                             onMouseEnter={(e) => {
                                                                                 try {
                                                                                     localStorage.setItem(`prefetch:book:${book.id}`, JSON.stringify(book));
@@ -1247,7 +1251,7 @@ const BookSubmit = () => {
                                         <Col lg={9} md={12}>
                                             <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
-                                                    background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+                                                    background: "var(--secondary-color)",
                                                     border: "none",
                                                     borderBottom: "2px solid #d1d5db",
                                                 }}>
@@ -1258,7 +1262,7 @@ const BookSubmit = () => {
                                                                 fontSize: "18px",
                                                                 letterSpacing: "0.3px"
                                                             }}>
-                                                                <i className="fa-solid fa-book-open me-3" style={{ color: "#6b7280" }}></i>
+                                                                
                                                                 {bookIssues.length > 0 ? "Issued Books for this ISBN" :
                                                                     cardIssues.length > 0 ? "Issued Books for this Library Card" :
                                                                         "All Issued Books"}
@@ -1271,12 +1275,12 @@ const BookSubmit = () => {
                                                             <InputGroup style={{ maxWidth: "250px" }}>
                                                                 <InputGroup.Text
                                                                     style={{
-                                                                        background: "#f3e9fc",
+                                                                        background: "var(--primary-color)",
                                                                         borderColor: "#e9ecef",
                                                                         padding: "0.375rem 0.75rem"
                                                                     }}
                                                                 >
-                                                                    <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                                                                    <i className="fa-solid fa-search" style={{ color: "White", }}></i>
                                                                 </InputGroup.Text>
 
                                                                 <Form.Control

@@ -3,10 +3,10 @@ import { Row, Col, Card, Badge, Button, Form, Spinner, Table, ProgressBar } from
 import DataApi from "../../api/dataApi";
 
 const RelatedTabContent = ({ id, data, refresh }) => {
-   
+
     const [relatedPlans, setRelatedPlans] = useState([]);
     const [loadingRelated, setLoadingRelated] = useState(false);
-    const [allPlans, setAllPlans] = useState([]); 
+    const [allPlans, setAllPlans] = useState([]);
 
     const [isAddingPlan, setIsAddingPlan] = useState(false);
     const [selectedPlanId, setSelectedPlanId] = useState("");
@@ -20,10 +20,10 @@ const RelatedTabContent = ({ id, data, refresh }) => {
         if (refresh > 0) fetchRelatedData();
     }, [refresh]);
 
-    useEffect(()=>{
+    useEffect(() => {
         fetchPlansOnly();
     }, [])
-   
+
     const fetchPlansOnly = async () => {
         try {
             const api = new DataApi('plans');
@@ -83,7 +83,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
 
     const handleOpenAddPlan = async () => {
         setIsAddingPlan(true);
-        await fetchPlansOnly(); 
+        await fetchPlansOnly();
     };
 
     const handleAssignPlan = async () => {
@@ -91,11 +91,11 @@ const RelatedTabContent = ({ id, data, refresh }) => {
         setAssigningPlan(true);
         try {
             const selectedPlan = allPlans.find(p => String(p.id) === String(selectedPlanId));
-            
+
             const startDate = new Date();
             const endDate = new Date();
-            const freshDuration = parseInt(selectedPlan.duration_days) || 30; 
-            
+            const freshDuration = parseInt(selectedPlan.duration_days) || 30;
+
             endDate.setDate(startDate.getDate() + freshDuration);
 
             const subscriptionData = {
@@ -104,7 +104,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                 card_id: id,
                 user_id: data?.user_id || data?.id,
                 plan_name: selectedPlan.plan_name || selectedPlan.name,
-                duration_days: freshDuration, 
+                duration_days: freshDuration,
                 allowed_books: selectedPlan.allowed_books,
                 start_date: startDate.toISOString().split('T')[0],
                 end_date: endDate.toISOString().split('T')[0],
@@ -118,7 +118,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
             if (response?.data?.success || response?.status === 200 || response?.status === 201) {
                 setIsAddingPlan(false);
                 setSelectedPlanId("");
-                await fetchRelatedData(); 
+                await fetchRelatedData();
             } else {
                 alert("Failed to assign. Please try again.");
             }
@@ -138,19 +138,19 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     const isPlanActive = (plan) => {
         if (!plan || !plan.expiry_date) return false;
         const expiry = new Date(plan.expiry_date);
-        expiry.setHours(23, 59, 59); 
-        return expiry >= new Date(); 
+        expiry.setHours(23, 59, 59);
+        return expiry >= new Date();
     };
 
     const getDaysRemaining = (expiryDate) => {
-        if(!expiryDate) return 0;
+        if (!expiryDate) return 0;
         const total = Date.parse(expiryDate) - Date.parse(new Date());
         const days = Math.ceil(total / (1000 * 60 * 60 * 24));
         return days > 0 ? days : 0;
     };
 
     const calculateTotalDuration = (start, end) => {
-        if(!start || !end) return 0;
+        if (!start || !end) return 0;
         const diff = new Date(end) - new Date(start);
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }
@@ -209,8 +209,8 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                                 <i className="fa-solid fa-bolt text-warning me-2"></i>
                                                 New Subscription
                                             </h6>
-                                            <Button 
-                                                variant="light" 
+                                            <Button
+                                                variant="light"
                                                 size="sm"
                                                 className="rounded-circle btn-close-custom"
                                                 onClick={() => setIsAddingPlan(false)}
@@ -218,44 +218,44 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                                 <i className="fa-solid fa-times text-muted"></i>
                                             </Button>
                                         </div>
-                                                                            
-                                    <div className="mb-3">
-                                        <div className="input-group shadow-sm rounded-3 overflow-hidden border">
-                                            <Form.Select 
-                                                className="border-0 bg-white text-dark fw-semibold py-1"
-                                                style={{ fontSize: '0.95rem', boxShadow: 'none' }}
-                                                value={selectedPlanId}
-                                                onChange={(e) => setSelectedPlanId(e.target.value)}
-                                            >
-                                                <option value="">-- Choose a Plan --</option>
-                                                {allPlans.map(p => (
-                                                    <option key={p.id} value={p.id}>{p.plan_name || p.name}</option>
-                                                ))}
-                                            </Form.Select>
-                                            
-                                            <Button 
-                                                variant=""
-                                                className="px-4 fw-bold border-0"
-                                                onClick={handleAssignPlan}
-                                                style={{ background: 'var(--primary-color)',color:'var(--header-highlighter-color)' }}
-                                            >
-                                                Activate 
-                                            </Button>
+
+                                        <div className="mb-3">
+                                            <div className="input-group shadow-sm rounded-3 overflow-hidden border">
+                                                <Form.Select
+                                                    className="border-0 bg-white text-dark fw-semibold py-1"
+                                                    style={{ fontSize: '0.95rem', boxShadow: 'none' }}
+                                                    value={selectedPlanId}
+                                                    onChange={(e) => setSelectedPlanId(e.target.value)}
+                                                >
+                                                    <option value="">-- Choose a Plan --</option>
+                                                    {allPlans.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.plan_name || p.name}</option>
+                                                    ))}
+                                                </Form.Select>
+
+                                                <Button
+                                                    variant=""
+                                                    className="px-4 fw-bold border-0"
+                                                    onClick={handleAssignPlan}
+                                                    style={{ background: 'var(--primary-color)', color: 'var(--header-highlighter-color)' }}
+                                                >
+                                                    Activate
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
                                     </Card.Body>
                                 </Card>
                             )}
 
                             {!isAddingPlan && activePlan && (
-                                <div 
+                                <div
                                     className="rounded-4 p-4 position-relative text-white overflow-hidden "
-                                    style={{ 
+                                    style={{
                                         background: 'var(--primary-color)',
-                                        
+
                                     }}
                                 >
-                                   
+
                                     <div className="position-absolute" style={{ top: '-20px', right: '-20px', opacity: '0.1', transform: 'rotate(15deg)' }}>
                                         <i className="fa-solid fa-book-reader fa-8x"></i>
                                     </div>
@@ -264,7 +264,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                         <div className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
                                             Library Card
                                         </div>
-                                        <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{width: 40, height: 40}}>
+                                        <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
                                             <i className="fa-solid fa-check"></i>
                                         </div>
                                     </div>
@@ -280,11 +280,11 @@ const RelatedTabContent = ({ id, data, refresh }) => {
 
                                     <div className="d-flex justify-content-between border-top border-white border-opacity-25 pt-3 mt-1 position-relative z-1">
                                         <div>
-                                            <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Started</small>
+                                            <small className="text-white-50 d-block text-uppercase" style={{ fontSize: '10px', letterSpacing: '1px' }}>Started</small>
                                             <span className="fw-bold">{formatDate(activePlan.assigned_date)}</span>
                                         </div>
                                         <div className="text-end">
-                                            <small className="text-white-50 d-block text-uppercase" style={{fontSize: '10px', letterSpacing: '1px'}}>Expires</small>
+                                            <small className="text-white-50 d-block text-uppercase" style={{ fontSize: '10px', letterSpacing: '1px' }}>Expires</small>
                                             <span className="fw-bold">{formatDate(activePlan.expiry_date)}</span>
                                         </div>
                                     </div>
@@ -342,10 +342,10 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                         <p className="text-muted small mb-4 px-3">
                                             This member currently has no active subscription. Assign a plan to grant access.
                                         </p>
-                                        
-                                        <Button 
-                                            variant="dark" 
-                                            className="fw-bold shadow-sm rounded-pill px-4" 
+
+                                        <Button
+                                            variant="dark"
+                                            className="fw-bold shadow-sm rounded-pill px-4"
                                             onClick={handleOpenAddPlan}
                                         >
                                             <i className="fa-solid fa-plus me-2"></i> Assign Plan
@@ -363,24 +363,24 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                             <i className="fa-solid fa-clock-rotate-left me-2"></i> Subscription History
                         </h6>
                     </div>
-                    
-                    <Card className="border-0 rounded-4 overflow-hidden bg-white " style={{height:"280px"}}>
+
+                    <Card className="border-0 rounded-4 overflow-hidden bg-white " style={{ height: "280px" }}>
                         <Card.Body className="p-0">
-                            <div className="custom-scrollbar" style={{ maxHeight: '350px', overflowY: 'auto'  }}>
+                            <div className="custom-scrollbar" style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                 <Table hover responsive className="mb-0 align-middle table-hover-custom text-nowrap" >
-                                    <thead className="bg-light text-secondary table-header-bg"  style={{
-                                            background: 'var(--primary-background-color)', 
-                                            position: 'sticky', 
-                                            top: 0,             
-                                            zIndex: 10         
-                                        }} >
-                                        <tr> 
-                                            <th className="py-3 ps-4 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600 ,background:'var(--primary-background-color)' }}>Plan Details</th>
-                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background:'var(--primary-background-color)' }}>Duration</th>
-                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600,background:'var(--primary-background-color)'  }}>Book Limit</th>
-                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600,background:'var(--primary-background-color)'  }}>Issued Date</th>
-                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600,background:'var(--primary-background-color)'  }}>Expired Date</th>
-                                            <th className="py-3 text-end px-4 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600,background:'var(--primary-background-color)'  }}>Status</th>
+                                    <thead className="bg-light text-secondary table-header-bg" style={{
+                                        background: 'var(--primary-background-color)',
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 10
+                                    }} >
+                                        <tr>
+                                            <th className="py-3 ps-4 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Plan Details</th>
+                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Duration</th>
+                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Book Limit</th>
+                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Issued Date</th>
+                                            <th className="py-3 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Expired Date</th>
+                                            <th className="py-3 text-end px-4 border-bottom-1 small text-uppercase text-muted" style={{ fontWeight: 600, background: 'var(--primary-background-color)' }}>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -414,7 +414,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                                             <span className="text-dark">{formatDate(plan.expiry_date)}</span>
                                                         </div>
                                                     </td>
-                                                   
+
                                                     <td className="py-3 text-end">
                                                         {getStatusBadge(plan)}
                                                     </td>

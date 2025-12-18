@@ -138,7 +138,7 @@ module.exports = (app) => {
         if (!userId) {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }
-
+console.log('Creating book submission with data:', req.userinfo.tenantcode);
         BookSubmission.init(req.userinfo.tenantcode);
 
         const submission = await BookSubmission.create(req.body, userId);

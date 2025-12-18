@@ -220,7 +220,7 @@ const Settings = () => {
                     className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                     style={{
                       color: "var(--primary-color)",
-                      background: "var(--header-highlighter-color)",
+                         background: "var(--primary-background-color)",
                       borderRadius: "10px",
                     }}
                   >

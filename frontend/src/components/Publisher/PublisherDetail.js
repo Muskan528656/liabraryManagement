@@ -6,6 +6,11 @@ import { Card, Col, Row } from "react-bootstrap";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import City_State from "../../constants/CityState.json";
+
+
+console.log(COUNTRY_CODES)
 const PublisherDetail = () => {
 
     const { id } = useParams();
@@ -14,7 +19,7 @@ const PublisherDetail = () => {
 
     const [totalBooks, setTotalBooks] = useState(0);
 
-    console.log("Book ID from URL:", id); 
+    console.log("Book ID from URL:", id);
     const { timeZone } = useTimeZone();
     const fetchBookData = async (bookId) => {
         try {
@@ -36,17 +41,24 @@ const PublisherDetail = () => {
 
 
     useEffect(() => {
-
         if (id) {
             fetchBookData(id);
+            console.log("country", COUNTRY_CODES)
         }
     }, [id]);
 
     const fields = {
-
         details: [
-            { key: "salutation", label: "Salutation", type: "text" },
-            { key: "name", label: "name", type: "text" },
+            {
+                key: "salutation",
+                label: "Salutation",
+                type: "text"
+            },
+            {
+                key: "name",
+                label: "name",
+                type: "text"
+            },
             {
                 key: "email",
                 label: "Email",
@@ -57,10 +69,38 @@ const PublisherDetail = () => {
                 label: "Phone",
                 type: "tel"
             },
-            { key: "city", label: "City", type: "text" },
-            { key: "state", label: "State", type: "text" },
-            { key: "country", label: "Country", type: "text" },
-            { key: "is_active", label: "Active", type: "toggle" },
+            {
+                key: "city",
+                label: "City",
+                type: "select",
+                options: City_State.map(item => ({
+                    value: item.name,
+                    label: `${item.name} `
+                })),
+            },
+            {
+                key: "state",
+                label: "State",
+                type: "select",
+                options: City_State.map(item => ({
+                    value: item.state,
+                    label: `${item.state}`
+                })),
+            },
+            {
+                key: "country",
+                label: "Country",
+                type: "select",
+                options: COUNTRY_CODES.map(item => ({
+                    value: item.country,
+                    label: `${item.country}(${item.country_code})`
+                })),
+            },
+            {
+                key: "is_active",
+                label: "Active",
+                type: "toggle"
+            },
         ],
         other: [
             { key: "createdbyid", label: "Created By", type: "text" },
@@ -97,7 +137,7 @@ const PublisherDetail = () => {
                             moduleName="publisher"
                             moduleApi="publisher"
                             moduleLabel="publisher"
-                            icon="fa-solid fa-book"
+                            icon="fa fa-address-card"
                             fields={fields}
                         // lookupNavigation={lookupNavigation}
                         // externalData={externalData}

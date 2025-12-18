@@ -1082,13 +1082,13 @@ const UniversalBarcodeScanner = () => {
         return (
             <div className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 style={{ color: "#6f42c1", fontWeight: "600" }}>
+                    <h6 style={{ color: "var(--primary-color)", fontWeight: "600" }}>
                         <i className="fa-solid fa-book me-2"></i>Book Details
                     </h6>
                     <Button
                         variant="link"
                         onClick={() => setShowAdvancedFields(!showAdvancedFields)}
-                        style={{ color: "#8b5cf6", textDecoration: "none", fontSize: "14px" }}
+                        style={{ color: "var(--primary-color)", textDecoration: "none", fontSize: "14px" }}
                     >
                         <i className={`fa-solid fa-${showAdvancedFields ? "chevron-up" : "chevron-down"} me-2`}></i>
                         {showAdvancedFields ? "Hide Details" : "Show Details"}
@@ -1302,7 +1302,7 @@ const UniversalBarcodeScanner = () => {
                             </div>
                         )}
 
-                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                        <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
                             <i className="fa-solid fa-user-pen me-2"></i>Author Details
                         </h6>
                         <Row className="mb-3">
@@ -1354,7 +1354,7 @@ const UniversalBarcodeScanner = () => {
                             </Col>
                         </Row>
 
-                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                        <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
                             <i className="fa-solid fa-tags me-2"></i>Category Details
                         </h6>
                         <Row className="mb-3">
@@ -1388,7 +1388,7 @@ const UniversalBarcodeScanner = () => {
                             </Col>
                         </Row>
 
-                        <h6 style={{ color: "#6f42c1", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
+                        <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginTop: "20px", marginBottom: "15px" }}>
                             <i className="fa-solid fa-building me-2"></i>Publisher Details
                         </h6>
                         <Row className="mb-3">
@@ -1495,7 +1495,7 @@ const UniversalBarcodeScanner = () => {
         if (detectedData.type === "author") {
             return (
                 <div className="mt-4">
-                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                    <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginBottom: "15px" }}>
                         <i className="fa-solid fa-user-pen me-2"></i>Author Details
                     </h6>
                     <Row className="mb-3">
@@ -1574,7 +1574,7 @@ const UniversalBarcodeScanner = () => {
         if (detectedData.type === "category") {
             return (
                 <div className="mt-4">
-                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                    <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginBottom: "15px" }}>
                         <i className="fa-solid fa-tags me-2"></i>Category Details
                     </h6>
                     <Row className="mb-3">
@@ -1620,7 +1620,7 @@ const UniversalBarcodeScanner = () => {
         if (detectedData.type === "supplier") {
             return (
                 <div className="mt-4">
-                    <h6 style={{ color: "#6f42c1", fontWeight: "600", marginBottom: "15px" }}>
+                    <h6 style={{ color: "var(--primary-color)", fontWeight: "600", marginBottom: "15px" }}>
                         <i className="fa-solid fa-truck me-2"></i>Supplier Details
                     </h6>
                     <Row className="mb-3">
@@ -1708,62 +1708,55 @@ const UniversalBarcodeScanner = () => {
     return (
         <>
             {/* Floating Scan Button */}
-            <Button
-                onClick={() => setShowModal(true)}
-                className="shadow-lg"
-                style={{
-                    position: "fixed",
-                    bottom: "100px",
-                    right: "20px",
-                    zIndex: 1000,
-                    width: "54px",
-                    height: "54px",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #e9d5ff 0%, #f3e8ff 100%)",
-                    border: "2px solid #8b5cf6",
-                    boxShadow: "0 4px 16px rgba(139, 92, 246, 0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.1)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(139, 92, 246, 0.4)";
-                    e.currentTarget.style.borderColor = "#6f42c1";
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(139, 92, 246, 0.3)";
-                    e.currentTarget.style.borderColor = "#8b5cf6";
-                }}
-                title="Scan Barcode - Universal Scanner"
-            >
-                <i className="fa-solid fa-barcode" style={{ fontSize: "26px", color: "#6f42c1" }}></i>
-            </Button>
+         <Button
+  onClick={() => setShowModal(true)}
+  className="shadow-lg pulse-button"
+  style={{
+    position: "fixed",
+    bottom: "100px",
+    right: "20px",
+    zIndex: 1000,
+    width: "54px",
+    height: "54px",
+    borderRadius: "50%",
+    backgroundImage: "url('/logoo.webp')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    border: "2px solid var(--primary-color)",
+    boxShadow: "0 4px 16px rgba(139, 92, 246, 0.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0",
+    transition: "all 0.3s ease",
+  }}
+  title="Open Library / Book Scanner"
+/>
+
+
 
             {/* Scanner Modal */}
             <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered scrollable>
                 <Modal.Header
                     closeButton
                     style={{
-                        background: "linear-gradient(135deg, #e9d5ff 0%, #f3e8ff 100%)",
+                        background: "var(--primary-background-color)",
                         borderBottom: "none",
                         borderRadius: "8px 8px 0 0"
                     }}
                 >
-                    <Modal.Title style={{ color: "#6f42c1", fontWeight: "600" }}>
+                    <Modal.Title style={{ color: "var(--primary-color)", fontWeight: "600" }}>
                         <i className="fa-solid fa-barcode me-2"></i>Universal Data Scanner
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: "24px" }}>
                     <div className="mb-4">
                         <Form.Label style={{ fontWeight: "500", color: "#333", marginBottom: "10px", fontSize: "14px" }}>
-                            <i className="fa-solid fa-qrcode me-2" style={{ color: "#8b5cf6" }}></i>Scan or Enter Barcode/Data
+                            <i className="fa-solid fa-qrcode me-2" style={{ color: "var(--primary-color)" }}></i>Scan or Enter Barcode/Data
                         </Form.Label>
                         <InputGroup>
-                            <InputGroup.Text style={{ background: "#e9d5ff", borderColor: "#e9ecef" }}>
-                                <i className="fa-solid fa-barcode" style={{ color: "#6f42c1" }}></i>
+                            <InputGroup.Text style={{ background: "var(--primary-background-color)", borderColor: "#e9ecef" }}>
+                                <i className="fa-solid fa-barcode" style={{ color: "var(--primary-color)" }}></i>
                             </InputGroup.Text>
                             <Form.Control
                                 ref={inputRef}
@@ -1781,8 +1774,8 @@ const UniversalBarcodeScanner = () => {
                                     borderRadius: "0",
                                     fontSize: "14px",
                                 }}
-                                onFocus={(e) => e.target.style.borderColor = "#8b5cf6"}
-                                onBlur={(e) => e.target.style.borderColor = "#e9ecef"}
+                                onFocus={(e) => e.target.style.borderColor = "var(--primary-color)"}
+                                onBlur={(e) => e.target.style.borderColor = "#var(--header-highlighter-color)"}
                                 autoFocus
                             />
                             <Button
@@ -1791,7 +1784,7 @@ const UniversalBarcodeScanner = () => {
                                 disabled={!barcodeInput.trim() || loading}
                                 style={{
                                     borderColor: "#8b5cf6",
-                                    color: "#6f42c1",
+                                    color: "#var(--primary-color)",
                                     background: "#e9d5ff"
                                 }}
                             >
@@ -1812,7 +1805,7 @@ const UniversalBarcodeScanner = () => {
                             style={{
                                 background: "#e9d5ff",
                                 borderColor: "#8b5cf6",
-                                color: "#6f42c1",
+                                color: "#var(--primary-color)",
                                 borderRadius: "8px",
                                 padding: "16px"
                             }}
@@ -1903,7 +1896,7 @@ const UniversalBarcodeScanner = () => {
                         }}
                         style={{
                             borderColor: "#8b5cf6",
-                            color: "#6f42c1",
+                            color: "#var(--primary-color)",
                             background: "white",
                             padding: "8px 20px",
                             borderRadius: "6px"
@@ -1916,10 +1909,10 @@ const UniversalBarcodeScanner = () => {
                         disabled={!detectedData || loading}
                         style={{
                             background: detectedData && !loading
-                                ? "linear-gradient(135deg, #e9d5ff 0%, #f3e8ff 100%)"
+                                ? "linear-gradient(135deg, var(--primary-color) 0%, #f3e8ff 100%)"
                                 : "#ccc",
-                            border: detectedData && !loading ? "2px solid #8b5cf6" : "none",
-                            color: detectedData && !loading ? "#6f42c1" : "#999",
+                            border: detectedData && !loading ? "2px solid var(--primary-color)" : "none",
+                            color: detectedData && !loading ? "var(--primary-color)" : "#999",
                             padding: "8px 24px",
                             borderRadius: "6px",
                             fontWeight: "500"

@@ -451,20 +451,20 @@ const ModuleDetail = ({
     }
   }, [id, moduleApi, moduleLabel]);
 
- useEffect(() => {
-  if (!data) return;
+  useEffect(() => {
+    if (!data) return;
 
-  const userIds = [];
+    const userIds = [];
 
-  if (data.createdbyid) userIds.push(data.createdbyid);
-  if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
-  if (data.created_by) userIds.push(data.created_by);
-  if (data.modified_by) userIds.push(data.modified_by);
+    if (data.createdbyid) userIds.push(data.createdbyid);
+    if (data.lastmodifiedbyid) userIds.push(data.lastmodifiedbyid);
+    if (data.created_by) userIds.push(data.created_by);
+    if (data.modified_by) userIds.push(data.modified_by);
 
-  if (userIds.length > 0) {
-    fetchUserNames(userIds);
-  }
-}, [data]);
+    if (userIds.length > 0) {
+      fetchUserNames(userIds);
+    }
+  }, [data]);
 
 
   useEffect(() => {
@@ -1002,7 +1002,7 @@ const ModuleDetail = ({
   const renderField = (field, index, currentData) => {
     if (!field || !field.key) return null;
 
-    
+
 
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
@@ -1080,8 +1080,8 @@ const ModuleDetail = ({
 
 
     if (
-    (!isEditing || shouldShowAsReadOnly) &&
-    (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
+      (!isEditing || shouldShowAsReadOnly) &&
+      (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
     ) {
       const userId = currentData ? currentData[field.key] : null;
       if (userId) {
@@ -1348,7 +1348,8 @@ const ModuleDetail = ({
                       className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                       style={{
                         color: "var(--primary-color)",
-                        background: "var(--header-highlighter-color)",
+                        background: "vae(--primary-background-color)",
+                        //    background: "vae(--primary-background-color)",,
                         borderRadius: "10px",
                       }}
                     >
@@ -1383,7 +1384,7 @@ const ModuleDetail = ({
                           className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                           style={{
                             color: "var(--primary-color)",
-                            background: "var(--header-highlighter-color)",
+                            background: "vae(--primary-background-color)",
                             borderRadius: "10px",
                           }}
                         >
@@ -1421,7 +1422,6 @@ const ModuleDetail = ({
                         className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
                           color: "var(--primary-color)",
-                          background: "var(--header-highlighter-color)",
                           borderRadius: "10px",
                         }}
                       >

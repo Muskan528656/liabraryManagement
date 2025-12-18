@@ -95,7 +95,6 @@ module.exports = (app) => {
 
 
 
-
     router.put("/:id", fetchUser, async (req, res) => {
         try {
             const { plan_name, duration_days, is_active, allowed_books } = req.body;
@@ -115,7 +114,7 @@ module.exports = (app) => {
                 is_active,
                 duration_days,
                 allowed_books,
-                lastmodifiedbyid: lastModifiedBy, 
+                lastmodifiedbyid: lastModifiedBy,
             });
 
             const schema = req.userinfo.tenantcode;
@@ -153,6 +152,64 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
+
+    // router.put("/:id", fetchUser, async (req, res) => {
+    //     try {
+    //         const { plan_name, duration_days, is_active, allowed_books } = req.body;
+    //         const id = req.params.id;
+
+    //         if (!id) {
+    //             return res.status(400).json({ errors: "Plan ID is required" });
+    //         }
+
+    //         Plan.init(req.userinfo.tenantcode);
+
+    //         const lastModifiedBy = req.userinfo.id;
+
+    //         const result = await Plan.updatePlan({
+    //             id,
+    //             plan_name,
+    //             is_active,
+    //             duration_days,
+    //             allowed_books,
+    //             lastmodifiedbyid: lastModifiedBy, 
+    //         });
+
+    //         const schema = req.userinfo.tenantcode;
+    //         const updateFields = {};
+    //         if (plan_name !== undefined) updateFields.plan_name = plan_name;
+    //         if (duration_days !== undefined) updateFields.duration_days = duration_days;
+    //         if (allowed_books !== undefined) updateFields.allowed_books = allowed_books;
+
+    //         if (Object.keys(updateFields).length > 0) {
+    //             updateFields.lastmodifiedbyid = lastModifiedBy;
+    //             updateFields.lastmodifieddate = new Date();
+
+    //             const setClause = Object.keys(updateFields).map((key, index) => `"${key}" = $${index + 2}`).join(', ');
+    //             const values = [id, ...Object.values(updateFields)];
+
+    //             const updateQuery = `UPDATE ${schema}.subscriptions SET ${setClause} WHERE plan_id = $1`;
+    //             await sql.query(updateQuery, values);
+    //         }
+
+    //         if (duration_days !== undefined) {
+    //             const recalcQuery = `
+    //                 UPDATE ${schema}.subscriptions
+    //                 SET end_date = start_date + INTERVAL '${duration_days} days'
+    //                 WHERE plan_id = $1
+    //             `;
+    //             await sql.query(recalcQuery, [id]);
+    //         }
+
+    //         return res.status(200).json({
+    //             message: "Plan updated successfully",
+    //             data: result,
+    //         });
+    //     } catch (err) {
+    //         console.error(err);
+    //         res.status(500).json({ errors: "Internal Server Error" });
+    //     }
+    // });
 
 
 

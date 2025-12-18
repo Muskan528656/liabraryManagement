@@ -131,19 +131,19 @@ const BookDetail = () => {
   };
   const cardData = [
     {
-      title: "Total Books",
+      title: "Total Copies",
       value: totalBooks,
       icon: "fa-solid fa-layer-group",
       border: "border-start",
     },
     {
-      title: "Issued",
+      title: "Issued Copies",
       value: issuedBooksCount,
       icon: "fa-solid fa-book-open",
       border: "border-start",
     },
     {
-      title: "Available",
+      title: "Available Copies",
       value: availableBooks,
       icon: "fa-solid fa-cart-shopping",
       border: "border-start",
@@ -184,7 +184,7 @@ const BookDetail = () => {
               {cardData.map((item, index) => (
                 <Col lg={12} xs={12} key={index}>
                   <Card
-                    className={`shadow - sm border-0 ${item.border} border-5 border-primary mt-3`}
+                    className={`shadow - sm border-0 ${item.border} border-5 border-info mt-3`}
 
                   >
                     <Card.Body className="p-3">
