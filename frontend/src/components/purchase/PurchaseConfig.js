@@ -11,7 +11,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const company = props?.company?.[0] || {};
     
   
-    const currencySymbol = company.currency_symbol || "₹";
+    const currencySymbol = company.currency || "₹";
 
     console.log("currencySymbol=>",currencySymbol);
 
@@ -42,7 +42,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             label: "Unit Price",
             sortable: true,
             // render: (value, record) => `₹${parseFloat(record.unit_price || 0).toFixed(2)}`
-            render: (value, record) => `${currencySymbol}${parseFloat(record.unit_price || 0).toFixed(2)}`
+            render: (value, record) => `${currencySymbol} ${parseFloat(record.unit_price || 0).toFixed(2)}`
 
         },
         { 
@@ -50,7 +50,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             label: "Total Amount", 
             sortable: true, 
             // render: (value, record) => `₹${parseFloat(record.total_amount || 0).toFixed(2)}`
-            render: (value, record) => `${currencySymbol}${parseFloat(record.total_amount || 0).toFixed(2)}`
+            render: (value, record) => `${currencySymbol} ${parseFloat(record.total_amount || 0).toFixed(2)}`
 
         },
         {
