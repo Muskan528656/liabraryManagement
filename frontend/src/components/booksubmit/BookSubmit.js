@@ -113,6 +113,7 @@ const BookSubmit = () => {
 
 
         const nameFields = [
+            record.submitted_by_name,
             record.student_name,
             record.issued_to_name,
             record.user_name,
