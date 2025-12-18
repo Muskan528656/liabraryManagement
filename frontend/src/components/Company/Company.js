@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Card, Form, Alert } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
@@ -31,6 +32,7 @@ const Company = () => {
     is_external: false,
     has_wallet: false,
     currency: "",
+    currency_symbol: "",
     time_zone: "",
     country_code: "",
   });
@@ -114,8 +116,6 @@ const Company = () => {
       const companyApi = new DataApi("company");
       const response = await companyApi.update(tempCompany, companyId);
 
-
-
       if (response.data) {
         setCompany({ ...tempCompany });
         setIsEditingCompany(false);
@@ -172,6 +172,7 @@ const Company = () => {
         country: countryObj.name,
         country_code: `+${countryObj.phonecode}`,
         currency: tzData ? tzData.currency.code : countryObj.currency,
+        currency_symbol: tzData ? tzData.currency.symbol : "",
         time_zone:
           tzData && tzData.timezones.length > 0
             ? tzData.timezones[0].zoneName
@@ -202,7 +203,6 @@ const Company = () => {
         <Col lg={12} xl={12}>
           <Card className="border-0 shadow-sm detail-h4">
             <Card.Body>
-              {/* --- HEADER --- */}
               <div
                 className="d-flex justify-content-between align-items-center mb-4 p-2"
                 style={{
@@ -570,6 +570,28 @@ const Company = () => {
                       />
                     </Form.Group>
                   </Col>
+
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        Currency Symbol
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={
+                          isEditingCompany
+                            ? tempCompany.currency_symbol
+                            : Company.currency_symbol || ""
+                        }
+                        readOnly
+                        style={{
+                          opacity: 0.9,
+                          backgroundColor: "#e9ecef",
+                        }}
+                      />
+                    </Form.Group>
+                  </Col>
+
                   <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Time Zone</Form.Label>

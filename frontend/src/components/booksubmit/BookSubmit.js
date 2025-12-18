@@ -6,7 +6,6 @@ import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
-import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import moment from "moment";
 
 const BookSubmit = () => {
@@ -22,7 +21,7 @@ const BookSubmit = () => {
     const [bookIssues, setBookIssues] = useState([]);
     const [allIssuedBooks, setAllIssuedBooks] = useState([]);
     const [displayedIssuedBooks, setDisplayedIssuedBooks] = useState([]);
-    const [penalty, setPenalty] = useState({ penalty: 0, daysOverdue: 0 });
+    const [penalty, setPenalty] = useState({ penalty: 0, daysOverdue: 0, detailedPenalties: [] });
     const [conditionBefore, setConditionBefore] = useState("Good");
     const [conditionAfter, setConditionAfter] = useState("Good");
     const [remarks, setRemarks] = useState("");
@@ -37,15 +36,51 @@ const BookSubmit = () => {
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [timeZone, setTimeZone] = useState(null);
     const [scanMethod, setScanMethod] = useState("isbn");
+    const [penaltyMasters, setPenaltyMasters] = useState([]);
+    const [calculatedPenalties, setCalculatedPenalties] = useState([]);
+    const [bookAmount, setBookAmount] = useState(0);
+    const [isCalculatingPenalty, setIsCalculatingPenalty] = useState(false);
+    const [penaltyBreakdown, setPenaltyBreakdown] = useState([]);
+
     const recordsPerPage = 20;
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
     useEffect(() => {
         fetchAllIssuedBooks();
+        fetchPenaltyMasters();
         const storedTimeZone = localStorage.getItem('userTimeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
         setTimeZone(storedTimeZone);
     }, []);
+
+    const fetchPenaltyMasters = async () => {
+        try {
+            const resp = await helper.fetchWithAuth(
+                `${constants.API_BASE_URL}/api/penalty-master`,
+                "GET"
+            );
+
+            if (resp.ok) {
+                const data = await resp.json();
+                console.log("Penalty Masters:", data);
+                if (data.success && Array.isArray(data.data)) {
+                    setPenaltyMasters(data.data);
+                } else if (Array.isArray(data)) {
+                    setPenaltyMasters(data);
+                } else if (data.data && Array.isArray(data.data)) {
+                    setPenaltyMasters(data.data);
+                } else {
+                    setPenaltyMasters([]);
+                }
+            } else {
+                console.error("Failed to fetch penalty masters");
+                setPenaltyMasters([]);
+            }
+        } catch (error) {
+            console.error("Error fetching penalty masters:", error);
+            setPenaltyMasters([]);
+        }
+    };
 
     const fetchAllIssuedBooks = async () => {
         try {
@@ -61,7 +96,6 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
-            console.log("All issued books:", issues);
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -99,7 +133,6 @@ const BookSubmit = () => {
             record.issued_to ? `User ${record.issued_to}` : null
         ];
 
-
         for (let name of nameFields) {
             if (name && name.trim() !== "" && name !== "undefined undefined" && name !== " ") {
                 return name.trim();
@@ -112,10 +145,8 @@ const BookSubmit = () => {
     const getSubmittedByDisplayName = (record) => {
         if (!record) return "Unknown User";
 
-        console.log("Submitted book record:", record);
-
-
         const nameFields = [
+            record.submitted_by_name,
             record.student_name,
             record.issued_to_name,
             record.user_name,
@@ -147,7 +178,6 @@ const BookSubmit = () => {
         try {
             setLoadingSubmitted(true);
 
-
             const submissionsResp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
@@ -158,36 +188,21 @@ const BookSubmit = () => {
             }
 
             const response = await submissionsResp.json();
-            console.log("Submitted Books API Response:", response);
-
             let submissions = [];
 
-
             if (response.success !== undefined) {
-
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
                 }
-
                 else if (response.data && Array.isArray(response.data.data)) {
                     submissions = response.data.data;
                 }
             }
-
             else if (Array.isArray(response)) {
                 submissions = response;
             }
-
             else if (response.data && Array.isArray(response.data)) {
                 submissions = response.data;
-            }
-
-            console.log("Processed Submitted Books:", submissions);
-
-
-            if (submissions.length > 0) {
-                console.log("First submitted book record fields:", Object.keys(submissions[0]));
-                console.log("First submitted book record values:", submissions[0]);
             }
 
             setSubmittedBooks(submissions);
@@ -204,9 +219,95 @@ const BookSubmit = () => {
         }
     };
 
+    const calculatePenalties = (issue, condition) => {
+        if (!issue || !penaltyMasters.length) {
+            return { penalty: 0, daysOverdue: 0, detailedPenalties: [], breakdown: [] };
+        }
+
+        const today = new Date();
+        const dueDate = new Date(issue.due_date);
+        const daysOverdue = Math.max(
+            0,
+            Math.floor((today - dueDate) / (1000 * 60 * 60 * 24))
+        );
+
+        // Create penalty masters map
+        const masters = {};
+        penaltyMasters.forEach(p => {
+            if (p.penalty_type) {
+                masters[p.penalty_type.toLowerCase()] = p;
+            }
+        });
+
+        console.log("Penalty Masters Map:", masters);
+        console.log("Days Overdue:", daysOverdue);
+        console.log("Condition:", condition);
+
+        const penalties = [];
+        const breakdown = [];
+        let totalPenalty = 0;
+
+        // Late penalty
+        if (daysOverdue > 0 && masters['late']) {
+            const lateMaster = masters['late'];
+            const perDayAmount = parseFloat(lateMaster.per_day_amount) || 0;
+            const lateAmount = perDayAmount * daysOverdue;
+            totalPenalty += lateAmount;
+            penalties.push({
+                type: "LATE",
+                amount: lateAmount,
+                days: daysOverdue,
+                perDayAmount: perDayAmount
+            });
+
+            breakdown.push({
+                type: "Late Return",
+                description: `${daysOverdue} day(s) × ₹${perDayAmount}/day`,
+                amount: lateAmount
+            });
+        }
+
+        // Damaged book penalty
+        if (condition && condition.toLowerCase() === "damaged" && masters['damage']) {
+            const damageMaster = masters['damage'];
+            const damageAmount = parseFloat(damageMaster.fixed_amount) || 0;
+            totalPenalty += damageAmount;
+            penalties.push({
+                type: "DAMAGED",
+                amount: damageAmount,
+                isFixed: true
+            });
+
+            breakdown.push({
+                type: "Book Damage",
+                description: "Fixed penalty for damaged book",
+                amount: damageAmount
+            });
+        }
+
+        // Lost book penalty
+        if (condition && condition.toLowerCase() === "lost") {
+            penalties.push({
+                type: "LOST",
+                amount: 0, // Will be updated from bookAmount
+                requiresBookAmount: true
+            });
+        }
+
+        console.log("Calculated Penalties:", penalties);
+        setCalculatedPenalties(penalties);
+        setPenaltyBreakdown(breakdown);
+
+        return {
+            penalty: totalPenalty,
+            daysOverdue: daysOverdue,
+            detailedPenalties: penalties,
+            breakdown: breakdown
+        };
+    };
+
     const performSearch = async (value, mode = null) => {
         const searchType = mode || searchMode;
-        console.log("Performing search with:", value, "mode:", searchType);
 
         if (!value || value.trim() === "") {
             setDisplayedIssuedBooks(allIssuedBooks);
@@ -214,7 +315,7 @@ const BookSubmit = () => {
             setBook(null);
             setLibraryCard(null);
             setCardIssues([]);
-            setPenalty({ penalty: 0, daysOverdue: 0 });
+            setPenalty({ penalty: 0, daysOverdue: 0, detailedPenalties: [], breakdown: [] });
 
             PubSub.publish("RECORD_ERROR_TOAST", {
                 title: "Validation",
@@ -247,7 +348,6 @@ const BookSubmit = () => {
                 }
 
                 const cardData = await cardResp.json();
-                console.log("Library Card Data:", cardData);
                 setLibraryCard(cardData);
 
                 const issuesResp = await helper.fetchWithAuth(
@@ -267,7 +367,6 @@ const BookSubmit = () => {
                 }
 
                 const issues = await issuesResp.json();
-                console.log("Card Issues Data:", issues);
 
                 if (!issues || !Array.isArray(issues) || issues.length === 0) {
                     PubSub.publish("RECORD_ERROR_TOAST", {
@@ -279,7 +378,6 @@ const BookSubmit = () => {
                     return;
                 }
 
-                // Enrich issues with cardholder name and card number to ensure proper display
                 const enrichedIssues = issues.map(issue => ({
                     ...issue,
                     issued_to_name: getUserDisplayName(cardData) || issue.issued_to_name,
@@ -311,7 +409,6 @@ const BookSubmit = () => {
                 }
 
                 const bookData = await bookResp.json();
-                console.log("Book Data:", bookData);
                 setBook(bookData);
 
                 const issuesResp = await helper.fetchWithAuth(
@@ -332,7 +429,6 @@ const BookSubmit = () => {
                 }
 
                 const issues = await issuesResp.json();
-                console.log("Book Issues Data:", issues);
 
                 if (!issues || !Array.isArray(issues) || issues.length === 0) {
                     PubSub.publish("RECORD_ERROR_TOAST", {
@@ -345,9 +441,7 @@ const BookSubmit = () => {
                     return;
                 }
 
-                // Enrich issues with card number and name for proper display
                 const enrichedIssues = await Promise.all(issues.map(async (issue) => {
-                    console.log("Processing issue:", issue.id, "card_id:", issue.card_id);
                     if (issue.card_id) {
                         try {
                             const cardResp = await helper.fetchWithAuth(
@@ -357,47 +451,26 @@ const BookSubmit = () => {
 
                             if (cardResp.ok) {
                                 const cardData = await cardResp.json();
-                                console.log("Fetched card data for issue", issue.id, ":", cardData);
                                 return {
                                     ...issue,
                                     card_number: cardData.card_number || issue.card_number,
                                     issued_to_name: getUserDisplayName(cardData) || issue.issued_to_name,
                                 };
-                            } else {
-                                console.error("Failed to fetch card data for issue:", issue.id, "status:", cardResp.status);
                             }
                         } catch (error) {
                             console.error("Error fetching card data for issue:", issue.id, error);
                         }
-                    } else {
-                        console.log("Issue", issue.id, "has no card_id");
                     }
                     return issue;
                 }));
-                console.log("Enriched issues:", enrichedIssues);
 
                 setBookIssues(enrichedIssues);
                 setDisplayedIssuedBooks(enrichedIssues);
                 const activeIssue = enrichedIssues[0];
                 setIssue(activeIssue);
 
-                const penaltyResp = await helper.fetchWithAuth(
-                    `${constants.API_BASE_URL}/api/bookissue/penalty/${activeIssue.id}`,
-                    "GET"
-                );
-
-                if (penaltyResp.ok) {
-                    const penaltyData = await penaltyResp.json();
-                    if (penaltyData && penaltyData.success) {
-                        setPenalty(penaltyData.data || { penalty: 0, daysOverdue: 0 });
-                    } else if (penaltyData && penaltyData.data) {
-                        setPenalty(penaltyData.data);
-                    } else {
-                        setPenalty({ penalty: 0, daysOverdue: 0 });
-                    }
-                } else {
-                    setPenalty({ penalty: 0, daysOverdue: 0 });
-                }
+                const calculatedPenalty = calculatePenalties(activeIssue, "Good");
+                setPenalty(calculatedPenalty);
 
                 setLibraryCard(null);
                 setCardIssues([]);
@@ -443,7 +516,7 @@ const BookSubmit = () => {
             setBook(null);
             setIssue(null);
             setBookIssues([]);
-            setPenalty({ penalty: 0, daysOverdue: 0 });
+            setPenalty({ penalty: 0, daysOverdue: 0, detailedPenalties: [], breakdown: [] });
             setDisplayedIssuedBooks(allIssuedBooks);
         }
     };
@@ -502,7 +575,7 @@ const BookSubmit = () => {
             setBook(null);
             setIssue(null);
             setBookIssues([]);
-            setPenalty({ penalty: 0, daysOverdue: 0 });
+            setPenalty({ penalty: 0, daysOverdue: 0, detailedPenalties: [], breakdown: [] });
             setDisplayedIssuedBooks(allIssuedBooks);
             isbnInputRef.current?.focus();
         } else {
@@ -527,7 +600,7 @@ const BookSubmit = () => {
         setLibraryCard(null);
         setBookIssues([]);
         setCardIssues([]);
-        setPenalty({ penalty: 0, daysOverdue: 0 });
+        setPenalty({ penalty: 0, daysOverdue: 0, detailedPenalties: [], breakdown: [] });
         setDisplayedIssuedBooks(allIssuedBooks);
 
         setTimeout(() => {
@@ -576,6 +649,13 @@ const BookSubmit = () => {
 
     const handleSubmitClick = (issueItem) => {
         setSelectedIssue(issueItem);
+        setBookAmount(0);
+        setConditionAfter("Good");
+        setRemarks("");
+
+        const initialPenalty = calculatePenalties(issueItem, "Good");
+        setPenalty(initialPenalty);
+
         setShowSubmitModal(true);
     };
 
@@ -584,16 +664,27 @@ const BookSubmit = () => {
         setSelectedIssue(null);
         setConditionAfter("Good");
         setRemarks("");
+        setBookAmount(0);
+        setCalculatedPenalties([]);
+        setPenaltyBreakdown([]);
     };
 
     const handleFinalSubmit = async () => {
         if (!selectedIssue) return;
 
+        if (conditionAfter?.toLowerCase() === "lost" && bookAmount <= 0) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Please enter book amount for lost books"
+            });
+            return;
+        }
+
         try {
             setLoading(true);
 
-
             const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const companyId = userData?.company_id || userData?.companyId || 1;
 
             const submitData = {
                 issue_id: selectedIssue.id,
@@ -606,18 +697,24 @@ const BookSubmit = () => {
                 condition_before: selectedIssue.condition_before || conditionBefore || 'Good',
                 condition_after: conditionAfter || 'Good',
                 remarks: remarks || '',
+                book_amount: conditionAfter?.toLowerCase() === "lost" ? parseFloat(bookAmount) : undefined,
                 penalty_amount: penalty.penalty || 0,
                 days_overdue: penalty.daysOverdue || 0,
                 submit_date: new Date().toISOString(),
-                submitted_by: userData?.name || userData?.username || 'System'
+                submitted_by: userData?.name || userData?.username || 'System',
+                company_id: companyId
             };
 
-            console.log("Submitting book data:", submitData);
+            const cleanedData = Object.fromEntries(
+                Object.entries(submitData).filter(([_, v]) => v !== undefined)
+            );
+
+            console.log("Submitting book data:", cleanedData);
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "POST",
-                JSON.stringify(submitData)
+                JSON.stringify(cleanedData)
             );
 
             if (!resp.ok) {
@@ -631,14 +728,13 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
-            console.log("Submit response:", result);
 
             if (result && result.success) {
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
-                    message: `Book submitted successfully for ${getUserDisplayName(selectedIssue)}`
+                    message: `Book submitted successfully for ${getUserDisplayName(selectedIssue)}`,
+                    type: "success"
                 });
-
 
                 const updatedBookIssues = bookIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
@@ -650,11 +746,18 @@ const BookSubmit = () => {
                 setAllIssuedBooks(updatedAllIssues);
                 setDisplayedIssuedBooks(updatedDisplayedIssues);
 
-
-                setSubmittedBooks(prev => [...prev, submitData]);
+                const newSubmission = {
+                    ...cleanedData,
+                    id: result.data?.submission_id || Date.now(),
+                    submit_date: new Date().toISOString(),
+                    submitted_by_name: userData?.name || userData?.username || 'System',
+                    penalty_type: result.data?.penalty_type,
+                    penalty_amount: result.data?.penalty_amount,
+                    days_overdue: result.data?.days_overdue
+                };
+                setSubmittedBooks(prev => [...prev, newSubmission]);
 
                 handleModalClose();
-
 
                 if (updatedBookIssues.length === 0 && updatedCardIssues.length === 0) {
                     setIsbn("");
@@ -680,6 +783,50 @@ const BookSubmit = () => {
             setLoading(false);
         }
     };
+
+    // Effect to recalculate penalties when condition or book amount changes
+    useEffect(() => {
+        if (selectedIssue && conditionAfter) {
+            setIsCalculatingPenalty(true);
+
+            const newPenalty = calculatePenalties(selectedIssue, conditionAfter);
+
+            // Update lost book amount
+            if (conditionAfter.toLowerCase() === "lost" && bookAmount > 0) {
+                const lostPenaltyIndex = newPenalty.detailedPenalties.findIndex(p => p.type === "LOST");
+                if (lostPenaltyIndex !== -1) {
+                    newPenalty.detailedPenalties[lostPenaltyIndex].amount = bookAmount;
+
+                    // Add lost penalty to breakdown
+                    const breakdownIndex = newPenalty.breakdown.findIndex(b => b.type === "Book Replacement");
+                    if (breakdownIndex === -1) {
+                        newPenalty.breakdown.push({
+                            type: "Book Replacement",
+                            description: "Cost of lost book",
+                            amount: bookAmount
+                        });
+                    } else {
+                        newPenalty.breakdown[breakdownIndex].amount = bookAmount;
+                    }
+                }
+
+                // Recalculate total penalty
+                let totalPenalty = 0;
+                newPenalty.breakdown.forEach(p => {
+                    totalPenalty += p.amount;
+                });
+                newPenalty.penalty = totalPenalty;
+
+                setPenalty(newPenalty);
+                setPenaltyBreakdown(newPenalty.breakdown);
+            } else {
+                setPenalty(newPenalty);
+                setPenaltyBreakdown(newPenalty.breakdown);
+            }
+
+            setIsCalculatingPenalty(false);
+        }
+    }, [conditionAfter, bookAmount, selectedIssue]);
 
     const filteredIssuedBooks = displayedIssuedBooks.filter(issue => {
         if (!searchTerm) return true;
@@ -961,6 +1108,16 @@ const BookSubmit = () => {
                     {value || "Good"}
                 </Badge>
             )
+        },
+        {
+            field: "penalty_amount",
+            label: "Penalty",
+            width: 100,
+            render: (value) => (
+                <span className={`fw-bold ${value > 0 ? "text-danger" : "text-success"}`}>
+                    ₹{parseFloat(value || 0).toFixed(2)}
+                </span>
+            )
         }
     ];
 
@@ -1039,7 +1196,6 @@ const BookSubmit = () => {
                                             <Card className="mb-4 shadow-sm" style={{ background: "#f3e8ff", border: "1px solid #d8b4fe", borderRadius: "8px" }}>
                                                 <Card.Header style={{
                                                     backgroundColor: "var(--primary-background-color)",
-                                                    // background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
                                                     border: "none",
                                                     borderBottom: "2px solid #d1d5db",
                                                     padding: "15px 20px"
@@ -1049,7 +1205,6 @@ const BookSubmit = () => {
                                                         fontSize: "16px",
                                                         letterSpacing: "0.3px"
                                                     }}>
-                                                       
                                                         Book Identification
                                                     </h3>
                                                 </Card.Header>
@@ -1262,7 +1417,6 @@ const BookSubmit = () => {
                                                                 fontSize: "18px",
                                                                 letterSpacing: "0.3px"
                                                             }}>
-                                                                
                                                                 {bookIssues.length > 0 ? "Issued Books for this ISBN" :
                                                                     cardIssues.length > 0 ? "Issued Books for this Library Card" :
                                                                         "All Issued Books"}
@@ -1353,7 +1507,6 @@ const BookSubmit = () => {
                                     <Row>
                                         <Col lg={12}>
                                             <Card className="shadow-sm">
-
                                                 <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                                                     <ResizableTable
                                                         data={filteredSubmittedBooks}
@@ -1533,10 +1686,40 @@ const BookSubmit = () => {
                                                     <option value="Good">✅ Good</option>
                                                     <option value="Fair">⚠️ Fair</option>
                                                     <option value="Damaged">❌ Damaged</option>
+                                                    <option value="Lost">💸 Lost</option>
                                                 </Form.Select>
                                             </Form.Group>
                                         </Col>
                                     </Row>
+
+                                    {/* Lost condition के लिए book amount input */}
+                                    {conditionAfter?.toLowerCase() === "lost" && (
+                                        <Form.Group className="mb-2">
+                                            <Form.Label className="small fw-bold">
+                                                Book Amount (₹)
+                                                <Badge bg="danger" className="ms-2">Required</Badge>
+                                            </Form.Label>
+                                            <InputGroup size="sm">
+                                                <InputGroup.Text>₹</InputGroup.Text>
+                                                <Form.Control
+                                                    type="number"
+                                                    placeholder="Enter book amount"
+                                                    value={bookAmount}
+                                                    onChange={(e) => {
+                                                        const amount = parseFloat(e.target.value) || 0;
+                                                        setBookAmount(amount);
+                                                    }}
+                                                    min="0"
+                                                    step="0.01"
+                                                    disabled={loading}
+                                                />
+                                            </InputGroup>
+                                            <Form.Text className="text-danger">
+                                                Book amount is required for lost books
+                                            </Form.Text>
+                                        </Form.Group>
+                                    )}
+
                                     <Form.Group className="mb-2">
                                         <Form.Label className="small fw-bold">Remarks</Form.Label>
                                         <Form.Control
@@ -1553,22 +1736,80 @@ const BookSubmit = () => {
                                 </Card.Body>
                             </Card>
 
+                            {/* Penalty Details Card */}
                             <Card>
-                                <Card.Header className="py-2">
-                                    <h6 className="mb-0 small">Penalty Information</h6>
+                                <Card.Header className="py-2 d-flex justify-content-between align-items-center">
+                                    <h6 className="mb-0 small">Penalty Details</h6>
+                                    <div>
+                                        {isCalculatingPenalty && (
+                                            <Spinner animation="border" size="sm" className="me-2" />
+                                        )}
+                                        {penaltyBreakdown.length > 0 && (
+                                            <Badge bg={penalty.penalty > 0 ? "danger" : "success"}>
+                                                Total: ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </Card.Header>
                                 <Card.Body className="py-2">
-                                    <div className="text-center">
-                                        <h5 style={{
-                                            color: penalty.penalty > 0 ? "#dc3545" : "#28a745",
-                                            fontWeight: "bold"
-                                        }}>
-                                            ₹{penalty.penalty || 0}
-                                        </h5>
-                                        <p className="small text-muted mb-0">
-                                            {penalty.daysOverdue ? `Overdue by ${penalty.daysOverdue} day(s)` : "No overdue penalty"}
-                                        </p>
-                                    </div>
+                                    {penaltyBreakdown.length > 0 ? (
+                                        <div>
+                                            <div className="mb-3">
+                                                <h6 className="text-muted small mb-2">Penalty Breakdown:</h6>
+                                                {penaltyBreakdown.map((item, index) => (
+                                                    <div key={index} className="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                                        <div>
+                                                            <div className="fw-bold small">{item.type}</div>
+                                                            <div className="text-muted extra-small">{item.description}</div>
+                                                        </div>
+                                                        <div className="text-danger fw-bold">
+                                                            ₹{item.amount.toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {penalty.daysOverdue > 0 && (
+                                                    <div className="mt-2 p-2 bg-light rounded">
+                                                        <div className="d-flex justify-content-between">
+                                                            <span className="small">Days Overdue:</span>
+                                                            <span className="fw-bold text-warning">{penalty.daysOverdue} day(s)</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <hr />
+                                            <div className="text-center">
+                                                <h4 style={{
+                                                    color: penalty.penalty > 0 ? "#dc3545" : "#28a745",
+                                                    fontWeight: "bold",
+                                                    fontSize: "1.5rem"
+                                                }}>
+                                                    Total Penalty: ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                                </h4>
+                                                <p className="small text-muted mb-0">
+                                                    {penalty.penalty > 0
+                                                        ? `This amount will be charged to ${getUserDisplayName(selectedIssue)}`
+                                                        : "No penalty applicable"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center">
+                                            <h5 style={{ color: "#28a745", fontWeight: "bold" }}>
+                                                ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                            </h5>
+                                            <p className="small text-muted mb-0">
+                                                {penalty.daysOverdue ? `Overdue by ${penalty.daysOverdue} day(s)` : "No overdue penalty"}
+                                            </p>
+                                            {penalty.daysOverdue > 0 && (
+                                                <div className="mt-2">
+                                                    <Badge bg="warning" className="me-1">No late fee</Badge>
+                                                    <span className="small text-muted">Late penalty not configured</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </Card.Body>
                             </Card>
                         </div>
@@ -1579,7 +1820,11 @@ const BookSubmit = () => {
                         <i className="fa-solid fa-times me-2"></i>
                         Cancel
                     </Button>
-                    <Button variant="success" onClick={handleFinalSubmit} disabled={loading}>
+                    <Button
+                        variant="success"
+                        onClick={handleFinalSubmit}
+                        disabled={loading || (conditionAfter?.toLowerCase() === "lost" && bookAmount <= 0)}
+                    >
                         {loading ? (
                             <>
                                 <Spinner animation="border" size="sm" className="me-2" />

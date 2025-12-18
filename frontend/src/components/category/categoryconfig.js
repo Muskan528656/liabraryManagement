@@ -1,9 +1,112 @@
 
+// export const getCategoryConfig = (externalData = {}, props = {}) => {
+//     return {
+//         moduleName: "categories",
+//         moduleLabel: "Category",
+//         apiEndpoint: "category",
+//         initialFormData: {
+//             name: "",
+//             description: ""
+//         },
+//         columns: [
+//             {
+//                 field: "name",
+//                 label: "Name",
+//             },
+//             {
+//                 field: "description",
+//                 label: "Description",
+//                 render: (value) => <span style={{ color: "#6c757d" }}>{value || '-'}</span>,
+//             }
+//         ],
+//         formFields: [
+//             {
+//                 name: "name",
+//                 label: "Name",
+//                 type: "text",
+//                 required: true,
+//                 placeholder: "Enter category name",
+//                 colSize: 12,
+//             },
+//             {
+//                 name: "description",
+//                 label: "Description",
+//                 type: "textarea",
+//                 rows: 3,
+//                 placeholder: "Enter category description",
+//                 colSize: 12,
+//             }
+//         ],
+//         validationRules: (formData, allCategories, editingCategory) => {
+//             const errors = [];
+//             if (!formData.name?.trim()) errors.push("Name is required");
+
+
+//             const duplicate = allCategories.find(
+//                 category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
+//                     category.id !== editingCategory?.id
+//             );
+//             if (duplicate) errors.push("Category with this name already exists");
+
+//             return errors;
+//         },
+//         dataDependencies: {},
+//         features: {
+//             showBulkInsert: false,
+//             showImportExport: true,
+//             showDetailView: true,
+//             showSearch: true,
+//             showColumnVisibility: true,
+//             showCheckbox: true,
+//             showActions: true,
+//             showAddButton: true,
+//             allowEdit: true,
+//             allowDelete: true
+//         },
+//         details: [
+//             { key: "name", label: "Category Name", type: "text" },
+//             { key: "description", label: "Description", type: "text" },
+//             { key: "created_at", label: "Created At", type: "date" },
+//             { key: "updated_at", label: "Updated At", type: "date" },
+//         ],
+//         customHandlers: {
+//             beforeSave: (formData, editingItem) => {
+//                 return true;
+//             },
+//             afterSave: (response, editingItem) => {
+
+//                 console.log("Category saved:", response);
+//             }
+//         }
+//     };
+// };
+
+
+import React from "react";
+// 1. Import createModel
+import { createModel } from "../common/UniversalCSVXLSXImporter";
+
 export const getCategoryConfig = (externalData = {}, props = {}) => {
+    
+    // 2. Define the Import Model
+    const CategoryModel = createModel({
+        modelName: "Category",
+        fields: {
+            "name": "Name",
+            "description": "Description"
+        },
+        required: ["name"], // Based on validationRules
+    });
+
     return {
         moduleName: "categories",
         moduleLabel: "Category",
         apiEndpoint: "category",
+
+        // 3. Add Import Configuration
+        importMatchFields: [],
+        importModel: CategoryModel,
+
         initialFormData: {
             name: "",
             description: ""
@@ -41,7 +144,6 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Name is required");
 
-
             const duplicate = allCategories.find(
                 category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
                     category.id !== editingCategory?.id
@@ -61,7 +163,9 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true
+            allowDelete: true,
+            // 4. Enable Import Button
+            showImportButton: true,
         },
         details: [
             { key: "name", label: "Category Name", type: "text" },
@@ -74,7 +178,6 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
-
                 console.log("Category saved:", response);
             }
         }

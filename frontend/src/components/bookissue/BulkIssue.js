@@ -841,7 +841,7 @@ const BulkIssue = () => {
                             {memberSubscription.is_active ? " ✓" : " ✗"}
                           </Badge>
                           <div className="small text-muted mt-1">
-                            {systemMaxBooks} books allowed • {durationDays} days
+                            {(memberSubscription?.allowed_books || memberSubscription?.allowedBooks || memberSubscription?.["allowed books"] || 0)} books allowed • {durationDays} days
                           </div>
                         </div>
                       )}

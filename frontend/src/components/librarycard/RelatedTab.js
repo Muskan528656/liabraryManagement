@@ -269,13 +269,24 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                         </div>
                                     </div>
 
-                                    <div className="mb-4 position-relative z-1">
-                                        <div className="text-white-50 small text-uppercase fw-bold mb-1">Active Plan</div>
-                                        <h4 className="fw-bold mb-2">{activePlan.plan_name || activePlan.name}</h4>
+                                   <div className="mb-4 position-relative z-1">
+                                        <div className="text-white-50 small text-uppercase fw-bold mb-1">
+                                            Active Plan
+                                        </div>
+                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                            <h4 className="fw-bold mb-0 text-white text-truncate pe-2">
+                                                {activePlan.plan_name || activePlan.name}
+                                            </h4>
+                                            <div className="d-flex align-items-center bg-white bg-opacity-10 border border-white border-opacity-25 px-2 py-1 rounded text-white" style={{ whiteSpace: 'nowrap' }}>
+                                                <i className="fa-solid fa-book-open text-warning me-2" style={{ fontSize: '12px' }}></i>
+                                                <span className="fw-bold small">{activePlan.allowed_books} Books</span>
+                                            </div>
+                                        </div>
                                         <div className="d-inline-flex align-items-center bg-white text-primary px-3 py-1 rounded-pill shadow-sm small fw-bold">
                                             <i className="fa-solid fa-hourglass-half me-2"></i>
-                                            {getDaysRemaining(activePlan.expiry_date)} days remaining
+                                            <span>{getDaysRemaining(activePlan.expiry_date)} days remaining</span>
                                         </div>
+
                                     </div>
 
                                     <div className="d-flex justify-content-between border-top border-white border-opacity-25 pt-3 mt-1 position-relative z-1">
@@ -422,7 +433,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="6" className="text-center py-5" style={{}}>
+                                                <td colSpan="6" style={{border:'none'}} className="text-center py-5">
                                                     <div className="text-muted opacity-50 mb-2">
                                                         <i className="fa-regular fa-folder-open fa-2x"></i>
                                                     </div>

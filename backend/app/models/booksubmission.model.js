@@ -15,125 +15,200 @@ function init(schema_name) {
   schema = schema_name;
 }
 
-
-
 async function create(submissionData, userId) {
-  console.log("Schema initialized for BookSubmission model:", schema);
+  console.log("Creating submission with data:", submissionData, "by user:", userId);
   try {
+    if (!schema) throw new Error("Schema not initialized");
+
+    await sql.query("BEGIN");
+
     if (!submissionData.issue_id) {
       throw new Error("Issue ID is required");
     }
-    if (!userId) {
-      throw new Error("Submitted by (librarian) is required");
-    }
+    const checkRes = await sql.query(
+      `SELECT return_date FROM ${schema}.book_issues WHERE id = $1`,
+      [submissionData.issue_id]
+    );
 
-    const issueQuery = `SELECT * FROM ${schema}.book_issues WHERE id = $1`;
-    const issueResult = await sql.query(issueQuery, [submissionData.issue_id]);
-    if (issueResult.rows.length === 0) {
-      throw new Error("Issue record not found");
-    }
-    const issue = issueResult.rows[0];
-
-    if (issue.return_date) {
+    if (checkRes.rows[0]?.return_date) {
       throw new Error("Book already returned");
     }
 
-    const bookQuery = `SELECT id FROM ${schema}.books WHERE id = $1`;
-    const bookResult = await sql.query(bookQuery, [issue.book_id]);
-    if (bookResult.rows.length === 0) {
-      throw new Error("Book not found");
-    }
+    // Get issue details
+    const issueRes = await sql.query(
+      `SELECT bi.*, b.title AS book_title, b.isbn
+       FROM ${schema}.book_issues bi
+       JOIN ${schema}.books b ON b.id = bi.book_id
+       WHERE bi.id = $1`,
+      [submissionData.issue_id]
+    );
 
-    const dueDate = new Date(issue.due_date);
+    if (!issueRes.rows.length) throw new Error("Issue not found");
+
+    const issue = issueRes.rows[0];
+
+    // Calculate days overdue manually in JavaScript
     const today = new Date();
-    const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
+    const dueDate = new Date(issue.due_date);
+    const daysOverdue = Math.max(
+      0,
+      Math.floor((today - dueDate) / (1000 * 60 * 60 * 24))
+    );
 
-    let penalty = 0;
+    const conditionAfter = (submissionData.condition_after || "good").toLowerCase();
+    const conditionBefore = (submissionData.condition_before || "good").toLowerCase();
+
+    // Get book amount from submission data ONLY
+    const bookAmount = submissionData.book_amount || 0;
+
+    // Insert book submission
+    const submissionRes = await sql.query(
+      `INSERT INTO ${schema}.book_submissions
+       (issue_id, book_id, submitted_by, submit_date,
+        condition_before, condition_after, remarks,
+        days_overdue, createddate, createdbyid)
+       VALUES ($1,$2,$3,CURRENT_DATE,$4,$5,$6,$7,CURRENT_TIMESTAMP,$3)
+       RETURNING *`,
+      [
+        issue.id,
+        issue.book_id,
+        userId,
+        conditionBefore,
+        conditionAfter,
+        submissionData.remarks || "",
+        daysOverdue
+      ]
+    );
+
+    const submission = submissionRes.rows[0];
+
+    // 4️⃣ INSERT INTO penalty_master (ONLY IF REQUIRED)
+    let penaltyAmount = 0;
+    let penaltyType = null;
+
+    if (conditionAfter === "lost") {
+      if (!bookAmount || bookAmount <= 0) {
+        throw new Error("Book amount is required for lost book");
+      }
+      penaltyType = "lost";
+      penaltyAmount = bookAmount;
+    }
+
+    if (conditionAfter === "damaged") {
+      penaltyType = "damage";
+      penaltyAmount = submissionData.book_amount || 0;
+    }
+
     if (daysOverdue > 0) {
-      try {
+      penaltyType = "late";
+      penaltyAmount = submissionData.book_amount || 0;
+    }
 
-        const penaltySettingsQuery = `SELECT * FROM ${schema}.penalty_masters WHERE is_active = true LIMIT 1`;
-        const penaltyResult = await sql.query(penaltySettingsQuery);
-        if (penaltyResult.rows.length > 0) {
-          const settings = penaltyResult.rows[0];
+    if (penaltyType) {
+      // Get company_id from user or use a valid default UUID
+      let companyId = null;
 
-
-          if (settings.rate_period === 'day') {
-            penalty = settings.rate * daysOverdue;
-          } else if (settings.rate_period === 'week') {
-            penalty = settings.rate * Math.ceil(daysOverdue / 7);
-          } else if (settings.rate_period === 'month') {
-            penalty = settings.rate * Math.ceil(daysOverdue / 30);
-          }
-
-
-          if (settings.concession_percentage > 0) {
-            penalty = penalty * (1 - settings.concession_percentage / 100);
-          }
+      // Check if company_id is a valid UUID
+      if (submissionData.company_id) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(submissionData.company_id.toString())) {
+          companyId = submissionData.company_id;
+        } else {
+          console.warn(`Invalid company_id UUID: ${submissionData.company_id}, using NULL`);
         }
-      } catch (err) {
-        console.warn("Could not fetch penalty settings, using 0 penalty");
       }
+
+      // Validate issued_to as UUID
+      let issuedToValue = issue.issued_to;
+      if (issuedToValue && typeof issuedToValue === 'string') {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(issuedToValue)) {
+          console.warn(`Invalid issued_to UUID: ${issuedToValue}, using NULL`);
+          issuedToValue = null;
+        }
+      }
+
+      console.log("Inserting into penalty_master with:", {
+        companyId,
+        penaltyType,
+        bookId: issue.book_id,
+        issueId: issue.id,
+        issuedToValue,
+        penaltyAmount
+      });
+
+      await sql.query(
+        `INSERT INTO ${schema}.penalty_master
+         (company_id, penalty_type, book_id, issue_id,
+          book_title, isbn, issued_to, card_number,
+          issue_date, due_date,
+          condition_before, condition_after,
+          book_amount, createdbyid)
+         VALUES
+         ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [
+          companyId,  // Use NULL if not a valid UUID
+          penaltyType,
+          issue.book_id,
+          issue.id,
+          issue.book_title,
+          issue.isbn,
+          issuedToValue,
+          issue.card_number || null,
+          issue.issue_date,
+          issue.due_date,
+          conditionBefore,
+          conditionAfter,
+          penaltyAmount,
+          userId
+        ]
+      );
     }
 
-    if (submissionData.condition_after && submissionData.condition_before) {
-      const conditionBefore = submissionData.condition_before.toLowerCase();
-      const conditionAfter = submissionData.condition_after.toLowerCase();
+    // 5️⃣ Update issue as returned
+    await sql.query(
+      `UPDATE ${schema}.book_issues
+       SET return_date = CURRENT_DATE,
+           status = 'returned',
+           lastmodifieddate = CURRENT_TIMESTAMP,
+           lastmodifiedbyid = $2
+       WHERE id = $1`,
+      [issue.id, userId]
+    );
 
-      if (conditionAfter === 'damaged' && conditionBefore !== 'damaged') {
-        penalty += 500;
-      } else if (conditionAfter === 'fair' && conditionBefore === 'good') {
-        penalty += 100;
-      }
+    // 6️⃣ Increase stock only if GOOD
+    if (conditionAfter === "good") {
+      await sql.query(
+        `UPDATE ${schema}.books
+         SET available_copies = available_copies + 1
+         WHERE id = $1`,
+        [issue.book_id]
+      );
     }
-
-    penalty = Math.round(penalty * 100) / 100;
-
-    const submissionQuery = `INSERT INTO ${schema}.book_submissions 
-  (issue_id, book_id, submitted_by, submit_date, condition_before, condition_after, remarks, penalty, createddate , createdbyid,lastmodifiedbyid)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP , $9 , $9)
-  RETURNING *`
-    const submissionValues = [
-      submissionData.issue_id,
-      issue.book_id,
-      userId,
-      submissionData.submit_date || new Date().toISOString().split('T')[0],
-      submissionData.condition_before || 'Good',
-      submissionData.condition_after || 'Good',
-      submissionData.remarks || '',
-      penalty,
-      userId
-    ];
-
-    const submissionResult = await sql.query(submissionQuery, submissionValues);
-    const submission = submissionResult.rows[0];
-
-    const returnDate = new Date().toISOString().split('T')[0];
-    const updateIssueQuery = `UPDATE ${schema}.book_issues 
-                             SET return_date = $2, status = $3, 
-                                 lastmodifieddate = CURRENT_TIMESTAMP, lastmodifiedbyid = $4
-                             WHERE id = $1`;
-    await sql.query(updateIssueQuery, [
-      submissionData.issue_id,
-      returnDate,
-      'returned',
-      userId,
-    ]);
-
-    await sql.query(`UPDATE ${schema}.books SET available_copies = available_copies + 1 WHERE id = $1`, [issue.book_id]);
 
     await sql.query("COMMIT");
-    return submission;
-  } catch (error) {
-    await sql.query("ROLLBACK");
-    console.error("Error in create submission:", error);
-    throw error;
-  } finally {
 
+    return {
+      success: true,
+      message: "Book submitted successfully",
+      data: {
+        submission_id: submission.id,
+        penalty_type: penaltyType,
+        penalty_amount: penaltyAmount,
+        days_overdue: daysOverdue,
+        condition_after: conditionAfter,
+        book_amount: bookAmount
+      }
+    };
+
+  } catch (err) {
+    if (sql) await sql.query("ROLLBACK");
+    console.error("Submission error:", err);
+    throw err;
+  } finally {
+    // if (sql) sql.release();
   }
 }
-
-
 async function findById(id) {
   try {
     if (!schema) {
@@ -165,7 +240,6 @@ async function findById(id) {
     throw error;
   }
 }
-
 
 async function findAll() {
   console.log('schema', schema);
@@ -199,7 +273,6 @@ async function findAll() {
   }
 }
 
-
 async function findByIssueId(issueId) {
   try {
     if (!schema) {
@@ -228,7 +301,6 @@ async function findByIssueId(issueId) {
     throw error;
   }
 }
-
 
 async function findByBookId(bookId) {
   try {
@@ -260,7 +332,6 @@ async function findByBookId(bookId) {
   }
 }
 
-
 async function findByDateRange(startDate, endDate) {
   try {
     if (!schema) {
@@ -290,7 +361,6 @@ async function findByDateRange(startDate, endDate) {
     throw error;
   }
 }
-
 
 async function findByLibrarian(librarianId) {
   try {
@@ -322,7 +392,6 @@ async function findByLibrarian(librarianId) {
   }
 }
 
-
 async function deleteById(id) {
   try {
     const query = `DELETE FROM ${schema}.book_submissions WHERE id = $1 RETURNING *`;
@@ -336,7 +405,6 @@ async function deleteById(id) {
     throw error;
   }
 }
-
 
 async function getAllBooks() {
   try {
@@ -370,15 +438,10 @@ async function getAllBooks() {
   }
 }
 
-
 async function checkbeforeDue() {
-
-
   let notifications = [];
   try {
     const response = await getAllBooks();
-
-
     const submittedBooks = response.data;
 
     const today = new Date();
@@ -390,13 +453,11 @@ async function checkbeforeDue() {
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
 
-
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
         dueDate.getMonth() === tomorrow.getMonth() &&
         dueDate.getDate() === tomorrow.getDate()
       ) {
-
         notifications.push({
           message: `Your book is due tomorrow. Please return "${book.book_title}"  to avoid penalties.`,
           user: book.issued_by,
@@ -408,13 +469,14 @@ async function checkbeforeDue() {
       }
     });
 
-
     return notifications;
 
   } catch (error) {
     console.error("❌ Error:", error);
   }
-} async function getSubmitCountByBookId(bookId) {
+}
+
+async function getSubmitCountByBookId(bookId) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
@@ -434,6 +496,7 @@ async function checkbeforeDue() {
     throw error;
   }
 }
+
 async function sendDueReminder() {
   try {
     console.log("🔔 Running due reminder test...");
@@ -468,6 +531,7 @@ async function sendDueReminder() {
         dueDate: book.due_date,
       });
     }
+
     for (const issuedTo in groupedByStudent) {
       let student_email = null;
       let student_name = null;
@@ -521,88 +585,6 @@ async function sendDueReminder() {
   }
 }
 
-// async function sendDueReminder() {
-//   try {
-//     console.log("🔔 Running due reminder test...");
-
-//     const today = new Date();
-//     const tomorrow = new Date(today);
-//     tomorrow.setDate(today.getDate() + 1);
-
-//     const yyyy = tomorrow.getFullYear();
-//     const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
-//     const dd = String(tomorrow.getDate()).padStart(2, "0");
-//     const tomorrowStr = `${yyyy}-${mm}-${dd}`;
-//     console.log("🗓 Tomorrow:", tomorrowStr);
-
-//     // 1️⃣ Get all books due tomorrow
-//     const query = `
-//       SELECT bi.*, b.title AS book_title
-//       FROM demo.book_issues bi
-//       LEFT JOIN demo.books b ON bi.book_id = b.id
-//       WHERE bi.due_date = $1 AND bi.return_date IS NULL
-//     `;
-//     const result = await sql.query(query, [tomorrowStr]);
-//     const dueBooks = result.rows;
-
-//     console.log(`🔔 Found ${dueBooks.length} books due tomorrow.`);
-
-//     for (const book of dueBooks) {
-//       let student_email = null;
-//       let student_name = null;
-
-//       // 2️⃣ Try to get email from user table
-//       const userQuery = `
-//         SELECT email, firstname || ' ' || lastname AS student_name
-//         FROM demo."user"
-//         WHERE id = $1
-//       `;
-//       const userResult = await sql.query(userQuery, [book.issued_to]);
-//       if (userResult.rows.length > 0 && userResult.rows[0].email) {
-//         student_email = userResult.rows[0].email;
-//         student_name = userResult.rows[0].student_name;
-//       } else {
-
-//         const memberQuery = `
-//           SELECT *
-//           FROM demo.library_members
-//           WHERE id = $1 AND is_active = true
-//         `;
-//         const memberResult = await sql.query(memberQuery, [book.issued_to]);
-//         console.log('Member Result:', memberResult.rows);
-//         if (memberResult.rows.length > 0 && memberResult.rows[0].email) {
-//           student_email = memberResult.rows[0].email;
-//           student_name = memberResult.rows[0].student_name;
-//         }
-//       }
-
-//       if (!student_email) {
-//         console.warn(`⚠️ No email found for issued_to: ${book.issued_to}, Book: ${book.book_title}`);
-//         continue; // skip this record
-//       }
-
-//       console.log(`✉️ Sending mail to: ${student_email}, Book: ${book.book_title}`);
-
-//       const html = dueTemplate({
-//         studentName: student_name,
-//         bookName: book.book_title,
-//         dueDate: book.due_date,
-//       });
-
-//       await sendMail({
-//         to: student_email,
-//         subject: `📘 Reminder: "${book.book_title}" is due tomorrow`,
-//         html,
-//       });
-
-//       console.log(`✅ Test mail sent to ${student_email}`);
-//     }
-
-//     console.log(`🔔 Total test reminders processed: ${dueBooks.length}`);
-//   } catch (err) {
-//     console.error("❌ Error in due reminder test:", err);
-//   }
-// }
 async function sendOverdueReminder() {
   try {
     console.log(" Running overdue reminder test...");
@@ -614,7 +596,6 @@ async function sendOverdueReminder() {
     const todayStr = `${yyyy}-${mm}-${dd}`;
     console.log("🗓 Today:", todayStr);
 
-
     const query = `
       SELECT bi.*, b.title AS book_title
       FROM demo.book_issues bi
@@ -625,6 +606,23 @@ async function sendOverdueReminder() {
     const overdueBooks = result.rows;
 
     console.log(`Found ${overdueBooks.length} overdue books.`);
+
+    // Fetch penalty master data for late penalty
+    let perDayAmount = 0;
+    try {
+      const penaltyQuery = `
+        SELECT per_day_amount 
+        FROM demo.penalty_master 
+        WHERE penalty_type = 'late' AND is_active = true
+        LIMIT 1
+      `;
+      const penaltyResult = await sql.query(penaltyQuery);
+      if (penaltyResult.rows.length > 0) {
+        perDayAmount = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
+      }
+    } catch (err) {
+      console.warn("Could not fetch penalty settings, using 0 penalty per day");
+    }
 
     for (const book of overdueBooks) {
       let student_email = null;
@@ -640,7 +638,6 @@ async function sendOverdueReminder() {
         student_email = userResult.rows[0].email;
         student_name = userResult.rows[0].student_name;
       } else {
-
         const memberQuery = `
           SELECT email, firstname || ' ' || lastname AS student_name
           FROM demo.library_members
@@ -660,31 +657,7 @@ async function sendOverdueReminder() {
 
       const dueDate = new Date(book.due_date);
       const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
-      let penalty = 0;
-      try {
-        const penaltySettingsQuery = `
-          SELECT *
-          FROM demo.penalty_masters
-          WHERE is_active = true
-          LIMIT 1
-        `;
-        const penaltyResult = await sql.query(penaltySettingsQuery);
-        if (penaltyResult.rows.length > 0) {
-          const settings = penaltyResult.rows[0];
-          if (settings.rate_period === 'day') {
-            penalty = settings.rate * daysOverdue;
-          } else if (settings.rate_period === 'week') {
-            penalty = settings.rate * Math.ceil(daysOverdue / 7);
-          } else if (settings.rate_period === 'month') {
-            penalty = settings.rate * Math.ceil(daysOverdue / 30);
-          }
-          if (settings.concession_percentage > 0) {
-            penalty = penalty * (1 - settings.concession_percentage / 100);
-          }
-        }
-      } catch (err) {
-        console.warn("Could not fetch penalty settings, using 0 penalty");
-      }
+      const penalty = perDayAmount * daysOverdue;
 
       const html = overdueTemplate({
         studentName: student_name,
@@ -692,6 +665,7 @@ async function sendOverdueReminder() {
         dueDate: book.due_date,
         overdueDays: daysOverdue,
         penaltyAmount: penalty,
+        perDayAmount: perDayAmount
       });
 
       console.log(`Sending overdue mail to: ${student_email}, Book: ${book.book_title}`);
@@ -711,15 +685,222 @@ async function sendOverdueReminder() {
   }
 }
 
+// Get penalty masters for frontend calculation
+async function getPenaltyMasters() {
+  try {
+    const query = `
+      SELECT * FROM ${schema}.penalty_master 
+      WHERE is_active = true
+      ORDER BY penalty_type
+    `;
+    const result = await sql.query(query);
+
+    return {
+      success: true,
+      data: result.rows
+    };
+  } catch (error) {
+    console.error("Error fetching penalty masters:", error);
+    throw error;
+  }
+}
+
+// Calculate penalty for specific issue (for frontend preview)
+async function calculatePenalty(issueId, conditionAfter = null, bookAmount = 0) {
+  try {
+    // Fetch issue details
+    const issueRes = await sql.query(
+      `SELECT bi.*, b.title, b.isbn, b.price
+       FROM ${schema}.book_issues bi
+       LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+       WHERE bi.id = $1`,
+      [issueId]
+    );
+
+    if (!issueRes.rows.length) {
+      throw new Error("Issue not found");
+    }
+
+    const issue = issueRes.rows[0];
+    const today = new Date();
+    const dueDate = new Date(issue.due_date);
+
+    // Calculate days overdue
+    const timeDiff = today - dueDate;
+    const daysOverdue = Math.max(0, Math.floor(timeDiff / (1000 * 60 * 60 * 24)));
+
+    // Calculate days remaining
+    const daysRemaining = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+
+    // Fetch active penalty settings
+    const penaltyMastersRes = await sql.query(
+      `SELECT * FROM ${schema}.penalty_master 
+       WHERE is_active = true 
+       AND (company_id = $1 OR company_id IS NULL) 
+       ORDER BY penalty_type`,
+      [issue.company_id || 1]
+    );
+
+    const masters = {};
+    penaltyMastersRes.rows.forEach(p => {
+      masters[p.penalty_type.toLowerCase()] = p;
+    });
+
+    const penalties = [];
+    let totalPenalty = 0;
+    let penaltyType = null;
+
+    // Calculate late penalty
+    if (daysOverdue > 0 && masters['late']) {
+      const lateMaster = masters['late'];
+      const perDayAmount = parseFloat(lateMaster.per_day_amount) || 0;
+      const fixedLateAmount = parseFloat(lateMaster.fixed_amount) || 0;
+      let lateAmount = 0;
+
+      if (perDayAmount > 0) {
+        // Per day penalty
+        lateAmount = perDayAmount * daysOverdue;
+      } else {
+        // Fixed penalty for being late
+        lateAmount = fixedLateAmount;
+      }
+
+      totalPenalty += lateAmount;
+      penaltyType = 'late';
+
+      penalties.push({
+        type: "LATE_FEE",
+        description: `Overdue by ${daysOverdue} day(s)`,
+        amount: lateAmount,
+        daysOverdue: daysOverdue,
+        perDayAmount: perDayAmount,
+        isFixed: perDayAmount === 0
+      });
+    }
+
+    // Calculate damaged penalty
+    if (conditionAfter && conditionAfter.toLowerCase() === "damaged" && masters['damage']) {
+      const damageMaster = masters['damage'];
+      const damageAmount = parseFloat(damageMaster.fixed_amount) ||
+        parseFloat(damageMaster.per_day_amount) ||
+        (bookAmount * 0.1); // 10% of book amount as default
+
+      totalPenalty += damageAmount;
+      penaltyType = 'damage';
+
+      penalties.push({
+        type: "DAMAGE_FEE",
+        description: "Book damaged",
+        amount: damageAmount,
+        isFixed: true
+      });
+    }
+
+    // Calculate lost penalty
+    if (conditionAfter && conditionAfter.toLowerCase() === "lost" && masters['lost']) {
+      const lostMaster = masters['lost'];
+      let lostAmount = 0;
+
+      if (bookAmount > 0) {
+        lostAmount = bookAmount; // Full book amount from input
+      } else if (issue.price > 0) {
+        lostAmount = issue.price; // Use book price from database
+      } else if (lostMaster.fixed_amount > 0) {
+        lostAmount = parseFloat(lostMaster.fixed_amount);
+      } else {
+        lostAmount = 500; // Default amount
+      }
+
+      totalPenalty += lostAmount;
+      penaltyType = 'lost';
+
+      penalties.push({
+        type: "LOST_BOOK",
+        description: "Book lost - replacement cost",
+        amount: lostAmount,
+        isFixed: true
+      });
+    }
+
+    return {
+      success: true,
+      data: {
+        totalPenalty: totalPenalty,
+        daysOverdue: daysOverdue,
+        daysRemaining: daysRemaining,
+        penaltyType: penaltyType,
+        isOverdue: daysOverdue > 0,
+        detailedPenalties: penalties,
+        issue_details: {
+          issue_id: issue.id,
+          book_title: issue.title,
+          due_date: issue.due_date,
+          days_since_issue: Math.floor((today - new Date(issue.issue_date)) / (1000 * 60 * 60 * 24)),
+          current_date: today.toISOString().split('T')[0]
+        }
+      }
+    };
+  } catch (err) {
+    console.error("Error calculating penalty:", err);
+    throw err;
+  }
+}
+
+async function checkOverdueStatus(issueId) {
+  try {
+    const issueRes = await sql.query(
+      `SELECT * FROM ${schema}.book_issues WHERE id = $1`,
+      [issueId]
+    );
+
+    if (!issueRes.rows.length) {
+      throw new Error("Issue not found");
+    }
+
+    const issue = issueRes.rows[0];
+
+    if (issue.return_date) {
+      return {
+        isReturned: true,
+        message: "Book already returned",
+        returnDate: issue.return_date
+      };
+    }
+
+    const today = new Date();
+    const dueDate = new Date(issue.due_date);
+    const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
+    const daysRemaining = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+
+    let status = "ON_TIME";
+    if (daysOverdue > 0) {
+      status = "OVERDUE";
+    } else if (daysRemaining <= 2 && daysRemaining >= 0) {
+      status = "DUE_SOON";
+    }
+
+    return {
+      isOverdue: daysOverdue > 0,
+      daysOverdue: daysOverdue,
+      daysRemaining: daysRemaining,
+      status: status,
+      dueDate: issue.due_date,
+      today: today.toISOString().split('T')[0],
+      message: daysOverdue > 0
+        ? `Book is ${daysOverdue} day(s) overdue`
+        : daysRemaining >= 0
+          ? `Due in ${daysRemaining} day(s)`
+          : "Due date calculation error"
+    };
+  } catch (err) {
+    console.error("Error checking overdue status:", err);
+    throw err;
+  }
+}
 
 // ------------------------
-// Cron job for daily reminders (actual deployment)
-// cron.schedule("*/10 * * * * *", sendDueReminder);
-cron.schedule("*/10 * * * *", sendDueReminder);
+// Cron job for daily reminders
 cron.schedule("0 10 * * *", sendOverdueReminder);
-
-
-
 
 module.exports = {
   init,
@@ -732,6 +913,11 @@ module.exports = {
   findByLibrarian,
   deleteById,
   checkbeforeDue,
-  getAllBooks
-  , getSubmitCountByBookId
+  getAllBooks,
+  getSubmitCountByBookId,
+  getPenaltyMasters,
+  calculatePenalty,
+  checkOverdueStatus,
+  sendDueReminder,
+  sendOverdueReminder
 };

@@ -169,8 +169,21 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
+            // 4. Enable Import Button
+            showImportButton: true,
         },
 
+        customHandlers: {
+          
+            onDataLoad: (data) => {
+                if (Array.isArray(data)) {
+                    return data.map(item => ({
+                        ...item,
+                        is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true
+                    }));
+                }
+                return data;
+            }
+        }
     };
-
 };

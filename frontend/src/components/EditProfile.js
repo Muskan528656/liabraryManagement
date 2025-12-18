@@ -5,88 +5,63 @@ import "react-toastify/dist/ReactToastify.css";
 import { NameInitialsAvatar } from "react-name-initials-avatar";
 import jwt_decode from "jwt-decode";
 import DataApi from "../api/dataApi";
-import PubSub from "pubsub-js";
-import JsBarcode from "jsbarcode";
-import axios from "axios";
-import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
-import { API_BASE_URL } from "../constants/CONSTANT";
 
-const EditProfile = ({ userId }) => {
+import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
+
+
+const EditProfile = () => {
+
   const fileInputRef = useRef();
-  const barcodeRef = useRef(null);
+
 
   const [profile, setProfile] = useState({
-    id: "",
-    firstname: "",
-    lastname: "",
-    email: "",
-    whatsapp_number: "",
-    country_code: "",
+    firstname: '',
+    lastname: '',
+    email: '',
+    country_code: '',
+    phone: ''
   });
   const [body, setBody] = useState();
-  const [selectedFiles, setSelectedFiles] = useState(null);
-  const [companyCountryCode, setCompanyCountryCode] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [emailError, setEmailError] = useState("");
+
+
+
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [brokenImages, setBrokenImages] = useState([]);
-  const [libraryCard, setLibraryCard] = useState(null);
+
   const [showLibraryCardModal, setShowLibraryCardModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const phoneRegex = /^[0-9]{10}$/;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const [userId, setUserId] = useState(null); // Store the user ID
 
-  let tenantcode = "";
-  try {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-      const decoded = jwt_decode(token);
-      tenantcode = decoded.tenantcode || decoded.tenant_code || "";
-    }
-  } catch (error) {
-    console.error("Error decoding token:", error);
-    sessionStorage.removeItem("token");
-    window.location.href = "/login";
-  }
 
-  const profileImg = tenantcode ? `/public/${tenantcode}/users` : "";
+  //formdata
+  const [formData, setFormData] = useState({
+    phone: '',
+    email: '',
+    firstname: '',
+    lastname: '',
+    country_code: ''
+    // Add other fields as needed
+  });
 
-  const fetCompanyCode = async () => {
-    try {
-      const companyApi = new DataApi("company");
-      const companyResponse = await companyApi.fetchAll();
-      if (companyResponse?.data?.data?.length > 0) {
-        const companyWithCountryCode = companyResponse.data.data.find(
-          (c) => c && c.country_code
-        );
+  const [fieldsValid, setFieldsValid] = useState({
+    firstname: true,
+    lastname: true,
+    email: true,
+    country_code: true,
+    phone: true
+  });
+  const [buttonEnabled, setButtonEnabled] = useState(false);
 
-        if (companyWithCountryCode && companyWithCountryCode.country_code) {
-          const countryCodeStr = String(companyWithCountryCode.country_code).trim();
-          const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
-          let finalCode = codePart || "";
-          if (finalCode && !finalCode.startsWith("+")) {
-            finalCode = "+" + finalCode;
-          }
-          setCompanyCountryCode(finalCode);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching company data:", error);
-    }
-  };
 
   useEffect(() => {
     async function init() {
       try {
         setIsLoading(true);
-        await fetCompanyCode();
-
         const token = sessionStorage.getItem("token");
         if (!token) {
           console.error("No token found");
@@ -101,53 +76,15 @@ const EditProfile = ({ userId }) => {
           return;
         }
 
+        setUserId(userIdFromToken); // Store the userId
+
         const userApi = new DataApi("user");
         const userResponse = await userApi.fetchById(userIdFromToken);
 
-        if (userResponse && userResponse.data) {
-          let result = userResponse.data.data || userResponse.data;
+        console.log("fetchuserApi", userApi)
+        console.log("fetchres", userResponse)
+        setProfile(userResponse.data);
 
-
-          let whatsappNumber = result.whatsapp_number || "";
-          if (whatsappNumber && whatsappNumber.length === 12 && whatsappNumber.startsWith("91")) {
-            whatsappNumber = whatsappNumber.slice(2);
-          }
-
-
-          let userCountryCode = result.country_code || "";
-          if (userCountryCode) {
-            userCountryCode = String(userCountryCode).trim();
-            if (!userCountryCode.startsWith("+")) {
-              userCountryCode = "+" + userCountryCode;
-            }
-          }
-
-
-          setProfile({
-            id: result.id,
-            firstname: result.firstname || "",
-            lastname: result.lastname || "",
-            email: result.email || "",
-            whatsapp_number: whatsappNumber,
-            country_code: userCountryCode || companyCountryCode || "+91",
-          });
-
-
-          if (result.id) {
-            setBody(`${API_BASE_URL}/uploads/users/${result.id}`);
-          }
-
-
-          try {
-            const cardApi = new DataApi("librarycard");
-            const cardResponse = await cardApi.get(`/user/${result.id}`);
-            if (cardResponse?.data) {
-              setLibraryCard(cardResponse.data.data || cardResponse.data);
-            }
-          } catch (error) {
-            console.error("Error fetching library card:", error);
-          }
-        }
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast.error("Failed to load profile data");
@@ -158,196 +95,51 @@ const EditProfile = ({ userId }) => {
     init();
   }, []);
 
-  useEffect(() => {
-    if (showLibraryCardModal && libraryCard && libraryCard.card_number) {
-      setTimeout(() => {
-        try {
-          if (barcodeRef.current) {
-            barcodeRef.current.innerHTML = "";
-            const barcodeData = libraryCard.card_number;
-            JsBarcode(barcodeRef.current, barcodeData, {
-              format: "CODE128",
-              width: 2,
-              height: 50,
-              displayValue: true,
-              fontSize: 14,
-              margin: 5,
-              background: "#ffffff",
-              lineColor: "#000000",
-            });
-          }
-        } catch (error) {
-          console.error("Error generating barcode:", error);
-        }
-      }, 100);
-    }
-  }, [showLibraryCardModal, libraryCard]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === "email") {
-      if (!emailRegex.test(value)) {
-        setEmailError("Invalid email format");
-      } else {
-        setEmailError("");
-      }
-    }
-
-    if (name === "whatsapp_number") {
-
-      const numericValue = value.replace(/\D/g, '');
-
-      if (numericValue.length > 10) {
-        return;
-      }
-
-      if (numericValue && !phoneRegex.test(numericValue)) {
-        setPhoneError("Phone number must be exactly 10 digits");
-      } else {
-        setPhoneError("");
-      }
-
-      setProfile(prev => ({ ...prev, [name]: numericValue }));
-    } else {
-      setProfile(prev => ({ ...prev, [name]: value }));
-    }
+    setProfile((prevProfile) => ({
+      ...prevProfile,
+      [name]: value
+    }));
+    // Update fieldsValid state
+    setFieldsValid((prevValid) => ({
+      ...prevValid,
+      [name]: value.trim() !== ""  // Set true if value is not empty
+    }));
+    console.log("fieldvalid", fieldsValid)
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!isFormValid()) {
-      toast.error("Please fill all required fields correctly");
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-
-
-      const updateData = {
-        firstname: profile.firstname.trim(),
-        lastname: profile.lastname.trim(),
-        email: profile.email.trim(),
-        whatsapp_number: profile.whatsapp_number ? `91${profile.whatsapp_number}` : "",
-        country_code: profile.country_code || companyCountryCode || "+91",
-      };
-
-      const userApi = new DataApi("user");
-
-      if (selectedFiles) {
-
-        const formData = new FormData();
-        formData.append("file", selectedFiles);
-        Object.entries(updateData).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-
-        const token = sessionStorage.getItem("token");
-        const uploadResponse = await axios.post(
-          `${API_BASE_URL}/api/user/${profile.id}/upload-image`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (uploadResponse.data.success) {
-          toast.success("Profile and image updated successfully");
-          setTimeout(() => window.location.reload(), 1000);
-        } else {
-          throw new Error(uploadResponse.data.message || "Image upload failed");
-        }
-      } else {
-
-        const result = await userApi.update(updateData, profile.id);
-        if (result.data.success) {
-
-          PubSub.publish("RECORD_SAVED_TOAST", {
-            title: "Success",
-            message: "Profile updated successfully",
-          });
-        } else {
-          throw new Error(result.data.message || "Update failed");
-        }
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error(error.message || "Failed to update profile");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 8 || password.length > 16) {
-      toast.error("Password must be 8-16 characters");
-      return;
-    }
-
-    try {
-      const userApi = new DataApi("user");
-      const result = await userApi.update({ password }, profile.id);
-
-      if (result.data.success) {
-        toast.success("Password updated successfully");
-        setShowPasswordModal(false);
-        setTimeout(() => {
-          sessionStorage.clear();
-          window.location.href = "/login";
-        }, 2000);
-      } else {
-        throw new Error(result.data.message || "Password update failed");
-      }
-    } catch (error) {
-      toast.error(error.message || "Failed to update password");
-    }
-  };
-
-  const handlePhotoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setBody(URL.createObjectURL(file));
-      setSelectedFiles(file);
-    }
-  };
-
-  const isFormValid = () => {
-    return (
-      profile.firstname?.trim() &&
-      profile.lastname?.trim() &&
-      profile.email?.trim() &&
-      emailRegex.test(profile.email) &&
-      profile.whatsapp_number?.length === 10 &&
-      phoneRegex.test(profile.whatsapp_number) &&
-      !emailError &&
-      !phoneError
-    );
-  };
+  // Check if all fields are valid
+  const isFormValid = Object.values(fieldsValid).every((valid) => valid);
 
   if (isLoading) {
-    return (
-      <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: "80vh" }}>
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading profile...</p>
-        </div>
-      </Container>
-    );
+    return <div>Loading...</div>;
   }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+
+      const userApi = new DataApi("user");
+      console.log("userapi", userApi)
+      console.log("prifileid", profile.name)
+      console.log("userid---->", userId)
+      const response = await userApi.update(profile, userId);
+
+      console.log("response", response)
+      toast.success("Profile updated successfully!")
+      // setSuccess("Profile updated successfully!");
+    } catch (error) {
+      toast.success("Failed to update profile.")
+      // setError("Failed to update profile.");
+    } finally {
+      setIsLoading(false); // Stop loading animation
+    }
+  };
 
   return (
     <>
@@ -415,7 +207,7 @@ const EditProfile = ({ userId }) => {
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={handlePhotoUpload}
+                  // onChange={handlePhotoUpload}
                   />
                   <h4 className="mt-3 mb-1 fw-bold">
                     {profile.firstname} {profile.lastname}
@@ -424,10 +216,10 @@ const EditProfile = ({ userId }) => {
                 </div>
 
                 {/* Library Card Section */}
-                <div className="mt-4 pt-4 border-top">
+                {/* <div className="mt-4 pt-4 border-top">
                   <h5 className="fw-bold mb-3">
                     <i className="fa-solid fa-id-card me-2 text-primary"></i>
-                    Library Card
+                    Library Cardddd
                   </h5>
                   {libraryCard ? (
                     <div className="border rounded p-3 bg-light">
@@ -460,7 +252,7 @@ const EditProfile = ({ userId }) => {
                       <p className="text-muted mb-0">No library card assigned</p>
                     </div>
                   )}
-                </div>
+                </div> */}
               </Card.Body>
             </Card>
           </Col>
@@ -518,11 +310,7 @@ const EditProfile = ({ userId }) => {
                         onChange={handleChange}
                         placeholder="Enter email"
                         required
-                        isInvalid={!!emailError}
                       />
-                      <Form.Control.Feedback type="invalid">
-                        {emailError}
-                      </Form.Control.Feedback>
                     </Col>
 
                     <Col md={3} className="mb-3">
@@ -542,49 +330,29 @@ const EditProfile = ({ userId }) => {
                     </Col>
 
                     <Col md={3} className="mb-3">
-                      <Form.Label className="fw-semibold">
-                        WhatsApp Number <span className="text-danger">*</span>
-                      </Form.Label>
+                      <Form.Label className="fw-semibold">WhatsApp Number <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
-                        name="whatsapp_number"
-                        value={profile.whatsapp_number}
+                        name="phone"
+                        value={profile.phone}
                         onChange={handleChange}
                         placeholder="10 digit number"
                         maxLength={10}
                         required
-                        isInvalid={!!phoneError}
                       />
-                      <Form.Control.Feedback type="invalid">
-                        {phoneError}
-                      </Form.Control.Feedback>
                     </Col>
 
                     <Col xs={12} className="mt-4">
                       <div className="d-flex justify-content-end gap-2">
-                        <Button
-                          variant="light"
-                          type="button"
-                          onClick={() => window.history.back()}
-                        >
+                        <Button variant="light" type="button" onClick={() => window.history.back()}>
                           Cancel
                         </Button>
                         <Button
                           type="submit"
                           variant="primary"
-                          disabled={!isFormValid() || isSaving}
+                          disabled={!isFormValid}
                         >
-                          {isSaving ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <i className="fa-solid fa-save me-2"></i>
-                              Save Changes
-                            </>
-                          )}
+                          <i className="fa-solid fa-save me-2"></i> Save Changes
                         </Button>
                       </div>
                     </Col>
@@ -605,7 +373,7 @@ const EditProfile = ({ userId }) => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handlePasswordSubmit}>
+          <Form >
             <Form.Group className="mb-3">
               <Form.Label>New Password <span className="text-danger">*</span></Form.Label>
               <InputGroup>
