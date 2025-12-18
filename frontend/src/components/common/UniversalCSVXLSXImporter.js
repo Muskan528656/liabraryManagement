@@ -14,6 +14,7 @@ const IconArrowRight = () => (<svg width="12" height="12" viewBox="0 0 24 24" fi
 const IconCheck = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>);
 const IconAlert = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>);
 const IconSpinner = () => (<svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>);
+const IconDownload = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
 
 // New Status Icons
 const IconSuccessCircle = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>);
@@ -35,9 +36,14 @@ const UploadBox = ({ onChange }) => {
   );
 };
 
-const Button = ({ children, variant = "secondary", onClick, disabled, isLoading }) => {
+const Button = ({ children, variant = "secondary", onClick, disabled, isLoading, style }) => {
   return (
-    <button onClick={onClick} disabled={disabled || isLoading} className={`ui-btn ui-btn-${variant}`}>
+    <button 
+      onClick={onClick} 
+      disabled={disabled || isLoading} 
+      className={`ui-btn ui-btn-${variant}`}
+      style={style}
+    >
       {isLoading && <IconSpinner />}
       {children}
     </button>
@@ -62,6 +68,25 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   // New States for Processing
   const [isProcessing, setIsProcessing] = useState(false);
   const [importResult, setImportResult] = useState(null);
+
+  // --- DOWNLOAD SIMPLE CSV ---
+  const handleDownloadSample = () => {
+    if (!model || !model.fields) return;
+
+    // Use the labels (values) as headers
+    const headers = Object.values(model.fields);
+    
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    
+    // Generate filename ending in .csv
+    const filename = `${model.modelName || "data"}_sample.csv`;
+    
+    // Force CSV format download
+    XLSX.writeFile(wb, filename, { bookType: "csv" });
+  };
 
   const handleFile = (uploadedFile) => {
     setError(null);
@@ -133,7 +158,6 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
     if(onDataParsed) {
       setIsProcessing(true);
       try {
-        // We expect the parent to return a report object
         const result = await onDataParsed(finalData);
         setImportResult(result);
         setStep(3); // Move to Result View
@@ -162,7 +186,6 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       <div className="ui-header-compact">
         <div className="ui-stepper-compact">
           {steps.map((label, idx) => {
-             // If we are at results, keep previous steps as 'completed'
              const active = step === idx;
              const completed = step > idx;
              return (
@@ -178,7 +201,38 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
         </div>
       </div>
 
-      <div className="ui-body-compact">
+      <div className="ui-body-compact" style={{ position: 'relative' }}>
+        
+        {/* --- Download Simple CSV Button (Bottom Right) --- */}
+        {step === 0 && (
+          <button 
+            onClick={handleDownloadSample}
+            className="ui-btn-ghost"
+            style={{ 
+              position: 'absolute', 
+              bottom: '12px', 
+              right: '12px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              fontSize: '12px', 
+              color: '#666',
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              padding: '6px 10px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              zIndex: 10,
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.borderColor = '#ccc'}
+            onMouseOut={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+            title="Download CSV Template"
+          >
+             <IconDownload /> <span>Download Simple CSV</span>
+          </button>
+        )}
+
         {error && (
           <div className="ui-error-banner">
             <IconAlert /> <span>{error}</span>
@@ -266,7 +320,6 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
         {step === 3 && importResult && (
           <div className="ui-step-content scroll-y">
             
-            {/* Success Summary Header */}
             <div className="ui-result-summary">
               <div className="summary-card success">
                 <span className="lbl">Success</span>
@@ -282,10 +335,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
               </div>
             </div>
 
-            {/* Detailed Logs */}
             <div className="ui-result-logs">
-              
-              {/* Green Success Message */}
               {importResult.successCount > 0 && (
                 <div className="log-item log-success">
                   <IconSuccessCircle />
@@ -293,7 +343,6 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 </div>
               )}
 
-              {/* Orange Duplicate Messages */}
               {importResult.duplicates?.map((dup, i) => (
                 <div key={`dup-${i}`} className="log-item log-warning">
                   <IconWarningTriangle />
@@ -304,7 +353,6 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 </div>
               ))}
 
-              {/* Red Error Messages */}
               {importResult.errors?.map((err, i) => (
                 <div key={`err-${i}`} className="log-item log-error">
                   <IconErrorX />
