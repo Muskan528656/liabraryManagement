@@ -15,6 +15,7 @@ import PubSub from 'pubsub-js';
 
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
+    
     const [multiInsertRows, setMultiInsertRows] = useState([{
         vendor_id: "",
         book_id: "",
@@ -37,7 +38,7 @@ const BulkPurchasePage = () => {
         purchased: 0,
         available: 0
     });
-
+    
     const [showAddVendorModal, setShowAddVendorModal] = useState(false);
     const [showAddBookModal, setShowAddBookModal] = useState(false);
     const [vendorFormData, setVendorFormData] = useState({
@@ -66,8 +67,37 @@ const BulkPurchasePage = () => {
     const [autoLookupTimeout, setAutoLookupTimeout] = useState(null);
     const [barcodeProcessing, setBarcodeProcessing] = useState(false);
     const [newlyAddedBookId, setNewlyAddedBookId] = useState(null);
+    const [company, setCompany] = useState("") ;
+
+    function getCompanyIdFromToken() {
+        const token = sessionStorage.getItem("token");
+        if (!token) return null;
+
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload.companyid || payload.companyid || null;
+    }
+
+     const fetchCompany = async () => {
+        try {
+          const companyid = getCompanyIdFromToken();
+          if (!companyid) {
+            console.error("Company ID not found in token");
+            return;
+          }
+          const companyApi = new DataApi("company");
+          const response = await companyApi.fetchById(companyid);
+          console.log("response company =>",response.data?.currency);
+          
+          if (response.data) {
+            setCompany(response.data);
+          }
+        } catch (error) {
+          console.error("Error fetching company by ID:", error);
+        }
+      };
 
     useEffect(() => {
+        fetchCompany();
         fetchVendors();
         fetchBooks();
         fetchAuthors();
@@ -1181,7 +1211,7 @@ const BulkPurchasePage = () => {
                                         <td className="border-end p-2" style={{ width: '12%' }}>
                                             <div className="bg-light p-2 rounded text-center">
                                                 <span className="fw-semibold text-primary">
-                                                    ₹{((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}
+                                                    {company?.currency} {((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}
                                                 </span>
                                             </div>
                                         </td>
@@ -1270,7 +1300,7 @@ const BulkPurchasePage = () => {
                                     color: 'white'
                                 }}>
                                     <small className="text-white-50 text-uppercase">Total Value</small>
-                                    <div className="h4 mb-0 fw-bold">₹{totalAmount.toFixed(2)}</div>
+                                    <div className="h4 mb-0 fw-bold">{company?.currency} {totalAmount.toFixed(2)}</div>
                                 </div>
 
                                 {/* Action Buttons */}
