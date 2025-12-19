@@ -537,5 +537,37 @@ module.exports = (app) => {
     }
   });
 
+  router.post("/import", fetchUser, async (req, res) => {
+    try {
+      const { members } = req.body;
+      if (!Array.isArray(members)) {
+        return res.status(400).json({ errors: "Members should be an array" });
+      }
+
+      LibraryCard.init(req.userinfo.tenantcode);
+      const userId = req.userinfo?.id || null;
+
+      const results = [];
+      for (const member of members) {
+        try {
+          const card = await LibraryCard.create(member, userId);
+          results.push({ success: true, data: card });
+        } catch (error) {
+          results.push({ success: false, error: error.message, member });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      res.status(200).json({
+        success: true,
+        message: `Imported ${successCount} out of ${members.length} members`,
+        results
+      });
+    } catch (error) {
+      console.error("Error importing members:", error);
+      res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };

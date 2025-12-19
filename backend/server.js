@@ -107,6 +107,7 @@ require("./app/routes/publisher.routes.js")(app);
 require("./app/routes/mail.routes.js")(app);
 
 require("./app/routes/dashbard.router.js")(app);
+// require('./app/routes/objecttype.routes.js')(app);
 
 
 server.listen(PORT, () => {

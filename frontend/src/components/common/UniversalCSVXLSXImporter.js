@@ -1,57 +1,19 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import '../../App.css'; 
+import { 
+  CloudArrowUp, Download, ChevronRight, ChevronLeft, 
+  FileEarmarkSpreadsheet, Check2Circle, ExclamationCircle, 
+  ArrowRightCircle, CheckCircleFill, DashCircle, 
+  ArrowClockwise, ListCheck, Table as TableIcon
+} from "react-bootstrap-icons";
 
+// --- HELPERS ---
 export const createModel = ({ modelName, fields = {}, required = [], validators = {} }) => {
   return { modelName, fields, required, validators };
 };
 
-// --- ICONS ---
-const IconUpload = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
-const IconFile = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>);
-const IconArrowRight = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>);
-const IconCheck = () => (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>);
-const IconAlert = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>);
-const IconSpinner = () => (<svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>);
-const IconDownload = () => (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
-
-// New Status Icons
-const IconSuccessCircle = () => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>);
-const IconWarningTriangle = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>);
-const IconErrorX = () => (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>);
-
-const UploadBox = ({ onChange }) => {
-  return (
-    <div className="ui-upload-zone compact">
-      <input type="file" accept=".csv, .xls, .xlsx" className="ui-file-input" onChange={onChange} />
-      <div className="ui-upload-content">
-        <IconUpload />
-        <div className="ui-upload-text">
-          <span className="link">Click to upload</span>
-          <span className="sub"> (.csv, .xlsx)</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Button = ({ children, variant = "secondary", onClick, disabled, isLoading, style }) => {
-  return (
-    <button 
-      onClick={onClick} 
-      disabled={disabled || isLoading} 
-      className={`ui-btn ui-btn-${variant}`}
-      style={style}
-    >
-      {isLoading && <IconSpinner />}
-      {children}
-    </button>
-  );
-};
-
 export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
-
   const activeFields = model ? Object.keys(model.fields).reduce((acc, key) => {
     acc[key] = key;
     return acc;
@@ -59,51 +21,45 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   const activeRequired = model ? model.required : [];
   const fieldLabels = model ? model.fields : {};
 
-  const [step, setStep] = useState(0); // 0: Upload, 1: Map, 2: Preview, 3: Result
+  const [step, setStep] = useState(0); 
   const [rawHeaders, setRawHeaders] = useState([]);
   const [rawRows, setRawRows] = useState([]);
   const [map, setMap] = useState({}); 
   const [error, setError] = useState(null);
-  
-  // New States for Processing
   const [isProcessing, setIsProcessing] = useState(false);
   const [importResult, setImportResult] = useState(null);
 
-  // --- DOWNLOAD SIMPLE CSV ---
+  const STEPS_CONFIG = [
+    { id: 0, label: "Upload", icon: <CloudArrowUp /> },
+    { id: 1, label: "Map Columns", icon: <ListCheck /> },
+    { id: 2, label: "Preview", icon: <TableIcon /> },
+    { id: 3, label: "Results", icon: <Check2Circle /> }
+  ];
+
+  // --- DOWNLOAD TEMPLATE ---
   const handleDownloadSample = () => {
     if (!model || !model.fields) return;
-
-    // Use the labels (values) as headers
     const headers = Object.values(model.fields);
-    
-    // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet([headers]);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-    
-    // Generate filename ending in .csv
-    const filename = `${model.modelName || "data"}_sample.csv`;
-    
-    // Force CSV format download
-    XLSX.writeFile(wb, filename, { bookType: "csv" });
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `${model.modelName || "data"}_template.csv`, { bookType: "csv" });
   };
 
+  // --- FILE HANDLING ---
   const handleFile = (uploadedFile) => {
     setError(null);
-    setImportResult(null);
     if (!uploadedFile) return;
     const ext = uploadedFile.name.split(".").pop().toLowerCase();
     
     const handleResult = (data) => {
       if (!data || data.length < 2) {
-        setError("File appears empty.");
+        setError("The uploaded file appears to be empty.");
         return;
       }
       const headers = data[0].map((h) => (h ? h.toString().trim() : "Untitled"));
-      const rows = data.slice(1);
-      
       setRawHeaders(headers);
-      setRawRows(rows);
+      setRawRows(data.slice(1));
 
       const initialMap = {};
       headers.forEach((h) => {
@@ -122,28 +78,25 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       Papa.parse(uploadedFile, {
         skipEmptyLines: true,
         complete: (res) => handleResult(res.data),
-        error: () => setError("Failed to parse CSV."),
+        error: () => setError("Failed to parse CSV file."),
       });
-    } else if (["xls", "xlsx"].includes(ext)) {
+    } else {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const workbook = XLSX.read(e.target.result, { type: "array" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
           handleResult(json);
         } catch (err) { setError("Failed to parse Excel file."); }
       };
       reader.readAsArrayBuffer(uploadedFile);
-    } else {
-      setError("Unsupported format.");
     }
   };
 
   const handleImport = async () => {
     const missing = activeRequired.filter(req => !Object.values(map).includes(req));
     if (missing.length > 0) {
-      setError(`Missing required columns: ${missing.map(k => fieldLabels[k] || k).join(", ")}`);
+      setError(`Required fields missing: ${missing.map(k => fieldLabels[k] || k).join(", ")}`);
       return;
     }
 
@@ -160,115 +113,89 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       try {
         const result = await onDataParsed(finalData);
         setImportResult(result);
-        setStep(3); // Move to Result View
+        setStep(3);
       } catch (err) {
-        setError("An unexpected error occurred during import.");
+        setError("Server Error: Import failed to process.");
       } finally {
         setIsProcessing(false);
       }
     }
   };
 
-  const resetImporter = () => {
-    setStep(0);
-    setRawHeaders([]);
-    setRawRows([]);
-    setMap({});
-    setError(null);
-    setImportResult(null);
-  };
-
-  const steps = ["Upload", "Map", "Preview", "Result"];
-
   return (
-    <div className="ui-importer-wrapper compact-mode">
-      
-      <div className="ui-header-compact">
-        <div className="ui-stepper-compact">
-          {steps.map((label, idx) => {
-             const active = step === idx;
-             const completed = step > idx;
-             return (
-               <div key={idx} className={`ui-step-item ${active ? 'active' : ''} ${completed ? 'completed' : ''}`}>
-                 <div className="ui-step-circle">
-                   {completed ? <IconCheck /> : idx + 1}
-                 </div>
-                 <span className="ui-step-label">{label}</span>
-                 {idx < steps.length - 1 && <div className="ui-step-line"></div>}
-               </div>
-             )
-          })}
-        </div>
-      </div>
-
-      <div className="ui-body-compact" style={{ position: 'relative' }}>
+    <div className="cahaya-importer-container">
+      <div className="cahaya-card-wrapper row g-0">
         
-        {/* --- Download Simple CSV Button (Bottom Right) --- */}
-        {step === 0 && (
-          <button 
-            onClick={handleDownloadSample}
-            className="ui-btn-ghost"
-            style={{ 
-              position: 'absolute', 
-              bottom: '12px', 
-              right: '12px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '6px', 
-              fontSize: '12px', 
-              color: '#666',
-              background: '#f9fafb',
-              border: '1px solid #e5e7eb',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              zIndex: 10,
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.borderColor = '#ccc'}
-            onMouseOut={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
-            title="Download CSV Template"
-          >
-             <IconDownload /> <span>Download Simple CSV</span>
-          </button>
-        )}
-
-        {error && (
-          <div className="ui-error-banner">
-            <IconAlert /> <span>{error}</span>
+        {/* SIDEBAR NAVIGATION */}
+        <div className="col-md-3 border-end bg-light p-4 d-none d-md-block">
+          <div className="sidebar-brand mb-4 text-primary fw-bold">
+             Importer Wizard
           </div>
-        )}
-
-        {step === 0 && (
-          <div className="ui-step-content center-content">
-             <UploadBox onChange={(e) => handleFile(e.target.files[0])} />
+          <div className="vertical-stepper">
+            {STEPS_CONFIG.map((s) => (
+              <div key={s.id} className={`v-step ${step >= s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
+                <div className="v-circle">{step > s.id ? <CheckCircleFill size={14}/> : s.id + 1}</div>
+                <div className="v-label">{s.label}</div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {step === 1 && (
-          <div className="ui-step-content no-scroll">
-            <div className="ui-mapping-table-header">
-              <div className="col-source">Source File Column</div>
-              <div className="col-arrow"></div>
-              <div className="col-target">Database Field</div>
+        {/* MAIN CONTENT AREA */}
+        <div className="col-md-9 p-4 bg-white position-relative">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h4 className="fw-bold m-0 text-dark">
+              {STEPS_CONFIG[step].label}
+            </h4>
+            <div className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
+              {model?.modelName || "Standard Import"}
             </div>
-            <div className="ui-mapping-list-scroll">
-              {rawHeaders.map((header, idx) => {
-                const isMapped = !!map[header];
-                return (
-                  <div key={idx} className={`ui-map-row ${isMapped ? "mapped" : ""}`}>
-                    <div className="col-source">
-                      <IconFile />
-                      <span className="text-val" title={header}>{header}</span>
+          </div>
+
+          {error && (
+            <div className="alert alert-danger border-0 rounded-4 shadow-sm fade-in d-flex align-items-center mb-4">
+              <ExclamationCircle className="me-2" /> {error}
+            </div>
+          )}
+
+          {/* STEP 0: UPLOAD */}
+          {step === 0 && (
+            <div className="fade-in py-4 text-center">
+              <div className="upload-dropzone" onClick={() => document.querySelector('.hidden-input').click()}>
+                <input type="file" className="hidden-input" hidden onChange={(e) => handleFile(e.target.files[0])} accept=".csv, .xlsx, .xls" />
+                <div className="upload-icon-circle">
+                  <CloudArrowUp size={32} />
+                </div>
+                <h5 className="mt-3 fw-bold">Select source file</h5>
+                <p className="text-muted small">Drop your CSV or Excel file here to start mapping</p>
+                <div className="mt-2 text-primary fw-medium small">Supported: .csv, .xlsx, .xls</div>
+              </div>
+              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-4 small d-flex align-items-center justify-content-center mx-auto">
+                <Download className="me-2" /> Download Template CSV
+              </button>
+            </div>
+          )}
+
+          {/* STEP 1: MAPPING */}
+          {step === 1 && (
+            <div className="fade-in">
+              <div className="mapping-container">
+                {rawHeaders.map((header, idx) => (
+                  <div key={idx} className={`mapping-item-card ${map[header] ? 'mapped' : ''}`}>
+                    <div className="source-info">
+                      <FileEarmarkSpreadsheet className="text-muted me-2" />
+                      <span className="text-truncate fw-medium" title={header}>{header}</span>
                     </div>
-                    <div className="col-arrow"><IconArrowRight /></div>
-                    <div className="col-target">
+                    <div className="mapping-arrow">
+                      <ArrowRightCircle />
+                    </div>
+                    <div className="target-select">
                       <select
-                        className={`ui-select-compact ${isMapped ? "filled" : ""}`}
+                        className="form-select form-select-sm modern-select"
                         value={map[header] || ""}
                         onChange={(e) => setMap({ ...map, [header]: e.target.value })}
                       >
-                        <option value="">-- Ignore --</option>
+                        <option value="">-- Ignore Column --</option>
                         {Object.keys(activeFields).map((key) => (
                           <option key={key} value={key}>
                             {fieldLabels[key] || key} {activeRequired.includes(key) ? "*" : ""}
@@ -277,128 +204,177 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                       </select>
                     </div>
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 2 && (
-          <div className="ui-step-content">
-            <div className="ui-table-container">
-              <table className="ui-preview-table">
-                <thead>
-                  <tr>
-                    {Object.values(activeFields).map((key, i) => (
-                      <th key={i}>{fieldLabels[key] || key}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rawRows.slice(0, 10).map((row, rIdx) => (
-                    <tr key={rIdx}>
-                      {Object.keys(activeFields).map((key, cIdx) => {
-                        const header = Object.keys(map).find(h => map[h] === key);
-                        const index = rawHeaders.indexOf(header);
-                        const val = index !== -1 ? row[index] : "";
-                        return (
-                          <td key={cIdx} title={val}>
-                             {val || <span className="empty">-</span>}
-                          </td>
-                        );
-                      })}
+          {/* STEP 2: PREVIEW */}
+          {step === 2 && (
+            <div className="fade-in">
+              <div className="preview-table-wrapper shadow-sm border rounded-4">
+                <table className="table table-hover mb-0 custom-preview-table">
+                  <thead>
+                    <tr>
+                      {Object.values(activeFields).map((key, i) => (
+                        <th key={i}>{fieldLabels[key] || key}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rawRows.slice(0, 10).map((row, rIdx) => (
+                      <tr key={rIdx}>
+                        {Object.keys(activeFields).map((key, cIdx) => {
+                          const header = Object.keys(map).find(h => map[h] === key);
+                          const index = rawHeaders.indexOf(header);
+                          const val = index !== -1 ? row[index] : "";
+                          return <td key={cIdx} className="text-truncate">{val || <span className="text-light">-</span>}</td>;
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-muted small mt-2 px-2">Showing a preview of the first 10 rows.</p>
             </div>
-            <div className="ui-table-footer-note">Showing first 10 rows</div>
-          </div>
-        )}
+          )}
 
-        {/* --- STEP 3: RESULTS DISPLAY --- */}
-        {step === 3 && importResult && (
-          <div className="ui-step-content scroll-y">
-            
-            <div className="ui-result-summary">
-              <div className="summary-card success">
-                <span className="lbl">Success</span>
-                <span className="val">{importResult.successCount}</span>
-              </div>
-              <div className="summary-card warning">
-                 <span className="lbl">Duplicates</span>
-                 <span className="val">{importResult.duplicates?.length || 0}</span>
-              </div>
-              <div className="summary-card error">
-                 <span className="lbl">Failed</span>
-                 <span className="val">{importResult.errors?.length || 0}</span>
-              </div>
-            </div>
-
-            <div className="ui-result-logs">
-              {importResult.successCount > 0 && (
-                <div className="log-item log-success">
-                  <IconSuccessCircle />
-                  <span>Successfully inserted {importResult.successCount} records.</span>
-                </div>
-              )}
-
-              {importResult.duplicates?.map((dup, i) => (
-                <div key={`dup-${i}`} className="log-item log-warning">
-                  <IconWarningTriangle />
-                  <div className="log-text">
-                    <strong>Duplicate found:</strong> {dup.message}
-                    {dup.row && <span className="log-row-badge">Row {dup.row}</span>}
+          {/* STEP 3: RESULTS */}
+          {step === 3 && importResult && (
+            <div className="fade-in py-3">
+              <div className="row g-3 mb-4">
+                <div className="col-4">
+                  <div className="stat-card success">
+                    <div className="stat-val">{importResult.successCount}</div>
+                    <div className="stat-label">Imported</div>
                   </div>
                 </div>
-              ))}
-
-              {importResult.errors?.map((err, i) => (
-                <div key={`err-${i}`} className="log-item log-error">
-                  <IconErrorX />
-                  <div className="log-text">
-                    <strong>Import Failed:</strong> {err.message}
-                    {err.row && <span className="log-row-badge">Row {err.row}</span>}
+                <div className="col-4">
+                  <div className="stat-card warning">
+                    <div className="stat-val">{importResult.duplicates?.length || 0}</div>
+                    <div className="stat-label">Duplicates</div>
                   </div>
                 </div>
-              ))}
-              
-              {(!importResult.duplicates?.length && !importResult.errors?.length && importResult.successCount === 0) && (
-                <div className="log-item">No records were processed.</div>
+                <div className="col-4">
+                  <div className="stat-card danger">
+                    <div className="stat-val">{importResult.errors?.length || 0}</div>
+                    <div className="stat-label">Failed</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="result-log-area border rounded-4 p-3 bg-light">
+                 <h6 className="fw-bold mb-3">Event Logs</h6>
+                 <div className="log-scroll">
+                   {importResult.successCount > 0 && (
+                     <div className="log-line text-success small mb-2 d-flex align-items-center">
+                       <CheckCircleFill className="me-2" /> Successfully added {importResult.successCount} records.
+                     </div>
+                   )}
+                   {importResult.duplicates?.map((d, i) => (
+                     <div key={i} className="log-line text-warning small mb-2 d-flex align-items-start">
+                       <DashCircle className="me-2 mt-1" /> <div>Duplicate skipped at Row {d.row}: {d.message}</div>
+                     </div>
+                   ))}
+                   {importResult.errors?.map((e, i) => (
+                     <div key={i} className="log-line text-danger small mb-2 d-flex align-items-start">
+                       <ExclamationCircle className="me-2 mt-1" /> <div>Error at Row {e.row}: {e.message}</div>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER ACTIONS */}
+          <div className="mt-5 d-flex justify-content-between align-items-center">
+            {step > 0 && step < 3 ? (
+              <button className="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-medium" onClick={() => setStep(step - 1)} disabled={isProcessing}>
+                <ChevronLeft size={14} className="me-1" /> Back
+              </button>
+            ) : <div></div>}
+
+            <div className="d-flex gap-2">
+              {step === 1 && (
+                <button className="btn btn-primary rounded-pill px-4 shadow-sm" onClick={() => setStep(2)}>
+                  Preview Data <ChevronRight size={14} className="ms-1" />
+                </button>
+              )}
+              {step === 2 && (
+                <button className="btn btn-success rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={handleImport} disabled={isProcessing}>
+                  {isProcessing ? (
+                    <><span className="spinner-border spinner-border-sm me-2"></span> Processing...</>
+                  ) : (
+                    <><Check2Circle className="me-2" /> Confirm Import</>
+                  )}
+                </button>
+              )}
+              {step === 3 && (
+                <button className="btn btn-primary rounded-pill px-4 shadow-sm" onClick={() => { setStep(0); setImportResult(null); setMap({}); }}>
+                  <ArrowClockwise className="me-2" /> Import Another File
+                </button>
               )}
             </div>
-
           </div>
-        )}
+        </div>
       </div>
 
-      {step > 0 && (
-        <div className="ui-footer-compact">
-          {step !== 3 && (
-            <Button onClick={() => { setError(null); setStep(step - 1); }} disabled={isProcessing}>
-              Back
-            </Button>
-          )}
-          
-          {step === 1 && (
-            <Button variant="primary" onClick={() => setStep(2)}>
-              Preview Data
-            </Button>
-          )}
-          
-          {step === 2 && (
-            <Button variant="success" onClick={handleImport} isLoading={isProcessing}>
-              {isProcessing ? "Importing..." : "Import Data"}
-            </Button>
-          )}
+      <style jsx>{`
+        .cahaya-importer-container { background: transparent; padding: 10px; }
+        .cahaya-card-wrapper { border-radius: 24px; overflow: hidden; background: #fff; border: 1px solid #f0f0f0; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
+        
+        /* Stepper */
+        .vertical-stepper { display: flex; flex-direction: column; gap: 24px; }
+        .v-step { display: flex; align-items: center; gap: 12px; }
+        .v-circle { 
+          width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid #ddd;
+          display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #999;
+        }
+        .v-step.active .v-circle { border-color: #0d6efd; color: #0d6efd; }
+        .v-step.completed .v-circle { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+        .v-label { font-size: 13px; color: #888; font-weight: 500; }
+        .v-step.active .v-label { color: #000; }
 
-          {step === 3 && (
-            <Button variant="primary" onClick={resetImporter}>
-              Upload Another File
-            </Button>
-          )}
-        </div>
-      )}
+        /* Step 0: Upload */
+        .upload-dropzone {
+          border: 2px dashed #e2e8f0; border-radius: 20px; padding: 40px;
+          background: #f8fafc; transition: 0.3s; cursor: pointer;
+        }
+        .upload-dropzone:hover { border-color: #0d6efd; background: #eff6ff; }
+        .upload-icon-circle { width: 60px; height: 60px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #0d6efd; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        /* Step 1: Mapping */
+        .mapping-container { max-height: 380px; overflow-y: auto; padding-right: 8px; }
+        .mapping-item-card {
+          display: flex; align-items: center; padding: 12px 20px; border: 1px solid #f0f0f0;
+          border-radius: 14px; margin-bottom: 8px; transition: 0.2s;
+        }
+        .mapping-item-card:hover { border-color: #0d6efd; background: #fcfdfe; }
+        .mapping-item-card.mapped { border-left: 4px solid #0d6efd; background: #f8fbff; }
+        .source-info { flex: 1; display: flex; align-items: center; font-size: 14px; }
+        .mapping-arrow { padding: 0 15px; color: #ccc; }
+        .target-select { flex: 1; }
+        .modern-select { border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; }
+
+        /* Step 2: Preview */
+        .preview-table-wrapper { overflow-x: auto; border-radius: 16px; }
+        .custom-preview-table th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding: 12px; }
+        .custom-preview-table td { font-size: 13px; padding: 12px; }
+
+        /* Step 3: Result Stats */
+        .stat-card { padding: 15px; border-radius: 18px; text-align: center; }
+        .stat-card.success { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
+        .stat-card.warning { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+        .stat-card.danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
+        .stat-val { font-size: 20px; font-weight: 800; }
+        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .log-scroll { max-height: 200px; overflow-y: auto; }
+
+        /* Global Helpers */
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bg-soft-primary { background: #e0e7ff; }
+      `}</style>
     </div>
   );
 }

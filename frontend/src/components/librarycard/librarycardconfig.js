@@ -28,6 +28,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
     let defaultCountryCode = "";
     let plansList = [];
+    let objectTypesList = [];
 
     try {
 
@@ -96,6 +97,40 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         } else {
             console.warn("No plans data found");
         }
+
+        // Fetch object types
+        const objectTypeApi = new DataApi("objecttype");
+        const objectTypeResponse = await objectTypeApi.fetchAll();
+
+        console.log("Object Type API Response:", objectTypeResponse);
+
+        let objectTypeData = [];
+
+        if (objectTypeResponse.success && objectTypeResponse.data && Array.isArray(objectTypeResponse.data)) {
+            objectTypeData = objectTypeResponse.data;
+        } else if (objectTypeResponse.data && objectTypeResponse.data.data && Array.isArray(objectTypeResponse.data.data)) {
+            objectTypeData = objectTypeResponse.data.data;
+        } else if (objectTypeResponse.data && Array.isArray(objectTypeResponse.data)) {
+            objectTypeData = objectTypeResponse.data;
+        } else if (Array.isArray(objectTypeResponse)) {
+            objectTypeData = objectTypeResponse;
+        }
+
+        console.log("Extracted object type data:", objectTypeData);
+
+        if (objectTypeData.length > 0) {
+            objectTypesList = objectTypeData
+                .filter(type => type.status === 'active' || type.status === true)
+                .map(type => ({
+                    value: type.id,
+                    label: type.name.charAt(0).toUpperCase() + type.name.slice(1),
+                    data: type
+                }));
+
+            console.log("Filtered active object types list:", objectTypesList);
+        } else {
+            console.warn("No object type data found");
+        }
     } catch (error) {
         console.error("Error fetching data:", error);
         defaultCountryCode = "+91"; // Default to India if company fetch fails
@@ -103,6 +138,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
     console.log("Final defaultCountryCode:", defaultCountryCode);
     console.log("Final plansList:", plansList);
+    console.log("Final objectTypesList:", objectTypesList);
 
     const defaultColumns = [
         {
@@ -160,6 +196,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
+        { field: "type", label: "Type", sortable: true },
+
 
         {
             field: "status",
@@ -198,10 +236,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             country_code: defaultCountryCode,
             phone_number: "",
             registration_date: new Date().toISOString().split("T")[0],
-            type: "",
+            type_id: "",
             issue_date: new Date().toISOString().split("T")[0],
             plan_id: "",
-            selectedPlan: null, // Added selectedPlan to initial form data
+            selectedPlan: null,
             status: "active",
             image: null,
         },
@@ -263,12 +301,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 label: "Type",
                 type: "select",
                 required: false,
-                options: [
-                    { value: "student", label: "Student" },
-                    { value: "faculty", label: "Faculty" },
-                    { value: "staff", label: "Staff" },
-                    { value: "guest", label: "Guest" },
-                ],
+                options: objectTypesList,
                 colSize: 6,
             },
             // {
@@ -391,6 +424,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             users: "user",
             company: "company",
             plans: "plan",
+            objecttypes: "objecttype",
         },
 
         lookupNavigation: {
@@ -559,6 +593,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     delete submitData.status;
                 }
 
+                // Map type_id to type for backend processing
+                if (submitData.type_id) {
+                    submitData.type = submitData.type_id;
+                    delete submitData.type_id;
+                }
 
                 if (!submitData.user_id) {
                     errors.push("Please select a member");

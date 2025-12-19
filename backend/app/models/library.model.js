@@ -243,8 +243,18 @@ async function getStudentDashboardStats(userId) {
   }
 }
 
+async function getAllRecords() {
+  let query = `SELECT * FROM demo.object_type ORDER BY type`;
+
+  console.log("query",query);
+  let result = await sql.query(query);
+
+  return result.rows.length > 0 ? result.rows : null;
+}
+
 module.exports = {
   init,
+  getAllRecords,
   getDashboardStats,
   getStudentDashboardStats,
 };

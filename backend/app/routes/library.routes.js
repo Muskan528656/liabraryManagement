@@ -17,6 +17,25 @@ module.exports = (app) => {
   var router = require("express").Router();
 
  
+  
+  
+     router.get("/", fetchUser, async (req, res) => {
+        try {
+          const records = await Library.getAllRecords();
+          res.status(200).json({
+            success: true,
+            data: records || [],
+            message: "Object types retrieved successfully",
+          });
+        } catch (error) {
+          console.error("Error fetching object types:", error);
+          res.status(500).json({
+            success: false,
+            message: "Internal server error",
+          });
+        }
+      });
+    
   router.get("/dashboard", fetchUser, async (req, res) => {
     try {
       Library.init(req.userinfo.tenantcode);
