@@ -77,16 +77,16 @@ module.exports = (app) => {
   });
 
 
-  router.get("/issue/:issueId", fetchUser, async (req, res) => {
-    try {
-      BookSubmission.init(req.userinfo.tenantcode);
-      const submissions = await BookSubmission.findByIssueId(req.params.issueId);
-      return res.status(200).json({ success: true, data: submissions });
-    } catch (error) {
-      console.error("Error fetching submissions by issue ID:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+  // router.get("/issue/:issueId", fetchUser, async (req, res) => {
+  //   try {
+  //     BookSubmission.init(req.userinfo.tenantcode);
+  //     const submissions = await BookSubmission.findByIssueId(req.params.issueId);
+  //     return res.status(200).json({ success: true, data: submissions });
+  //   } catch (error) {
+  //     console.error("Error fetching submissions by issue ID:", error);
+  //     return res.status(500).json({ errors: "Internal server error" });
+  //   }
+  // });
 
 
   router.get(
@@ -112,10 +112,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
-
-
   router.post(
     "/",
     fetchUser,
@@ -138,7 +134,7 @@ module.exports = (app) => {
         if (!userId) {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }
-console.log('Creating book submission with data:', req.userinfo.tenantcode);
+
         BookSubmission.init(req.userinfo.tenantcode);
 
         const submission = await BookSubmission.create(req.body, userId);
@@ -175,8 +171,6 @@ console.log('Creating book submission with data:', req.userinfo.tenantcode);
       }
     }
   );
-
-
   router.delete(
     "/:id",
     fetchUser,
@@ -197,16 +191,15 @@ console.log('Creating book submission with data:', req.userinfo.tenantcode);
       }
     }
   );
-
   router.get("/:bookId/submit-count", fetchUser, async (req, res) => {
     try {
       const bookId = req.params.bookId;
 
-  
+
       BookSubmission.init(req.userinfo.tenantcode);
-   
+
       const submitCount = await BookSubmission.getSubmitCountByBookId(bookId);
-    
+
       return res.status(200).json({ submit_count: submitCount });
 
     } catch (error) {
