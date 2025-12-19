@@ -6,6 +6,7 @@
 const sql = require("./db.js");
 let schema = "";
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+const ObjectType = require("./objecttype.model.js");
 function init(schema_name) {
   schema = schema_name;
 }
@@ -13,18 +14,22 @@ function init(schema_name) {
 async function findAll() {
   try {
     const query = `
-      SELECT
+     SELECT
         lc.*,
         u.firstname || ' ' || u.lastname AS user_name,
         u.email AS user_email,
         p.plan_name,
-        p.duration_days
-      FROM ${schema}.library_members lc
-      LEFT JOIN ${schema}."user" u
+        p.duration_days,
+        ot.label AS type
+    FROM ${schema}.library_members lc
+    LEFT JOIN ${schema}."user" u
         ON lc.createdbyid = u.id
-      LEFT JOIN ${schema}.plan p
+    LEFT JOIN ${schema}.plan p
         ON lc.plan_id = p.id
-      ORDER BY lc.createddate DESC
+    LEFT JOIN ${schema}.object_type ot
+        ON lc.type_id = ot.id -- Library_members ki type_id ko object_type ki id se join kiya
+    ORDER BY lc.createddate DESC;
+
     `;
     const result = await sql.query(query);
     return result.rows;
@@ -106,17 +111,41 @@ async function create(cardData, userId) {
     }
   }
 
+  // Resolve type_id from object_type table if type is provided as string, or use type_id directly
+  if (cardData.type_id) {
+    // type_id is provided directly, use it
+  } else if (cardData.type) {
+    try {
+      const objectTypes = await ObjectType.getAllRecords();
+      const typeRecord = objectTypes.find(ot => ot.name.toLowerCase() === cardData.type.toLowerCase());
+      if (typeRecord) {
+        cardData.type_id = typeRecord.id;
+      } else {
+        // If type is a number (id), use it directly
+        const typeId = parseInt(cardData.type);
+        if (!isNaN(typeId)) {
+          cardData.type_id = typeId;
+        } else {
+          throw new Error(`Invalid type: ${cardData.type}. Must be a valid type name or id.`);
+        }
+      }
+    } catch (error) {
+      console.error("Error resolving type_id:", error);
+      throw error;
+    }
+  }
+
   try {
     const query = `
       INSERT INTO ${schema}.library_members
-      (card_number, is_active, image, subscription_id, 
+      (card_number, is_active, image, subscription_id,
        first_name, last_name, name, email, phone_number,
-       registration_date, type,
+       registration_date, type_id,
        createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
       VALUES
       ($1, $2, $3, $4, $5,
        $6, $7, $8, $9, $10,
-       $11, 
+       $11,
        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $12, $12)
       RETURNING *
     `;
@@ -145,7 +174,7 @@ async function create(cardData, userId) {
       cardData.email || null,
       cardData.phone_number || null,
       cardData.registration_date || null,
-      cardData.type || null,
+      cardData.type_id || null,
       userId,
     ];
 
@@ -162,7 +191,7 @@ async function create(cardData, userId) {
       email: values[8],
       phone_number: values[9],
       registration_date: values[10],
-      type: values[11],
+      type_id: values[11],
       userId: values[12]
     });
 
@@ -203,7 +232,7 @@ async function updateById(id, cardData, userId) {
       "email",
       "phone_number",
       "registration_date",
-      "type",
+      "type_id",
       "country_code"
     ];
 

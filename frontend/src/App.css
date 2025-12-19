@@ -2417,3 +2417,198 @@ textarea.form-control[required] {
 .ui-btn-success:hover:not(:disabled) {
   background-color: var(--ui-success-hover);
 }
+
+
+/* Modal Wrapper */
+.cahaya-modal .modal-content {
+    border-radius: 24px !important;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Sidebar Stepper */
+.vertical-stepper {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    position: relative;
+}
+
+.v-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.v-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #94a3b8;
+    transition: 0.3s;
+}
+
+.v-step.active .v-circle {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.15);
+}
+
+.v-step.completed .v-circle {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.v-label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Step 1 Styles */
+.category-icon-header {
+    width: 64px;
+    height: 64px;
+    background: #eff6ff;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    border: 1px solid #dbeafe;
+}
+
+.modern-dropdown {
+    border-radius: 12px !important;
+    border: 2px solid #f1f5f9 !important;
+    padding: 12px 15px !important;
+    background-color: #f8fafc !important;
+}
+
+/* Step 2 Styles (Upload) */
+.upload-dropzone {
+    border: 2px dashed #e2e8f0;
+    border-radius: 24px;
+    padding: 40px 20px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.upload-dropzone:hover {
+    background: #eff6ff;
+    border-color: var(--primary-color);
+}
+
+.upload-icon-circle {
+    width: 70px;
+    height: 70px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Step 3 Styles (Mapping) */
+.mapping-scroll-area {
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.mapping-card {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 10px;
+}
+
+.file-col {
+    flex: 1;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.db-col {
+    flex: 1;
+}
+
+/* Step 4 Styles (Preview) */
+.preview-container {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+}
+
+.custom-table th {
+    background: #f8fafc;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #64748b;
+    padding: 14px;
+    white-space: nowrap;
+}
+
+.custom-table td {
+    font-size: 14px;
+    padding: 12px;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Step 5 Styles (Success) */
+.stat-box {
+    background: #f0fdf4;
+    border: 1px solid #dcfce7;
+    padding: 20px;
+    border-radius: 20px;
+    width: 200px;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.success-bounce {
+    animation: bounceIn 0.8s ease;
+}
+
+@keyframes bounceIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Utility Classes */
+.bg-soft-primary {
+    background-color: #e0e7ff !important;
+}
+
+.min-vh-50 {
+    min-height: 50vh;
+}

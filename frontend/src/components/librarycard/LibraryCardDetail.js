@@ -549,6 +549,13 @@ console.log("WOKRI",issues)
         colSize: 3,
       },
       {
+          name: "type",
+          label: "Type",
+          type: "text",
+          required: false,
+          colSize: 3,
+      },
+      {
         key: "phone_number",
         label: "Phone",
         type: "text",
@@ -1943,8 +1950,6 @@ console.log("WOKRI",issues)
                                   </Col>
                                 ))}
                             </Col>
-
-                            {/* ID Card Preview Section (Right Side) */}
                             <Col md={3}>
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
@@ -1968,7 +1973,6 @@ console.log("WOKRI",issues)
                       <Col lg={12}>
                         <Card border="0">
                           <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%"}}>
-                            {/* Props pass karein */}
                             <RelatedTabContent id={id} data={data} refresh={refreshCounter} />
                           </Card.Body>
                         </Card>

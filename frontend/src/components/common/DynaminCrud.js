@@ -50,6 +50,7 @@ const DynamicCRUD = ({
     importMatchFields = [],
     autoCreateRelated = {},
     importModel,
+    headerActions = [], 
 }) => {
 
     const navigate = useNavigate();
@@ -749,61 +750,75 @@ const DynamicCRUD = ({
     }, []);
 
     const getActionButtons = useCallback(() => {
-        const buttons = [];
+    const buttons = [];
 
-        if (showImportExport) {
-            buttons.push({
-                variant: "outline-success",
-                size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
-                onClick: handleExport,
-            });
-        }
+    // 🔹 1. IMPORT (Export se pehle)
+    if (showImportButton) {
+        buttons.push({
+            variant: "outline-primary",
+            size: "sm",
+            icon: "fa-solid fa-upload",
+            label: `Import ${moduleLabel}`,
+            onClick: () => setShowImportModal(true),
+        });
+    }
 
-        if (showBulkInsert) {
-            buttons.push({
-                variant: "outline-primary",
-                size: "sm",
-                icon: "fa-solid fa-layer-group",
-                label: "Bulk Insert",
-                onClick: handleBulkInsert,
-            });
-        }
+    // 🔹 2. EXPORT
+    if (showImportExport) {
+        buttons.push({
+            variant: "outline-success",
+            size: "sm",
+            icon: "fa-solid fa-download",
+            label: "Export",
+            onClick: handleExport,
+        });
+    }
 
-        if (showAddButton) {
-            buttons.push({
-                size: "sm",
-                icon: "fa-solid fa-plus",
-                label: `Add ${moduleLabel}`,
-                onClick: handleAdd,
-                style: {
-                    background: "var(--primary-color)",
-                    border: "none",
-                },
-            });
-        }
+    // 🔹 3. BULK INSERT
+    if (showBulkInsert) {
+        buttons.push({
+            variant: "outline-primary",
+            size: "sm",
+            icon: "fa-solid fa-layer-group",
+            label: "Bulk Insert",
+            onClick: handleBulkInsert,
+        });
+    }
 
-        if (showImportButton) {
-            buttons.push({
-                size: "sm",
-                icon: "fa-solid fa-plus",
-                label: `Import Data`,
-                onClick: () => setShowImportModal(true),
-                style: {
-                    background: "var(--primary-color)",
-                    border: "none",
-                },
-            });
-        }
+    // 🔹 4. ADD (last)
+    if (showAddButton) {
+        buttons.push({
+            size: "sm",
+            icon: "fa-solid fa-plus",
+            label: `Add ${moduleLabel}`,
+            onClick: handleAdd,
+            style: {
+                background: "var(--primary-color)",
+                border: "none",
+            },
+        });
+    }
 
-        if (customActionButtons.length > 0) {
-            buttons.push(...customActionButtons);
-        }
+    // 🔹 5. CUSTOM ACTIONS (agar ho)
+    if (customActionButtons.length > 0) {
+        buttons.push(...customActionButtons);
+    }
 
-        return buttons;
-    }, [showImportExport, showBulkInsert, showAddButton, moduleLabel, handleExport, handleBulkInsert, handleAdd, customActionButtons]);
+    return buttons;
+}, [
+    showImportButton,        // ✅ REQUIRED
+    showImportExport,
+    showBulkInsert,
+    showAddButton,
+    moduleLabel,
+    handleExport,
+    handleBulkInsert,
+    handleAdd,
+    customActionButtons,
+    setShowImportModal       // ✅ REQUIRED
+]);
 
+ 
     const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);
     const actionButtons = useMemo(() => getActionButtons(), [getActionButtons]);
 
@@ -885,6 +900,7 @@ const DynamicCRUD = ({
                                         visibleColumns={visibleColumns}
                                         onToggleColumnVisibility={toggleColumnVisibility}
                                         actionButtons={actionButtons}
+                                        headerActions={headerActions} 
                                     />
                                     <ResizableTable
                                         data={filteredData}

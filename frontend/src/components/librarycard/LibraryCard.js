@@ -10,6 +10,7 @@ import { API_BASE_URL } from "../../constants/CONSTANT";
 import { handleDownloadBarcode } from './LibraryCardDownload';
 import { handlePrintBarcode } from './LibrarycardPrint';
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+import LibraryImportModal from "./LibraryImportModal";
 
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -21,6 +22,7 @@ const LibraryCard = (props) => {
   const [usersData, setUsersData] = useState([]);
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [configError, setConfigError] = useState(null);
+  const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
 
   console.log("sdfghjgfdewertyu", timeZone);
@@ -541,13 +543,55 @@ const LibraryCard = (props) => {
     return <Loader message="Finalizing configuration..." />;
   }
 
+  const handleLibraryImport = (data) => {
+    console.log("Library Import Data:", data);
+    alert(`Importing ${data.type} data from file: ${data.file.name}`);
+    // TODO: Implement actual import logic
+  };
+
   return (
     <>
-      <DynamicCRUD
+     {/* <div className="mb-3">
+        <Button
+        
+        variant=""
+          onClick={() => setShowLibraryImportModal(true)}
+          className="btn btn-outline-primary"
+        >
+          <i className="fa-solid fa-upload me-2"></i> Import Member
+        </Button>
+      </div>      */}
+      {/* <DynamicCRUD
         {...finalConfig}
         icon="fa-solid fa-id-card"
         subscriptionsData={subscriptionsData}
         usersData={usersData}
+      /> */}
+
+      <DynamicCRUD
+      {...finalConfig}
+      icon="fa-solid fa-id-card"
+      subscriptionsData={subscriptionsData}
+      usersData={usersData}
+
+      headerActions={[
+        {
+          key: "import-member",
+          label: "Import Member",
+          icon: "fa-solid fa-upload",
+          variant: "outline-primary",
+          onClick: () => setShowLibraryImportModal(true),
+          order: 1, 
+        },
+      ]}
+    />
+
+
+      {/* Library Import Modal */}
+      <LibraryImportModal
+        show={showLibraryImportModal}
+        onClose={() => setShowLibraryImportModal(false)}
+        onImport={handleLibraryImport}
       />
 
       {/* Barcode Modal */}
