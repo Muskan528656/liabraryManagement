@@ -5,7 +5,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { NameInitialsAvatar } from "react-name-initials-avatar";
 import jwt_decode from "jwt-decode";
 import DataApi from "../api/dataApi";
-
+import axios from "axios";
+import { API_BASE_URL } from "../constants/CONSTANT";
 import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
 
 
@@ -34,6 +35,7 @@ const EditProfile = () => {
 
   const [showLibraryCardModal, setShowLibraryCardModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [userId, setUserId] = useState(null); // Store the user ID
 
@@ -84,6 +86,14 @@ const EditProfile = () => {
         console.log("fetchuserApi", userApi)
         console.log("fetchres", userResponse)
         setProfile(userResponse.data);
+        
+        // Set profile image
+        if (userResponse.data.image) {
+          const imagePath = userResponse.data.image.startsWith('http') 
+            ? userResponse.data.image 
+            : `${API_BASE_URL}${userResponse.data.image}`;
+          setBody(imagePath);
+        }
 
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -113,6 +123,68 @@ const EditProfile = () => {
 
   // Check if all fields are valid
   const isFormValid = Object.values(fieldsValid).every((valid) => valid);
+
+  // Handle profile photo upload
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Only JPEG, PNG, and GIF images are allowed.");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File size too large. Maximum size is 5MB.");
+      return;
+    }
+
+    try {
+      setImageUploading(true);
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = sessionStorage.getItem("token");
+      
+      // Upload image
+      const response = await axios.post(
+        `${API_BASE_URL}/api/user/${userId}/upload-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': token.startsWith("Bearer ") ? token : `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Update profile with new image path
+        const newImagePath = response.data.filePath;
+        setProfile(prev => ({ ...prev, image: newImagePath }));
+        setBody(`${API_BASE_URL}${newImagePath}`);
+        
+        // Also update the user record with the new image path
+        const userApi = new DataApi("user");
+        await userApi.update({ image: newImagePath }, userId);
+        
+        toast.success("Profile image updated successfully!");
+      } else {
+        toast.error("Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error(error.response?.data?.errors || "Failed to upload image");
+    } finally {
+      setImageUploading(false);
+    }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -196,10 +268,14 @@ const EditProfile = () => {
                     )}
                     <div
                       className="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2 border border-3 border-white"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => fileInputRef.current.click()}
+                      style={{ cursor: imageUploading ? "wait" : "pointer" }}
+                      onClick={() => !imageUploading && fileInputRef.current.click()}
                     >
-                      <i className="fa-solid fa-camera text-white"></i>
+                      {imageUploading ? (
+                        <span className="spinner-border spinner-border-sm text-white" role="status"></span>
+                      ) : (
+                        <i className="fa-solid fa-camera text-white"></i>
+                      )}
                     </div>
                   </div>
                   <input
@@ -207,7 +283,7 @@ const EditProfile = () => {
                     type="file"
                     hidden
                     accept="image/*"
-                  // onChange={handlePhotoUpload}
+                    onChange={handlePhotoUpload}
                   />
                   <h4 className="mt-3 mb-1 fw-bold">
                     {profile.firstname} {profile.lastname}

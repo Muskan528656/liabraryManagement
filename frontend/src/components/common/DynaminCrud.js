@@ -14,6 +14,7 @@ import jwt_decode from "jwt-decode";
 import ModuleDetail from "./ModuleDetail";
 import UniversalCSVXLSXImporter from "./UniversalCSVXLSXImporter";
 import { saveImportedData } from "../../utils/importHelpers";
+import AdvancedFilter, { applyAdvancedFilters } from "./AdvancedFilter";
 const normalizeListResponse = (payload) => {
     if (!payload) return [];
     if (Array.isArray(payload)) return payload;
@@ -50,7 +51,8 @@ const DynamicCRUD = ({
     importMatchFields = [],
     autoCreateRelated = {},
     importModel,
-    headerActions = [], 
+    headerActions = [],
+    filterFields = [],
 }) => {
 
     const navigate = useNavigate();
@@ -66,7 +68,8 @@ const DynamicCRUD = ({
         showActions = true,
         showAddButton = true,
         allowEdit = true,
-        allowDelete = true
+        allowDelete = true,
+        showAdvancedFilter = false
     } = features;
 
 
@@ -90,6 +93,7 @@ const DynamicCRUD = ({
     const [isEditable, setIsEditable] = useState(false);
 
     const [showImportModal, setShowImportModal] = useState(false);
+    const [advancedFilters, setAdvancedFilters] = useState([]);
     console.log("formData", formData)
     console.log("Data", data)
 
@@ -347,18 +351,36 @@ const DynamicCRUD = ({
     }, []);
 
     const filteredData = useMemo(() => {
-        if (!searchTerm || !showSearch) return data;
+        let result = data;
 
-        const searchTermLower = searchTerm.toLowerCase();
-        return data.filter(item =>
-            columns.some(col => {
-                if (!col || !col.field) return false;
-                const fieldValue = item[col.field];
-                return fieldValue != null &&
-                    String(fieldValue).toLowerCase().includes(searchTermLower);
-            })
-        );
-    }, [data, searchTerm, showSearch, columns]);
+        if (advancedFilters && advancedFilters.length > 0) {
+            result = applyAdvancedFilters(result, advancedFilters);
+        }
+
+        if (searchTerm && showSearch) {
+            const searchTermLower = searchTerm.toLowerCase();
+            result = result.filter(item =>
+                columns.some(col => {
+                    if (!col || !col.field) return false;
+                    const fieldValue = item[col.field];
+                    return fieldValue != null &&
+                        String(fieldValue).toLowerCase().includes(searchTermLower);
+                })
+            );
+        }
+
+        return result;
+    }, [data, searchTerm, showSearch, columns, advancedFilters]);
+
+    const handleAdvancedFilterChange = useCallback((filters) => {
+        setAdvancedFilters(filters);
+        setCurrentPage(1);
+    }, []);
+
+    const handleAdvancedFilterClear = useCallback(() => {
+        setAdvancedFilters([]);
+        setCurrentPage(1);
+    }, []);
 
     const fetchData = useCallback(async () => {
         try {
@@ -902,6 +924,19 @@ const DynamicCRUD = ({
                                         actionButtons={actionButtons}
                                         headerActions={headerActions} 
                                     />
+                                    
+                                    {showAdvancedFilter && (
+                                        <AdvancedFilter
+                                            fields={filterFields.length > 0 ? filterFields : formFields.map(field => ({
+                                                ...field,
+                                                name: field.name || field.field,
+                                                field: field.name || field.field,
+                                            }))}
+                                            onFilterChange={handleAdvancedFilterChange}
+                                            onClear={handleAdvancedFilterClear}
+                                        />
+                                    )}
+                                    
                                     <ResizableTable
                                         data={filteredData}
                                         columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}

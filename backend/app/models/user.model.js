@@ -197,6 +197,7 @@ async function updateById(id, userData) {
     add("time_zone", userData.time_zone);
     add("isactive", userData.isactive);
     add("companyid", userData.companyid);
+    add("image", userData.image);
 
     if (updateFields.length === 0) {
       throw new Error("No fields to update");

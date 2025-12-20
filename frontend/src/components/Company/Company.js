@@ -6,6 +6,8 @@ import PubSub from "pubsub-js";
 import { Country, State, City } from "country-state-city";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+import axios from "axios";
+import { API_BASE_URL } from "../../constants/CONSTANT";
 
 const Company = () => {
   const { timeZone, setCompanyTimeZone } = useTimeZone();
@@ -42,6 +44,9 @@ const Company = () => {
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [tempCompany, setTempCompany] = useState({ ...Company });
   const [availableTimeZones, setAvailableTimeZones] = useState([]);
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const allCountries = useMemo(() => Country.getAllCountries(), []);
 
@@ -112,32 +117,90 @@ const Company = () => {
 
   const handleCompanySave = async () => {
     try {
+      setIsUploading(true);
       const companyId = getCompanyIdFromToken();
-      const companyApi = new DataApi("company");
-      const response = await companyApi.update(tempCompany, companyId);
-
-      if (response.data) {
-        setCompany({ ...tempCompany });
-        setIsEditingCompany(false);
-        setAlertMessage("Company details updated successfully!");
-        setShowAlert(true);
-
-        console.log('response.data ==>>', response.data)
-
-        setCompanyTimeZone(response.data.data.time_zone)
-
-        PubSub.publish("RECORD_SAVED_TOAST", {
-          title: "Success",
-          message: "Company details updated successfully!",
+      const token = sessionStorage.getItem("token");
+      
+      // Create FormData if there's a file to upload
+      if (selectedLogoFile) {
+        const formData = new FormData();
+        formData.append('image', selectedLogoFile);
+        
+        // Append all other company data
+        Object.keys(tempCompany).forEach(key => {
+          if (key !== 'logourl' && tempCompany[key] !== null && tempCompany[key] !== undefined) {
+            formData.append(key, tempCompany[key]);
+          }
         });
 
+        const response = await axios.put(
+          `${API_BASE_URL}/api/company/${companyId}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': token.startsWith("Bearer ") ? token : `Bearer ${token}`
+            }
+          }
+        );
 
-        PubSub.publish("COMPANY_UPDATED", { company: { ...tempCompany } });
+        if (response.data?.success) {
+          const updatedCompany = response.data.data;
+          setCompany(updatedCompany);
+          setTempCompany(updatedCompany);
+          setIsEditingCompany(false);
+          setSelectedLogoFile(null);
+          setLogoPreview(null);
+          setAlertMessage("Company details updated successfully!");
+          setShowAlert(true);
+
+          console.log('response.data ==>>', response.data);
+          setCompanyTimeZone(updatedCompany.time_zone);
+
+          PubSub.publish("RECORD_SAVED_TOAST", {
+            title: "Success",
+            message: "Company details updated successfully!",
+          });
+
+          PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
+        }
+      } else {
+        // No file to upload, use regular update
+        const companyApi = new DataApi("company");
+        const response = await companyApi.update(tempCompany, companyId);
+
+        if (response.data) {
+          const updatedCompany = response.data.data || response.data;
+          setCompany(updatedCompany);
+          setTempCompany(updatedCompany);
+          setIsEditingCompany(false);
+          setAlertMessage("Company details updated successfully!");
+          setShowAlert(true);
+
+          console.log('response.data ==>>', response.data);
+
+          if (updatedCompany.time_zone) {
+            setCompanyTimeZone(updatedCompany.time_zone);
+          }
+
+          PubSub.publish("RECORD_SAVED_TOAST", {
+            title: "Success",
+            message: "Company details updated successfully!",
+          });
+
+          PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
+        }
       }
     } catch (error) {
       console.error("Error updating company:", error);
       setAlertMessage("Failed to update company details.");
       setShowAlert(true);
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: error.response?.data?.errors || "Failed to update company details",
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -149,6 +212,8 @@ const Company = () => {
   const handleCompanyCancel = () => {
     setIsEditingCompany(false);
     setTempCompany({ ...Company });
+    setSelectedLogoFile(null);
+    setLogoPreview(null);
   };
 
   const handleCompanyChange = (key, value) => {
@@ -230,12 +295,23 @@ const Company = () => {
                     <button
                       className="custom-btn-primary"
                       onClick={handleCompanySave}
+                      disabled={isUploading}
                     >
-                      <i className="fa-solid fa-check me-2"></i> Save
+                      {isUploading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-check me-2"></i> Save
+                        </>
+                      )}
                     </button>
                     <button
                       className="custom-btn-secondary"
                       onClick={handleCompanyCancel}
+                      disabled={isUploading}
                     >
                       <i className="fa-solid fa-times me-2"></i> Cancel
                     </button>
@@ -430,20 +506,27 @@ const Company = () => {
                       >
                         <img
                           src={
-                            tempCompany.logourl
-                              ? tempCompany.logourl
-                              : Company?.logourl
-                                ? `${Company.logourl}?${new Date().getTime()}`
-                                : "/default-logo.png"
+                            logoPreview
+                              ? logoPreview
+                              : tempCompany.logourl
+                                ? (tempCompany.logourl.startsWith('http') || tempCompany.logourl.startsWith('blob:')
+                                    ? tempCompany.logourl
+                                    : `${API_BASE_URL}${tempCompany.logourl}`)
+                                : Company?.logourl
+                                  ? `${API_BASE_URL}${Company.logourl}?${new Date().getTime()}`
+                                  : "/default-logo.png"
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
                           style={{ objectFit: "cover" }}
+                          onError={(e) => {
+                            e.target.src = "/default-logo.png";
+                          }}
                         />
 
                         {isEditingCompany && (
                           <div className="position-absolute bottom-0 start-0 w-100 text-center bg-dark bg-opacity-50 text-white small py-1">
-                            Click to change
+                            {isUploading ? "Uploading..." : "Click to change"}
                           </div>
                         )}
                       </div>
@@ -456,8 +539,29 @@ const Company = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
+                              // Validate file type
+                              const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                              if (!allowedTypes.includes(file.type)) {
+                                PubSub.publish("RECORD_ERROR_TOAST", {
+                                  title: "Error",
+                                  message: "Only JPEG, PNG, and GIF images are allowed",
+                                });
+                                return;
+                              }
+                              
+                              // Validate file size (max 5MB)
+                              if (file.size > 5 * 1024 * 1024) {
+                                PubSub.publish("RECORD_ERROR_TOAST", {
+                                  title: "Error",
+                                  message: "File size must be less than 5MB",
+                                });
+                                return;
+                              }
+                              
+                              // Set file for upload on save
+                              setSelectedLogoFile(file);
                               const previewUrl = URL.createObjectURL(file);
-                              handleCompanyChange("logourl", previewUrl);
+                              setLogoPreview(previewUrl);
                             }
                           }}
                         />
