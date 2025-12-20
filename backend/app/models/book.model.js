@@ -74,10 +74,14 @@ async function create(bookData, userId) {
     if (availableCopies > totalCopies) {
       throw new Error(`Available copies (${availableCopies}) cannot exceed total copies (${totalCopies})`);
     }
-    console.log("bookdataaa->>>", bookData)
+
+    console.log("bookdataaa->>>", bookData);
+
     const query = `INSERT INTO ${this.schema}.books 
-                   (title, author_id, category_id, isbn, total_copies, available_copies, company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid , language) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8 , $9) 
+                   (title, author_id, category_id, isbn, total_copies, available_copies, 
+                    company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, 
+                    language, status, pages, price) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12) 
                    RETURNING *`;
 
     const values = [
@@ -89,7 +93,10 @@ async function create(bookData, userId) {
       availableCopies,
       bookData.company_id || bookData.companyId || null,
       userId || null,
-      bookData.language || null,
+      bookData.language || 'English',
+      bookData.status || 'available',
+      bookData.pages || null,
+      bookData.price || null
     ];
 
     const result = await sql.query(query, values);
@@ -100,7 +107,6 @@ async function create(bookData, userId) {
     throw error;
   }
 }
-
 
 async function updateById(id, bookData, userId) {
   try {
@@ -122,9 +128,11 @@ async function updateById(id, bookData, userId) {
     const query = `UPDATE ${this.schema}.books 
                    SET title = $2, author_id = $3, category_id = $4, isbn = $5, 
                        total_copies = $6, available_copies = $7, 
-                       lastmodifieddate = NOW(), lastmodifiedbyid = $8 ,language = $9
+                       lastmodifieddate = NOW(), lastmodifiedbyid = $8,
+                       language = $9, status = $10, pages = $11, price = $12
                    WHERE id = $1 
                    RETURNING *`;
+
     const values = [
       id,
       bookData.title !== undefined ? bookData.title : currentBook.title,
@@ -134,8 +142,12 @@ async function updateById(id, bookData, userId) {
       totalCopies,
       availableCopies,
       userId || null,
-      bookData.language || null,
+      bookData.language !== undefined ? bookData.language : currentBook.language,
+      bookData.status !== undefined ? bookData.status : currentBook.status,
+      bookData.pages !== undefined ? bookData.pages : currentBook.pages,
+      bookData.price !== undefined ? bookData.price : currentBook.price
     ];
+
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
       return result.rows[0];
@@ -146,7 +158,6 @@ async function updateById(id, bookData, userId) {
     throw error;
   }
 }
-
 
 async function deleteById(id) {
   try {

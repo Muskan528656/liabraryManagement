@@ -99,7 +99,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
 
         // Fetch object types
-        const objectTypeApi = new DataApi("objecttype");
+        const objectTypeApi = new DataApi("librarycard");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
         console.log("Object Type API Response:", objectTypeResponse);
@@ -424,7 +424,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             users: "user",
             company: "company",
             plans: "plan",
-            objecttypes: "objecttype",
+            objecttypes: "librarycard",
         },
 
         lookupNavigation: {

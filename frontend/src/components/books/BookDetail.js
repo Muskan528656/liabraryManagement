@@ -82,6 +82,7 @@ const BookDetail = () => {
     subtitle: "isbn",
     details: [
       { key: "title", label: "Title", type: "text" },
+      { key: "price", label: "Price", type: "text" },
       { key: "isbn", label: "ISBN", type: "text" },
       {
         key: "author_id",

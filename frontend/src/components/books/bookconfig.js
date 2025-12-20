@@ -48,6 +48,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         columns: [
             { field: "title", label: "Title" },
+            { field: "price", label: "Price" },
             { field: "author_name", label: "Author" },
             { field: "category_name", label: "Category" },
             { field: "isbn", label: "ISBN" },
@@ -60,6 +61,14 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "text",
                 required: true,
                 placeholder: "Enter book title",
+                colSize: 12,
+            },
+            {
+                name: "price",
+                label: "Price",
+                type: "number",
+                required: true,
+                placeholder: "Enter book price",
                 colSize: 12,
             },
             {

@@ -71,11 +71,22 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
 
   const fetchObjectTypes = async () => {
     try {
-      const api = new DataApi("library");
-      const res = await api.fetchAll();
-      setObjectTypes(res?.data?.data || []);
+      const api = new DataApi("librarycard");
+      const res = await api.get("/object-types");
+
+      console.log("Fetched Object Types Response:", res);
+
+      // ✅ सही way: res.data.data
+      if (res.data?.success) {
+        setObjectTypes(res.data.data || []);
+        console.log(`Set ${res.data.data?.length || 0} object types`);
+      } else {
+        console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
+        setObjectTypes([]);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching object types:", err);
+      setObjectTypes([]);
     }
   };
 
@@ -238,7 +249,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
               </div>
             )}
 
-          
+
             {step === 2 && (
               <div className="fade-in text-center py-4">
                 <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()}>

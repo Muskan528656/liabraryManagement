@@ -50,7 +50,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   // Filter notifications based on active tab
   const filteredNotifications = React.useMemo(() => {
     const combined = [...dueNotifications, ...allNotifications];
-    
+
     if (activeTab === "UNREAD") {
       return combined.filter(n => !n.is_read);
     } else if (activeTab === "READ") {
@@ -658,7 +658,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
-    
+
     // Set notification as read locally for immediate UI update
     setAllNotifications((prev) =>
       prev.map((n) =>
@@ -670,12 +670,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         n.id === notification.id ? { ...n, is_read: true } : n
       )
     );
-    
+
     // You can add specific navigation based on notification type
     if (notification.type === 'book_due') {
       navigate("/mybooks");
     }
-    
+
     // Don't close the dropdown on click - let user see multiple notifications
   };
 
