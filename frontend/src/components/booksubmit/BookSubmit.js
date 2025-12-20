@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, InputGroup, Table, Modal, Tab, Nav } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +56,23 @@ const BookSubmit = () => {
     const recordsPerPage = 20;
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
+
+    // Helper function to safely get book price from purchase details
+    const getBookPriceFromPurchaseDetails = (purchaseDetails) => {
+        if (!purchaseDetails) return 0;
+
+        // Try to parse different possible price fields
+        const priceFields = ['price', 'unit_price', 'total_price'];
+        for (const field of priceFields) {
+            if (purchaseDetails[field] !== undefined && purchaseDetails[field] !== null) {
+                const parsed = parseFloat(purchaseDetails[field]);
+                if (!isNaN(parsed)) {
+                    return parsed;
+                }
+            }
+        }
+        return 0;
+    };
 
     useEffect(() => {
         fetchAllIssuedBooks();
@@ -115,6 +135,8 @@ const BookSubmit = () => {
                 "GET"
             );
 
+            console.log("Fetch Purchase Details Response:", resp);
+
             if (resp.ok) {
                 const data = await resp.json();
                 console.log("Book Purchase Details:", data);
@@ -131,7 +153,7 @@ const BookSubmit = () => {
                 setBookPurchaseDetails(purchaseDetails);
 
                 if (conditionAfter === "Lost" && purchaseDetails) {
-                    const price = purchaseDetails.price || purchaseDetails.unit_price || purchaseDetails.total_price || 0;
+                    const price = getBookPriceFromPurchaseDetails(purchaseDetails);
                     setLostBookPrice(price.toString());
                 }
 
@@ -246,14 +268,14 @@ const BookSubmit = () => {
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
             );
-
+console.log("Fetch Submitted Books Response:", submissionsResp);
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
             }
 
             const response = await submissionsResp.json();
             let submissions = [];
-
+console.log("Submitted Books Data:", response);
             if (response.success !== undefined) {
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
@@ -318,9 +340,7 @@ const BookSubmit = () => {
         if (condition && condition.toLowerCase() === "damaged") {
             const purchaseDetails = await fetchBookPurchaseDetails(issueRecord.book_id || book?.id);
             if (purchaseDetails) {
-                bookPrice = parseFloat(purchaseDetails.price) ||
-                    parseFloat(purchaseDetails.unit_price) ||
-                    parseFloat(purchaseDetails.total_price) || 0;
+                bookPrice = getBookPriceFromPurchaseDetails(purchaseDetails);
             }
         }
 
@@ -330,9 +350,7 @@ const BookSubmit = () => {
             } else {
                 const purchaseDetails = await fetchBookPurchaseDetails(issueRecord.book_id || book?.id);
                 if (purchaseDetails) {
-                    bookPrice = parseFloat(purchaseDetails.price) ||
-                        parseFloat(purchaseDetails.unit_price) ||
-                        parseFloat(purchaseDetails.total_price) || 0;
+                    bookPrice = getBookPriceFromPurchaseDetails(purchaseDetails);
                 }
             }
         }
@@ -448,7 +466,7 @@ const BookSubmit = () => {
             if (selectedIssue) {
                 const purchaseDetails = await fetchBookPurchaseDetails(selectedIssue.book_id || book?.id);
                 if (purchaseDetails) {
-                    const price = purchaseDetails.price || purchaseDetails.unit_price || purchaseDetails.total_price || 0;
+                    const price = getBookPriceFromPurchaseDetails(purchaseDetails);
                     setLostBookPrice(price.toString());
                 }
             }
@@ -1380,220 +1398,183 @@ const BookSubmit = () => {
                             </Nav>
                             <Tab.Content>
                                 <Tab.Pane eventKey="submit">
-                                    <Row>
-                                        <Col lg={3} md={12}>
-                                            <Card className="mb-4 shadow-sm" style={{ background: "#f3e8ff", border: "1px solid #d8b4fe", borderRadius: "8px" }}>
-                                                <Card.Header style={{
-                                                    backgroundColor: "var(--primary-background-color)",
-                                                    border: "none",
-                                                    borderBottom: "2px solid #d1d5db",
-                                                    padding: "15px 20px"
-                                                }}>
-                                                    <h3 className="mb-0 fw-bold" style={{
-                                                        color: "#1f2937",
-                                                        fontSize: "16px",
-                                                        letterSpacing: "0.3px"
-                                                    }}>
-                                                        Book Identification
-                                                    </h3>
-                                                </Card.Header>
-                                                <Card.Body className="p-4">
-                                                    <Form.Group className="mb-3">
-                                                        <Form.Label className="fw-bold small">Search By</Form.Label>
-                                                        <Form.Select
-                                                            value={searchMode}
-                                                            onChange={handleSearchModeChange}
-                                                            style={{
-                                                                border: "2px solid #8b5cf6",
-                                                                borderRadius: "8px",
-                                                                fontSize: "0.7rem",
-                                                                padding: "0.5rem 1rem"
-                                                            }}
-                                                        >
-                                                            <option value="isbn">Search by ISBN</option>
-                                                            <option value="card">Search by Library Card</option>
-                                                        </Form.Select>
-                                                    </Form.Group>
+                                    <Row className="mb-3">
+                                        {/* Book Identification Card - Now at top in a full width row */}
+                                        <Col xs={12}>
+                                            <Card className="shadow-sm" style={{
+                                                background: "#f3e8ff",
+                                                border: "1px solid #d8b4fe",
+                                                borderRadius: "8px"
+                                            }}>
 
-                                                    <Form.Group className="mb-3">
-                                                        <Form.Label className="fw-bold small">
-                                                            {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
-                                                        </Form.Label>
-                                                        <InputGroup>
-                                                            <Form.Control
-                                                                ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
-                                                                type="text"
-                                                                placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
-                                                                value={searchMode === "isbn" ? isbn : cardNumber}
-                                                                onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
-                                                                onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
-                                                                autoFocus
-                                                                disabled={loading}
-                                                                style={{
-                                                                    border: "1px solid #dee2e6",
-                                                                    borderRadius: "8px 0 0 8px",
-                                                                    fontSize: "0.7rem",
-                                                                    padding: "0.5rem 1rem"
-                                                                }}
-                                                            />
-                                                            {loading && (
-                                                                <InputGroup.Text style={{
-                                                                    border: "1px solid #dee2e6",
-                                                                    borderLeft: "none",
-                                                                    borderRadius: "0",
-                                                                    backgroundColor: "#f8f9fa"
-                                                                }}>
-                                                                    <Spinner animation="border" size="sm" />
-                                                                </InputGroup.Text>
-                                                            )}
-                                                            <Button
-                                                                variant="outline-secondary"
-                                                                onClick={handleClearSearch}
-                                                                disabled={loading}
-                                                                style={{
-                                                                    border: "1px solid #dee2e6",
-                                                                    borderLeft: loading ? "none" : "1px solid #dee2e6",
-                                                                    borderRadius: loading ? "0 8px 8px 0" : "0 8px 8px 0",
-                                                                    minWidth: "50px",
-                                                                    backgroundColor: "#f8f9fa"
-                                                                }}
-                                                            >
-                                                                <i className="fa-solid fa-xmark"></i>
-                                                            </Button>
-                                                        </InputGroup>
-                                                    </Form.Group>
+                                                <Card.Body className="p-3">
+                                                    <Row className="align-items-center">
+                                                        <Col md={3}>
+                                                            <Form.Group className="mb-0">
+                                                                <Form.Label className="fw-bold small mb-1">Search By</Form.Label>
+                                                                <Form.Select
+                                                                    value={searchMode}
+                                                                    onChange={handleSearchModeChange}
+                                                                    style={{
+                                                                        border: "2px solid #8b5cf6",
+                                                                        borderRadius: "6px",
+                                                                        fontSize: "0.9rem",
+                                                                        height: "40px",
+                                                                        padding: "0.375rem 0.75rem"
+                                                                    }}
+                                                                >
+                                                                    <option value="isbn">Search by ISBN</option>
+                                                                    <option value="card">Search by Library Card</option>
+                                                                </Form.Select>
+                                                            </Form.Group>
+                                                        </Col>
 
-                                                    <div className="text-center">
-                                                        <Button
-                                                            variant="primary"
-                                                            onClick={handleScanButtonClick}
-                                                            disabled={loading}
-                                                            style={{
-                                                                width: "100%",
-                                                                backgroundColor: "#0d6efd",
-                                                                border: "none",
-                                                                borderRadius: "8px",
-                                                                fontWeight: "600",
-                                                                fontSize: "0.95rem",
-                                                                padding: "0.75rem 1rem",
-                                                                boxShadow: "0 2px 4px rgba(13, 110, 253, 0.3)"
-                                                            }}
-                                                        >
-                                                            {loading ? (
-                                                                <Spinner animation="border" size="sm" className="me-2" />
-                                                            ) : (
-                                                                <i className="fa-solid fa-camera me-2"></i>
+                                                        <Col md={3}>
+                                                            <Form.Group className="mb-0">
+                                                                <Form.Label className="fw-bold small mb-1">
+                                                                    {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
+                                                                </Form.Label>
+                                                                <InputGroup>
+                                                                    <Form.Control
+                                                                        ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
+                                                                        type="text"
+                                                                        placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
+                                                                        value={searchMode === "isbn" ? isbn : cardNumber}
+                                                                        onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
+                                                                        onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
+                                                                        autoFocus
+                                                                        disabled={loading}
+                                                                        style={{
+                                                                            border: "1px solid #dee2e6",
+                                                                            borderRadius: "6px 0 0 6px",
+                                                                            height: "40px",
+                                                                            fontSize: "0.9rem",
+                                                                            padding: "0.375rem 0.75rem"
+                                                                        }}
+                                                                    />
+                                                                    {loading && (
+                                                                        <InputGroup.Text style={{
+                                                                            border: "1px solid #dee2e6",
+                                                                            borderLeft: "none",
+                                                                            borderRadius: "0",
+                                                                            backgroundColor: "#f8f9fa",
+                                                                            height: "40px",
+                                                                            padding: "0.375rem 0.75rem"
+                                                                        }}>
+                                                                            <Spinner animation="border" size="sm" />
+                                                                        </InputGroup.Text>
+                                                                    )}
+                                                                    <Button
+                                                                        variant="outline-secondary"
+                                                                        onClick={handleClearSearch}
+                                                                        disabled={loading}
+                                                                        style={{
+                                                                            border: "1px solid #dee2e6",
+                                                                            borderLeft: loading ? "none" : "1px solid #dee2e6",
+                                                                            borderRadius: loading ? "0 6px 6px 0" : "0 6px 6px 0",
+                                                                            minWidth: "40px",
+                                                                            backgroundColor: "#f8f9fa",
+                                                                            height: "40px",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "center",
+                                                                            padding: "0.375rem"
+                                                                        }}
+                                                                    >
+                                                                        <i className="fa-solid fa-xmark"></i>
+                                                                    </Button>
+                                                                </InputGroup>
+                                                            </Form.Group>
+                                                        </Col>
+                                                        <Col lg={3}></Col>
+                                                        <Col md={3}>
+                                                            <div className="d-flex align-items-end h-100 pt-1">
+                                                                <Button
+                                                                    className="text-end"
+                                                                    variant="primary"
+                                                                    onClick={handleScanButtonClick}
+                                                                    disabled={loading}
+                                                                    style={{
+                                                                        backgroundColor: "#0d6efd",
+                                                                        border: "none",
+                                                                        borderRadius: "6px",
+                                                                        fontWeight: "600",
+                                                                        fontSize: "0.875rem",
+                                                                        padding: "0.375rem 0.75rem",
+                                                                        height: "40px",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        justifyContent: "center"
+                                                                    }}
+                                                                >
+                                                                    {loading ? (
+                                                                        <Spinner animation="border" size="sm" className="me-1" />
+                                                                    ) : (
+                                                                        <i className="fa-solid fa-camera me-1"></i>
+                                                                    )}
+                                                                    Scan
+                                                                </Button>
+                                                            </div>
+                                                        </Col>
+                                                    </Row>
+
+                                                    {/* Book and Card Details Section - Shows only when data is available */}
+                                                    {(book || libraryCard) && (
+                                                        <Row className="mt-2">
+                                                            {book && (
+                                                                <Col md={6}>
+                                                                    <Card className="h-100" style={{
+                                                                        border: "1px solid #e5e7eb",
+                                                                        borderRadius: "6px",
+                                                                        background: "#f8f9fa"
+                                                                    }}>
+                                                                        <Card.Body className="p-2">
+                                                                            <h6 className="mb-1 fw-bold" style={{ color: "var(--primary-color)", fontSize: "13px" }}>
+                                                                                <i className="fa-solid fa-book me-1"></i>
+                                                                                Book Details
+                                                                            </h6>
+                                                                            <div className="small" style={{ fontSize: "12px" }}>
+                                                                                <div><strong>Title:</strong> {book.title}</div>
+                                                                                <div><strong>ISBN:</strong> {book.isbn}</div>
+                                                                                <div><strong>Author:</strong> {book.author || "N/A"}</div>
+                                                                            </div>
+                                                                        </Card.Body>
+                                                                    </Card>
+                                                                </Col>
                                                             )}
-                                                            Scan {searchMode === "isbn" ? "ISBN" : "Library Card"}
-                                                        </Button>
-                                                    </div>
+
+                                                            {libraryCard && (
+                                                                <Col md={6}>
+                                                                    <Card className="h-100" style={{
+                                                                        border: "1px solid #e5e7eb",
+                                                                        borderRadius: "6px",
+                                                                        background: "#f8f9fa"
+                                                                    }}>
+                                                                        <Card.Body className="p-2">
+                                                                            <h6 className="mb-1 fw-bold" style={{ color: "var(--primary-color)", fontSize: "13px" }}>
+                                                                                <i className="fa-solid fa-id-card me-1"></i>
+                                                                                Library Card Details
+                                                                            </h6>
+                                                                            <div className="small" style={{ fontSize: "12px" }}>
+                                                                                <div><strong>Card Holder:</strong> {getUserDisplayName(libraryCard)}</div>
+                                                                                <div><strong>Card Number:</strong> {libraryCard.card_number}</div>
+                                                                                <div><strong>Issues:</strong> {cardIssues.length} active</div>
+                                                                            </div>
+                                                                        </Card.Body>
+                                                                    </Card>
+                                                                </Col>
+                                                            )}
+                                                        </Row>
+                                                    )}
                                                 </Card.Body>
                                             </Card>
-
-                                            {libraryCard && (
-                                                <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                                    <Card.Header className="py-3 px-4" style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #6f42c1" }}>
-                                                        <div className="d-flex justify-content-between align-items-center">
-                                                            <h6 className="mb-0 fw-bold" style={{ color: "var(--primary-color)", fontSize: "1rem" }}>
-                                                                <i className="fa-solid fa-id-card me-2"></i>
-                                                                Library Card: {libraryCard.card_number}
-                                                            </h6>
-                                                            <Badge bg="info">
-                                                                {cardIssues.length} Active Issue{cardIssues.length !== 1 ? 's' : ''}
-                                                            </Badge>
-                                                        </div>
-                                                    </Card.Header>
-                                                    <Card.Body className="py-3 px-4">
-                                                        <Row>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">Card Holder:</strong>
-                                                                    <div className="text-secondary">
-                                                                        {getUserDisplayName(libraryCard)}
-                                                                    </div>
-                                                                </div>
-                                                            </Col>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">Card Number:</strong>
-                                                                    <div className="text-secondary">{libraryCard.card_number}</div>
-                                                                </div>
-                                                            </Col>
-                                                        </Row>
-                                                    </Card.Body>
-                                                </Card>
-                                            )}
-
-                                            {book && (
-                                                <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                                    <Card.Header style={{
-                                                        background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-                                                        border: "none",
-                                                        borderBottom: "2px solid #d1d5db",
-                                                        padding: "20px 24px"
-                                                    }}>
-                                                        <h5 className="mb-0 fw-bold" style={{
-                                                            color: "#1f2937",
-                                                            fontSize: "20px",
-                                                            letterSpacing: "0.3px"
-                                                        }}>
-                                                            Book Details for ISBN: {isbn}
-                                                        </h5>
-                                                    </Card.Header>
-                                                    <Card.Body className="py-3 px-4">
-                                                        <Row>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">Title:</strong>
-                                                                    <div className="text-secondary">
-                                                                        <a
-                                                                            href={`/book/${book.id}`}
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                navigate(`/book/${book.id}`);
-                                                                            }}
-                                                                            style={{ color: "var(--primary-color)", textDecoration: "none", fontWeight: 600 }}
-                                                                            onMouseEnter={(e) => {
-                                                                                try {
-                                                                                    localStorage.setItem(`prefetch:book:${book.id}`, JSON.stringify(book));
-                                                                                } catch (err) { }
-                                                                                e.target.style.textDecoration = "underline";
-                                                                            }}
-                                                                            onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
-                                                                        >
-                                                                            {book.title}
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </Col>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">ISBN:</strong>
-                                                                    <div className="text-secondary">{book.isbn}</div>
-                                                                </div>
-                                                            </Col>
-                                                        </Row>
-                                                        <Row>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">Author:</strong>
-                                                                    <div className="text-secondary">{book.author || "N/A"}</div>
-                                                                </div>
-                                                            </Col>
-                                                            <Col md={6}>
-                                                                <div className="mb-2">
-                                                                    <strong className="small">Total Copies:</strong>
-                                                                    <div className="text-secondary">{book.total_copies || 0}</div>
-                                                                </div>
-                                                            </Col>
-                                                        </Row>
-                                                    </Card.Body>
-                                                </Card>
-                                            )}
                                         </Col>
+                                    </Row>
 
-                                        <Col lg={9} md={12}>
-                                            <Card className="mb-4 shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                    {/* Table Section - Takes full width below the Book Identification card */}
+                                    <Row>
+                                        <Col xs={12}>
+                                            <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
                                                     background: "var(--secondary-color)",
                                                     border: "none",
@@ -1623,7 +1604,7 @@ const BookSubmit = () => {
                                                                         padding: "0.375rem 0.75rem"
                                                                     }}
                                                                 >
-                                                                    <i className="fa-solid fa-search" style={{ color: "White", }}></i>
+                                                                    <i className="fa-solid fa-search" style={{ color: "White" }}></i>
                                                                 </InputGroup.Text>
 
                                                                 <Form.Control
@@ -1790,312 +1771,286 @@ const BookSubmit = () => {
             </Modal>
 
             <Modal show={showSubmitModal} onHide={handleModalClose} centered size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i className="fa-solid fa-paper-plane me-2 text-success"></i>
+                <Modal.Header closeButton style={{
+                    padding: "15px 20px", backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", fontWeight: "bold"
+                }}>
+                    <Modal.Title style={{ fontSize: "18px", fontWeight: "600" }}>
                         Submit Book Return
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{ padding: "20px" }}>
                     {selectedIssue && (
                         <div>
-                            <h6 className="mb-3">Book Return Details</h6>
+                            <Row>
+                                <Col md={8}>
+                                    {/* Left Column - Issue Information and Condition Assessment */}
+                                    <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
+                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
+                                            <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+                                                Issue Information
+                                            </h6>
+                                        </Card.Header>
+                                        <Card.Body className="py-2 px-3">
+                                            <Row className="g-2">
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>Book Title:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>{selectedIssue.book_title || book?.title}</div>
+                                                        </div>
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>ISBN:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>{selectedIssue.book_isbn || book?.isbn}</div>
+                                                        </div>
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>Issued To:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>
+                                                                {getUserDisplayName(selectedIssue)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>Card Number:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>{selectedIssue.card_number || selectedIssue.card_id || '-'}</div>
+                                                        </div>
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>Issue Date:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>{formatDate(selectedIssue.issue_date)}</div>
+                                                        </div>
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <div className="mb-1">
+                                                        <div className="d-flex">
+                                                            <div style={{ width: "100px", fontSize: "13px", color: "#6b7280" }}>Due Date:</div>
+                                                            <div style={{ fontSize: "13px", fontWeight: "500", color: "#1f2937", flex: 1 }}>{formatDate(selectedIssue.due_date)}</div>
+                                                        </div>
+                                                        {penalty.daysOverdue > 0 && (
+                                                            <div style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600", marginTop: "2px", marginLeft: "100px" }}>
+                                                                Overdue by {penalty.daysOverdue} day(s)
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                            </Row>
+                                        </Card.Body>
+                                    </Card>
 
-                            <Card className="mb-3">
-                                <Card.Header className="py-2">
-                                    <h6 className="mb-0 small">Issue Information</h6>
-                                </Card.Header>
-                                <Card.Body className="py-2">
-                                    <Row>
-                                        <Col md={6}>
-                                            <strong className="small">Book Title:</strong>
-                                            <div className="text-secondary small">{selectedIssue.book_title || book?.title}</div>
-                                        </Col>
-                                        <Col md={6}>
-                                            <strong className="small">ISBN:</strong>
-                                            <div className="text-secondary small">{selectedIssue.book_isbn || book?.isbn}</div>
-                                        </Col>
-                                    </Row>
-                                    <Row className="mt-2">
-                                        <Col md={6}>
-                                            <strong className="small">Issued To:</strong>
-                                            <div className="text-secondary small">
-                                                {getUserDisplayName(selectedIssue)}
-                                            </div>
-                                        </Col>
-                                        <Col md={6}>
-                                            <strong className="small">Card Number:</strong>
-                                            <div className="text-secondary small">{selectedIssue.card_number || selectedIssue.card_id || '-'}</div>
-                                        </Col>
-                                    </Row>
-                                    <Row className="mt-2">
-                                        <Col md={6}>
-                                            <strong className="small">Issue Date:</strong>
-                                            <div className="text-secondary small">{formatDate(selectedIssue.issue_date)}</div>
-                                        </Col>
-                                        <Col md={6}>
-                                            <strong className="small">Due Date:</strong>
-                                            <div className="text-secondary small">{formatDate(selectedIssue.due_date)}</div>
-                                            {penalty.daysOverdue > 0 && (
-                                                <div className="text-danger small fw-bold mt-1">
-                                                    Overdue by {penalty.daysOverdue} day(s)
-                                                </div>
+                                    <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
+                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "#f8f9fa", borderBottom: "1px solid #e5e7eb" }}>
+                                            <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+                                                Condition Assessment
+                                            </h6>
+                                        </Card.Header>
+                                        <Card.Body className="py-2 px-3">
+                                            <Row>
+                                                <Col md={6}>
+                                                    <Form.Group className="mb-2">
+                                                        <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#4b5563", marginBottom: "4px" }}>
+                                                            Condition Before
+                                                        </Form.Label>
+                                                        <Form.Control
+                                                            type="text"
+                                                            value={selectedIssue.condition_before || conditionBefore}
+                                                            onChange={(e) => setConditionBefore(e.target.value)}
+                                                            disabled={loading}
+                                                            size="sm"
+                                                            style={{ fontSize: "13px", padding: "6px 10px" }}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <Form.Group className="mb-2">
+                                                        <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#4b5563", marginBottom: "4px" }}>
+                                                            Condition After
+                                                        </Form.Label>
+                                                        <Form.Select
+                                                            value={conditionAfter}
+                                                            onChange={handleConditionAfterChange}
+                                                            disabled={loading}
+                                                            size="sm"
+                                                            style={{ fontSize: "13px", padding: "6px 10px" }}
+                                                        >
+                                                            <option value="Good">Good</option>
+                                                            <option value="Fair">Fair</option>
+                                                            <option value="Damaged">Damaged</option>
+                                                            <option value="Lost">Lost</option>
+                                                        </Form.Select>
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
+
+                                            {conditionAfter === "Lost" && (
+                                                <Form.Group className="mb-2">
+                                                    <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#4b5563", marginBottom: "4px" }}>
+                                                        Book Purchase Price
+                                                    </Form.Label>
+                                                    <div className="d-flex align-items-center">
+                                                        <div style={{ flex: 1 }}>
+                                                            <Form.Control
+                                                                type="text"
+                                                                placeholder="Enter book purchase price..."
+                                                                value={lostBookPrice}
+                                                                onChange={handleLostBookPriceChange}
+                                                                disabled={loading || isLoadingPurchaseDetails}
+                                                                size="sm"
+                                                                style={{ fontSize: "13px", padding: "6px 10px" }}
+                                                                isInvalid={!!lostBookPriceError}
+                                                            />
+                                                            <Form.Control.Feedback type="invalid" style={{ fontSize: "12px" }}>
+                                                                {lostBookPriceError}
+                                                            </Form.Control.Feedback>
+                                                            <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                                                                {isLoadingPurchaseDetails ? (
+                                                                    <>
+                                                                        <Spinner animation="border" size="sm" className="me-1" />
+                                                                        Loading purchase details...
+                                                                    </>
+                                                                ) : bookPurchaseDetails ? (
+                                                                    <>
+                                                                        Auto-filled from purchase records: ₹
+                                                                        {getBookPriceFromPurchaseDetails(bookPurchaseDetails).toFixed(2)}
+                                                                        {bookPurchaseDetails.purchase_date && (
+                                                                            <> (Purchased on: {formatDate(bookPurchaseDetails.purchase_date)})</>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        Enter the price at which this book was purchased
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </Form.Group>
                                             )}
-                                        </Col>
-                                    </Row>
-                                </Card.Body>
-                            </Card>
 
-                            <Card className="mb-3">
-                                <Card.Header className="py-2">
-                                    <h6 className="mb-0 small">Condition Assessment</h6>
-                                </Card.Header>
-                                <Card.Body className="py-2">
-                                    <Row>
-                                        <Col md={6}>
                                             <Form.Group className="mb-2">
-                                                <Form.Label className="small fw-bold">Condition Before</Form.Label>
+                                                <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#4b5563", marginBottom: "4px" }}>
+                                                    Remarks
+                                                </Form.Label>
                                                 <Form.Control
-                                                    type="text"
-                                                    value={selectedIssue.condition_before || conditionBefore}
-                                                    onChange={(e) => setConditionBefore(e.target.value)}
+                                                    as="textarea"
+                                                    rows={2}
+                                                    placeholder="Add notes about book condition..."
+                                                    value={remarks}
+                                                    onChange={(e) => setRemarks(e.target.value)}
                                                     disabled={loading}
                                                     size="sm"
-                                                    className="small"
+                                                    style={{ fontSize: "13px", padding: "6px 10px" }}
                                                 />
                                             </Form.Group>
-                                        </Col>
-                                        <Col md={6}>
-                                            <Form.Group className="mb-2">
-                                                <Form.Label className="small fw-bold">Condition After</Form.Label>
-                                                <Form.Select
-                                                    value={conditionAfter}
-                                                    onChange={handleConditionAfterChange}
-                                                    disabled={loading}
-                                                    size="sm"
-                                                    className="small"
-                                                >
-                                                    <option value="Good">✅ Good</option>
-                                                    <option value="Fair">⚠️ Fair</option>
-                                                    <option value="Damaged">❌ Damaged</option>
-                                                    <option value="Lost">💸 Lost</option>
-                                                </Form.Select>
-                                            </Form.Group>
-                                        </Col>
-                                    </Row>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
 
-                                    {conditionAfter === "Lost" && (
-                                        <Form.Group className="mb-2">
-                                            <Form.Label className="small fw-bold">
-                                                <i className="fa-solid fa-indian-rupee-sign me-1"></i>
-                                                Book Purchase Price
-                                            </Form.Label>
-                                            <div className="d-flex align-items-center">
-                                                <div style={{ flex: 1 }}>
-                                                    <Form.Control
-                                                        type="text"
-                                                        placeholder="Enter book purchase price..."
-                                                        value={lostBookPrice}
-                                                        onChange={handleLostBookPriceChange}
-                                                        disabled={loading || isLoadingPurchaseDetails}
-                                                        size="sm"
-                                                        className="small"
-                                                        isInvalid={!!lostBookPriceError}
-                                                    />
-                                                    <Form.Control.Feedback type="invalid">
-                                                        {lostBookPriceError}
-                                                    </Form.Control.Feedback>
-                                                    <Form.Text className="text-muted extra-small">
-                                                        {isLoadingPurchaseDetails ? (
-                                                            <Spinner animation="border" size="sm" className="me-1" />
-                                                        ) : bookPurchaseDetails ? (
-                                                            <>
-                                                                <i className="fa-solid fa-info-circle me-1"></i>
-                                                                Auto-filled from purchase records: ₹
-                                                                {(bookPurchaseDetails.price || bookPurchaseDetails.unit_price || bookPurchaseDetails.total_price || 0).toFixed(2)}
-                                                                {bookPurchaseDetails.purchase_date && (
-                                                                    <> (Purchased on: {formatDate(bookPurchaseDetails.purchase_date)})</>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <i className="fa-solid fa-pencil me-1"></i>
-                                                                Enter the price at which this book was purchased
-                                                            </>
-                                                        )}
-                                                    </Form.Text>
+                                <Col md={4}>
+                                    {/* Right Column - Penalty Summary */}
+                                    <Card style={{ border: "1px solid #e5e7eb", boxShadow: "none", height: "100%" }}>
+                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "#f8f9fa", borderBottom: "1px solid #e5e7eb" }}>
+                                            <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+                                                Penalty Summary
+                                            </h6>
+                                        </Card.Header>
+                                        <Card.Body className="py-2 px-3">
+                                            {isCalculating || isLoadingPurchaseDetails ? (
+                                                <div className="text-center py-4">
+                                                    <Spinner animation="border" variant="primary" size="sm" />
+                                                    <p className="small text-muted mt-2">Calculating penalty...</p>
                                                 </div>
-                                                <div className="ms-2">
-                                                    <Button
-                                                        variant="outline-secondary"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            if (selectedIssue) {
-                                                                fetchBookPurchaseDetails(selectedIssue.book_id || book?.id);
-                                                            }
-                                                        }}
-                                                        disabled={loading || isLoadingPurchaseDetails}
-                                                        title="Fetch latest purchase price"
-                                                    >
-                                                        <i className="fa-solid fa-refresh"></i>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </Form.Group>
-                                    )}
+                                            ) : (
+                                                <div>
+                                                    {/* Penalty Breakdown */}
+                                                    {penaltyBreakdown.length > 0 ? (
+                                                        <div>
+                                                            <div className="mb-2" style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: "8px" }}>
 
-                                    <Form.Group className="mb-2">
-                                        <Form.Label className="small fw-bold">Remarks</Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={3}
-                                            placeholder="Add notes about book condition..."
-                                            value={remarks}
-                                            onChange={(e) => setRemarks(e.target.value)}
-                                            disabled={loading}
-                                            size="sm"
-                                            className="small"
-                                        />
-                                    </Form.Group>
-                                </Card.Body>
-                            </Card>
+                                                                <div style={{ maxHeight: "180px", overflowY: "auto" }}>
+                                                                    {penaltyBreakdown.map((item, index) => (
+                                                                        <div key={index} style={{ marginBottom: "6px", paddingBottom: "6px", borderBottom: index < penaltyBreakdown.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                                                                            <div className="d-flex justify-content-between align-items-start">
+                                                                                <div style={{ flex: 1 }}>
+                                                                                    <div style={{ fontSize: "12px", fontWeight: "600", color: item.isInfo ? "#10b981" : "#374151" }}>
+                                                                                        {item.type}
+                                                                                    </div>
+                                                                                    <div style={{ fontSize: "11px", color: "#6b7280" }}>{item.description}</div>
+                                                                                </div>
+                                                                                <div style={{ textAlign: "right", minWidth: "80px" }}>
+                                                                                    <div style={{ fontSize: "11px", color: "#6b7280" }}>{item.calculation}</div>
+                                                                                    <div style={{ fontSize: "13px", fontWeight: "600", color: item.isInfo ? "#10b981" : "#dc2626" }}>
+                                                                                        ₹{item.amount?.toFixed(2)}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
 
-                            <Card>
-                                <Card.Body className="py-2">
-                                    {isCalculating || isLoadingPurchaseDetails ? (
-                                        <div className="text-center py-3">
-                                            <Spinner animation="border" variant="primary" size="sm" />
-                                            <p className="small text-muted mt-2">Calculating penalty...</p>
-                                        </div>
-                                    ) : penaltyBreakdown.length > 0 ? (
-                                        <div>
-                                            {librarySettings && (
-                                                <div className="mb-3 p-2 border rounded" style={{
-                                                    background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                                                    borderLeft: "4px solid #3b82f6"
-                                                }}>
-                                                    <h6 className="small fw-bold mb-2" style={{ color: "#1e40af" }}>
-                                                        <i className="fa-solid fa-gear me-1"></i>
-                                                        Library Settings
-                                                    </h6>
-                                                    <div className="row">
-                                                        <div className="col-6">
-                                                            <span className="small text-muted">Late Fee per Day:</span>
-                                                            <Badge bg="warning" className="ms-2" style={{ fontSize: "0.75em" }}>
-                                                                ₹{librarySettings.fine_per_day || 0}/day
-                                                            </Badge>
+                                                            {/* Total Penalty */}
+                                                            <div className="text-center p-3 border rounded" style={{
+                                                                background: penalty.penalty > 0
+                                                                    ? "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)"
+                                                                    : "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                                                                borderLeft: `3px solid ${penalty.penalty > 0 ? "#ef4444" : "#10b981"}`
+                                                            }}>
+                                                                <h4 style={{
+                                                                    color: penalty.penalty > 0 ? "#dc2626" : "#059669",
+                                                                    fontWeight: "bold",
+                                                                    fontSize: "1.3rem"
+                                                                }}>
+                                                                    Total Penalty: ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                                                </h4>
+                                                                <p style={{
+                                                                    fontSize: "12px",
+                                                                    color: penalty.penalty > 0 ? "#dc2626" : "#059669",
+                                                                    marginBottom: "0"
+                                                                }}>
+                                                                    {penalty.penalty > 0
+                                                                        ? `This amount will be charged to ${getUserDisplayName(selectedIssue)}`
+                                                                        : "No penalty applicable"}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div className="col-6">
-                                                            <span className="small text-muted">Damage Penalty:</span>
-                                                            <Badge bg="danger" className="ms-2" style={{ fontSize: "0.75em" }}>
-                                                                {librarySettings.damage_percentage || 50}% of book price
-                                                            </Badge>
+                                                    ) : (
+                                                        <div className="text-center p-4 border rounded" style={{
+                                                            background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                                                            borderLeft: "3px solid #10b981"
+                                                        }}>
+                                                            <h4 style={{ color: "#059669", fontWeight: "bold", fontSize: "1.3rem" }}>
+                                                                ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                                            </h4>
+                                                            <p style={{ fontSize: "12px", color: "#059669", marginBottom: "0" }}>
+                                                                No penalty applicable
+                                                            </p>
                                                         </div>
-                                                        <div className="col-6 mt-2">
-                                                            <span className="small text-muted">Lost Book Penalty:</span>
-                                                            <Badge bg="danger" className="ms-2" style={{ fontSize: "0.75em" }}>
-                                                                {librarySettings.lost_percentage || 100}% of book price
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             )}
-
-                                            {conditionAfter === "Lost" && lostBookPrice && (
-                                                <div className="mb-3 p-2 border rounded" style={{
-                                                    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                                                    borderLeft: "4px solid #10b981"
-                                                }}>
-                                                    <h6 className="small fw-bold mb-2" style={{ color: "#065f46" }}>
-                                                        <i className="fa-solid fa-tag me-1"></i>
-                                                        Book Value for Lost Calculation
-                                                    </h6>
-                                                    <div className="row">
-                                                        <div className="col-6">
-                                                            <span className="small text-muted">Entered Price:</span>
-                                                            <span className="fw-bold text-success ms-2">
-                                                                ₹{parseFloat(lostBookPrice || 0).toFixed(2)}
-                                                            </span>
-                                                        </div>
-                                                        <div className="col-6">
-                                                            <span className="small text-muted">Penalty Percentage:</span>
-                                                            <span className="fw-bold text-danger ms-2">
-                                                                {librarySettings?.lost_percentage || 100}%
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {penalty.daysOverdue > 0 && (
-                                                <div className="mt-2 p-2 border rounded" style={{
-                                                    background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                                                    borderLeft: "4px solid #f59e0b"
-                                                }}>
-                                                    <div className="d-flex justify-content-between">
-                                                        <span className="small fw-bold" style={{ color: "#92400e" }}>Days Overdue:</span>
-                                                        <span className="fw-bold" style={{ color: "#92400e" }}>{penalty.daysOverdue} day(s)</span>
-                                                    </div>
-                                                    <div className="d-flex justify-content-between mt-1">
-                                                        <span className="small fw-bold" style={{ color: "#92400e" }}>Fine per Day:</span>
-                                                        <span className="fw-bold" style={{ color: "#92400e" }}>₹{penalty.finePerDay || 0}/day</span>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <hr className="my-3" />
-                                            <div className="text-center p-3 border rounded" style={{
-                                                background: penalty.penalty > 0
-                                                    ? "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)"
-                                                    : "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                                                borderLeft: `4px solid ${penalty.penalty > 0 ? "#ef4444" : "#10b981"}`
-                                            }}>
-                                                <h4 style={{
-                                                    color: penalty.penalty > 0 ? "#dc2626" : "#059669",
-                                                    fontWeight: "bold",
-                                                    fontSize: "1.8rem"
-                                                }}>
-                                                    Total Penalty: ₹{penalty.penalty?.toFixed(2) || "0.00"}
-                                                </h4>
-                                                <p className="small mb-0" style={{
-                                                    color: penalty.penalty > 0 ? "#dc2626" : "#059669"
-                                                }}>
-                                                    {penalty.penalty > 0
-                                                        ? `This amount will be charged to ${getUserDisplayName(selectedIssue)}`
-                                                        : "✅ No penalty applicable"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center p-4 border rounded" style={{
-                                            background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                                            borderLeft: "4px solid #10b981"
-                                        }}>
-                                            <h5 style={{ color: "#059669", fontWeight: "bold" }}>
-                                                ₹{penalty.penalty?.toFixed(2) || "0.00"}
-                                            </h5>
-                                            <p className="small text-success mb-0">
-                                                {penalty.daysOverdue ? `Overdue by ${penalty.daysOverdue} day(s)` : "No overdue penalty"}
-                                            </p>
-                                            {penalty.daysOverdue > 0 && penalty.finePerDay === 0 && (
-                                                <div className="mt-2">
-                                                    <Badge bg="warning" className="me-1">
-                                                        <i className="fa-solid fa-info-circle me-1"></i>
-                                                        No late fee configured
-                                                    </Badge>
-                                                    <span className="small text-muted">Late penalty not configured in library settings</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </Card.Body>
-                            </Card>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            </Row>
                         </div>
                     )}
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleModalClose} disabled={loading}>
-                        <i className="fa-solid fa-times me-2"></i>
+                <Modal.Footer style={{ padding: "15px 20px" }}>
+                    <Button variant="secondary" onClick={handleModalClose} disabled={loading} style={{ fontSize: "14px", padding: "8px 16px" }}>
                         Cancel
                     </Button>
                     <Button
@@ -2106,7 +2061,10 @@ const BookSubmit = () => {
                             background: penalty.penalty > 0
                                 ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
                                 : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                            border: "none"
+                            border: "none",
+                            fontSize: "14px",
+                            padding: "8px 20px",
+                            fontWeight: "600"
                         }}
                     >
                         {loading ? (
@@ -2116,7 +2074,6 @@ const BookSubmit = () => {
                             </>
                         ) : (
                             <>
-                                <i className="fa-solid fa-check me-2"></i>
                                 {penalty.penalty > 0 ? "Submit with Penalty" : "Confirm Submit"}
                             </>
                         )}

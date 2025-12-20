@@ -79,8 +79,8 @@ const BulkIssue = () => {
     setSubscriptionAllowedBooks(0);
     setMemberPersonalAllowedBooks(0);
     setMemberExtraAllowance(0);
-    setTotalAllowedBooks(6); // Reset to default
-    setSystemMaxBooks(6); // Reset to default
+    setTotalAllowedBooks(6);
+    setSystemMaxBooks(6);
   };
 
   const fetchAll = async () => {
@@ -120,7 +120,7 @@ const BulkIssue = () => {
       setBooks(booksList);
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
-
+      console.log("cardsList loaded:", cardsList);
       const activeCards = cardsList.filter((c) =>
         c.is_active === true || c.is_active === "true" || c.is_active === 1
       );

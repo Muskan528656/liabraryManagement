@@ -38,7 +38,7 @@ async function generatePurchaseSerialNo() {
   }
 }
 
- 
+
 async function findAll() {
   try {
     if (!this.schema) {
@@ -67,7 +67,7 @@ async function findAll() {
   }
 }
 
- 
+
 async function findById(id) {
   try {
     if (!this.schema) {
@@ -99,7 +99,7 @@ async function findById(id) {
   }
 }
 
- 
+
 async function findBySerialNo(serialNo) {
   try {
     if (!this.schema) {
@@ -137,7 +137,7 @@ async function create(purchaseData, userId) {
       throw new Error("Vendor ID is required for purchase");
     }
 
- 
+
     const purchaseSerialNo = await generateAutoNumberSafe('purchases', userId, 'PUR-', 5);
 
     const purchaseQuery = `INSERT INTO ${this.schema}.purchases 
@@ -176,7 +176,7 @@ async function create(purchaseData, userId) {
   }
 }
 
- 
+
 async function updateById(id, purchaseData, userId) {
   try {
     if (!this.schema) {
@@ -247,7 +247,7 @@ async function updateById(id, purchaseData, userId) {
   }
 }
 
- 
+
 async function deleteById(id) {
   try {
     if (!this.schema) {
@@ -276,7 +276,7 @@ async function deleteById(id) {
   }
 }
 
- 
+
 async function getStatistics() {
   try {
     if (!this.schema) {
@@ -296,7 +296,7 @@ async function getStatistics() {
   }
 }
 
- 
+
 async function getRecentPurchases(limit = 10) {
   try {
     if (!this.schema) {
@@ -322,10 +322,42 @@ async function getRecentPurchases(limit = 10) {
     throw error;
   }
 }
+async function findByBookId(bookId) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema is not initialized before querying purchases");
+    }
+
+    const query = `
+      SELECT 
+        id,
+        book_id,
+        vendor_id,
+        quantity,
+        unit_price,
+        (quantity * unit_price) AS total_price,
+        purchase_date
+      FROM "${this.schema}"."purchases"
+      WHERE book_id = $1
+      ORDER BY createddate DESC
+      LIMIT 1
+    `;
+
+    const result = await sql.query(query, [bookId]);
+
+    return result.rows.length ? result.rows[0] : null;
+  } catch (error) {
+    console.error("findByBookId error:", error.message);
+    throw error;
+  }
+}
+
+
 
 module.exports = {
   init,
   findAll,
+  findByBookId,
   findById,
   findBySerialNo,
   create,

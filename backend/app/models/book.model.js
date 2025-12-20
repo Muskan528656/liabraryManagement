@@ -10,7 +10,6 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-
 async function findAll() {
   try {
     if (!this.schema) {
@@ -19,7 +18,14 @@ async function findAll() {
     const query = `SELECT 
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name
+                    c.name AS category_name,
+                    (
+                      SELECT p.unit_price 
+                      FROM ${this.schema}.purchases p 
+                      WHERE p.book_id = b.id 
+                      ORDER BY p.purchase_date DESC, p.createddate DESC 
+                      LIMIT 1
+                    ) AS price
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
@@ -31,8 +37,6 @@ async function findAll() {
     throw error;
   }
 }
-
-
 async function findById(id) {
   try {
     if (!this.schema) {

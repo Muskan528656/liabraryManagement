@@ -448,7 +448,7 @@ const FormModal = ({
 
   return (
     <Modal show={show} onHide={onHide} size={size} centered>
-      <Modal.Header closeButton>
+      <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
         <Modal.Title>
           {icon && <i className={`${icon} me-2`}></i>}
           {title}
@@ -527,7 +527,7 @@ const FormModal = ({
           customFooter
         ) : (
           <>
-            <Button variant="secondary" onClick={onCancel || onHide} disabled={loading}>
+            <Button onClick={onCancel || onHide} disabled={loading}>
               Cancel
             </Button>
             <Button
@@ -535,12 +535,13 @@ const FormModal = ({
               disabled={loading}
               className="d-flex align-items-center justify-content-center"
               style={{
-                background: "var(--primary-color)",
+                backgroundColor: "var(--primary-color)",
                 border: "none",
-                padding: "10px 20px",
+                padding: "8px 20px",
                 borderRadius: "8px",
                 fontWeight: 600,
-                minWidth: "120px",
+                fontSize: "14px",
+                color: "white"
               }}
             >
               {loading ? (
