@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
@@ -127,9 +128,9 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       <div className="cahaya-card-wrapper row g-0">
         
         {/* SIDEBAR NAVIGATION */}
-        <div className="col-md-3 border-end bg-light p-4 d-none d-md-block">
-          <div className="sidebar-brand mb-4 text-primary fw-bold">
-             Importer Wizard
+        <div className="col-md-3 border-end bg-light d-none d-md-block">
+          <div className="sidebar-brand mb-3 text-primary fw-bold" style={{ fontSize: '0.9rem', padding: '12px 0 0 16px' }}>
+            Importer Wizard
           </div>
           <div className="vertical-stepper">
             {STEPS_CONFIG.map((s) => (
@@ -142,36 +143,36 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
         </div>
 
         {/* MAIN CONTENT AREA */}
-        <div className="col-md-9 p-4 bg-white position-relative">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h4 className="fw-bold m-0 text-dark">
+        <div className="col-md-9 p-3 bg-white position-relative">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="fw-bold m-0 text-dark" style={{ fontSize: '1rem' }}>
               {STEPS_CONFIG[step].label}
-            </h4>
-            <div className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill">
+            </h5>
+            <div className="badge bg-soft-primary text-primary px-2 py-1 rounded-pill" style={{ fontSize: '0.75rem' }}>
               {model?.modelName || "Standard Import"}
             </div>
           </div>
 
           {error && (
-            <div className="alert alert-danger border-0 rounded-4 shadow-sm fade-in d-flex align-items-center mb-4">
-              <ExclamationCircle className="me-2" /> {error}
+            <div className="alert alert-danger border-0 rounded-3 shadow-sm fade-in d-flex align-items-center mb-3 py-2" style={{ fontSize: '0.875rem' }}>
+              <ExclamationCircle className="me-2" size={16} /> {error}
             </div>
           )}
 
           {/* STEP 0: UPLOAD */}
           {step === 0 && (
-            <div className="fade-in py-4 text-center">
+            <div className="fade-in py-3 text-center">
               <div className="upload-dropzone" onClick={() => document.querySelector('.hidden-input').click()}>
                 <input type="file" className="hidden-input" hidden onChange={(e) => handleFile(e.target.files[0])} accept=".csv, .xlsx, .xls" />
                 <div className="upload-icon-circle">
-                  <CloudArrowUp size={32} />
+                  <CloudArrowUp size={24} />
                 </div>
-                <h5 className="mt-3 fw-bold">Select source file</h5>
-                <p className="text-muted small">Drop your CSV or Excel file here to start mapping</p>
-                <div className="mt-2 text-primary fw-medium small">Supported: .csv, .xlsx, .xls</div>
+                <h6 className="mt-2 fw-bold" style={{ fontSize: '0.95rem' }}>Select source file</h6>
+                <p className="text-muted small" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Drop your CSV or Excel file here to start mapping</p>
+                <div className="text-primary fw-medium" style={{ fontSize: '0.75rem' }}>Supported: .csv, .xlsx, .xls</div>
               </div>
-              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-4 small d-flex align-items-center justify-content-center mx-auto">
-                <Download className="me-2" /> Download Template CSV
+              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-3 small d-flex align-items-center justify-content-center mx-auto" style={{ fontSize: '0.8rem' }}>
+                <Download className="me-1" size={14} /> Download Template CSV
               </button>
             </div>
           )}
@@ -183,17 +184,18 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 {rawHeaders.map((header, idx) => (
                   <div key={idx} className={`mapping-item-card ${map[header] ? 'mapped' : ''}`}>
                     <div className="source-info">
-                      <FileEarmarkSpreadsheet className="text-muted me-2" />
-                      <span className="text-truncate fw-medium" title={header}>{header}</span>
+                      <FileEarmarkSpreadsheet className="text-muted me-2" size={14} />
+                      <span className="text-truncate fw-medium" style={{ fontSize: '0.85rem' }} title={header}>{header}</span>
                     </div>
                     <div className="mapping-arrow">
-                      <ArrowRightCircle />
+                      <ArrowRightCircle size={16} />
                     </div>
                     <div className="target-select">
                       <select
                         className="form-select form-select-sm modern-select"
                         value={map[header] || ""}
                         onChange={(e) => setMap({ ...map, [header]: e.target.value })}
+                        style={{ fontSize: '0.85rem', padding: '4px 8px' }}
                       >
                         <option value="">-- Ignore Column --</option>
                         {Object.keys(activeFields).map((key) => (
@@ -212,37 +214,37 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
           {/* STEP 2: PREVIEW */}
           {step === 2 && (
             <div className="fade-in">
-              <div className="preview-table-wrapper shadow-sm border rounded-4">
+              <div className="preview-table-wrapper shadow-sm border rounded-3">
                 <table className="table table-hover mb-0 custom-preview-table">
                   <thead>
                     <tr>
                       {Object.values(activeFields).map((key, i) => (
-                        <th key={i}>{fieldLabels[key] || key}</th>
+                        <th key={i} style={{ fontSize: '0.8rem', padding: '8px' }}>{fieldLabels[key] || key}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {rawRows.slice(0, 10).map((row, rIdx) => (
+                    {rawRows.slice(0, 8).map((row, rIdx) => (
                       <tr key={rIdx}>
                         {Object.keys(activeFields).map((key, cIdx) => {
                           const header = Object.keys(map).find(h => map[h] === key);
                           const index = rawHeaders.indexOf(header);
                           const val = index !== -1 ? row[index] : "";
-                          return <td key={cIdx} className="text-truncate">{val || <span className="text-light">-</span>}</td>;
+                          return <td key={cIdx} className="text-truncate" style={{ fontSize: '0.85rem', padding: '8px' }}>{val || <span className="text-light">-</span>}</td>;
                         })}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="text-muted small mt-2 px-2">Showing a preview of the first 10 rows.</p>
+              <p className="text-muted small mt-1 px-1" style={{ fontSize: '0.75rem' }}>Showing a preview of the first 8 rows.</p>
             </div>
           )}
 
           {/* STEP 3: RESULTS */}
           {step === 3 && importResult && (
-            <div className="fade-in py-3">
-              <div className="row g-3 mb-4">
+            <div className="fade-in py-2">
+              <div className="row g-2 mb-3">
                 <div className="col-4">
                   <div className="stat-card success">
                     <div className="stat-val">{importResult.successCount}</div>
@@ -263,22 +265,22 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 </div>
               </div>
 
-              <div className="result-log-area border rounded-4 p-3 bg-light">
-                 <h6 className="fw-bold mb-3">Event Logs</h6>
+              <div className="result-log-area border rounded-3 p-2 bg-light" style={{ fontSize: '0.85rem' }}>
+                 <h6 className="fw-bold mb-2" style={{ fontSize: '0.9rem' }}>Event Logs</h6>
                  <div className="log-scroll">
                    {importResult.successCount > 0 && (
-                     <div className="log-line text-success small mb-2 d-flex align-items-center">
-                       <CheckCircleFill className="me-2" /> Successfully added {importResult.successCount} records.
+                     <div className="log-line text-success small mb-1 d-flex align-items-center">
+                       <CheckCircleFill className="me-1" size={14} /> Successfully added {importResult.successCount} records.
                      </div>
                    )}
                    {importResult.duplicates?.map((d, i) => (
-                     <div key={i} className="log-line text-warning small mb-2 d-flex align-items-start">
-                       <DashCircle className="me-2 mt-1" /> <div>Duplicate skipped at Row {d.row}: {d.message}</div>
+                     <div key={i} className="log-line text-warning small mb-1 d-flex align-items-start">
+                       <DashCircle className="me-1 mt-1" size={14} /> <div>Duplicate skipped at Row {d.row}: {d.message}</div>
                      </div>
                    ))}
                    {importResult.errors?.map((e, i) => (
-                     <div key={i} className="log-line text-danger small mb-2 d-flex align-items-start">
-                       <ExclamationCircle className="me-2 mt-1" /> <div>Error at Row {e.row}: {e.message}</div>
+                     <div key={i} className="log-line text-danger small mb-1 d-flex align-items-start">
+                       <ExclamationCircle className="me-1 mt-1" size={14} /> <div>Error at Row {e.row}: {e.message}</div>
                      </div>
                    ))}
                  </div>
@@ -287,31 +289,31 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
           )}
 
           {/* FOOTER ACTIONS */}
-          <div className="mt-5 d-flex justify-content-between align-items-center">
+          <div className="mt-4 d-flex justify-content-between align-items-center">
             {step > 0 && step < 3 ? (
-              <button className="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-medium" onClick={() => setStep(step - 1)} disabled={isProcessing}>
-                <ChevronLeft size={14} className="me-1" /> Back
+              <button className="btn btn-outline-secondary rounded-pill px-3 btn-sm fw-medium" style={{ fontSize: '0.85rem' }} onClick={() => setStep(step - 1)} disabled={isProcessing}>
+                <ChevronLeft size={12} className="me-1" /> Back
               </button>
             ) : <div></div>}
 
             <div className="d-flex gap-2">
               {step === 1 && (
-                <button className="btn btn-primary rounded-pill px-4 shadow-sm" onClick={() => setStep(2)}>
-                  Preview Data <ChevronRight size={14} className="ms-1" />
+                <button className="btn btn-primary rounded-pill px-3 shadow-sm" style={{ fontSize: '0.85rem' }} onClick={() => setStep(2)}>
+                  Preview Data <ChevronRight size={12} className="ms-1" />
                 </button>
               )}
               {step === 2 && (
-                <button className="btn btn-success rounded-pill px-4 shadow-sm d-flex align-items-center" onClick={handleImport} disabled={isProcessing}>
+                <button className="btn btn-success rounded-pill px-3 shadow-sm d-flex align-items-center" style={{ fontSize: '0.85rem' }} onClick={handleImport} disabled={isProcessing}>
                   {isProcessing ? (
-                    <><span className="spinner-border spinner-border-sm me-2"></span> Processing...</>
+                    <><span className="spinner-border spinner-border-sm me-1"></span> Processing...</>
                   ) : (
-                    <><Check2Circle className="me-2" /> Confirm Import</>
+                    <><Check2Circle className="me-1" size={14} /> Confirm Import</>
                   )}
                 </button>
               )}
               {step === 3 && (
-                <button className="btn btn-primary rounded-pill px-4 shadow-sm" onClick={() => { setStep(0); setImportResult(null); setMap({}); }}>
-                  <ArrowClockwise className="me-2" /> Import Another File
+                <button className="btn btn-primary rounded-pill px-3 shadow-sm" style={{ fontSize: '0.85rem' }} onClick={() => { setStep(0); setImportResult(null); setMap({}); }}>
+                  <ArrowClockwise className="me-1" size={14} /> Import Another File
                 </button>
               )}
             </div>
@@ -320,59 +322,59 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       </div>
 
       <style jsx>{`
-        .cahaya-importer-container { background: transparent; padding: 10px; }
-        .cahaya-card-wrapper { border-radius: 24px; overflow: hidden; background: #fff; border: 1px solid #f0f0f0; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
+        .cahaya-importer-container { background: transparent; padding: 8px; }
+        .cahaya-card-wrapper { border-radius: 20px; overflow: hidden; background: #fff; border: 1px solid #f0f0f0; box-shadow: 0 5px 20px rgba(0,0,0,0.04); }
         
         /* Stepper */
-        .vertical-stepper { display: flex; flex-direction: column; gap: 24px; }
-        .v-step { display: flex; align-items: center; gap: 12px; }
+        .vertical-stepper { display: flex; flex-direction: column; gap: 16px; padding: 12px 16px; }
+        .v-step { display: flex; align-items: center; gap: 10px; }
         .v-circle { 
-          width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 2px solid #ddd;
-          display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #999;
+          width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 2px solid #ddd;
+          display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #999;
         }
-        .v-step.active .v-circle { border-color: #0d6efd; color: #0d6efd; }
-        .v-step.completed .v-circle { background: #0d6efd; border-color: #0d6efd; color: #fff; }
-        .v-label { font-size: 13px; color: #888; font-weight: 500; }
+        .v-step.active .v-circle { border-color: var(--primary-color, #0d6efd); color: var(--primary-color, #0d6efd); }
+        .v-step.completed .v-circle { background: var(--primary-color, #0d6efd); border-color: var(--primary-color, #0d6efd); color: #fff; }
+        .v-label { font-size: 12px; color: #888; font-weight: 500; }
         .v-step.active .v-label { color: #000; }
 
         /* Step 0: Upload */
         .upload-dropzone {
-          border: 2px dashed #e2e8f0; border-radius: 20px; padding: 40px;
+          border: 2px dashed #e2e8f0; border-radius: 16px; padding: 24px;
           background: #f8fafc; transition: 0.3s; cursor: pointer;
         }
-        .upload-dropzone:hover { border-color: #0d6efd; background: #eff6ff; }
-        .upload-icon-circle { width: 60px; height: 60px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #0d6efd; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .upload-dropzone:hover { border-color: var(--primary-color, #0d6efd); background: #eff6ff; }
+        .upload-icon-circle { width: 48px; height: 48px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: var(--primary-color, #0d6efd); box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
 
         /* Step 1: Mapping */
-        .mapping-container { max-height: 380px; overflow-y: auto; padding-right: 8px; }
+        .mapping-container { max-height: 320px; overflow-y: auto; padding-right: 6px; }
         .mapping-item-card {
-          display: flex; align-items: center; padding: 12px 20px; border: 1px solid #f0f0f0;
-          border-radius: 14px; margin-bottom: 8px; transition: 0.2s;
+          display: flex; align-items: center; padding: 8px 12px; border: 1px solid #f0f0f0;
+          border-radius: 12px; margin-bottom: 6px; transition: 0.2s;
         }
-        .mapping-item-card:hover { border-color: #0d6efd; background: #fcfdfe; }
-        .mapping-item-card.mapped { border-left: 4px solid #0d6efd; background: #f8fbff; }
-        .source-info { flex: 1; display: flex; align-items: center; font-size: 14px; }
-        .mapping-arrow { padding: 0 15px; color: #ccc; }
+        .mapping-item-card:hover { border-color: var(--primary-color, #0d6efd); background: #fcfdfe; }
+        .mapping-item-card.mapped { border-left: 3px solid var(--primary-color, #0d6efd); background: #f8fbff; }
+        .source-info { flex: 1; display: flex; align-items: center; font-size: 13px; }
+        .mapping-arrow { padding: 0 10px; color: #ccc; }
         .target-select { flex: 1; }
-        .modern-select { border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; }
+        .modern-select { border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; }
 
         /* Step 2: Preview */
-        .preview-table-wrapper { overflow-x: auto; border-radius: 16px; }
-        .custom-preview-table th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding: 12px; }
-        .custom-preview-table td { font-size: 13px; padding: 12px; }
+        .preview-table-wrapper { overflow-x: auto; border-radius: 12px; }
+        .custom-preview-table th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; }
+        .custom-preview-table td { font-size: 12px; }
 
         /* Step 3: Result Stats */
-        .stat-card { padding: 15px; border-radius: 18px; text-align: center; }
+        .stat-card { padding: 10px; border-radius: 14px; text-align: center; }
         .stat-card.success { background: #f0fdf4; color: #15803d; border: 1px solid #dcfce7; }
         .stat-card.warning { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
         .stat-card.danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-        .stat-val { font-size: 20px; font-weight: 800; }
-        .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
-        .log-scroll { max-height: 200px; overflow-y: auto; }
+        .stat-val { font-size: 18px; font-weight: 800; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .log-scroll { max-height: 180px; overflow-y: auto; }
 
         /* Global Helpers */
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .bg-soft-primary { background: #e0e7ff; }
       `}</style>
     </div>

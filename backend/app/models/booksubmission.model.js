@@ -19,151 +19,881 @@ const emailTracker = {
 function init(schema_name) {
   schema = schema_name;
 }
+// async function create(submissionData, userId) {
+//   if (!schema) throw new Error("Schema not initialized");
+//   if (!submissionData.issue_id) throw new Error("Issue ID required");
+
+//   const client = await sql.connect();
+
+//   try {
+//     await client.query('BEGIN');
+
+//     // Get issue details with book title and ISBN from demo.book_issues
+//     const issueRes = await client.query(
+//       `SELECT bi.*, b.title, b.isbn, b.available_copies
+//        FROM demo.book_issues bi
+//        LEFT JOIN demo.books b ON bi.book_id = b.id
+//        WHERE bi.id = $1`,
+//       [submissionData.issue_id]
+//     );
+
+//     if (!issueRes.rows.length) throw new Error("Issue not found");
+//     const issue = issueRes.rows[0];
+
+//     if (issue.return_date) throw new Error("Book already returned");
+
+//     // Get library member details from demo.library_members
+//     const memberRes = await client.query(
+//       `SELECT * FROM demo.library_members 
+//        WHERE id = $1 AND is_active = true`,
+//       [issue.issued_to]
+//     );
+
+//     if (!memberRes.rows.length) throw new Error("Library member not found");
+//     const member = memberRes.rows[0];
+
+//     // Get library settings from demo.library_setting
+//     const settingRes = await client.query(
+//       `SELECT * FROM demo.library_setting LIMIT 1`
+//     );
+
+//     let finePerDay = 5;
+//     if (settingRes.rows.length > 0) {
+//       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
+//     }
+
+//     // Calculate days overdue
+//     const today = new Date();
+//     const dueDate = new Date(issue.due_date);
+//     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
+
+//     // Parse condition from submission data
+//     const conditionBefore = submissionData.condition_before || "Good";
+//     const conditionAfter = submissionData.condition_after || "Good";
+//     const conditionAfterLower = conditionAfter.toLowerCase();
+//     console.log("Condition after:", conditionAfterLower);
+//     // Fetch LATEST book purchase price from demo.purchases table
+//     let bookPurchasePrice = 0;
+//     let purchaseDetails = null;
+
+//     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
+//       try {
+//         // Get the LATEST purchase entry for this book
+//         const purchaseRes = await client.query(
+//           `SELECT unit_price, purchase_date, quantity, total_amount
+//            FROM demo.purchases 
+//            WHERE book_id = $1 
+//            ORDER BY purchase_date DESC, createddate DESC 
+//            LIMIT 1`,
+//           [issue.book_id]
+//         );
+
+//         if (purchaseRes.rows.length > 0) {
+//           purchaseDetails = purchaseRes.rows[0];
+//           bookPurchasePrice = purchaseDetails.unit_price || 0;
+
+//           console.log("LATEST purchase price fetched:", {
+//             unit_price: bookPurchasePrice,
+//             purchase_date: purchaseDetails.purchase_date,
+//             quantity: purchaseDetails.quantity,
+//             total_amount: purchaseDetails.total_amount
+//           });
+
+//         } else {
+//           // If no purchase record found, use frontend price
+//           bookPurchasePrice = submissionData.book_price ||
+//             submissionData.lost_book_price ||
+//             0;
+//           console.log("No purchase record found, using frontend price:", bookPurchasePrice);
+//         }
+//       } catch (error) {
+//         console.error("Error fetching purchase price:", error);
+//         bookPurchasePrice = submissionData.book_price ||
+//           submissionData.lost_book_price ||
+//           0;
+//       }
+//     }
+
+//     // Calculate penalties
+//     let totalPenalty = 0;
+//     let penaltyType = "none";
+//     let latePenalty = 0;
+//     let damageLostPenalty = 0;
+//     console.log("Calculating penalties with:", conditionAfterLower);
+//     // 1. Late return penalty (if overdue)
+//     if (daysOverdue > 0) {
+//       latePenalty = daysOverdue * finePerDay;
+//       totalPenalty += latePenalty;
+//       penaltyType = "late";
+//       console.log("Late penalty calculated:", latePenalty, "for", daysOverdue, "days");
+//     }
+
+//     // 2. Damage/Lost penalty based on LATEST purchase price
+//     if (conditionAfterLower === "lost") {
+//       // Lost book ka 100% of LATEST purchase price
+//       damageLostPenalty = bookPurchasePrice;
+//       totalPenalty += damageLostPenalty;
+//       penaltyType = "lost";
+//       console.log("Lost penalty calculated:", damageLostPenalty, "based on latest price:", bookPurchasePrice);
+
+//     } else if (conditionAfterLower === "damaged") {
+//       // Damaged book ka 50% of LATEST purchase price
+//       damageLostPenalty = bookPurchasePrice * 0.5;
+//       totalPenalty += damageLostPenalty;
+//       penaltyType = "damaged";
+//       console.log("Damaged penalty calculated:", damageLostPenalty, "based on latest price:", bookPurchasePrice);
+//     }
+
+//     console.log("Total penalty:", totalPenalty, "Type:", penaltyType);
+
+//     // Insert book submission record into demo.book_submissions
+//     const submissionRes = await client.query(
+//       `INSERT INTO demo.book_submissions
+//         (issue_id, book_id, submitted_by, submit_date,
+//          condition_before, condition_after, remarks,
+//          days_overdue, penalty, createddate, createdbyid)
+//        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3)
+//        RETURNING *`,
+//       [
+//         issue.id,
+//         issue.book_id,
+//         userId,
+//         submissionData.submit_date ? new Date(submissionData.submit_date) : new Date(),
+//         conditionBefore,
+//         conditionAfter,
+//         submissionData.remarks || "",
+//         daysOverdue,
+//         totalPenalty
+//       ]
+//     );
+
+//     const submission = submissionRes.rows[0];
+//     console.log("Created submission ID:", submission.id);
+
+//     // Update book available copies (only if not lost)
+//     if (conditionAfterLower !== "lost") {
+//       await client.query(
+//         `UPDATE demo.books
+//          SET available_copies = COALESCE(available_copies, 0) + 1,
+//              lastmodifieddate = CURRENT_TIMESTAMP,
+//              lastmodifiedbyid = $2
+//          WHERE id = $1`,
+//         [issue.book_id, userId]
+//       );
+//       console.log("Available copies increased for book:", issue.book_id);
+//     } else {
+//       console.log("Book is LOST - available copies NOT increased");
+//     }
+
+//     // Handle company ID
+//     let companyId = null;
+//     if (submissionData.company_id) {
+//       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+//       if (uuidRegex.test(submissionData.company_id)) {
+//         companyId = submissionData.company_id;
+//       }
+//     }
+
+//     // Insert into penalty_master if any penalty exists
+//     let penaltyMasterId = null;
+//     if (totalPenalty > 0) {
+//       try {
+//         const penaltyInsertResult = await client.query(
+//           `INSERT INTO demo.penalty_master
+//            (company_id, penalty_type, book_id, issue_id,
+//             book_title, isbn, issued_to, card_number,
+//             issue_date, due_date,
+//             condition_before, condition_after,
+//             book_amount, per_day_amount,
+//             createddate, createdbyid, is_paid)
+//            VALUES
+//            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP,$15,false)
+//            RETURNING id`,
+//           [
+//             companyId,
+//             penaltyType,
+//             issue.book_id,
+//             issue.id,
+//             issue.title,
+//             issue.isbn,
+//             member.id,
+//             member.card_number || null,
+//             issue.issue_date,
+//             issue.due_date,
+//             conditionBefore,
+//             conditionAfter,
+//             totalPenalty,
+//             finePerDay,
+//             userId
+//           ]
+//         );
+
+//         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
+//         console.log("Inserted penalty_master record ID:", penaltyMasterId);
+//       } catch (error) {
+//         console.error("Error inserting into penalty_master:", error);
+//         console.error("Error details:", error.message);
+//       }
+//     }
+
+//     // Update book issue status in demo.book_issues
+//     let issueStatus = 'returned';
+//     if (conditionAfterLower === 'lost') {
+//       issueStatus = 'lost';
+//     } else if (conditionAfterLower === 'damaged') {
+//       issueStatus = 'damaged';
+//     }
+
+//     await client.query(
+//       `UPDATE demo.book_issues
+//        SET return_date = CURRENT_DATE, 
+//            status = $3,
+//            lastmodifieddate = CURRENT_TIMESTAMP,
+//            lastmodifiedbyid = $2
+//        WHERE id = $1`,
+//       [issue.id, userId, issueStatus]
+//     );
+
+//     console.log("Book issue marked as", issueStatus, "ID:", issue.id);
+
+//     await client.query('COMMIT');
+//     console.log("Transaction completed successfully");
+
+//     // Prepare response
+//     return {
+//       success: true,
+//       message: "Book submitted successfully",
+//       data: {
+//         submission_id: submission.id,
+//         totalPenalty: totalPenalty,
+//         penaltyType: penaltyType,
+//         daysOverdue: daysOverdue,
+//         bookPurchasePrice: bookPurchasePrice,
+//         latePenalty: latePenalty,
+//         damageLostPenalty: damageLostPenalty,
+//         member_details: {
+//           id: member.id,
+//           name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.name || 'N/A',
+//           email: member.email || 'N/A',
+//           card_number: member.card_number || 'N/A'
+//         },
+//         book_details: {
+//           id: issue.book_id,
+//           title: issue.title || 'N/A',
+//           isbn: issue.isbn || 'N/A'
+//         },
+//         issue_details: {
+//           id: issue.id,
+//           issue_date: issue.issue_date,
+//           due_date: issue.due_date,
+//           return_date: new Date().toISOString().split('T')[0],
+//           status: issueStatus
+//         },
+//         submission_details: {
+//           submit_date: submission.submit_date,
+//           condition_before: conditionBefore,
+//           condition_after: conditionAfter,
+//           remarks: submissionData.remarks || ""
+//         },
+//         purchase_details: purchaseDetails ? {
+//           unit_price: purchaseDetails.unit_price,
+//           purchase_date: purchaseDetails.purchase_date,
+//           quantity: purchaseDetails.quantity,
+//           total_amount: purchaseDetails.total_amount
+//         } : null,
+//         penalty_details: {
+//           penalty_master_id: penaltyMasterId,
+//           fine_per_day: finePerDay,
+//           total_penalty: totalPenalty
+//         }
+//       }
+//     };
+
+//   } catch (error) {
+//     await client.query('ROLLBACK');
+//     console.error("Book submission failed:", error);
+//     console.error("Error stack:", error.stack);
+
+
+//     if (error.message.includes("foreign key constraint")) {
+//       throw new Error("Database constraint error. Please check if all related records exist.");
+//     } else if (error.message.includes("connection")) {
+//       throw new Error("Database connection error. Please try again.");
+//     }
+
+//     throw error;
+//   } finally {
+//     client.release();
+//   }
+// }
+// async function create(submissionData, userId) {
+//   if (!schema) throw new Error("Schema not initialized");
+//   if (!submissionData.issue_id) throw new Error("Issue ID required");
+
+//   const client = await sql.connect();
+
+//   try {
+//     await client.query('BEGIN');
+
+//     const issueRes = await client.query(
+//       `SELECT bi.*, b.title, b.isbn, b.available_copies
+//        FROM demo.book_issues bi
+//        LEFT JOIN demo.books b ON bi.book_id = b.id
+//        WHERE bi.id = $1`,
+//       [submissionData.issue_id]
+//     );
+
+//     if (!issueRes.rows.length) throw new Error("Issue not found");
+//     const issue = issueRes.rows[0];
+
+//     if (issue.return_date) throw new Error("Book already returned");
+
+//     const memberRes = await client.query(
+//       `SELECT * FROM demo.library_members 
+//        WHERE id = $1 AND is_active = true`,
+//       [issue.issued_to]
+//     );
+
+//     if (!memberRes.rows.length) throw new Error("Library member not found");
+//     const member = memberRes.rows[0];
+
+//     const settingRes = await client.query(
+//       `SELECT * FROM demo.library_setting LIMIT 1`
+//     );
+
+//     let finePerDay = 5;
+//     if (settingRes.rows.length > 0) {
+//       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
+//     }
+
+//     const today = new Date();
+//     const dueDate = new Date(issue.due_date);
+//     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
+
+//     const conditionBefore = submissionData.condition_before || "Good";
+//     const conditionAfter = submissionData.condition_after || "Good";
+//     const conditionAfterLower = conditionAfter.toLowerCase();
+//     console.log("Condition after:", conditionAfterLower);
+//     let bookPurchasePrice = 0;
+
+//     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
+//       try {
+//         const purchaseRes = await client.query(
+//           `SELECT id, unit_price, purchase_date, createddate 
+//        FROM demo.purchases 
+//        WHERE book_id = $1 
+//        ORDER BY purchase_date DESC, createddate DESC`,
+//           [issue.book_id]
+//         );
+
+//         if (purchaseRes.rows.length > 0) {
+//           bookPurchasePrice = purchaseRes.rows[0].unit_price || 0;
+//           console.log("Purchase price fetched:", bookPurchasePrice);
+//         } else {
+//           bookPurchasePrice = submissionData.book_price ||
+//             submissionData.lost_book_price ||
+//             0;
+//         }
+//       } catch (error) {
+//         console.error("Error fetching purchase price:", error);
+//         bookPurchasePrice = submissionData.book_price ||
+//           submissionData.lost_book_price ||
+//           0;
+//       }
+//     }
+
+//     let totalPenalty = 0;
+//     let penaltyType = "none";
+//     let latePenalty = 0;
+//     if (daysOverdue > 0) {
+//       latePenalty = daysOverdue * finePerDay;
+//       totalPenalty += latePenalty;
+//       penaltyType = "late";
+//     }
+
+//     if (conditionAfterLower === "lost") {
+//       const lostPenalty = bookPurchasePrice;
+//       totalPenalty += lostPenalty;
+//       penaltyType = "lost";
+//       console.log("Calculating penalties with:", lostPenalty);
+
+//     } else if (conditionAfterLower === "damaged") {
+//       const damagePenalty = bookPurchasePrice * 0.5;
+//       totalPenalty += damagePenalty;
+//       penaltyType = "damaged";
+//     }
+
+//     const submissionRes = await client.query(
+//       `INSERT INTO demo.book_submissions
+//         (issue_id, book_id, submitted_by, submit_date,
+//          condition_before, condition_after, remarks,
+//          days_overdue, penalty, createddate, createdbyid)
+//        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3)
+//        RETURNING * `,
+//       [
+//         issue.id,
+//         issue.book_id,
+//         userId,
+//         submissionData.submit_date ? new Date(submissionData.submit_date) : new Date(),
+//         conditionBefore,
+//         conditionAfter,
+//         submissionData.remarks || "",
+//         daysOverdue,
+//         totalPenalty
+//       ]
+//     );
+
+//     const submission = submissionRes.rows[0];
+//     console.log("Created submission ID:", submissionRes);
+//     if (conditionAfterLower !== "lost") {
+//       await client.query(
+//         `UPDATE demo.books
+//          SET available_copies = COALESCE(available_copies, 0) + 1,
+//              lastmodifieddate = CURRENT_TIMESTAMP,
+//              lastmodifiedbyid = $2
+//          WHERE id = $1`,
+//         [issue.book_id, userId]
+//       );
+//     }
+
+
+//     let companyId = null;
+//     if (submissionData.company_id) {
+//       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+//       if (uuidRegex.test(submissionData.company_id)) {
+//         companyId = submissionData.company_id;
+//       }
+//     }
+
+//     let penaltyMasterId = null;
+//     if (totalPenalty > 0) {
+//       try {
+//         const penaltyInsertResult = await client.query(
+//           `INSERT INTO demo.penalty_master
+//            (company_id, penalty_type, book_id, issue_id,
+//             book_title, isbn, issued_to, card_number,
+//             issue_date, due_date,
+//             condition_before, condition_after,
+//             book_amount, per_day_amount,
+//             createddate, createdbyid, is_paid)
+//            VALUES
+//            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP,$15,false)
+//            RETURNING *`,
+//           [
+//             companyId,
+//             penaltyType,
+//             issue.book_id,
+//             issue.id,
+//             issue.title,
+//             issue.isbn,
+//             member.id,
+//             member.card_number || null,
+//             issue.issue_date,
+//             issue.due_date,
+//             conditionBefore,
+//             conditionAfter,
+//             totalPenalty,
+//             finePerDay,
+//             userId
+//           ]
+//         );
+
+//         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
+//         console.log("Inserted penalty_master ID:", penaltyInsertResult);
+//       } catch (error) {
+//         console.error("Error inserting into penalty_master:", error);
+//       }
+//     }
+
+//     let issueStatus = 'returned';
+//     if (conditionAfterLower === 'lost') {
+//       issueStatus = 'lost';
+//     } else if (conditionAfterLower === 'damaged') {
+//       issueStatus = 'damaged';
+//     }
+
+//     await client.query(
+//       `UPDATE demo.book_issues
+//        SET return_date = CURRENT_DATE, 
+//            status = $3,
+//            lastmodifieddate = CURRENT_TIMESTAMP,
+//            lastmodifiedbyid = $2
+//        WHERE id = $1`,
+//       [issue.id, userId, issueStatus]
+//     );
+
+
+//     return {
+//       success: true,
+//       message: "Book submitted successfully",
+//       data: {
+//         submission_id: submission.id,
+//         totalPenalty: totalPenalty,
+//         penaltyType: penaltyType,
+//         daysOverdue: daysOverdue,
+//         bookPurchasePrice: bookPurchasePrice,
+//         latePenalty: latePenalty,
+//         damageLostPenalty: totalPenalty - latePenalty,
+//         member_details: {
+//           id: member.id,
+//           name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.name || 'N/A',
+//           email: member.email || 'N/A',
+//           card_number: member.card_number || 'N/A'
+//         },
+//         book_details: {
+//           id: issue.book_id,
+//           title: issue.title || 'N/A',
+//           isbn: issue.isbn || 'N/A'
+//         },
+//         issue_details: {
+//           id: issue.id,
+//           issue_date: issue.issue_date,
+//           due_date: issue.due_date,
+//           return_date: new Date().toISOString().split('T')[0],
+//           status: issueStatus
+//         },
+//         submission_details: {
+//           submit_date: submission.submit_date,
+//           condition_before: conditionBefore,
+//           condition_after: conditionAfter,
+//           remarks: submissionData.remarks || ""
+//         },
+//         penalty_details: {
+//           penalty_master_id: penaltyMasterId,
+//           fine_per_day: finePerDay,
+//           total_penalty: totalPenalty
+//         }
+//       }
+//     };
+
+//   } catch (error) {
+//     await client.query('ROLLBACK');
+//     console.error("Book submission failed:", error);
+
+//     if (error.message.includes("foreign key constraint")) {
+//       throw new Error("Database constraint error. Please check if all related records exist.");
+//     } else if (error.message.includes("connection")) {
+//       throw new Error("Database connection error. Please try again.");
+//     }
+
+//     throw error;
+//   } finally {
+//     client.release();
+//   }
+// }
+
+
 
 async function create(submissionData, userId) {
   if (!schema) throw new Error("Schema not initialized");
   if (!submissionData.issue_id) throw new Error("Issue ID required");
 
-  const issueRes = await sql.query(
-    `SELECT bi.*, b.title, b.isbn
-     FROM ${schema}.book_issues bi
-     LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-     WHERE bi.id = $1`,
-    [submissionData.issue_id]
-  );
+  const client = await sql.connect();
 
-  if (!issueRes.rows.length) throw new Error("Issue not found");
-  const issue = issueRes.rows[0];
+  try {
+    await client.query('BEGIN');
 
-  if (issue.return_date) throw new Error("Book already returned");
+    console.log("📝 Starting book submission for issue_id:", submissionData.issue_id);
+    console.log("📦 Submission data:", submissionData);
 
-  // Get library member details
-  const memberRes = await sql.query(
-    `SELECT lm.* FROM ${schema}.library_members lm 
-     WHERE lm.id = $1 AND lm.is_active = true`,
-    [issue.issued_to]
-  );
-
-  if (!memberRes.rows.length) throw new Error("Library member not found");
-  const member = memberRes.rows[0];
-
-  const settingRes = await sql.query(
-    `SELECT fine_per_day FROM demo.library_setting LIMIT 1`
-  );
-  const finePerDay = settingRes.rows.length ? Number(settingRes.rows[0].fine_per_day) : 0;
-
-  const today = new Date();
-  const dueDate = new Date(issue.due_date);
-  const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
-  let totalPenalty = 0;
-  let penaltyType = null;
-  let penalties = [];
-
-  if (daysOverdue > 0) {
-    totalPenalty = daysOverdue * finePerDay;
-    penaltyType = "late";
-    penalties.push({
-      type: penaltyType,
-      amount: totalPenalty,
-      daysOverdue
-    });
-  }
-
-  const submissionRes = await sql.query(
-    `INSERT INTO ${schema}.book_submissions
-      (issue_id, book_id, submitted_by, submit_date,
-       condition_before, condition_after, remarks,
-       days_overdue, createddate, createdbyid)
-     VALUES ($1,$2,$3,CURRENT_DATE,$4,$5,$6,$7,CURRENT_TIMESTAMP,$3)
-     RETURNING *`,
-    [
-      issue.id,
-      issue.book_id,
-      userId,
-      submissionData.condition_before || "good",
-      submissionData.condition_after || "good",
-      submissionData.remarks || "",
-      daysOverdue
-    ]
-  );
-
-  const submission = submissionRes.rows[0];
-
-  const conditionAfter =
-    (submissionData.condition_after || "good").toLowerCase();
-
-  // Increase available copies only if book is NOT lost
-  if (conditionAfter !== "lost") {
-    await sql.query(
-      `
-    UPDATE ${schema}.books
-    SET 
-      available_copies = COALESCE(available_copies, 0) + 1,
-      lastmodifieddate = CURRENT_TIMESTAMP,
-      lastmodifiedbyid = $2
-    WHERE id = $1
-    `,
-      [issue.book_id, userId]
+    // Get issue details with book title and ISBN from demo.book_issues
+    const issueRes = await client.query(
+      `SELECT bi.*, b.title, b.isbn, b.available_copies
+       FROM demo.book_issues bi
+       LEFT JOIN demo.books b ON bi.book_id = b.id
+       WHERE bi.id = $1`,
+      [submissionData.issue_id]
     );
-  }
-  let companyId = null;
-  if (submissionData.company_id) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(submissionData.company_id)) companyId = submissionData.company_id;
-  }
 
-  if (totalPenalty > 0) {
-    await sql.query(
-      `INSERT INTO ${schema}.penalty_master
-       (company_id, penalty_type, book_id, issue_id,
-        book_title, isbn, issued_to, card_number,
-        issue_date, due_date,
-        condition_before, condition_after,
-        book_amount, createdbyid)
-       VALUES
-       ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+    if (!issueRes.rows.length) throw new Error("Issue not found");
+    const issue = issueRes.rows[0];
+    console.log("✅ Issue found:", issue.id, "Book:", issue.title);
+
+    if (issue.return_date) throw new Error("Book already returned");
+
+    // Get library member details from demo.library_members
+    const memberRes = await client.query(
+      `SELECT * FROM demo.library_members 
+       WHERE id = $1 AND is_active = true`,
+      [issue.issued_to]
+    );
+
+    if (!memberRes.rows.length) throw new Error("Library member not found");
+    const member = memberRes.rows[0];
+    console.log("✅ Member found:", member.id, "Name:", member.first_name, member.last_name);
+
+    // Get library settings from demo.library_setting
+    const settingRes = await client.query(
+      `SELECT * FROM demo.library_setting LIMIT 1`
+    );
+
+    let finePerDay = 5;
+    if (settingRes.rows.length > 0) {
+      finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
+    }
+    console.log("💰 Fine per day:", finePerDay);
+
+    // Calculate days overdue
+    const today = new Date();
+    const dueDate = new Date(issue.due_date);
+    const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
+    console.log("📅 Days overdue:", daysOverdue);
+
+    // Parse condition from submission data
+    const conditionBefore = submissionData.condition_before || "Good";
+    const conditionAfter = submissionData.condition_after || "Good";
+    const conditionAfterLower = conditionAfter.toLowerCase();
+    console.log("📊 Condition - Before:", conditionBefore, "After:", conditionAfter);
+
+    // Fetch LATEST book purchase price from demo.purchases table
+    let bookPurchasePrice = 0;
+    let purchaseDetails = null;
+
+    if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
+      try {
+        console.log("🔍 Fetching purchase price for book_id:", issue.book_id);
+
+        const purchaseRes = await client.query(
+          `SELECT unit_price, purchase_date, quantity, total_amount
+           FROM demo.purchases 
+           WHERE book_id = $1 
+           ORDER BY purchase_date DESC, createddate DESC 
+           LIMIT 1`,
+          [issue.book_id]
+        );
+
+        if (purchaseRes.rows.length > 0) {
+          purchaseDetails = purchaseRes.rows[0];
+          bookPurchasePrice = purchaseDetails.unit_price || 0;
+          console.log("✅ Purchase price found:", bookPurchasePrice);
+        } else {
+          bookPurchasePrice = submissionData.book_price ||
+            submissionData.lost_book_price ||
+            0;
+          console.log("⚠️ No purchase record, using frontend price:", bookPurchasePrice);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching purchase price:", error);
+        bookPurchasePrice = submissionData.book_price ||
+          submissionData.lost_book_price ||
+          0;
+      }
+    }
+
+    // Calculate penalties
+    let totalPenalty = 0;
+    let penaltyType = "none";
+    let latePenalty = 0;
+    let damageLostPenalty = 0;
+
+    // 1. Late return penalty (if overdue)
+    if (daysOverdue > 0) {
+      latePenalty = daysOverdue * finePerDay;
+      totalPenalty += latePenalty;
+      penaltyType = "late";
+      console.log("⏰ Late penalty:", latePenalty, "for", daysOverdue, "days");
+    }
+
+    // 2. Damage/Lost penalty based on LATEST purchase price
+    if (conditionAfterLower === "lost") {
+      damageLostPenalty = bookPurchasePrice;
+      totalPenalty += damageLostPenalty;
+      penaltyType = "lost";
+      console.log("💔 Lost penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+    } else if (conditionAfterLower === "damaged") {
+      damageLostPenalty = bookPurchasePrice * 0.5;
+      totalPenalty += damageLostPenalty;
+      penaltyType = "damaged";
+      console.log("🔧 Damage penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+    }
+
+    console.log("💰 Total penalty:", totalPenalty, "Type:", penaltyType);
+
+    // Insert book submission record into demo.book_submissions
+    const submissionRes = await client.query(
+      `INSERT INTO demo.book_submissions
+        (issue_id, book_id, submitted_by, submit_date,
+         condition_before, condition_after, remarks,
+         days_overdue, penalty, createddate, createdbyid)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3)
+       RETURNING *`,
       [
-        companyId,
-        penaltyType,
-        issue.book_id,
         issue.id,
-        issue.title,
-        issue.isbn,
-        member.id,
-        member.card_number || null,
-        issue.issue_date,
-        issue.due_date,
-        submissionData.condition_before || "good",
-        submissionData.condition_after || "good",
-        totalPenalty,
-        userId
+        issue.book_id,
+        userId,
+        submissionData.submit_date ? new Date(submissionData.submit_date) : new Date(),
+        conditionBefore,
+        conditionAfter,
+        submissionData.remarks || "",
+        daysOverdue,
+        totalPenalty
       ]
     );
-  }
 
-  await sql.query(
-    `UPDATE ${schema}.book_issues
-     SET return_date = CURRENT_DATE, status = 'returned', lastmodifieddate = CURRENT_TIMESTAMP,
-         lastmodifiedbyid = $2
-     WHERE id = $1`,
-    [issue.id, userId]
-  );
+    const submission = submissionRes.rows[0];
+    console.log("✅ Book submission created with ID:", submission.id);
 
-  return {
-    success: true,
-    message: "Book submitted successfully",
-    data: {
-      submission_id: submission.id,
-      totalPenalty,
-      penaltyType,
-      daysOverdue,
-      penalties,
-      member_name: `${member.first_name} ${member.last_name}`,
-      member_email: member.email
+    // Update book available copies (only if not lost)
+    if (conditionAfterLower !== "lost") {
+      await client.query(
+        `UPDATE demo.books
+         SET available_copies = COALESCE(available_copies, 0) + 1,
+             lastmodifieddate = CURRENT_TIMESTAMP,
+             lastmodifiedbyid = $2
+         WHERE id = $1`,
+        [issue.book_id, userId]
+      );
+      console.log("📚 Available copies increased for book:", issue.book_id);
+    } else {
+      console.log("⚠️ Book is LOST - available copies NOT increased");
     }
-  };
-}
 
+    // Handle company ID
+    let companyId = null;
+    if (submissionData.company_id) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(submissionData.company_id)) {
+        companyId = submissionData.company_id;
+      }
+    }
+
+    // Insert into penalty_master if any penalty exists
+    let penaltyMasterId = null;
+    if (totalPenalty > 0) {
+      try {
+        console.log("📝 Inserting into penalty_master with penalty:", totalPenalty);
+
+        const penaltyInsertResult = await client.query(
+          `INSERT INTO demo.penalty_master
+           (company_id, penalty_type, book_id, issue_id,
+            book_title, isbn, issued_to, card_number,
+            issue_date, due_date,
+            condition_before, condition_after,
+            book_amount, per_day_amount,
+            createddate, createdbyid, is_paid)
+           VALUES
+           ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP,$15,false)
+           RETURNING id`,
+          [
+            companyId,
+            penaltyType,
+            issue.book_id,
+            issue.id,
+            issue.title,
+            issue.isbn,
+            member.id,
+            member.card_number || null,
+            issue.issue_date,
+            issue.due_date,
+            conditionBefore,
+            conditionAfter,
+            totalPenalty,
+            finePerDay,
+            userId
+          ]
+        );
+
+        penaltyMasterId = penaltyInsertResult.rows[0]?.id;
+        console.log("✅ Penalty master record created with ID:", penaltyMasterId);
+      } catch (error) {
+        console.error("❌ Error inserting into penalty_master:", error);
+        console.error("Error details:", error.message);
+        console.error("SQL State:", error.code);
+        // Don't throw error, continue with submission
+      }
+    } else {
+      console.log("✅ No penalty to insert into penalty_master");
+    }
+
+    // Update book issue status in demo.book_issues
+    let issueStatus = 'returned';
+    if (conditionAfterLower === 'lost') {
+      issueStatus = 'lost';
+    } else if (conditionAfterLower === 'damaged') {
+      issueStatus = 'damaged';
+    }
+
+    await client.query(
+      `UPDATE demo.book_issues
+       SET return_date = CURRENT_DATE, 
+           status = $3,
+           lastmodifieddate = CURRENT_TIMESTAMP,
+           lastmodifiedbyid = $2
+       WHERE id = $1`,
+      [issue.id, userId, issueStatus]
+    );
+
+    console.log("✅ Book issue marked as", issueStatus, "ID:", issue.id);
+
+    await client.query('COMMIT');
+    console.log("🎉 Transaction completed successfully");
+
+    // Prepare response
+    return {
+      success: true,
+      message: "Book submitted successfully",
+      data: {
+        submission_id: submission.id,
+        totalPenalty: totalPenalty,
+        penaltyType: penaltyType,
+        daysOverdue: daysOverdue,
+        bookPurchasePrice: bookPurchasePrice,
+        latePenalty: latePenalty,
+        damageLostPenalty: damageLostPenalty,
+        member_details: {
+          id: member.id,
+          name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.name || 'N/A',
+          email: member.email || 'N/A',
+          card_number: member.card_number || 'N/A'
+        },
+        book_details: {
+          id: issue.book_id,
+          title: issue.title || 'N/A',
+          isbn: issue.isbn || 'N/A'
+        },
+        issue_details: {
+          id: issue.id,
+          issue_date: issue.issue_date,
+          due_date: issue.due_date,
+          return_date: new Date().toISOString().split('T')[0],
+          status: issueStatus
+        },
+        submission_details: {
+          submit_date: submission.submit_date,
+          condition_before: conditionBefore,
+          condition_after: conditionAfter,
+          remarks: submissionData.remarks || ""
+        },
+        purchase_details: purchaseDetails ? {
+          unit_price: purchaseDetails.unit_price,
+          purchase_date: purchaseDetails.purchase_date,
+          quantity: purchaseDetails.quantity,
+          total_amount: purchaseDetails.total_amount
+        } : null,
+        penalty_details: {
+          penalty_master_id: penaltyMasterId,
+          fine_per_day: finePerDay,
+          total_penalty: totalPenalty
+        }
+      }
+    };
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("💥 Book submission failed:", error);
+    console.error("Error stack:", error.stack);
+
+    if (error.message.includes("foreign key constraint")) {
+      throw new Error("Database constraint error. Please check if all related records exist.");
+    } else if (error.message.includes("connection")) {
+      throw new Error("Database connection error. Please try again.");
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 async function findById(id) {
   try {
     if (!schema) {
