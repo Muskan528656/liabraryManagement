@@ -7,13 +7,11 @@ const Plan = {
         schema = tenantcode;
     },
 
-
     async getAllPlans() {
         const query = `SELECT * FROM ${schema}.plan ORDER BY createddate DESC`;
         const result = await sql.query(query);
         return result.rows;
     },
-
 
     async getPlanById(id) {
         const query = `SELECT * FROM ${schema}.plan WHERE id = $1`;
@@ -21,33 +19,30 @@ const Plan = {
         return result.rows[0] || null;
     },
 
-
     async insertPlan(data) {
         const query = `
             INSERT INTO ${schema}.plan 
-            (plan_name, duration_days, allowed_books, createdbyid, createddate, lastmodifieddate, is_active)
-            VALUES ($1, $2, $3, $4, NOW(), NOW(), $5)
-            RETURNING id, plan_name, duration_days, allowed_books, is_active, createddate, createdbyid
+            (plan_name, duration_days, allowed_books, max_allowed_books_at_time, createdbyid, createddate, lastmodifieddate, is_active)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6)
+            RETURNING id, plan_name, duration_days, allowed_books, max_allowed_books_at_time, is_active, createddate, createdbyid
         `;
 
         const result = await sql.query(query, [
             data.plan_name,
             data.duration_days,
             data.allowed_books !== undefined ? data.allowed_books : 0,
+            data.max_allowed_books_at_time !== undefined ? data.max_allowed_books_at_time : 0,
             data.createdbyid || data.createdby,
-            data.is_active !== undefined ? data.is_active : true
+            data.is_active !== undefined ? data.is_active : true,
         ]);
 
         return result.rows[0];
     },
 
-
     async updatePlan(data) {
-
         const updates = [];
         const values = [];
         let paramCount = 1;
-
 
         if (data.plan_name !== undefined) {
             updates.push(`plan_name = $${paramCount}`);
@@ -67,12 +62,17 @@ const Plan = {
             paramCount++;
         }
 
+        if (data.max_allowed_books_at_time !== undefined) {
+            updates.push(`max_allowed_books_at_time = $${paramCount}`);
+            values.push(data.max_allowed_books_at_time);
+            paramCount++;
+        }
+
         if (data.is_active !== undefined) {
             updates.push(`is_active = $${paramCount}`);
             values.push(data.is_active);
             paramCount++;
         }
-
 
         updates.push(`lastmodifieddate = NOW()`);
 
@@ -81,7 +81,6 @@ const Plan = {
             values.push(data.lastmodifiedbyid || data.lastmodifiedby);
             paramCount++;
         }
-
 
         values.push(data.id);
 
@@ -93,21 +92,31 @@ const Plan = {
         `;
 
         const result = await sql.query(query, values);
-
         return result.rows[0];
     },
 
     async deletePlan(id) {
+        // First check if plan is being used in subscriptions
+        const checkQuery = `
+            SELECT COUNT(*) as subscription_count 
+            FROM ${schema}.subscriptions 
+            WHERE plan_id = $1
+        `;
+
+        const checkResult = await sql.query(checkQuery, [id]);
+        const subscriptionCount = parseInt(checkResult.rows[0].subscription_count);
+
+        if (subscriptionCount > 0) {
+            throw new Error(`Cannot delete plan. It is being used by ${subscriptionCount} subscription(s).`);
+        }
 
         const query = `
-        DELETE FROM ${schema}.plan
-        WHERE id = $1
-        RETURNING id;
-    `;
+            DELETE FROM ${schema}.plan
+            WHERE id = $1
+            RETURNING id, plan_name
+        `;
 
         const result = await sql.query(query, [id]);
-        console.log("Delete Result -> ", result);
-
         return result.rows[0];
     }
 

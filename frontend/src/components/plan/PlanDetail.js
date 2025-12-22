@@ -10,6 +10,7 @@ const PlanDetail = () => {
         details: [
             { key: "plan_name", label: "Plan Name", type: "text" },
             { key: "duration_days", label: "Duration (Days)", type: "number" },
+            { key: "max_allowed_books_at_time", label: "Max Allowed Books At Time", type: "number" },
             { key: "allowed_books", label: "Allowed Books", type: "number" },
             { key: "is_active", label: "Active", type: "toggle" },
         ],

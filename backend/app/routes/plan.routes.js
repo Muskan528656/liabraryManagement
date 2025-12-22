@@ -22,10 +22,6 @@ const sql = require("../models/db.js");
 module.exports = (app) => {
     const router = express.Router();
 
-
-
-
-
     router.get("/", fetchUser, async (req, res) => {
         try {
             Plan.init(req.userinfo.tenantcode);
@@ -36,9 +32,6 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
-
-
-
 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
@@ -58,12 +51,9 @@ module.exports = (app) => {
         }
     });
 
-
-
-
     router.post("/", fetchUser, async (req, res) => {
         try {
-            const { plan_name, duration_days, allowed_books } = req.body;
+            const { plan_name, duration_days, allowed_books, max_allowed_books_at_time } = req.body;
 
             if (!plan_name || !duration_days) {
                 return res
@@ -79,13 +69,14 @@ module.exports = (app) => {
                 plan_name,
                 duration_days,
                 allowed_books: allowed_books || 0,
-                createdbyid: createdBy, // Changed from createdby to createdbyid
+                max_allowed_books_at_time: max_allowed_books_at_time || 0,
+                createdbyid: createdBy,
             });
 
             return res.status(201).json({
                 success: true,
                 message: "Plan inserted successfully",
-
+                data: result
             });
         } catch (err) {
             console.error(err);
@@ -93,11 +84,9 @@ module.exports = (app) => {
         }
     });
 
-
-
     router.put("/:id", fetchUser, async (req, res) => {
         try {
-            const { plan_name, duration_days, is_active, allowed_books } = req.body;
+            const { plan_name, duration_days, is_active, allowed_books, max_allowed_books_at_time } = req.body;
             const id = req.params.id;
 
             if (!id) {
@@ -108,16 +97,20 @@ module.exports = (app) => {
 
             const lastModifiedBy = req.userinfo.id;
 
+            // Update plan table
             const result = await Plan.updatePlan({
                 id,
                 plan_name,
                 is_active,
                 duration_days,
                 allowed_books,
+                max_allowed_books_at_time,
                 lastmodifiedbyid: lastModifiedBy,
             });
 
             const schema = req.userinfo.tenantcode;
+
+            // Update related subscriptions if needed
             const updateFields = {};
             if (plan_name !== undefined) updateFields.plan_name = plan_name;
             if (duration_days !== undefined) updateFields.duration_days = duration_days;
@@ -134,6 +127,7 @@ module.exports = (app) => {
                 await sql.query(updateQuery, values);
             }
 
+            // Recalculate end dates if duration changed
             if (duration_days !== undefined) {
                 const recalcQuery = `
                     UPDATE ${schema}.subscriptions
@@ -144,6 +138,7 @@ module.exports = (app) => {
             }
 
             return res.status(200).json({
+                success: true,
                 message: "Plan updated successfully",
                 data: result,
             });
@@ -152,67 +147,6 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
-
-    // router.put("/:id", fetchUser, async (req, res) => {
-    //     try {
-    //         const { plan_name, duration_days, is_active, allowed_books } = req.body;
-    //         const id = req.params.id;
-
-    //         if (!id) {
-    //             return res.status(400).json({ errors: "Plan ID is required" });
-    //         }
-
-    //         Plan.init(req.userinfo.tenantcode);
-
-    //         const lastModifiedBy = req.userinfo.id;
-
-    //         const result = await Plan.updatePlan({
-    //             id,
-    //             plan_name,
-    //             is_active,
-    //             duration_days,
-    //             allowed_books,
-    //             lastmodifiedbyid: lastModifiedBy, 
-    //         });
-
-    //         const schema = req.userinfo.tenantcode;
-    //         const updateFields = {};
-    //         if (plan_name !== undefined) updateFields.plan_name = plan_name;
-    //         if (duration_days !== undefined) updateFields.duration_days = duration_days;
-    //         if (allowed_books !== undefined) updateFields.allowed_books = allowed_books;
-
-    //         if (Object.keys(updateFields).length > 0) {
-    //             updateFields.lastmodifiedbyid = lastModifiedBy;
-    //             updateFields.lastmodifieddate = new Date();
-
-    //             const setClause = Object.keys(updateFields).map((key, index) => `"${key}" = $${index + 2}`).join(', ');
-    //             const values = [id, ...Object.values(updateFields)];
-
-    //             const updateQuery = `UPDATE ${schema}.subscriptions SET ${setClause} WHERE plan_id = $1`;
-    //             await sql.query(updateQuery, values);
-    //         }
-
-    //         if (duration_days !== undefined) {
-    //             const recalcQuery = `
-    //                 UPDATE ${schema}.subscriptions
-    //                 SET end_date = start_date + INTERVAL '${duration_days} days'
-    //                 WHERE plan_id = $1
-    //             `;
-    //             await sql.query(recalcQuery, [id]);
-    //         }
-
-    //         return res.status(200).json({
-    //             message: "Plan updated successfully",
-    //             data: result,
-    //         });
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500).json({ errors: "Internal Server Error" });
-    //     }
-    // });
-
-
-
 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
@@ -236,7 +170,6 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
-
 
     app.use(process.env.BASE_API_URL + "/api/plans", router);
 };
