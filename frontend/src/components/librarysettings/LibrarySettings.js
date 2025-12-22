@@ -61,7 +61,7 @@ const Settings = () => {
     setTwoFactorAuth(method);
   };
 
- 
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -72,7 +72,7 @@ const Settings = () => {
       const response = await settingsApi.get("/all");
       if (response.data && response.data.success) {
         const settingsData = response.data.data;
- 
+
         const settingsObj = {
           max_books_per_card: parseInt(settingsData.max_books_per_card || 1),
           duration_days: parseInt(settingsData.duration_days || 15),
@@ -220,7 +220,7 @@ const Settings = () => {
                     className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                     style={{
                       color: "var(--primary-color)",
-                         background: "var(--primary-background-color)",
+                      background: "var(--primary-background-color)",
                       borderRadius: "10px",
                     }}
                   >

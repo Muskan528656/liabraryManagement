@@ -279,8 +279,6 @@ async function create(cardData, userId) {
       "first_name",
       "last_name",
       "name",
-
-      // ✅ NEW FIELDS
       "father_gurdian_name",
       "parent_contact",
       "dob",
@@ -288,7 +286,7 @@ async function create(cardData, userId) {
       "email",
       "phone_number",
       "country_code",
-      "age",
+    
       "registration_date",
 
       "type_id",

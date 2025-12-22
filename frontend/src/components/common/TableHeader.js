@@ -131,7 +131,7 @@ const TableHeader = ({
   visibleColumns = {},
   onToggleColumnVisibility,
   actionButtons = [],
-  headerActions = [],   // 👈 NEW
+  headerActions = [],  
   showSearch = true,
 }) => {
   return (
@@ -143,7 +143,7 @@ const TableHeader = ({
         borderRadius: "10px",
       }}
     >
-      {/* 🔹 LEFT SIDE (Title + Count) */}
+   
       <div className="d-flex align-items-center gap-3">
         <h5 className="fw-bold mb-1" style={{ color: "var(--primary-color)" }}>
           {icon && <i className={`${icon} me-2 fs-6`}></i>}
@@ -167,10 +167,8 @@ const TableHeader = ({
         )}
       </div>
 
-      {/* 🔹 RIGHT SIDE (Search + Buttons) */}
       <div className="d-flex gap-2 flex-wrap align-items-center detail-h3">
 
-        {/* 🔍 SEARCH */}
         {showSearch && (
           <InputGroup size="sm" style={{ width: "250px", maxWidth: "100%" }}>
             <InputGroup.Text>
@@ -189,7 +187,6 @@ const TableHeader = ({
           </InputGroup>
         )}
 
-        {/* ⚙️ COLUMN VISIBILITY */}
         {showColumnVisibility && allColumns.length > 0 && (
           <Dropdown>
             <Dropdown.Toggle
@@ -240,7 +237,7 @@ const TableHeader = ({
           </Dropdown>
         )}
 
-        {/* 🔹 HEADER ACTIONS (SEPARATE – Import Member etc.) */} 
+       
         {headerActions.length > 0 &&
           headerActions
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -265,7 +262,6 @@ const TableHeader = ({
               </Button>
             ))}
 
-        {/* 🔹 DEFAULT ACTION BUTTONS (Export / Add / Bulk) */}
         {actionButtons.map((button, index) => (
           <button
             key={index}

@@ -2,7 +2,22 @@
 
 
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, InputGroup, Table, Modal, Tab, Nav } from "react-bootstrap";
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Form,
+    Button,
+    Spinner,
+    Badge,
+    InputGroup,
+    Table,
+    Modal,
+    Tab,
+    Nav,
+    Dropdown,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
@@ -43,6 +58,8 @@ const BookSubmit = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showScanModal, setShowScanModal] = useState(false);
     const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [timeZone, setTimeZone] = useState(null);
     const [scanMethod, setScanMethod] = useState("isbn");
     const [librarySettings, setLibrarySettings] = useState(null);
@@ -52,6 +69,12 @@ const BookSubmit = () => {
     const [isLoadingPurchaseDetails, setIsLoadingPurchaseDetails] = useState(false);
     const [lostBookPrice, setLostBookPrice] = useState("");
     const [lostBookPriceError, setLostBookPriceError] = useState("");
+    const [editFormData, setEditFormData] = useState({
+        issue_date: "",
+        due_date: "",
+        condition_before: "Good",
+        remarks: ""
+    });
 
     const recordsPerPage = 20;
     const isbnInputRef = React.useRef(null);
@@ -182,6 +205,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
+            console.log("Fetched active issues:", issues);
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -867,6 +891,25 @@ const BookSubmit = () => {
         }
     };
 
+    // Handle Edit Click
+    const handleEditClick = (issueItem) => {
+        setSelectedIssue(issueItem);
+        setEditFormData({
+            issue_date: issueItem.issue_date ? issueItem.issue_date.split('T')[0] : "",
+            due_date: issueItem.due_date ? issueItem.due_date.split('T')[0] : "",
+            condition_before: issueItem.condition_before || "Good",
+            remarks: issueItem.remarks || ""
+        });
+        setShowEditModal(true);
+    };
+
+    // Handle Cancel Click
+    const handleCancelClick = (issueItem) => {
+        setSelectedIssue(issueItem);
+        setShowCancelModal(true);
+    };
+
+    // Handle Submit Click
     const handleSubmitClick = async (issueItem) => {
         setSelectedIssue(issueItem);
         setConditionAfter("Good");
@@ -881,13 +924,134 @@ const BookSubmit = () => {
         setShowSubmitModal(true);
     };
 
+    const handleEditSubmit = async () => {
+        if (!selectedIssue) return;
+
+        try {
+            setLoading(true);
+
+            const updateData = {
+                issue_date: editFormData.issue_date,
+                due_date: editFormData.due_date,
+                condition_before: editFormData.condition_before,
+                remarks: editFormData.remarks,
+                status: "issued" // Keep status as issued for edit
+            };
+
+            const resp = await helper.fetchWithAuth(
+                `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
+                "PUT",
+                JSON.stringify(updateData)
+            );
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: err.errors || "Failed to update issue"
+                });
+                return;
+            }
+
+            const result = await resp.json();
+
+            if (result.success) {
+                PubSub.publish("RECORD_SUCCESS_TOAST", {
+                    title: "Success",
+                    message: "Issue updated successfully"
+                });
+
+                // Refresh the list
+                await fetchAllIssuedBooks();
+                setShowEditModal(false);
+                setSelectedIssue(null);
+            } else {
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: result.errors || "Failed to update issue"
+                });
+            }
+        } catch (error) {
+            console.error("Error updating issue:", error);
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: error.message || "Error updating issue"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+// handleCancelConfirm फंक्शन अपडेट करें
+const handleCancelConfirm = async () => {
+  if (!selectedIssue) return;
+
+  try {
+    setLoading(true);
+
+    const cancelData = {
+      cancellation_reason: "Cancelled by librarian" // नाम सही करें
+    };
+
+    // API एंडपॉइंट सही करें
+    const resp = await helper.fetchWithAuth(
+      `${constants.API_BASE_URL}/api/book_submissions/cancel/${selectedIssue.id}`,
+      "PUT", // PUT method का उपयोग करें
+      JSON.stringify(cancelData)
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: err.errors || "Failed to cancel issue"
+      });
+      return;
+    }
+
+    const result = await resp.json();
+
+    if (result.success) {
+      PubSub.publish("RECORD_SUCCESS_TOAST", {
+        title: "Success",
+        message: "Issue cancelled successfully"
+      });
+
+      // Refresh the list
+      await fetchAllIssuedBooks();
+      setShowCancelModal(false);
+      setSelectedIssue(null);
+    } else {
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Error",
+        message: result.errors || "Failed to cancel issue"
+      });
+    }
+  } catch (error) {
+    console.error("Error cancelling issue:", error);
+    PubSub.publish("RECORD_ERROR_TOAST", {
+      title: "Error",
+      message: error.message || "Error cancelling issue"
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
     const handleModalClose = () => {
         setShowSubmitModal(false);
+        setShowEditModal(false);
+        setShowCancelModal(false);
         setSelectedIssue(null);
         setConditionAfter("Good");
         setRemarks("");
         setLostBookPrice("");
         setLostBookPriceError("");
+        setEditFormData({
+            issue_date: "",
+            due_date: "",
+            condition_before: "Good",
+            remarks: ""
+        });
         setPenalty({
             penalty: 0,
             daysOverdue: 0,
@@ -1064,6 +1228,23 @@ const BookSubmit = () => {
         );
     });
 
+    const getStatusBadge = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'issued':
+                return <Badge bg="primary">Issued</Badge>;
+            case 'returned':
+                return <Badge bg="success">Returned</Badge>;
+            case 'submitted':
+                return <Badge bg="info">Submitted</Badge>;
+            case 'cancelled':
+                return <Badge bg="secondary">Cancelled</Badge>;
+            case 'overdue':
+                return <Badge bg="danger">Overdue</Badge>;
+            default:
+                return <Badge bg="warning">Unknown</Badge>;
+        }
+    };
+
     const issueColumns = [
         {
             field: "book_title",
@@ -1187,23 +1368,51 @@ const BookSubmit = () => {
             }
         },
         {
-            field: "actions",
-            label: "Action",
+            field: "status",
+            label: "Status",
             width: 100,
-            render: (value, record) => (
-                <Button
-                    size="sm"
-                    onClick={() => handleSubmitClick(record)}
-                    variant="success"
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <Spinner animation="border" size="sm" />
-                    ) : (
-                        'Submit'
-                    )}
-                </Button>
-            )
+            render: (value) => getStatusBadge(value)
+        },
+        {
+            field: "actions",
+            label: "Actions",
+            width: 200,
+            render: (value, record) => {
+                const isIssued = record.status?.toLowerCase() === 'issued';
+
+                if (!isIssued) {
+                    return <Badge bg="secondary">No Actions</Badge>;
+                }
+
+                return (
+                    <div className="btn-group">
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleSubmitClick(record)}
+                            title="Submit Return"
+                        >
+                            <i className="fa-solid fa-check-circle"></i> Submit
+                        </Button>
+                        <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => handleEditClick(record)}
+                            title="Edit Issue"
+                        >
+                            <i className="fa-solid fa-edit"></i>
+                        </Button>
+                        <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleCancelClick(record)}
+                            title="Cancel Issue"
+                        >
+                            <i className="fa-solid fa-times"></i>
+                        </Button>
+                    </div>
+                );
+            }
         }
     ];
 
@@ -1325,6 +1534,12 @@ const BookSubmit = () => {
                     ₹{parseFloat(value || 0).toFixed(2)}
                 </span>
             )
+        },
+        {
+            field: "status",
+            label: "Status",
+            width: 100,
+            render: (value) => getStatusBadge(value)
         }
     ];
 
@@ -1347,7 +1562,6 @@ const BookSubmit = () => {
                                             border: "none",
                                             borderRadius: "8px 8px 0 0",
                                             padding: "12px 24px",
-
                                             backgroundColor: activeTab === 'submit' ? "var(--primary-color)" : "var(--secondary-background-color)",
                                             color: activeTab === 'submit' ? "white" : "#64748b",
                                             borderTop: activeTab === 'submit' ? "3px solid var(--primary-color)" : "3px solid transparent",
@@ -1369,7 +1583,6 @@ const BookSubmit = () => {
                                             border: "none",
                                             borderRadius: "8px 8px 0 0",
                                             padding: "12px 24px",
-
                                             backgroundColor: activeTab === 'submitted' ? "var(--primary-color)" : "transparent",
                                             color: activeTab === 'submitted' ? "white" : "#64748b",
                                             borderTop: activeTab === 'submitted' ? "3px solid var(--primary-color)" : "3px solid transparent",
@@ -1390,7 +1603,6 @@ const BookSubmit = () => {
                                             right: "20px",
                                             top: "50%",
                                             transform: "translateY(-50%)",
-
                                             zIndex: 10
                                         }}
                                     >
@@ -1772,6 +1984,7 @@ const BookSubmit = () => {
                 </Card>
             </Container>
 
+            {/* Scan Modal */}
             <Modal show={showScanModal} onHide={() => setShowScanModal(false)} centered>
                 <Modal.Header closeButton style={{ backgroundColor: "#1e3a8a", color: "white" }}>
                     <Modal.Title>
@@ -1834,6 +2047,7 @@ const BookSubmit = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Submit Modal */}
             <Modal show={showSubmitModal} onHide={handleModalClose} centered size="lg">
                 <Modal.Header closeButton style={{
                     padding: "15px 20px", backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", fontWeight: "bold"
@@ -2140,6 +2354,124 @@ const BookSubmit = () => {
                             <>
                                 {penalty.penalty > 0 ? "Submit with Penalty" : "Confirm Submit"}
                             </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Edit Modal */}
+            <Modal show={showEditModal} onHide={handleModalClose} centered>
+                <Modal.Header closeButton style={{ backgroundColor: "#0d6efd", color: "white" }}>
+                    <Modal.Title>
+                        <i className="fa-solid fa-pen-to-square me-2"></i>
+                        Edit Issue
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedIssue && (
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Issue Date</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    value={editFormData.issue_date}
+                                    onChange={(e) => setEditFormData({ ...editFormData, issue_date: e.target.value })}
+                                    disabled={loading}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Due Date</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    value={editFormData.due_date}
+                                    onChange={(e) => setEditFormData({ ...editFormData, due_date: e.target.value })}
+                                    disabled={loading}
+                                    min={editFormData.issue_date}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Condition Before</Form.Label>
+                                <Form.Select
+                                    value={editFormData.condition_before}
+                                    onChange={(e) => setEditFormData({ ...editFormData, condition_before: e.target.value })}
+                                    disabled={loading}
+                                >
+                                    <option value="Good">Good</option>
+                                    <option value="Fair">Fair</option>
+                                    <option value="Damaged">Damaged</option>
+                                </Form.Select>
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Remarks</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
+                                    value={editFormData.remarks}
+                                    onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })}
+                                    disabled={loading}
+                                    placeholder="Enter any remarks..."
+                                />
+                            </Form.Group>
+                        </Form>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleModalClose} disabled={loading}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleEditSubmit} disabled={loading}>
+                        {loading ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Updating...
+                            </>
+                        ) : (
+                            'Update Issue'
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Cancel Modal */}
+            <Modal show={showCancelModal} onHide={handleModalClose} centered>
+                <Modal.Header closeButton style={{ backgroundColor: "#dc3545", color: "white" }}>
+                    <Modal.Title>
+                        <i className="fa-solid fa-times-circle me-2"></i>
+                        Cancel Issue
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedIssue && (
+                        <div>
+                            <p className="fw-bold">Are you sure you want to cancel this issue?</p>
+                            <div className="alert alert-warning">
+                                <i className="fa-solid fa-exclamation-triangle me-2"></i>
+                                This action cannot be undone. The issue will be marked as cancelled.
+                            </div>
+                            <div className="mt-3">
+                                <p><strong>Book:</strong> {selectedIssue.book_title}</p>
+                                <p><strong>Issued To:</strong> {getUserDisplayName(selectedIssue)}</p>
+                                <p><strong>Card Number:</strong> {selectedIssue.card_number}</p>
+                                <p><strong>Issue Date:</strong> {formatDate(selectedIssue.issue_date)}</p>
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleModalClose} disabled={loading}>
+                        No, Keep Issue
+                    </Button>
+                    <Button variant="danger" onClick={handleCancelConfirm} disabled={loading}>
+                        {loading ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Cancelling...
+                            </>
+                        ) : (
+                            'Yes, Cancel Issue'
                         )}
                     </Button>
                 </Modal.Footer>

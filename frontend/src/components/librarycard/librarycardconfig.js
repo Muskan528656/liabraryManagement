@@ -376,6 +376,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
+                {
+                name: "plan_id",
+                label: "Plan",
+                type: "select",
+                required: false,
+                options: plansList,
+                colSize: 6,
+            },
+
+
             {
                 name: "image",
                 label: "User Photo",

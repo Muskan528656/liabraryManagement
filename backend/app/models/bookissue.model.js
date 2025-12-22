@@ -303,12 +303,12 @@ async function issueBook(req) {
     const issueData = {
       book_id: req.body.book_id,
       issued_to: req.body.card_id,
-      issued_by: userId, // ✅ Use the extracted user ID
+      issued_by: userId,
       issue_date: issueDate.toISOString().split('T')[0],
       due_date: dueDate.toISOString().split('T')[0],
       status: 'issued',
-      createdbyid: userId, // ✅ Use the extracted user ID
-      lastmodifiedbyid: userId, // ✅ Use the extracted user ID
+      createdbyid: userId,
+      lastmodifiedbyid: userId,
     };
 
     console.log("Issue Data:", issueData);

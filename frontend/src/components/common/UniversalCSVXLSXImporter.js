@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { 
-  CloudArrowUp, Download, ChevronRight, ChevronLeft, 
-  FileEarmarkSpreadsheet, Check2Circle, ExclamationCircle, 
-  ArrowRightCircle, CheckCircleFill, DashCircle, 
+import {
+  CloudArrowUp, Download, ChevronRight, ChevronLeft,
+  FileEarmarkSpreadsheet, Check2Circle, ExclamationCircle,
+  ArrowRightCircle, CheckCircleFill, DashCircle,
   ArrowClockwise, ListCheck, Table as TableIcon
 } from "react-bootstrap-icons";
 
@@ -22,10 +22,10 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   const activeRequired = model ? model.required : [];
   const fieldLabels = model ? model.fields : {};
 
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [rawHeaders, setRawHeaders] = useState([]);
   const [rawRows, setRawRows] = useState([]);
-  const [map, setMap] = useState({}); 
+  const [map, setMap] = useState({});
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [importResult, setImportResult] = useState(null);
@@ -52,7 +52,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
     setError(null);
     if (!uploadedFile) return;
     const ext = uploadedFile.name.split(".").pop().toLowerCase();
-    
+
     const handleResult = (data) => {
       if (!data || data.length < 2) {
         setError("The uploaded file appears to be empty.");
@@ -66,8 +66,8 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       headers.forEach((h) => {
         const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
         const match = Object.keys(activeFields).find((key) => {
-            const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-            return key.toLowerCase() === normH || label === normH;
+          const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          return key.toLowerCase() === normH || label === normH;
         });
         if (match) initialMap[h] = match;
       });
@@ -104,12 +104,12 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
     const finalData = rawRows.map(row => {
       const obj = {};
       rawHeaders.forEach((h, i) => {
-        if(map[h]) obj[map[h]] = row[i];
+        if (map[h]) obj[map[h]] = row[i];
       });
       return obj;
     });
 
-    if(onDataParsed) {
+    if (onDataParsed) {
       setIsProcessing(true);
       try {
         const result = await onDataParsed(finalData);
@@ -126,16 +126,21 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
   return (
     <div className="cahaya-importer-container">
       <div className="cahaya-card-wrapper row g-0">
-        
+
         {/* SIDEBAR NAVIGATION */}
-        <div className="col-md-3 border-end bg-light d-none d-md-block">
-          <div className="sidebar-brand mb-3 text-primary fw-bold" style={{ fontSize: '0.9rem', padding: '12px 0 0 16px' }}>
+        <div className="col-md-3 border-end d-none d-md-block" style={{
+          color: "var(--primary-color)",
+          background: "var(--primary-background-color)",
+          fontSize: "20px"
+
+        }}>
+          {/* <div className="sidebar-brand mb-3" style={{ fontSize: '0.9rem', padding: '12px 0 0 16px' }}>
             Importer Wizard
-          </div>
+          </div> */}
           <div className="vertical-stepper">
             {STEPS_CONFIG.map((s) => (
               <div key={s.id} className={`v-step ${step >= s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
-                <div className="v-circle">{step > s.id ? <CheckCircleFill size={14}/> : s.id + 1}</div>
+                <div className="v-circle">{step > s.id ? <CheckCircleFill size={14} /> : s.id + 1}</div>
                 <div className="v-label">{s.label}</div>
               </div>
             ))}
@@ -148,7 +153,12 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
             <h5 className="fw-bold m-0 text-dark" style={{ fontSize: '1rem' }}>
               {STEPS_CONFIG[step].label}
             </h5>
-            <div className="badge bg-soft-primary text-primary px-2 py-1 rounded-pill" style={{ fontSize: '0.75rem' }}>
+            <div className="badge bg-soft-primary text-primary px-2 py-1"
+              style={{
+                color: "var(--primary-color)",
+                background: "var(--primary-background-color)",
+                borderRadius: "5px",
+              }}>
               {model?.modelName || "Standard Import"}
             </div>
           </div>
@@ -171,7 +181,14 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 <p className="text-muted small" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Drop your CSV or Excel file here to start mapping</p>
                 <div className="text-primary fw-medium" style={{ fontSize: '0.75rem' }}>Supported: .csv, .xlsx, .xls</div>
               </div>
-              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-3 small d-flex align-items-center justify-content-center mx-auto" style={{ fontSize: '0.8rem' }}>
+              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-3 small d-flex align-items-center justify-content-center mx-auto"
+                style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "5px",
+                  border: "1px solid var(--primary-color)",
+                }}
+              >
                 <Download className="me-1" size={14} /> Download Template CSV
               </button>
             </div>
@@ -185,7 +202,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                   <div key={idx} className={`mapping-item-card ${map[header] ? 'mapped' : ''}`}>
                     <div className="source-info">
                       <FileEarmarkSpreadsheet className="text-muted me-2" size={14} />
-                      <span className="text-truncate fw-medium" style={{ fontSize: '0.85rem' }} title={header}>{header}</span>
+                      <span className="text-truncate fw-medium" title={header}>{header}</span>
                     </div>
                     <div className="mapping-arrow">
                       <ArrowRightCircle size={16} />
@@ -266,24 +283,24 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
               </div>
 
               <div className="result-log-area border rounded-3 p-2 bg-light" style={{ fontSize: '0.85rem' }}>
-                 <h6 className="fw-bold mb-2" style={{ fontSize: '0.9rem' }}>Event Logs</h6>
-                 <div className="log-scroll">
-                   {importResult.successCount > 0 && (
-                     <div className="log-line text-success small mb-1 d-flex align-items-center">
-                       <CheckCircleFill className="me-1" size={14} /> Successfully added {importResult.successCount} records.
-                     </div>
-                   )}
-                   {importResult.duplicates?.map((d, i) => (
-                     <div key={i} className="log-line text-warning small mb-1 d-flex align-items-start">
-                       <DashCircle className="me-1 mt-1" size={14} /> <div>Duplicate skipped at Row {d.row}: {d.message}</div>
-                     </div>
-                   ))}
-                   {importResult.errors?.map((e, i) => (
-                     <div key={i} className="log-line text-danger small mb-1 d-flex align-items-start">
-                       <ExclamationCircle className="me-1 mt-1" size={14} /> <div>Error at Row {e.row}: {e.message}</div>
-                     </div>
-                   ))}
-                 </div>
+                <h6 className="fw-bold mb-2" style={{ fontSize: '0.9rem' }}>Event Logs</h6>
+                <div className="log-scroll">
+                  {importResult.successCount > 0 && (
+                    <div className="log-line text-success small mb-1 d-flex align-items-center">
+                      <CheckCircleFill className="me-1" size={14} /> Successfully added {importResult.successCount} records.
+                    </div>
+                  )}
+                  {importResult.duplicates?.map((d, i) => (
+                    <div key={i} className="log-line text-warning small mb-1 d-flex align-items-start">
+                      <DashCircle className="me-1 mt-1" size={14} /> <div>Duplicate skipped at Row {d.row}: {d.message}</div>
+                    </div>
+                  ))}
+                  {importResult.errors?.map((e, i) => (
+                    <div key={i} className="log-line text-danger small mb-1 d-flex align-items-start">
+                      <ExclamationCircle className="me-1 mt-1" size={14} /> <div>Error at Row {e.row}: {e.message}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -291,19 +308,38 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
           {/* FOOTER ACTIONS */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             {step > 0 && step < 3 ? (
-              <button className="btn btn-outline-secondary rounded-pill px-3 btn-sm fw-medium" style={{ fontSize: '0.85rem' }} onClick={() => setStep(step - 1)} disabled={isProcessing}>
-                <ChevronLeft size={12} className="me-1" /> Back
+              <button
+                variant="outline-secondary"
+                size="sm"
+                style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "5px",
+                  border: 'var(--primary-color) solid 1px'
+                }}
+                onClick={() => setStep(step - 1)}
+              >
+                <ChevronLeft /> Back
               </button>
             ) : <div></div>}
 
             <div className="d-flex gap-2">
               {step === 1 && (
-                <button className="btn btn-primary rounded-pill px-3 shadow-sm" style={{ fontSize: '0.85rem' }} onClick={() => setStep(2)}>
+                <button className="btn px-3 shadow-sm" style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "5px",
+                }}
+                  onClick={() => setStep(2)}>
                   Preview Data <ChevronRight size={12} className="ms-1" />
                 </button>
               )}
               {step === 2 && (
-                <button className="btn btn-success rounded-pill px-3 shadow-sm d-flex align-items-center" style={{ fontSize: '0.85rem' }} onClick={handleImport} disabled={isProcessing}>
+                <button className="btn px-3 shadow-sm d-flex align-items-center" style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "5px"
+                }} onClick={handleImport} disabled={isProcessing}>
                   {isProcessing ? (
                     <><span className="spinner-border spinner-border-sm me-1"></span> Processing...</>
                   ) : (

@@ -96,6 +96,13 @@ const BookDetail = () => {
         displayKey: "author_name"
       },
       {
+        key: "publisher_id",
+        label: "Publisher",
+        type: "select",
+        options: "publisher",
+        displayKey: "publisher_name"
+      },
+      {
         key: "category_id",
         label: "Category",
         type: "select",
@@ -104,7 +111,10 @@ const BookDetail = () => {
       },
       { key: "total_copies", label: "Total Copies", type: "number" },
       { key: "available_copies", label: "Available Copies", type: "number" },
+      { key: 'min_age', label: 'Min Age', type: 'number' },
+      { key: 'max_age', label: 'Max Age', type: 'number' },
       { key: "inventory_binding", label: "Inventory Binding", type: "select", options: inventoryBindings, },
+
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },
