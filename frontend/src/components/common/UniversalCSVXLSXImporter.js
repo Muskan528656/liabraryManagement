@@ -128,10 +128,15 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       <div className="cahaya-card-wrapper row g-0">
         
         {/* SIDEBAR NAVIGATION */}
-        <div className="col-md-3 border-end bg-light d-none d-md-block">
-          <div className="sidebar-brand mb-3 text-primary fw-bold" style={{ fontSize: '0.9rem', padding: '12px 0 0 16px' }}>
+        <div className="col-md-3 border-end d-none d-md-block" style={{
+          color: "var(--primary-color)",
+          background: "var(--primary-background-color)",
+          fontSize:"20px"
+
+      }}>
+          {/* <div className="sidebar-brand mb-3" style={{ fontSize: '0.9rem', padding: '12px 0 0 16px' }}>
             Importer Wizard
-          </div>
+          </div> */}
           <div className="vertical-stepper">
             {STEPS_CONFIG.map((s) => (
               <div key={s.id} className={`v-step ${step >= s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
@@ -148,7 +153,12 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
             <h5 className="fw-bold m-0 text-dark" style={{ fontSize: '1rem' }}>
               {STEPS_CONFIG[step].label}
             </h5>
-            <div className="badge bg-soft-primary text-primary px-2 py-1 rounded-pill" style={{ fontSize: '0.75rem' }}>
+            <div className="badge bg-soft-primary text-primary px-2 py-1"
+            style={{
+                color: "var(--primary-color)",
+                background: "var(--primary-background-color)",
+                borderRadius: "5px",
+              }}>
               {model?.modelName || "Standard Import"}
             </div>
           </div>
@@ -171,7 +181,14 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                 <p className="text-muted small" style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Drop your CSV or Excel file here to start mapping</p>
                 <div className="text-primary fw-medium" style={{ fontSize: '0.75rem' }}>Supported: .csv, .xlsx, .xls</div>
               </div>
-              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-3 small d-flex align-items-center justify-content-center mx-auto" style={{ fontSize: '0.8rem' }}>
+              <button onClick={handleDownloadSample} className="btn btn-link text-decoration-none text-secondary mt-3 small d-flex align-items-center justify-content-center mx-auto"
+                style={{
+                  color: "var(--primary-color)",
+                  background: "var(--primary-background-color)",
+                  borderRadius: "5px",
+                  border: "1px solid var(--primary-color)",
+               }}
+              >
                 <Download className="me-1" size={14} /> Download Template CSV
               </button>
             </div>
@@ -185,7 +202,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
                   <div key={idx} className={`mapping-item-card ${map[header] ? 'mapped' : ''}`}>
                     <div className="source-info">
                       <FileEarmarkSpreadsheet className="text-muted me-2" size={14} />
-                      <span className="text-truncate fw-medium" style={{ fontSize: '0.85rem' }} title={header}>{header}</span>
+                      <span className="text-truncate fw-medium" title={header}>{header}</span>
                     </div>
                     <div className="mapping-arrow">
                       <ArrowRightCircle size={16} />
@@ -291,19 +308,38 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
           {/* FOOTER ACTIONS */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             {step > 0 && step < 3 ? (
-              <button className="btn btn-outline-secondary rounded-pill px-3 btn-sm fw-medium" style={{ fontSize: '0.85rem' }} onClick={() => setStep(step - 1)} disabled={isProcessing}>
-                <ChevronLeft size={12} className="me-1" /> Back
-              </button>
+               <button
+                  variant="outline-secondary"
+                  size="sm"
+                  style={{
+                    color: "var(--primary-color)",
+                    background: "var(--primary-background-color)",
+                    borderRadius: "5px",
+                    border:'var(--primary-color) solid 1px'
+                  }}
+                  onClick={() => setStep(step - 1)}
+                >
+                  <ChevronLeft /> Back
+                </button>
             ) : <div></div>}
 
             <div className="d-flex gap-2">
               {step === 1 && (
-                <button className="btn btn-primary rounded-pill px-3 shadow-sm" style={{ fontSize: '0.85rem' }} onClick={() => setStep(2)}>
+                <button className="btn px-3 shadow-sm" style={{
+                    color: "var(--primary-color)",
+                    background: "var(--primary-background-color)",
+                    borderRadius: "5px",
+              }}
+                 onClick={() => setStep(2)}>
                   Preview Data <ChevronRight size={12} className="ms-1" />
                 </button>
               )}
               {step === 2 && (
-                <button className="btn btn-success rounded-pill px-3 shadow-sm d-flex align-items-center" style={{ fontSize: '0.85rem' }} onClick={handleImport} disabled={isProcessing}>
+                <button className="btn px-3 shadow-sm d-flex align-items-center" style={{
+                    color: "var(--primary-color)",
+                    background: "var(--primary-background-color)",
+                    borderRadius: "5px"
+                }} onClick={handleImport} disabled={isProcessing}>
                   {isProcessing ? (
                     <><span className="spinner-border spinner-border-sm me-1"></span> Processing...</>
                   ) : (
