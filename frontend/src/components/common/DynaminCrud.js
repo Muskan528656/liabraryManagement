@@ -53,6 +53,9 @@ const DynamicCRUD = ({
     importModel,
     headerActions = [],
     filterFields = [],
+    authors = [],
+    categories = [],
+    publishers = [],
 }) => {
 
     const navigate = useNavigate();
@@ -424,11 +427,19 @@ const DynamicCRUD = ({
             const uniqueOptions = [...new Set(selectFields.map(field => field.options))];
             if (uniqueOptions.length === 0) return;
 
+            const relatedProps = {
+                authors,
+                categories,
+                publishers,
+            };
+
             const endpointMap = {
                 authors: "author",
                 author: "author",
                 categories: "category",
                 category: "category",
+                publishers: "publisher",
+                publisher: "publisher",
                 users: "user",
                 vendor: "vendor",
                 "user-role": "user-role",
@@ -443,15 +454,19 @@ const DynamicCRUD = ({
             const relatedApis = {};
 
             for (const option of uniqueOptions) {
-                try {
-                    const endpoint = endpointMap[option] || option;
-                    const api = new DataApi(endpoint);
-                    const response = await api.fetchAll();
+                if (relatedProps[option] && Array.isArray(relatedProps[option])) {
+                    relatedApis[option] = relatedProps[option];
+                } else {
+                    try {
+                        const endpoint = endpointMap[option] || option;
+                        const api = new DataApi(endpoint);
+                        const response = await api.fetchAll();
 
-                    relatedApis[option] = normalizeListResponse(response.data);
-                } catch (error) {
-                    console.error(`Error fetching ${option}:`, error);
-                    relatedApis[option] = [];
+                        relatedApis[option] = normalizeListResponse(response.data);
+                    } catch (error) {
+                        console.error(`Error fetching ${option}:`, error);
+                        relatedApis[option] = [];
+                    }
                 }
             }
 
@@ -459,7 +474,7 @@ const DynamicCRUD = ({
         } catch (error) {
             console.error("Error fetching related data:", error);
         }
-    }, [autoFetchRelated, formFields]);
+    }, [autoFetchRelated, formFields, authors, categories, publishers]);
 
     useEffect(() => {
         if (userInfo) {

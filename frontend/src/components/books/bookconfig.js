@@ -4,18 +4,23 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
 
     const categories = props.categories || externalData.categories || externalData.category || [];
 
+    const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
+
     const BookModel = createModel({
         modelName: "Book",
         fields: {
             title: "Title",
             author_id: "Author",
             category_id: "Category",
+            publisher_id: "Publisher",
             isbn: "ISBN",
             language: "Language",
             total_copies: "Total Copies",
             available_copies: "Available Copies",
+            min_age: "Min Age",
+            max_age: "Max Age",
         },
-        required: ["title", "author_id", "category_id", "isbn"]
+        required: ["title", "author_id", "category_id", "isbn", "min_age"]
     });
 
 
@@ -26,6 +31,11 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
 
         importMatchFields: ["isbn"],
 
+        // Pass the data for select options
+        authors,
+        categories,
+        publishers,
+
         autoCreateRelated: {
             authors: {
                 endpoint: "author",
@@ -34,6 +44,10 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             categories: {
                 endpoint: "category",
                 labelField: "name"
+            },
+            publishers: {
+                endpoint: "publisher",
+                labelField: "name"
             }
         },
 
@@ -41,17 +55,23 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             title: "",
             author_id: "",
             category_id: "",
+            publisher_id: "",
             isbn: "",
             total_copies: 1,
             available_copies: 1,
-            language: ""
+            language: "",
+            min_age: "",
+            max_age: ""
         },
         columns: [
             { field: "title", label: "Title" },
             { field: "price", label: "Price" },
             { field: "author_name", label: "Author" },
             { field: "category_name", label: "Category" },
+            { field: "publisher_name", label: "Publisher" },
             { field: "isbn", label: "ISBN" },
+            { field: "min_age", label: "Min Age" },
+            { field: "max_age", label: "Max Age" },
             { field: "available_copies", label: "Available Copies" }
         ],
         formFields: [
@@ -61,7 +81,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "text",
                 required: true,
                 placeholder: "Enter book title",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "price",
@@ -69,7 +89,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "number",
                 required: true,
                 placeholder: "Enter book price",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "author_id",
@@ -87,6 +107,15 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 options: "categories",
                 required: true,
                 placeholder: "Select category",
+                colSize: 6,
+            },
+            {
+                name: "publisher_id",
+                label: "Publisher",
+                type: "select",
+                options: "publishers",
+                required: false,
+                placeholder: "Select publisher",
                 colSize: 6,
             },
             {
@@ -119,6 +148,24 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 placeholder: "Enter available copies",
                 colSize: 6,
                 props: { min: 0 }
+            },
+            {
+                name: "min_age",
+                label: "Min Age",
+                type: "number",
+                required: true,
+                placeholder: "Enter minimum age",
+                colSize: 6,
+                props: { min: 0 }
+            },
+            {
+                name: "max_age",
+                label: "Max Age",
+                type: "number",
+                required: false,
+                placeholder: "Enter maximum age ",
+                colSize: 6,
+                props: { min: 0 }
             }
         ],
         validationRules: (formData, allBooks, editingBook) => {
@@ -127,6 +174,19 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             if (!formData.author_id) errors.push("Author is required");
             if (!formData.category_id) errors.push("Category is required");
             if (!formData.isbn?.trim()) errors.push("ISBN is required");
+            if (formData.min_age === undefined || formData.min_age === null || formData.min_age === "") {
+                errors.push("Min age is required");
+            } else if (formData.min_age < 0) {
+                errors.push("Min age must be non-negative");
+            }
+            if (formData.max_age !== undefined && formData.max_age !== null && formData.max_age !== "" && formData.max_age < 0) {
+                errors.push("Max age must be non-negative");
+            }
+            if (formData.max_age !== undefined && formData.max_age !== null && formData.max_age !== "" && 
+                formData.min_age !== undefined && formData.min_age !== null && formData.min_age !== "" && 
+                formData.max_age < formData.min_age) {
+                errors.push("Max age cannot be less than min age");
+            }
 
             const duplicate = allBooks.find(
                 book => book.isbn === formData.isbn && book.id !== editingBook?.id
@@ -137,7 +197,8 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         dataDependencies: {
             authors: "author",
-            categories: "category"
+            categories: "category",
+            publishers: "publisher"
         },
         features: {
             showBulkInsert: false,
@@ -156,9 +217,12 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         filterFields: [
             { name: 'title', label: 'Title', type: 'text' },
             { name: 'price', label: 'Price', type: 'number' },
-            { name: 'author_name', label: 'Author', type: 'text' },
-            { name: 'category_name', label: 'Category', type: 'text' },
+            { name: 'author_id', label: 'Author', type: 'select', options: authors?.map(author => ({ value: author.id?.toString(), label: author.name || `Author ${author.id}` })) || [] },
+            { name: 'category_id', label: 'Category', type: 'select', options: categories?.map(category => ({ value: category.id?.toString(), label: category.name || `Category ${category.id}` })) || [] },
+            { name: 'publisher_id', label: 'Publisher', type: 'select', options: publishers?.map(publisher => ({ value: publisher.id?.toString(), label: publisher.name || `Publisher ${publisher.id}` })) || [] },
             { name: 'isbn', label: 'ISBN', type: 'text' },
+            { name: 'min_age', label: 'Min Age', type: 'number' },
+            { name: 'max_age', label: 'Max Age', type: 'number' },
         ],
         lookupNavigation: {
             author_name: {
@@ -170,6 +234,11 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 path: "category",
                 idField: "category_id",
                 labelField: "category_name"
+            },
+            publisher_name: {
+                path: "publisher",
+                idField: "publisher_id",
+                labelField: "publisher_name"
             }
         },
         importModel: BookModel

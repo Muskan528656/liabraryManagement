@@ -150,6 +150,7 @@ async function create(cardData, userId) {
       "email",
       "phone_number",
       "country_code",
+      "age",
       "registration_date",
       "type",
       "createddate",
@@ -187,6 +188,7 @@ async function create(cardData, userId) {
       cardData.email,
       cardData.phone_number,
       cardData.country_code,
+      cardData.age || null,
       cardData.registration_date || null,
       cardData.type_id || null,
       new Date(),
@@ -260,7 +262,8 @@ async function updateById(id, cardData, userId) {
       "email",
       "phone_number",
       "registration_date",
-      "country_code"
+      "country_code",
+      "age"
     ];
 
     // Prepare other fields

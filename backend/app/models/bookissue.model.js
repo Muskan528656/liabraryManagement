@@ -187,6 +187,7 @@ async function issueBook(req) {
         m.id AS member_id, 
         m.card_number, 
         m.plan_id, 
+        m.age,
         p.duration_days,
         p.allowed_books,
         p.is_active AS plan_active,
@@ -264,6 +265,39 @@ async function issueBook(req) {
         [req.body.book_id]
       );
       book.available_copies = book.total_copies;
+    }
+
+    console.log("Step 4.5: Checking member's age against book age restrictions...");
+    // Get member's age from library_members table
+    const memberAgeRes = await sql.query(
+      `SELECT age FROM ${schema}.library_members WHERE id = $1 AND is_active = true`,
+      [req.body.card_id]
+    );
+
+    if (memberAgeRes.rows.length > 0) {
+      const memberAge = memberAgeRes.rows[0].age;
+      console.log("Member age:", memberAge);
+      console.log("Book min_age:", book.min_age, "max_age:", book.max_age);
+
+      if (memberAge !== null && memberAge !== undefined) {
+        // Check min_age requirement
+        if (book.min_age !== null && book.min_age !== undefined && memberAge < book.min_age) {
+          return {
+            success: false,
+            message: `Member age (${memberAge}) is below the minimum age requirement (${book.min_age}) for this book.`
+          };
+        }
+
+        // Check max_age requirement (if specified)
+        if (book.max_age !== null && book.max_age !== undefined && memberAge > book.max_age) {
+          return {
+            success: false,
+            message: `Member age (${memberAge}) exceeds the maximum age limit (${book.max_age}) for this book.`
+          };
+        }
+      } else {
+        console.warn("Member age not found, skipping age validation");
+      }
     }
 
     console.log("Step 5: Checking if this member already has this book...");

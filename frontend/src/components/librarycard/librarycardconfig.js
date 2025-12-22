@@ -197,6 +197,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
+        { field: "age", label: "Age", sortable: true },
         { field: "type_label", label: "Type", sortable: true },
 
 
@@ -236,6 +237,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             email: "",
             country_code: defaultCountryCode,
             phone_number: "",
+            age: "",
             registration_date: new Date().toISOString().split("T")[0],
             type_id: "",
             issue_date: new Date().toISOString().split("T")[0],
@@ -289,6 +291,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 required: false,
                 placeholder: "Enter phone number",
                 colSize: 3,
+            },
+            {
+                name: "age",
+                label: "Age",
+                type: "number",
+                required: false,
+                placeholder: "Enter age",
+                colSize: 3,
+                props: { min: 0, max: 120 }
             },
             {
                 name: "registration_date",
@@ -465,6 +476,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     
                     { value: "", label: "All Types" }
                 ],
+            },
+            {
+                name: "plan_id",
+                field: "plan_id",
+                label: "Plan",
+                type: "select",
+                options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
             },
             {
                 name: "card_number",
