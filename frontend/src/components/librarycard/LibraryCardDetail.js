@@ -30,6 +30,7 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import ResizableTable from "../../components/common/ResizableTable";
 import RelatedTabContent from '../../components/librarycard/RelatedTab'
+
 const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
@@ -64,6 +65,8 @@ const LibraryCardDetail = ({
   const [activeTab, setActiveTab] = useState("detail");
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [objectTypes, setObjectTypes] = useState([]);
+  const [planStatus, setPlanStatus] = useState("No Plan");
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -91,7 +94,11 @@ const LibraryCardDetail = ({
       "plan_id",
       "is_active",
       "allowed_book",
-      "image"
+      "image",
+      "father_gurdian_name",
+      "parent_contact",
+      "dob",
+      "type_id"
     ],
     []
   );
@@ -102,8 +109,6 @@ const LibraryCardDetail = ({
     }
     return window.location.origin;
   }, []);
-
-
 
   const getImageUrl = useCallback(
     (imagePath) => {
@@ -224,38 +229,35 @@ const LibraryCardDetail = ({
       </div>
     );
   };
-
-  const calculateSubscriptionProgress = useCallback((subscriptionData) => {
-    if (
-      !subscriptionData ||
-      !subscriptionData.start_date ||
-      !subscriptionData.end_date
-    ) {
-      return { progress: 0, daysRemaining: 0 };
-    }
-
-    const startDate = new Date(subscriptionData.start_date);
-    const endDate = new Date(subscriptionData.end_date);
+  const calculateSubscriptionProgress = (subscription) => {
+    const startDate = new Date(subscription.start_date);
+    const endDate = new Date(subscription.end_date);
     const today = new Date();
 
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return { progress: 0, daysRemaining: 0 };
-    }
+    // total duration
+    const totalDays =
+      (endDate - startDate) / (1000 * 60 * 60 * 24);
 
-    const totalDuration = endDate - startDate;
-    const elapsedDuration = today - startDate;
-    const remainingDuration = endDate - today;
+    // used duration
+    const usedDays =
+      (today - startDate) / (1000 * 60 * 60 * 24);
 
-    let progress = (elapsedDuration / totalDuration) * 100;
-    progress = Math.max(0, progress);
+    let progress = Math.round((usedDays / totalDays) * 100);
+    progress = Math.min(Math.max(progress, 0), 100);
 
-    const daysRemaining = Math.ceil(remainingDuration / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.max(
+      Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)),
+      0
+    );
+
+    const status = today > endDate ? "Expired" : "Active";
 
     return {
-      progress: Math.round(progress),
-      daysRemaining: daysRemaining,
+      progress,
+      daysRemaining,
+      status,
     };
-  }, []);
+  };
 
   const UserAvatar = ({
     userId,
@@ -411,36 +413,49 @@ const LibraryCardDetail = ({
 
   useEffect(() => {
     const fetchSubscriptionProgress = async () => {
-      if (data?.subscription_id) {
-        try {
-          const api = new DataApi("subscriptions");
-          const response = await api.fetchById(data.subscription_id);
-          if (response && response.data) {
-            const subscriptionData = response.data.success
-              ? response.data.data
-              : response.data;
-            const { progress, daysRemaining } =
-              calculateSubscriptionProgress(subscriptionData);
-            setSubscriptionProgress(progress);
-            setDaysRemaining(daysRemaining);
-          }
-        } catch (error) {
-          console.error("Error fetching subscription details:", error);
-          setSubscriptionProgress(0);
-          setDaysRemaining(0);
-        }
-      } else {
+      if (!data?.subscription_id) {
         setSubscriptionProgress(0);
         setDaysRemaining(0);
+        setPlanStatus("No Plan");
+        return;
+      }
+
+      try {
+        const api = new DataApi("plans");
+        const response = await api.fetchById(data.subscription_id);
+
+        const subscriptionData = response?.data?.success
+          ? response.data.data
+          : response?.data;
+
+        if (!subscriptionData) {
+          throw new Error("No subscription data");
+        }
+
+        const {
+          progress,
+          daysRemaining,
+          status,
+        } = calculateSubscriptionProgress(subscriptionData);
+
+        setSubscriptionProgress(progress);
+        setDaysRemaining(daysRemaining);
+        setPlanStatus(status);
+      } catch (error) {
+        console.error("Error fetching subscription details:", error);
+        setSubscriptionProgress(0);
+        setDaysRemaining(0);
+        setPlanStatus("Expired");
       }
     };
 
     fetchSubscriptionProgress();
-  }, [data, calculateSubscriptionProgress]);
+  }, [data?.subscription_id]);
 
   const fetchCardData = async () => {
     try {
       const api = new DataApi("librarycard");
+
       const response = await api.fetchById(id);
       if (response && response.data) {
         const card = response.data;
@@ -468,7 +483,7 @@ const LibraryCardDetail = ({
         const issues = Array.isArray(issuesResponse.data)
           ? issuesResponse.data
           : issuesResponse.data?.data || [];
-console.log("WOKRI",issues)
+
         const cardIssues = issues.filter((issue) => {
           const matchesCard =
             issue.card_id === cardId ||
@@ -511,7 +526,31 @@ console.log("WOKRI",issues)
       console.error("Error fetching book counts:", error);
     }
   };
+  const fetchTypeOptions = async () => {
+    try {
+      const api = new DataApi("librarycard");
+      const res = await api.get("/object-types");
 
+      console.log("Fetched Object Types Response:", res);
+
+      if (res.data?.success) {
+        setObjectTypes(res.data.data || []);
+        console.log(`Set ${res.data.data?.length || 0} object types`);
+      } else {
+        console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
+        setObjectTypes([]);
+      }
+    } catch (err) {
+      console.error("Error fetching object types:", err);
+      setObjectTypes([]);
+    }
+  };
+  const typeOptions = useMemo(() => {
+    return objectTypes.map((item) => ({
+      label: item.label,   // STAFF / STUDENT / OTHER
+      value: item.id,
+    }));
+  }, [objectTypes]);
   const fields = {
     details: [
       {
@@ -533,8 +572,26 @@ console.log("WOKRI",issues)
         colSize: 3,
       },
       {
+        key: "dob",
+        label: "Date of Birth",
+        type: "date",
+        colSize: 3,
+      },
+      {
         key: "email",
         label: "Email",
+        type: "text",
+        colSize: 3,
+      },
+      {
+        key: "father_gurdian_name",
+        label: "Father/Guardian Name",
+        type: "text",
+        colSize: 3,
+      },
+      {
+        key: "parent_contact",
+        label: "Parent Contact",
         type: "text",
         colSize: 3,
       },
@@ -546,20 +603,20 @@ console.log("WOKRI",issues)
           label: `${c.country_code} (${c.country})`,
           value: c.country_code,
         })),
-        colSize: 3,
-      },
-      {
-          name: "type",
-          label: "Type",
-          type: "text",
-          required: false,
-          colSize: 3,
+        colSize: 2,
       },
       {
         key: "phone_number",
         label: "Phone",
         type: "text",
-        colSize: 3,
+        colSize: 2,
+      },
+      {
+        key: "type_id",
+        label: "Type",
+        type: "select",
+        options: typeOptions,
+        colSize: 2,
       },
       {
         key: "registration_date",
@@ -584,12 +641,18 @@ console.log("WOKRI",issues)
       { key: "createdbyid", label: "Created By", type: "text" },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
       {
-        key: "createddate", label: "Created Date", type: "date", render: (value) => {
+        key: "createddate",
+        label: "Created Date",
+        type: "date",
+        render: (value) => {
           return convertToUserTimezone(value, timeZone)
         },
       },
       {
-        key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => {
+        key: "lastmodifieddate",
+        label: "Last Modified Date",
+        type: "date",
+        render: (value) => {
           return convertToUserTimezone(value, timeZone)
         },
       },
@@ -659,7 +722,6 @@ console.log("WOKRI",issues)
         </div>
 
         <Card.Body style={{ padding: "20px" }}>
-          {/* User Image Section */}
           <div className="text-center mb-3">
             {imagePreview ? (
               <img
@@ -732,7 +794,6 @@ console.log("WOKRI",issues)
             )}
           </div>
 
-          {/* User Information */}
           <div style={{ textAlign: "center", marginBottom: "15px" }}>
             <h5
               style={{
@@ -826,15 +887,24 @@ console.log("WOKRI",issues)
                 daysRemaining={daysRemaining}
                 size={100}
               />
+
               {data?.subscription_id ? (
                 <div className="mt-2">
                   <p className="mb-1 small">
                     <strong>Progress:</strong> {subscriptionProgress}%
                   </p>
-                  <p className="mb-0 text-muted small">
-                    {daysRemaining > 0
-                      ? `${daysRemaining} days remaining`
-                      : "Subscription expired"}
+
+                  <p
+                    className={`mb-0 small ${daysRemaining > 5
+                      ? "text-muted"
+                      : daysRemaining > 0
+                        ? "text-warning"
+                        : "text-danger"
+                      }`}
+                  >
+                    {daysRemaining > 1 && `${daysRemaining} days remaining`}
+                    {daysRemaining === 1 && "Last day of subscription"}
+                    {daysRemaining <= 0 && "Subscription expired"}
                   </p>
                 </div>
               ) : (
@@ -843,6 +913,7 @@ console.log("WOKRI",issues)
                 </p>
               )}
             </div>
+
           </div>
         </Card.Body>
       </Card>
@@ -890,6 +961,7 @@ console.log("WOKRI",issues)
         setLoading(true);
         await fetchData();
         await fetchLookupData();
+        await fetchTypeOptions();
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -1067,11 +1139,17 @@ console.log("WOKRI",issues)
     } else {
       resetImageSelection();
       setIsEditing(true);
-      setTempData({
+
+      const editData = {
         ...data,
         country_code: data?.country_code || companyCountryCode || "",
-      });
+        father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
+        type_id: data?.type_id || data?.type || ""
+      };
+
+      setTempData(editData);
       await fetchLookupData();
+      await fetchTypeOptions();
     }
   };
 
@@ -1176,8 +1254,13 @@ console.log("WOKRI",issues)
     if (!originalData || !tempData) return false;
 
     const dataChanged = EDITABLE_FIELDS.some((field) => {
-      const originalValue = originalData[field];
+      let originalValue = originalData[field];
       const tempValue = tempData[field];
+
+      if (field === "father_guardian_name") {
+        originalValue = originalData.father_guardian_name || originalData.father_gurdian_name;
+        return String(originalValue || "") !== String(tempValue || "");
+      }
 
       if (field === "is_active") {
         return Boolean(originalValue) !== Boolean(tempValue);
@@ -1208,8 +1291,10 @@ console.log("WOKRI",issues)
     }
   };
 
+
+
   const handleSave = async () => {
-    console.log("working");
+    console.log("Saving data...");
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1226,25 +1311,35 @@ console.log("WOKRI",issues)
         if (tempData[field] !== undefined) {
           let value = tempData[field];
 
-          if (value === "" || value === undefined) value = null;
-
-          if (field.includes("date") && value) {
-            try {
-              value = new Date(value).toISOString();
-            } catch (err) { }
+          if (value === "" || value === undefined || value === null) {
+            return;
           }
 
-          if (field !== "image") {
-            payload[field] = value;   // skip image for now
+          if (field === "type_id") {
+            payload["type"] = value;
+            console.log(`✅ Type field: ${field} -> type: ${value}`);
+          }
+          else if (field === "father_guardian_name") {
+            payload["father_guardian_name"] = value;
+          }
+          else if (field.includes("date") && value) {
+            try {
+              const date = new Date(value);
+              payload[field] = date.toISOString().split('T')[0];
+            } catch (err) {
+              payload[field] = value;
+            }
+          }
+          else if (field !== "image") {
+            payload[field] = value;
           }
         }
       });
 
-      console.log("Initial payload:", payload);
+      console.log("Final payload for save:", payload);
       console.log("Selected file:", selectedImageFile);
 
       let response;
-      let requestPayload = { ...payload }; 
 
       if (selectedImageFile) {
         console.log("CASE 1: New image uploaded");
@@ -1262,21 +1357,17 @@ console.log("WOKRI",issues)
         console.log("FORMDATA SENT:");
         for (let p of formData.entries()) console.log(p[0], p[1]);
 
-        console.log("Using updateLibraryCard for image upload");
         response = await api.updateLibraryCard(formData, id);
       } else {
-        console.log("CASE 3: No new image, using existing");
+        console.log("CASE 2: No new image, using existing");
 
+        const requestPayload = { ...payload };
         if (data?.image) {
           if (typeof data.image === 'object' && data.image !== null) {
             requestPayload.image = data.image.name || data.image;
           } else {
             requestPayload.image = data.image;
           }
-          payload.image = requestPayload.image;
-        } else {
-          requestPayload.image = null;
-          payload.image = null;
         }
 
         console.log("Sending JSON payload:", requestPayload);
@@ -1422,8 +1513,12 @@ console.log("WOKRI",issues)
   };
 
   const getSelectOptions = (field) => {
-    if (!field || field.type !== "select" || !field.options) {
+    if (!field || field.type !== "select") {
       return [];
+    }
+
+    if (field.key === "type_id") {
+      return typeOptions;
     }
 
     if (Array.isArray(field.options)) {
@@ -1465,6 +1560,30 @@ console.log("WOKRI",issues)
 
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
+
+    if (field.key === "father_guardian_name") {
+      const value = currentData.father_guardian_name || currentData.father_gurdian_name;
+
+      if (isEditing) {
+        return value || "";
+      } else {
+        return formatValue(value, field) || "—";
+      }
+    }
+
+    if (field.key === "type_id") {
+      const value = currentData.type_id || currentData.type;
+
+      if (isEditing) {
+        return value || "";
+      } else {
+        const typeOption = typeOptions.find(opt =>
+          opt.value === value || opt.code === value
+        );
+        return typeOption?.label || value || "—";
+      }
+    }
+
     const value = currentData[field.key];
 
     if (isEditing) {
@@ -1551,6 +1670,55 @@ console.log("WOKRI",issues)
           ) : (
             <div>{formatValue(currentData[field.key], field) || "—"}</div>
           )}
+        </Form.Group>
+      );
+    }
+
+    if (field.key === "type_id") {
+      const options = getSelectOptions(field);
+      const currentValue = getFieldValue(field, currentData);
+
+      if (isEditing) {
+        return (
+          <Form.Group key={`${field.key}-${index}`} className="mb-3">
+            <Form.Label className="fw-semibold">{field.label}</Form.Label>
+            <Form.Select
+              value={currentValue || ""}
+              onChange={(e) => {
+                const nextValue = e.target.value || "";
+                handleFieldChange(field.key, nextValue || null);
+              }}
+              style={{ background: "white" }}
+            >
+              <option value="">Select {field.label}</option>
+              {options.map((option) => {
+                const optionValue = option.value || option.id || "";
+                return (
+                  <option
+                    key={optionValue}
+                    value={optionValue}
+                  >
+                    {option.label || option.name || optionValue}
+                  </option>
+                );
+              })}
+            </Form.Select>
+          </Form.Group>
+        );
+      }
+
+      return (
+        <Form.Group key={`${field.key}-${index}`} className="mb-3">
+          <Form.Label className="fw-semibold">{field.label}</Form.Label>
+          <Form.Control
+            type="text"
+            value={currentValue || "—"}
+            readOnly
+            style={{
+              pointerEvents: "none",
+              opacity: 0.9,
+            }}
+          />
         </Form.Group>
       );
     }
@@ -1781,73 +1949,92 @@ console.log("WOKRI",issues)
                 </div>
               </div>
 
-              <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "detail")}>
-                <Nav variant="tabs" className="custom-nav-tabs">
-                  <Nav.Item>
-                    <Nav.Link eventKey="detail">
-                      <span>Detail</span>
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="related">
-                      <span>Related</span>
-                    </Nav.Link>
-                  </Nav.Item>
-                </Nav>
-
-                {/* Search bar only for related tab */}
-                {activeTab === "related" && (
-                  <div style={{
-                    position: "absolute",
-                    right: "0",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    paddingRight: "15px",
-                    marginTop: "-60px"
-                  }}>
-
-                    <InputGroup style={{ maxWidth: "250px" }}>
-                      <InputGroup.Text
+              <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "detail")} id="book-tabs-container">
+                <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
+                  <Nav variant="tabs" className="border-bottom-0">
+                    <Nav.Item>
+                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`}
                         style={{
-                          background: "#f3e9fc",
-                          borderColor: "#e9ecef",
-                          padding: "0.375rem 0.75rem",
-                        }}
-                      >
-                        <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
-                      </InputGroup.Text>
-                      <Form.Control
-                        placeholder="Search books..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                          borderColor: "#e9ecef",
-                          fontSize: "0.875rem",
-                          padding: "0.375rem 0.75rem",
-                        }}
-                      />
+                          border: "none",
+                          borderRadius: "8px 8px 0 0",
+                          padding: "12px 24px",
 
-                      {searchTerm && (
-                        <Button
-                          variant="outline-secondary"
-                          onClick={() => setSearchTerm("")}
+                          backgroundColor: activeTab === 'detail' ? "var(--primary-color)" : "#f8f9fa",
+                          color: activeTab === 'detail' ? "white" : "#64748b",
+                          borderTop: activeTab === 'detail' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                          fontSize: "14px",
+                          transition: "all 0.3s ease",
+                          marginBottom: "-1px"
+                        }}>
+                        <span>Detail</span>
+                      </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`}
+                        style={{
+                          border: "none",
+                          borderRadius: "8px 8px 0 0",
+                          padding: "12px 24px",
+
+                          backgroundColor: activeTab === 'related' ? "var(--primary-color)" : "#f8f9fa",
+                          color: activeTab === 'related' ? "white" : "#64748b",
+                          borderTop: activeTab === 'related' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                          fontSize: "14px",
+                          transition: "all 0.3s ease",
+                          marginBottom: "-1px"
+                        }}>
+                        <span>Related</span>
+                      </Nav.Link>
+                    </Nav.Item>
+                  </Nav>
+
+                  {activeTab === "related" && (
+                    <div style={{
+                      position: "absolute",
+                      right: "0",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      paddingRight: "15px",
+                      marginTop: "-60px"
+                    }}>
+                      <InputGroup style={{ maxWidth: "250px" }}>
+                        <InputGroup.Text
                           style={{
-                            border: "1px solid #d1d5db",
-                            borderRadius: "0 6px 6px 0",
-                            height: "38px",
+                            background: "#f3e9fc",
+                            borderColor: "#e9ecef",
+                            padding: "0.375rem 0.75rem",
                           }}
                         >
-                          <i className="fa-solid fa-times"></i>
-                        </Button>
-                      )}
+                          <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          placeholder="Search books..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          style={{
+                            borderColor: "#e9ecef",
+                            fontSize: "0.875rem",
+                            padding: "0.375rem 0.75rem",
+                          }}
+                        />
 
-                    </InputGroup>
-
-                  </div>
-
-                )}
-
-                {/* Tab Content */}
+                        {searchTerm && (
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() => setSearchTerm("")}
+                            style={{
+                              border: "1px solid #d1d5db",
+                              borderRadius: "0 6px 6px 0",
+                              height: "38px",
+                            }}
+                          >
+                            <i className="fa-solid fa-times"></i>
+                          </Button>
+                        )}
+                      </InputGroup>
+                    </div>
+                  )}
+                </div>
                 <Tab.Content>
                   <Tab.Pane eventKey="detail">
                     <Row>
@@ -1860,50 +2047,51 @@ console.log("WOKRI",issues)
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
-                                  // background: "var(--header-highlighter-color)",
                                   borderRadius: "10px",
                                 }}
                               >
                                 {moduleLabel} Information
                               </h6>
 
-                              {/* Fields in 3-3-3 Layout */}
                               <Row className="px-5">
-                                {/* First Column: Card Number, First Name, Last Name */}
-                                <Col md={4}>
+                                <Col md={3}>
                                   {normalizedFields.details
-                                    .slice(0, 3)
+                                    .slice(0, 4)
                                     .map((field, index) =>
                                       renderFieldGroup(field, index)
                                     )}
                                 </Col>
 
-                                {/* Second Column: Email, Country Code, Phone */}
-                                <Col md={4}>
+                                <Col md={3}>
                                   {normalizedFields.details
-                                    .slice(3, 6)
+                                    .slice(4, 7)
                                     .map((field, index) =>
-                                      renderFieldGroup(field, index + 3)
+                                      renderFieldGroup(field, index + 4)
                                     )}
                                 </Col>
 
-                                {/* Third Column: Registration Date, Subscription, Status, Allowed Books */}
-                                <Col md={4}>
+                                <Col md={3}>
                                   {normalizedFields.details
-                                    .slice(6)
+                                    .slice(7, 10)
                                     .map((field, index) =>
-                                      renderFieldGroup(field, index + 6)
+                                      renderFieldGroup(field, index + 7)
+                                    )}
+                                </Col>
+
+                                <Col md={3}>
+                                  {normalizedFields.details
+                                    .slice(10)
+                                    .map((field, index) =>
+                                      renderFieldGroup(field, index + 10)
                                     )}
                                 </Col>
                               </Row>
 
-                              {/* Other Fields Section */}
                               <Col className="pt-4">
                                 <h6
                                   className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                   style={{
                                     color: "var(--primary-color)",
-                                    // background: "var(--p)",
                                     borderRadius: "10px",
                                   }}
                                 >
@@ -1972,7 +2160,7 @@ console.log("WOKRI",issues)
                     <Row>
                       <Col lg={12}>
                         <Card border="0">
-                          <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%"}}>
+                          <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%" }}>
                             <RelatedTabContent id={id} data={data} refresh={refreshCounter} />
                           </Card.Body>
                         </Card>

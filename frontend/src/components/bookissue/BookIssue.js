@@ -152,7 +152,7 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
-console.log("reposne->>>",response)
+      console.log("reposne->>>", response)
       if (response.data && Array.isArray(response.data)) {
 
         const activeIssues = response.data.filter(
@@ -306,48 +306,48 @@ console.log("reposne->>>",response)
 
 
 
-   {
-  field: "issued_to_name",
-  label: "Issued To",
-  width: 200,
-  render: (value, record) => {
+    {
+      field: "issued_to_name",
+      label: "Issued To",
+      width: 200,
+      render: (value, record) => {
 
-    const displayName = 
-      record.issued_to_name || 
-      record.member_name || 
-      record.student_name || 
-      record.user_name || 
-      record.name || 
-      `${record.first_name || ''} ${record.last_name || ''}`.trim() || 
-      "N/A";
-    
-    const userId = record.issued_to || record.card_id;
-    
-    if (userId && displayName !== "N/A") {
-      return (
-        <a
-          href={`/librarycard/${userId}`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(`/librarycard/${userId}`, { state: record });
-          }}
-          style={{
-            color: "#6f42c1",
-            textDecoration: "none",
-            fontWeight: 500,
-          }}
-          onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
-          onMouseLeave={(e) => e.target.style.textDecoration = "none"}
-        >
-          {displayName}
-        </a>
-      );
-    }
-    
-    return displayName;
-  },
-},
+        const displayName =
+          record.issued_to_name ||
+          record.member_name ||
+          record.student_name ||
+          record.user_name ||
+          record.name ||
+          `${record.first_name || ''} ${record.last_name || ''}`.trim() ||
+          "N/A";
+
+        const userId = record.issued_to || record.card_id;
+
+        if (userId && displayName !== "N/A") {
+          return (
+            <a
+              href={`/librarycard/${userId}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/librarycard/${userId}`, { state: record });
+              }}
+              style={{
+                color: "#6f42c1",
+                textDecoration: "none",
+                fontWeight: 500,
+              }}
+              onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+              onMouseLeave={(e) => e.target.style.textDecoration = "none"}
+            >
+              {displayName}
+            </a>
+          );
+        }
+
+        return displayName;
+      },
+    },
     {
       field: "issued_by",
       label: "Issued By",
@@ -488,170 +488,180 @@ console.log("reposne->>>",response)
   ];
 
   return (
-    <Container
-      fluid
-      className="mt-4"
-      style={{ marginTop: "90px", padding: "0 1.5rem" }}
-    >
 
-      <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
-        <Card.Body className="">
-          <Tab.Container
-            activeKey={activeTab}
-            onSelect={(k) => setActiveTab(k || "issue")}
-          >
-            <Nav variant="tabs" className="custom-nav-tabs">
+
+    <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden" }}>
+      <Card.Body >
+        <Tab.Container
+          activeKey={activeTab}
+          onSelect={(k) => setActiveTab(k || "issue")}
+          id="book-tabs-container"
+        >
+          <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
+            <Nav variant="tabs" className="border-bottom-0">
               <Nav.Item>
-                <Nav.Link eventKey="issue">
+                <Nav.Link
+                  eventKey="issue"
+                  className={`fw-semibold ${activeTab === 'issue' ? 'active' : ''}`}
+                  style={{
+                    border: "none",
+                    borderRadius: "8px 8px 0 0",
+                    padding: "12px 24px",
+              
+                    backgroundColor: activeTab === 'issue' ? "var(--primary-color)" : "#f8f9fa",
+                    color: activeTab === 'issue' ? "white" : "#64748b",
+                    borderTop: activeTab === 'issue' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                    fontSize: "14px",
+                    transition: "all 0.3s ease",
+                    marginBottom: "-1px"
+                  }}
+                >
                   <i className="fa-solid fa-book-return me-2"></i>
                   <span>Issue New Book</span>
                 </Nav.Link>
               </Nav.Item>
+
               <Nav.Item>
-                <Nav.Link eventKey="list">
+                <Nav.Link
+                  eventKey="list"
+                  className={`fw-semibold ${activeTab === 'list' ? 'active' : ''}`}
+                  style={{
+                    border: "none",
+                    borderRadius: "8px 8px 0 0",
+                    padding: "12px 24px",
+             
+                    backgroundColor: activeTab === 'list' ? "var(--primary-color)" : "#f8f9fa",
+                    color: activeTab === 'list' ? "white" : "#64748b",
+                    borderTop: activeTab === 'list' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                    fontSize: "14px",
+                    transition: "all 0.3s ease",
+                    marginBottom: "-1px"
+                  }}
+                >
                   <span>View Issued Books ({issuedBooks.length})</span>
                 </Nav.Link>
               </Nav.Item>
-
-              {activeTab === "list" && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    padding: "10px 0",
-                    alignItems: "center",
-                    width: "100%",
-                  }}
-                >
-                  <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
-
-                    <InputGroup.Text
-                      style={{
-                        background: "#f3e9fc",
-                        borderColor: "#e9ecef",
-                        padding: "0.375rem 0.75rem",
-                        borderRight: "none" // Cleaner border
-                      }}
-                    >
-                      <i
-                        className="fa-solid fa-search"
-                        style={{ color: "#6f42c1", fontSize: "0.875rem" }}
-                      ></i>
-                    </InputGroup.Text>
-
-                    <Form.Control
-                      placeholder="Search books..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{
-                        borderColor: "#e9ecef",
-                        fontSize: "0.875rem",
-                        padding: "0.375rem 0.75rem",
-                        borderLeft: "none", // Cleaner look
-                        borderRight: searchTerm ? "none" : "1px solid #e9ecef" // Button ke liye
-                      }}
-                    />
-
-                    {searchTerm && (
-                      <Button
-                        variant="outline-secondary"
-                        onClick={() => setSearchTerm("")}
-                        style={{
-                          border: "1px solid #d1d5db",
-                          borderLeft: "none",
-                          height: "38px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "0 12px"
-                        }}
-                      >
-                        <i className="fa-solid fa-times"></i>
-                      </Button>
-                    )}
-                  </InputGroup>
-                </div>
-              )}
             </Nav>
-            <Tab.Content>
-              <Tab.Pane eventKey="issue">
-                <Row>
-                  <Col>
-                    <Col lg={12}>
-                      <Row>
-                        <Col lg={12}>
-                          <Card className="shadow-sm h-100">
 
-                            <Card.Body className="p-0" style={{ overflow: "hidden" }}>
-                              <BulkIssue />
-                            </Card.Body>
+            {/* Search Bar - Only for List Tab */}
+            {activeTab === "list" && (
+              <div className="d-flex align-items-center">
+                <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
+                  <InputGroup.Text
+                    style={{
+                      background: "#f3e9fc",
+                      borderColor: "#e9ecef",
+                      padding: "0.375rem 0.75rem",
+                      borderRight: "none",
+                      borderTopLeftRadius: "6px",
+                      borderBottomLeftRadius: "6px"
+                    }}
+                  >
+                    <i
+                      className="fa-solid fa-search"
+                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                    ></i>
+                  </InputGroup.Text>
 
-                          </Card>
-                        </Col>
-                      </Row>
-                      {/* </Card> */}
-                    </Col>
-                  </Col>
-                </Row>
+                  <Form.Control
+                    placeholder="Search books..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      borderColor: "#e9ecef",
+                      fontSize: "0.875rem",
+                      padding: "0.375rem 0.75rem",
+                      borderLeft: "none",
+                      borderRight: searchTerm ? "none" : "1px solid #e9ecef"
+                    }}
+                  />
 
-                {/* </Card> */}
-              </Tab.Pane>
-
-              {/* Issued Books List Tab */}
-              <Tab.Pane eventKey="list">
-                <Card className="shadow-sm">
-                  <Card.Body className="p-0" style={{ overflow: "hidden" }}>
-                    <ResizableTable
-                      data={filteredIssuedBooks}
-                      columns={issueColumns}
-                      loading={loadingIssuedBooks}
-                      showCheckbox={false}
-                      showSerialNumber={true}
-                      showActions={false}
-                      searchTerm={searchTerm}
-                      currentPage={currentPage}
-                      recordsPerPage={recordsPerPage}
-                      onPageChange={(page) => {
-                        setCurrentPage(page);
-                      }}
-                      emptyMessage={
-                        searchTerm
-                          ? "No issued books found matching your search"
-                          : "No books have been issued yet"
-                      }
-                      onRowClick={(issue) => {
-
-                        console.log("Issue clicked:", issue);
-                      }}
-                    />
-                  </Card.Body>
-                  {filteredIssuedBooks.length > 0 && (
-                    <Card.Footer
+                  {searchTerm && (
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setSearchTerm("")}
                       style={{
-                        background: "#f8f9fa",
-                        borderTop: "1px solid #e9ecef",
+                        border: "1px solid #d1d5db",
+                        borderLeft: "none",
+                        height: "38px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "0 12px",
+                        borderTopRightRadius: "6px",
+                        borderBottomRightRadius: "6px"
                       }}
                     >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>Total Issued Books:</strong>{" "}
-                          {filteredIssuedBooks.length}
-                          {searchTerm && (
-                            <span className="text-muted ms-2">
-                              (Filtered from {issuedBooks.length} total)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Card.Footer>
+                      <i className="fa-solid fa-times"></i>
+                    </Button>
                   )}
-                </Card>
-              </Tab.Pane>
-            </Tab.Content>
-          </Tab.Container>
-        </Card.Body>
-      </Card>
-    </Container>
+                </InputGroup>
+              </div>
+            )}
+          </div>
+
+          <Tab.Content className="pt-3">
+            <Tab.Pane eventKey="issue">
+              {/* <Card className="shadow-sm h-100 border-0"> */}
+              {/* <Card.Body className="p-0" style={{ overflow: "hidden" }}> */}
+              <BulkIssue />
+              {/* </Card.Body> */}
+              {/* </Card> */}
+            </Tab.Pane>
+
+            <Tab.Pane eventKey="list">
+              <Card className="shadow-sm border-0">
+                <Card.Body className="p-0" style={{ overflow: "hidden" }}>
+                  <ResizableTable
+                    data={filteredIssuedBooks}
+                    columns={issueColumns}
+                    loading={loadingIssuedBooks}
+                    showCheckbox={false}
+                    showSerialNumber={true}
+                    showActions={false}
+                    searchTerm={searchTerm}
+                    currentPage={currentPage}
+                    recordsPerPage={recordsPerPage}
+                    onPageChange={(page) => {
+                      setCurrentPage(page);
+                    }}
+                    emptyMessage={
+                      searchTerm
+                        ? "No issued books found matching your search"
+                        : "No books have been issued yet"
+                    }
+                    onRowClick={(issue) => {
+                      console.log("Issue clicked:", issue);
+                    }}
+                  />
+                </Card.Body>
+                {filteredIssuedBooks.length > 0 && (
+                  <Card.Footer
+                    style={{
+                      background: "#f8f9fa",
+                      borderTop: "1px solid #e9ecef",
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Total Issued Books:</strong>{" "}
+                        {filteredIssuedBooks.length}
+                        {searchTerm && (
+                          <span className="text-muted ms-2">
+                            (Filtered from {issuedBooks.length} total)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card.Footer>
+                )}
+              </Card>
+            </Tab.Pane>
+          </Tab.Content>
+        </Tab.Container>
+      </Card.Body>
+    </Card>
+
   );
 };
 

@@ -172,7 +172,7 @@ module.exports = (app) => {
       body("last_name").notEmpty().withMessage("Last name is required"),
       body("email").optional().isEmail().withMessage("Valid email required"),
       body("phone_number").optional().isString(),
-      body("type").optional().isString(),
+      body("type_id").optional().isString(),
     ],
     async (req, res) => {
       try {
@@ -243,69 +243,114 @@ module.exports = (app) => {
   // ============ PUT ROUTE ============
 
   // PUT update library card
-  router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
-    try {
-      LibraryCard.init(req.userinfo.tenantcode);
+ router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
+  try {
+    LibraryCard.init(req.userinfo.tenantcode);
 
-      // Check if card exists
-      const existingCard = await LibraryCard.findById(req.params.id);
-      if (!existingCard) {
-        return res.status(404).json({ error: "Library card not found" });
-      }
-
-      const userId = req.userinfo?.id || null;
-      const cardData = { ...req.body };
-      const previousImagePath = existingCard.image;
-
-      console.log("🔄 Updating library card:", req.params.id);
-      console.log("Update data:", cardData);
-
-      // Handle image upload
-      if (req.file) {
-        // Delete old image if exists
-        if (previousImagePath) {
-          deleteFileIfExists(previousImagePath);
-        }
-        cardData.image = `/uploads/librarycards/${req.file.filename}`;
-      } else if (cardData.image === 'null' || cardData.image === null) {
-        // If image is explicitly set to null, delete old image
-        if (previousImagePath) {
-          deleteFileIfExists(previousImagePath);
-        }
-        cardData.image = null;
-      }
-
-      // Handle is_active from status
-      if (cardData.status !== undefined) {
-        cardData.is_active = cardData.status === 'true' || cardData.status === true;
-      }
-
-      // Map plan_id to subscription_id for backend compatibility
-      if (cardData.plan_id !== undefined) {
-        cardData.subscription_id = cardData.plan_id;
-        delete cardData.plan_id;
-      }
-
-      // Update name if first_name or last_name changed
-      if (cardData.first_name || cardData.last_name) {
-        const firstName = cardData.first_name || existingCard.first_name;
-        const lastName = cardData.last_name || existingCard.last_name;
-        cardData.name = `${firstName} ${lastName}`;
-      }
-
-      // Update the card
-      const updatedCard = await LibraryCard.updateById(req.params.id, cardData, userId);
-
-      return res.status(200).json({
-        success: true,
-        data: updatedCard,
-        message: "Library card updated successfully",
-      });
-    } catch (error) {
-      console.error("❌ Error updating library card:", error);
-      return res.status(500).json({ error: error.message });
+    // Check if card exists
+    const existingCard = await LibraryCard.findById(req.params.id);
+    if (!existingCard) {
+      return res.status(404).json({ error: "Library card not found" });
     }
-  });
+
+    const userId = req.userinfo?.id || null;
+    const cardData = { ...req.body };
+    const previousImagePath = existingCard.image;
+
+    console.log("🔄 Updating library card:", req.params.id);
+    console.log("Update data:", cardData);
+
+    // Handle image upload
+    if (req.file) {
+      // Delete old image if exists
+      if (previousImagePath) {
+        deleteFileIfExists(previousImagePath);
+      }
+      cardData.image = `/uploads/librarycards/${req.file.filename}`;
+    } else if (cardData.image === 'null' || cardData.image === null) {
+      // If image is explicitly set to null, delete old image
+      if (previousImagePath) {
+        deleteFileIfExists(previousImagePath);
+      }
+      cardData.image = null;
+    }
+
+    // Handle is_active from status
+    if (cardData.status !== undefined) {
+      cardData.is_active = cardData.status === 'true' || cardData.status === true;
+    }
+
+    // Map plan_id to subscription_id for backend compatibility
+    if (cardData.plan_id !== undefined) {
+      cardData.subscription_id = cardData.plan_id;
+      delete cardData.plan_id;
+    }
+
+    // ✅ FIX: Handle type_id to type mapping
+    if (cardData.type_id !== undefined && !cardData.type) {
+      cardData.type = cardData.type_id;
+      delete cardData.type_id;
+    }
+
+    // Update name if first_name or last_name changed
+    if (cardData.first_name || cardData.last_name) {
+      const firstName = cardData.first_name || existingCard.first_name;
+      const lastName = cardData.last_name || existingCard.last_name;
+      cardData.name = `${firstName} ${lastName}`;
+    }
+
+    // Format date fields if present
+    if (cardData.dob) {
+      // Convert dob to proper date format
+      cardData.dob = new Date(cardData.dob);
+    }
+
+    if (cardData.registration_date) {
+      // Convert registration_date to proper date format
+      cardData.registration_date = new Date(cardData.registration_date);
+    }
+
+    // Clean up data - remove any undefined or null fields that shouldn't be updated
+    const fieldsToUpdate = {
+      ...cardData,
+      lastmodifiedbyid: userId,
+      lastmodifieddate: new Date()
+    };
+
+    // Remove any empty strings if they should be treated as null
+    Object.keys(fieldsToUpdate).forEach(key => {
+      if (fieldsToUpdate[key] === '' && key !== 'name') {
+        fieldsToUpdate[key] = null;
+      }
+    });
+
+    console.log("Final update data:", fieldsToUpdate);
+
+    // Update the card
+    const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
+
+    // Format response to include all fields
+    const responseCard = {
+      ...updatedCard,
+      // Ensure date fields are properly formatted
+      dob: updatedCard.dob ? new Date(updatedCard.dob).toISOString().split('T')[0] : null,
+      registration_date: updatedCard.registration_date ? new Date(updatedCard.registration_date).toISOString().split('T')[0] : null,
+      // Map subscription_id back to plan_id for frontend
+      plan_id: updatedCard.subscription_id,
+      // Map type back to type_id for frontend
+      type_id: updatedCard.type
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: responseCard,
+      message: "Library card updated successfully",
+    });
+  } catch (error) {
+    console.error("❌ Error updating library card:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
 
   // ============ DELETE ROUTE ============
 

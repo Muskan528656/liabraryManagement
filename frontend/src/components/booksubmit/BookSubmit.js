@@ -1330,23 +1330,59 @@ const BookSubmit = () => {
 
     return (
         <>
-            <Container fluid className="mt-4" style={{ marginTop: "0.5rem", padding: "0 1.5rem" }}>
-                <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
-                    <Card.Body className="">
-                        <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k || "submit")}>
-                            <Nav variant="tabs" className="custom-nav-tabs">
+            <Container fluid className="mt-2">
+                <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden" }}>
+                    <Card.Body className="p-0">
+                        <Tab.Container
+                            activeKey={activeTab}
+                            onSelect={(k) => setActiveTab(k || "submit")}
+                            id="book-tabs-container"
+                        >
+                            <Nav variant="tabs" className="border-bottom-0 position-relative">
                                 <Nav.Item>
-                                    <Nav.Link eventKey="submit">
+                                    <Nav.Link
+                                        eventKey="submit"
+                                        className={`fw-semibold ${activeTab === 'submit' ? 'active' : ''}`}
+                                        style={{
+                                            border: "none",
+                                            borderRadius: "8px 8px 0 0",
+                                            padding: "12px 24px",
+
+                                            backgroundColor: activeTab === 'submit' ? "var(--primary-color)" : "var(--secondary-background-color)",
+                                            color: activeTab === 'submit' ? "white" : "#64748b",
+                                            borderTop: activeTab === 'submit' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                                            fontSize: "14px",
+                                            transition: "all 0.3s ease",
+                                            marginBottom: "-1px"
+                                        }}
+                                    >
                                         <i className="fa-solid fa-book-return me-2"></i>
                                         <span>Submit Book</span>
                                     </Nav.Link>
                                 </Nav.Item>
 
                                 <Nav.Item>
-                                    <Nav.Link eventKey="submitted">
+                                    <Nav.Link
+                                        eventKey="submitted"
+                                        className={`fw-semibold ${activeTab === 'submitted' ? 'active' : ''}`}
+                                        style={{
+                                            border: "none",
+                                            borderRadius: "8px 8px 0 0",
+                                            padding: "12px 24px",
+
+                                            backgroundColor: activeTab === 'submitted' ? "var(--primary-color)" : "transparent",
+                                            color: activeTab === 'submitted' ? "white" : "#64748b",
+                                            borderTop: activeTab === 'submitted' ? "3px solid var(--primary-color)" : "3px solid transparent",
+                                            fontSize: "14px",
+                                            transition: "all 0.3s ease",
+                                            marginBottom: "-1px"
+                                        }}
+                                    >
                                         <span>View Submitted Books ({submittedBooks.length})</span>
                                     </Nav.Link>
                                 </Nav.Item>
+
+                                {/* Search bar for submitted tab */}
                                 {activeTab === "submitted" && (
                                     <div
                                         style={{
@@ -1354,18 +1390,19 @@ const BookSubmit = () => {
                                             right: "20px",
                                             top: "50%",
                                             transform: "translateY(-50%)",
-                                            marginTop: "10px"
+
+                                            zIndex: 10
                                         }}
                                     >
                                         <InputGroup style={{ maxWidth: "250px" }}>
                                             <InputGroup.Text
                                                 style={{
                                                     background: "var(--primary-color)",
-                                                    borderColor: "#e9ecef",
+                                                    borderColor: "var(--primary-color)",
                                                     padding: "0.375rem 0.75rem"
                                                 }}
                                             >
-                                                <i className="fa-solid fa-search" style={{ color: "var(--primary-color)" }}></i>
+                                                <i className="fa-solid fa-search" style={{ color: "white" }}></i>
                                             </InputGroup.Text>
 
                                             <Form.Control
@@ -1373,7 +1410,7 @@ const BookSubmit = () => {
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 style={{
-                                                    borderColor: "#e9ecef",
+                                                    borderColor: "var(--primary-color)",
                                                     fontSize: "0.875rem",
                                                     padding: "0.375rem 0.75rem"
                                                 }}
@@ -1384,7 +1421,8 @@ const BookSubmit = () => {
                                                     variant="outline-secondary"
                                                     onClick={() => setSearchTerm("")}
                                                     style={{
-                                                        border: "1px solid #d1d5db",
+                                                        border: "1px solid #3b82f6",
+                                                        backgroundColor: "white",
                                                         borderRadius: "0 6px 6px 0",
                                                         height: "38px"
                                                     }}
@@ -1396,9 +1434,10 @@ const BookSubmit = () => {
                                     </div>
                                 )}
                             </Nav>
-                            <Tab.Content>
+
+                            <Tab.Content style={{ backgroundColor: "white", border: "1px solid #e5e7eb", borderTop: "none", borderRadius: "0 8px 8px 8px", padding: "20px" }}>
                                 <Tab.Pane eventKey="submit">
-                                    <Row >
+                                    <Row>
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{
                                                 background: "#f3e8ff",
@@ -1492,7 +1531,7 @@ const BookSubmit = () => {
                                                                         onClick={handleScanButtonClick}
                                                                         disabled={loading}
                                                                         style={{
-                                                                            backgroundColor: "var(--primary-color)",
+                                                                            backgroundColor: "#1e3a8a",
                                                                             border: "none",
                                                                             borderRadius: "0 6px 6px 0",
                                                                             fontWeight: "600",
@@ -1527,14 +1566,14 @@ const BookSubmit = () => {
                                                                         marginTop: "24px"
                                                                     }}>
                                                                         <Card.Body className="p-2">
-                                                                            <h6 className="mb-2 fw-bold" style={{ // mb-2 added for more bottom margin
-                                                                                color: "var(--primary-color)",
+                                                                            <h6 className="mb-2 fw-bold" style={{
+                                                                                color: "#1e3a8a",
                                                                                 fontSize: "13px",
                                                                                 whiteSpace: "nowrap",
                                                                                 overflow: "hidden",
                                                                                 textOverflow: "ellipsis"
                                                                             }}>
-                                                                                <i className="fa-solid fa-book me-2"></i> {/* me-2 increased to me-2 */}
+                                                                                <i className="fa-solid fa-book me-2"></i>
                                                                                 Book Found
                                                                             </h6>
                                                                             <div className="small" style={{ fontSize: "12px" }}>
@@ -1563,13 +1602,13 @@ const BookSubmit = () => {
                                                                     }}>
                                                                         <Card.Body className="p-2">
                                                                             <h6 className="mb-2 fw-bold" style={{
-                                                                                color: "var(--primary-color)",
+                                                                                color: "#1e3a8a",
                                                                                 fontSize: "13px",
                                                                                 whiteSpace: "nowrap",
                                                                                 overflow: "hidden",
                                                                                 textOverflow: "ellipsis"
                                                                             }}>
-                                                                                <i className="fa-solid fa-id-card me-2"></i> {/* me-2 increased to me-2 */}
+                                                                                <i className="fa-solid fa-id-card me-2"></i>
                                                                                 Card Found
                                                                             </h6>
                                                                             <div className="small" style={{ fontSize: "12px" }}>
@@ -1594,13 +1633,12 @@ const BookSubmit = () => {
                                         </Col>
                                     </Row>
 
-
                                     {/* Table Section - Takes full width below the Book Identification card */}
-                                    <Row>
+                                    <Row className="mt-4">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
-                                                    background: "var(--secondary-color)",
+                                                    background: "#f8fafc",
                                                     border: "none",
                                                     borderBottom: "2px solid #d1d5db",
                                                 }}>
@@ -1623,8 +1661,8 @@ const BookSubmit = () => {
                                                             <InputGroup style={{ maxWidth: "250px" }}>
                                                                 <InputGroup.Text
                                                                     style={{
-                                                                        background: "var(--primary-color)",
-                                                                        borderColor: "#e9ecef",
+                                                                        background: "#1e3a8a",
+                                                                        borderColor: "#1e3a8a",
                                                                         padding: "0.375rem 0.75rem"
                                                                     }}
                                                                 >
@@ -1636,7 +1674,7 @@ const BookSubmit = () => {
                                                                     value={searchTerm}
                                                                     onChange={(e) => setSearchTerm(e.target.value)}
                                                                     style={{
-                                                                        borderColor: "#e9ecef",
+                                                                        borderColor: "#1e3a8a",
                                                                         fontSize: "0.875rem",
                                                                         padding: "0.375rem 0.75rem"
                                                                     }}
@@ -1647,7 +1685,8 @@ const BookSubmit = () => {
                                                                         variant="outline-secondary"
                                                                         onClick={() => setSearchTerm("")}
                                                                         style={{
-                                                                            border: "1px solid #d1d5db",
+                                                                            border: "1px solid #1e3a8a",
+                                                                            backgroundColor: "white",
                                                                             borderRadius: "0 6px 6px 0",
                                                                             height: "38px"
                                                                         }}
@@ -1700,7 +1739,7 @@ const BookSubmit = () => {
                                 <Tab.Pane eventKey="submitted">
                                     <Row>
                                         <Col lg={12}>
-                                            <Card className="shadow-sm">
+                                            <Card className="shadow-sm" style={{ border: "none" }}>
                                                 <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                                                     <ResizableTable
                                                         data={filteredSubmittedBooks}
@@ -1734,7 +1773,7 @@ const BookSubmit = () => {
             </Container>
 
             <Modal show={showScanModal} onHide={() => setShowScanModal(false)} centered>
-                <Modal.Header closeButton>
+                <Modal.Header closeButton style={{ backgroundColor: "#1e3a8a", color: "white" }}>
                     <Modal.Title>
                         <i className={`fa-solid ${scanMethod === "isbn" ? "fa-barcode" : "fa-address-card"} me-2`}></i>
                         {scanMethod === "isbn" ? "Scan Book ISBN" : "Scan Library Card"}
@@ -1783,6 +1822,7 @@ const BookSubmit = () => {
                         variant="primary"
                         onClick={handleScanSubmit}
                         disabled={!((scanMethod === "isbn" ? isbn : cardNumber).trim()) || loading}
+                        style={{ backgroundColor: "#1e3a8a", border: "none" }}
                     >
                         {loading ? (
                             <Spinner animation="border" size="sm" className="me-2" />
@@ -1796,7 +1836,7 @@ const BookSubmit = () => {
 
             <Modal show={showSubmitModal} onHide={handleModalClose} centered size="lg">
                 <Modal.Header closeButton style={{
-                    padding: "15px 20px", backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", fontWeight: "bold"
+                    padding: "15px 20px", backgroundColor: "#1e3a8a", color: "white", fontWeight: "bold"
                 }}>
                     <Modal.Title style={{ fontSize: "18px", fontWeight: "600" }}>
                         Submit Book Return
@@ -1809,7 +1849,7 @@ const BookSubmit = () => {
                                 <Col md={8}>
                                     {/* Left Column - Issue Information and Condition Assessment */}
                                     <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
-                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
+                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "#f8fafc", }}>
                                             <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
                                                 Issue Information
                                             </h6>

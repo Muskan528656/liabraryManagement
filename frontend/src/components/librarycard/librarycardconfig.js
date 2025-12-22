@@ -18,6 +18,23 @@ const generateCardNumber = (card) => {
     return `LIB${uuidPart}`;
 };
 
+const calculateAge = (dob) => {
+    if (!dob) return "-";
+
+    const birthDate = new Date(dob);
+    if (isNaN(birthDate)) return "-";
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age;
+};
+
 export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview =
@@ -56,7 +73,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
 
 
-        const plansApi = new DataApi("plans"); // Corrected from "plans" to "plan"
+        const plansApi = new DataApi("plans");
         const plansResponse = await plansApi.fetchAll();
 
         console.log("Plans API Response:", plansResponse);
@@ -121,7 +138,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
         if (objectTypeData.length > 0) {
             objectTypesList = objectTypeData
-                .filter(type => type.status === 'active' ||type.status === 'Active'  || type.status === true)
+                .filter(type => type.status === 'active' || type.status === 'Active' || type.status === true)
                 .map(type => ({
                     value: type.id,
                     label: type.label.charAt(0).toUpperCase() + type.label.slice(1),
@@ -177,28 +194,41 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 );
             },
         },
+
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
         { field: "last_name", label: "Last Name", sortable: true },
         { field: "email", label: "Email", sortable: true },
+
+        { field: "phone_number", label: "Phone Number", sortable: true },
         {
-            field: "country_code",
-            label: "Country Code",
+            field: "type_id",
+            label: "Type",
+            sortable: true,
             render: (value) => {
-                const cleanValue = value
-                    ? String(value).split(/[—\-]/)[0].trim()
-                    : value;
-                const country = COUNTRY_CODES.find(
-                    (c) => c.country_code === cleanValue
+                const typeObj = objectTypesList.find(
+                    (t) => t.value === value
                 );
-                return country
-                    ? `${country.country_code} (${country.country})`
-                    : cleanValue || defaultCountryCode;
+                return typeObj ? typeObj.label : "-";
+            }
+        }
+        ,
+        {
+            field: "dob",
+            label: "Age",
+            sortable: true,
+            render: (value) => {
+                const age = calculateAge(value);
+                return (
+                    <div>
+
+                        {age !== "-" && (
+                            <small className="text-muted"> {age}</small>
+                        )}
+                    </div>
+                );
             },
         },
-        { field: "phone_number", label: "Phone Number", sortable: true },
-        { field: "type_label", label: "Type", sortable: true },
-
 
         {
             field: "status",
@@ -243,9 +273,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             selectedPlan: null,
             status: "active",
             image: null,
+            father_gurdian_name: "",
+            parent_contact: "",
+            dob: ""
         },
 
         formFields: [
+            {
+                name: "father_gurdian_name",
+                label: "Father / Guardian Name",
+                type: "text",
+                required: false,
+                placeholder: "Enter father or guardian name",
+                colSize: 6,
+            },
+            {
+                name: "parent_contact",
+                label: "Parent Contact",
+                type: "tel",
+                required: false,
+                placeholder: "Enter parent contact number",
+                colSize: 6,
+            },
+
             {
                 name: "first_name",
                 label: "First Name",
@@ -290,6 +340,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 placeholder: "Enter phone number",
                 colSize: 3,
             },
+
+            {
+                name: "dob",
+                label: "Date of Birth",
+                type: "date",
+                required: false,
+                colSize: 6,
+            },
+
             {
                 name: "registration_date",
                 label: "Registration Date",
@@ -305,64 +364,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 options: objectTypesList,
                 colSize: 6,
             },
-            // {
-            //     name: "plan_id",
-            //     label: "Plan",
-            //     type: "select",
-            //     options: plansList,
-            //     required: true,
-            //     colSize: 12,
-            //     onChange: (value, formData, setFormData) => {
-            //         console.log("Plan selected:", value);
-            //         const selectedPlan = plansList.find(p => p.value == value)?.data;
-            //         console.log("Selected plan data:", selectedPlan);
-
-            //         const updatedFormData = {
-            //             ...formData,
-            //             plan_id: value,
-            //             selectedPlan: selectedPlan || null
-            //         };
-
-            //         setFormData(updatedFormData);
-            //         console.log("Form data updated with selected plan:", updatedFormData);
-            //     },
-            //     renderOptions: (options) => (
-            //         <>
-            //             <option value="">-- Select a plan --</option>
-            //             {options.map(option => (
-            //                 <option key={option.value} value={option.value}>
-            //                     {option.label}
-            //                 </option>
-            //             ))}
-            //             {options.length === 0 && (
-            //                 <option value="" disabled>No active plans available</option>
-            //             )}
-            //         </>
-            //     ),
-            //     validationMessage: plansList.length === 0 ?
-            //         "No active plans available. Please create a plan first." :
-            //         ""
-            // },
-            {
-                name: "plan_details",
-                type: "custom",
-                colSize: 12,
-                render: (formData, setFormData) => {
-                    console.log("Rendering PlanDetailsTab with:", {
-                        planId: formData.plan_id,
-                        selectedPlan: formData.selectedPlan
-                    });
 
 
-                }
-            },
             {
                 name: "image",
                 label: "User Photo",
                 type: "file",
                 accept: "image/*",
                 required: false,
-                colSize: 12,
+                colSize: 6,
                 preview: true,
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
@@ -462,7 +472,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 label: "Member Type",
                 type: "select",
                 options: objectTypesList.length > 0 ? objectTypesList : [
-                    
+
                     { value: "", label: "All Types" }
                 ],
             },
@@ -533,33 +543,30 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 },
             },
             { key: "phone_number", label: "Phone Number", type: "text" },
+            { key: "father_gurdian_name", label: "Father / Guardian Name", type: "text" },
+            { key: "parent_contact", label: "Parent Contact", type: "number", maxLength: 10 },
+            {
+                field: "dob",
+                label: "Date of Birth",
+                sortable: true,
+                render: (value) => {
+                    const age = calculateAge(value);
+                    return (
+                        <div>
+                            {/* <div>{formatDateToDDMMYYYY(value)}</div> */}
+                            {age !== "-" && (
+                                <small className="text-muted"> {age}</small>
+                            )}
+                        </div>
+                    );
+                },
+            },
+
             { key: "registration_date", label: "Registration Date", type: "date" },
             { key: "type", label: "Type", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
-            // {
-            //     key: "plan",
-            //     label: "Plan",
-            //     render: (value, row) => {
-            //         if (value && typeof value === 'object') {
-            //             return (
-            //                 <div>
-            //                     <strong>{value.plan_name}</strong>
-            //                     <div className="small text-muted">
-            //                         Duration: {value.duration_days} days |
-            //                         Books: {value.allowed_books || 0} |
-            //                         Status: <Badge bg={value.is_active ? "success" : "secondary"} size="sm">
-            //                             {value.is_active ? "Active" : "Inactive"}
-            //                         </Badge>
-            //                     </div>
-            //                 </div>
-            //             );
-            //         } else if (row.plan_name) {
-            //             return row.plan_name;
-            //         }
-            //         return <span className="text-muted">No Plan</span>;
-            //     }
-            // },
+
             {
                 key: "status",
                 label: "Status",
@@ -650,7 +657,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     delete submitData.status;
                 }
 
-                // Map type_id to type for backend processing
                 if (submitData.type_id) {
                     submitData.type = submitData.type_id;
                     delete submitData.type_id;
