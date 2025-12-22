@@ -354,7 +354,12 @@ const DynamicCRUD = ({
         let result = data;
 
         if (advancedFilters && advancedFilters.length > 0) {
-            result = applyAdvancedFilters(result, advancedFilters);
+            const fieldsForFilter = filterFields.length > 0 ? filterFields : formFields.map(field => ({
+                ...field,
+                name: field.name || field.field,
+                field: field.name || field.field,
+            }));
+            result = applyAdvancedFilters(result, advancedFilters, fieldsForFilter);
         }
 
         if (searchTerm && showSearch) {
@@ -370,8 +375,9 @@ const DynamicCRUD = ({
         }
 
         return result;
-    }, [data, searchTerm, showSearch, columns, advancedFilters]);
+    }, [data, searchTerm, showSearch, columns, advancedFilters, filterFields, formFields]);
 
+    
     const handleAdvancedFilterChange = useCallback((filters) => {
         setAdvancedFilters(filters);
         setCurrentPage(1);

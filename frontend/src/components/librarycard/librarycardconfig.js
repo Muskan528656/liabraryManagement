@@ -468,7 +468,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         filterFields: [
             {
                 name: "type_type",
-                field: "type",
+                field: "type_id",
                 label: "Member Type",
                 type: "select",
                 options: objectTypesList.length > 0 ? objectTypesList : [

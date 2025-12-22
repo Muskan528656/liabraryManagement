@@ -8,60 +8,8 @@ const AdvancedFilter = ({
   initialFilters = [],
   className = "",
 }) => {
-  const [filters, setFilters] = useState(initialFilters.length > 0 ? initialFilters : [{ id: Date.now(), field: "", operator: "equals", value: "", logic: "AND" }]);
+  const [filters, setFilters] = useState(initialFilters.length > 0 ? initialFilters : [{ id: Date.now(), field: "", value: "", valueTo: "" }]);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const getOperatorsForField = useCallback((fieldConfig) => {
-    if (!fieldConfig) {
-      return [
-        { value: "equals", label: "Equals" },
-        { value: "not_equals", label: "Not Equals" },
-        { value: "contains", label: "Contains" },
-      ];
-    }
-
-    const baseOperators = [
-      { value: "equals", label: "Equals" },
-      { value: "not_equals", label: "Not Equals" },
-    ];
-
-    switch (fieldConfig.type) {
-      case "text":
-      case "email":
-      case "tel":
-        return [
-          ...baseOperators,
-          { value: "contains", label: "Contains" },
-          { value: "starts_with", label: "Starts With" },
-          { value: "ends_with", label: "Ends With" },
-          { value: "is_empty", label: "Is Empty" },
-          { value: "is_not_empty", label: "Is Not Empty" },
-        ];
-      case "select":
-      case "dropdown":
-        return baseOperators;
-      case "number":
-        return [
-          ...baseOperators,
-          { value: "greater_than", label: "Greater Than" },
-          { value: "less_than", label: "Less Than" },
-          { value: "greater_or_equal", label: "Greater or Equal" },
-          { value: "less_or_equal", label: "Less or Equal" },
-        ];
-      case "date":
-        return [
-          ...baseOperators,
-          { value: "before", label: "Before" },
-          { value: "after", label: "After" },
-          { value: "between", label: "Between" },
-        ];
-      case "boolean":
-      case "toggle":
-        return [{ value: "equals", label: "Is" }];
-      default:
-        return baseOperators;
-    }
-  }, []);
 
   const renderValueInput = useCallback((filter, index, fieldConfig) => {
     console.log("fieldConfig", fieldConfig)
@@ -76,11 +24,6 @@ const AdvancedFilter = ({
         />
       );
     }
-
-    if (filter.operator === "is_empty" || filter.operator === "is_not_empty") {
-      return null;
-    }
-
 
     switch (fieldConfig.type) {
       case "select":
@@ -113,16 +56,20 @@ const AdvancedFilter = ({
           </Form.Select>
         );
       case "date":
-        if (filter.operator === "between") {
-          return (
-            <div className="d-flex gap-2">
+        return (
+          <div className="d-flex flex-row gap-2">
+            <div>
+              {/* <small className="text-muted">Start Date</small> */}
               <Form.Control
                 size="sm"
                 type="date"
                 value={filter.value || ""}
                 onChange={(e) => handleFilterChange(index, "value", e.target.value)}
               />
-              <span className="align-self-center">to</span>
+            </div>
+            <span className="align-self-center">to</span>
+            <div>
+              {/* <small className="text-muted">End Date</small> */}
               <Form.Control
                 size="sm"
                 type="date"
@@ -130,15 +77,7 @@ const AdvancedFilter = ({
                 onChange={(e) => handleFilterChange(index, "valueTo", e.target.value)}
               />
             </div>
-          );
-        }
-        return (
-          <Form.Control
-            size="sm"
-            type="date"
-            value={filter.value || ""}
-            onChange={(e) => handleFilterChange(index, "value", e.target.value)}
-          />
+          </div>
         );
       case "number":
         return (
@@ -163,48 +102,62 @@ const AdvancedFilter = ({
     }
   }, []);
 
+  const getFieldConfig = useCallback(
+    (fieldName) => {
+      return fields.find((f) => f.name === fieldName || f.field === fieldName);
+    },
+    [fields]
+  );
+
   const handleFilterChange = useCallback((index, key, value) => {
     setFilters((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [key]: value };
 
       if (key === "field") {
-        updated[index].operator = "equals";
         updated[index].value = "";
         updated[index].valueTo = "";
+        const fieldConfig = getFieldConfig(value);
+        if (fieldConfig?.label === "Registration date") {
+          updated[index].value = new Date().toISOString().split('T')[0];
+        }
       }
 
       return updated;
     });
-  }, []);
+  }, [getFieldConfig]);
 
   const addFilter = useCallback(() => {
     setFilters((prev) => [
       ...prev,
-      { id: Date.now(), field: "", operator: "equals", value: "", logic: "AND" },
+      { id: Date.now(), field: "", value: "", valueTo: "" },
     ]);
   }, []);
 
   const removeFilter = useCallback((index) => {
     setFilters((prev) => {
       if (prev.length === 1) {
-        return [{ id: Date.now(), field: "", operator: "equals", value: "", logic: "AND" }];
+        return [{ id: Date.now(), field: "", value: "", valueTo: "" }];
       }
       return prev.filter((_, i) => i !== index);
     });
   }, []);
 
   const applyFilters = useCallback(() => {
+    console.log("filter",filters);
     const validFilters = filters.filter(
-      (f) => f.field && (f.operator === "is_empty" || f.operator === "is_not_empty" || f.value)
+      (f) => f.field && f.value
     );
+
+    console.log("validFilters",validFilters);
+
     if (onFilterChange) {
       onFilterChange(validFilters);
     }
   }, [filters, onFilterChange]);
 
   const clearFilters = useCallback(() => {
-    const emptyFilter = [{ id: Date.now(), field: "", operator: "equals", value: "", logic: "AND" }];
+    const emptyFilter = [{ id: Date.now(), field: "", value: "", valueTo: "" }];
     setFilters(emptyFilter);
     if (onClear) {
       onClear();
@@ -216,16 +169,9 @@ const AdvancedFilter = ({
 
   const activeFilterCount = useMemo(() => {
     return filters.filter(
-      (f) => f.field && (f.operator === "is_empty" || f.operator === "is_not_empty" || f.value)
+      (f) => f.field && f.value
     ).length;
   }, [filters]);
-
-  const getFieldConfig = useCallback(
-    (fieldName) => {
-      return fields.find((f) => f.name === fieldName || f.field === fieldName);
-    },
-    [fields]
-  );
 
   return (
     <div className={`advanced-filter-container ${className}`}>
@@ -262,27 +208,7 @@ const AdvancedFilter = ({
           </Button>
         )}
         
-            <div className="d-flex justify-content-end gap-2">
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={clearFilters}
-              >
-                <i className="fa-solid fa-times me-1"></i>
-                Clear
-              </Button>
-              <Button
-                size="sm"
-                onClick={applyFilters}
-                style={{
-                  background: "var(--primary-color)",
-                  border: "none",
-                }}
-              >
-                <i className="fa-solid fa-check me-1"></i>
-                Apply Filters
-              </Button>
-            </div>
+          
       </div>
 
       {isExpanded && (
@@ -290,28 +216,10 @@ const AdvancedFilter = ({
           <Card.Body className="p-3">
             {filters.map((filter, index) => {
               const fieldConfig = getFieldConfig(filter.field);
-              const operators = getOperatorsForField(fieldConfig);
 
               return (
                 <Row key={filter.id} className="mb-2 align-items-center g-2">
-                  {index > 0 && (
-                    <Col xs={12} md={1}>
-                      <Form.Select
-                        size="sm"
-                        value={filter.logic}
-                        onChange={(e) => handleFilterChange(index, "logic", e.target.value)}
-                        style={{ fontWeight: "bold", color: "var(--primary-color)" }}
-                      >
-                        <option value="AND">AND</option>
-                        <option value="OR">OR</option>
-                      </Form.Select>
-                    </Col>
-                  )}
-                  {index === 0 && <Col xs={12} md={1}></Col>}
-
-                  {console.log("fields",fields)}
-
-                  <Col xs={12} md={3}>
+                  <Col xs={12} md={4}>
                     <Form.Select
                       size="sm"
                       value={filter.field}
@@ -319,33 +227,18 @@ const AdvancedFilter = ({
                     >
                       <option value="">-- Select Field --</option>
                       {fields.map((field) => (
-                        <option key={field.name || field.field} value={field.name || field.field}>
+                      <option key={field.field || field.name} value={field.field || field.name}>
                           {field.label}
                         </option>
                       ))}
                     </Form.Select>
                   </Col>
 
-                  <Col xs={12} md={2}>
-                    <Form.Select
-                      size="sm"
-                      value={filter.operator}
-                      onChange={(e) => handleFilterChange(index, "operator", e.target.value)}
-                      disabled={!filter.field}
-                    >
-                      {operators.map((op) => (
-                        <option key={op.value} value={op.value}>
-                          {op.label}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Col>
-
-                  <Col xs={12} md={4}>
+                  <Col xs={12} md={5}>
                     {renderValueInput(filter, index, fieldConfig)}
                   </Col>
 
-                  <Col xs={12} md={2} className="d-flex gap-2">
+                  <Col xs={12} md={3} className="d-flex gap-2">
                     <Button
                       variant="outline-danger"
                       size="sm"
@@ -371,10 +264,9 @@ const AdvancedFilter = ({
                   </Col>
                 </Row>
               );
+              
             })}
-
-            <hr className="my-3" />
-{/* 
+          </Card.Body>
             <div className="d-flex justify-content-end gap-2">
               <Button
                 variant="outline-secondary"
@@ -382,7 +274,7 @@ const AdvancedFilter = ({
                 onClick={clearFilters}
               >
                 <i className="fa-solid fa-times me-1"></i>
-                Clear All
+                Clear
               </Button>
               <Button
                 size="sm"
@@ -395,19 +287,19 @@ const AdvancedFilter = ({
                 <i className="fa-solid fa-check me-1"></i>
                 Apply Filters
               </Button>
-            </div> */}
-          </Card.Body>
+            </div>
         </Card>
       )}
     </div>
   );
 };
 
-export const applyAdvancedFilters = (data, filters) => {
+export const applyAdvancedFilters = (data, filters, fields) => {
   if (!filters || filters.length === 0) return data;
+  fields = fields || [];
 
   return data.filter((item) => {
-    let result = null;
+    let result = true;
 
     for (let i = 0; i < filters.length; i++) {
       const filter = filters[i];
@@ -424,66 +316,43 @@ export const applyAdvancedFilters = (data, filters) => {
           ? ""
           : String(filterValue).toLowerCase().trim();
 
-      switch (filter.operator) {
-        case "equals":
-          conditionResult = normalizedFieldValue === normalizedFilterValue;
-          break;
-        case "not_equals":
-          conditionResult = normalizedFieldValue !== normalizedFilterValue;
-          break;
-        case "contains":
+      const fieldConfig = fields.find((f) => f.name === filter.field || f.field === filter.field);
+      const type = fieldConfig?.type || "text";
+
+      switch (type) {
+        case "text":
+        case "email":
+        case "tel":
           conditionResult = normalizedFieldValue.includes(normalizedFilterValue);
           break;
-        case "starts_with":
-          conditionResult = normalizedFieldValue.startsWith(normalizedFilterValue);
+        case "select":
+        case "dropdown":
+          conditionResult = normalizedFieldValue === normalizedFilterValue;
           break;
-        case "ends_with":
-          conditionResult = normalizedFieldValue.endsWith(normalizedFilterValue);
+        case "number":
+          conditionResult = parseFloat(fieldValue) === parseFloat(filterValue);
           break;
-        case "is_empty":
-          conditionResult = !fieldValue || normalizedFieldValue === "";
-          break;
-        case "is_not_empty":
-          conditionResult = fieldValue && normalizedFieldValue !== "";
-          break;
-        case "greater_than":
-          conditionResult = parseFloat(fieldValue) > parseFloat(filterValue);
-          break;
-        case "less_than":
-          conditionResult = parseFloat(fieldValue) < parseFloat(filterValue);
-          break;
-        case "greater_or_equal":
-          conditionResult = parseFloat(fieldValue) >= parseFloat(filterValue);
-          break;
-        case "less_or_equal":
-          conditionResult = parseFloat(fieldValue) <= parseFloat(filterValue);
-          break;
-        case "before":
-          conditionResult = new Date(fieldValue) < new Date(filterValue);
-          break;
-        case "after":
-          conditionResult = new Date(fieldValue) > new Date(filterValue);
-          break;
-        case "between":
+        case "date":
           if (filter.valueTo) {
             const dateVal = new Date(fieldValue);
             conditionResult =
-              dateVal >= new Date(filterValue) && dateVal <= new Date(filter.valueTo);
+              dateVal >= new Date(filter.value) && dateVal <= new Date(filter.valueTo);
+          } else if (filter.value) {
+            const dateVal = new Date(fieldValue);
+            conditionResult = dateVal >= new Date(filter.value);
+          } else {
+            conditionResult = true;
           }
           break;
+        case "boolean":
+        case "toggle":
+          conditionResult = String(fieldValue) === filterValue;
+          break;
         default:
-          conditionResult = normalizedFieldValue === normalizedFilterValue;
+          conditionResult = normalizedFieldValue.includes(normalizedFilterValue);
       }
 
-      if (i === 0) {
-        result = conditionResult;
-      } else {
-        if (filter.logic === "AND") {
-          result = result && conditionResult;
-        } else {
-          result = result || conditionResult;
-        }
-      }
+      result = result && conditionResult;
     }
 
     return result;

@@ -187,12 +187,15 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
   return (
     <Modal show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
       <Modal.Header  
-      className="py-4"
+      className="py-3 fw-bold"
       style={{
           color: "var(--primary-color)",
           background: "var(--primary-background-color)",
           borderRadius: "5px",
+          fontSize:"20px"
+
       }}>
+        Import Library Members
 
         <button type="button" className="btn-close" onClick={onClose}></button>
       </Modal.Header>
@@ -200,7 +203,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
         <div className="row g-0">
 
           <div className="col-md-3 border-end p-4 d-none d-md-block" style={{ background: 'var(--primary-background-color)' }}>
-            <h5 className="fw-bold mb-4" style={{ color: 'var(--primary-color)' }}>Member Import</h5>
+            {/* <h5 className="mb-4" style={{ color: 'var(--primary-color)' }}>Member Import</h5> */}
             <div className="vertical-stepper">
               {STEPS_CONFIG.map((s) => (
                 <div key={s.id} className={`v-step ${step >= s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
