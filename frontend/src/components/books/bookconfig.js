@@ -151,7 +151,15 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             allowEdit: true,
             allowDelete: false,
             showImportButton: true,
+            showAdvancedFilter: true,
         },
+        filterFields: [
+            { name: 'title', label: 'Title', type: 'text' },
+            { name: 'price', label: 'Price', type: 'number' },
+            { name: 'author_name', label: 'Author', type: 'text' },
+            { name: 'category_name', label: 'Category', type: 'text' },
+            { name: 'isbn', label: 'ISBN', type: 'text' },
+        ],
         lookupNavigation: {
             author_name: {
                 path: "author",
