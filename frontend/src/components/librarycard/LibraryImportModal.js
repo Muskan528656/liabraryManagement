@@ -76,7 +76,6 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
 
       console.log("Fetched Object Types Response:", res);
 
-      // ✅ सही way: res.data.data
       if (res.data?.success) {
         setObjectTypes(res.data.data || []);
         console.log(`Set ${res.data.data?.length || 0} object types`);
@@ -186,7 +185,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
   };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered className="cahaya-modal">
+    <Modal show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
       <Modal.Body className="p-0 overflow-hidden">
         <div className="row g-0">
 
@@ -223,12 +222,12 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
             {step === 1 && (
               <div className="fade-in py-3 text-center">
                 <div className="category-icon-header">
-                  <LayoutTextWindow size={32} className="text-primary" />
+                  <LayoutTextWindow size={32} style={{ color: 'var(--primary-color)' }} />
                 </div>
                 <p className="text-muted mt-3">Select the library category for this import.</p>
                 <Form.Group className="mb-4 mx-auto" style={{ maxWidth: '400px' }}>
                   <Form.Select
-                    size="lg"
+                    size="md"
                     className="modern-dropdown"
                     onChange={(e) => {
                       const cat = objectTypes.find(o => String(o.id) === e.target.value);
@@ -242,22 +241,33 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   </Form.Select>
                 </Form.Group>
                 <div className="d-grid mt-5 mx-auto" style={{ maxWidth: '400px' }}>
-                  <Button variant="primary" size="lg" className="rounded-pill py-3 fw-bold shadow-sm" disabled={!selectedCategory} onClick={() => setStep(2)}>
+                  <Button
+                    size="sm"
+                    className="rounded-pill fw-bold shadow-sm py-2 px-4"
+                    style={{
+                      backgroundColor: 'var(--primary-color)',
+                      borderColor: 'var(--primary-color)',
+                      color: '#fff'
+                    }}
+                    disabled={!selectedCategory}
+                    onClick={() => setStep(2)}
+                  >
                     Proceed to Upload <ChevronRight className="ms-1" />
                   </Button>
                 </div>
               </div>
             )}
 
-
             {step === 2 && (
               <div className="fade-in text-center py-4">
                 <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()}>
                   <input type="file" id="fileInput" hidden onChange={handleFileChange} accept=".csv,.xlsx" />
-                  <div className="upload-icon-circle"><CloudArrowUp size={35} className="text-primary" /></div>
+                  <div className="upload-icon-circle"><CloudArrowUp size={35} style={{ color: 'var(--primary-color)' }} /></div>
                   <h5 className="mt-3 fw-bold">Choose a file to import</h5>
                   <p className="text-muted small">Excel (.xlsx) or CSV files (Max 5MB)</p>
-                  <Badge bg="soft-primary" className="text-primary p-2 mt-2">Group: {selectedCategory?.type || ''}</Badge>
+                  <Badge bg="soft-primary" className="text-primary p-2 mt-2" style={{ color: 'var(--primary-color)' }}>
+                    Group: {selectedCategory?.type || ''}
+                  </Badge>
                 </div>
                 <Button variant="link" className="mt-4 text-decoration-none text-secondary" onClick={downloadTemplate}><Download className="me-2" /> Download Template</Button>
               </div>
@@ -269,7 +279,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   {rawHeaders.map((h, idx) => (
                     <div key={idx} className="mapping-card shadow-sm border-0 mb-2">
                       <div className="file-col">
-                        <FileEarmarkSpreadsheet className="me-2 text-primary" />
+                        <FileEarmarkSpreadsheet className="me-2" style={{ color: 'var(--primary-color)' }} />
                         <span className="text-truncate">{h}</span>
                       </div>
                       <ArrowRightCircle className="text-muted mx-3" />
@@ -318,20 +328,59 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   <div className="h2 fw-bold text-primary mb-0">{importResult?.count}</div>
                   <div className="small text-uppercase tracking-wider text-muted">Records Added</div>
                 </div>
-                <Button variant="primary" className="px-5 rounded-pill py-3 shadow-sm fw-bold" onClick={handleFinish}>Return to Members List</Button>
+                <Button
+                  size="sm"
+                  className="px-4 rounded-pill shadow-sm fw-bold py-2"
+                  style={{
+                    backgroundColor: 'var(--primary-color)',
+                    borderColor: 'var(--primary-color)',
+                    color: '#fff'
+                  }}
+                  onClick={handleFinish}
+                >
+                  Return to Members List
+                </Button>
               </div>
             )}
 
             {step > 1 && step < 5 && (
-              <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                <Button variant="outline-secondary" className="px-4 rounded-pill border-0" onClick={() => setStep(step - 1)}>
+              <div className="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  className="px-3 rounded-pill border py-1"
+                  onClick={() => setStep(step - 1)}
+                >
                   <ChevronLeft /> Back
                 </Button>
                 <div className="d-flex gap-2">
-                  {step === 3 && <Button variant="primary" className="px-4 rounded-pill shadow-sm" onClick={() => setStep(4)}>Preview Data</Button>}
+                  {step === 3 && (
+                    <Button
+                      size="sm"
+                      className="px-3 rounded-pill shadow-sm py-1"
+                      style={{
+                        backgroundColor: 'var(--primary-color)',
+                        borderColor: 'var(--primary-color)',
+                        color: '#fff'
+                      }}
+                      onClick={() => setStep(4)}
+                    >
+                      Preview Data
+                    </Button>
+                  )}
                   {step === 4 && (
-                    <Button variant="success" className="px-4 rounded-pill shadow-sm py-2" onClick={handleImport} disabled={loading}>
-                      {loading ? <Spinner size="sm" /> : <><DatabaseFillCheck className="me-2" /> Start Import</>}
+                    <Button
+                      size="sm"
+                      className="px-3 rounded-pill shadow-sm py-1"
+                      style={{
+                        backgroundColor: 'var(--primary-color)',
+                        borderColor: 'var(--primary-color)',
+                        color: '#fff'
+                      }}
+                      onClick={handleImport}
+                      disabled={loading}
+                    >
+                      {loading ? <Spinner size="sm" /> : <><DatabaseFillCheck className="me-1" /> Start Import</>}
                     </Button>
                   )}
                 </div>

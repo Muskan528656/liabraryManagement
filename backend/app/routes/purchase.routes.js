@@ -147,6 +147,33 @@ module.exports = (app) => {
     }
   });
 
+  // Get purchase details by book_id
+router.get("/book/:bookId", fetchUser, async (req, res) => {
+  try {
+    const { bookId } = req.params;
+
+    if (!bookId) {
+      return res.status(400).json({ errors: "Book ID is required" });
+    }
+
+    Purchase.init(req.userinfo.tenantcode);
+
+    const purchase = await Purchase.findByBookId(bookId);
+
+    if (!purchase) {
+      return res.status(404).json({ errors: "Purchase not found for this book" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: purchase,
+    });
+  } catch (error) {
+    console.error("Error fetching purchase by book ID:", error);
+    return res.status(500).json({ errors: "Internal server error" });
+  }
+});
+
  
   app.use(process.env.BASE_API_URL + "/api/purchase", router);
 };
