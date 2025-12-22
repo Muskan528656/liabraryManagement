@@ -186,6 +186,16 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
 
   return (
     <Modal show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
+      <Modal.Header  
+      className="py-4"
+      style={{
+          color: "var(--primary-color)",
+          background: "var(--primary-background-color)",
+          borderRadius: "5px",
+      }}>
+
+        <button type="button" className="btn-close" onClick={onClose}></button>
+      </Modal.Header>
       <Modal.Body className="p-0 overflow-hidden">
         <div className="row g-0">
 
@@ -210,7 +220,6 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                 {step === 4 && "Review Data"}
                 {step === 5 && "All Set!"}
               </h4>
-              <button type="button" className="btn-close" onClick={onClose}></button>
             </div>
 
             {error && (
@@ -220,15 +229,15 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
             )}
 
             {step === 1 && (
-              <div className="fade-in py-3 text-center">
+              <div className="fade-in text-center">
                 <div className="category-icon-header">
                   <LayoutTextWindow size={32} style={{ color: 'var(--primary-color)' }} />
                 </div>
                 <p className="text-muted mt-3">Select the library category for this import.</p>
-                <Form.Group className="mb-4 mx-auto" style={{ maxWidth: '400px' }}>
+                <Form.Group className="mb-2 mx-auto" style={{ maxWidth: '400px'}}>
                   <Form.Select
                     size="md"
-                    className="modern-dropdown"
+                    className="modern-dropdown py-1"
                     onChange={(e) => {
                       const cat = objectTypes.find(o => String(o.id) === e.target.value);
                       setSelectedCategory(cat);
@@ -240,15 +249,17 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     ))}
                   </Form.Select>
                 </Form.Group>
-                <div className="d-grid mt-5 mx-auto" style={{ maxWidth: '400px' }}>
+                <div className="d-grid float-end mt-5" style={{ maxWidth: '400px' }}>
                   <Button
                     size="sm"
-                    className="rounded-pill fw-bold shadow-sm py-2 px-4"
-                    style={{
-                      backgroundColor: 'var(--primary-color)',
-                      borderColor: 'var(--primary-color)',
-                      color: '#fff'
-                    }}
+                    variant=""
+                    className="fw-bold shadow-sm py-2"
+                     style={{
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "5px",
+                        border:'var(--primary-color) solid 1px'
+                      }}
                     disabled={!selectedCategory}
                     onClick={() => setStep(2)}
                   >
@@ -259,7 +270,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
             )}
 
             {step === 2 && (
-              <div className="fade-in text-center py-4">
+              <div className="fade-in text-center py-1">
                 <div className="upload-dropzone" onClick={() => document.getElementById('fileInput').click()}>
                   <input type="file" id="fileInput" hidden onChange={handleFileChange} accept=".csv,.xlsx" />
                   <div className="upload-icon-circle"><CloudArrowUp size={35} style={{ color: 'var(--primary-color)' }} /></div>
@@ -269,7 +280,14 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     Group: {selectedCategory?.type || ''}
                   </Badge>
                 </div>
-                <Button variant="link" className="mt-4 text-decoration-none text-secondary" onClick={downloadTemplate}><Download className="me-2" /> Download Template</Button>
+                <Button variant="link" className="mt-4 text-decoration-none " 
+                 style={{
+                    color: "var(--primary-color)",
+                    background: "var(--primary-background-color)",
+                    borderRadius: "5px",
+                    border:'var(--primary-color) solid 1px'
+                    }}  
+                  onClick={downloadTemplate}><Download className="me-2" /> Download Template</Button>
               </div>
             )}
 
@@ -301,7 +319,10 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
             {step === 4 && (
               <div className="fade-in">
                 <div className="preview-container shadow-sm overflow-auto">
-                  <Table responsive hover className="mb-0 custom-table">
+                  <Table responsive hover className="mb-0 custom-table"  style={{
+                    background: "var(--primary-background-color)",
+                  
+                  }} >
                     <thead>
                       <tr>{Object.keys(DB_FIELDS).map(k => <th key={k}>{DB_FIELDS[k]}</th>)}</tr>
                     </thead>
@@ -348,7 +369,12 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                 <Button
                   variant="outline-secondary"
                   size="sm"
-                  className="px-3 rounded-pill border py-1"
+                  style={{
+                    color: "var(--primary-color)",
+                    background: "var(--primary-background-color)",
+                    borderRadius: "5px",
+                    border:'var(--primary-color) solid 1px'
+                  }}
                   onClick={() => setStep(step - 1)}
                 >
                   <ChevronLeft /> Back
@@ -357,11 +383,13 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   {step === 3 && (
                     <Button
                       size="sm"
-                      className="px-3 rounded-pill shadow-sm py-1"
+                      // className="px-3 rounded-pill shadow-sm py-1"
+                      variant=""
                       style={{
-                        backgroundColor: 'var(--primary-color)',
-                        borderColor: 'var(--primary-color)',
-                        color: '#fff'
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "5px",
+                        border:'var(--primary-color) solid 1px'
                       }}
                       onClick={() => setStep(4)}
                     >
@@ -371,11 +399,13 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   {step === 4 && (
                     <Button
                       size="sm"
-                      className="px-3 rounded-pill shadow-sm py-1"
+                      variant="var(--primary-color)"
+                      // className="px-3 rounded-pill shadow-sm py-1"
                       style={{
-                        backgroundColor: 'var(--primary-color)',
-                        borderColor: 'var(--primary-color)',
-                        color: '#fff'
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "5px",
+                        border:'var(--primary-color) solid 1px'
                       }}
                       onClick={handleImport}
                       disabled={loading}

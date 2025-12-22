@@ -249,7 +249,7 @@ const TableHeader = ({
                 style={{
               color: "var(--primary-color)",
               background: "var(--primary-background-color)",
-              borderRadius: "10px",
+              borderRadius: "5px",
               border:'var(--primary-color) solid 1px'
               }}
               className="fw-bold py-2"
