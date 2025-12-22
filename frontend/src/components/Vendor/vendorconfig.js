@@ -34,30 +34,18 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         companies = externalData["company"];
     }
 
-
     let defaultCountryCode = "+91";
-
-    console.log("Companies array in getVendorConfig:", companies);
 
     if (Array.isArray(companies) && companies.length > 0) {
         const companyWithCountryCode = companies.find(c => c && c.country_code);
-        console.log("Company with country code in vendor:", companyWithCountryCode);
-
         if (companyWithCountryCode && companyWithCountryCode.country_code) {
             const countryCodeStr = String(companyWithCountryCode.country_code).trim();
-            console.log("Original country_code string in vendor:", countryCodeStr);
-
-
             const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
-            console.log("Extracted code part in vendor:", codePart);
-
             if (codePart && !codePart.startsWith('+')) {
                 defaultCountryCode = '+' + codePart;
             } else if (codePart) {
                 defaultCountryCode = codePart;
             }
-
-            console.log("Final defaultCountryCode for vendor:", defaultCountryCode);
         }
     }
 
@@ -106,7 +94,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 field: "name",
                 label: "Name",
-
             },
             {
                 field: "company_name",
@@ -125,7 +112,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             },
             {
                 field: "country_code",
-                label: "County Code",
+                label: "Country Code",
                 render: (value) => <span>{value || '-'}</span>,
             },
             {
@@ -147,13 +134,22 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             }
         ],
         formFields: [
+            // Contact Person Information Section - 6-6 Grid
             {
                 name: "name",
                 label: "Contact Person Name",
                 type: "text",
                 required: true,
                 placeholder: "Enter contact person name",
-                colSize: 12,
+                colSize: 6,
+                section: "Contact Person Information"
+            },
+            {
+                name: "company_name",
+                label: "Company Name",
+                type: "text",
+                placeholder: "Enter company name",
+                colSize: 6,
                 section: "Contact Person Information"
             },
             {
@@ -167,7 +163,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 required: true,
                 placeholder: "Select country code",
                 defaultValue: defaultCountryCode,
-                colSize: 4,
+                colSize: 3,
                 section: "Contact Person Information"
             },
             {
@@ -175,7 +171,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Phone",
                 type: "tel",
                 placeholder: "Enter phone number",
-                colSize: 4,
+                colSize: 3,
                 section: "Contact Person Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
@@ -192,7 +188,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Email",
                 type: "email",
                 placeholder: "Enter email address",
-                colSize: 4,
+                colSize: 6,
                 section: "Contact Person Information",
                 customValidation: (value, formData, allVendors, editingVendor) => {
                     if (value && value.trim()) {
@@ -210,20 +206,14 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     return null;
                 }
             },
-            {
-                name: "company_name",
-                label: "Company Name",
-                type: "text",
-                placeholder: "Enter company name",
-                colSize: 12,
-                section: "Company Information"
-            },
+
+            // Company Information Section - 6-6 Grid
             {
                 name: "gst_number",
                 label: "GST Number",
                 type: "text",
                 placeholder: "Enter GST number",
-                colSize: 6,
+                colSize: 3,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim() && value.length !== 15) {
@@ -237,7 +227,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "PAN Number",
                 type: "text",
                 placeholder: "Enter PAN number",
-                colSize: 6,
+                colSize: 3,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
@@ -250,30 +240,37 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 }
             },
             {
-                name: "address",
-                label: "Address",
-                type: "textarea",
-                rows: 3,
-                placeholder: "Enter address",
-                colSize: 12,
-                section: "Company Information"
-            },
-            {
                 name: "state",
                 label: "State",
-                type: "custom",
-                colSize: 4,
+                type: "select",
+                colSize: 3,
                 section: "Company Information",
+                options: states,
+                placeholder: "Select State",
                 render: (value, onChange, formData) => {
-
                     const handleChange = (e) => {
-                        if (typeof onChange === 'function') {
-                            onChange(e);
-                        } else if (onChange && typeof onChange.handleChange === 'function') {
+                        const newValue = e.target.value;
 
-                            onChange.handleChange(e);
-                        } else {
-                            console.error('onChange is not a function', onChange);
+                        // Clear city when state changes
+                        if (typeof onChange === 'function') {
+                            onChange({
+                                target: {
+                                    name: 'state',
+                                    value: newValue
+                                }
+                            });
+
+                            // Also clear city field
+                            setTimeout(() => {
+                                if (onChange.handleChange) {
+                                    onChange.handleChange({
+                                        target: {
+                                            name: 'city',
+                                            value: ''
+                                        }
+                                    });
+                                }
+                            }, 0);
                         }
                     };
 
@@ -284,8 +281,8 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                             value={value || ''}
                             onChange={handleChange}
                             style={{
-                                border: "2px solid #c084fc",
-                                borderRadius: "8px",
+                                border: "1px solid #ced4da",
+                                borderRadius: "4px",
                             }}
                         >
                             <option value="">Select State</option>
@@ -301,23 +298,25 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 name: "city",
                 label: "City",
-                type: "custom",
-                colSize: 4,
+                type: "select",
+                colSize: 3,
                 section: "Company Information",
+                options: [],
+                placeholder: "Select City",
                 render: (value, onChange, formData) => {
                     const filteredCities = formData?.state
                         ? allCities.filter(city => city.state === formData.state)
-                        : allCities;
-
+                        : [];
 
                     const handleChange = (e) => {
+                        const newValue = e.target.value;
                         if (typeof onChange === 'function') {
-                            onChange(e);
-                        } else if (onChange && typeof onChange.handleChange === 'function') {
-
-                            onChange.handleChange(e);
-                        } else {
-                            console.error('onChange is not a function', onChange);
+                            onChange({
+                                target: {
+                                    name: 'city',
+                                    value: newValue
+                                }
+                            });
                         }
                     };
 
@@ -329,12 +328,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                             onChange={handleChange}
                             disabled={!formData?.state}
                             style={{
-                                border: "2px solid #c084fc",
-                                borderRadius: "8px",
-                                opacity: formData?.state ? 1 : 0.6
+                                border: "1px solid #ced4da",
+                                borderRadius: "4px",
+                                backgroundColor: formData?.state ? '#fff' : '#f8f9fa'
                             }}
                         >
-                            <option value="">Select City</option>
+                            <option value="">{formData?.state ? "Select City" : "First select state"}</option>
                             {filteredCities.map(city => (
                                 <option key={city.value} value={city.value}>
                                     {city.label}
@@ -349,7 +348,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Pincode",
                 type: "text",
                 placeholder: "Enter pincode",
-                colSize: 4,
+                colSize: 3,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
@@ -366,9 +365,19 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Country",
                 type: "text",
                 placeholder: "Enter country",
-                colSize: 6,
+                colSize: 3,
                 section: "Company Information",
-                defaultValue: "India"
+                defaultValue: "India",
+                readOnly: true
+            },
+            {
+                name: "address",
+                label: "Address",
+                type: "textarea",
+                rows: 2,
+                placeholder: "Enter full address",
+                colSize: 12,
+                section: "Company Information"
             },
             {
                 name: "status",
@@ -443,9 +452,9 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { key: "country", label: "Country", type: "text" },
             { key: "country_code", label: "Country Code", type: "text" },
             {
-                field: "isactive",
+                key: "isactive",
                 label: "Status",
-                sortable: true,
+                type: "badge",
                 render: (value) => {
                     return (
                         <Badge bg={value === true || value === "active" ? "success" : "secondary"}>
@@ -472,7 +481,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                         cleanedData[field] = null;
                     }
                 });
-
 
                 if (cleanedData.country_code) {
                     const cleanValue = String(cleanedData.country_code).split(/[—\-]/)[0].trim();
@@ -511,8 +519,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 { key: "Status", header: "Status", width: 15 }
             ]
         },
-
-
         initializeFormData: (existingData = null) => {
             if (existingData) {
                 return {
