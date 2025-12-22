@@ -19,6 +19,7 @@ async function findAll() {
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
+                    p.name AS publisher_name,
                     (
                       SELECT p.unit_price 
                       FROM ${this.schema}.purchases p 
@@ -29,6 +30,7 @@ async function findAll() {
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
                    ORDER BY b.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -45,10 +47,12 @@ async function findById(id) {
     const query = `SELECT 
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name
+                    c.name AS category_name,
+                    p.name AS publisher_name
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
                    WHERE b.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
@@ -84,8 +88,8 @@ async function create(bookData, userId) {
     const query = `INSERT INTO ${this.schema}.books 
                    (title, author_id, category_id, isbn, total_copies, available_copies, 
                     company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, 
-                    language, status, pages, price) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12) 
+                    language, status, pages, price, publisher_id, min_age, max_age , inventory_binding) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
                    RETURNING *`;
 
     const values = [
@@ -100,7 +104,11 @@ async function create(bookData, userId) {
       bookData.language || 'English',
       bookData.status || 'available',
       bookData.pages || null,
-      bookData.price || null
+      bookData.price || null,
+      bookData.publisher_id || bookData.publisherId || null,
+      bookData.min_age || bookData.minAge || null,
+      bookData.max_age || bookData.maxAge || null,
+      bookData.inventory_binding || null,
     ];
 
     const result = await sql.query(query, values);
@@ -133,7 +141,8 @@ async function updateById(id, bookData, userId) {
                    SET title = $2, author_id = $3, category_id = $4, isbn = $5, 
                        total_copies = $6, available_copies = $7, 
                        lastmodifieddate = NOW(), lastmodifiedbyid = $8,
-                       language = $9, status = $10, pages = $11, price = $12
+                       language = $9, status = $10, pages = $11, price = $12,
+                       publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16
                    WHERE id = $1 
                    RETURNING *`;
 
@@ -149,7 +158,11 @@ async function updateById(id, bookData, userId) {
       bookData.language !== undefined ? bookData.language : currentBook.language,
       bookData.status !== undefined ? bookData.status : currentBook.status,
       bookData.pages !== undefined ? bookData.pages : currentBook.pages,
-      bookData.price !== undefined ? bookData.price : currentBook.price
+      bookData.price !== undefined ? bookData.price : currentBook.price,
+      bookData.publisher_id !== undefined ? (bookData.publisher_id || bookData.publisherId) : currentBook.publisher_id,
+      bookData.min_age !== undefined ? (bookData.min_age || bookData.minAge) : currentBook.min_age,
+      bookData.max_age !== undefined ? (bookData.max_age || bookData.maxAge) : currentBook.max_age,
+      bookData.inventory_binding !== undefined ? bookData.inventory_binding : currentBook.inventory_binding,
     ];
 
     const result = await sql.query(query, values);
@@ -176,6 +189,49 @@ async function deleteById(id) {
     return { success: false, message: "Book not found" };
   } catch (error) {
     console.error("Error in deleteById:", error);
+    throw error;
+  }
+}
+
+async function findByAgeRange(minAge, maxAge) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    let query = `SELECT 
+                    b.*,
+                    a.name AS author_name,
+                    c.name AS category_name,
+                    p.name AS publisher_name
+                   FROM ${this.schema}.books b
+                   LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
+                   LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
+                   WHERE b.available_copies > 0 AND b.status = 'available'`;
+
+    const params = [];
+    let paramIndex = 1;
+
+    // Add age filtering conditions
+    if (minAge !== null && minAge !== undefined) {
+      query += ` AND (b.min_age IS NULL OR b.min_age <= $${paramIndex})`;
+      params.push(minAge);
+      paramIndex++;
+    }
+
+    if (maxAge !== null && maxAge !== undefined) {
+      query += ` AND (b.max_age IS NULL OR b.max_age >= $${paramIndex})`;
+      params.push(maxAge);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY b.title ASC`;
+
+    const result = await sql.query(query, params);
+    return result.rows.length > 0 ? result.rows : [];
+  } catch (error) {
+    console.error("Error in findByAgeRange:", error);
     throw error;
   }
 }
@@ -209,5 +265,6 @@ module.exports = {
   updateById,
   deleteById,
   findByISBN,
+  findByAgeRange,
 };
 

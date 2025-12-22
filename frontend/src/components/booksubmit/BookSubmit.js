@@ -1836,7 +1836,7 @@ const BookSubmit = () => {
 
             <Modal show={showSubmitModal} onHide={handleModalClose} centered size="lg">
                 <Modal.Header closeButton style={{
-                    padding: "15px 20px", backgroundColor: "#1e3a8a", color: "white", fontWeight: "bold"
+                    padding: "15px 20px", backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", fontWeight: "bold"
                 }}>
                     <Modal.Title style={{ fontSize: "18px", fontWeight: "600" }}>
                         Submit Book Return
@@ -1849,7 +1849,7 @@ const BookSubmit = () => {
                                 <Col md={8}>
                                     {/* Left Column - Issue Information and Condition Assessment */}
                                     <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
-                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "#f8fafc", }}>
+                                        <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
                                             <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
                                                 Issue Information
                                             </h6>

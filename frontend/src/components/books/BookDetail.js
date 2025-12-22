@@ -17,7 +17,11 @@ const BookDetail = () => {
   const [submitBooksCount, setSubmitBooksCount] = useState(0);
   const [showImporter, setShowImporter] = useState(false);
 
-
+  const inventoryBindings = [
+    { value: "hardcover", label: "Hardcover" },
+    { value: "paperback", label: "Paperback" },
+    { value: "spiral", label: "Spiral" },
+  ];
 
   console.log("Book ID from URL:", id);
   const { timeZone } = useTimeZone();
@@ -100,6 +104,7 @@ const BookDetail = () => {
       },
       { key: "total_copies", label: "Total Copies", type: "number" },
       { key: "available_copies", label: "Available Copies", type: "number" },
+      { key: "inventory_binding", label: "Inventory Binding", type: "select", options: inventoryBindings, },
     ],
     other: [
       { key: "createdbyid", label: "Created By", type: "text" },

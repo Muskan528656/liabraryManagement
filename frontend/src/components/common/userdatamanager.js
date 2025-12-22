@@ -20,7 +20,13 @@ export const useDataManager = (dependencies = {}, propsData = {}) => {
        
           const api = new DataApi(endpoint);
           const response = await api.fetchAll();
-          return { endpoint, data: response.data || [] };
+          // Handle different response formats
+          let data = response.data || [];
+          if (data && typeof data === 'object' && data.data && Array.isArray(data.data)) {
+            // API returns { success: true, data: [...], message: "..." }
+            data = data.data;
+          }
+          return { endpoint, data };
         });
 
         const results = await Promise.all(promises);

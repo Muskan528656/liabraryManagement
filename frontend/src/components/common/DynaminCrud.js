@@ -53,6 +53,9 @@ const DynamicCRUD = ({
     importModel,
     headerActions = [],
     filterFields = [],
+    authors = [],
+    categories = [],
+    publishers = [],
 }) => {
 
     const navigate = useNavigate();
@@ -64,7 +67,7 @@ const DynamicCRUD = ({
         showDetailView = true,
         showSearch = true,
         showColumnVisibility = true,
-        showCheckbox = true,    
+        showCheckbox = true,
         showActions = true,
         showAddButton = true,
         allowEdit = true,
@@ -377,7 +380,7 @@ const DynamicCRUD = ({
         return result;
     }, [data, searchTerm, showSearch, columns, advancedFilters, filterFields, formFields]);
 
-    
+
     const handleAdvancedFilterChange = useCallback((filters) => {
         setAdvancedFilters(filters);
         setCurrentPage(1);
@@ -424,11 +427,19 @@ const DynamicCRUD = ({
             const uniqueOptions = [...new Set(selectFields.map(field => field.options))];
             if (uniqueOptions.length === 0) return;
 
+            const relatedProps = {
+                authors,
+                categories,
+                publishers,
+            };
+
             const endpointMap = {
                 authors: "author",
                 author: "author",
                 categories: "category",
                 category: "category",
+                publishers: "publisher",
+                publisher: "publisher",
                 users: "user",
                 vendor: "vendor",
                 "user-role": "user-role",
@@ -443,15 +454,19 @@ const DynamicCRUD = ({
             const relatedApis = {};
 
             for (const option of uniqueOptions) {
-                try {
-                    const endpoint = endpointMap[option] || option;
-                    const api = new DataApi(endpoint);
-                    const response = await api.fetchAll();
+                if (relatedProps[option] && Array.isArray(relatedProps[option])) {
+                    relatedApis[option] = relatedProps[option];
+                } else {
+                    try {
+                        const endpoint = endpointMap[option] || option;
+                        const api = new DataApi(endpoint);
+                        const response = await api.fetchAll();
 
-                    relatedApis[option] = normalizeListResponse(response.data);
-                } catch (error) {
-                    console.error(`Error fetching ${option}:`, error);
-                    relatedApis[option] = [];
+                        relatedApis[option] = normalizeListResponse(response.data);
+                    } catch (error) {
+                        console.error(`Error fetching ${option}:`, error);
+                        relatedApis[option] = [];
+                    }
                 }
             }
 
@@ -459,7 +474,7 @@ const DynamicCRUD = ({
         } catch (error) {
             console.error("Error fetching related data:", error);
         }
-    }, [autoFetchRelated, formFields]);
+    }, [autoFetchRelated, formFields, authors, categories, publishers]);
 
     useEffect(() => {
         if (userInfo) {
@@ -778,75 +793,75 @@ const DynamicCRUD = ({
     }, []);
 
     const getActionButtons = useCallback(() => {
-    const buttons = [];
+        const buttons = [];
 
-    // 🔹 1. IMPORT (Export se pehle)
-    if (showImportButton) {
-        buttons.push({
-            variant: "outline-primary",
-            size: "sm",
-            icon: "fa-solid fa-upload",
-            label: `Import ${moduleLabel}`,
-            onClick: () => setShowImportModal(true),
-        });
-    }
+        // 🔹 1. IMPORT (Export se pehle)
+        if (showImportButton) {
+            buttons.push({
+                variant: "outline-primary",
+                size: "sm",
+                icon: "fa-solid fa-upload",
+                label: `Import ${moduleLabel}`,
+                onClick: () => setShowImportModal(true),
+            });
+        }
 
-    // 🔹 2. EXPORT
-    if (showImportExport) {
-        buttons.push({
-            variant: "outline-success",
-            size: "sm",
-            icon: "fa-solid fa-download",
-            label: "Export",
-            onClick: handleExport,
-        });
-    }
+        // 🔹 2. EXPORT
+        if (showImportExport) {
+            buttons.push({
+                variant: "outline-success",
+                size: "sm",
+                icon: "fa-solid fa-download",
+                label: "Export",
+                onClick: handleExport,
+            });
+        }
 
-    // 🔹 3. BULK INSERT
-    if (showBulkInsert) {
-        buttons.push({
-            variant: "outline-primary",
-            size: "sm",
-            icon: "fa-solid fa-layer-group",
-            label: "Bulk Insert",
-            onClick: handleBulkInsert,
-        });
-    }
+        // 🔹 3. BULK INSERT
+        if (showBulkInsert) {
+            buttons.push({
+                variant: "outline-primary",
+                size: "sm",
+                icon: "fa-solid fa-layer-group",
+                label: "Bulk Insert",
+                onClick: handleBulkInsert,
+            });
+        }
 
-    // 🔹 4. ADD (last)
-    if (showAddButton) {
-        buttons.push({
-            size: "sm",
-            icon: "fa-solid fa-plus",
-            label: `Add ${moduleLabel}`,
-            onClick: handleAdd,
-            style: {
-                background: "var(--primary-color)",
-                border: "none",
-            },
-        });
-    }
+        // 🔹 4. ADD (last)
+        if (showAddButton) {
+            buttons.push({
+                size: "sm",
+                icon: "fa-solid fa-plus",
+                label: `Add ${moduleLabel}`,
+                onClick: handleAdd,
+                style: {
+                    background: "var(--primary-color)",
+                    border: "none",
+                },
+            });
+        }
 
-    // 🔹 5. CUSTOM ACTIONS (agar ho)
-    if (customActionButtons.length > 0) {
-        buttons.push(...customActionButtons);
-    }
+        // 🔹 5. CUSTOM ACTIONS (agar ho)
+        if (customActionButtons.length > 0) {
+            buttons.push(...customActionButtons);
+        }
 
-    return buttons;
-}, [
-    showImportButton,        // ✅ REQUIRED
-    showImportExport,
-    showBulkInsert,
-    showAddButton,
-    moduleLabel,
-    handleExport,
-    handleBulkInsert,
-    handleAdd,
-    customActionButtons,
-    setShowImportModal       // ✅ REQUIRED
-]);
+        return buttons;
+    }, [
+        showImportButton,        // ✅ REQUIRED
+        showImportExport,
+        showBulkInsert,
+        showAddButton,
+        moduleLabel,
+        handleExport,
+        handleBulkInsert,
+        handleAdd,
+        customActionButtons,
+        setShowImportModal       // ✅ REQUIRED
+    ]);
 
- 
+
     const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);
     const actionButtons = useMemo(() => getActionButtons(), [getActionButtons]);
 
@@ -928,9 +943,9 @@ const DynamicCRUD = ({
                                         visibleColumns={visibleColumns}
                                         onToggleColumnVisibility={toggleColumnVisibility}
                                         actionButtons={actionButtons}
-                                        headerActions={headerActions} 
+                                        headerActions={headerActions}
                                     />
-                                    
+
                                     {showAdvancedFilter && (
                                         <AdvancedFilter
                                             fields={filterFields.length > 0 ? filterFields : formFields.map(field => ({
@@ -942,7 +957,7 @@ const DynamicCRUD = ({
                                             onClear={handleAdvancedFilterClear}
                                         />
                                     )}
-                                    
+
                                     <ResizableTable
                                         data={filteredData}
                                         columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
@@ -1172,11 +1187,11 @@ const DynamicCRUD = ({
                 show={showImportModal}
                 onHide={() => setShowImportModal(false)}
                 size="lg"
-                centered 
+                centered
                 className=""
             >
                 <Modal.Header closeButton>
-                    <Modal.Title style={{color:'var(--primary-color)'}}> Import {moduleLabel} Data</Modal.Title>
+                    <Modal.Title style={{ color: 'var(--primary-color)' }}> Import {moduleLabel} Data</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body className="mb-5">

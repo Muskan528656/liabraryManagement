@@ -1,4 +1,3 @@
-
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";

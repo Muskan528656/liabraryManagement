@@ -216,7 +216,7 @@ const BulkIssue = () => {
           });
 
           if (subscription) {
-            // Subscription/Plan के allowed books निकालें
+      
             subscriptionBooks = parseInt(subscription.allowed_books || 0);
             if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
               subscriptionBooks = 0;

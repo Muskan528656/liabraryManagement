@@ -36,6 +36,23 @@ module.exports = (app) => {
   });
 
  
+  router.get("/by-age/:age", fetchUser, async (req, res) => {
+    try {
+      Book.init(req.userinfo.tenantcode);
+      const memberAge = parseInt(req.params.age);
+      
+      if (isNaN(memberAge) || memberAge < 0) {
+        return res.status(400).json({ errors: "Invalid age parameter" });
+      }
+      
+      const books = await Book.findByAgeRange(memberAge, memberAge);
+      return res.status(200).json(books);
+    } catch (error) {
+      console.error("Error fetching books by age:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+  
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -86,6 +103,17 @@ module.exports = (app) => {
           
         return true;
       }),
+      body("publisher_id").optional().custom((value) => {
+          
+        return true;
+      }),
+      body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
+      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
+        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
+          throw new Error("Max age cannot be less than min age");
+        }
+        return true;
+      }),
       body("isbn").optional().custom((value) => {
         if (value === null || value === undefined || value === "") {
           return true;        
@@ -134,6 +162,14 @@ module.exports = (app) => {
       body("title").notEmpty().withMessage("Title is required"),
       body("author_id").notEmpty().withMessage("Author ID is required"),
       body("category_id").notEmpty().withMessage("Category ID is required"),
+      body("publisher_id").optional(),
+      body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
+      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
+        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
+          throw new Error("Max age cannot be less than min age");
+        }
+        return true;
+      }),
       body("isbn").notEmpty().withMessage("ISBN is required"),
     ],
     async (req, res) => {

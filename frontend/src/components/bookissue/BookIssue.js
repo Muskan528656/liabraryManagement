@@ -507,7 +507,7 @@ const BookIssue = () => {
                     border: "none",
                     borderRadius: "8px 8px 0 0",
                     padding: "12px 24px",
-              
+
                     backgroundColor: activeTab === 'issue' ? "var(--primary-color)" : "#f8f9fa",
                     color: activeTab === 'issue' ? "white" : "#64748b",
                     borderTop: activeTab === 'issue' ? "3px solid var(--primary-color)" : "3px solid transparent",
@@ -529,7 +529,7 @@ const BookIssue = () => {
                     border: "none",
                     borderRadius: "8px 8px 0 0",
                     padding: "12px 24px",
-             
+
                     backgroundColor: activeTab === 'list' ? "var(--primary-color)" : "#f8f9fa",
                     color: activeTab === 'list' ? "white" : "#64748b",
                     borderTop: activeTab === 'list' ? "3px solid var(--primary-color)" : "3px solid transparent",

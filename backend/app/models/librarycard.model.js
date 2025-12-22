@@ -288,6 +288,7 @@ async function create(cardData, userId) {
       "email",
       "phone_number",
       "country_code",
+      "age",
       "registration_date",
 
       "type_id",
@@ -425,10 +426,10 @@ async function updateById(id, cardData, userId) {
       "parent_contact"
     ];
 
-    // Prepare other fields
+
     allowedFields.forEach(field => {
       if (cardData[field] !== undefined) {
-        // Special handling for name field
+
         if (field === 'name') {
           if (!cardData[field] && cardData.first_name && cardData.last_name) {
             updates.push(`name = $${idx}`);
@@ -440,7 +441,7 @@ async function updateById(id, cardData, userId) {
             idx++;
           }
         }
-        // Special handling for date fields
+
         else if (field === 'dob' || field === 'registration_date') {
           if (cardData[field]) {
             updates.push(`${field} = $${idx}`);
@@ -453,7 +454,7 @@ async function updateById(id, cardData, userId) {
             idx++;
           }
         }
-        // Handle other fields normally
+
         else if (field !== 'name') {
           updates.push(`${field} = $${idx}`);
           values.push(cardData[field]);
@@ -462,14 +463,13 @@ async function updateById(id, cardData, userId) {
       }
     });
 
-    // Add timestamp and user fields
     updates.push("lastmodifieddate = CURRENT_TIMESTAMP");
     updates.push(`lastmodifiedbyid = $${idx}`);
     values.push(userId);
     idx++;
 
     if (updates.length === 0) {
-      console.log("⚠️ No updates to perform");
+      
       return await findById(id);
     }
 
@@ -482,20 +482,15 @@ async function updateById(id, cardData, userId) {
       RETURNING *
     `;
 
-    console.log("🔧 Update Query:", query);
-    console.log("📊 Query Values:", values);
-
     const result = await sql.query(query, values);
 
     if (result.rows.length === 0) {
       throw new Error("Record not found");
     }
 
-    console.log("✅ Update successful for record ID:", id);
-
-    // Fetch complete updated record
+  
     const updatedRecord = await findById(id);
-    console.log("📄 Updated record:", updatedRecord);
+   
     return updatedRecord;
 
   } catch (error) {
@@ -510,12 +505,10 @@ async function resolveTypeId(typeInput) {
 
     console.log("🔍 Resolving type ID for:", typeInput);
 
-    // If it's already a UUID, return as-is
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(typeInput)) {
       return typeInput;
     }
 
-    // Try to find by ID (numeric)
     const queryById = `
       SELECT id FROM ${schema}.library_member_types 
       WHERE id::text = $1 OR code = $1 OR LOWER(name) = LOWER($1)

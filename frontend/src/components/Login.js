@@ -69,7 +69,7 @@ const Login = () => {
               }}
             >
               <Row className="g-0">
-                {/* Left Section */}
+
                 <Col
                   lg={6}
                   className="d-none d-lg-flex align-items-center justify-content-center"
@@ -83,14 +83,11 @@ const Login = () => {
                       src="Untitled design (7).png"
                       alt="Library"
                       style={{
-                        maxWidth: "560px",   // 🔥 very large image
-                        width: "100%",
+                        width: "140%",
+                        maxWidth: "none",
                         height: "auto",
-                        marginBottom: "0px", // ❌ gap removed
-                        display: "block",    // extra spacing fix
                       }}
                     />
-
 
                   </div>
                 </Col>
