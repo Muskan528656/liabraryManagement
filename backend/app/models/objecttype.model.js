@@ -13,7 +13,7 @@ function init(schema_name) {
 }
 
 async function getAllRecords() {
-  let query = `SELECT * FROM public.object_type ORDER BY name`;
+  let query = `SELECT * FROM demo.object_type ORDER BY label`;
 
   let result = await sql.query(query);
 
@@ -22,7 +22,7 @@ async function getAllRecords() {
 
 async function createRecord(reqBody) {
   const result = await sql.query(
-    `INSERT INTO public.object_type (name, status) VALUES ($1, $2) RETURNING *`,
+    `INSERT INTO demo.object_type (name, status) VALUES ($1, $2) RETURNING *`,
     [reqBody.name, reqBody.status || 'active']
   );
   if (result.rows.length > 0) {
@@ -44,7 +44,7 @@ async function updateById(id, reqBody) {
 }
 
 function buildUpdateQuery(id, cols) {
-  var query = [`UPDATE public.object_type`];
+  var query = [`UPDATE demo.object_type`];
   query.push("SET");
   var set = [];
   Object.keys(cols).forEach(function (key, i) {
@@ -58,7 +58,7 @@ function buildUpdateQuery(id, cols) {
 async function deleteRecord(id) {
   try {
     const result = await sql.query(
-      `DELETE FROM public.object_type WHERE id = $1`,
+      `DELETE FROM demo.object_type WHERE id = $1`,
       [id]
     );
     if (result.rowCount > 0) {
@@ -72,7 +72,7 @@ async function deleteRecord(id) {
 }
 
 async function checkDuplicateRecord(name, id = null) {
-  let query = `SELECT * FROM public.object_type WHERE name = $1`;
+  let query = `SELECT * FROM demo.object_type WHERE name = $1`;
   const params = [name];
 
   if (id) {

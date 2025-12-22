@@ -64,6 +64,7 @@ const AdvancedFilter = ({
   }, []);
 
   const renderValueInput = useCallback((filter, index, fieldConfig) => {
+    console.log("fieldConfig", fieldConfig)
     if (!fieldConfig) {
       return (
         <Form.Control
@@ -79,6 +80,7 @@ const AdvancedFilter = ({
     if (filter.operator === "is_empty" || filter.operator === "is_not_empty") {
       return null;
     }
+
 
     switch (fieldConfig.type) {
       case "select":
@@ -259,6 +261,28 @@ const AdvancedFilter = ({
             Clear Filters
           </Button>
         )}
+        
+            <div className="d-flex justify-content-end gap-2">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={clearFilters}
+              >
+                <i className="fa-solid fa-times me-1"></i>
+                Clear
+              </Button>
+              <Button
+                size="sm"
+                onClick={applyFilters}
+                style={{
+                  background: "var(--primary-color)",
+                  border: "none",
+                }}
+              >
+                <i className="fa-solid fa-check me-1"></i>
+                Apply Filters
+              </Button>
+            </div>
       </div>
 
       {isExpanded && (
@@ -284,6 +308,8 @@ const AdvancedFilter = ({
                     </Col>
                   )}
                   {index === 0 && <Col xs={12} md={1}></Col>}
+
+                  {console.log("fields",fields)}
 
                   <Col xs={12} md={3}>
                     <Form.Select
@@ -348,7 +374,7 @@ const AdvancedFilter = ({
             })}
 
             <hr className="my-3" />
-
+{/* 
             <div className="d-flex justify-content-end gap-2">
               <Button
                 variant="outline-secondary"
@@ -369,7 +395,7 @@ const AdvancedFilter = ({
                 <i className="fa-solid fa-check me-1"></i>
                 Apply Filters
               </Button>
-            </div>
+            </div> */}
           </Card.Body>
         </Card>
       )}

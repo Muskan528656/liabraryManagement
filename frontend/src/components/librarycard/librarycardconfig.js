@@ -28,6 +28,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
     let defaultCountryCode = "";
     let plansList = [];
+
     let objectTypesList = [];
 
     try {
@@ -99,7 +100,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
 
         // Fetch object types
-        const objectTypeApi = new DataApi("librarycard");
+        const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
         console.log("Object Type API Response:", objectTypeResponse);
@@ -120,10 +121,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
         if (objectTypeData.length > 0) {
             objectTypesList = objectTypeData
-                .filter(type => type.status === 'active' || type.status === true)
+                .filter(type => type.status === 'active' ||type.status === 'Active'  || type.status === true)
                 .map(type => ({
                     value: type.id,
-                    label: type.name.charAt(0).toUpperCase() + type.name.slice(1),
+                    label: type.label.charAt(0).toUpperCase() + type.label.slice(1),
                     data: type
                 }));
 
@@ -196,7 +197,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
         },
         { field: "phone_number", label: "Phone Number", sortable: true },
-        { field: "type", label: "Type", sortable: true },
+        { field: "type_label", label: "Type", sortable: true },
 
 
         {
@@ -424,7 +425,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             users: "user",
             company: "company",
             plans: "plan",
-            objecttypes: "librarycard",
+            objecttypes: "objecttype",
         },
 
         lookupNavigation: {
@@ -456,11 +457,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
         filterFields: [
             {
-                name: "type",
+                name: "type_type",
                 field: "type",
                 label: "Member Type",
                 type: "select",
                 options: objectTypesList.length > 0 ? objectTypesList : [
+                    
                     { value: "", label: "All Types" }
                 ],
             },

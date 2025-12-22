@@ -1091,6 +1091,12 @@ module.exports = (app) => {
           cardData.is_active = cardData.status === 'true' || cardData.status === true;
         }
 
+        // Map plan_id to subscription_id for backend compatibility
+        if (cardData.plan_id !== undefined) {
+          cardData.subscription_id = cardData.plan_id;
+          delete cardData.plan_id;
+        }
+
         const card = await LibraryCard.create(cardData, userId);
         
         return res.status(201).json({
@@ -1143,6 +1149,12 @@ module.exports = (app) => {
       // Handle is_active from status
       if (cardData.status !== undefined) {
         cardData.is_active = cardData.status === 'true' || cardData.status === true;
+      }
+
+      // Map plan_id to subscription_id for backend compatibility
+      if (cardData.plan_id !== undefined) {
+        cardData.subscription_id = cardData.plan_id;
+        delete cardData.plan_id;
       }
 
       // Update name if first_name or last_name changed
