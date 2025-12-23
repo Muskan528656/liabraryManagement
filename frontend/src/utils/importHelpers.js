@@ -19,6 +19,7 @@ export const saveImportedData = async ({
   existingRecords = [],
   importMatchFields = [],
   autoCreateRelated = {},
+  customHandlers = {},
 }) => {
   // We wrap the whole process in a try/catch for critical setup errors
   try {
@@ -156,8 +157,14 @@ export const saveImportedData = async ({
       transformedData.push(transformed);
     }
 
+    // Apply custom import data transformation if provided
+    let finalData = transformedData;
+    if (customHandlers.onImportDataTransform) {
+      finalData = customHandlers.onImportDataTransform(transformedData);
+    }
+
     // --- 2. Process & Save Rows ---
-    for (const item of transformedData) {
+    for (const item of finalData) {
       // Check Empty
       const hasData = Object.values(item).some(
         (v) => v !== null && v !== undefined && v !== ""

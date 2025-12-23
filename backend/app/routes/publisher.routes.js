@@ -65,8 +65,7 @@ module.exports = (app) => {
     router.post("/", fetchUser, [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
-        body('phone', 'Phone number is required').isMobilePhone(),
-        body('phone', 'Phone number is 10 digit').isMobilePhone(),
+        body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
         body('city', 'City is required').not().isEmpty(),
         body('country', 'Country is required').not().isEmpty()
     ], async (req, res) => {
@@ -103,8 +102,7 @@ module.exports = (app) => {
     router.put("/:id", [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
-        body('phone', 'Phone number is required').isMobilePhone(),
-        body('phone', 'Phone number is 10 digit').isMobilePhone(),
+        body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
         body('city', 'City is required').not().isEmpty(),
         body('country', 'Country is required').not().isEmpty()
     ], fetchUser, async (req, res) => {

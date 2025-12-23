@@ -1250,6 +1250,7 @@ const DynamicCRUD = ({
                                 existingRecords: data,
                                 importMatchFields,
                                 autoCreateRelated,
+                                customHandlers,
                                 afterSave: () => {
                                     fetchData();
                                     setShowImportModal(false);

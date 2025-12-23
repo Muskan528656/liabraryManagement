@@ -1,7 +1,24 @@
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import City_State from "../../constants/CityState.json";
 
+import { createModel } from "../common/UniversalCSVXLSXImporter";
+
 export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
+
+    const PublisherModel = createModel({
+        modelName: "Publisher",
+        fields: {
+            "Salutation": "Salutation",
+            "Name": "Name",
+            "Email": "Email",
+            "Phone": "Phone",
+            "City": "City",
+            "State": "State",
+            "Country": "Country",
+            "is_active": "Status"
+        },
+        required: ["Name", "Email", "Phone", "Country"],
+    });
 
     const statusBadge = (value) => (
         <span className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
@@ -15,6 +32,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
         moduleName: "publisher",
         moduleLabel: "publisher",
         apiEndpoint: "publisher",
+        importMatchFields: [],
         initialFormData: {
             salutation: "",
             name: "",
@@ -23,7 +41,6 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             city: "",
             state: "",
             country: "",
-
             is_active: true
         },
         columns: [
@@ -183,7 +200,24 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                     }));
                 }
                 return data;
+            },
+            onImportDataTransform: (data) => {
+                return data.map(item => ({
+                    ...item,
+                    is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true || item.Status === "Active" || item.Status === "true" || item.Status === true
+                }));
             }
-        }
+        },
+        importModel: PublisherModel,
+        exportColumns: [
+            { key: "salutation", header: "Salutation", width: 12 },
+            { key: "name", header: "Name", width: 20 },
+            { key: "email", header: "Email", width: 20 },
+            { key: "phone", header: "Phone", width: 15 },
+            { key: "city", header: "City", width: 15 },
+            { key: "state", header: "State", width: 15 },
+            { key: "country", header: "Country", width: 15 },
+            { key: "is_active", header: "Status", width: 12 },
+        ],
     };
 };
