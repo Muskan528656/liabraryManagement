@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from "react";
 import {
     Container,
@@ -24,6 +22,7 @@ import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
+import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
 
 const BookSubmit = () => {
@@ -75,6 +74,7 @@ const BookSubmit = () => {
         condition_before: "Good",
         remarks: ""
     });
+    const [submittedBooksFilters, setSubmittedBooksFilters] = useState({});
 
     const recordsPerPage = 20;
     const isbnInputRef = React.useRef(null);
@@ -1288,6 +1288,9 @@ const handleSearchModeChange = (e) => {
             isbn.includes(query) ||
             studentName.includes(query)
         );
+    }).filter(submission => {
+        // Apply advanced filters
+        return applyAdvancedFilters([submission], submittedBooksFilters).length > 0;
     });
 
     const getStatusBadge = (status) => {
@@ -1602,6 +1605,37 @@ const handleSearchModeChange = (e) => {
             label: "Status",
             width: 100,
             render: (value) => getStatusBadge(value)
+        }
+    ];
+
+    // Advanced Filter Configuration for Submitted Books
+    const submittedBooksFilterFields = [
+        {
+            name: "status",
+            label: "Status",
+            type: "select",
+            options: [
+                { value: "cancel", label: "Cancel" },
+                { value: "issued", label: "Issued" },
+                { value: "lost", label: "Lost" },
+                { value: "damage", label: "Damage" },
+                { value: "fair", label: "Fair" }
+            ]
+        },
+        {
+            name: "book_title",
+            label: "Book Name",
+            type: "text"
+        },
+        {
+            name: "issued_to_name",
+            label: "Member Name",
+            type: "text"
+        },
+        {
+            name: "submit_date",
+            label: "Submission Date",
+            type: "date"
         }
     ];
 
@@ -2013,6 +2047,13 @@ const handleSearchModeChange = (e) => {
                                 <Tab.Pane eventKey="submitted">
                                     <Row>
                                         <Col lg={12}>
+                                            {/* Advanced Filter for Submitted Books */}
+                                            <AdvancedFilter
+                                                fields={submittedBooksFilterFields}
+                                                onFilterChange={setSubmittedBooksFilters}
+                                                onClear={() => setSubmittedBooksFilters({})}
+                                            />
+
                                             <Card className="shadow-sm" style={{ border: "none" }}>
                                                 <Card.Body className="p-0" style={{ overflow: "hidden", width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
                                                     <ResizableTable
