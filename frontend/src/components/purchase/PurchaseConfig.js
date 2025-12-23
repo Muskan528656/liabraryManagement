@@ -18,7 +18,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-            "Purchase Serial No": "Purchase Serial No",
+            // "Purchase Serial No": "Purchase Serial No",
             "Vendor": "Vendor",
             "Book": "Book",
             "ISBN": "ISBN",

@@ -440,8 +440,13 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             ]
         },
          filterFields: [
-            { name: 'name', label: 'Name', type: 'text' },
-            { name: 'status', label: 'Status', type: 'boolean' },
+            { name: 'name', label: 'Vendor Name', type: 'text' },
+            { name: 'status', label: 'Status', type: 'select', options: [
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' }
+            ]},
+            { name: 'company_name', label: 'Book Name', type: 'text' }
         ],
 
         details: [
