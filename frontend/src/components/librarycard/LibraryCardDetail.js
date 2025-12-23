@@ -452,16 +452,27 @@ const LibraryCardDetail = ({
     fetchSubscriptionProgress();
   }, [data?.subscription_id]);
 
+  useEffect(()=>{
+    fetchCardData()
+    console.log("book",fetchBookCounts)
+  },[])
   const fetchCardData = async () => {
+    console.log("check---->")
     try {
       const api = new DataApi("librarycard");
 
       const response = await api.fetchById(id);
+
+      console.log("responsecarddata",response)
+
       if (response && response.data) {
         const card = response.data;
         setCardData(card);
-        if (card.user_id) {
-          await fetchBookCounts(card.user_id, id);
+
+        console.log("cardcardcard", card)
+
+        if (card.id) {
+          await fetchBookCounts(card.id);
         }
       }
     } catch (error) {
@@ -477,8 +488,13 @@ const LibraryCardDetail = ({
 
   const fetchBookCounts = async (userId, cardId) => {
     try {
+
+      console.log("bookcount", userId)
+      console.log("cardId", cardId)
+
       const issueApi = new DataApi("bookissue");
       const issuesResponse = await issueApi.fetchAll();
+      console.log("issuesResponse", issuesResponse)
       if (issuesResponse && issuesResponse.data) {
         const issues = Array.isArray(issuesResponse.data)
           ? issuesResponse.data
@@ -486,19 +502,11 @@ const LibraryCardDetail = ({
 
         const cardIssues = issues.filter((issue) => {
           const matchesCard =
-            issue.card_id === cardId ||
-            issue.library_card_id === cardId ||
-            issue.cardId === cardId;
-          const matchesUser =
-            issue.issued_to === userId ||
-            issue.user_id === userId ||
-            issue.student_id === userId;
-          const isActive =
-            !issue.return_date &&
-            issue.status !== "returned" &&
-            issue.status !== "submitted";
+            issue.issued_to === userId
 
-          return (matchesCard || matchesUser) && isActive;
+
+          console.log("matchesCardmatchesCardmatchesCard", matchesCard)
+          return matchesCard
         });
         setIssuedCount(cardIssues.length);
       }

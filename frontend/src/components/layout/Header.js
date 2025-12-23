@@ -705,9 +705,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         }}
       >
         {/* Brand */}
+        <div className="fw-bold  pt-0">
+            <img
+              src="/Logo.png"
+              // width="100" 
+              height="60"
+            style={{ height: "60px", marginLeft: '20px', objectFit: "contain" }}
+            />
+          </div>
         <Navbar.Brand
           href="#"
-          className="fw-bold"
+          className="fw-bold "
           style={{
             fontSize: "1.7rem",
             fontWeight: "900",
@@ -719,10 +727,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             gap: "0.5rem",
           }}
         >
-          <img
-            src="/image.png"
-            style={{ height: "60px", marginLeft: '20px', objectFit: "contain" }}
-          />
+          
           <span>{Company?.company_name || "Adhwaa Al-Hedaya School"}</span>
         </Navbar.Brand>
 

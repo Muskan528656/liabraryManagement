@@ -78,15 +78,11 @@ const Login = () => {
                     minHeight: "100vh",
                   }}
                 >
-                  <div className="text-center d-lg-flex align-items-center justify-content-center  ">
+                  <div >
                     <img
                       src="Untitled design (7).png"
-                      alt="Library"
-                      style={{
-                        width: "140%",
-                        maxWidth: "200%",
-                        height: "auto",
-                      }}
+                      width="600" 
+                      height="600"
                     />
 
                   </div>
