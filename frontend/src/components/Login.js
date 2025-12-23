@@ -72,19 +72,19 @@ const Login = () => {
 
                 <Col
                   lg={6}
-                  className="d-none d-lg-flex align-items-center justify-content-center"
+                  className="d-none d-lg-flex align-items-center justify-content-center "
                   style={{
                     backgroundColor: "var(--primary-background-color)",
                     minHeight: "100vh",
                   }}
                 >
-                  <div className="text-center">
+                  <div className="text-center d-lg-flex align-items-center justify-content-center  ">
                     <img
                       src="Untitled design (7).png"
                       alt="Library"
                       style={{
                         width: "140%",
-                        maxWidth: "none",
+                        maxWidth: "200%",
                         height: "auto",
                       }}
                     />
