@@ -53,9 +53,8 @@ const BulkIssue = () => {
   const [memberInfo, setMemberInfo] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [memberAge, setMemberAge] = useState(null);
-  const [filteredBooksByAge, setFilteredBooksByAge] = useState([]); // नई state
+  const [filteredBooksByAge, setFilteredBooksByAge] = useState([]);
 
-  // Helper function to extract error messages
   const extractErrorMessage = (result) => {
     if (!result) return "Unknown error";
 
@@ -118,7 +117,6 @@ const BulkIssue = () => {
     }
   }, [selectedCard, subscriptions, plans]);
 
-  // Age-based book filtering effect
   useEffect(() => {
     if (books.length === 0) {
       setFilteredBooksByAge([]);
@@ -129,26 +127,20 @@ const BulkIssue = () => {
       setFilteredBooksByAge(books);
       return;
     }
-
-    // Filter books based on member's age
     const filtered = books.filter(book => {
       const minAge = parseInt(book.min_age) || 0;
       const maxAge = parseInt(book.max_age) || 999;
 
-      // Agar dono 0 hai to koi restriction nahi
+
       if (minAge === 0 && maxAge === 0) {
         return true;
       }
-
-      // Age range check
       const isAgeValid = memberAge >= minAge && memberAge <= maxAge;
 
       return isAgeValid;
     });
 
     setFilteredBooksByAge(filtered);
-
-    // Debug log
     console.log("Age filtering:", {
       memberAge,
       totalBooks: books.length,
@@ -172,7 +164,7 @@ const BulkIssue = () => {
     setTotalAllowedBooks(6);
     setSystemMaxBooks(6);
     setMemberAge(null);
-    setFilteredBooksByAge(books); // Reset to all books
+    setFilteredBooksByAge(books);
     setDailyLimitCount(2);
   };
 
@@ -230,7 +222,7 @@ const BulkIssue = () => {
       }
 
       setBooks(booksList);
-      setFilteredBooksByAge(booksList); // Initial set
+      setFilteredBooksByAge(booksList);
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
       setPlans(plansList);
@@ -276,7 +268,7 @@ const BulkIssue = () => {
         const member = memberResp.data;
         setMemberInfo(member);
 
-        // Calculate member age
+
         const memberDob = member.dob || member.date_of_birth || member.birth_date;
         let age = null;
 
@@ -289,7 +281,7 @@ const BulkIssue = () => {
           console.log("No DOB found for member");
         }
 
-        // Personal Allowance
+
         let personalAllowed = 0;
         if (member.allowed_books !== undefined && member.allowed_books !== null) {
           personalAllowed = parseInt(member.allowed_books);
@@ -306,7 +298,7 @@ const BulkIssue = () => {
         setMemberPersonalAllowedBooks(personalAllowed);
         setMemberExtraAllowance(personalAllowed);
 
-        // FIRST: Check for plan_id from member
+
         let planId = null;
         if (member.plan_id) {
           planId = member.plan_id;
@@ -320,7 +312,7 @@ const BulkIssue = () => {
         let planDuration = 7;
         let dailyLimit = 2;
 
-        // Check in plans table first
+
         if (planId && plans.length > 0) {
           plan = plans.find(p => {
             return (
@@ -330,18 +322,14 @@ const BulkIssue = () => {
           });
 
           if (plan) {
-            // Allowed books from plan
+
             subscriptionBooks = parseInt(plan.allowed_books || 0);
             if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
               subscriptionBooks = 0;
-            }
-
-            // Duration from plan
-            if (plan.duration_days) {
+            } if (plan.duration_days) {
               planDuration = parseInt(plan.duration_days);
             }
 
-            // DAILY LIMIT
             if (plan.max_allowed_books_at_time !== undefined && plan.max_allowed_books_at_time !== null) {
               dailyLimit = parseInt(plan.max_allowed_books_at_time);
               if (isNaN(dailyLimit) || dailyLimit < 1) {
@@ -361,7 +349,6 @@ const BulkIssue = () => {
           }
         }
 
-        // If no plan found, check subscriptions
         if (!plan && subscriptions.length > 0) {
           let subscriptionId = null;
           if (member.subscription_id) {
@@ -394,7 +381,6 @@ const BulkIssue = () => {
                 planDuration = parseInt(subscription.duration);
               }
 
-              // DAILY LIMIT for subscription
               if (subscription.max_allowed_books_at_time !== undefined && subscription.max_allowed_books_at_time !== null) {
                 dailyLimit = parseInt(subscription.max_allowed_books_at_time);
               } else if (subscription.maxBooksAtTime !== undefined && subscription.maxBooksAtTime !== null) {
@@ -530,7 +516,6 @@ const BulkIssue = () => {
   };
 
   const getBookOptions = () => {
-    // Use filteredBooksByAge instead of filtering again
     const booksToShow = filteredBooksByAge.length > 0 ? filteredBooksByAge : books;
 
     console.log("getBookOptions:", {
@@ -621,7 +606,7 @@ const BulkIssue = () => {
       return false;
     }
 
-    // DAILY LIMIT VALIDATION
+    
     if (selectedBooks.length > dailyLimitCount) {
       showErrorToast(
         `Daily limit is ${dailyLimitCount} books per day. ` +
@@ -650,7 +635,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // Total allowed books validation
     const issuedCount = computeIssuedCountForCard(selectedCard.value);
     const toIssueCount = selectedBooks.length;
 
@@ -663,7 +647,6 @@ const BulkIssue = () => {
       return false;
     }
 
-    // Check if books are already issued to this member
     const alreadyIssuedBooks = [];
     selectedBooks.forEach(book => {
       if (isBookIssuedToSelectedCard(book.value)) {
@@ -678,8 +661,6 @@ const BulkIssue = () => {
       );
       return false;
     }
-
-    // Check if books are available
     const unavailableBooks = [];
     selectedBooks.forEach(book => {
       const bookData = book.data;
@@ -694,8 +675,6 @@ const BulkIssue = () => {
       );
       return false;
     }
-
-    // Check if member is active
     if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;

@@ -501,7 +501,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error("❌ Error cancelling issue:", error);
+    console.error("Error cancelling issue:", error);
     throw error;
   } finally {
     client.release();
