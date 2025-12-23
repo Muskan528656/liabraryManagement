@@ -166,7 +166,13 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             allowEdit: true,
             allowDelete: false,
             showImportButton: true,
+            showAdvancedFilter: true,
         },
+         filterFields: [
+            { name: 'vendor_name', label: 'Vendor Name', type: 'text' },
+            { name: 'book_title', label: 'Book Title', type: 'text' },
+            { name: 'purchase_date', label: 'Purchase Date', type: 'date' },
+        ],
         dataDependencies: {
             vendors: "vendor",
             books: "book",

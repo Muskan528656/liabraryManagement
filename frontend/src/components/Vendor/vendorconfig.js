@@ -426,6 +426,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             allowEdit: true,
             allowDelete: false,
             showImportButton: true,
+            showAdvancedFilter: true,
             searchFields: [
                 "name",
                 "company_name",
@@ -438,6 +439,11 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 "state"
             ]
         },
+         filterFields: [
+            { name: 'name', label: 'Name', type: 'text' },
+            { name: 'status', label: 'Status', type: 'boolean' },
+        ],
+
         details: [
             { key: "name", label: "Vendor Name", type: "text" },
             { key: "company_name", label: "Company Name", type: "text" },

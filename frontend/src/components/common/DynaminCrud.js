@@ -383,6 +383,11 @@ const DynamicCRUD = ({
     const filteredData = useMemo(() => {
     let result = data;
 
+    console.log('advancedFilters = ', advancedFilters);
+    console.log('result = ', result);
+    console.log('searchTerm = ', searchTerm);
+    console.log('showSearch = ', showSearch);
+
     // 1. Advanced Filter Logic
     // Check karein ki kya koi filter value set hai
     const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);

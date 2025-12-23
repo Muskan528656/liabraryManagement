@@ -442,7 +442,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
             variant={isExpanded ? "secondary" : "outline-secondary"}
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="d-flex align-items-center gap-2 px-3 py-1 shadow-sm "
+            className="d-flex align-items-center gap-2 px-3 py-1"
           >
             <i className={`fa-solid ${isExpanded ? 'fa-minus' : 'fa-filter'}`}></i>
             <span className="fw-bold">Advanced Filter</span>
@@ -457,18 +457,27 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
         <div className="d-flex gap-2">
           <Button 
-            variant="light" 
+            variant="" 
             size="sm" 
             onClick={handleClear}
-            className="border px-3  text-muted d-flex align-items-center gap-2"
+            className="px-3 text-muted d-flex align-items-center gap-2 "
+            style={{
+              color: "var(--primary-color)",
+              background: "var(--primary-background-color)",
+              borderRadius: "5px",
+              border:'var(--primary-color) solid 1px'}}
           >
             <i className="fa-solid fa-rotate-left"></i> Clear
           </Button>
           <Button 
             size="sm" 
             onClick={handleSearch} 
-            className="px-4  d-flex align-items-center gap-2 shadow-sm"
-            style={{ backgroundColor: 'var(--primary-color)', border: 'none' }}
+            className="px-2 d-flex align-items-center gap-2"
+            style={{ 
+              color: "var(--primary-color)",
+              background: "var(--primary-background-color)",
+              borderRadius: "5px",
+              border:'var(--primary-color) solid 1px' }}
           >
             <i className="fa-solid fa-magnifying-glass"></i> Search
           </Button>
@@ -477,7 +486,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
       {/* Expandable Filter Panel */}
       {isExpanded && (
-        <Card className="border-0 shadow-sm rounded-4 overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
+        <Card className="border-2 rounded-4 overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
           <Card.Body className="p-4">
             <Row className="g-4">
               {fields.map((field, idx) => {
@@ -506,7 +515,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                         <Form.Control 
                           size="sm" 
                           type="date" 
-                          className="border-0 shadow-sm"
+                          className="border-1"
                           value={localFilters[fName + "_to"] || ""} 
                           onChange={(e) => handleChange(fName + "_to", e.target.value)} 
                         />
@@ -518,17 +527,17 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                 // --- Select/Dropdowns ---
                 if (field.type === "select") {
                   return (
-                    <Col xs={12} md={2} key={idx}>
+                    <Col xs={12} md={3} key={idx}>
                       <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
                         {field.label}
                       </Form.Label>
                       <Form.Select 
                         size="sm" 
-                        className="border-0 shadow-sm"
+                        className="border-1"
                         value={localFilters[fName] || ""} 
                         onChange={(e) => handleChange(fName, e.target.value)}
                       >
-                        <option value="">All {field.label}</option>
+                        <option value="">Select {field.label}</option>
                         {field.options?.map((opt, i) => (
                           <option key={i} value={opt.value}>{opt.label}</option>
                         ))}
@@ -539,14 +548,14 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
                 // --- Default Text Input ---
                 return (
-                  <Col xs={12} md={3} key={idx}>
+                  <Col xs={12} md={2} key={idx}>
                     <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
                       {field.label}
                     </Form.Label>
                     <Form.Control 
                       size="sm" 
                       type="text" 
-                      className="border-0 shadow-sm"
+                      className="border-1"
                       placeholder={`Enter ${field.label}...`} 
                       value={localFilters[fName] || ""} 
                       onChange={(e) => handleChange(fName, e.target.value)} 
