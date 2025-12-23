@@ -828,53 +828,53 @@ const BookSubmit = () => {
         }
     };
 
-const handleSearchModeChange = (e) => {
-    const newMode = e.target.value;
+    const handleSearchModeChange = (e) => {
+        const newMode = e.target.value;
 
-    // ✅ CLEAR BOTH TIMERS
-    if (isbnInputRef.current?.timer) {
-        clearTimeout(isbnInputRef.current.timer);
-    }
-    if (cardInputRef.current?.timer) {
-        clearTimeout(cardInputRef.current.timer);
-    }
+        // ✅ CLEAR BOTH TIMERS
+        if (isbnInputRef.current?.timer) {
+            clearTimeout(isbnInputRef.current.timer);
+        }
+        if (cardInputRef.current?.timer) {
+            clearTimeout(cardInputRef.current.timer);
+        }
 
-    setSearchMode(newMode);
+        setSearchMode(newMode);
 
-    setIsbn("");
-    setCardNumber("");
-    setBook(null);
-    setLibraryCard(null);
-    setBookIssues([]);
-    setCardIssues([]);
-    setPenalty({
-        penalty: 0,
-        daysOverdue: 0,
-        finePerDay: 0,
-        breakdown: [],
-        calculated: false
-    });
-    setDisplayedIssuedBooks(allIssuedBooks);
+        setIsbn("");
+        setCardNumber("");
+        setBook(null);
+        setLibraryCard(null);
+        setBookIssues([]);
+        setCardIssues([]);
+        setPenalty({
+            penalty: 0,
+            daysOverdue: 0,
+            finePerDay: 0,
+            breakdown: [],
+            calculated: false
+        });
+        setDisplayedIssuedBooks(allIssuedBooks);
 
-    setTimeout(() => {
-        newMode === "isbn"
-            ? isbnInputRef.current?.focus()
-            : cardInputRef.current?.focus();
-    }, 100);
-};
+        setTimeout(() => {
+            newMode === "isbn"
+                ? isbnInputRef.current?.focus()
+                : cardInputRef.current?.focus();
+        }, 100);
+    };
 
- const handleScanButtonClick = async () => {
-    if (searchMode === "isbn" && isbnInputRef.current?.timer) {
-        clearTimeout(isbnInputRef.current.timer);
-    }
-    if (searchMode === "card" && cardInputRef.current?.timer) {
-        clearTimeout(cardInputRef.current.timer);
-    }
+    const handleScanButtonClick = async () => {
+        if (searchMode === "isbn" && isbnInputRef.current?.timer) {
+            clearTimeout(isbnInputRef.current.timer);
+        }
+        if (searchMode === "card" && cardInputRef.current?.timer) {
+            clearTimeout(cardInputRef.current.timer);
+        }
 
-    setIsScanning(true);
-    await handleSearch();   // ✅ single source
-    setIsScanning(false);
-};
+        setIsScanning(true);
+        await handleSearch();   // ✅ single source
+        setIsScanning(false);
+    };
 
     const handleScanSubmit = async () => {
         const value = searchMode === "isbn" ? isbn : cardNumber;

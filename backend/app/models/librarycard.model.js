@@ -83,7 +83,7 @@ async function findByCardNumber(cardNumber) {
       LEFT JOIN ${schema}.plan p
         ON lm.subscription_id = p.id
       LEFT JOIN ${schema}.object_type ot
-        ON lm.type = ot.id
+        ON lm.type_id = ot.id
       WHERE lm.card_number = $1
     `;
 
