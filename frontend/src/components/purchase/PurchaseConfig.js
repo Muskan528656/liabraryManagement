@@ -137,8 +137,9 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         moduleName: "purchase",
         moduleLabel: "Purchase",
         apiEndpoint: "purchase",
-
         importMatchFields: [],
+        importModel: PurchaseModel,
+
 
         autoCreateRelated: {
             vendors: {
