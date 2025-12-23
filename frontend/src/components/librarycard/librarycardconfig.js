@@ -486,16 +486,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         },
 
         filterFields: [
-            {
-                name: "type_type",
-                field: "type_id",
-                label: "Member Type",
-                type: "select",
-                options: objectTypesList.length > 0 ? objectTypesList : [
+            // {
+            //     name: "type_type",
+            //     field: "type_id",
+            //     label: "Member Type",
+            //     type: "select",
+            //     options: objectTypesList.length > 0 ? objectTypesList : [
 
-                    { value: "", label: "All Types" }
-                ],
-            },
+            //         { value: "", label: "All Types" }
+            //     ],
+            // },
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -503,42 +503,42 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 type: "select",
                 options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
             },
-            {
-                name: "card_number",
-                field: "card_number",
-                label: "Card Number",
-                type: "text",
-            },
+            // {
+            //     name: "card_number",
+            //     field: "card_number",
+            //     label: "Card Number",
+            //     type: "text",
+            // },
             {
                 name: "first_name",
                 field: "first_name",
                 label: "First Name",
                 type: "text",
             },
-            {
-                name: "last_name",
-                field: "last_name",
-                label: "Last Name",
-                type: "text",
-            },
-            {
-                name: "email",
-                field: "email",
-                label: "Email",
-                type: "text",
-            },
+            // {
+            //     name: "last_name",
+            //     field: "last_name",
+            //     label: "Last Name",
+            //     type: "text",
+            // },
+            // {
+            //     name: "email",
+            //     field: "email",
+            //     label: "Email",
+            //     type: "text",
+            // },
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
-            {
-                name: "is_active",
-                field: "is_active",
-                label: "Status",
-                type: "boolean",
-            },
+            // {
+            //     name: "is_active",
+            //     field: "is_active",
+            //     label: "Status",
+            //     type: "boolean",
+            // },
             {
                 name: "registration_date",
                 field: "registration_date",

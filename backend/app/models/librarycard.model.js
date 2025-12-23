@@ -83,7 +83,7 @@ async function findByCardNumber(cardNumber) {
       LEFT JOIN ${schema}.plan p
         ON lm.subscription_id = p.id
       LEFT JOIN ${schema}.object_type ot
-        ON lm.type = ot.id
+        ON lm.type_id = ot.id
       WHERE lm.card_number = $1
     `;
 
@@ -286,7 +286,7 @@ async function create(cardData, userId) {
       "email",
       "phone_number",
       "country_code",
-    
+
       "registration_date",
 
       "type_id",
@@ -467,7 +467,7 @@ async function updateById(id, cardData, userId) {
     idx++;
 
     if (updates.length === 0) {
-      
+
       return await findById(id);
     }
 
@@ -486,9 +486,9 @@ async function updateById(id, cardData, userId) {
       throw new Error("Record not found");
     }
 
-  
+
     const updatedRecord = await findById(id);
-   
+
     return updatedRecord;
 
   } catch (error) {
