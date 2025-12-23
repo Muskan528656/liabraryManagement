@@ -974,7 +974,7 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
-
+            console.log("Update Issue Result:", result);
             if (result.success) {
                 PubSub.publish("RECORD_SUCCESS_TOAST", {
                     title: "Success",

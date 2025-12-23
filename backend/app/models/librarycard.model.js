@@ -286,7 +286,7 @@ async function create(cardData, userId) {
       "email",
       "phone_number",
       "country_code",
-    
+
       "registration_date",
 
       "type_id",
@@ -467,7 +467,7 @@ async function updateById(id, cardData, userId) {
     idx++;
 
     if (updates.length === 0) {
-      
+
       return await findById(id);
     }
 
@@ -486,9 +486,9 @@ async function updateById(id, cardData, userId) {
       throw new Error("Record not found");
     }
 
-  
+
     const updatedRecord = await findById(id);
-   
+
     return updatedRecord;
 
   } catch (error) {

@@ -112,8 +112,8 @@ module.exports = (app) => {
       body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
       body("status")
         .optional()
-        .isIn(["issued", "returned", "lost", "damaged"])
-        .withMessage("Status must be one of: issued, returned, lost, damaged"),
+        .isIn(["issued", "returned", "lost", "damaged","cancelled"])
+        .withMessage("Status must be one of: issued, returned, lost, damaged, cancelled"),
     ],
     async (req, res) => {
       try {

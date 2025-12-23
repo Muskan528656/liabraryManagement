@@ -1370,14 +1370,14 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {selectedCard && memberInfo && memberInfo.is_active &&
+                  {/* {selectedCard && memberInfo && memberInfo.is_active &&
                     selectedBooks.length >= Math.min(remainingForCard, remainingForToday) &&
                     Math.min(remainingForCard, remainingForToday) > 0 && (
                       <Form.Text className="text-warning fw-bold">
                         <i className="fa-solid fa-lock me-1"></i>
                         You have selected the maximum allowed books for this transaction.
                       </Form.Text>
-                    )}
+                    )} */}
 
                   {selectedCard && (
                     <Form.Text className="text-dark small d-block mt-1">
@@ -1386,12 +1386,12 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {selectedCard && memberAge !== null && (
+                  {/* {selectedCard && memberAge !== null && (
                     <Form.Text className="text-info small d-block mt-1">
                       <i className="fa-solid fa-filter me-1"></i>
                       Showing books filtered for age {memberAge} years. {filteredBooksByAge.length} of {books.length} books available.
                     </Form.Text>
-                  )}
+                  )} */}
                 </div>
 
                 <div className="mb-4">

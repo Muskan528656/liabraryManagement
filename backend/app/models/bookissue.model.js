@@ -69,7 +69,7 @@ async function findActive() {
                    FROM ${schema}.book_issues bi
                    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
                    LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-                   WHERE bi.return_date IS NULL AND bi.status = 'issued'
+                   WHERE bi.return_date IS NULL
                    ORDER BY bi.issue_date DESC`;
 
     const result = await sql.query(query);
