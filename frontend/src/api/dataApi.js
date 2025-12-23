@@ -88,9 +88,10 @@ export default class DataApi {
         return res.data;
     }
     updateFormData(formData, id) {
-        return axios.put(`${this.baseUrl}/${this.endpoint}/${id}`, formData, {
+        return axios.put(`${this.baseUrl}/${id}`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
+                Authorization: `${this.token}`,
             },
         });
     }

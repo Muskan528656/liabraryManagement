@@ -81,8 +81,13 @@ const Login = () => {
                   <div >
                     <img
                       src="Untitled design (7).png"
-                      width="600" 
+                      width="600"
                       height="600"
+                    // style={{
+                    //   width: "140%",
+                    //   maxWidth: "200%",
+                    //   height: "auto",
+                    // }}
                     />
 
                   </div>

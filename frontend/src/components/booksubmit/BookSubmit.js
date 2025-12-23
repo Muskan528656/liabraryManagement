@@ -903,13 +903,14 @@ const BookSubmit = () => {
         setShowEditModal(true);
     };
 
-    // Handle Cancel Click
     const handleCancelClick = (issueItem) => {
+
+        console.log("issued item", issueItem)
+        console.log("selected issued", selectedIssue)
         setSelectedIssue(issueItem);
         setShowCancelModal(true);
     };
 
-    // Handle Submit Click
     const handleSubmitClick = async (issueItem) => {
         setSelectedIssue(issueItem);
         setConditionAfter("Good");
@@ -935,9 +936,16 @@ const BookSubmit = () => {
                 due_date: editFormData.due_date,
                 condition_before: editFormData.condition_before,
                 remarks: editFormData.remarks,
-                status: "issued" // Keep status as issued for edit
+                // Keep other fields same as original record
+                book_id: selectedIssue.book_id,
+                issued_to: selectedIssue.issued_to,
+                book_title: selectedIssue.book_title,
+                book_isbn: selectedIssue.book_isbn,
+                card_id: selectedIssue.card_id,
+                card_number: selectedIssue.card_number
             };
 
+            // Use PUT request to update the entire issue record
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
                 "PUT",
@@ -963,6 +971,22 @@ const BookSubmit = () => {
 
                 // Refresh the list
                 await fetchAllIssuedBooks();
+                // If we have current search results, update them too
+                if (bookIssues.length > 0) {
+                    const updatedBookIssues = bookIssues.map(item =>
+                        item.id === selectedIssue.id ? { ...item, ...updateData } : item
+                    );
+                    setBookIssues(updatedBookIssues);
+                    setDisplayedIssuedBooks(updatedBookIssues);
+                }
+                if (cardIssues.length > 0) {
+                    const updatedCardIssues = cardIssues.map(item =>
+                        item.id === selectedIssue.id ? { ...item, ...updateData } : item
+                    );
+                    setCardIssues(updatedCardIssues);
+                    setDisplayedIssuedBooks(updatedCardIssues);
+                }
+
                 setShowEditModal(false);
                 setSelectedIssue(null);
             } else {
@@ -981,61 +1005,114 @@ const BookSubmit = () => {
             setLoading(false);
         }
     };
-// handleCancelConfirm फंक्शन अपडेट करें
-const handleCancelConfirm = async () => {
-  if (!selectedIssue) return;
 
-  try {
-    setLoading(true);
+    const handleCancelConfirm = async () => {
+        console.log("Cancelling issue:", selectedIssue);
+        if (!selectedIssue) return;
 
-    const cancelData = {
-      cancellation_reason: "Cancelled by librarian" // नाम सही करें
+        try {
+            setLoading(true);
+
+            // Prepare the cancellation data - update status to "cancelled"
+            const cancelData = {
+                status: "cancelled",
+                cancellation_reason: "Cancelled by librarian",
+                cancellation_date: new Date().toISOString(),
+                // Keep all other original data
+                book_id: selectedIssue.book_id,
+                issued_to: selectedIssue.issued_to,
+                book_title: selectedIssue.book_title,
+                book_isbn: selectedIssue.book_isbn,
+                card_id: selectedIssue.card_id,
+                card_number: selectedIssue.card_number,
+                issue_date: selectedIssue.issue_date,
+                due_date: selectedIssue.due_date,
+                condition_before: selectedIssue.condition_before,
+                remarks: selectedIssue.remarks
+            };
+
+            console.log("cancel data", cancelData)
+
+            // Use PUT request to update the status
+            const resp = await helper.fetchWithAuth(
+                `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
+                "PUT",
+                JSON.stringify(cancelData)
+            );
+
+                
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: err.errors || "Failed to cancel issue"
+                });
+                return;
+            }
+
+            const result = await resp.json();
+
+            if (result.success) {
+                PubSub.publish("RECORD_SUCCESS_TOAST", {
+                    title: "Success",
+                    message: "Issue cancelled successfully"
+                });
+
+                // Refresh the list
+                await fetchAllIssuedBooks();
+                // Update local state to remove the cancelled issue from current view
+                const updatedBookIssues = bookIssues.filter(item => item.id !== selectedIssue.id);
+                const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
+                const updatedAllIssues = allIssuedBooks.filter(item => item.id !== selectedIssue.id);
+                const updatedDisplayedIssues = displayedIssuedBooks.filter(item => item.id !== selectedIssue.id);
+
+                setBookIssues(updatedBookIssues);
+                setCardIssues(updatedCardIssues);
+                setAllIssuedBooks(updatedAllIssues);
+                setDisplayedIssuedBooks(updatedDisplayedIssues);
+
+                setShowCancelModal(false);
+                setSelectedIssue(null);
+            } else {
+
+
+
+                const resultErrorMessage = Array.isArray(result.errors)
+                    ? result.errors.map(e => e.msg).join(", ")
+                    : result.errors?.msg || "Failed to cancel issue";
+
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: resultErrorMessage
+                });
+
+
+
+                // PubSub.publish("RECORD_ERROR_TOAST", {
+                //     title: "Error",
+                //     message: result.errors || "Failed to cancel issue"
+                // });
+            }
+        } catch (err) {
+
+            const errorMessage = Array.isArray(err.errors)
+                ? err.errors.map(e => e.msg).join(", ")
+                : err.errors?.msg || "Failed to cancel issue";
+
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: errorMessage
+            });
+
+            // console.error("Error cancelling issue:", error);
+            // PubSub.publish("RECORD_ERROR_TOAST", {
+            //     title: "Error",
+            //     message: error.message || "Error cancelling issue"
+            // });
+        } finally {
+            setLoading(false);
+        }
     };
-
-    // API एंडपॉइंट सही करें
-    const resp = await helper.fetchWithAuth(
-      `${constants.API_BASE_URL}/api/book_submissions/cancel/${selectedIssue.id}`,
-      "PUT", // PUT method का उपयोग करें
-      JSON.stringify(cancelData)
-    );
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: err.errors || "Failed to cancel issue"
-      });
-      return;
-    }
-
-    const result = await resp.json();
-
-    if (result.success) {
-      PubSub.publish("RECORD_SUCCESS_TOAST", {
-        title: "Success",
-        message: "Issue cancelled successfully"
-      });
-
-      // Refresh the list
-      await fetchAllIssuedBooks();
-      setShowCancelModal(false);
-      setSelectedIssue(null);
-    } else {
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Error",
-        message: result.errors || "Failed to cancel issue"
-      });
-    }
-  } catch (error) {
-    console.error("Error cancelling issue:", error);
-    PubSub.publish("RECORD_ERROR_TOAST", {
-      title: "Error",
-      message: error.message || "Error cancelling issue"
-    });
-  } finally {
-    setLoading(false);
-  }
-};
 
     const handleModalClose = () => {
         setShowSubmitModal(false);
@@ -2361,9 +2438,8 @@ const handleCancelConfirm = async () => {
 
             {/* Edit Modal */}
             <Modal show={showEditModal} onHide={handleModalClose} centered>
-                <Modal.Header closeButton style={{ backgroundColor: "#0d6efd", color: "white" }}>
+                <Modal.Header closeButton style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                     <Modal.Title>
-                        <i className="fa-solid fa-pen-to-square me-2"></i>
                         Edit Issue
                     </Modal.Title>
                 </Modal.Header>
@@ -2437,9 +2513,8 @@ const handleCancelConfirm = async () => {
 
             {/* Cancel Modal */}
             <Modal show={showCancelModal} onHide={handleModalClose} centered>
-                <Modal.Header closeButton style={{ backgroundColor: "#dc3545", color: "white" }}>
+                <Modal.Header closeButton style={{ backgroundColor: "var(--primary-background-color)", color: "var(--primary-color)" }}>
                     <Modal.Title>
-                        <i className="fa-solid fa-times-circle me-2"></i>
                         Cancel Issue
                     </Modal.Title>
                 </Modal.Header>
@@ -2447,10 +2522,7 @@ const handleCancelConfirm = async () => {
                     {selectedIssue && (
                         <div>
                             <p className="fw-bold">Are you sure you want to cancel this issue?</p>
-                            <div className="alert alert-warning">
-                                <i className="fa-solid fa-exclamation-triangle me-2"></i>
-                                This action cannot be undone. The issue will be marked as cancelled.
-                            </div>
+
                             <div className="mt-3">
                                 <p><strong>Book:</strong> {selectedIssue.book_title}</p>
                                 <p><strong>Issued To:</strong> {getUserDisplayName(selectedIssue)}</p>
@@ -2462,16 +2534,16 @@ const handleCancelConfirm = async () => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleModalClose} disabled={loading}>
-                        No, Keep Issue
+                        No
                     </Button>
-                    <Button variant="danger" onClick={handleCancelConfirm} disabled={loading}>
+                    <Button className="btn-primary-custom" onClick={handleCancelConfirm} disabled={loading}>
                         {loading ? (
                             <>
                                 <Spinner animation="border" size="sm" className="me-2" />
                                 Cancelling...
                             </>
                         ) : (
-                            'Yes, Cancel Issue'
+                            'Yes, Cancel'
                         )}
                     </Button>
                 </Modal.Footer>

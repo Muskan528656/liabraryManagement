@@ -463,7 +463,7 @@ const LibraryCardDetail = ({
 
       const response = await api.fetchById(id);
 
-      console.log("responsecarddata",response)
+      console.log("responsecarddata", response)
 
       if (response && response.data) {
         const card = response.data;

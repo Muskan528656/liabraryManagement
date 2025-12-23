@@ -164,9 +164,83 @@ async function create(userData, userId) {
 
 
 
+// async function updateById(id, userData) {
+//   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+//   try {
+//     if (userData.email) {
+//       const existing = await this.findByEmail(userData.email);
+//       if (existing && existing.id !== id) {
+//         throw new Error("User with this email already exists");
+//       }
+//     }
+
+//     const updateFields = [];
+//     const values = [];
+//     let i = 1;
+
+//     const add = (field, value) => {
+//       if (value !== undefined) {
+//         updateFields.push(`${field} = $${i++}`);
+//         values.push(value);
+//       }
+//     };
+
+//     add("firstname", userData.firstname);
+//     add("lastname", userData.lastname);
+//     add("email", userData.email);
+//     add("password", userData.password);
+//     add("userrole", userData.userrole);
+//     add("phone", userData.phone);
+//     add("country_code", userData.country_code);
+//     add("country", userData.country);
+//     add("currency", userData.currency);
+//     add("time_zone", userData.time_zone);
+//     add("isactive", userData.isactive);
+//     add("companyid", userData.companyid);
+//     add("image", userData.image);
+
+//     if (updateFields.length === 0) {
+//       throw new Error("No fields to update");
+//     }
+
+//     values.push(id);
+
+//     const query = `
+//       UPDATE ${this.schema}."user"
+//       SET ${updateFields.join(", ")}
+//       WHERE id = $${i}
+//       RETURNING
+//         id,
+//         firstname,
+//         lastname,
+//         email,
+//         userrole,
+//         phone,
+//         country_code,
+//         country,
+//         currency,
+//         time_zone,
+//         isactive,
+//         companyid
+//     `;
+
+//     const result = await sql.query(query, values);
+//     return result.rows.length ? result.rows[0] : null;
+
+//   } catch (error) {
+//     console.error("Error in updateById:", error);
+//     throw error;
+//   }
+// }
+
+
 async function updateById(id, userData) {
+  console.log("update id is", id);
+  console.log("userData", userData);
+
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
+    // Check if email is already in use by another user
     if (userData.email) {
       const existing = await this.findByEmail(userData.email);
       if (existing && existing.id !== id) {
@@ -178,13 +252,17 @@ async function updateById(id, userData) {
     const values = [];
     let i = 1;
 
+    // Function to add fields to the update query
     const add = (field, value) => {
-      if (value !== undefined) {
+      if (value !== undefined && value !== null) { // Only add non-null/undefined fields
         updateFields.push(`${field} = $${i++}`);
         values.push(value);
       }
     };
 
+    console.log("userData before adding fields", userData);
+
+    // Add user fields to update
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);
@@ -195,16 +273,19 @@ async function updateById(id, userData) {
     add("country", userData.country);
     add("currency", userData.currency);
     add("time_zone", userData.time_zone);
-    add("isactive", userData.isactive);
+    // add("isactive", userData.isactive);
     add("companyid", userData.companyid);
-    add("image", userData.image);
+    add("profile_image", userData.profileImage);
 
+    // If no fields were added to update
     if (updateFields.length === 0) {
       throw new Error("No fields to update");
     }
 
+    // Add user ID as the last value
     values.push(id);
 
+    // Construct the query
     const query = `
       UPDATE ${this.schema}."user"
       SET ${updateFields.join(", ")}
@@ -224,7 +305,10 @@ async function updateById(id, userData) {
         companyid
     `;
 
+    // Execute the query
     const result = await sql.query(query, values);
+
+    console.log("result",result)
     return result.rows.length ? result.rows[0] : null;
 
   } catch (error) {
@@ -232,9 +316,6 @@ async function updateById(id, userData) {
     throw error;
   }
 }
-
-
-
 
 async function deleteById(id) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");

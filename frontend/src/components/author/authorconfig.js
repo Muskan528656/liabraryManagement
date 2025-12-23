@@ -195,33 +195,33 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 required: true,
                 placeholder: "Enter author name",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "email",
                 label: "Email",
                 type: "email",
                 placeholder: "Enter email address",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "bio",
                 label: "Bio",
                 type: "textarea",
-                colSize: 12,
-                // Note: Keeping your existing render logic
+                colSize: 6,
+           
                 render: (value, onChange) => (
                     <textarea
                         name="bio"
                         value={value || ""}
-                        onChange={onChange} // Ensure onChange is passed if this is an input
+                        onChange={onChange} 
                         rows={3}
                         placeholder="Enter bio"
-                        className="form-control" // Added bootstrap class for better styling in edit mode
+                        className="form-control"
                         style={{
                             width: "100%",
                             resize: "none",
-                            background: "#fff", // Changed to white for input
+                            background: "#fff", 
                             borderRadius: "6px",
                             padding: "8px",
                             border: "1px solid #ddd",

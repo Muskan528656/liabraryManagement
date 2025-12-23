@@ -472,7 +472,7 @@ const FormModal = ({
                   <div
                     style={{
                       padding: "12px 16px",
-                      // background: "linear-gradient(to right, #f3e9fc, #ffffff)",
+                      backgroundColor: "var(--secondary-color)",
                       // borderLeft: "4px solid #6f42c1",
                       marginBottom: "20px",
                       borderRadius: "6px",
@@ -481,7 +481,7 @@ const FormModal = ({
                     <h6
                       style={{
                         margin: 0,
-                        color: "#6f42c1",
+                        color: "var(--primary-color)",
                         fontSize: "16px",
                         fontWeight: "700",
                         display: "flex",

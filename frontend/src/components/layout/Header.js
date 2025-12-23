@@ -727,7 +727,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             gap: "0.5rem",
           }}
         >
-          
+       
           <span>{Company?.company_name || "Adhwaa Al-Hedaya School"}</span>
         </Navbar.Brand>
 

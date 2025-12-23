@@ -87,7 +87,7 @@ import React from "react";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getCategoryConfig = (externalData = {}, props = {}) => {
-    
+
     // 2. Define the Import Model
     const CategoryModel = createModel({
         modelName: "Category",
@@ -129,7 +129,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 required: true,
                 placeholder: "Enter category name",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "description",
@@ -137,7 +137,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 type: "textarea",
                 rows: 3,
                 placeholder: "Enter category description",
-                colSize: 12,
+                colSize: 6,
             }
         ],
         validationRules: (formData, allCategories, editingCategory) => {

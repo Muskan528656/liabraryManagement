@@ -69,7 +69,7 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
                 type: "text",
                 required: true,
                 placeholder: "Enter plan name",
-                colSize: 12,
+                colSize: 6,
             },
             {
                 name: "duration_days",

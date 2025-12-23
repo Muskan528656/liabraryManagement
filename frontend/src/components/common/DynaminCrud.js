@@ -795,29 +795,30 @@ const DynamicCRUD = ({
     const getActionButtons = useCallback(() => {
         const buttons = [];
 
-        // 🔹 1. IMPORT (Export se pehle)
         if (showImportButton) {
             buttons.push({
                 variant: "outline-primary",
                 size: "sm",
-                icon: "fa-solid fa-upload",
-                label: `Import ${moduleLabel}`,
+                icon: "fa-solid fa-arrow-down",
+
+
+                // label: `Import ${moduleLabel}`,
                 onClick: () => setShowImportModal(true),
             });
         }
 
-        // 🔹 2. EXPORT
+
         if (showImportExport) {
             buttons.push({
                 variant: "outline-success",
                 size: "sm",
-                icon: "fa-solid fa-download",
-                label: "Export",
+                icon: "fa-solid fa-file-import",
+                // label: "Export",
                 onClick: handleExport,
             });
         }
 
-        // 🔹 3. BULK INSERT
+
         if (showBulkInsert) {
             buttons.push({
                 variant: "outline-primary",
