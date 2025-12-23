@@ -828,38 +828,53 @@ const BookSubmit = () => {
         }
     };
 
-    const handleSearchModeChange = (e) => {
-        const newMode = e.target.value;
-        setSearchMode(newMode);
+const handleSearchModeChange = (e) => {
+    const newMode = e.target.value;
 
-        setIsbn("");
-        setCardNumber("");
-        setBook(null);
-        setLibraryCard(null);
-        setBookIssues([]);
-        setCardIssues([]);
-        setPenalty({
-            penalty: 0,
-            daysOverdue: 0,
-            finePerDay: 0,
-            breakdown: [],
-            calculated: false
-        });
-        setDisplayedIssuedBooks(allIssuedBooks);
+    // ✅ CLEAR BOTH TIMERS
+    if (isbnInputRef.current?.timer) {
+        clearTimeout(isbnInputRef.current.timer);
+    }
+    if (cardInputRef.current?.timer) {
+        clearTimeout(cardInputRef.current.timer);
+    }
 
-        setTimeout(() => {
-            if (newMode === "isbn") {
-                isbnInputRef.current?.focus();
-            } else {
-                cardInputRef.current?.focus();
-            }
-        }, 100);
-    };
+    setSearchMode(newMode);
 
-    const handleScanButtonClick = () => {
-        setScanMethod(searchMode);
-        setShowScanModal(true);
-    };
+    setIsbn("");
+    setCardNumber("");
+    setBook(null);
+    setLibraryCard(null);
+    setBookIssues([]);
+    setCardIssues([]);
+    setPenalty({
+        penalty: 0,
+        daysOverdue: 0,
+        finePerDay: 0,
+        breakdown: [],
+        calculated: false
+    });
+    setDisplayedIssuedBooks(allIssuedBooks);
+
+    setTimeout(() => {
+        newMode === "isbn"
+            ? isbnInputRef.current?.focus()
+            : cardInputRef.current?.focus();
+    }, 100);
+};
+
+ const handleScanButtonClick = async () => {
+    if (searchMode === "isbn" && isbnInputRef.current?.timer) {
+        clearTimeout(isbnInputRef.current.timer);
+    }
+    if (searchMode === "card" && cardInputRef.current?.timer) {
+        clearTimeout(cardInputRef.current.timer);
+    }
+
+    setIsScanning(true);
+    await handleSearch();   // ✅ single source
+    setIsScanning(false);
+};
 
     const handleScanSubmit = async () => {
         const value = searchMode === "isbn" ? isbn : cardNumber;
