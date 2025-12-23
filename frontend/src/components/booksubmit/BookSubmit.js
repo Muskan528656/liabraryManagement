@@ -80,11 +80,11 @@ const BookSubmit = () => {
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
-    // Helper function to safely get book price from purchase details
+
     const getBookPriceFromPurchaseDetails = (purchaseDetails) => {
         if (!purchaseDetails) return 0;
 
-        // Try to parse different possible price fields
+
         const priceFields = ['price', 'unit_price', 'total_price'];
         for (const field of priceFields) {
             if (purchaseDetails[field] !== undefined && purchaseDetails[field] !== null) {
@@ -831,7 +831,7 @@ const BookSubmit = () => {
     const handleSearchModeChange = (e) => {
         const newMode = e.target.value;
 
-        // ✅ CLEAR BOTH TIMERS
+
         if (isbnInputRef.current?.timer) {
             clearTimeout(isbnInputRef.current.timer);
         }
@@ -906,7 +906,7 @@ const BookSubmit = () => {
         }
     };
 
-    // Handle Edit Click
+
     const handleEditClick = (issueItem) => {
         setSelectedIssue(issueItem);
         setEditFormData({
@@ -948,7 +948,7 @@ const BookSubmit = () => {
                 due_date: editFormData.due_date,
                 condition_before: editFormData.condition_before,
                 remarks: editFormData.remarks,
-                // Keep other fields same as original record
+
                 book_id: selectedIssue.book_id,
                 issued_to: selectedIssue.issued_to,
                 book_title: selectedIssue.book_title,
@@ -957,7 +957,7 @@ const BookSubmit = () => {
                 card_number: selectedIssue.card_number
             };
 
-            // Use PUT request to update the entire issue record
+
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
                 "PUT",
@@ -981,9 +981,9 @@ const BookSubmit = () => {
                     message: "Issue updated successfully"
                 });
 
-                // Refresh the list
+
                 await fetchAllIssuedBooks();
-                // If we have current search results, update them too
+
                 if (bookIssues.length > 0) {
                     const updatedBookIssues = bookIssues.map(item =>
                         item.id === selectedIssue.id ? { ...item, ...updateData } : item
@@ -1025,12 +1025,12 @@ const BookSubmit = () => {
         try {
             setLoading(true);
 
-            // Prepare the cancellation data - update status to "cancelled"
+
             const cancelData = {
                 status: "cancelled",
                 cancellation_reason: "Cancelled by librarian",
                 cancellation_date: new Date().toISOString(),
-                // Keep all other original data
+
                 book_id: selectedIssue.book_id,
                 issued_to: selectedIssue.issued_to,
                 book_title: selectedIssue.book_title,
@@ -1043,7 +1043,7 @@ const BookSubmit = () => {
                 remarks: selectedIssue.remarks
             };
 
-            // Use PUT request to update the status
+
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
                 "PUT",
@@ -1067,9 +1067,9 @@ const BookSubmit = () => {
                     message: "Issue cancelled successfully"
                 });
 
-                // Refresh the list
+
                 await fetchAllIssuedBooks();
-                // Update local state to remove the cancelled issue from current view
+
                 const updatedBookIssues = bookIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedAllIssues = allIssuedBooks.filter(item => item.id !== selectedIssue.id);
@@ -1289,7 +1289,7 @@ const BookSubmit = () => {
             studentName.includes(query)
         );
     }).filter(submission => {
-        // Apply advanced filters
+
         return applyAdvancedFilters([submission], submittedBooksFilters).length > 0;
     });
 
@@ -1450,7 +1450,7 @@ const BookSubmit = () => {
                 }
 
                 return (
-                    <div className="btn-group">
+                    <div>
                         <Button
                             variant="primary"
                             size="sm"
@@ -1459,15 +1459,16 @@ const BookSubmit = () => {
                         >
                             <i className="fa-solid fa-check-circle"></i> Submit
                         </Button>
-                        <Button
+                        {/* <Button
                             variant="outline-secondary"
                             size="sm"
                             onClick={() => handleEditClick(record)}
                             title="Edit Issue"
                         >
                             <i className="fa-solid fa-edit"></i>
-                        </Button>
+                        </Button> */}
                         <Button
+className="m-1"
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleCancelClick(record)}
@@ -1608,7 +1609,7 @@ const BookSubmit = () => {
         }
     ];
 
-    // Advanced Filter Configuration for Submitted Books
+
     const submittedBooksFilterFields = [
         {
             name: "status",
@@ -1641,7 +1642,7 @@ const BookSubmit = () => {
 
     return (
         <>
-            <Container fluid className="mt-2">
+            <Container fluid >
                 <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden" }}>
                     <Card.Body className="p-0">
                         <Tab.Container
@@ -1747,16 +1748,16 @@ const BookSubmit = () => {
                                 <Tab.Pane eventKey="submit">
                                     <Row>
                                         <Col xs={12}>
-                                            <Card className="shadow-sm" style={{
+                                            {/* <Card className="shadow-sm" style={{
                                                 background: "#f3e8ff",
                                                 border: "1px solid #d8b4fe",
                                                 borderRadius: "8px"
-                                            }}>
-                                                <Card.Body>
+                                            }}> */}
+                                                {/* <Card.Body> */}
                                                     <Row className="align-items-center">
                                                         {/* Search By Dropdown */}
                                                         <Col md={3}>
-                                                            <Form.Group className="mb-0">
+                                                            <Form.Group >
                                                                 <Form.Label className="fw-bold small">Search By</Form.Label>
                                                                 <Form.Select
                                                                     value={searchMode}
@@ -1766,7 +1767,6 @@ const BookSubmit = () => {
                                                                         borderRadius: "6px",
                                                                         fontSize: "0.9rem",
                                                                         height: "40px",
-                                                                        padding: "0.375rem 0.75rem"
                                                                     }}
                                                                 >
                                                                     <option value="isbn">Search by ISBN</option>
@@ -1777,7 +1777,7 @@ const BookSubmit = () => {
 
                                                         {/* Search Input with Scan Button */}
                                                         <Col md={6}>
-                                                            <Form.Group className="mb-0">
+                                                            <Form.Group >
                                                                 <Form.Label className="fw-bold small">
                                                                     {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
                                                                 </Form.Label>
@@ -1796,7 +1796,6 @@ const BookSubmit = () => {
                                                                             borderRadius: "6px 0 0 6px",
                                                                             height: "40px",
                                                                             fontSize: "0.9rem",
-                                                                            padding: "0.375rem 0.75rem"
                                                                         }}
                                                                     />
                                                                     {loading && (
@@ -1806,7 +1805,6 @@ const BookSubmit = () => {
                                                                             borderRadius: "0",
                                                                             backgroundColor: "#f8f9fa",
                                                                             height: "40px",
-                                                                            padding: "0.375rem 0.75rem"
                                                                         }}>
                                                                             <Spinner animation="border" size="sm" />
                                                                         </InputGroup.Text>
@@ -1827,7 +1825,7 @@ const BookSubmit = () => {
                                                                             display: "flex",
                                                                             alignItems: "center",
                                                                             justifyContent: "center",
-                                                                            padding: "0.375rem"
+                                                                  
                                                                         }}
                                                                     >
                                                                         <i className="fa-solid fa-xmark"></i>
@@ -1936,13 +1934,13 @@ const BookSubmit = () => {
                                                             )}
                                                         </Col>
                                                     </Row>
-                                                </Card.Body>
-                                            </Card>
+                                                {/* </Card.Body> */}
+                                            {/* </Card> */}
                                         </Col>
                                     </Row>
 
-                                    {/* Table Section - Takes full width below the Book Identification card */}
-                                    <Row className="mt-4">
+                                
+                                    <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
@@ -2047,7 +2045,7 @@ const BookSubmit = () => {
                                 <Tab.Pane eventKey="submitted">
                                     <Row>
                                         <Col lg={12}>
-                                            {/* Advanced Filter for Submitted Books */}
+                                       
                                             <AdvancedFilter
                                                 fields={submittedBooksFilterFields}
                                                 onFilterChange={setSubmittedBooksFilters}
@@ -2164,7 +2162,7 @@ const BookSubmit = () => {
                         <div>
                             <Row>
                                 <Col md={8}>
-                                    {/* Left Column - Issue Information and Condition Assessment */}
+                                 
                                     <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
                                         <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
                                             <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
@@ -2463,7 +2461,7 @@ const BookSubmit = () => {
             </Modal>
 
             {/* Edit Modal */}
-            <Modal show={showEditModal} onHide={handleModalClose} centered>
+            {/* <Modal show={showEditModal} onHide={handleModalClose} centered>
                 <Modal.Header closeButton style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                     <Modal.Title>
                         Edit Issue
@@ -2535,7 +2533,7 @@ const BookSubmit = () => {
                         )}
                     </Button>
                 </Modal.Footer>
-            </Modal>
+            </Modal> */}
 
             {/* Cancel Modal */}
             <Modal show={showCancelModal} onHide={handleModalClose} centered>

@@ -206,7 +206,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 }
             },
 
-            // Company Information Section - 6-6 Grid
+ 
             {
                 name: "gst_number",
                 label: "GST Number",
@@ -250,7 +250,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     const handleChange = (e) => {
                         const newValue = e.target.value;
 
-                        // Clear city when state changes
+ 
                         if (typeof onChange === 'function') {
                             onChange({
                                 target: {
@@ -259,7 +259,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                                 }
                             });
 
-                            // Also clear city field
+ 
                             setTimeout(() => {
                                 if (onChange.handleChange) {
                                     onChange.handleChange({

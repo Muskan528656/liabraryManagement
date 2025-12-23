@@ -29,7 +29,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
   const fileUpload = require("express-fileupload");
-  // Image upload route
+ 
   router.post("/:id/upload-image", fetchUser, async (req, res) => {
     try {
       console.log("req chdck->", req.userinfo);
@@ -44,7 +44,7 @@ module.exports = (app) => {
       console.log("user-->", userId);
       console.log("req user id->", req.userinfo.id);
 
-      // Authorization check
+ 
       if (req.userinfo.id !== userId) {
         return res.status(403).json({ errors: "Unauthorized access" });
       }
@@ -83,10 +83,10 @@ module.exports = (app) => {
 
       console.log("relative path", relativePath);
 
-      // Initialize the User schema before making any DB calls
+ 
       User.init(req.userinfo.tenantcode);
 
-      // Update profile image path in DB
+ 
       await User.updateById(userId, { profileImage: relativePath }, req.userinfo.id);
 
       res.status(200).json({

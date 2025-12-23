@@ -5,7 +5,7 @@ function init(schema_name) {
     this.schema = schema_name;
 }
 
-// Get all publishers
+ 
 async function findAllPublisher() {
     try {
         const query = `select * from ${this.schema}.publisher order by createddate desc`;
@@ -16,7 +16,7 @@ async function findAllPublisher() {
         throw error
     }
 }
-// Find publisher by ID
+ 
 async function findPublisherById(id, schema = null) {
     try {
         const query = `select * from ${this.schema || schema
@@ -28,7 +28,7 @@ async function findPublisherById(id, schema = null) {
         throw error;
     }
 }
-//insert publisher-------
+ 
 async function insertPublisher(data, userId) {
     const query = `insert into ${this.schema}.publisher
     ( salutation,name,email,phone,city,state,country,is_active,createddate,lastmodifieddate,createdbyid,lastmodifiedbyid)
@@ -50,7 +50,7 @@ async function insertPublisher(data, userId) {
     return result.rows[0];
 }
 
-//update publisher
+ 
 async function updatePublisherByid(id, data, userId) {
     try {
         const current = await findPublisherById(id, this.schema);
@@ -82,9 +82,9 @@ async function updatePublisherByid(id, data, userId) {
             data.country,
             data.is_active !== undefined ? data.is_active : current.is_active,
             userId
-            // data.createdbyid || data.createdbyid || current.createdbyid,
-            // data.lastmodifiedbyid || data.lastmodifiedby || current.lastmodifiedbyid,
-            // data.createddate || data.createddate || current.createddate
+ 
+ 
+ 
         ];
         const result = await sql.query(query, values);
         console.log("Result in updatePublisherByid:", result);
@@ -94,7 +94,7 @@ async function updatePublisherByid(id, data, userId) {
         throw error;
     }
 }
-//delete publisher
+ 
 async function deletePublisherById(id, data) {
     try {
         const current = await findPublisherById(id, this.schema);

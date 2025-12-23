@@ -31,10 +31,10 @@ async function create(submissionData, userId) {
   try {
     await client.query('BEGIN');
 
-    console.log("📝 Starting book submission for issue_id:", submissionData.issue_id);
-    console.log("📦 Submission data:", submissionData);
+    console.log(" Starting book submission for issue_id:", submissionData.issue_id);
+    console.log(" Submission data:", submissionData);
 
-    // Get issue details with book title and ISBN from demo.book_issues
+
     const issueRes = await client.query(
       `SELECT bi.*, b.title, b.isbn, b.available_copies
        FROM demo.book_issues bi
@@ -45,11 +45,11 @@ async function create(submissionData, userId) {
 
     if (!issueRes.rows.length) throw new Error("Issue not found");
     const issue = issueRes.rows[0];
-    console.log("✅ Issue found:", issue.id, "Book:", issue.title);
+    console.log(" Issue found:", issue.id, "Book:", issue.title);
 
     if (issue.return_date) throw new Error("Book already returned");
 
-    // Get library member details from demo.library_members
+
     const memberRes = await client.query(
       `SELECT * FROM demo.library_members 
        WHERE id = $1 AND is_active = true`,
@@ -58,9 +58,9 @@ async function create(submissionData, userId) {
 
     if (!memberRes.rows.length) throw new Error("Library member not found");
     const member = memberRes.rows[0];
-    console.log("✅ Member found:", member.id, "Name:", member.first_name, member.last_name);
+    console.log(" Member found:", member.id, "Name:", member.first_name, member.last_name);
 
-    // Get library settings from demo.library_setting
+
     const settingRes = await client.query(
       `SELECT * FROM demo.library_setting LIMIT 1`
     );
@@ -69,27 +69,27 @@ async function create(submissionData, userId) {
     if (settingRes.rows.length > 0) {
       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
     }
-    console.log("💰 Fine per day:", finePerDay);
+    console.log(" Fine per day:", finePerDay);
 
-    // Calculate days overdue
+
     const today = new Date();
     const dueDate = new Date(issue.due_date);
     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
-    console.log("📅 Days overdue:", daysOverdue);
+    console.log(" Days overdue:", daysOverdue);
 
-    // Parse condition from submission data
+
     const conditionBefore = submissionData.condition_before || "Good";
     const conditionAfter = submissionData.condition_after || "Good";
     const conditionAfterLower = conditionAfter.toLowerCase();
-    console.log("📊 Condition - Before:", conditionBefore, "After:", conditionAfter);
+    console.log(" Condition - Before:", conditionBefore, "After:", conditionAfter);
 
-    // Fetch LATEST book purchase price from demo.purchases table
+
     let bookPurchasePrice = 0;
     let purchaseDetails = null;
 
     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
       try {
-        console.log("🔍 Fetching purchase price for book_id:", issue.book_id);
+        console.log(" Fetching purchase price for book_id:", issue.book_id);
 
         const purchaseRes = await client.query(
           `SELECT unit_price, purchase_date, quantity, total_amount
@@ -103,51 +103,51 @@ async function create(submissionData, userId) {
         if (purchaseRes.rows.length > 0) {
           purchaseDetails = purchaseRes.rows[0];
           bookPurchasePrice = purchaseDetails.unit_price || 0;
-          console.log("✅ Purchase price found:", bookPurchasePrice);
+          console.log(" Purchase price found:", bookPurchasePrice);
         } else {
           bookPurchasePrice = submissionData.book_price ||
             submissionData.lost_book_price ||
             0;
-          console.log("⚠️ No purchase record, using frontend price:", bookPurchasePrice);
+          console.log(" No purchase record, using frontend price:", bookPurchasePrice);
         }
       } catch (error) {
-        console.error("❌ Error fetching purchase price:", error);
+        console.error(" Error fetching purchase price:", error);
         bookPurchasePrice = submissionData.book_price ||
           submissionData.lost_book_price ||
           0;
       }
     }
 
-    // Calculate penalties
+
     let totalPenalty = 0;
     let penaltyType = "none";
     let latePenalty = 0;
     let damageLostPenalty = 0;
 
-    // 1. Late return penalty (if overdue)
+
     if (daysOverdue > 0) {
       latePenalty = daysOverdue * finePerDay;
       totalPenalty += latePenalty;
       penaltyType = "late";
-      console.log("⏰ Late penalty:", latePenalty, "for", daysOverdue, "days");
+      console.log("Late penalty:", latePenalty, "for", daysOverdue, "days");
     }
 
-    // 2. Damage/Lost penalty based on LATEST purchase price
+
     if (conditionAfterLower === "lost") {
       damageLostPenalty = bookPurchasePrice;
       totalPenalty += damageLostPenalty;
       penaltyType = "lost";
-      console.log("💔 Lost penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+      console.log(" Lost penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
     } else if (conditionAfterLower === "damaged") {
       damageLostPenalty = bookPurchasePrice * 0.5;
       totalPenalty += damageLostPenalty;
       penaltyType = "damaged";
-      console.log("🔧 Damage penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+      console.log(" Damage penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
     }
 
-    console.log("💰 Total penalty:", totalPenalty, "Type:", penaltyType);
+    console.log(" Total penalty:", totalPenalty, "Type:", penaltyType);
 
-    // Insert book submission record into demo.book_submissions
+
     const submissionRes = await client.query(
       `INSERT INTO demo.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
@@ -169,9 +169,9 @@ async function create(submissionData, userId) {
     );
 
     const submission = submissionRes.rows[0];
-    console.log("✅ Book submission created with ID:", submission.id);
+    console.log(" Book submission created with ID:", submission.id);
 
-    // Update book available copies (only if not lost)
+
     if (conditionAfterLower !== "lost") {
       await client.query(
         `UPDATE demo.books
@@ -181,12 +181,12 @@ async function create(submissionData, userId) {
          WHERE id = $1`,
         [issue.book_id, userId]
       );
-      console.log("📚 Available copies increased for book:", issue.book_id);
+      console.log(" Available copies increased for book:", issue.book_id);
     } else {
-      console.log("⚠️ Book is LOST - available copies NOT increased");
+      console.log(" Book is LOST - available copies NOT increased");
     }
 
-    // Handle company ID
+
     let companyId = null;
     if (submissionData.company_id) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -195,11 +195,11 @@ async function create(submissionData, userId) {
       }
     }
 
-    // Insert into penalty_master if any penalty exists
+
     let penaltyMasterId = null;
     if (totalPenalty > 0) {
       try {
-        console.log("📝 Inserting into penalty_master with penalty:", totalPenalty);
+        console.log(" Inserting into penalty_master with penalty:", totalPenalty);
 
         const penaltyInsertResult = await client.query(
           `INSERT INTO demo.penalty_master
@@ -232,18 +232,18 @@ async function create(submissionData, userId) {
         );
 
         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
-        console.log("✅ Penalty master record created with ID:", penaltyMasterId);
+        console.log(" Penalty master record created with ID:", penaltyMasterId);
       } catch (error) {
-        console.error("❌ Error inserting into penalty_master:", error);
+        console.error(" Error inserting into penalty_master:", error);
         console.error("Error details:", error.message);
         console.error("SQL State:", error.code);
-        // Don't throw error, continue with submission
+
       }
     } else {
-      console.log("✅ No penalty to insert into penalty_master");
+      console.log(" No penalty to insert into penalty_master");
     }
 
-    // Update book issue status in demo.book_issues
+
     let issueStatus = 'returned';
     if (conditionAfterLower === 'lost') {
       issueStatus = 'lost';
@@ -261,12 +261,12 @@ async function create(submissionData, userId) {
       [issue.id, userId, issueStatus]
     );
 
-    console.log("✅ Book issue marked as", issueStatus, "ID:", issue.id);
+    console.log(" Book issue marked as", issueStatus, "ID:", issue.id);
 
     await client.query('COMMIT');
-    console.log("🎉 Transaction completed successfully");
+    console.log("Transaction completed successfully");
 
-    // Prepare response
+
     return {
       success: true,
       message: "Book submitted successfully",
@@ -318,7 +318,7 @@ async function create(submissionData, userId) {
 
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error("💥 Book submission failed:", error);
+    console.error(" Book submission failed:", error);
     console.error("Error stack:", error.stack);
 
     if (error.message.includes("foreign key constraint")) {
@@ -398,9 +398,9 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
   try {
     await client.query('BEGIN');
 
-    console.log("🔄 Cancelling issue:", issueId);
+    console.log("Cancelling issue:", issueId);
 
-    // पहले issue की जाँच करें
+
     const issueRes = await client.query(
       `SELECT * FROM demo.book_issues WHERE id = $1`,
       [issueId]
@@ -412,17 +412,17 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
     const issue = issueRes.rows[0];
 
-    // Check current status
+
     if (issue.status && issue.status !== 'issued') {
       throw new Error(`Cannot cancel issue with status: ${issue.status}`);
     }
 
-    // TRY-CATCH के साथ पहले 'cancelled' का प्रयास करें
+
     let statusUpdated = false;
     let finalStatus = 'cancelled';
 
     try {
-      // पहले 'cancelled' status के साथ try करें
+
       await client.query(
         `UPDATE demo.book_issues 
          SET status = 'cancelled',
@@ -436,8 +436,8 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       statusUpdated = true;
 
     } catch (statusError) {
-      // अगर 'cancelled' काम नहीं करता तो 'returned' का प्रयोग करें
-      console.log("⚠️ 'cancelled' status not allowed, trying 'returned'");
+
+      console.log(" 'cancelled' status not allowed, trying 'returned'");
 
       await client.query(
         `UPDATE demo.book_issues 
@@ -457,7 +457,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       throw new Error("Failed to update issue status");
     }
 
-    // books टेबल में available copies बढ़ाएं
+
     await client.query(
       `UPDATE demo.books
        SET available_copies = COALESCE(available_copies, 0) + 1,
@@ -467,7 +467,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       [issue.book_id, userId]
     );
 
-    // Book submission record create करें
+
     await client.query(
       `INSERT INTO demo.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
@@ -479,13 +479,13 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
         issue.book_id,
         userId,
         issue.condition_before || 'Good',
-        finalStatus,  // condition_after में status डालें
+        finalStatus,
         `Issue ${finalStatus}: ${reason}`,
       ]
     );
 
     await client.query('COMMIT');
-    console.log(`✅ Issue ${finalStatus} successfully:`, issueId);
+    console.log(` Issue ${finalStatus} successfully:`, issueId);
 
     return {
       success: true,
@@ -698,7 +698,7 @@ async function checkbeforeDue() {
     return notifications;
 
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error(" Error:", error);
   }
 }
 
@@ -723,7 +723,7 @@ async function getSubmitCountByBookId(bookId) {
   }
 }
 
-// Helper function to check if email already sent today
+
 function hasEmailBeenSent(type, key) {
   const today = new Date().toISOString().split('T')[0];
   const trackerKey = `${key}_${today}`;
@@ -735,7 +735,7 @@ function hasEmailBeenSent(type, key) {
     return true;
   }
 
-  // Mark as sent
+
   if (type === 'due') {
     emailTracker.due[trackerKey] = true;
   } else {
@@ -745,11 +745,11 @@ function hasEmailBeenSent(type, key) {
   return false;
 }
 
-// Cleanup old tracker entries (older than 1 day)
+
 function cleanupEmailTracker() {
   const today = new Date().toISOString().split('T')[0];
 
-  // Clean due tracker
+
   Object.keys(emailTracker.due).forEach(key => {
     const keyDate = key.split('_').pop();
     if (keyDate !== today) {
@@ -757,7 +757,7 @@ function cleanupEmailTracker() {
     }
   });
 
-  // Clean overdue tracker
+
   Object.keys(emailTracker.overdue).forEach(key => {
     const keyDate = key.split('_').pop();
     if (keyDate !== today) {
@@ -768,24 +768,23 @@ function cleanupEmailTracker() {
 
 async function sendDueReminder() {
   try {
-    console.log("🚀 Starting due reminder process...");
+    console.log(" Starting due reminder process...");
 
-    // Cleanup old tracker entries
+
     cleanupEmailTracker();
 
-    // Get tomorrow's date properly
+
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    // Format for database query (YYYY-MM-DD)
+
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayDateStr = today.toISOString().split('T')[0];
 
-    console.log(`📅 Looking for books due on: ${tomorrowStr}`);
+    console.log(` Looking for books due on: ${tomorrowStr}`);
     console.log(`Today: ${todayDateStr}`);
 
-    // Query using library_members table
     const query = `
       SELECT 
         bi.id,
@@ -806,16 +805,15 @@ async function sendDueReminder() {
       ORDER BY lm.email, bi.due_date
     `;
 
-    console.log("🔍 Executing query for due books...");
+    console.log("Executing query for due books...");
     const result = await sql.query(query, [tomorrowStr]);
-    console.log(`📚 Found ${result.rows.length} due books for tomorrow`);
+    console.log(` Found ${result.rows.length} due books for tomorrow`);
 
     if (result.rows.length === 0) {
-      console.log("✅ No books due tomorrow.");
+      console.log(" No books due tomorrow.");
       return;
     }
 
-    // Group books by library member
     const groupedByMember = {};
 
     for (const book of result.rows) {
@@ -836,9 +834,9 @@ async function sendDueReminder() {
       });
     }
 
-    console.log(`👥 Found ${Object.keys(groupedByMember).length} library members with due books`);
+    console.log(` Found ${Object.keys(groupedByMember).length} library members with due books`);
 
-    // Send emails
+
     let emailsSent = 0;
     let emailsFailed = 0;
     let emailsSkipped = 0;
@@ -846,34 +844,31 @@ async function sendDueReminder() {
     for (const memberId in groupedByMember) {
       const member = groupedByMember[memberId];
 
-      // Check if email already sent today
       if (hasEmailBeenSent('due', memberId)) {
-        console.log(`⏭️ Skipping due reminder for ${member.name} - already sent today`);
+        console.log(`⏭Skipping due reminder for ${member.name} - already sent today`);
         emailsSkipped++;
         continue;
       }
 
-      // Check if email exists
       if (!member.email) {
-        console.warn(`⚠️ No email found for library member ID: ${memberId} (${member.name})`);
+        console.warn(` No email found for library member ID: ${memberId} (${member.name})`);
         emailsFailed++;
         continue;
       }
 
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(member.email)) {
-        console.warn(`⚠️ Invalid email format for ${member.name}: ${member.email}`);
+        console.warn(` Invalid email format for ${member.name}: ${member.email}`);
         emailsFailed++;
         continue;
       }
 
       try {
-        console.log(`📧 Preparing due email for: ${member.name} (${member.email})`);
+        console.log(` Preparing due email for: ${member.name} (${member.email})`);
         console.log(`   Books due: ${member.books.length}`);
         console.log(`   Card Number: ${member.card_number || 'N/A'}`);
 
-        // Create HTML content for email
+
         const html = dueTemplate({
           studentName: member.name,
           books: member.books,
@@ -881,7 +876,6 @@ async function sendDueReminder() {
           cardNumber: member.card_number
         });
 
-        // Send email
         await sendMail({
           to: member.email,
           subject: `📚 Library Reminder: ${member.books.length} Book(s) Due Tomorrow`,
@@ -890,20 +884,20 @@ async function sendDueReminder() {
             }\n\nDue Date: ${tomorrowStr}\nCard Number: ${member.card_number || 'N/A'}\n\nPlease return or renew them on time.\n\nLibrary Management System`
         });
 
-        console.log(`✅ Due email sent to: ${member.email}`);
+        console.log(` Due email sent to: ${member.email}`);
         emailsSent++;
 
-        // Add small delay to avoid overwhelming email service
+
         await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error) {
-        console.error(`❌ Failed to send email to ${member.email}:`, error.message);
+        console.error(` Failed to send email to ${member.email}:`, error.message);
         emailsFailed++;
       }
     }
 
-    // Final report
-    console.log("\n📊 DUE REMINDER REPORT =====================");
+
+    console.log("\nDUE REMINDER REPORT =====================");
     console.log(`Total library members found: ${Object.keys(groupedByMember).length}`);
     console.log(`New emails sent: ${emailsSent}`);
     console.log(`Already sent today: ${emailsSkipped}`);
@@ -912,7 +906,7 @@ async function sendDueReminder() {
     console.log("==========================================\n");
 
   } catch (error) {
-    console.error("💥 CRITICAL ERROR in sendDueReminder:", error);
+    console.error(" CRITICAL ERROR in sendDueReminder:", error);
     console.error("Error details:", {
       message: error.message,
       stack: error.stack?.split('\n')[0],
@@ -923,17 +917,17 @@ async function sendDueReminder() {
 
 async function sendOverdueReminder() {
   try {
-    console.log("🚨 Starting overdue reminder process...");
+    console.log(" Starting overdue reminder process...");
 
-    // Cleanup old tracker entries
+
     cleanupEmailTracker();
 
-    // Get today's date
+
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    console.log(`📅 Today's date: ${todayStr}`);
+    console.log(` Today's date: ${todayStr}`);
 
-    // Get penalty amount
+
     let penaltyPerDay = 0;
     try {
       const penaltyQuery = `
@@ -948,69 +942,92 @@ async function sendOverdueReminder() {
       if (penaltyResult.rows.length > 0) {
         penaltyPerDay = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
       }
-      console.log(`💰 Penalty per day: ₹${penaltyPerDay}`);
+      console.log(` Penalty per day: ₹${penaltyPerDay}`);
     } catch (penaltyError) {
-      console.warn("⚠️ Could not fetch penalty settings, using 0");
+      console.warn(" Could not fetch penalty settings, using 0");
     }
 
-    // Query for overdue books using library_members - SYNTAX CORRECTED
-    const query = `
-      SELECT 
-        bi.id,
-        bi.book_id,
-        bi.issued_to,
-        bi.due_date,
-        bi.issue_date,
-        b.title AS book_title,
-        lm.email AS student_email,
-        CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
-        lm.card_number
-      FROM demo.book_issues bi
-      INNER JOIN demo.books b ON bi.book_id = b.id
-      INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
-      WHERE DATE(bi.due_date) < $1 
-        AND bi.return_date IS NULL
-        AND bi.status IN ('issued', 'active', NULL)
-        AND lm.is_active = true
-      ORDER BY bi.due_date, lm.email
-    `;
 
-    console.log("🔍 Executing query for overdue books...");
-    const result = await sql.query(query, [todayStr]);
-    console.log(`📚 Found ${result.rows.length} overdue books`);
+    // const query = `
+    //   SELECT 
+    //     bi.id,
+    //     bi.book_id,
+    //     bi.issued_to,
+    //     bi.due_date,
+    //     bi.issue_date,
+    //     b.title AS book_title,
+    //     lm.email AS student_email,
+    //     CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
+    //     lm.card_number
+    //   FROM demo.book_issues bi
+    //   INNER JOIN demo.books b ON bi.book_id = b.id
+    //   INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+    //   WHERE DATE(bi.due_date) < $1 
+    //     AND bi.return_date IS NULL
+    //     AND bi.status IN ('issued', 'active', NULL)
+    //     AND lm.is_active = true
+    //   ORDER BY bi.due_date, lm.email
+    // `;
+
+    const query = ` SELECT
+    bi.id,
+      bi.book_id,
+      bi.issued_to,
+      bi.due_date,
+      bi.issue_date,
+      b.title AS book_title,
+        lm.email AS student_email,
+          CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
+            lm.card_number
+FROM demo.book_issues bi
+INNER JOIN demo.books b ON bi.book_id = b.id
+INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+WHERE DATE(bi.due_date) = $1
+  AND bi.return_date IS NULL
+  AND bi.status IN('issued', 'active', NULL)
+  AND lm.is_active = true
+ORDER BY lm.email`;
+
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    console.log(" Executing query for overdue books...");
+    const result = await sql.query(query, [yesterdayStr]);
+    console.log(`found ${result.rows.length} overdue books`);
 
     if (result.rows.length === 0) {
-      console.log("✅ No overdue books found.");
+      console.log(" No overdue books found.");
       return;
     }
 
-    // Process each overdue book
+
     let emailsSent = 0;
     let emailsFailed = 0;
     let emailsSkipped = 0;
 
     for (const book of result.rows) {
       if (!book.student_email) {
-        console.warn(`⚠️ No email for library member ID ${book.issued_to}: ${book.student_name}`);
+        console.warn(` No email for library member ID ${book.issued_to}: ${book.student_name}`);
         emailsFailed++;
         continue;
       }
 
-      // Check if email already sent today for this book
+
       const trackerKey = `${book.issued_to}_${book.id}`;
       if (hasEmailBeenSent('overdue', trackerKey)) {
-        console.log(`⏭️ Skipping overdue reminder for ${book.student_name} - book "${book.book_title}" already notified today`);
+        console.log(` Skipping overdue reminder for ${book.student_name} - book "${book.book_title}" already notified today`);
         emailsSkipped++;
         continue;
       }
 
-      // Calculate overdue days and penalty
+
       const dueDate = new Date(book.due_date);
       const timeDiff = today.getTime() - dueDate.getTime();
       const overdueDays = Math.max(0, Math.floor(timeDiff / (1000 * 3600 * 24)));
       const penaltyAmount = penaltyPerDay * overdueDays;
 
-      console.log(`\n📕 Processing: ${book.book_title}`);
+      console.log(`\n Processing: ${book.book_title}`);
       console.log(`   Library Member: ${book.student_name} (${book.student_email})`);
       console.log(`   Card Number: ${book.card_number || 'N/A'}`);
       console.log(`   Due Date: ${book.due_date}`);
@@ -1018,7 +1035,7 @@ async function sendOverdueReminder() {
       console.log(`   Penalty: ₹${penaltyAmount}`);
 
       try {
-        // Create HTML content for overdue email
+
         const html = overdueTemplate({
           studentName: book.student_name,
           bookName: book.book_title,
@@ -1030,7 +1047,7 @@ async function sendOverdueReminder() {
           cardNumber: book.card_number
         });
 
-        // Send email
+
         await sendMail({
           to: book.student_email,
           subject: `⏰ URGENT: Overdue Book "${book.book_title}"`,
@@ -1044,20 +1061,20 @@ async function sendOverdueReminder() {
             `Library Management System`
         });
 
-        console.log(`✅ Overdue reminder sent to: ${book.student_email}`);
+        console.log(` Overdue reminder sent to: ${book.student_email}`);
         emailsSent++;
 
-        // Add delay between emails
+
         await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error) {
-        console.error(`❌ Failed to send overdue email to ${book.student_email}:`, error.message);
+        console.error(` Failed to send overdue email to ${book.student_email}:`, error.message);
         emailsFailed++;
       }
     }
 
-    // Final report
-    console.log("\n📊 OVERDUE REMINDER REPORT =================");
+
+    console.log("\n OVERDUE REMINDER REPORT =================");
     console.log(`Total overdue books found: ${result.rows.length}`);
     console.log(`New emails sent: ${emailsSent}`);
     console.log(`Already sent today: ${emailsSkipped}`);
@@ -1065,7 +1082,7 @@ async function sendOverdueReminder() {
     console.log("==========================================\n");
 
   } catch (error) {
-    console.error("💥 CRITICAL ERROR in sendOverdueReminder:", error);
+    console.error(" CRITICAL ERROR in sendOverdueReminder:", error);
     console.error("Error details:", {
       message: error.message,
       stack: error.stack?.split('\n')[0],
@@ -1074,28 +1091,27 @@ async function sendOverdueReminder() {
   }
 }
 
-// Helper function to run both reminders
 async function sendAllReminders() {
-  console.log("🔄 ===== STARTING ALL LIBRARY REMINDERS =====\n");
+  console.log(" ===== STARTING ALL LIBRARY REMINDERS =====\n");
 
   const startTime = Date.now();
 
   try {
-    // Run due reminders
+
     await sendDueReminder();
 
     console.log("\n---\n");
 
-    // Run overdue reminders
+
     await sendOverdueReminder();
 
   } catch (error) {
-    console.error("💥 ERROR in sendAllReminders:", error);
+    console.error(" ERROR in sendAllReminders:", error);
   } finally {
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
 
-    console.log(`\n✅ All reminders completed in ${duration.toFixed(2)} seconds`);
+    console.log(`\n All reminders completed in ${duration.toFixed(2)} seconds`);
     console.log("===== END LIBRARY REMINDERS =====\n");
   }
 }
@@ -1120,12 +1136,12 @@ async function getPenaltyMasters() {
 }
 
 async function calculatePenalty(issue, conditionAfter, bookAmount) {
-  // Default penalty
+
   let totalPenalty = 0;
   let penaltyType = null;
   const penalties = [];
 
-  // Fetch active penalty master settings
+
   const penaltyRes = await sql.query(
     `SELECT * FROM ${schema}.penalty_master WHERE is_active = true`
   );
@@ -1138,7 +1154,7 @@ async function calculatePenalty(issue, conditionAfter, bookAmount) {
   const dueDate = new Date(issue.due_date);
   const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
 
-  // ✅ 1. Lost Book
+
   if (conditionAfter?.toLowerCase() === "lost") {
     penaltyType = "lost";
     const amount = bookAmount > 0 ? bookAmount : (issue.price || 500);
@@ -1146,7 +1162,7 @@ async function calculatePenalty(issue, conditionAfter, bookAmount) {
     penalties.push({ type: "LOST", amount, description: "Book lost" });
   }
 
-  // ✅ 2. Damaged Book
+
   if (conditionAfter?.toLowerCase() === "damaged" && masters['damage']) {
     penaltyType = "damage";
     const damageAmount = masters['damage'].fixed_amount || (bookAmount * 0.1) || 0;
@@ -1154,7 +1170,7 @@ async function calculatePenalty(issue, conditionAfter, bookAmount) {
     penalties.push({ type: "DAMAGE", amount: damageAmount, description: "Book damaged" });
   }
 
-  // ✅ 3. Late return
+
   if (daysOverdue > 0 && masters['late']) {
     penaltyType = "late";
     const perDayAmount = masters['late'].per_day_amount || 0;
@@ -1231,18 +1247,14 @@ async function checkOverdueStatus(issueId) {
   }
 }
 
-// For testing - run every 5 seconds
-// cron.schedule("*/5 * * * * *", sendDueReminder);      // हर 5 सेकंड
-// cron.schedule("*/5 * * * * *", sendOverdueReminder); // हर 5 सेकंड
-
 console.log("✅ Cron jobs scheduled - Each member will receive only ONE email per day for each reminder type");
 
-// For production (comment out the above and uncomment below)
-/*
-cron.schedule("0 9 * * *", sendDueReminder);      // रोज सुबह 9:00 बजे
-cron.schedule("0 10 * * *", sendOverdueReminder); // रोज सुबह 10:00 बजे
-console.log("✅ Production cron jobs scheduled for 9 AM and 10 AM daily");
-*/
+cron.schedule("*/5 * * * * *", sendDueReminder);
+cron.schedule("*/5 * * * * *", sendOverdueReminder);
+
+// cron.schedule("0 9 * * *", sendDueReminder);
+// cron.schedule("0 10 * * *", sendOverdueReminder);
+
 
 module.exports = {
   init,

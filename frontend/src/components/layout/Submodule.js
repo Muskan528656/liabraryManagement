@@ -176,7 +176,7 @@ const Submodule = () => {
     <Navbar
       expand="lg"
       style={{
-        padding: "0.65rem 1.3rem",
+        padding: "0.56rem 1.3rem",
 
         boxShadow: "none",
       }}

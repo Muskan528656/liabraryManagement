@@ -111,7 +111,7 @@ require("./app/routes/dashbard.router.js")(app);
 require('./app/routes/objecttype.routes.js')(app);
 
 
-//  upload middleware
+ 
 app.use(fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 },
   abortOnLimit: true,

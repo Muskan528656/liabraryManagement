@@ -213,7 +213,7 @@ async function findByAgeRange(minAge, maxAge) {
     const params = [];
     let paramIndex = 1;
 
-    // Add age filtering conditions
+ 
     if (minAge !== null && minAge !== undefined) {
       query += ` AND (b.min_age IS NULL OR b.min_age <= $${paramIndex})`;
       params.push(minAge);

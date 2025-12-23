@@ -7,7 +7,7 @@ const Footer = () => {
       className="p-3 w-100"
       style={{
         backgroundColor: "var(--primary-background-color)",
-        // background: "white",
+ 
         borderTop: "1px solid #e2e8f0",
         position: "fixed",
         zIndex: 999,

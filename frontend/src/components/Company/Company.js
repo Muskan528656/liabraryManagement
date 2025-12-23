@@ -121,12 +121,12 @@ const Company = () => {
       const companyId = getCompanyIdFromToken();
       const token = sessionStorage.getItem("token");
       
-      // Create FormData if there's a file to upload
+ 
       if (selectedLogoFile) {
         const formData = new FormData();
         formData.append('image', selectedLogoFile);
         
-        // Append all other company data
+ 
         Object.keys(tempCompany).forEach(key => {
           if (key !== 'logourl' && tempCompany[key] !== null && tempCompany[key] !== undefined) {
             formData.append(key, tempCompany[key]);
@@ -165,7 +165,7 @@ const Company = () => {
           PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
         }
       } else {
-        // No file to upload, use regular update
+ 
         const companyApi = new DataApi("company");
         const response = await companyApi.update(tempCompany, companyId);
 
@@ -539,7 +539,7 @@ const Company = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
-                              // Validate file type
+ 
                               const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                               if (!allowedTypes.includes(file.type)) {
                                 PubSub.publish("RECORD_ERROR_TOAST", {
@@ -549,7 +549,7 @@ const Company = () => {
                                 return;
                               }
                               
-                              // Validate file size (max 5MB)
+ 
                               if (file.size > 5 * 1024 * 1024) {
                                 PubSub.publish("RECORD_ERROR_TOAST", {
                                   title: "Error",
@@ -558,7 +558,7 @@ const Company = () => {
                                 return;
                               }
                               
-                              // Set file for upload on save
+ 
                               setSelectedLogoFile(file);
                               const previewUrl = URL.createObjectURL(file);
                               setLogoPreview(previewUrl);

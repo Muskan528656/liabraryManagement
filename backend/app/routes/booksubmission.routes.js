@@ -77,16 +77,16 @@ module.exports = (app) => {
   });
 
 
-  // router.get("/issue/:issueId", fetchUser, async (req, res) => {
-  //   try {
-  //     BookSubmission.init(req.userinfo.tenantcode);
-  //     const submissions = await BookSubmission.findByIssueId(req.params.issueId);
-  //     return res.status(200).json({ success: true, data: submissions });
-  //   } catch (error) {
-  //     console.error("Error fetching submissions by issue ID:", error);
-  //     return res.status(500).json({ errors: "Internal server error" });
-  //   }
-  // });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
   router.get(
@@ -233,12 +233,12 @@ router.put(
         req.body.cancellation_reason || "Cancelled by librarian"
       );
 
-      // नोटिफिकेशन भेजें (वैकल्पिक)
+ 
       if (result.success) {
         try {
           Notification.init(req.userinfo.tenantcode);
 
-          // issue से user की जानकारी लें
+ 
           const issueQuery = `
             SELECT bi.issued_to, b.title 
             FROM ${req.userinfo.tenantcode}.book_issues bi
@@ -266,7 +266,7 @@ router.put(
           }
         } catch (notifError) {
           console.error("Error creating cancellation notification:", notifError);
-          // नोटिफिकेशन एरर को अनदेखा करें
+ 
         }
       }
 

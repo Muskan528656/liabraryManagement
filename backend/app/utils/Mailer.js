@@ -1,4 +1,4 @@
-// backend/mailer.js
+ 
 const transporter = require("./mailconfig");
 
 const sendMail = async ({ to, subject, text, html }) => {

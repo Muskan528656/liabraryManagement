@@ -113,111 +113,111 @@ async function resolveTypeId(typeName) {
   return result.rows.length ? result.rows[0].id : null;
 }
 
-// async function create(cardData, userId) {
-//   console.log("📥 Model.create() - Received cardData:", {
-//     ...cardData,
-//     image: cardData.image ? `[${typeof cardData.image} - ${cardData.image.substring(0, 30)}...]` : 'null'
-//   });
+ 
+ 
+ 
+ 
+ 
 
-//   // Generate card number if not provided
-//   if (!cardData.card_number) {
-//     cardData.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
-//     if (!cardData.card_number) {
-//       throw new Error("Failed to generate unique card number");
-//     }
-//   }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-//   // Resolve type from name
-//   if (cardData.type) {
-//     const resolvedTypeId = await resolveTypeId(cardData.type);
+ 
+ 
+ 
 
-//     if (!resolvedTypeId) {
-//       throw new Error(`Invalid or inactive type: ${cardData.type}`);
-//     }
+ 
+ 
+ 
 
-//     cardData.type_id = resolvedTypeId;
-//   }
+ 
+ 
 
-//   try {
-//     const fields = [
-//       "card_number",
-//       "is_active",
-//       "image",
-//       "subscription_id",
-//       "first_name",
-//       "last_name",
-//       "name",
-//       "email",
-//       "phone_number",
-//       "country_code",
-//       "registration_date",
-//       "type",
-//       "createddate",
-//       "lastmodifieddate",
-//       "createdbyid",
-//       "lastmodifiedbyid"
-//     ];
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-//     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
+ 
 
-//     const query = `
-//       INSERT INTO ${schema}.library_members
-//       (${fields.join(", ")})
-//       VALUES (${placeholders})
-//       RETURNING *
-//     `;
+ 
+ 
+ 
+ 
+ 
+ 
 
-//     const imageValue = cardData.hasOwnProperty('image')
-//       ? (cardData.image || null)
-//       : null;
+ 
+ 
+ 
 
-//     // ✅ FIXED: Handle is_active properly
-//     const isActive = cardData.is_active !== undefined
-//       ? cardData.is_active
-//       : (cardData.status === 'true' || cardData.status === true);
+ 
+ 
+ 
+ 
 
-//     const values = [
-//       cardData.card_number,
-//       isActive,
-//       imageValue,
-//       cardData.subscription_id || null,
-//       cardData.first_name,
-//       cardData.last_name,
-//       `${cardData.first_name} ${cardData.last_name}`,
-//       cardData.email,
-//       cardData.phone_number,
-//       cardData.country_code,
-//       cardData.registration_date || null,
-//       cardData.type_id || null,
-//       new Date(),
-//       new Date(),
-//       userId,
-//       userId
-//     ];
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-//     console.log("📋 Inserting values:", {
-//       card_number: values[0],
-//       is_active: values[1],
-//       type: values[11],
-//       createdbyid: values[14]
-//     });
+ 
+ 
+ 
+ 
+ 
+ 
 
-//     const result = await sql.query(query, values);
+ 
 
-//     // Fetch the complete record with joins
-//     const completeRecord = await findById(result.rows[0].id);
-//     return completeRecord;
+ 
+ 
+ 
 
-//   } catch (error) {
-//     console.error("❌ Error in create:", {
-//       message: error.message,
-//       code: error.code,
-//       detail: error.detail,
-//       constraint: error.constraint
-//     });
-//     throw error;
-//   }
-// }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 async function create(cardData, userId) {
   console.log("📥 Model.create() - Received cardData:", {
     ...cardData,
@@ -252,10 +252,10 @@ async function create(cardData, userId) {
       );
 
     if (isUUID) {
-      // ✅ Frontend already sent type_id
+ 
       cardData.type_id = cardData.type;
     } else {
-      // ✅ Resolve from type name
+ 
       const resolvedTypeId = await resolveTypeId(cardData.type);
 
       if (!resolvedTypeId) {
@@ -329,7 +329,7 @@ async function create(cardData, userId) {
       cardData.last_name || null,
       fullName || null,
 
-      // ✅ NEW VALUES
+ 
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
@@ -381,20 +381,20 @@ async function updateById(id, cardData, userId) {
     console.log("📝 Updating library card ID:", id);
     console.log("📋 Update data received:", cardData);
 
-    // Handle is_active
+ 
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
       idx++;
     }
 
-    // ✅ Handle type field - FIXED
+ 
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
 
       console.log("Type value received:", typeValue, "Type:", typeof typeValue);
 
-      // If it's a number, convert to integer
+ 
       if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
         console.log(`✅ Converted type to integer: ${typeValue}`);
@@ -406,7 +406,7 @@ async function updateById(id, cardData, userId) {
       console.log(`✅ Type field set to: ${typeValue}`);
     }
 
-    // Fields that can be updated
+ 
     const allowedFields = [
       "card_number",
       "image",
@@ -519,7 +519,7 @@ async function resolveTypeId(typeInput) {
       return resultById.rows[0].id;
     }
 
-    // Try by name or code (case-insensitive)
+ 
     const queryByName = `
       SELECT id FROM ${schema}.library_member_types 
       WHERE LOWER(name) = LOWER($1) OR LOWER(code) = LOWER($1)
@@ -567,7 +567,7 @@ async function deleteById(id) {
   } catch (error) {
     console.error("Error in deleteById:", error);
 
-    // Handle foreign key constraint errors
+ 
     if (error.code === '23503') { // foreign_key_violation
       throw new Error("Cannot delete member. Related records exist.");
     }

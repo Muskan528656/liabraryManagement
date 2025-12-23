@@ -97,7 +97,7 @@ module.exports = (app) => {
 
             const lastModifiedBy = req.userinfo.id;
 
-            // Update plan table
+ 
             const result = await Plan.updatePlan({
                 id,
                 plan_name,
@@ -110,7 +110,7 @@ module.exports = (app) => {
 
             const schema = req.userinfo.tenantcode;
 
-            // Update related subscriptions if needed
+ 
             const updateFields = {};
             if (plan_name !== undefined) updateFields.plan_name = plan_name;
             if (duration_days !== undefined) updateFields.duration_days = duration_days;
@@ -127,7 +127,7 @@ module.exports = (app) => {
                 await sql.query(updateQuery, values);
             }
 
-            // Recalculate end dates if duration changed
+ 
             if (duration_days !== undefined) {
                 const recalcQuery = `
                     UPDATE ${schema}.subscriptions

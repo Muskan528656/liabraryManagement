@@ -131,18 +131,18 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 placeholder: "Enter The State",
                 colSize: 6,
             },
-            // {
-            //     name: "country",
-            //     label: "Country",
-            //     type: "select",
-            //     options: COUNTRY_CODES.map(item => ({
-            //         value: item.country,
-            //         label: `${item.country}(${item.country_code})`
-            //     })),
-            //     required: true,
-            //     placeholder: "Select a country",
-            //     colSize: 6
-            // },
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             {
                 name: "is_active",
                 label: "Active",
@@ -161,17 +161,17 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             console.log("errors--->", errors)
             console.log("book", allBooks);
 
-            // if (!formData.salutation?.trim()) errors.push("salutation is required");
+ 
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
-            // if (!formData.country?.trim()) errors.push("country is required");
+ 
             if (!formData.phone) errors.push("phone is required");
 
-            // const duplicate = allBooks.find(
-            //     book => book.isbn === formData.isbn && book.id !== editingBook?.id   
-            // );
-            // if (duplicate) errors.push("Book with this ISBN already exists");
+ 
+ 
+ 
+ 
 
             return errors;
         },
@@ -187,7 +187,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
-            // 4. Enable Import Button
+ 
             showImportButton: true,
         },
 

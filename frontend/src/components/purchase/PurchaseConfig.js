@@ -18,7 +18,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-            // "Purchase Serial No": "Purchase Serial No",
+ 
             "Vendor": "Vendor",
             "Book": "Book",
             "ISBN": "ISBN",
@@ -41,7 +41,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             field: "unit_price",
             label: "Unit Price",
             sortable: true,
-            // render: (value, record) => `₹${parseFloat(record.unit_price || 0).toFixed(2)}`
+ 
             render: (value, record) => `${currencySymbol} ${parseFloat(record.unit_price || 0).toFixed(2)}`
 
         },
@@ -49,7 +49,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             field: "total_amount", 
             label: "Total Amount", 
             sortable: true, 
-            // render: (value, record) => `₹${parseFloat(record.total_amount || 0).toFixed(2)}`
+ 
             render: (value, record) => `${currencySymbol} ${parseFloat(record.total_amount || 0).toFixed(2)}`
 
         },
