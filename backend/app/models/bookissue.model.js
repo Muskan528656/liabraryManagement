@@ -134,15 +134,6 @@ async function issueBook(req) {
     console.log("Using schema:", schema);
     console.log("Request body:", req.body);
 
-
-    console.log("=== DEBUG REQ OBJECT ===");
-    console.log("req.userinfo:", req.userinfo);
-    console.log("req.user:", req.user);
-    console.log("req.auth:", req.auth);
-    console.log("req.headers:", req.headers);
-    console.log("req.cookies:", req.cookies);
-    console.log("=== END DEBUG ===");
-
     if (!req.body.card_id) {
       return { success: false, message: "Card ID is required" };
     }
@@ -150,38 +141,22 @@ async function issueBook(req) {
       return { success: false, message: "Book ID is required" };
     }
 
-
+    // Get user ID logic remains same...
     let userId = null;
-
-
     if (req.userinfo && req.userinfo.id) {
       userId = req.userinfo.id;
-      console.log("User ID from req.userinfo.id:", userId);
-    }
-
-    else if (req.user && req.user.id) {
+    } else if (req.user && req.user.id) {
       userId = req.user.id;
-      console.log("User ID from req.user.id:", userId);
-    }
-
-    else if (req.headers['x-user-id']) {
+    } else if (req.headers['x-user-id']) {
       userId = req.headers['x-user-id'];
-      console.log("User ID from headers x-user-id:", userId);
-    }
-
-    else if (req.auth && req.auth.userId) {
+    } else if (req.auth && req.auth.userId) {
       userId = req.auth.userId;
-      console.log("User ID from req.auth.userId:", userId);
+    } else {
+      console.warn("⚠️ No user ID found. Using default user ID 1");
+      userId = 1;
     }
 
-    else {
-      console.warn("⚠️ No user ID found in request. Using default user ID 1 for testing.");
-      userId = 1; // Default admin user ID
-    }
-
-    console.log("Final User ID to be used:", userId);
-
-    console.log("Step 2: Fetching Member + Plan...");
+    console.log("Step 2: Fetching Member + Plan with daily limit...");
     const memberRes = await sql.query(
       `SELECT 
         m.id AS member_id, 
@@ -189,6 +164,7 @@ async function issueBook(req) {
         m.plan_id, 
         p.duration_days,
         p.allowed_books,
+        p.max_allowed_books_at_time,
         p.is_active AS plan_active,
         m.first_name,
         m.last_name
@@ -217,7 +193,14 @@ async function issueBook(req) {
       return { success: false, message: "This plan does not allow issuing books" };
     }
 
-    console.log("Step 3: Counting already issued books...");
+    // Get daily limit from plan
+    let dailyLimit = member.max_allowed_books_at_time ? parseInt(member.max_allowed_books_at_time) : 2;
+    if (isNaN(dailyLimit) || dailyLimit < 1) {
+      dailyLimit = 2; // Default fallback
+    }
+    console.log(`Daily limit from plan (max_allowed_books_at_time): ${dailyLimit}`);
+
+    console.log("Step 3: Checking TOTAL book limit...");
     const issuedRes = await sql.query(
       `SELECT COUNT(*) AS total 
        FROM ${schema}.book_issues 
@@ -226,12 +209,37 @@ async function issueBook(req) {
     );
 
     const alreadyIssued = Number(issuedRes.rows[0].total || 0);
-    console.log(`Already Issued: ${alreadyIssued}/${member.allowed_books}`);
+    console.log(`Already Issued (Total): ${alreadyIssued}/${member.allowed_books}`);
 
     if (alreadyIssued >= member.allowed_books) {
       return {
         success: false,
-        message: `Book limit exceeded. You can issue maximum ${member.allowed_books} books.`
+        message: `Total book limit exceeded. You can issue maximum ${member.allowed_books} books total.`
+      };
+    }
+
+    // NEW: Check DAILY limit
+    console.log("Step 3.5: Checking DAILY book limit...");
+    const today = new Date().toISOString().split('T')[0];
+    console.log("Today's date for daily check:", today);
+
+    const dailyIssuedRes = await sql.query(
+      `SELECT COUNT(*) AS daily_total 
+       FROM ${schema}.book_issues 
+       WHERE issued_to = $1 
+       AND issue_date = $2 
+       AND status = 'issued'
+       AND (return_date IS NULL OR return_date > $2)`,
+      [req.body.card_id, today]
+    );
+
+    const issuedToday = Number(dailyIssuedRes.rows[0].daily_total || 0);
+    console.log(`Issued Today: ${issuedToday}/${dailyLimit}`);
+
+    if (issuedToday >= dailyLimit) {
+      return {
+        success: false,
+        message: `Daily limit reached! You can issue maximum ${dailyLimit} books per day. Already issued ${issuedToday} today.`
       };
     }
 
@@ -329,7 +337,6 @@ async function issueBook(req) {
     const newIssue = insertRes.rows[0];
     console.log("Book issued successfully! Issue ID:", newIssue.id);
 
-
     console.log("Step 9: Updating book quantity...");
     const updateBookQuery = `
       UPDATE ${schema}.books 
@@ -344,7 +351,7 @@ async function issueBook(req) {
 
     const updateBookRes = await sql.query(updateBookQuery, [
       req.body.book_id,
-      userId // ✅ Use the extracted user ID
+      userId
     ]);
 
     if (updateBookRes.rows.length === 0) {
@@ -358,7 +365,7 @@ async function issueBook(req) {
     const updatedBook = updateBookRes.rows[0];
     console.log(`Book quantity updated. New available copies: ${updatedBook.available_copies}`);
 
-
+    // Update issued count
     try {
       const updateIssuedCountQuery = `
         UPDATE ${schema}.books 
@@ -370,13 +377,12 @@ async function issueBook(req) {
       `;
       await sql.query(updateIssuedCountQuery, [
         req.body.book_id,
-        userId // ✅ Use the extracted user ID
+        userId
       ]);
       console.log("Issued count updated successfully");
     } catch (err) {
       console.warn("Could not update issued count:", err.message);
     }
-
 
     console.log("Step 11: Updating member's issued book count...");
     try {
@@ -391,7 +397,7 @@ async function issueBook(req) {
       `;
       await sql.query(updateMemberQuery, [
         req.body.card_id,
-        userId // ✅ Use the extracted user ID
+        userId
       ]);
       console.log("Member's issued book count updated");
     } catch (err) {
@@ -412,6 +418,13 @@ async function issueBook(req) {
           old_available_copies: book.available_copies,
           new_available_copies: updatedBook.available_copies,
           total_copies: updatedBook.total_copies
+        },
+        limits_info: {
+          total_allowed: member.allowed_books,
+          currently_issued: alreadyIssued + 1,
+          daily_limit: dailyLimit,
+          issued_today: issuedToday + 1,
+          remaining_today: dailyLimit - (issuedToday + 1)
         }
       }
     };
@@ -426,6 +439,7 @@ async function issueBook(req) {
     };
   }
 }
+
 async function returnBook(issueId, returnData, userId) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");

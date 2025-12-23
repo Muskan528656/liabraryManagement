@@ -551,7 +551,7 @@ const LibraryCard = (props) => {
 
   return (
     <>
-     {/* <div className="mb-3">
+      {/* <div className="mb-3">
         <Button
         
         variant=""
@@ -569,22 +569,22 @@ const LibraryCard = (props) => {
       /> */}
 
       <DynamicCRUD
-      {...finalConfig}
-      icon="fa-solid fa-id-card"
-      subscriptionsData={subscriptionsData}
-      usersData={usersData}
+        {...finalConfig}
+        icon="fa-solid fa-id-card"
+        subscriptionsData={subscriptionsData}
+        usersData={usersData}
 
-      headerActions={[
-        {
-          key: "import-member",
-          label: "Import Member",
-          icon: "fa-solid fa-upload",
-          variant: "outline-primary",
-          onClick: () => setShowLibraryImportModal(true),
-          order: 1, 
-        },
-      ]}
-    />
+        headerActions={[
+          {
+            key: "import-member",
+            label: "Import Member",
+            icon: "fa-solid fa-upload",
+            variant: "outline-primary",
+            onClick: () => setShowLibraryImportModal(true),
+            order: 1,
+          },
+        ]}
+      />
 
 
       {/* Library Import Modal */}

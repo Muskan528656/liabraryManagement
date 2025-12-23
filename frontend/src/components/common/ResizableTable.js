@@ -365,11 +365,11 @@ const ResizableTable = ({
                                 {columns.map((column, index) => {
                                     let colIndex;
                                     if (showCheckbox && showSerialNumber) {
-                                        colIndex = index + 2; // checkbox(1) + serial(1) + columns
+                                        colIndex = index + 2;
                                     } else if (showCheckbox || showSerialNumber) {
-                                        colIndex = index + 1; // checkbox(1) OR serial(1) + columns
+                                        colIndex = index + 1;
                                     } else {
-                                        colIndex = index; // only columns
+                                        colIndex = index;
                                     }
                                     return (
                                         <th

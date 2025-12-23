@@ -1,5 +1,3 @@
-
-
 /**
  * Handles all incoming request for /api/bookissue endpoint
  * DB table for this demo.book_issues
@@ -104,7 +102,135 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
- router.post("/issue", fetchUser, async (req, res) => {
+
+  router.put(
+    "/:id",
+    fetchUser,
+    [
+      body("issue_date").optional().isISO8601().withMessage("Issue date must be a valid date"),
+      body("due_date").optional().isISO8601().withMessage("Due date must be a valid date"),
+      body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
+      body("status")
+        .optional()
+        .isIn(["issued", "returned", "lost", "damaged"])
+        .withMessage("Status must be one of: issued, returned, lost, damaged"),
+    ],
+    async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
+
+        const issueId = req.params.id;
+        const userId = req.userinfo.id;
+        const updateData = req.body;
+
+        BookIssue.init(req.userinfo.tenantcode);
+
+        // 🔹 Existing issue check
+        const existingIssue = await BookIssue.findById(issueId);
+        if (!existingIssue) {
+          return res.status(404).json({
+            success: false,
+            errors: "Book issue not found",
+          });
+        }
+
+        // 🔹 Prepare update query
+        const updateFields = [];
+        const updateValues = [];
+        let paramCounter = 1;
+
+        // Always update audit fields
+        updateFields.push(`lastmodifieddate = NOW()`);
+        updateFields.push(`lastmodifiedbyid = $${paramCounter}`);
+        updateValues.push(userId);
+        paramCounter++;
+
+        // Allowed DB fields only
+        const allowedFields = [
+          "issue_date",
+          "due_date",
+          "return_date",
+          "status",
+        ];
+
+        allowedFields.forEach((field) => {
+          if (updateData[field] !== undefined) {
+            updateFields.push(`${field} = $${paramCounter}`);
+            updateValues.push(updateData[field]);
+            paramCounter++;
+          }
+        });
+
+        if (updateFields.length === 2) {
+          return res.status(400).json({
+            success: false,
+            errors: "No valid fields provided to update",
+          });
+        }
+
+        updateValues.push(issueId);
+
+        const updateQuery = `
+        UPDATE ${req.userinfo.tenantcode}.book_issues
+        SET ${updateFields.join(", ")}
+        WHERE id = $${paramCounter}
+        RETURNING *
+      `;
+
+        const result = await sql.query(updateQuery, updateValues);
+
+        const updatedIssue = result.rows[0];
+
+        // 🔹 Notification on status change
+        if (updateData.status && updateData.status !== existingIssue.status) {
+          try {
+            Notification.init(req.userinfo.tenantcode);
+
+            const message = `Your book issue status has been changed to "${updateData.status}".`;
+
+            await Notification.create({
+              user_id: existingIssue.issued_to,
+              title: "Book Issue Updated",
+              message,
+              type: "book_issue",
+              related_id: issueId,
+              related_type: "book_issue",
+            });
+
+            if (req.app.get("io")) {
+              req.app
+                .get("io")
+                .to(`user_${existingIssue.issued_to}`)
+                .emit("new_notification", {
+                  title: "Book Issue Updated",
+                  message,
+                });
+            }
+          } catch (err) {
+            console.error("Notification error:", err);
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Book issue updated successfully",
+          data: updatedIssue,
+        });
+      } catch (error) {
+        console.error("Update error:", error);
+        return res.status(500).json({
+          success: false,
+          errors: "Internal server error",
+        });
+      }
+    }
+  );
+
+
+  router.post("/issue", fetchUser, async (req, res) => {
     try {
       console.log("📩 Received Issue Book request:", req.userinfo);
       BookIssue.init(req.userinfo.tenantcode);

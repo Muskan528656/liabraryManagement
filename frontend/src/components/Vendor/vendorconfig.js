@@ -134,7 +134,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             }
         ],
         formFields: [
-            // Contact Person Information Section - 6-6 Grid
             {
                 name: "name",
                 label: "Contact Person Name",
@@ -213,7 +212,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "GST Number",
                 type: "text",
                 placeholder: "Enter GST number",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim() && value.length !== 15) {
@@ -227,7 +226,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "PAN Number",
                 type: "text",
                 placeholder: "Enter PAN number",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
@@ -243,7 +242,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 name: "state",
                 label: "State",
                 type: "select",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 options: states,
                 placeholder: "Select State",
@@ -299,7 +298,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 name: "city",
                 label: "City",
                 type: "select",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 options: [],
                 placeholder: "Select City",
@@ -348,7 +347,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Pincode",
                 type: "text",
                 placeholder: "Enter pincode",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
@@ -365,7 +364,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 label: "Country",
                 type: "text",
                 placeholder: "Enter country",
-                colSize: 3,
+                colSize: 6,
                 section: "Company Information",
                 defaultValue: "India",
                 readOnly: true
@@ -376,7 +375,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "textarea",
                 rows: 2,
                 placeholder: "Enter full address",
-                colSize: 12,
+                colSize: 6,
                 section: "Company Information"
             },
             {

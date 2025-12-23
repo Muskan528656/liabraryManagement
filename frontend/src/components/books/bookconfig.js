@@ -84,14 +84,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 placeholder: "Enter book title",
                 colSize: 6,
             },
-            {
-                name: "price",
-                label: "Price",
-                type: "number",
-                required: true,
-                placeholder: "Enter book price",
-                colSize: 6,
-            },
+
             {
                 name: "author_id",
                 label: "Author",
@@ -128,12 +121,14 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 colSize: 6,
             },
             {
-                name: "language",
-                label: "Language",
-                type: "text",
-                placeholder: "Enter language",
+                name: "price",
+                label: "Price",
+                type: "number",
+                required: true,
+                placeholder: "Enter book price",
                 colSize: 6,
             },
+
             {
                 name: "total_copies",
                 label: "Total Copies",
@@ -176,6 +171,13 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 required: false,
                 colSize: 6,
             }
+            , {
+                name: "language",
+                label: "Language",
+                type: "text",
+                placeholder: "Enter language",
+                colSize: 6,
+            },
         ],
         validationRules: (formData, allBooks, editingBook) => {
             const errors = [];
