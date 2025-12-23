@@ -1,6 +1,5 @@
 
 
-
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -28,6 +27,7 @@ const BulkIssue = () => {
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [users, setUsers] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
+  const [plans, setPlans] = useState([]);
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedBooks, setSelectedBooks] = useState([]);
@@ -36,11 +36,12 @@ const BulkIssue = () => {
   const [systemMaxBooks, setSystemMaxBooks] = useState(6);
   const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
   const [totalAllowedBooks, setTotalAllowedBooks] = useState(6);
-  const [dailyLimitCount, setDailyLimitCount] = useState(2); // Daily limit from plan
+  const [dailyLimitCount, setDailyLimitCount] = useState(2);
 
   const [subscriptionAllowedBooks, setSubscriptionAllowedBooks] = useState(0);
   const [memberPersonalAllowedBooks, setMemberPersonalAllowedBooks] = useState(0);
   const [memberSubscription, setMemberSubscription] = useState(null);
+  const [memberPlan, setMemberPlan] = useState(null);
 
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -52,6 +53,49 @@ const BulkIssue = () => {
   const [memberInfo, setMemberInfo] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [memberAge, setMemberAge] = useState(null);
+  const [filteredBooksByAge, setFilteredBooksByAge] = useState([]); // नई state
+
+  // Helper function to extract error messages
+  const extractErrorMessage = (result) => {
+    if (!result) return "Unknown error";
+
+    if (result.message) return result.message;
+    if (result.error) return result.error;
+
+    if (result.errors && Array.isArray(result.errors)) {
+      return result.errors.map(err => {
+        if (typeof err === 'string') return err;
+        if (err.msg) return err.msg;
+        if (err.message) return err.message;
+        return JSON.stringify(err);
+      }).join(", ");
+    }
+
+    if (result.errors && typeof result.errors === 'object') {
+      const messages = [];
+
+      if (result.errors.errors && Array.isArray(result.errors.errors)) {
+        return result.errors.errors.map(e => e.msg).join(", ");
+      }
+
+      for (const key in result.errors) {
+        const err = result.errors[key];
+        if (typeof err === 'string') {
+          messages.push(err);
+        } else if (err && err.msg) {
+          messages.push(err.msg);
+        } else if (err && err.message) {
+          messages.push(err.message);
+        }
+      }
+
+      if (messages.length > 0) return messages.join(", ");
+
+      return "Validation error";
+    }
+
+    return "Unknown error occurred";
+  };
 
   useEffect(() => {
     fetchAll();
@@ -72,18 +116,64 @@ const BulkIssue = () => {
     } else {
       resetMemberInfo();
     }
-  }, [selectedCard, subscriptions]);
+  }, [selectedCard, subscriptions, plans]);
+
+  // Age-based book filtering effect
+  useEffect(() => {
+    if (books.length === 0) {
+      setFilteredBooksByAge([]);
+      return;
+    }
+
+    if (!selectedCard || memberAge === null) {
+      setFilteredBooksByAge(books);
+      return;
+    }
+
+    // Filter books based on member's age
+    const filtered = books.filter(book => {
+      const minAge = parseInt(book.min_age) || 0;
+      const maxAge = parseInt(book.max_age) || 999;
+
+      // Agar dono 0 hai to koi restriction nahi
+      if (minAge === 0 && maxAge === 0) {
+        return true;
+      }
+
+      // Age range check
+      const isAgeValid = memberAge >= minAge && memberAge <= maxAge;
+
+      return isAgeValid;
+    });
+
+    setFilteredBooksByAge(filtered);
+
+    // Debug log
+    console.log("Age filtering:", {
+      memberAge,
+      totalBooks: books.length,
+      filteredBooks: filtered.length,
+      booksWithAgeRestriction: books.filter(b => {
+        const minAge = parseInt(b.min_age) || 0;
+        const maxAge = parseInt(b.max_age) || 999;
+        return minAge > 0 || maxAge > 0;
+      }).length
+    });
+
+  }, [books, selectedCard, memberAge]);
 
   const resetMemberInfo = () => {
     setMemberInfo(null);
     setMemberSubscription(null);
+    setMemberPlan(null);
     setSubscriptionAllowedBooks(0);
     setMemberPersonalAllowedBooks(0);
     setMemberExtraAllowance(0);
     setTotalAllowedBooks(6);
     setSystemMaxBooks(6);
     setMemberAge(null);
-    setDailyLimitCount(2); // Reset to default
+    setFilteredBooksByAge(books); // Reset to all books
+    setDailyLimitCount(2);
   };
 
   const fetchAll = async () => {
@@ -94,15 +184,23 @@ const BulkIssue = () => {
       const userApi = new DataApi("user");
       const issueApi = new DataApi("bookissue");
       const subscriptionApi = new DataApi("subscriptions");
+      const planApi = new DataApi("plans");
 
-      const [booksResp, cardsResp, usersResp, issuesResp, subscriptionResponse] =
-        await Promise.all([
-          bookApi.fetchAll(),
-          cardApi.fetchAll(),
-          userApi.fetchAll(),
-          issueApi.fetchAll(),
-          subscriptionApi.fetchAll()
-        ]);
+      const [
+        booksResp,
+        cardsResp,
+        usersResp,
+        issuesResp,
+        subscriptionResponse,
+        planResponse
+      ] = await Promise.all([
+        bookApi.fetchAll(),
+        cardApi.fetchAll(),
+        userApi.fetchAll(),
+        issueApi.fetchAll(),
+        subscriptionApi.fetchAll(),
+        planApi.fetchAll()
+      ]);
 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
@@ -120,9 +218,22 @@ const BulkIssue = () => {
         subscriptionsList = subscriptionResponse;
       }
 
+      let plansList = [];
+      if (planResponse?.data?.data) {
+        plansList = planResponse.data.data;
+      } else if (planResponse?.data) {
+        plansList = Array.isArray(planResponse.data) ?
+          planResponse.data :
+          [planResponse.data];
+      } else if (Array.isArray(planResponse)) {
+        plansList = planResponse;
+      }
+
       setBooks(booksList);
+      setFilteredBooksByAge(booksList); // Initial set
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
+      setPlans(plansList);
 
       const activeCards = cardsList.filter((c) =>
         c.is_active === true || c.is_active === "true" || c.is_active === 1
@@ -139,7 +250,7 @@ const BulkIssue = () => {
       setDurationDays(7);
       setSystemMaxBooks(6);
       setTotalAllowedBooks(6);
-      setDailyLimitCount(2); // Default value
+      setDailyLimitCount(2);
 
     } catch (err) {
       console.error("Error fetching lists:", err);
@@ -165,16 +276,20 @@ const BulkIssue = () => {
         const member = memberResp.data;
         setMemberInfo(member);
 
-        // Member की age calculate करें
+        // Calculate member age
         const memberDob = member.dob || member.date_of_birth || member.birth_date;
         let age = null;
 
         if (memberDob) {
           age = calculateMemberAge(memberDob);
           setMemberAge(age);
+          console.log("Member age calculated:", { dob: memberDob, age });
+        } else {
+          setMemberAge(null);
+          console.log("No DOB found for member");
         }
 
-        // Personal Allowance निकालें
+        // Personal Allowance
         let personalAllowed = 0;
         if (member.allowed_books !== undefined && member.allowed_books !== null) {
           personalAllowed = parseInt(member.allowed_books);
@@ -191,81 +306,126 @@ const BulkIssue = () => {
         setMemberPersonalAllowedBooks(personalAllowed);
         setMemberExtraAllowance(personalAllowed);
 
-        // Subscription/Plan से allowed books निकालें
-        let subscription = null;
-        let subscriptionBooks = 0;
-        let planDuration = 7;
-        let dailyLimit = 2; // Default value
-
+        // FIRST: Check for plan_id from member
         let planId = null;
         if (member.plan_id) {
           planId = member.plan_id;
         } else if (member.planId) {
           planId = member.planId;
-        } else if (member.subscription_id) {
-          planId = member.subscription_id;
-        } else if (member.subscriptionId) {
-          planId = member.subscriptionId;
-        } else if (member.plan) {
-          planId = member.plan;
-        } else if (member.subscription) {
-          planId = member.subscription;
         }
 
-        if (planId && subscriptions.length > 0) {
-          subscription = subscriptions.find(sub => {
+        let subscription = null;
+        let plan = null;
+        let subscriptionBooks = 0;
+        let planDuration = 7;
+        let dailyLimit = 2;
+
+        // Check in plans table first
+        if (planId && plans.length > 0) {
+          plan = plans.find(p => {
             return (
-              sub.id?.toString() === planId.toString() ||
-              sub._id?.toString() === planId.toString() ||
-              sub.plan_id?.toString() === planId.toString() ||
-              sub.planId?.toString() === planId.toString()
+              p.id?.toString() === planId.toString() ||
+              p._id?.toString() === planId.toString()
             );
           });
 
-          if (subscription) {
-            // Allowed books from subscription
-            subscriptionBooks = parseInt(subscription.allowed_books || 0);
+          if (plan) {
+            // Allowed books from plan
+            subscriptionBooks = parseInt(plan.allowed_books || 0);
             if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
               subscriptionBooks = 0;
             }
 
-            // Duration निकालें (days में)
-            if (subscription.duration_days) {
-              planDuration = parseInt(subscription.duration_days);
-            } else if (subscription.duration) {
-              planDuration = parseInt(subscription.duration);
+            // Duration from plan
+            if (plan.duration_days) {
+              planDuration = parseInt(plan.duration_days);
             }
 
-            // Daily limit निकालें (max_allowed_books_at_time field से)
-            if (subscription.max_allowed_books_at_time !== undefined && subscription.max_allowed_books_at_time !== null) {
-              dailyLimit = parseInt(subscription.max_allowed_books_at_time);
-            } else if (subscription.maxBooksAtTime !== undefined && subscription.maxBooksAtTime !== null) {
-              dailyLimit = parseInt(subscription.maxBooksAtTime);
-            } else if (subscription.max_at_time !== undefined && subscription.max_at_time !== null) {
-              dailyLimit = parseInt(subscription.max_at_time);
-            } else if (subscription.daily_limit !== undefined && subscription.daily_limit !== null) {
-              dailyLimit = parseInt(subscription.daily_limit);
+            // DAILY LIMIT
+            if (plan.max_allowed_books_at_time !== undefined && plan.max_allowed_books_at_time !== null) {
+              dailyLimit = parseInt(plan.max_allowed_books_at_time);
+              if (isNaN(dailyLimit) || dailyLimit < 1) {
+                dailyLimit = 2;
+              }
+            } else {
+              dailyLimit = 2;
             }
 
-            if (isNaN(dailyLimit) || dailyLimit < 1) {
-              dailyLimit = 2; // Default fallback
-            }
+            const isPlanActive = plan.is_active === true ||
+              plan.is_active === "true" ||
+              plan.is_active === 1;
 
-            const isSubscriptionActive = subscription.is_active === true ||
-              subscription.is_active === "true" ||
-              subscription.is_active === 1 ||
-              subscription.status === "active";
-
-            if (!isSubscriptionActive) {
+            if (!isPlanActive) {
               subscriptionBooks = 0;
             }
           }
         }
 
+        // If no plan found, check subscriptions
+        if (!plan && subscriptions.length > 0) {
+          let subscriptionId = null;
+          if (member.subscription_id) {
+            subscriptionId = member.subscription_id;
+          } else if (member.subscriptionId) {
+            subscriptionId = member.subscriptionId;
+          } else if (member.subscription) {
+            subscriptionId = member.subscription;
+          }
+
+          if (subscriptionId) {
+            subscription = subscriptions.find(sub => {
+              return (
+                sub.id?.toString() === subscriptionId.toString() ||
+                sub._id?.toString() === subscriptionId.toString() ||
+                sub.plan_id?.toString() === subscriptionId.toString() ||
+                sub.planId?.toString() === subscriptionId.toString()
+              );
+            });
+
+            if (subscription) {
+              subscriptionBooks = parseInt(subscription.allowed_books || 0);
+              if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
+                subscriptionBooks = 0;
+              }
+
+              if (subscription.duration_days) {
+                planDuration = parseInt(subscription.duration_days);
+              } else if (subscription.duration) {
+                planDuration = parseInt(subscription.duration);
+              }
+
+              // DAILY LIMIT for subscription
+              if (subscription.max_allowed_books_at_time !== undefined && subscription.max_allowed_books_at_time !== null) {
+                dailyLimit = parseInt(subscription.max_allowed_books_at_time);
+              } else if (subscription.maxBooksAtTime !== undefined && subscription.maxBooksAtTime !== null) {
+                dailyLimit = parseInt(subscription.maxBooksAtTime);
+              } else if (subscription.max_at_time !== undefined && subscription.max_at_time !== null) {
+                dailyLimit = parseInt(subscription.max_at_time);
+              } else if (subscription.daily_limit !== undefined && subscription.daily_limit !== null) {
+                dailyLimit = parseInt(subscription.daily_limit);
+              }
+
+              if (isNaN(dailyLimit) || dailyLimit < 1) {
+                dailyLimit = 2;
+              }
+
+              const isSubscriptionActive = subscription.is_active === true ||
+                subscription.is_active === "true" ||
+                subscription.is_active === 1 ||
+                subscription.status === "active";
+
+              if (!isSubscriptionActive) {
+                subscriptionBooks = 0;
+              }
+            }
+          }
+        }
+
+        setMemberPlan(plan);
         setMemberSubscription(subscription);
         setSubscriptionAllowedBooks(subscriptionBooks);
         setDurationDays(planDuration);
-        setDailyLimitCount(dailyLimit); // Set daily limit
+        setDailyLimitCount(dailyLimit);
 
         const systemMax = subscriptionBooks > 0 ? subscriptionBooks : 6;
         setSystemMaxBooks(systemMax);
@@ -301,23 +461,6 @@ const BulkIssue = () => {
     }
 
     return age;
-  };
-
-  const filterBooksByMemberAge = (booksList) => {
-    if (!selectedCard || memberAge === null) {
-      return booksList;
-    }
-
-    return booksList.filter(book => {
-      const minAge = parseInt(book.min_age) || 0;
-      const maxAge = parseInt(book.max_age) || 999;
-
-      if (minAge === 0 && maxAge === 0) {
-        return true;
-      }
-
-      return memberAge >= minAge && memberAge <= maxAge;
-    });
   };
 
   const findUserByCardId = (cardId) => {
@@ -387,9 +530,17 @@ const BulkIssue = () => {
   };
 
   const getBookOptions = () => {
-    const filteredBooks = filterBooksByMemberAge(books);
+    // Use filteredBooksByAge instead of filtering again
+    const booksToShow = filteredBooksByAge.length > 0 ? filteredBooksByAge : books;
 
-    return filteredBooks.map((b) => ({
+    console.log("getBookOptions:", {
+      totalBooks: books.length,
+      filteredBooks: filteredBooksByAge.length,
+      memberAge,
+      booksToShow: booksToShow.length
+    });
+
+    return booksToShow.map((b) => ({
       value: b.id,
       label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
       subLabel: `Available: ${b.available_copies || 0}`,
@@ -470,16 +621,15 @@ const BulkIssue = () => {
       return false;
     }
 
-    // Check if selected books exceed daily limit
+    // DAILY LIMIT VALIDATION
     if (selectedBooks.length > dailyLimitCount) {
       showErrorToast(
-        `You can issue maximum ${dailyLimitCount} books per day. ` +
+        `Daily limit is ${dailyLimitCount} books per day. ` +
         `Currently selected: ${selectedBooks.length} books.`
       );
       return false;
     }
 
-    // Check if member has already issued books today
     const issuedTodayCount = computeIssuedTodayForCard(selectedCard.value);
     const availableToday = Math.max(0, dailyLimitCount - issuedTodayCount);
 
@@ -500,6 +650,7 @@ const BulkIssue = () => {
       return false;
     }
 
+    // Total allowed books validation
     const issuedCount = computeIssuedCountForCard(selectedCard.value);
     const toIssueCount = selectedBooks.length;
 
@@ -512,6 +663,7 @@ const BulkIssue = () => {
       return false;
     }
 
+    // Check if books are already issued to this member
     const alreadyIssuedBooks = [];
     selectedBooks.forEach(book => {
       if (isBookIssuedToSelectedCard(book.value)) {
@@ -527,6 +679,7 @@ const BulkIssue = () => {
       return false;
     }
 
+    // Check if books are available
     const unavailableBooks = [];
     selectedBooks.forEach(book => {
       const bookData = book.data;
@@ -542,6 +695,7 @@ const BulkIssue = () => {
       return false;
     }
 
+    // Check if member is active
     if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;
@@ -588,16 +742,17 @@ const BulkIssue = () => {
               data: result.data
             });
           } else {
+            const errorMessage = extractErrorMessage(result);
             failedBooks.push({
               book: b.data.title,
-              error: result.message || result.error || "Unknown error",
+              error: errorMessage,
               details: result.details || {}
             });
           }
         } catch (bookErr) {
           failedBooks.push({
             book: b.data.title,
-            error: "Network error",
+            error: "Network error: " + bookErr.message,
             details: { network_error: bookErr.message }
           });
         }
@@ -657,9 +812,8 @@ const BulkIssue = () => {
 
     } catch (err) {
       console.error("Bulk issue error:", err);
-      showErrorToast(
-        err.message || "Failed to issue books. Please try again."
-      );
+      let errorMsg = err.message || "Failed to issue books. Please try again.";
+      showErrorToast(errorMsg);
     } finally {
       setProcessing(false);
     }
@@ -764,21 +918,21 @@ const BulkIssue = () => {
       <div className="text-start">
         <strong>Limits Breakdown:</strong>
         <div className="small">
-          {memberSubscription ? (
+          {memberPlan || memberSubscription ? (
             <>
               <div className="fw-bold text-success">Current Plan:</div>
               <div className="ps-2">
-                <div>Plan: {memberSubscription.plan_name || memberSubscription.name || 'N/A'}</div>
+                <div>Plan: {memberPlan?.plan_name || memberSubscription?.plan_name || memberSubscription?.name || 'N/A'}</div>
                 <div>Total Allowed: {systemMaxBooks} books</div>
                 <div>Daily Limit: {dailyLimitCount} books per day</div>
                 <div>Duration: {durationDays} days</div>
-                <div>Status: {memberSubscription.is_active ? "Active ✓" : "Inactive ✗"}</div>
+                <div>Status: {(memberPlan?.is_active || memberSubscription?.is_active) ? "Active ✓" : "Inactive ✗"}</div>
               </div>
               <hr className="my-1" />
             </>
           ) : (
             <>
-              <div className="fw-bold text-info">System Default:</div>
+              <div className="fw-bold text-dark">System Default:</div>
               <div className="ps-2">
                 <div>No active subscription/plan</div>
                 <div>Default Maximum: {systemMaxBooks} books</div>
@@ -791,7 +945,7 @@ const BulkIssue = () => {
 
           {memberExtraAllowance > 0 && (
             <>
-              <div className="fw-bold text-info">Personal Allowance:</div>
+              <div className="fw-bold text-dark">Personal Allowance:</div>
               <div className="ps-2">
                 <div>Extra Books: {memberExtraAllowance} books</div>
               </div>
@@ -802,12 +956,11 @@ const BulkIssue = () => {
           <div className="fw-bold">Current Status:</div>
           <div className="ps-2">
             <div>Total Issued: {issuedCountForSelectedCard}</div>
-            <div>Issued Today: {issuedTodayForSelectedCard}/{dailyLimitCount}</div>
             <div>From Plan/Default: {planMaxUsed}/{systemMaxBooks}</div>
             {memberExtraAllowance > 0 && (
               <div>From Extra Allowance: {extraUsed}/{memberExtraAllowance}</div>
             )}
-            <div className="fw-bold mt-1">Can Issue More: {Math.min(remainingForCard, remainingForToday)}</div>
+            <div className="fw-bold mt-1">Can Issue More Today: {Math.min(remainingForCard, remainingForToday)}</div>
             <div className="text-success mt-1">Daily limit resets every day at midnight</div>
           </div>
         </div>
@@ -830,7 +983,6 @@ const BulkIssue = () => {
         </div>
       ) : (
         <Row>
-          {/* LEFT COLUMN: CARD SELECTION & STATS */}
           <Col lg={4} md={5} className="mb-4">
             <Card
               className="shadow-sm border-0 mb-4"
@@ -927,9 +1079,13 @@ const BulkIssue = () => {
                       </h5>
 
                       {memberAge !== null && (
-                        <div className="text-info small mb-2">
+                        <div className="text-dark small mb-2">
                           <i className="fa-solid fa-cake-candles me-1"></i>
                           Age: {memberAge} years
+                          <br />
+                          <span className="text-muted">
+                            {filteredBooksByAge.length} books available for this age
+                          </span>
                         </div>
                       )}
 
@@ -940,15 +1096,15 @@ const BulkIssue = () => {
                         </div>
                       )}
 
-                      {memberSubscription && (
+                      {(memberPlan || memberSubscription) && (
                         <div className="mt-2">
                           <Badge
-                            bg={memberSubscription.is_active ? "success" : "danger"}
+                            bg={(memberPlan?.is_active || memberSubscription?.is_active) ? "success" : "danger"}
                             className="mb-1"
                           >
                             <i className="fa-solid fa-crown me-1"></i>
-                            {memberSubscription.plan_name || memberSubscription.name || 'Plan'}
-                            {memberSubscription.is_active ? " ✓" : " ✗"}
+                            {memberPlan?.plan_name || memberSubscription?.plan_name || memberSubscription?.name || 'Plan'}
+                            {(memberPlan?.is_active || memberSubscription?.is_active) ? " ✓" : " ✗"}
                           </Badge>
                           <div className="small text-muted mt-1">
                             {systemMaxBooks} books total • {dailyLimitCount} per day • {durationDays} days
@@ -980,7 +1136,6 @@ const BulkIssue = () => {
 
                     <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />
 
-                    {/* Stats Grid - Updated to include daily limit */}
                     <Row className="g-2 mb-3">
                       <Col xs={3}>
                         <div className="p-2 bg-light rounded-3">
@@ -993,7 +1148,7 @@ const BulkIssue = () => {
                       <Col xs={3}>
                         <div className="p-2 bg-light rounded-3">
                           <div className="small text-muted">Issued Today</div>
-                          <div className="h5 mb-0 fw-bold text-info">
+                          <div className="h5 mb-0 fw-bold text-dark">
                             {issuedTodayForSelectedCard}/{dailyLimitCount}
                           </div>
                         </div>
@@ -1054,7 +1209,7 @@ const BulkIssue = () => {
                           </span>
                         </div>
                         <div className="d-flex justify-content-between mt-1">
-                          <span className="text-info">
+                          <span className="text-dark">
                             <i className="fa-solid fa-calendar-day me-1"></i>
                             Today: {issuedTodayForSelectedCard}/{dailyLimitCount}
                           </span>
@@ -1065,7 +1220,6 @@ const BulkIssue = () => {
                       </div>
                     </div>
 
-                    {/* Warning if member has reached daily limit */}
                     {selectedCard && remainingForToday === 0 && remainingForCard > 0 && (
                       <Alert variant="warning" className="mt-3 small p-2">
                         <i className="fa-solid fa-triangle-exclamation me-1"></i>
@@ -1073,11 +1227,17 @@ const BulkIssue = () => {
                       </Alert>
                     )}
 
-                    {/* Warning if member is inactive */}
                     {memberInfo && !memberInfo.is_active && (
                       <Alert variant="danger" className="mt-3 small p-2">
                         <i className="fa-solid fa-triangle-exclamation me-1"></i>
                         This member is inactive and cannot issue books.
+                      </Alert>
+                    )}
+
+                    {memberAge !== null && (
+                      <Alert variant="info" className="mt-3 small p-2">
+                        <i className="fa-solid fa-filter me-1"></i>
+                        Books filtered for age {memberAge} years. Showing {filteredBooksByAge.length} of {books.length} books.
                       </Alert>
                     )}
                   </>
@@ -1086,7 +1246,6 @@ const BulkIssue = () => {
             </Card>
           </Col>
 
-          {/* RIGHT COLUMN: BOOK SELECTION & ACTION */}
           <Col lg={8} md={7}>
             <Card
               className="shadow-sm border-0"
@@ -1111,7 +1270,6 @@ const BulkIssue = () => {
                     value={selectedBooks}
                     onChange={(v) => {
                       if (selectedCard && v) {
-                        // Check daily limit
                         const availableToday = Math.max(0, dailyLimitCount - issuedTodayForSelectedCard);
                         const limitedSelection = v.slice(0, availableToday);
 
@@ -1169,7 +1327,7 @@ const BulkIssue = () => {
                             )}
                           </span>
                           {data?.min_age !== undefined && data?.max_age !== undefined && (
-                            <small className="text-info">
+                            <small className="text-dark">
                               <i className="fa-solid fa-user-group me-1"></i>
                               Age: {data.min_age || 0} - {data.max_age || "Any"} years
                             </small>
@@ -1198,7 +1356,6 @@ const BulkIssue = () => {
                     )}
                   />
 
-                  {/* Helper messages */}
                   {!selectedCard && (
                     <Form.Text className="text-danger">
                       <i className="fa-solid fa-circle-info me-1"></i>
@@ -1213,69 +1370,31 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {selectedCard && memberInfo && memberInfo.is_active &&
+                  {/* {selectedCard && memberInfo && memberInfo.is_active &&
                     selectedBooks.length >= Math.min(remainingForCard, remainingForToday) &&
                     Math.min(remainingForCard, remainingForToday) > 0 && (
                       <Form.Text className="text-warning fw-bold">
                         <i className="fa-solid fa-lock me-1"></i>
                         You have selected the maximum allowed books for this transaction.
                       </Form.Text>
-                    )}
+                    )} */}
 
-                  {selectedCard && remainingForCard === 0 && (
-                    <Form.Text className="text-danger fw-bold">
-                      <i className="fa-solid fa-ban me-1"></i>
-                      This card has reached its total issue limit.
-                    </Form.Text>
-                  )}
-
-                  {selectedCard && remainingForToday === 0 && remainingForCard > 0 && (
-                    <Form.Text className="text-danger fw-bold">
-                      <i className="fa-solid fa-calendar-day me-1"></i>
-                      Daily limit reached! {remainingForCard} books available from tomorrow.
-                    </Form.Text>
-                  )}
-
-                  {selectedCard && Math.min(remainingForCard, remainingForToday) > 0 && (
-                    <Form.Text className="text-muted small">
-                      <i className="fa-solid fa-info-circle me-1"></i>
-                      Member can issue {Math.min(remainingForCard, remainingForToday)} more book(s).
-                      <OverlayTrigger placement="top" overlay={limitsTooltip}>
-                        <span className="ms-1 text-primary cursor-pointer">
-                          (Daily: {remainingForToday}/{dailyLimitCount}, Total: {remainingForCard}/{totalAllowedBooks})
-                        </span>
-                      </OverlayTrigger>
-                    </Form.Text>
-                  )}
-
-                  {/* Info about daily limit */}
-                  {selectedCard && dailyLimitCount > 0 && (
-                    <Form.Text className="text-info small d-block mt-1">
-                      <i className="fa-solid fa-calendar-check me-1"></i>
-                      Daily limit: {dailyLimitCount} books per day. Already issued today: {issuedTodayForSelectedCard}.
-                    </Form.Text>
-                  )}
-
-                  {/* Info about disabled books */}
                   {selectedCard && (
-                    <Form.Text className="text-info small d-block mt-1">
+                    <Form.Text className="text-dark small d-block mt-1">
                       <i className="fa-solid fa-lightbulb me-1"></i>
                       Already issued books are disabled. After successful issue, refresh the list to select them again.
                     </Form.Text>
                   )}
+
+                  {/* {selectedCard && memberAge !== null && (
+                    <Form.Text className="text-info small d-block mt-1">
+                      <i className="fa-solid fa-filter me-1"></i>
+                      Showing books filtered for age {memberAge} years. {filteredBooksByAge.length} of {books.length} books available.
+                    </Form.Text>
+                  )} */}
                 </div>
 
-                {/* SELECTED BOOKS GRID */}
                 <div className="mb-4">
-                  <h6 className="fw-bold mb-3">
-                    Books to be Issued
-                    {selectedBooks.length > 0 && ` (${selectedBooks.length})`}
-                    {selectedCard && dailyLimitCount > 0 && (
-                      <span className="text-muted small ms-2">
-                        (Daily limit: {dailyLimitCount} books, Issued today: {issuedTodayForSelectedCard})
-                      </span>
-                    )}
-                  </h6>
                   {selectedBooks.length === 0 ? (
                     <div
                       className="text-center p-5 border rounded-3"
@@ -1288,12 +1407,12 @@ const BulkIssue = () => {
                       <i className="fa-solid fa-book-open text-muted fa-2x mb-2 opacity-50"></i>
                       <p className="text-muted mb-0">No books selected yet.</p>
                       {selectedCard && memberAge !== null && (
-                        <p className="text-info small mt-2">
+                        <p className="text-dark small mt-2">
                           Books filtered for age {memberAge} years
                         </p>
                       )}
                       {selectedCard && dailyLimitCount > 0 && (
-                        <p className="text-info small mt-2">
+                        <p className="text-dark small mt-2">
                           Daily limit: {dailyLimitCount} books per day
                         </p>
                       )}
@@ -1324,7 +1443,7 @@ const BulkIssue = () => {
                                   Author: {book.data.author || "Unknown"}
                                 </div>
                                 {(book.data.min_age || book.data.max_age) && (
-                                  <div className="text-info small">
+                                  <div className="text-dark small">
                                     <i className="fa-solid fa-user-group me-1"></i>
                                     Age: {book.data.min_age || "Any"} - {book.data.max_age || "Any"} years
                                   </div>
@@ -1357,7 +1476,6 @@ const BulkIssue = () => {
 
                 <hr style={{ borderColor: "#f0f0f0" }} />
 
-                {/* DATES & CONFIRM */}
                 <Row className="g-3 align-items-end">
                   <Col md={4}>
                     <Form.Label className="fw-bold small text-muted text-uppercase">
@@ -1415,39 +1533,6 @@ const BulkIssue = () => {
                         </>
                       )}
                     </Button>
-
-                    {/* Summary info */}
-                    {selectedBooks.length > 0 && selectedCard && (
-                      <div className="mt-2 small text-center">
-                        <span className="text-muted">
-                          Issuing {selectedBooks.length} book(s) to {getMemberName()}
-                          {memberAge !== null && ` (Age: ${memberAge} years)`}
-                        </span>
-                        <br />
-                        <span className="text-muted">
-                          Daily: {issuedTodayForSelectedCard + selectedBooks.length}/{dailyLimitCount} •
-                          Total: {issuedCountForSelectedCard + selectedBooks.length}/{totalAllowedBooks}
-                          <br />
-                          Remaining today: {Math.max(0, remainingForToday - selectedBooks.length)} •
-                          Remaining total: {Math.max(0, remainingForCard - selectedBooks.length)}
-                          {memberExtraAllowance > 0 && (
-                            <span className="text-success">
-                              <br />
-                              <i className="fa-solid fa-calculator me-1"></i>
-                              {systemMaxBooks} ({memberSubscription ? 'Plan' : 'Default'}) + {memberExtraAllowance} (Extra) = {totalAllowedBooks}
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Info about refresh */}
-                    {selectedCard && (
-                      <div className="mt-2 small text-info text-center">
-                        <i className="fa-solid fa-rotate me-1"></i>
-                        List refreshes after successful issue
-                      </div>
-                    )}
                   </Col>
                 </Row>
               </Card.Body>

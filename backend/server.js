@@ -21,6 +21,7 @@ app.use(
   express.urlencoded({ extended: true, limit: "50mb" })
 );
 
+const fileUpload = require("express-fileupload");
 const path = require("path");
 const sendMail = require("./app/utils/mailer");
 const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
@@ -109,6 +110,13 @@ require("./app/routes/mail.routes.js")(app);
 require("./app/routes/dashbard.router.js")(app);
 require('./app/routes/objecttype.routes.js')(app);
 
+
+//  upload middleware
+app.use(fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 },
+  abortOnLimit: true,
+  createParentPath: true,
+}));
 
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);

@@ -131,18 +131,19 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 placeholder: "Enter The State",
                 colSize: 6,
             },
+            // {
+            //     name: "country",
+            //     label: "Country",
+            //     type: "select",
+            //     options: COUNTRY_CODES.map(item => ({
+            //         value: item.country,
+            //         label: `${item.country}(${item.country_code})`
+            //     })),
+            //     required: true,
+            //     placeholder: "Select a country",
+            //     colSize: 6
+            // },
             {
-                name: "country",
-                label: "Country",
-                type: "select",
-                options: COUNTRY_CODES.map(item => ({
-                    value: item.country,
-                    label: `${item.country}(${item.country_code})`
-                })),
-                required: true,
-                placeholder: "Select a country",
-                colSize: 6
-            }, {
                 name: "is_active",
                 label: "Active",
                 type: "toggle",
@@ -164,7 +165,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
-            if (!formData.country?.trim()) errors.push("country is required");
+            // if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
 
             // const duplicate = allBooks.find(
@@ -191,7 +192,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
         },
 
         customHandlers: {
-          
+
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
                     return data.map(item => ({

@@ -720,8 +720,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src="/image.png"
-            style={{ height: "60px", marginLeft: '20px', objectFit: "contain" }}
+            src="/Logo.png"
+
+            height="50"
+            style={{ height: "50px", marginLeft: '20px', objectFit: "contain" }}
           />
           <span>{Company?.company_name || "Adhwaa Al-Hedaya School"}</span>
         </Navbar.Brand>
