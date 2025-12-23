@@ -353,33 +353,60 @@ const DynamicCRUD = ({
         }
     }, []);
 
+    // const filteredData = useMemo(() => {
+    //     let result = data;
+
+    //     if (advancedFilters && advancedFilters.length > 0) {
+    //         const fieldsForFilter = filterFields.length > 0 ? filterFields : formFields.map(field => ({
+    //             ...field,
+    //             name: field.name || field.field,
+    //             field: field.name || field.field,
+    //         }));
+    //         result = applyAdvancedFilters(result, advancedFilters, fieldsForFilter);
+    //     }
+
+    //     if (searchTerm && showSearch) {
+    //         const searchTermLower = searchTerm.toLowerCase();
+    //         result = result.filter(item =>
+    //             columns.some(col => {
+    //                 if (!col || !col.field) return false;
+    //                 const fieldValue = item[col.field];
+    //                 return fieldValue != null &&
+    //                     String(fieldValue).toLowerCase().includes(searchTermLower);
+    //             })
+    //         );
+    //     }
+
+    //     return result;
+    // }, [data, searchTerm, showSearch, columns, advancedFilters, filterFields, formFields]);
+
     const filteredData = useMemo(() => {
-        let result = data;
+    let result = data;
 
-        if (advancedFilters && advancedFilters.length > 0) {
-            const fieldsForFilter = filterFields.length > 0 ? filterFields : formFields.map(field => ({
-                ...field,
-                name: field.name || field.field,
-                field: field.name || field.field,
-            }));
-            result = applyAdvancedFilters(result, advancedFilters, fieldsForFilter);
-        }
+    // 1. Advanced Filter Logic
+    // Check karein ki kya koi filter value set hai
+    const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
+    
+    if (hasActiveFilters) {
+        // Hamara naya logic call karein
+        result = applyAdvancedFilters(result, advancedFilters);
+    }
 
-        if (searchTerm && showSearch) {
-            const searchTermLower = searchTerm.toLowerCase();
-            result = result.filter(item =>
-                columns.some(col => {
-                    if (!col || !col.field) return false;
-                    const fieldValue = item[col.field];
-                    return fieldValue != null &&
-                        String(fieldValue).toLowerCase().includes(searchTermLower);
-                })
-            );
-        }
+    // 2. Global Search Term Logic
+    if (searchTerm && showSearch) {
+        const searchTermLower = searchTerm.toLowerCase();
+        result = result.filter(item =>
+            columns.some(col => {
+                if (!col || !col.field) return false;
+                const fieldValue = item[col.field];
+                return fieldValue != null &&
+                    String(fieldValue).toLowerCase().includes(searchTermLower);
+            })
+        );
+    }
 
-        return result;
-    }, [data, searchTerm, showSearch, columns, advancedFilters, filterFields, formFields]);
-
+    return result;
+}, [data, searchTerm, showSearch, columns, advancedFilters]);
 
     const handleAdvancedFilterChange = useCallback((filters) => {
         setAdvancedFilters(filters);
@@ -946,7 +973,7 @@ const DynamicCRUD = ({
                                         headerActions={headerActions}
                                     />
 
-                                    {showAdvancedFilter && (
+                                    {/* {showAdvancedFilter && (
                                         <AdvancedFilter
                                             fields={filterFields.length > 0 ? filterFields : formFields.map(field => ({
                                                 ...field,
@@ -956,8 +983,19 @@ const DynamicCRUD = ({
                                             onFilterChange={handleAdvancedFilterChange}
                                             onClear={handleAdvancedFilterClear}
                                         />
+                                    )} */}
+                                    {showAdvancedFilter && (
+                                        <AdvancedFilter
+                                            // Agar filterFields di hain toh wo, warna processedFormFields use karein
+                                            // Hum password aur file fields ko filter se nikaal dete hain
+                                            fields={filterFields.length > 0 
+                                                ? filterFields 
+                                                : processedFormFields.filter(f => !['password', 'file', 'image', 'hidden'].includes(f.type))
+                                            }
+                                            onFilterChange={handleAdvancedFilterChange}
+                                            onClear={handleAdvancedFilterClear}
+                                        />
                                     )}
-
                                     <ResizableTable
                                         data={filteredData}
                                         columns={enhancedColumns.filter(col => col && visibleColumns[col.field])}
