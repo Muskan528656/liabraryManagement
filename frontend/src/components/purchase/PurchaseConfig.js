@@ -145,10 +145,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             vendors: {
                 endpoint: "vendor",
                 labelField: "name"
-            },
-            books: {
-                endpoint: "book",
-                labelField: "title"
             }
         },
 
@@ -196,6 +192,36 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                         total_amount: totalAmount.toFixed(2)
                     }));
                 }
+            },
+            onImportComplete: async (successfulRecords, apiEndpoint) => {
+                // Update book prices after importing purchase data
+                if (successfulRecords && successfulRecords.length > 0) {
+                    try {
+                        const DataApi = (await import("../../api/dataApi")).default;
+                        const bookApi = new DataApi("book");
+                        
+                        for (const purchase of successfulRecords) {
+                            if (purchase.book_id && purchase.unit_price) {
+                                // Get current book data
+                                const bookResponse = await bookApi.getById(purchase.book_id);
+                                if (bookResponse.data && bookResponse.data.data) {
+                                    const currentBook = bookResponse.data.data;
+                                    
+                                    // Update book price if it's different
+                                    if (parseFloat(currentBook.price || 0) !== parseFloat(purchase.unit_price)) {
+                                        await bookApi.update(purchase.book_id, {
+                                            ...currentBook,
+                                            price: parseFloat(purchase.unit_price)
+                                        });
+                                        console.log(`Updated price for book ${currentBook.title} from ${currentBook.price} to ${purchase.unit_price}`);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error updating book prices after purchase import:", error);
+                    }
+                }
             }
         },
         exportColumns: [
@@ -213,6 +239,5 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             vendor_name: { path: "vendor", idField: "vendor_id", labelField: "vendor_name" },
             book_title: { path: "book", idField: "book_id", labelField: "book_title" }
         },
-        importModel: PurchaseModel
     };
 };

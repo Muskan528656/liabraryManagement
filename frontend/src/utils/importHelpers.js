@@ -31,6 +31,7 @@ export const saveImportedData = async ({
     let createdCount = 0;
     let skippedCount = 0;
     let errorCount = 0; // Track actual errors separate from duplicates if needed
+    const successfulRecords = []; // Track successfully created records
 
     const relatedApiCache = {};
     const relatedIndex = {};
@@ -192,8 +193,9 @@ export const saveImportedData = async ({
 
       // --- SERVER-SIDE SAVE WITH ERROR HANDLING ---
       try {
-        await mainApi.create(item);
+        const result = await mainApi.create(item);
         createdCount++;
+        successfulRecords.push({ ...item, id: result.data?.data?.id || result.data?.id }); // Add the created record with ID
       } catch (err) {
         // Here is the fix: Check for 400 (Bad Request) or 409 (Conflict)
         // These codes usually mean Validation Failed or Duplicate Entry on server
@@ -235,6 +237,15 @@ export const saveImportedData = async ({
     }
 
     if (afterSave) afterSave();
+
+    // Call custom import complete handler if provided
+    if (customHandlers && customHandlers.onImportComplete) {
+      try {
+        await customHandlers.onImportComplete(successfulRecords, apiEndpoint);
+      } catch (error) {
+        console.error("Error in onImportComplete handler:", error);
+      }
+    }
 
   } catch (globalError) {
     console.error("Critical Import error:", globalError);
