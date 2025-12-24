@@ -125,24 +125,17 @@ const Company = () => {
       if (selectedLogoFile) {
         const formData = new FormData();
         formData.append('image', selectedLogoFile);
-        
- 
+
         Object.keys(tempCompany).forEach(key => {
           if (key !== 'logourl' && tempCompany[key] !== null && tempCompany[key] !== undefined) {
-            formData.append(key, tempCompany[key]);
+            // Convert boolean values to strings for FormData compatibility
+            const value = typeof tempCompany[key] === 'boolean' ? tempCompany[key].toString() : tempCompany[key];
+            formData.append(key, value);
           }
         });
 
-        const response = await axios.put(
-          `${API_BASE_URL}/api/company/${companyId}`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': token.startsWith("Bearer ") ? token : `Bearer ${token}`
-            }
-          }
-        );
+        const companyApi = new DataApi("company");
+        const response = await companyApi.updateFormData(formData, companyId);
 
         if (response.data?.success) {
           const updatedCompany = response.data.data;
@@ -539,26 +532,53 @@ const Company = () => {
                           onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
- 
-                              const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                              if (!allowedTypes.includes(file.type)) {
+                              // File type validation - check both MIME type and extension
+                              const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                              const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+
+                              const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                              const mimeType = file.type.toLowerCase();
+
+                              console.log('File validation:', {
+                                name: file.name,
+                                mimeType: mimeType,
+                                extension: fileExtension,
+                                size: file.size
+                              });
+
+                              // Check if MIME type is valid
+                              const isValidMimeType = allowedMimeTypes.includes(mimeType);
+
+                              // Check if extension is valid
+                              const isValidExtension = allowedExtensions.includes(fileExtension);
+
+                              // Validate that MIME type and extension match appropriately
+                              const isValidCombination =
+                                (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
+                                (mimeType === 'image/png' && fileExtension === '.png') ||
+                                (mimeType === 'image/gif' && fileExtension === '.gif');
+
+                              if (!isValidMimeType || !isValidExtension || !isValidCombination) {
+                                console.log('File rejected:', { isValidMimeType, isValidExtension, isValidCombination });
                                 PubSub.publish("RECORD_ERROR_TOAST", {
                                   title: "Error",
                                   message: "Only JPEG, PNG, and GIF images are allowed",
                                 });
+                                // Reset file input
+                                e.target.value = '';
                                 return;
                               }
-                              
- 
+
                               if (file.size > 5 * 1024 * 1024) {
                                 PubSub.publish("RECORD_ERROR_TOAST", {
                                   title: "Error",
                                   message: "File size must be less than 5MB",
                                 });
+                                // Reset file input
+                                e.target.value = '';
                                 return;
                               }
-                              
- 
+
                               setSelectedLogoFile(file);
                               const previewUrl = URL.createObjectURL(file);
                               setLogoPreview(previewUrl);
