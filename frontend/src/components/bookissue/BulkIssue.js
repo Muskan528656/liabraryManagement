@@ -1,5 +1,6 @@
 
 
+// @ts-nocheck
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -529,12 +530,56 @@ const BulkIssue = () => {
       booksToShow: booksToShow.length
     });
 
-    return booksToShow.map((b) => ({
-      value: b.id,
-      label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
-      subLabel: `Available: ${b.available_copies || 0}`,
-      data: b,
-    }));
+    // Define age groups
+    const ageGroups = [
+      { label: "General (All Ages)", min: 0, max: 0 },
+      { label: "0-5 years", min: 0, max: 5 },
+      { label: "6-12 years", min: 6, max: 12 },
+      { label: "13-18 years", min: 13, max: 18 },
+      { label: "19-25 years", min: 19, max: 25 },
+      { label: "26+ years", min: 26, max: 999 }
+    ];
+
+    // Filter groups based on member age
+    const relevantGroups = memberAge !== null
+      ? ageGroups.filter(group => {
+          if (group.min === 0 && group.max === 0) {
+            // General group: show if member age is null or if there are general books
+            return true;
+          } else {
+            // Specific age groups: show only if member's age falls within this group
+            return memberAge >= group.min && memberAge <= group.max;
+          }
+        })
+      : ageGroups; // If no member selected, show all groups
+
+    // Group books by age categories
+    const groupedOptions = relevantGroups.map(group => {
+      const groupBooks = booksToShow.filter(book => {
+        const minAge = parseInt(book.min_age) || 0;
+        const maxAge = parseInt(book.max_age) || 999;
+
+        if (group.min === 0 && group.max === 0) {
+          // General books: no age restrictions or min_age = 0 and max_age = 0
+          return minAge === 0 && maxAge === 0;
+        } else {
+          // Specific age groups: check if book's age range fits within the group
+          return minAge <= group.max && maxAge >= group.min;
+        }
+      });
+
+      return {
+        label: `${group.label} (${groupBooks.length})`,
+        options: groupBooks.map((b) => ({
+          value: b.id,
+          label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
+          subLabel: `Available: ${b.available_copies || 0}`,
+          data: b,
+        }))
+      };
+    }).filter(group => group.options.length > 0); // Only show groups with books
+
+    return groupedOptions;
   };
 
   const availableForSelect = (option) => {
@@ -1268,7 +1313,7 @@ const BulkIssue = () => {
 
                 <div className="mb-4">
                   <Select
-                    options={getBookOptions().map(availableForSelect)}
+                    options={getBookOptions()}
                     isMulti
                     value={selectedBooks}
                     onChange={(v) => {
@@ -1355,6 +1400,11 @@ const BulkIssue = () => {
                         >
                           {subLabel}
                         </Badge>
+                      </div>
+                    )}
+                    formatGroupLabel={(group) => (
+                      <div className="fw-bold text-primary">
+                        {group.label}
                       </div>
                     )}
                   />

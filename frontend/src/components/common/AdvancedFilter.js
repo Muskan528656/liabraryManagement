@@ -172,7 +172,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
           <Col xs={12} md={2} className="d-flex align-items-end gap-2">
             <div className="d-flex gap-2" style={{ height: '38px' }}>
               <Button
-
+                
                 size="sm"
                 onClick={handleClear}
                 className="d-flex align-items-center gap-1 h-100"
