@@ -411,7 +411,7 @@ export const applyAdvancedFilters = (data, filterValues) => {
 
 const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }) => {
   const [localFilters, setLocalFilters] = useState({});
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleChange = (name, value) => {
     setLocalFilters(prev => ({ ...prev, [name]: value }));
@@ -434,15 +434,15 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
   }, [localFilters]);
 
   return (
-    <div className={`advanced-filter-wrapper ${className} mb-4`}>
+    <div className={`advanced-filter-wrapper ${className} mb-5`}>
       {/* Header Section */}
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <div className="d-flex align-items-center gap-3">
+      <div className="d-flex align-items-center justify-content-end mb-3">
+        <div className="d-none">
           <Button
             variant={isExpanded ? "secondary" : "outline-secondary"}
             size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="d-flex align-items-center gap-2 px-3 py-1"
+            // onClick={() => setIsExpanded(!isExpanded)}
+            // className="d-flex align-items-center gap-2 px-3 py-1"
           >
             <i className={`fa-solid ${isExpanded ? 'fa-minus' : 'fa-filter'}`}></i>
             <span className="fw-bold">Advanced Filter</span>
@@ -452,34 +452,6 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
               </Badge>
             )}
             <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} ms-1 small`}></i>
-          </Button>
-        </div>
-
-        <div className="d-flex gap-2">
-          <Button 
-            variant="" 
-            size="sm" 
-            onClick={handleClear}
-            className="px-3 text-muted d-flex align-items-center gap-2 "
-            style={{
-              color: "var(--primary-color)",
-              background: "var(--primary-background-color)",
-              borderRadius: "5px",
-              border:'var(--primary-color) solid 1px'}}
-          >
-            <i className="fa-solid fa-rotate-left"></i> Clear
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={handleSearch} 
-            className="px-2 d-flex align-items-center gap-2"
-            style={{ 
-              color: "var(--primary-color)",
-              background: "var(--primary-background-color)",
-              borderRadius: "5px",
-              border:'var(--primary-color) solid 1px' }}
-          >
-            <i className="fa-solid fa-magnifying-glass"></i> Search
           </Button>
         </div>
       </div>
@@ -564,6 +536,15 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                 );
               })}
             </Row>
+            {/* Action Buttons */}
+            <div className="d-flex align-items-center justify-content-end mt-4 gap-2">
+              <Button variant="outline-secondary" size="sm" onClick={handleClear}>
+                Clear Filters
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleSearch}>
+                Apply Filters
+              </Button>
+            </div>
           </Card.Body>
         </Card>
       )}
