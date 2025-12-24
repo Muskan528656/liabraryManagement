@@ -473,7 +473,10 @@ const DynamicCRUD = ({
                 publishers: "publisher",
                 publisher: "publisher",
                 users: "user",
+                vendors: "vendor",
                 vendor: "vendor",
+                books: "book",
+                book: "book",
                 "user-role": "user-role",
                 "userroles": "user-role",
                 subscriptions: "subscriptions",
@@ -835,7 +838,12 @@ const DynamicCRUD = ({
 
 
                 // label: `Import ${moduleLabel}`,
-                onClick: () => setShowImportModal(true),
+                onClick: async () => {
+                    if (Object.keys(relatedData).length === 0) {
+                        await fetchRelatedData();
+                    }
+                    setShowImportModal(true);
+                },
             });
         }
 

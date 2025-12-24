@@ -137,7 +137,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         moduleName: "purchase",
         moduleLabel: "Purchase",
         apiEndpoint: "purchase",
-        importMatchFields: [],
+        importMatchFields: ["vendor_id", "book_id", "quantity", "purchase_date"],
         importModel: PurchaseModel,
 
 
@@ -145,6 +145,10 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             vendors: {
                 endpoint: "vendor",
                 labelField: "name"
+            },
+            books: {
+                endpoint: "book",
+                labelField: "title"
             }
         },
 
@@ -193,33 +197,86 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                     }));
                 }
             },
+            onImportDataTransform: (data) => {
+                return data.map(row => {
+                    const transformed = { ...row };
+
+                    // Ensure quantity is a number
+                    if (transformed.quantity) {
+                        transformed.quantity = parseInt(transformed.quantity, 10) || 1;
+                    }
+
+                    // Ensure unit_price is a number
+                    if (transformed.unit_price) {
+                        transformed.unit_price = parseFloat(transformed.unit_price) || 0;
+                    }
+
+                    // Calculate total_amount if not provided
+                    if (!transformed.total_amount && transformed.quantity && transformed.unit_price) {
+                        transformed.total_amount = (transformed.quantity * transformed.unit_price).toFixed(2);
+                    }
+
+                    // Ensure purchase_date is in correct format
+                    if (transformed.purchase_date) {
+                        // If it's already in YYYY-MM-DD format, keep it
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(transformed.purchase_date)) {
+                            // Already in correct format
+                        } else {
+                            // Try to parse other formats
+                            const date = new Date(transformed.purchase_date);
+                            if (!isNaN(date.getTime())) {
+                                transformed.purchase_date = date.toISOString().split('T')[0];
+                            }
+                        }
+                    } else {
+                        // Set default date if not provided
+                        transformed.purchase_date = new Date().toISOString().split('T')[0];
+                    }
+
+                    return transformed;
+                });
+            },
             onImportComplete: async (successfulRecords, apiEndpoint) => {
-                // Update book prices after importing purchase data
+                // Update book prices and quantities after importing purchase data
                 if (successfulRecords && successfulRecords.length > 0) {
                     try {
                         const DataApi = (await import("../../api/dataApi")).default;
                         const bookApi = new DataApi("book");
-                        
+
                         for (const purchase of successfulRecords) {
-                            if (purchase.book_id && purchase.unit_price) {
+                            if (purchase.book_id && purchase.unit_price && purchase.quantity) {
                                 // Get current book data
                                 const bookResponse = await bookApi.getById(purchase.book_id);
                                 if (bookResponse.data && bookResponse.data.data) {
                                     const currentBook = bookResponse.data.data;
-                                    
+
                                     // Update book price if it's different
-                                    if (parseFloat(currentBook.price || 0) !== parseFloat(purchase.unit_price)) {
-                                        await bookApi.update(purchase.book_id, {
-                                            ...currentBook,
-                                            price: parseFloat(purchase.unit_price)
-                                        });
-                                        console.log(`Updated price for book ${currentBook.title} from ${currentBook.price} to ${purchase.unit_price}`);
+                                    const newPrice = parseFloat(purchase.unit_price);
+                                    const currentPrice = parseFloat(currentBook.price || 0);
+
+                                    // Update book quantity (add to existing total_copies)
+                                    const purchaseQuantity = parseInt(purchase.quantity) || 0;
+                                    const currentTotalCopies = parseInt(currentBook.total_copies || 0);
+                                    const newTotalCopies = currentTotalCopies + purchaseQuantity;
+
+                                    const updateData = { ...currentBook };
+
+                                    // Only update price if it's different
+                                    if (currentPrice !== newPrice) {
+                                        updateData.price = newPrice;
+                                        console.log(`Updated price for book ${currentBook.title} from ${currentPrice} to ${newPrice}`);
                                     }
+
+                                    // Always update total_copies by adding the purchased quantity
+                                    updateData.total_copies = newTotalCopies;
+                                    console.log(`Updated total_copies for book ${currentBook.title} from ${currentTotalCopies} to ${newTotalCopies}`);
+
+                                    await bookApi.update(purchase.book_id, updateData);
                                 }
                             }
                         }
                     } catch (error) {
-                        console.error("Error updating book prices after purchase import:", error);
+                        console.error("Error updating book prices and quantities after purchase import:", error);
                     }
                 }
             }
