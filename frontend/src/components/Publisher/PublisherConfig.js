@@ -148,17 +148,17 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             console.log("errors--->", errors)
             console.log("book", allBooks);
 
-            // if (!formData.salutation?.trim()) errors.push("salutation is required");
+ 
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
             if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
 
-            // const duplicate = allBooks.find(
-            //     book => book.isbn === formData.isbn && book.id !== editingBook?.id   
-            // );
-            // if (duplicate) errors.push("Book with this ISBN already exists");
+ 
+ 
+ 
+ 
 
             return errors;
         },
@@ -174,7 +174,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
-            // 4. Enable Import Button
+ 
             showImportButton: true,
         },
 

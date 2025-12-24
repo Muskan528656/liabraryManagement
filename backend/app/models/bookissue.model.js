@@ -141,7 +141,7 @@ async function issueBook(req) {
       return { success: false, message: "Book ID is required" };
     }
 
-    // Get user ID logic remains same...
+ 
     let userId = null;
     if (req.userinfo && req.userinfo.id) {
       userId = req.userinfo.id;
@@ -193,7 +193,7 @@ async function issueBook(req) {
       return { success: false, message: "This plan does not allow issuing books" };
     }
 
-    // Get daily limit from plan
+ 
     let dailyLimit = member.max_allowed_books_at_time ? parseInt(member.max_allowed_books_at_time) : 2;
     if (isNaN(dailyLimit) || dailyLimit < 1) {
       dailyLimit = 2; // Default fallback
@@ -218,7 +218,7 @@ async function issueBook(req) {
       };
     }
 
-    // NEW: Check DAILY limit
+ 
     console.log("Step 3.5: Checking DAILY book limit...");
     const today = new Date().toISOString().split('T')[0];
     console.log("Today's date for daily check:", today);
@@ -365,7 +365,7 @@ async function issueBook(req) {
     const updatedBook = updateBookRes.rows[0];
     console.log(`Book quantity updated. New available copies: ${updatedBook.available_copies}`);
 
-    // Update issued count
+ 
     try {
       const updateIssuedCountQuery = `
         UPDATE ${schema}.books 

@@ -234,11 +234,11 @@ const LibraryCardDetail = ({
     const endDate = new Date(subscription.end_date);
     const today = new Date();
 
-    // total duration
+ 
     const totalDays =
       (endDate - startDate) / (1000 * 60 * 60 * 24);
 
-    // used duration
+ 
     const usedDays =
       (today - startDate) / (1000 * 60 * 60 * 24);
 

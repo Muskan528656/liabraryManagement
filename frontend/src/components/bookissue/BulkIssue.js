@@ -275,6 +275,10 @@ const BulkIssue = () => {
         if (memberDob) {
           age = calculateMemberAge(memberDob);
           setMemberAge(age);
+        }
+        if (memberDob) {
+          age = calculateMemberAge(memberDob);
+          setMemberAge(age);
           console.log("Member age calculated:", { dob: memberDob, age });
         } else {
           setMemberAge(null);
@@ -606,7 +610,7 @@ const BulkIssue = () => {
       return false;
     }
 
-    
+
     if (selectedBooks.length > dailyLimitCount) {
       showErrorToast(
         `Daily limit is ${dailyLimitCount} books per day. ` +
@@ -946,7 +950,27 @@ const BulkIssue = () => {
       </div>
     </Tooltip>
   );
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
+  // const memberAge = memberInfo ? calculateAge(memberInfo.dob) : null;
+  const ageFilteredBooks = getBookOptions().filter((book) => {
+    if (memberAge === null) return true;
+
+    const minAge = book.min_age ?? 0;
+    const maxAge = book.max_age ?? Infinity;
+
+    return memberAge >= minAge && memberAge <= maxAge;
+  });
   return (
     <Container
       fluid

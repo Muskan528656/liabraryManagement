@@ -167,7 +167,7 @@ const Settings = () => {
   };
 
   return (
-    <Container fluid className="py-4 detail-h4">
+    <Container fluid className=" detail-h4">
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
           <Card className="border-0 shadow-sm">

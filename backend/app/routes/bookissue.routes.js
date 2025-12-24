@@ -128,7 +128,7 @@ module.exports = (app) => {
 
         BookIssue.init(req.userinfo.tenantcode);
 
-        // 🔹 Existing issue check
+ 
         const existingIssue = await BookIssue.findById(issueId);
         if (!existingIssue) {
           return res.status(404).json({
@@ -137,18 +137,18 @@ module.exports = (app) => {
           });
         }
 
-        // 🔹 Prepare update query
+ 
         const updateFields = [];
         const updateValues = [];
         let paramCounter = 1;
 
-        // Always update audit fields
+ 
         updateFields.push(`lastmodifieddate = NOW()`);
         updateFields.push(`lastmodifiedbyid = $${paramCounter}`);
         updateValues.push(userId);
         paramCounter++;
 
-        // Allowed DB fields only
+ 
         const allowedFields = [
           "issue_date",
           "due_date",
@@ -184,7 +184,7 @@ module.exports = (app) => {
 
         const updatedIssue = result.rows[0];
 
-        // 🔹 Notification on status change
+ 
         if (updateData.status && updateData.status !== existingIssue.status) {
           try {
             Notification.init(req.userinfo.tenantcode);

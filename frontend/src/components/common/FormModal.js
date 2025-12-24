@@ -222,7 +222,7 @@ const FormModal = ({
 
       case "text":
       case "email":
-      // REMOVED "password" from here
+ 
       case "number":
       case "tel":
         return (
@@ -473,7 +473,7 @@ const FormModal = ({
                     style={{
                       padding: "12px 16px",
                       backgroundColor: "var(--secondary-color)",
-                      // borderLeft: "4px solid #6f42c1",
+ 
                       marginBottom: "20px",
                       borderRadius: "6px",
                     }}

@@ -386,7 +386,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   {step === 3 && (
                     <Button
                       size="sm"
-                      // className="px-3 rounded-pill shadow-sm py-1"
+ 
                       variant=""
                       style={{
                         color: "var(--primary-color)",
@@ -403,7 +403,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     <Button
                       size="sm"
                       variant="var(--primary-color)"
-                      // className="px-3 rounded-pill shadow-sm py-1"
+ 
                       style={{
                         color: "var(--primary-color)",
                         background: "var(--primary-background-color)",
