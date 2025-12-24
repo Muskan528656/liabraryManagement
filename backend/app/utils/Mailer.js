@@ -1,5 +1,5 @@
  
-const transporter = require("./mailconfig");
+const transporter = require("./MailConfig");
 
 const sendMail = async ({ to, subject, text, html }) => {
     try {
