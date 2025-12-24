@@ -16,7 +16,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             "gst_number": "GST Number",
             "pan_number": "PAN Number",
             "address": "Address",
-            "city": "City",
+
             "state": "State",
             "pincode": "Pincode",
             "country": "Country",
@@ -83,7 +83,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             gst_number: "",
             pan_number: "",
             address: "",
-            city: "",
+
             state: "",
             pincode: "",
             country: "India",
@@ -206,7 +206,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 }
             },
 
- 
+
             {
                 name: "gst_number",
                 label: "GST Number",
@@ -250,7 +250,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     const handleChange = (e) => {
                         const newValue = e.target.value;
 
- 
+
                         if (typeof onChange === 'function') {
                             onChange({
                                 target: {
@@ -259,7 +259,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                                 }
                             });
 
- 
+
                             setTimeout(() => {
                                 if (onChange.handleChange) {
                                     onChange.handleChange({
@@ -294,54 +294,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     );
                 }
             },
-            {
-                name: "city",
-                label: "City",
-                type: "select",
-                colSize: 6,
-                section: "Company Information",
-                options: [],
-                placeholder: "Select City",
-                render: (value, onChange, formData) => {
-                    const filteredCities = formData?.state
-                        ? allCities.filter(city => city.state === formData.state)
-                        : [];
 
-                    const handleChange = (e) => {
-                        const newValue = e.target.value;
-                        if (typeof onChange === 'function') {
-                            onChange({
-                                target: {
-                                    name: 'city',
-                                    value: newValue
-                                }
-                            });
-                        }
-                    };
-
-                    return (
-                        <select
-                            className="form-control"
-                            name="city"
-                            value={value || ''}
-                            onChange={handleChange}
-                            disabled={!formData?.state}
-                            style={{
-                                border: "1px solid #ced4da",
-                                borderRadius: "4px",
-                                backgroundColor: formData?.state ? '#fff' : '#f8f9fa'
-                            }}
-                        >
-                            <option value="">{formData?.state ? "Select City" : "First select state"}</option>
-                            {filteredCities.map(city => (
-                                <option key={city.value} value={city.value}>
-                                    {city.label}
-                                </option>
-                            ))}
-                        </select>
-                    );
-                }
-            },
             {
                 name: "pincode",
                 label: "Pincode",
@@ -434,17 +387,19 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 "gst_number",
                 "pan_number",
                 "address",
-                "city",
+          
                 "state"
             ]
         },
-         filterFields: [
+        filterFields: [
             { name: 'name', label: 'Vendor Name', type: 'text' },
-            { name: 'status', label: 'Status', type: 'select', options: [
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' },
-                { value: 'suspended', label: 'Suspended' }
-            ]},
+            {
+                name: 'status', label: 'Status', type: 'select', options: [
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'suspended', label: 'Suspended' }
+                ]
+            },
             { name: 'company_name', label: 'Book Name', type: 'text' }
         ],
 
@@ -456,7 +411,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { key: "gst_number", label: "GST Number", type: "text" },
             { key: "pan_number", label: "PAN Number", type: "text" },
             { key: "address", label: "Address", type: "text" },
-            { key: "city", label: "City", type: "text" },
+           
             { key: "state", label: "State", type: "text" },
             { key: "pincode", label: "Pincode", type: "text" },
             { key: "country", label: "Country", type: "text" },
@@ -521,7 +476,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 { key: "GST Number", header: "GST Number", width: 20 },
                 { key: "PAN Number", header: "PAN Number", width: 20 },
                 { key: "Address", header: "Address", width: 40 },
-                { key: "City", header: "City", width: 20 },
+             
                 { key: "State", header: "State", width: 20 },
                 { key: "Pincode", header: "Pincode", width: 15 },
                 { key: "Country", header: "Country", width: 20 },
@@ -545,7 +500,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 gst_number: "",
                 pan_number: "",
                 address: "",
-                city: "",
+              
                 state: "",
                 pincode: "",
                 country: "India",
