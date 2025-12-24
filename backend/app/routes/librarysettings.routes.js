@@ -210,6 +210,6 @@ module.exports = (app) => {
   });
 
  
-  app.use("/api/librarysettings", router);
+  app.use(process.env.BASE_API_URL + "/api/librarysettings", router);
 };
 

@@ -281,5 +281,5 @@ router.put(
     }
   }
 );
-  app.use("/api/book_submissions", router);
+  app.use(process.env.BASE_API_URL + "/api/book_submissions", router);
 };

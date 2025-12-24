@@ -26,7 +26,7 @@ const SUCCESS_COLOR = "#059669";
 const WARNING_COLOR = "#f59e0b";
 const DANGER_COLOR = "#dc2626";
 const INFO_COLOR = "#8b5cf6";
-const API_BASE_URL = "http://localhost:3001";
+
 const styles = {
   card: {
     border: "1px solid #e2e8f0",
@@ -1168,7 +1168,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                 onError={(e) => {
                                   console.log("Image failed to load:", member.image);
                                   e.target.onerror = null;
-                                  e.target.src = `${API_BASE_URL}/uploads/librarycards/default-user.png`;
+                                  // e.target.src = `${API_BA/SE_URL}/uploads/librarycards/default-user.png`;
                                 }}
                                 style={{
                                   width: "36px",
