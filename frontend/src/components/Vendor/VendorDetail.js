@@ -69,7 +69,7 @@ const VendorDetail = () => {
     <ModuleDetail
       moduleName="vendor"
       moduleApi="vendor"
-      moduleLabel="Vendor Management"
+      moduleLabel="Vendor"
       icon="fa-solid fa-store"
       fields={fields}
     />

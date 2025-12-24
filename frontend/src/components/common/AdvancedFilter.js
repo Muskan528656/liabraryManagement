@@ -176,13 +176,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                 size="sm"
                 onClick={handleClear}
                 className="d-flex align-items-center gap-1 h-100"
-              // style={{
-              //   minWidth: '80px',
-              //   backgroundColor: 'var(--bs-light)',
-              //   color: '#6c757d',
-              //   border: '1px solid var(--bs-light)',
-              //   fontWeight: '500'
-              // }}
+           
               >
                 <i className="fa-solid fa-xmark"></i>
                 Clear
@@ -192,13 +186,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                 size="sm"
                 onClick={handleSearch}
                 className="btn-custom d-flex align-items-center gap-1 h-100"
-                // style={{
-                //   minWidth: '80px',
-                //   backgroundColor: 'var(--bs-primary)',
-                //   color: '#fff',
-                //   border: '1px solid var(--bs-primary)',
-                //   fontWeight: '500'
-                // }}
+             
               >
                 <i className="fa-solid fa-filter"></i>
                 Apply

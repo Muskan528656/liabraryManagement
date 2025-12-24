@@ -1310,13 +1310,13 @@ const ModuleDetail = ({
                           <i className="fa-solid fa-edit me-2"></i>
                           Edit {moduleLabel}
                         </button>
-                        <button
+                        {/* <button
                           className="custom-btn-delete-detail"
                           onClick={handleDelete}
                         >
                           <i className="fa-solid fa-trash me-2"></i>
                           Delete
-                        </button>
+                        </button> */}
                       </>
                     ) : (
                       <div className="d-flex gap-2">

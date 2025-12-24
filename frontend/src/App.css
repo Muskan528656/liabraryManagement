@@ -323,8 +323,8 @@ a {
 .badge.bg-primary,
 .badge.bg-success,
 .badge.bg-info {
-  background-color: var(--primary-color) !important;
-  color: var(--ui-white) !important;
+  background-color: var(--secondary-color) !important;
+  color: var(--primary-color) !important;
   padding: 5px 30px 5px 30px;
   border-radius: 15px;
 }
@@ -826,8 +826,6 @@ th.fc-col-header-cell {
 .btn-outline-primary {
   border: 1px solid !important;
   color: #333 !important;
-
-
 }
 
 .btn-outline-primary:hover {

@@ -533,16 +533,8 @@ const FormModal = ({
             <Button
               onClick={onSubmit}
               disabled={loading}
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                backgroundColor: "var(--primary-color)",
-                border: "none",
-                padding: "8px 20px",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "white"
-              }}
+              className="btn-custom d-flex align-items-center justify-content-center"
+            
             >
               {loading ? (
                 <>
