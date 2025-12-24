@@ -7,7 +7,7 @@
 
 const sql = require("./db.js");
 const cron = require("node-cron");
-const sendMail = require("../utils/mailer");
+const sendMail = require("../utils/Mailer.js");
 const { dueTemplate, overdueTemplate } = require("../../app/utils/ReminderTemplate");
 
 let schema = "";
