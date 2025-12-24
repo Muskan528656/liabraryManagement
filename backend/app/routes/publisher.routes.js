@@ -8,7 +8,7 @@
 
 const express = require('express');
 const router = express.Router();
-const Publisher = require('../models/publisher.model.js');
+const Publisher = require('../models/Publisher.model.js');
 const { fetchUser } = require('../middleware/fetchuser.js');
 const { body, validationResult } = require('express-validator');
 
