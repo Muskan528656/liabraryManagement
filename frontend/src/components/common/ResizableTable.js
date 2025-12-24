@@ -253,7 +253,7 @@ const ResizableTable = ({
     return (
         <>
             <div
-                className="table-responsive resizable-table-container"
+                className="mt-3 table-responsive resizable-table-container"
                 style={{
                     border: "1px solid #e2e8f0",
                     borderRadius: "8px",

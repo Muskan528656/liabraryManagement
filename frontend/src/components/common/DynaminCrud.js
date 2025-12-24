@@ -964,8 +964,9 @@ const DynamicCRUD = ({
 
             <Row className="justify-content-center">
                 <Col lg={12} xl={12}>
-                    <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
-                        <Card.Body >
+                    <Card 
+                    style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+                        <Card.Body className="">
                             {loading ? (
                                 <Loader />
                             ) : (
@@ -1057,7 +1058,6 @@ const DynamicCRUD = ({
                                                         title="View Barcode"
                                                     >
                                                         <i className="fs-7 fa-solid fa-eye me-1"></i>
-                                                        {/* Preview */}
                                                     </button>
                                                 )}
                                             </div>

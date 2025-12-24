@@ -836,9 +836,9 @@ th.fc-col-header-cell {
 }
 
 .btn-custom {
-  border: 1px solid #1c3df7 !important;
+  border: 1px solid var(--primary-color) !important;
   color: #fff !important;
-  background: #1c3df7 !important;
+  background: var(--primary-color) !important;
 }
 
 /*
