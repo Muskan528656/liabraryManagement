@@ -40,8 +40,8 @@ const VendorDetail = () => {
       {
         key: "country_code",
         label: "Country Code",
-        type: "select",
-        options: countryCodeOptions,
+        type: "select", // Changed from "text" to "select"
+        options: countryCodeOptions, // Added options
         render: (value) => {
           const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
           const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
@@ -54,7 +54,7 @@ const VendorDetail = () => {
       { key: "pincode", label: "Pincode", type: "text" },
       { key: "state", label: "State", type: "text" },
       { key: "address", label: "Address", type: "text" },
-
+      { key: "city", label: "City", type: "text" },
 
     ],
     other: [

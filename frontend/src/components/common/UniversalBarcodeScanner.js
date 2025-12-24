@@ -1,3940 +1,3 @@
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
-
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
-
- 
-
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
-
-
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
 
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, InputGroup, Alert, Row, Col } from "react-bootstrap";
@@ -3961,7 +24,7 @@ const UniversalBarcodeScanner = () => {
         isbn10: "",
         isbn13: "",
         coverImage: "",
-        pages: "" // Added pages field explicitly
+        pages: ""
     });
     const [authorDetails, setAuthorDetails] = useState({
         name: "",
@@ -4005,19 +68,16 @@ const UniversalBarcodeScanner = () => {
         }
     }, [showModal]);
 
- 
     useEffect(() => {
         const checkForISBN = async () => {
             if (barcodeInput.length >= 10) {
                 const isbnCheck = isValidISBN(barcodeInput);
                 if (isbnCheck && !loading && !detectedData) {
- 
                     await detectAndProcessBarcode(barcodeInput.trim());
                 }
             }
         };
 
- 
         const timeoutId = setTimeout(checkForISBN, 500);
         return () => clearTimeout(timeoutId);
     }, [barcodeInput]);
@@ -4062,10 +122,8 @@ const UniversalBarcodeScanner = () => {
     const isValidISBN = (isbn) => {
         if (!isbn) return false;
 
- 
         const cleanIsbn = isbn.replace(/[^\dX]/gi, '').toUpperCase();
 
- 
         if (cleanIsbn.length === 10) {
             const isbn10Regex = /^[\d]{9}[\dX]$/;
             if (isbn10Regex.test(cleanIsbn)) {
@@ -4073,7 +131,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (cleanIsbn.length === 13) {
             const isbn13Regex = /^[\d]{13}$/;
             if (isbn13Regex.test(cleanIsbn)) {
@@ -4087,7 +144,6 @@ const UniversalBarcodeScanner = () => {
     const extractISBNFromText = (text) => {
         if (!text) return null;
 
- 
         const isbnPatterns = [
             /ISBN[-\s:]*([\d\-X]{10,17})/gi,
             /ISBN[-:]?\s*([\dX\-]{10,17})/gi,
@@ -4099,7 +155,6 @@ const UniversalBarcodeScanner = () => {
             const matches = text.match(pattern);
             if (matches) {
                 for (const match of matches) {
- 
                     const cleanMatch = match.replace(/[^\dX]/gi, '').toUpperCase();
                     const isbnCheck = isValidISBN(cleanMatch);
                     if (isbnCheck) {
@@ -4109,7 +164,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         const words = text.split(/\s+/);
         for (const word of words) {
             const cleanWord = word.replace(/[^\dX]/gi, '').toUpperCase();
@@ -4159,24 +213,27 @@ const UniversalBarcodeScanner = () => {
     const extractAllBookDetails = async (bookData) => {
         if (!bookData) return;
 
- 
         if (bookData.title) {
-            const titleParts = bookData.title.split(":");
             setBookDetails(prev => ({
                 ...prev,
-                title: titleParts[0] || bookData.title,
-                subtitle: titleParts.slice(1).join(":").trim() || ""
+                title: bookData.title,
+                subtitle: bookData.title || ""
             }));
         }
 
- 
+        if (bookData.subtitle && !bookDetails.subtitle) {
+            setBookDetails(prev => ({
+                ...prev,
+                subtitle: bookData.title
+            }));
+        }
+
         if (bookData.author_name) {
             setBookDetails(prev => ({
                 ...prev,
                 authors: Array.isArray(bookData.author_name) ? bookData.author_name : [bookData.author_name]
             }));
 
- 
             if (bookData.author_details) {
                 setAuthorDetails({
                     name: bookData.author_details.name || bookData.author_name,
@@ -4187,14 +244,12 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (bookData.category_name) {
             setBookDetails(prev => ({
                 ...prev,
                 categories: Array.isArray(bookData.category_name) ? bookData.category_name : [bookData.category_name]
             }));
 
- 
             if (bookData.category_description) {
                 setCategoryDetails({
                     name: bookData.category_name,
@@ -4203,7 +258,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (bookData.description) {
             setBookDetails(prev => ({
                 ...prev,
@@ -4211,39 +265,44 @@ const UniversalBarcodeScanner = () => {
             }));
         }
 
- 
         if (bookData.pageCount || bookData.pages) {
             const pages = bookData.pageCount || bookData.pages;
             setBookDetails(prev => ({
                 ...prev,
                 pageCount: pages,
-                pages: pages // Store in both fields for consistency
+                pages: pages
             }));
         }
 
- 
+        // ✅ FIX 3: Publisher details भी extract करें
         if (bookData.publisher) {
             setBookDetails(prev => ({
                 ...prev,
                 publisher: bookData.publisher
             }));
 
- 
-            setPublisherDetails(prev => ({
-                ...prev,
-                name: bookData.publisher
-            }));
+            if (bookData.publisher_details) {
+                setPublisherDetails({
+                    name: bookData.publisher_details.name || bookData.publisher,
+                    address: bookData.publisher_details.address || "",
+                    website: bookData.publisher_details.website || ""
+                });
+            } else {
+                setPublisherDetails({
+                    name: bookData.publisher,
+                    address: "",
+                    website: ""
+                });
+            }
         }
 
- 
-        if (bookData.published_date) {
+        if (bookData.published_date || bookData.publishedDate) {
             setBookDetails(prev => ({
                 ...prev,
-                publishedDate: bookData.published_date
+                publishedDate: bookData.published_date || bookData.publishedDate
             }));
         }
 
- 
         if (bookData.language) {
             setBookDetails(prev => ({
                 ...prev,
@@ -4251,7 +310,6 @@ const UniversalBarcodeScanner = () => {
             }));
         }
 
- 
         if (bookData.isbn) {
             if (bookData.isbn.length === 10) {
                 setBookDetails(prev => ({
@@ -4264,9 +322,18 @@ const UniversalBarcodeScanner = () => {
                     isbn13: bookData.isbn
                 }));
             }
+        } else if (bookData.isbn10) {
+            setBookDetails(prev => ({
+                ...prev,
+                isbn10: bookData.isbn10
+            }));
+        } else if (bookData.isbn13) {
+            setBookDetails(prev => ({
+                ...prev,
+                isbn13: bookData.isbn13
+            }));
         }
 
- 
         if (bookData.cover_image) {
             setBookDetails(prev => ({
                 ...prev,
@@ -4274,8 +341,9 @@ const UniversalBarcodeScanner = () => {
             }));
         }
 
- 
-        const isbnCheck = isValidISBN(bookData.isbn || barcodeInput);
+        // Google Books से complete details fetch करें
+        const isbnToCheck = bookData.isbn || bookData.isbn13 || bookData.isbn10 || barcodeInput;
+        const isbnCheck = isValidISBN(isbnToCheck);
         if (isbnCheck) {
             await fetchCompleteBookDetails(isbnCheck.value);
         }
@@ -4287,15 +355,15 @@ const UniversalBarcodeScanner = () => {
 
             if (!googleBooksData) return;
 
- 
             const mergedData = { ...bookDetails };
 
+            // ✅ FIX 4: Google Books से आया पूरा टाइटल use करें
             if (googleBooksData.title) {
-                const titleParts = googleBooksData.title.split(":");
-                mergedData.title = titleParts[0] || googleBooksData.title;
-                if (titleParts.length > 1) {
-                    mergedData.subtitle = titleParts.slice(1).join(":").trim();
-                }
+                mergedData.title = googleBooksData.title;
+            }
+
+            if (googleBooksData.subtitle && !mergedData.subtitle) {
+                mergedData.subtitle = googleBooksData.subtitle;
             }
 
             if (googleBooksData.authors && googleBooksData.authors.length > 0) {
@@ -4320,48 +388,56 @@ const UniversalBarcodeScanner = () => {
                 }
             }
 
-            if (googleBooksData.description) {
+            if (googleBooksData.description && !mergedData.description) {
                 mergedData.description = googleBooksData.description;
             }
 
- 
             if (googleBooksData.pageCount || googleBooksData.pages) {
                 const pages = googleBooksData.pageCount || googleBooksData.pages;
                 mergedData.pageCount = pages;
                 mergedData.pages = pages;
             }
 
-            if (googleBooksData.publisher) {
+            // ✅ FIX 5: Publisher details Google Books से भी लें
+            if (googleBooksData.publisher && !mergedData.publisher) {
                 mergedData.publisher = googleBooksData.publisher;
-                setPublisherDetails(prev => ({
-                    ...prev,
-                    name: googleBooksData.publisher
-                }));
+
+                if (googleBooksData.publisher_details) {
+                    setPublisherDetails({
+                        name: googleBooksData.publisher_details.name || googleBooksData.publisher,
+                        address: googleBooksData.publisher_details.address || "",
+                        website: googleBooksData.publisher_details.website || ""
+                    });
+                } else {
+                    setPublisherDetails(prev => ({
+                        ...prev,
+                        name: googleBooksData.publisher
+                    }));
+                }
             }
 
-            if (googleBooksData.publishedDate) {
+            if (googleBooksData.publishedDate && !mergedData.publishedDate) {
                 mergedData.publishedDate = googleBooksData.publishedDate;
             }
 
-            if (googleBooksData.language) {
+            if (googleBooksData.language && !mergedData.language) {
                 mergedData.language = googleBooksData.language;
             }
 
-            if (googleBooksData.isbn13) {
+            if (googleBooksData.isbn13 && !mergedData.isbn13) {
                 mergedData.isbn13 = googleBooksData.isbn13;
             }
 
-            if (googleBooksData.isbn10) {
+            if (googleBooksData.isbn10 && !mergedData.isbn10) {
                 mergedData.isbn10 = googleBooksData.isbn10;
             }
 
-            if (googleBooksData.coverImage) {
+            if (googleBooksData.coverImage && !mergedData.coverImage) {
                 mergedData.coverImage = googleBooksData.coverImage;
             }
 
             setBookDetails(mergedData);
 
- 
             if (detectedData && detectedData.type === "book") {
                 const pagesValue = mergedData.pageCount || mergedData.pages || detectedData.data.pages;
 
@@ -4372,13 +448,14 @@ const UniversalBarcodeScanner = () => {
                     author_name: mergedData.authors?.join(", ") || detectedData.data.author_name,
                     category_name: mergedData.categories?.[0] || detectedData.data.category_name,
                     description: mergedData.description || detectedData.data.description,
-                    pages: pagesValue, // Set pages from merged data
+                    pages: pagesValue,
                     publisher: mergedData.publisher || detectedData.data.publisher,
                     published_date: mergedData.publishedDate || detectedData.data.published_date,
                     language: mergedData.language || detectedData.data.language,
                     isbn_10: mergedData.isbn10 || detectedData.data.isbn_10,
                     isbn_13: mergedData.isbn13 || detectedData.data.isbn_13,
-                    cover_image: mergedData.coverImage || detectedData.data.cover_image
+                    cover_image: mergedData.coverImage || detectedData.data.cover_image,
+                    publisher_name: mergedData.publisher || detectedData.data.publisher // Publisher name add करें
                 };
 
                 setDetectedData({
@@ -4396,23 +473,18 @@ const UniversalBarcodeScanner = () => {
     const detectDataType = async (barcode) => {
         console.log("Processing barcode:", barcode);
 
- 
         const isbnCheck = isValidISBN(barcode);
         if (!isbnCheck) {
- 
             const extractedISBN = extractISBNFromText(barcode);
             if (extractedISBN) {
- 
                 const bookData = await fetchBookFromGoogleBooks(extractedISBN.value);
                 return await processBookData(bookData, extractedISBN.value);
             }
         } else {
- 
             const bookData = await fetchBookFromGoogleBooks(isbnCheck.value);
             return await processBookData(bookData, isbnCheck.value);
         }
 
- 
         const cardNumberPattern = /^(LIB|LC-?)?[A-Z0-9]{6,20}$/i;
         const barcodeTrimmed = barcode.trim();
         if (cardNumberPattern.test(barcodeTrimmed)) {
@@ -4443,16 +515,14 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         try {
             const jsonData = JSON.parse(barcode);
             const result = await analyzeJsonData(jsonData);
             if (result) return result;
         } catch (e) {
- 
+            // Not JSON
         }
 
- 
         if (barcode.includes("@") && barcode.includes(".")) {
             const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
             const emailMatch = barcode.match(emailRegex);
@@ -4470,7 +540,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (/^\+?[\d\s-()]{10,}$/.test(barcode) && barcode.length >= 10) {
             return {
                 type: "supplier",
@@ -4479,7 +548,6 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
- 
         if (/^[A-Za-z\s.]+$/.test(barcode) && (barcode.split(/\s+/).length >= 2 || barcode.length >= 3)) {
             const words = barcode.trim().split(/\s+/);
             if (words.length >= 1 && words.every(w => w.length >= 2)) {
@@ -4491,7 +559,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (/^[A-Za-z]+$/.test(barcode) && barcode.length >= 3 && barcode.length <= 30) {
             return {
                 type: "category",
@@ -4500,7 +567,6 @@ const UniversalBarcodeScanner = () => {
             };
         }
 
- 
         if (/^[A-Za-z0-9\s&.,-]+$/.test(barcode) && barcode.length > 2) {
             const supplierKeywords = ["supplier", "vendor", "distributor", "company", "ltd", "inc", "corp"];
             const lowerBarcode = barcode.toLowerCase();
@@ -4513,7 +579,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
             const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
             if (possibleIsbns) {
@@ -4535,7 +600,6 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
         if (barcode.length > 3) {
             return {
                 type: "book",
@@ -4543,7 +607,7 @@ const UniversalBarcodeScanner = () => {
                     title: barcode.trim(),
                     total_copies: 1,
                     available_copies: 1,
-                    pages: 0 // Initialize with 0 pages
+                    pages: 0
                 },
                 module: "/book",
             };
@@ -4553,23 +617,7 @@ const UniversalBarcodeScanner = () => {
     };
 
     const processBookData = async (bookData, isbn) => {
- 
-        if (bookData.author_name) {
-            const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
-            if (authorId) {
-                bookData.author_id = authorId;
-            }
-        }
-
- 
-        if (bookData.category_name) {
-            const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
-            if (categoryId) {
-                bookData.category_id = categoryId;
-            }
-        }
-
- 
+        // ✅ FIX 6: Publisher भी create करें
         if (bookData.publisher) {
             const publisherId = await findOrCreatePublisher(bookData.publisher, bookData.publisher_details);
             if (publisherId) {
@@ -4577,20 +625,32 @@ const UniversalBarcodeScanner = () => {
             }
         }
 
- 
+        if (bookData.author_name) {
+            const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
+            if (authorId) {
+                bookData.author_id = authorId;
+            }
+        }
+
+        if (bookData.category_name) {
+            const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
+            if (categoryId) {
+                bookData.category_id = categoryId;
+            }
+        }
+
         const cleanedBookData = {
             ...bookData,
             isbn: isbn,
             total_copies: bookData.total_copies || 1,
             available_copies: bookData.available_copies || 1,
-            pages: bookData.pageCount || bookData.pages || 0 // Include pages
+            pages: bookData.pageCount || bookData.pages || 0
         };
 
- 
         delete cleanedBookData.author_details;
         delete cleanedBookData.category_description;
         delete cleanedBookData.publisher_details;
-        delete cleanedBookData.pageCount; // Remove pageCount if present, use pages
+        delete cleanedBookData.pageCount;
 
         return {
             type: "book",
@@ -4598,6 +658,71 @@ const UniversalBarcodeScanner = () => {
             module: "/book",
             fullData: bookData
         };
+    };
+
+    // ✅ FIX 7: Publisher create/update function
+    const findOrCreatePublisher = async (publisherName, publisherDetails = null) => {
+        try {
+            const publisherApi = new DataApi("publisher");
+            const publishersResponse = await publisherApi.fetchAll();
+
+            if (publishersResponse.data && Array.isArray(publishersResponse.data)) {
+                // Clean publisher name
+                const cleanPublisherName = publisherName.trim();
+
+                let foundPublisher = publishersResponse.data.find(p =>
+                    p.name && p.name.toLowerCase() === cleanPublisherName.toLowerCase()
+                );
+
+                if (!foundPublisher) {
+                    const publisherData = {
+                        name: cleanPublisherName,
+                        address: publisherDetails?.address || "",
+                        website: publisherDetails?.website || "",
+                        contact_person: publisherDetails?.contact_person || ""
+                    };
+
+                    console.log("Creating new publisher:", publisherData);
+                    const newPublisherResponse = await publisherApi.create(publisherData);
+
+                    if (newPublisherResponse.data && newPublisherResponse.data.success) {
+                        foundPublisher = newPublisherResponse.data.data;
+                        PubSub.publish("RECORD_SAVED_TOAST", {
+                            message: `Publisher "${cleanPublisherName}" created successfully`,
+                        });
+                        console.log("Publisher created with ID:", foundPublisher.id);
+                        return foundPublisher.id;
+                    }
+                } else {
+                    console.log("Publisher already exists:", foundPublisher.id);
+                    // Update publisher details if needed
+                    if (publisherDetails) {
+                        const updateData = {};
+                        if (publisherDetails.address && !foundPublisher.address) {
+                            updateData.address = publisherDetails.address;
+                        }
+                        if (publisherDetails.website && !foundPublisher.website) {
+                            updateData.website = publisherDetails.website;
+                        }
+                        if (publisherDetails.contact_person && !foundPublisher.contact_person) {
+                            updateData.contact_person = publisherDetails.contact_person;
+                        }
+                        if (Object.keys(updateData).length > 0) {
+                            try {
+                                await publisherApi.update({ ...foundPublisher, ...updateData }, foundPublisher.id);
+                                console.log("Publisher details updated");
+                            } catch (e) {
+                                console.log("Could not update publisher details:", e);
+                            }
+                        }
+                    }
+                    return foundPublisher.id;
+                }
+            }
+        } catch (error) {
+            console.error("Error finding/creating publisher:", error);
+        }
+        return null;
     };
 
     const findOrCreateAuthor = async (authorName, authorDetails = null) => {
@@ -4703,63 +828,6 @@ const UniversalBarcodeScanner = () => {
         return null;
     };
 
-    const findOrCreatePublisher = async (publisherName, publisherDetails = null) => {
-        try {
-            const publisherApi = new DataApi("publisher");
-            const publishersResponse = await publisherApi.fetchAll();
-
-            if (publishersResponse.data && Array.isArray(publishersResponse.data)) {
-                let foundPublisher = publishersResponse.data.find(p =>
-                    p.name && p.name.toLowerCase() === publisherName.toLowerCase()
-                );
-
-                if (!foundPublisher) {
-                    const publisherData = {
-                        name: publisherName,
-                        address: publisherDetails?.address || "",
-                        website: publisherDetails?.website || "",
-                        contact_person: publisherDetails?.contact_person || ""
-                    };
-
-                    const newPublisherResponse = await publisherApi.create(publisherData);
-                    if (newPublisherResponse.data && newPublisherResponse.data.success) {
-                        foundPublisher = newPublisherResponse.data.data;
-                        PubSub.publish("RECORD_SAVED_TOAST", {
-                            message: `Publisher "${publisherName}" created successfully`,
-                        });
-                    }
-                } else {
-                    if (publisherDetails) {
-                        const updateData = {};
-                        if (publisherDetails.address && !foundPublisher.address) {
-                            updateData.address = publisherDetails.address;
-                        }
-                        if (publisherDetails.website && !foundPublisher.website) {
-                            updateData.website = publisherDetails.website;
-                        }
-                        if (publisherDetails.contact_person && !foundPublisher.contact_person) {
-                            updateData.contact_person = publisherDetails.contact_person;
-                        }
-                        if (Object.keys(updateData).length > 0) {
-                            try {
-                                await publisherApi.update({ ...foundPublisher, ...updateData }, foundPublisher.id);
-                            } catch (e) {
-                                console.log("Could not update publisher details:", e);
-                            }
-                        }
-                    }
-                }
-
-                if (foundPublisher) {
-                    return foundPublisher.id;
-                }
-            }
-        } catch (error) {
-            console.error("Error finding/creating publisher:", error);
-        }
-        return null;
-    };
-
     const fetchBookFromGoogleBooks = async (isbn) => {
         console.log("Fetching book data for ISBN from Google Books:", isbn);
 
@@ -4771,7 +839,7 @@ const UniversalBarcodeScanner = () => {
             categories: [],
             description: "",
             pageCount: 0,
-            pages: 0, // Added pages field
+            pages: 0,
             publisher: "",
             publishedDate: "",
             language: "",
@@ -4795,8 +863,14 @@ const UniversalBarcodeScanner = () => {
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
 
-                    bookData.title = volumeInfo.title || "";
-                    bookData.subtitle = volumeInfo.subtitle || "";
+                    // ✅ FIX 8: Google Books से पूरा टाइटल और subtitle अलग-अलग लें
+                    if (volumeInfo.title) {
+                        bookData.title = volumeInfo.title;
+                    }
+
+                    if (volumeInfo.subtitle) {
+                        bookData.subtitle = volumeInfo.subtitle;
+                    }
 
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
@@ -4823,10 +897,9 @@ const UniversalBarcodeScanner = () => {
                         bookData.description = volumeInfo.description;
                     }
 
- 
                     if (volumeInfo.pageCount) {
                         bookData.pageCount = volumeInfo.pageCount;
-                        bookData.pages = volumeInfo.pageCount; // Set both fields
+                        bookData.pages = volumeInfo.pageCount;
                         console.log(`Page count from Google Books: ${volumeInfo.pageCount} pages`);
                     }
 
@@ -4901,7 +974,7 @@ const UniversalBarcodeScanner = () => {
                 publisher_id: data.publisher_id || data.publisherId || "",
                 description: data.description || data.bookDescription || "",
                 pageCount: data.pageCount || data.pages || 0,
-                pages: data.pages || data.pageCount || 0, // Include pages
+                pages: data.pages || data.pageCount || 0,
                 publisher: data.publisher || "",
                 publishedDate: data.publishedDate || data.published_date || "",
                 language: data.language || "",
@@ -5001,12 +1074,19 @@ const UniversalBarcodeScanner = () => {
             let dataToInsert = { ...detectedData.data };
 
             if (detectedData.type === "book") {
- 
-                dataToInsert.title = bookDetails.title || dataToInsert.title || (dataToInsert.isbn ? `Book with ISBN: ${dataToInsert.isbn}` : "Scanned Book");
-                dataToInsert.subtitle = bookDetails.subtitle || dataToInsert.subtitle || "";
+                // ✅ FIX 9: पूरा टाइटल insert करें
+                const fullTitle = bookDetails.title || dataToInsert.title;
+                const fullSubtitle = bookDetails.subtitle || dataToInsert.subtitle;
+
+                // Combine title and subtitle if needed
+                if (fullSubtitle && !fullTitle.includes(fullSubtitle)) {
+                    dataToInsert.title = `${fullTitle}: ${fullSubtitle}`;
+                } else {
+                    dataToInsert.title = fullTitle;
+                }
+
                 dataToInsert.description = bookDetails.description || dataToInsert.description || "";
 
- 
                 const pagesValue = bookDetails.pages || bookDetails.pageCount;
                 if (pagesValue) {
                     dataToInsert.pages = parseInt(pagesValue) || 0;
@@ -5111,7 +1191,7 @@ const UniversalBarcodeScanner = () => {
                 </div>
 
                 <Row className="mb-3">
-                    <Col md={6}>
+                    <Col md={12}>
                         <Form.Group>
                             <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
                                 Title <span className="text-danger">*</span>
@@ -5120,12 +1200,16 @@ const UniversalBarcodeScanner = () => {
                                 type="text"
                                 value={bookDetails.title}
                                 onChange={(e) => setBookDetails({ ...bookDetails, title: e.target.value })}
-                                placeholder="Book title"
+                                placeholder="Full book title"
                                 style={{ fontSize: "14px" }}
                             />
+
                         </Form.Group>
                     </Col>
-                    <Col md={6}>
+                </Row>
+
+                <Row className="mb-3">
+                    <Col md={12}>
                         <Form.Group>
                             <Form.Label style={{ fontSize: "14px", fontWeight: "500" }}>
                                 Subtitle
@@ -5134,7 +1218,7 @@ const UniversalBarcodeScanner = () => {
                                 type="text"
                                 value={bookDetails.subtitle}
                                 onChange={(e) => setBookDetails({ ...bookDetails, subtitle: e.target.value })}
-                                placeholder="Book subtitle"
+                                placeholder="Book subtitle (if any)"
                                 style={{ fontSize: "14px" }}
                             />
                         </Form.Group>
@@ -5267,7 +1351,6 @@ const UniversalBarcodeScanner = () => {
                                                 pageCount: value
                                             });
 
- 
                                             if (detectedData && detectedData.type === "book") {
                                                 setDetectedData({
                                                     ...detectedData,
@@ -5766,7 +1849,6 @@ const UniversalBarcodeScanner = () => {
                 title="Open Library / Book Scanner"
             />
 
-            {/* Scanner Modal */}
             <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered scrollable>
                 <Modal.Header
                     closeButton
@@ -5889,7 +1971,6 @@ const UniversalBarcodeScanner = () => {
                         </Alert>
                     )}
 
-                    {/* Render detailed form based on detected type */}
                     {renderBookDetails()}
                     {renderOtherDetails()}
 
