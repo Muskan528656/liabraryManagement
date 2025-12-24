@@ -96,7 +96,7 @@ async function create(bookData, userId) {
       bookData.title || "Scanned Book",
       bookData.author_id || bookData.authorId || null,
       bookData.category_id || bookData.categoryId || null,
-      bookData.isbn || `SCAN-${Date.now()}`,
+      bookData.isbn || null,
       totalCopies,
       availableCopies,
       bookData.company_id || bookData.companyId || null,

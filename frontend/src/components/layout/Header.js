@@ -40,14 +40,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [userRoleName, setUserRoleName] = useState("");
   const [userDisplayName, setUserDisplayName] = useState("");
 
- 
+
   const totalUnreadCount = React.useMemo(() => {
     const allUnread = allNotifications.filter(n => !n.is_read).length;
     const dueUnread = dueNotifications.filter(n => !n.is_read).length;
     return allUnread + dueUnread;
   }, [allNotifications, dueNotifications]);
 
- 
+
   const filteredNotifications = React.useMemo(() => {
     const combined = [...dueNotifications, ...allNotifications];
 
@@ -56,7 +56,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     } else if (activeTab === "READ") {
       return combined.filter(n => n.is_read);
     } else {
- 
+
       return combined;
     }
   }, [allNotifications, dueNotifications, activeTab]);
@@ -614,19 +614,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
- 
+
         setAllNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId ? { ...n, is_read: true } : n
           )
         );
- 
+
         setDueNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId ? { ...n, is_read: true } : n
           )
         );
- 
+
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
@@ -642,7 +642,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
- 
+
         setAllNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
         setDueNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
         setUnreadCount(0);
@@ -652,14 +652,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
- 
+
   const handleNotificationClick = (notification) => {
- 
+
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
 
- 
+
     setAllNotifications((prev) =>
       prev.map((n) =>
         n.id === notification.id ? { ...n, is_read: true } : n
@@ -671,12 +671,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       )
     );
 
- 
+
     if (notification.type === 'book_due') {
       navigate("/mybooks");
     }
 
- 
+
   };
 
   return (
@@ -720,7 +720,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src="/Logo.png"
+            src={Company?.company_logo_url || "/Logo.png"}
+            // src="/Logo.png"
 
             height="50"
             style={{ height: "50px", marginLeft: '20px', objectFit: "contain" }}

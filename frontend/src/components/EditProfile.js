@@ -1,536 +1,15 @@
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
-
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
-
-
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
-
- 
-
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
-
-
-
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Button, Col, Container, Row, Card, Form,
-  Image, Modal, InputGroup
-} from "react-bootstrap";
+import { Button, Col, Container, Row, Card, Form, Image } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { NameInitialsAvatar } from "react-name-initials-avatar";
 import jwt_decode from "jwt-decode";
 import DataApi from "../api/dataApi";
+import axios from "axios";
+import { API_BASE_URL } from "../constants/CONSTANT";
 import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
 
 const EditProfile = () => {
-
   const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState({
@@ -539,15 +18,10 @@ const EditProfile = () => {
     email: "",
     country_code: "",
     phone: "",
-    profile_image: ""
   });
 
- 
-  const [body, setBody] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
   const [imageError, setImageError] = useState(false);
-
-
-
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
 
@@ -557,12 +31,11 @@ const EditProfile = () => {
     email: true,
     country_code: true,
     phone: true,
-
   });
 
- 
+  /* ================= FETCH USER ================= */
   useEffect(() => {
-    async function init() {
+    const init = async () => {
       try {
         setIsLoading(true);
         const token = sessionStorage.getItem("token");
@@ -576,129 +49,86 @@ const EditProfile = () => {
 
         setProfile(res.data);
 
-
-        console.log("userApi", userApi)
-        console.log("profile", profile)
-
- 
-        if (res.data?.profile_image) {
-          console.log("hello", body)
-          const imageUrl = `http://localhost:3003${res.data.profile_image}`;
-          setBody(imageUrl);
-          console.log("Image URL:", imageUrl);
-          console.log("body", body)
+        const storedImage = localStorage.getItem(`profile_image_${decoded.id}`);
+        if (storedImage) {
+          setImagePreview(storedImage);
         }
-
-      } catch (err) {
+      } catch (error) {
         toast.error("Failed to load profile");
       } finally {
         setIsLoading(false);
       }
-    }
+    };
     init();
   }, []);
 
-  useEffect(() => {
-    console.log("body check", body)
-  }, [])
- 
+  /* ================= HANDLERS ================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    console.log("profile", profile)
-
-    setProfile(prev => ({ ...prev, [name]: value }));
-    setFieldsValid(prev => ({ ...prev, [name]: value.trim() !== "" }));
+    setProfile((prev) => ({ ...prev, [name]: value }));
+    setFieldsValid((prev) => ({ ...prev, [name]: value.trim() !== "" }));
   };
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
-    console.log("file is", file)
     if (!file) return;
+
     setImageError(false);
-    setBody(URL.createObjectURL(file));
-
-    setProfile(prev => ({
-      ...prev,
-      photo: file
-    }));
-
-
+    setImagePreview(URL.createObjectURL(file));
+    setProfile((prev) => ({ ...prev, photo: file }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const userApi = new DataApi("user");
-      console.log("profileeeeeeee", profile.photo);
-      console.log("userIduserId", userId);
 
-      const formData = new FormData();
-
-
-      formData.append("firstname", profile.firstname);
-      formData.append("lastname", profile.lastname);
-      formData.append("email", profile.email);
-      formData.append("phone", profile.phone);
-      formData.append("country", profile.country);
-      formData.append("currency", profile.currency);
-      formData.append("time_zone", profile.time_zone);
-      formData.append("companyid", profile.companyid);
-
-
+      let imagePath = profile.profile_image;
       if (profile.photo) {
+        const formData = new FormData();
         formData.append("file", profile.photo);
+
+        const uploadResponse = await axios.post(
+          `${API_BASE_URL}/api/user/${userId}/upload-image`,
+          formData,
+          {
+            headers: {
+              Authorization: sessionStorage.getItem("token").startsWith("Bearer ") 
+                ? sessionStorage.getItem("token") 
+                : `Bearer ${sessionStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (uploadResponse.data.success) {
+          imagePath = uploadResponse.data.filePath;
+          setImagePreview(imagePath);
+          setProfile((prev) => ({ ...prev, profile_image: imagePath, photo: null }));
+          localStorage.setItem(`profile_image_${userId}`, imagePath);
+        }
       }
 
- 
-      if (profile.photo) {
-        await userApi.updateFormData(formData, userId);
-        await userApi.update(profile, userId);
-        console.log("profiledsfsfsdfsdfsdfsd", profile);
-        toast.success("Profile updated successfully");
-      } else {
-        await userApi.update(profile, userId);
-        toast.success("Profile updated successfully");
-      }
+      const { photo, profile_image, ...profileData } = profile;
+      await userApi.update(profileData, userId);
+      toast.success("Profile updated successfully");
     } catch {
       toast.error("Update failed");
     }
   };
 
-
   const isFormValid = Object.values(fieldsValid).every(Boolean);
-
   if (isLoading) return <div>Loading...</div>;
-
 
   return (
     <>
       <Container fluid className="py-4">
-        <Row className="mb-4">
-          <Col>
-            <Card className="border-0 shadow-sm" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-              <Card.Body className="p-4 ">
-                <div className="d-flex align-items-center">
-                  <div className="rounded-circle p-3 me-3">
-                    <i className="fa-solid fa-user text-primary fs-3"></i>
-                  </div>
-                  <div>
-                    <h2 className="mb-1 fw-bold">My Profile</h2>
-                    <p className="mb-0 ">Manage your personal information and settings</p>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
         <Row>
           {/* ===== LEFT : IMAGE ===== */}
           <Col lg={4} className="mb-4">
-            <Card className="border-0 shadow-sm">
-              <Card.Body className="text-center">
-
+            <Card className="border-0 shadow-sm text-center">
+              <Card.Body>
                 <div className="position-relative d-inline-block">
-                  {imageError || !body ? (
+                  {imageError || !imagePreview ? (
                     <NameInitialsAvatar
                       size="150px"
                       textSize="36px"
@@ -706,7 +136,7 @@ const EditProfile = () => {
                     />
                   ) : (
                     <Image
-                      src={body}
+                      src={imagePreview}
                       roundedCircle
                       style={{ width: 150, height: 150, objectFit: "cover" }}
                       onError={() => setImageError(true)}
@@ -714,7 +144,7 @@ const EditProfile = () => {
                   )}
 
                   <div
-                    className="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2 border border-white"
+                    className="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2"
                     style={{ cursor: "pointer" }}
                     onClick={() => fileInputRef.current.click()}
                   >
@@ -726,14 +156,14 @@ const EditProfile = () => {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  style={{ display: "none" }}
-
+                  hidden
                   onChange={handlePhotoUpload}
                 />
 
-                <h4 className="mt-3">{profile.firstname} {profile.lastname}</h4>
+                <h4 className="mt-3">
+                  {profile.firstname} {profile.lastname}
+                </h4>
                 <p className="text-muted">{profile.email}</p>
-
               </Card.Body>
             </Card>
           </Col>
@@ -742,7 +172,6 @@ const EditProfile = () => {
           <Col lg={8}>
             <Card className="border-0 shadow-sm">
               <Card.Body>
-
                 <Form onSubmit={handleSubmit}>
                   <Row>
                     <Col md={6} className="mb-3">
@@ -810,7 +239,6 @@ const EditProfile = () => {
                     </Col>
                   </Row>
                 </Form>
-
               </Card.Body>
             </Card>
           </Col>

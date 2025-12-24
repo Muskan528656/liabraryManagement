@@ -17,7 +17,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             "Country": "Country",
             "is_active": "Status"
         },
-        required: ["Name", "Email", "Phone", "Country"],
+        required: ["Name", "Email", "Phone", "Country", "City"],
     });
 
     const statusBadge = (value) => (
@@ -96,7 +96,6 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "email",
                 label: "Email",
                 type: "email",
-                options: "categories",
                 required: true,
                 placeholder: "ibirds@gmail.com",
                 colSize: 6,
@@ -112,37 +111,25 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             {
                 name: "city",
                 label: "City",
-                type: "select",
-                options: City_State.map(item => ({
-                    value: item.name,
-                    label: `${item.name}`
-                })),
+                type: "text",
                 placeholder: "Enter The City",
                 colSize: 6,
             },
             {
                 name: "state",
                 label: "State",
-                type: "select",
-                options: City_State.map(item => ({
-                    value: item.state,
-                    label: `${item.state}`
-                })),
+                type: "text",
                 placeholder: "Enter The State",
                 colSize: 6,
             },
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+            {
+                name: "country",
+                label: "Country",
+                type: "text",
+                required: true,
+                placeholder: "Select a country",
+                colSize: 6
+            },
             {
                 name: "is_active",
                 label: "Active",
@@ -165,7 +152,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
- 
+            if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
 
  

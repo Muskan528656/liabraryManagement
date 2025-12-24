@@ -25,12 +25,15 @@ export const saveImportedData = async ({
   try {
     console.log("data =>", data);
     console.log("relatedData =>", relatedData);
+    console.log("Available relatedData keys:", Object.keys(relatedData));
+    console.log("Form fields with select type:", formFields.filter(f => f.type === 'select').map(f => ({ name: f.name, options: f.options })));
 
     const mainApi = new DataApi(apiEndpoint);
 
     let createdCount = 0;
     let skippedCount = 0;
     let errorCount = 0; // Track actual errors separate from duplicates if needed
+    const successfulRecords = []; // Track successfully created records
 
     const relatedApiCache = {};
     const relatedIndex = {};
@@ -63,8 +66,8 @@ export const saveImportedData = async ({
       relatedIndex[optionKey] = map;
     };
 
- 
-    const getOrCreateRelatedId = async (optionKey, labelValue) => {
+    // --- Helper: Get or Create ID ---
+    const getOrCreateRelatedId = async (optionKey, labelValue, rowData = {}) => {
       if (!labelValue) return null;
       const norm = labelValue.toString().trim().toLowerCase();
 
@@ -73,6 +76,38 @@ export const saveImportedData = async ({
 
       if (index.has(norm)) {
         return index.get(norm);
+      }
+
+      // Special handling for books and vendors - check for existing records first
+      if (optionKey === 'books' || optionKey === 'vendors') {
+        console.log(`Checking for existing ${optionKey} with name: ${labelValue}`);
+
+        // For books, also check ISBN if available
+        if (optionKey === 'books' && rowData.isbn) {
+          const isbnNorm = rowData.isbn.toString().trim().toLowerCase();
+          console.log(`Checking ISBN: ${isbnNorm} for book: ${labelValue}`);
+
+          // Check if book exists by ISBN
+          const existingBooks = relatedData[optionKey] || [];
+          const bookByISBN = existingBooks.find(book =>
+            book.isbn && book.isbn.toString().trim().toLowerCase() === isbnNorm
+          );
+
+          if (bookByISBN) {
+            console.log(`Found existing book by ISBN: ${bookByISBN.title} (ID: ${bookByISBN.id})`);
+            index.set(norm, bookByISBN.id);
+            return bookByISBN.id;
+          }
+        }
+
+        // Check if exists by name/title
+        buildRelatedIndex(optionKey);
+        if (index.has(norm)) {
+          return index.get(norm);
+        }
+
+        // If not found, proceed to auto-create if configured
+        console.log(`No existing ${optionKey} found for: ${labelValue}, will attempt to create if autoCreateRelated is configured`);
       }
 
       const cfg = autoCreateRelated[optionKey];
@@ -93,6 +128,16 @@ export const saveImportedData = async ({
         ...extraPayload,
         [labelField]: labelValue,
       };
+
+      // For books, also include ISBN if available in rowData
+      if (optionKey === 'books') {
+        // Check for ISBN in various possible column names
+        const isbnValue = rowData.isbn || rowData.ISBN || rowData.Isbn || rowData['Book ISBN'] || rowData['book isbn'] || rowData['ISBN Number'] || rowData['isbn number'];
+        if (isbnValue) {
+          payload.isbn = isbnValue;
+          console.log(`Including ISBN "${isbnValue}" in book creation payload`);
+        }
+      }
 
       try {
         const res = await api.create(payload);
@@ -115,22 +160,52 @@ export const saveImportedData = async ({
  
     const transformedData = [];
 
+    console.log("Starting data transformation...");
+    console.log("Available formFields:", formFields.map(f => ({ name: f.name, label: f.label, type: f.type, options: f.options })));
+    console.log("Available relatedData keys:", Object.keys(relatedData));
+
     for (const row of data) {
       const transformed = {};
+      console.log("Processing row:", row);
 
       for (const key of Object.keys(row)) {
         const rawValue = row[key];
+        console.log(`Processing column "${key}" with value "${rawValue}"`);
 
-        const formField = formFields.find(
-          (f) =>
-            f.label?.toLowerCase() === key.toLowerCase() ||
-            f.name?.toLowerCase().replace(/[^a-z0-9]/g, "") ===
-            key.toLowerCase().replace(/[^a-z0-9]/g, "")
-        );
+        // Improved field mapping logic
+        const formField = formFields.find((f) => {
+          if (!f) return false;
+
+          const csvKey = key.toLowerCase().trim();
+          const fieldLabel = f.label?.toLowerCase().trim();
+          const fieldName = f.name?.toLowerCase().trim();
+
+          // Direct label match
+          if (fieldLabel === csvKey) return true;
+
+          // Direct name match (without _id suffix for select fields)
+          if (fieldName === csvKey || fieldName === csvKey + '_id') return true;
+
+          // Handle common variations
+          if (f.type === 'select') {
+            // For select fields, CSV might have "Vendor" but field name is "vendor_id"
+            const baseName = fieldName.replace('_id', '');
+            if (csvKey === baseName || csvKey.includes(baseName)) return true;
+          }
+
+          // Fuzzy matching for common cases
+          if (csvKey.includes(fieldLabel) || fieldLabel?.includes(csvKey)) return true;
+          if (csvKey.includes(fieldName.replace('_id', '')) || fieldName.replace('_id', '').includes(csvKey)) return true;
+
+          return false;
+        });
+
+        console.log(`Found formField for "${key}":`, formField ? { name: formField.name, type: formField.type, options: formField.options } : null);
 
         if (!formField) {
           const safeKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
           transformed[safeKey] = rawValue;
+          console.log(`No formField found, using safe key "${safeKey}"`);
           continue;
         }
 
@@ -140,20 +215,33 @@ export const saveImportedData = async ({
           const optionKey =
             typeof formField.options === "string" ? formField.options : null;
 
+          console.log(`Processing select field "${fieldName}" with optionKey "${optionKey}"`);
+          console.log(`Available relatedData for "${optionKey}":`, relatedData[optionKey]);
+
           if (optionKey) {
-            const relatedId = await getOrCreateRelatedId(optionKey, rawValue);
+            const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
             transformed[fieldName] = relatedId;
+            console.log(`Converted "${rawValue}" to ID "${relatedId}" for field "${fieldName}"`);
+
+            // For required select fields, warn if ID is null
+            if (formField.required && !relatedId) {
+              console.warn(`Required field "${fieldName}" could not be resolved for value "${rawValue}". This may cause validation errors.`);
+            }
           } else {
             transformed[fieldName] = null;
-          }
+            console.log(`No optionKey found for select field "${fieldName}"`);
+        }
         } else if (formField.type === "number") {
           const num = parseInt(rawValue, 10);
           transformed[fieldName] = isNaN(num) ? 0 : num;
+          console.log(`Converted "${rawValue}" to number ${transformed[fieldName]} for field "${fieldName}"`);
         } else {
           transformed[fieldName] = rawValue;
+          console.log(`Using raw value "${rawValue}" for field "${fieldName}"`);
         }
       }
 
+      console.log("Transformed row:", transformed);
       transformedData.push(transformed);
     }
 
@@ -192,8 +280,9 @@ export const saveImportedData = async ({
 
  
       try {
-        await mainApi.create(item);
+        const result = await mainApi.create(item);
         createdCount++;
+        successfulRecords.push({ ...item, id: result.data?.data?.id || result.data?.id }); // Add the created record with ID
       } catch (err) {
  
  
@@ -235,6 +324,15 @@ export const saveImportedData = async ({
     }
 
     if (afterSave) afterSave();
+
+    // Call custom import complete handler if provided
+    if (customHandlers && customHandlers.onImportComplete) {
+      try {
+        await customHandlers.onImportComplete(successfulRecords, apiEndpoint);
+      } catch (error) {
+        console.error("Error in onImportComplete handler:", error);
+      }
+    }
 
   } catch (globalError) {
     console.error("Critical Import error:", globalError);

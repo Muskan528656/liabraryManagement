@@ -22,6 +22,8 @@ app.use(
 );
 
 const fileUpload = require("express-fileupload");
+app.use(fileUpload());
+
 const path = require("path");
 // const sendMail = require("./app/utils/ Mailer.js");
 const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
