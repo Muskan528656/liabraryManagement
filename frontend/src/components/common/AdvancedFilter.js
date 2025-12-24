@@ -1,365 +1,3 @@
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-        
-          
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-              
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
-
 import React, { useState, useMemo } from "react";
 import { Row, Col, Form, Button, Badge, Card } from "react-bootstrap";
 
@@ -378,7 +16,6 @@ export const applyAdvancedFilters = (data, filterValues) => {
       const filterValue = filterValues[key];
       if (filterValue === "" || filterValue === null) return true;
 
- 
       if (key.endsWith("_from") || key.endsWith("_to")) {
         const actualFieldName = key.replace("_from", "").replace("_to", "");
         const itemValue = item[actualFieldName];
@@ -395,7 +32,6 @@ export const applyAdvancedFilters = (data, filterValues) => {
         }
       }
 
- 
       const itemValue = item[key];
       const searchStr = String(filterValue).toLowerCase().trim();
       const itemStr = String(itemValue || "").toLowerCase().trim();
@@ -428,21 +64,19 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
     onFilterChange && onFilterChange({});
   };
 
- 
   const activeCount = useMemo(() => {
     return Object.values(localFilters).filter(v => v !== "" && v !== null).length;
   }, [localFilters]);
 
   return (
-    <div className={`advanced-filter-wrapper ${className} mb-5`}>
+    <div className={`advanced-filter-wrapper ${className} mb-1`}>
       {/* Header Section */}
-      <div className="d-flex align-items-center justify-content-end mb-3">
+      <div className="d-flex align-items-center justify-content-end">
         <div className="d-none">
           <Button
             variant={isExpanded ? "secondary" : "outline-secondary"}
             size="sm"
-            // onClick={() => setIsExpanded(!isExpanded)}
-            // className="d-flex align-items-center gap-2 px-3 py-1"
+            className="d-flex align-items-center gap-2 px-3 "
           >
             <i className={`fa-solid ${isExpanded ? 'fa-minus' : 'fa-filter'}`}></i>
             <span className="fw-bold">Advanced Filter</span>
@@ -458,95 +92,121 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
       {/* Expandable Filter Panel */}
       {isExpanded && (
-        <Card className="border-2 rounded-4 overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
-          <Card.Body className="p-4">
-            <Row className="g-4">
-              {fields.map((field, idx) => {
-                const fName = field.name || field.field;
 
- 
-                if (field.type === "date") {
-                  return (
-                    <React.Fragment key={idx}>
-                      <Col xs={12} md={2}>
-                        <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                          {field.label} From
-                        </Form.Label>
-                        <Form.Control 
-                          size="sm" 
-                          type="date" 
-                          className="border-0 shadow-sm"
-                          value={localFilters[fName + "_from"] || ""} 
-                          onChange={(e) => handleChange(fName + "_from", e.target.value)} 
-                        />
-                      </Col>
-                      <Col xs={12} md={2}>
-                        <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                          {field.label} To
-                        </Form.Label>
-                        <Form.Control 
-                          size="sm" 
-                          type="date" 
-                          className="border-1"
-                          value={localFilters[fName + "_to"] || ""} 
-                          onChange={(e) => handleChange(fName + "_to", e.target.value)} 
-                        />
-                      </Col>
-                    </React.Fragment>
-                  );
-                }
+        <Row className="align-items-end">
+          {fields.map((field, idx) => {
+            const fName = field.name || field.field;
 
- 
-                if (field.type === "select") {
-                  return (
-                    <Col xs={12} md={3} key={idx}>
-                      <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                        {field.label}
-                      </Form.Label>
-                      <Form.Select 
-                        size="sm" 
-                        className="border-1"
-                        value={localFilters[fName] || ""} 
-                        onChange={(e) => handleChange(fName, e.target.value)}
-                      >
-                        <option value="">Select {field.label}</option>
-                        {field.options?.map((opt, i) => (
-                          <option key={i} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </Form.Select>
-                    </Col>
-                  );
-                }
-
- 
-                return (
-                  <Col xs={12} md={2} key={idx}>
-                    <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>
-                      {field.label}
+            // Date Range Fields
+            if (field.type === "date") {
+              return (
+                <React.Fragment key={idx}>
+                  <Col xs={12} md={2}>
+                    <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>
+                      {field.label} From
                     </Form.Label>
-                    <Form.Control 
-                      size="sm" 
-                      type="text" 
+                    <Form.Control
+                      size="sm"
+                      type="date"
                       className="border-1"
-                      placeholder={`Enter ${field.label}...`} 
-                      value={localFilters[fName] || ""} 
-                      onChange={(e) => handleChange(fName, e.target.value)} 
+                      value={localFilters[fName + "_from"] || ""}
+                      onChange={(e) => handleChange(fName + "_from", e.target.value)}
                     />
                   </Col>
-                );
-              })}
-            </Row>
-            {/* Action Buttons */}
-            <div className="d-flex align-items-center justify-content-end mt-4 gap-2">
-              <Button variant="outline-secondary" size="sm" onClick={handleClear}>
-                Clear Filters
+                  <Col xs={12} md={2}>
+                    <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>
+                      {field.label} To
+                    </Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="date"
+                      className="border-1"
+                      value={localFilters[fName + "_to"] || ""}
+                      onChange={(e) => handleChange(fName + "_to", e.target.value)}
+                    />
+                  </Col>
+                </React.Fragment>
+              );
+            }
+
+            // Select Fields
+            if (field.type === "select") {
+              return (
+                <Col xs={12} md={2} key={idx}>
+                  <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>
+                    {field.label}
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    className="border-1"
+                    value={localFilters[fName] || ""}
+                    onChange={(e) => handleChange(fName, e.target.value)}
+                  >
+                    <option value="">Select {field.label}</option>
+                    {field.options?.map((opt, i) => (
+                      <option key={i} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              );
+            }
+
+            // Text Fields
+            return (
+              <Col xs={12} md={2} key={idx}>
+                <Form.Label className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>
+                  {field.label}
+                </Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  className="border-1"
+                  placeholder={`Enter ${field.label}...`}
+                  value={localFilters[fName] || ""}
+                  onChange={(e) => handleChange(fName, e.target.value)}
+                />
+              </Col>
+            );
+          })}
+
+          <Col xs={12} md={2} className="d-flex align-items-end gap-2">
+            <div className="d-flex gap-2" style={{ height: '38px' }}>
+              <Button
+
+                size="sm"
+                onClick={handleClear}
+                className="d-flex align-items-center gap-1 h-100"
+                style={{
+                  minWidth: '80px',
+                  backgroundColor: 'var(--bs-light)',
+                  color: '#6c757d',
+                  border: '1px solid var(--bs-light)',
+                  fontWeight: '500'
+                }}
+              >
+                <i className="fa-solid fa-xmark"></i>
+                Clear
               </Button>
-              <Button variant="primary" size="sm" onClick={handleSearch}>
-                Apply Filters
+              <Button
+
+                size="sm"
+                onClick={handleSearch}
+                className="d-flex align-items-center gap-1 h-100"
+                style={{
+                  minWidth: '80px',
+                  backgroundColor: 'var(--bs-primary)',
+                  color: '#fff',
+                  border: '1px solid var(--bs-primary)',
+                  fontWeight: '500'
+                }}
+              >
+                <i className="fa-solid fa-filter"></i>
+                Apply
               </Button>
             </div>
-          </Card.Body>
-        </Card>
+          </Col>
+        </Row>
+
       )}
     </div>
   );

@@ -674,7 +674,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     label: `${country.country_code} - ${country.country}`
                 })),
                 required: true,
-                placeholder: "Select country code",
+        
                 defaultValue: defaultCountryCode,
                 colSize: 3,
                 section: "Contact Person Information"
