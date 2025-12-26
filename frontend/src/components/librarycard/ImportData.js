@@ -12,7 +12,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
             return;
         }
 
-        // If type is student, parent, or staff, check subType
+ 
         if (["student", "parent", "staff"].includes(type) && !subType) {
             alert("Please select data to import!");
             return;
@@ -23,7 +23,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
             return;
         }
 
-        // Return to parent component with type and subtype
+ 
         onImport({ type, subType, file });
         onClose();
     };

@@ -21,7 +21,7 @@ module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
 
-  // GET all object types
+ 
   router.get("/", fetchUser, async (req, res) => {
     try {
       const records = await ObjectType.getAllRecords();
@@ -39,7 +39,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET object type by ID
+ 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       const record = await ObjectType.getAllRecords();
@@ -64,7 +64,7 @@ module.exports = (app) => {
     }
   });
 
-  // POST create new object type
+ 
   router.post(
     "/",
     fetchUser,
@@ -79,7 +79,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check for duplicate name
+ 
         const isDuplicate = await ObjectType.checkDuplicateRecord(req.body.name);
         if (isDuplicate) {
           return res.status(400).json({
@@ -111,7 +111,7 @@ module.exports = (app) => {
     }
   );
 
-  // PUT update object type
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -126,7 +126,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        // Check for duplicate name (excluding current record)
+ 
         if (req.body.name) {
           const isDuplicate = await ObjectType.checkDuplicateRecord(req.body.name, req.params.id);
           if (isDuplicate) {
@@ -160,7 +160,7 @@ module.exports = (app) => {
     }
   );
 
-  // DELETE object type
+ 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const result = await ObjectType.deleteRecord(req.params.id);

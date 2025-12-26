@@ -1,21 +1,21 @@
-// SUPPORTED API ENDPOINTS
-//  *    GET     /api/publisher
-//  *    GET     /api/publisher/:id
-//  *    POST    /api/publisher
-//  *    PUT     /api/publisher/:id
-//  *    DELETE  /api/publisher/:id
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 const express = require('express');
 const router = express.Router();
-const Publisher = require('../models/publisher.model.js');
+const Publisher = require('../models/Publisher.model.js');
 const { fetchUser } = require('../middleware/fetchuser.js');
 const { body, validationResult } = require('express-validator');
 
 
 module.exports = (app) => {
 
-    //get all ----------------------------
+ 
     router.get("/", fetchUser, async (req, res) => {
         try {
             Publisher.init(req.userinfo.tenantcode);
@@ -35,7 +35,7 @@ module.exports = (app) => {
         }
     })
 
-    //get by id-----------------------
+ 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             const { id } = req.params;
@@ -61,16 +61,15 @@ module.exports = (app) => {
         }
     })
 
-    //insert publisher-----------------------
+ 
     router.post("/", fetchUser, [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
-        body('phone', 'Phone number is required').isMobilePhone(),
-        body('phone', 'Phone number is 10 digit').isMobilePhone(),
+        body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
         body('city', 'City is required').not().isEmpty(),
         body('country', 'Country is required').not().isEmpty()
     ], async (req, res) => {
-        //validation----
+ 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             console.log("check--->", req)
@@ -99,16 +98,15 @@ module.exports = (app) => {
         }
     })
 
-    //update publisher-----------------------
+ 
     router.put("/:id", [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
-        body('phone', 'Phone number is required').isMobilePhone(),
-        body('phone', 'Phone number is 10 digit').isMobilePhone(),
+        body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
         body('city', 'City is required').not().isEmpty(),
         body('country', 'Country is required').not().isEmpty()
     ], fetchUser, async (req, res) => {
-        //validation----
+ 
         const errors = validationResult(req);
         console.log("errors=>", errors)
         if (!errors.isEmpty()) {
@@ -138,7 +136,7 @@ module.exports = (app) => {
         }
     })
 
-    //delete publisher-----------------------
+ 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             const { id } = req.params;

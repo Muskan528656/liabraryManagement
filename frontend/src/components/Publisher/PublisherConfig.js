@@ -1,7 +1,24 @@
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import City_State from "../../constants/CityState.json";
 
+import { createModel } from "../common/UniversalCSVXLSXImporter";
+
 export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
+
+    const PublisherModel = createModel({
+        modelName: "Publisher",
+        fields: {
+            "Salutation": "Salutation",
+            "Name": "Name",
+            "Email": "Email",
+            "Phone": "Phone",
+            "City": "City",
+            "State": "State",
+            "Country": "Country",
+            "is_active": "Status"
+        },
+        required: ["Name", "Email", "Phone", "Country", "City"],
+    });
 
     const statusBadge = (value) => (
         <span className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
@@ -15,6 +32,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
         moduleName: "publisher",
         moduleLabel: "publisher",
         apiEndpoint: "publisher",
+        importMatchFields: [],
         initialFormData: {
             salutation: "",
             name: "",
@@ -23,7 +41,6 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             city: "",
             state: "",
             country: "",
-
             is_active: true
         },
         columns: [
@@ -79,7 +96,6 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "email",
                 label: "Email",
                 type: "email",
-                options: "categories",
                 required: true,
                 placeholder: "ibirds@gmail.com",
                 colSize: 6,
@@ -95,37 +111,25 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             {
                 name: "city",
                 label: "City",
-                type: "select",
-                options: City_State.map(item => ({
-                    value: item.name,
-                    label: `${item.name}`
-                })),
+                type: "text",
                 placeholder: "Enter The City",
                 colSize: 6,
             },
             {
                 name: "state",
                 label: "State",
-                type: "select",
-                options: City_State.map(item => ({
-                    value: item.state,
-                    label: `${item.state}`
-                })),
+                type: "text",
                 placeholder: "Enter The State",
                 colSize: 6,
             },
-            // {
-            //     name: "country",
-            //     label: "Country",
-            //     type: "select",
-            //     options: COUNTRY_CODES.map(item => ({
-            //         value: item.country,
-            //         label: `${item.country}(${item.country_code})`
-            //     })),
-            //     required: true,
-            //     placeholder: "Select a country",
-            //     colSize: 6
-            // },
+            {
+                name: "country",
+                label: "Country",
+                type: "text",
+                required: true,
+                placeholder: "Select a country",
+                colSize: 6
+            },
             {
                 name: "is_active",
                 label: "Active",
@@ -144,17 +148,17 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             console.log("errors--->", errors)
             console.log("book", allBooks);
 
-            // if (!formData.salutation?.trim()) errors.push("salutation is required");
+ 
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
-            // if (!formData.country?.trim()) errors.push("country is required");
+            if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
 
-            // const duplicate = allBooks.find(
-            //     book => book.isbn === formData.isbn && book.id !== editingBook?.id   
-            // );
-            // if (duplicate) errors.push("Book with this ISBN already exists");
+ 
+ 
+ 
+ 
 
             return errors;
         },
@@ -170,7 +174,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
-            // 4. Enable Import Button
+ 
             showImportButton: true,
         },
 
@@ -184,7 +188,24 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                     }));
                 }
                 return data;
+            },
+            onImportDataTransform: (data) => {
+                return data.map(item => ({
+                    ...item,
+                    is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true || item.Status === "Active" || item.Status === "true" || item.Status === true
+                }));
             }
-        }
+        },
+        importModel: PublisherModel,
+        exportColumns: [
+            { key: "salutation", header: "Salutation", width: 12 },
+            { key: "name", header: "Name", width: 20 },
+            { key: "email", header: "Email", width: 20 },
+            { key: "phone", header: "Phone", width: 15 },
+            { key: "city", header: "City", width: 15 },
+            { key: "state", header: "State", width: 15 },
+            { key: "country", header: "Country", width: 15 },
+            { key: "is_active", header: "Status", width: 12 },
+        ],
     };
 };

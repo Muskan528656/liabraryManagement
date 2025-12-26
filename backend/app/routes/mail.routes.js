@@ -1,4 +1,4 @@
-const sendMail = require("../utils/mailer");
+const sendMail = require("../utils/Mailer.js");
 const {
     dueTemplate,
     overdueTemplate,
@@ -23,7 +23,7 @@ module.exports = (app) => {
         }
     });
 
-    // DUE REMINDER
+ 
     app.get("/api/mail/due-reminder", async (req, res) => {
         try {
             const html = dueTemplate({
@@ -45,7 +45,7 @@ module.exports = (app) => {
         }
     });
 
-    // OVERDUE
+ 
     app.get("/api/mail/overdue", async (req, res) => {
         try {
             const html = overdueTemplate({

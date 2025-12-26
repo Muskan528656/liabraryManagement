@@ -353,65 +353,65 @@ const DynamicCRUD = ({
         }
     }, []);
 
-    // const filteredData = useMemo(() => {
-    //     let result = data;
 
-    //     if (advancedFilters && advancedFilters.length > 0) {
-    //         const fieldsForFilter = filterFields.length > 0 ? filterFields : formFields.map(field => ({
-    //             ...field,
-    //             name: field.name || field.field,
-    //             field: field.name || field.field,
-    //         }));
-    //         result = applyAdvancedFilters(result, advancedFilters, fieldsForFilter);
-    //     }
 
-    //     if (searchTerm && showSearch) {
-    //         const searchTermLower = searchTerm.toLowerCase();
-    //         result = result.filter(item =>
-    //             columns.some(col => {
-    //                 if (!col || !col.field) return false;
-    //                 const fieldValue = item[col.field];
-    //                 return fieldValue != null &&
-    //                     String(fieldValue).toLowerCase().includes(searchTermLower);
-    //             })
-    //         );
-    //     }
 
-    //     return result;
-    // }, [data, searchTerm, showSearch, columns, advancedFilters, filterFields, formFields]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const filteredData = useMemo(() => {
-    let result = data;
+        let result = data;
 
-    console.log('advancedFilters = ', advancedFilters);
-    console.log('result = ', result);
-    console.log('searchTerm = ', searchTerm);
-    console.log('showSearch = ', showSearch);
+        console.log('advancedFilters = ', advancedFilters);
+        console.log('result = ', result);
+        console.log('searchTerm = ', searchTerm);
+        console.log('showSearch = ', showSearch);
 
-    // 1. Advanced Filter Logic
-    // Check karein ki kya koi filter value set hai
-    const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
-    
-    if (hasActiveFilters) {
-        // Hamara naya logic call karein
-        result = applyAdvancedFilters(result, advancedFilters);
-    }
 
-    // 2. Global Search Term Logic
-    if (searchTerm && showSearch) {
-        const searchTermLower = searchTerm.toLowerCase();
-        result = result.filter(item =>
-            columns.some(col => {
-                if (!col || !col.field) return false;
-                const fieldValue = item[col.field];
-                return fieldValue != null &&
-                    String(fieldValue).toLowerCase().includes(searchTermLower);
-            })
-        );
-    }
 
-    return result;
-}, [data, searchTerm, showSearch, columns, advancedFilters]);
+        const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
+
+        if (hasActiveFilters) {
+
+            result = applyAdvancedFilters(result, advancedFilters);
+        }
+
+
+        if (searchTerm && showSearch) {
+            const searchTermLower = searchTerm.toLowerCase();
+            result = result.filter(item =>
+                columns.some(col => {
+                    if (!col || !col.field) return false;
+                    const fieldValue = item[col.field];
+                    return fieldValue != null &&
+                        String(fieldValue).toLowerCase().includes(searchTermLower);
+                })
+            );
+        }
+
+        return result;
+    }, [data, searchTerm, showSearch, columns, advancedFilters]);
 
     const handleAdvancedFilterChange = useCallback((filters) => {
         setAdvancedFilters(filters);
@@ -473,7 +473,10 @@ const DynamicCRUD = ({
                 publishers: "publisher",
                 publisher: "publisher",
                 users: "user",
+                vendors: "vendor",
                 vendor: "vendor",
+                books: "book",
+                book: "book",
                 "user-role": "user-role",
                 "userroles": "user-role",
                 subscriptions: "subscriptions",
@@ -529,7 +532,7 @@ const DynamicCRUD = ({
                 if (Array.isArray(field.options)) {
                     optionsArray = field.options;
                 } else if (typeof field.options === 'function') {
-                    // Handle function-based options (e.g., time_zone depending on country)
+
                     optionsArray = field.options(formData) || [];
                 } else if (typeof field.options === 'string') {
                     const relatedOptions = relatedData[field.options];
@@ -835,7 +838,12 @@ const DynamicCRUD = ({
 
 
                 // label: `Import ${moduleLabel}`,
-                onClick: () => setShowImportModal(true),
+                onClick: async () => {
+                    if (Object.keys(relatedData).length === 0) {
+                        await fetchRelatedData();
+                    }
+                    setShowImportModal(true);
+                },
             });
         }
 
@@ -845,7 +853,7 @@ const DynamicCRUD = ({
                 variant: "outline-success",
                 size: "sm",
                 icon: "fa-solid fa-file-import",
-                // label: "Export",
+
                 onClick: handleExport,
             });
         }
@@ -861,7 +869,7 @@ const DynamicCRUD = ({
             });
         }
 
-        // 🔹 4. ADD (last)
+
         if (showAddButton) {
             buttons.push({
                 size: "sm",
@@ -875,14 +883,14 @@ const DynamicCRUD = ({
             });
         }
 
-        // 🔹 5. CUSTOM ACTIONS (agar ho)
+
         if (customActionButtons.length > 0) {
             buttons.push(...customActionButtons);
         }
 
         return buttons;
     }, [
-        showImportButton,        // ✅ REQUIRED
+        showImportButton,       
         showImportExport,
         showBulkInsert,
         showAddButton,
@@ -891,7 +899,7 @@ const DynamicCRUD = ({
         handleBulkInsert,
         handleAdd,
         customActionButtons,
-        setShowImportModal       // ✅ REQUIRED
+        setShowImportModal       
     ]);
 
 
@@ -932,7 +940,7 @@ const DynamicCRUD = ({
     }
 
     return (
-        <Container fluid className="py-4">
+        <Container fluid >
             <ScrollToTop />
             {/* 
             <Row className="mb-3" style={{ marginTop: "0.5rem" }}>
@@ -956,7 +964,8 @@ const DynamicCRUD = ({
 
             <Row className="justify-content-center">
                 <Col lg={12} xl={12}>
-                    <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+                    <Card 
+                    style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
                                 <Loader />
@@ -992,10 +1001,10 @@ const DynamicCRUD = ({
                                     )} */}
                                     {showAdvancedFilter && (
                                         <AdvancedFilter
-                                            // Agar filterFields di hain toh wo, warna processedFormFields use karein
-                                            // Hum password aur file fields ko filter se nikaal dete hain
-                                            fields={filterFields.length > 0 
-                                                ? filterFields 
+
+
+                                            fields={filterFields.length > 0
+                                                ? filterFields
                                                 : processedFormFields.filter(f => !['password', 'file', 'image', 'hidden'].includes(f.type))
                                             }
                                             onFilterChange={handleAdvancedFilterChange}
@@ -1049,7 +1058,6 @@ const DynamicCRUD = ({
                                                         title="View Barcode"
                                                     >
                                                         <i className="fs-7 fa-solid fa-eye me-1"></i>
-                                                        {/* Preview */}
                                                     </button>
                                                 )}
                                             </div>
@@ -1251,6 +1259,7 @@ const DynamicCRUD = ({
                                 existingRecords: data,
                                 importMatchFields,
                                 autoCreateRelated,
+                                customHandlers,
                                 afterSave: () => {
                                     fetchData();
                                     setShowImportModal(false);

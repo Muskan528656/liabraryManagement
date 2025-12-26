@@ -29,75 +29,59 @@ module.exports = (app) => {
 
   var router = require("express").Router();
   const fileUpload = require("express-fileupload");
-  // Image upload route
+
+  
+
   router.post("/:id/upload-image", fetchUser, async (req, res) => {
-    try {
-      console.log("req chdck->", req.userinfo);
-      console.log("req.files =", req.files);
-      console.log("req.files.file =", req.files?.file);
-
-      if (!req.files?.file) {
-        return res.status(400).json({ errors: "No image file provided" });
-      }
-
-      const userId = req.params.id;
-      console.log("user-->", userId);
-      console.log("req user id->", req.userinfo.id);
-
-      // Authorization check
-      if (req.userinfo.id !== userId) {
-        return res.status(403).json({ errors: "Unauthorized access" });
-      }
-
-      const file = req.files.file;
-      console.log("file--->", file);
-
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return res.status(400).json({ errors: "Invalid image type" });
-      }
-
-      console.log("allowedtype", allowedTypes);
-
-      if (file.size > 5 * 1024 * 1024) {
-        return res.status(400).json({ errors: "Image size max 5MB" });
-      }
-
-      const uploadPath = path.join(
-        './public',
-        req.userinfo.tenantcode,
-        'users',
-        userId
-      );
-
-      console.log("upload path", uploadPath);
-      const fileName = `profile_${Date.now()}${path.extname(file.name) || '.jpg'}`;
-      const filePath = path.join(uploadPath, fileName);
-
-      console.log("filename", fileName);
-      console.log("filePath", filePath);
-
-      await file.mv(filePath);
-
-      const relativePath = `/public/${req.userinfo.tenantcode}/users/${userId}/${fileName}`;
-
-      console.log("relative path", relativePath);
-
-      // Initialize the User schema before making any DB calls
-      User.init(req.userinfo.tenantcode);
-
-      // Update profile image path in DB
-      await User.updateById(userId, { profileImage: relativePath }, req.userinfo.id);
-
-      res.status(200).json({
-        success: true,
-        filePath: relativePath,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ errors: "Internal server error" });
+  try {
+    if (!req.files?.file) {
+      return res.status(400).json({ errors: "No image file provided" });
     }
-  });
+
+    const userId = String(req.params.id);
+
+    // Authorization check
+    if (String(req.userinfo.id) !== userId) {
+      return res.status(403).json({ errors: "Unauthorized access" });
+    }
+
+    const file = req.files.file;
+
+    // Size check only (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ errors: "Image size max 5MB" });
+    }
+
+    // Use same path as server.js for consistency
+    const uploadPath = path.join(
+      __dirname,
+      '../../../frontend/public/uploads',
+      userId
+    );
+
+    console.log('uploadPath = ', uploadPath)
+
+    // Ensure directory exists
+    fs.mkdirSync(uploadPath, { recursive: true });
+
+    const fileExt = path.extname(file.name) || ".jpg";
+    const fileName = `profile_${Date.now()}${fileExt}`;
+    const filePath = path.join(uploadPath, fileName);
+
+    await file.mv(filePath);
+
+    const relativePath = `/uploads/${userId}/${fileName}`;
+
+    return res.status(200).json({
+      success: true,
+      filePath: relativePath,
+    });
+  } catch (error) {
+    console.error("Upload Image Error:", error);
+    return res.status(500).json({ errors: "Internal server error" });
+  }
+});
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
@@ -249,6 +233,11 @@ module.exports = (app) => {
           return res.status(404).json({ errors: "User not found" });
         }
 
+        // Authorization check
+        if (req.userinfo.id !== req.params.id) {
+          return res.status(403).json({ errors: "Unauthorized access" });
+        }
+
 
         const updateData = { ...req.body };
         if (updateData.password) {
@@ -273,81 +262,7 @@ module.exports = (app) => {
   );
 
 
-  router.post("/:id/upload-image", fetchUser, async (req, res) => {
-    try {
-      if (!req.files || !req.files.file) {
-        return res.status(400).json({ errors: "No image file provided" });
-      }
 
-      const userId = req.params.id;
-      const file = req.files.file;
-
-
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return res.status(400).json({ errors: "Invalid file type. Only JPEG, PNG, and GIF images are allowed." });
-      }
-
-
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        return res.status(400).json({ errors: "File size too large. Maximum size is 5MB." });
-      }
-
-
-      const uploadPath = path.join(
-        process.env.FILE_UPLOAD_PATH || './public',
-        req.userinfo.tenantcode,
-        'users',
-        userId
-      );
-
-
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-      }
-
-
-      const fileExtension = path.extname(file.name) || '.jpg';
-      const fileName = `profile${fileExtension}`;
-      const filePath = path.join(uploadPath, fileName);
-
-
-      try {
-        if (file.mv) {
-
-          await new Promise((resolve, reject) => {
-            file.mv(filePath, (err) => {
-              if (err) reject(err);
-              else resolve();
-            });
-          });
-        } else if (file.data) {
-
-          fs.writeFileSync(filePath, file.data);
-        } else if (Buffer.isBuffer(file)) {
-
-          fs.writeFileSync(filePath, file);
-        } else {
-          return res.status(400).json({ errors: "Invalid file format" });
-        }
-
-
-        const relativePath = `/public/${req.userinfo.tenantcode}/users/${userId}/${fileName}`;
-        return res.status(200).json({
-          success: true,
-          message: "Image uploaded successfully",
-          filePath: relativePath
-        });
-      } catch (saveError) {
-        console.error("Error saving file:", saveError);
-        return res.status(500).json({ errors: "Failed to save image file" });
-      }
-    } catch (error) {
-      console.error("Error uploading user image:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
 
 
   router.delete("/:id", fetchUser, async (req, res) => {

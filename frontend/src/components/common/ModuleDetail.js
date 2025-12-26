@@ -822,7 +822,7 @@ const ModuleDetail = ({
 
   const handleFieldChange = (fieldKey, value, field) => {
     if (isEditing && tempData) {
-      // If the field has a custom onChange handler, use it instead of generic logic
+ 
       if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
         field.onChange(value, tempData, setTempData);
         return;
@@ -1310,13 +1310,13 @@ const ModuleDetail = ({
                           <i className="fa-solid fa-edit me-2"></i>
                           Edit {moduleLabel}
                         </button>
-                        <button
+                        {/* <button
                           className="custom-btn-delete-detail"
                           onClick={handleDelete}
                         >
                           <i className="fa-solid fa-trash me-2"></i>
                           Delete
-                        </button>
+                        </button> */}
                       </>
                     ) : (
                       <div className="d-flex gap-2">
@@ -1349,7 +1349,7 @@ const ModuleDetail = ({
                       style={{
                         color: "var(--primary-color)",
                         background: "vae(--primary-background-color)",
-                        //    background: "vae(--primary-background-color)",,
+ 
                         borderRadius: "10px",
                       }}
                     >

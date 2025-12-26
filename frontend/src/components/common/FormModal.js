@@ -222,7 +222,7 @@ const FormModal = ({
 
       case "text":
       case "email":
-      // REMOVED "password" from here
+ 
       case "number":
       case "tel":
         return (
@@ -473,7 +473,7 @@ const FormModal = ({
                     style={{
                       padding: "12px 16px",
                       backgroundColor: "var(--secondary-color)",
-                      // borderLeft: "4px solid #6f42c1",
+ 
                       marginBottom: "20px",
                       borderRadius: "6px",
                     }}
@@ -533,16 +533,8 @@ const FormModal = ({
             <Button
               onClick={onSubmit}
               disabled={loading}
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                backgroundColor: "var(--primary-color)",
-                border: "none",
-                padding: "8px 20px",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "white"
-              }}
+              className="btn-custom d-flex align-items-center justify-content-center"
+            
             >
               {loading ? (
                 <>

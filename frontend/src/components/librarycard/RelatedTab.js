@@ -158,7 +158,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     const activePlan = relatedPlans.find(p => isPlanActive(p));
     const historyPlans = relatedPlans.filter(p => !isPlanActive(p));
 
-    // UI Helper: Get Status Badge style
+ 
     const getStatusBadge = (plan) => {
         const isActive = isPlanActive(plan);
         return (
@@ -301,46 +301,46 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                     </div>
                                 </div>
 
-                                // <div className="card shadow-sm border rounded-4 overflow-hidden" style={{height:'290px'}}>
-                                // <div className="card-body p-4">
-                                //     {/* Header: Plan Name & Status */}
-                                //     <div className="d-flex justify-content-between align-items-start mb-3">
-                                //         <div>
-                                //             <small className="text-muted text-uppercase fw-bold" style={{fontSize: '0.75rem'}}>Current Subscription</small>
-                                //             <h4 className="fw-bold text-dark mb-0 mt-1">{activePlan.plan_name || activePlan.name}</h4>
-                                //         </div>
-                                //         <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
-                                //             Active
-                                //         </span>
-                                //     </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-                                //     {/* Middle: Time Remaining Visual */}
-                                //     <div className="p-3 bg-light rounded-3 mb-4 border">
-                                //         <div className="d-flex justify-content-between align-items-center mb-2">
-                                //             <span className="fw-bold text-dark">{getDaysRemaining(activePlan.expiry_date)} Days Left</span>
-                                //             <small className="text-muted">{activePlan.allowed_books} Books Limit</small>
-                                //         </div>
-                                //         <ProgressBar 
-                                //             now={Math.min(100, Math.max(0, (getDaysRemaining(activePlan.expiry_date) / calculateTotalDuration(activePlan.assigned_date, activePlan.expiry_date)) * 100))}
-                                //             variant="primary"
-                                //             style={{ height: '6px' }}
-                                //             className="mb-0"
-                                //         />
-                                //     </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-                                //     {/* Footer: Dates */}
-                                //     <div className="row g-0">
-                                //         <div className="col-6 border-end pe-3">
-                                //             <small className="text-muted d-block" style={{fontSize: '11px'}}>START DATE</small>
-                                //             <span className="fw-semibold text-dark small">{formatDate(activePlan.assigned_date)}</span>
-                                //         </div>
-                                //         <div className="col-6 ps-3">
-                                //             <small className="text-muted d-block" style={{fontSize: '11px'}}>EXPIRY DATE</small>
-                                //             <span className="fw-semibold text-dark small">{formatDate(activePlan.expiry_date)}</span>
-                                //         </div>
-                                //     </div>
-                                // </div>
-                                // </div>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
                             )}
 
                             {!isAddingPlan && !activePlan && (

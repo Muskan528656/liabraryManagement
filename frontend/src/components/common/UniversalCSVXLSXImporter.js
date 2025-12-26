@@ -9,7 +9,7 @@ import {
   ArrowClockwise, ListCheck, Table as TableIcon
 } from "react-bootstrap-icons";
 
-// --- HELPERS ---
+ 
 export const createModel = ({ modelName, fields = {}, required = [], validators = {} }) => {
   return { modelName, fields, required, validators };
 };
@@ -37,7 +37,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
     { id: 3, label: "Results", icon: <Check2Circle /> }
   ];
 
-  // --- DOWNLOAD TEMPLATE ---
+ 
   const handleDownloadSample = () => {
     if (!model || !model.fields) return;
     const headers = Object.values(model.fields);
@@ -47,7 +47,7 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
     XLSX.writeFile(wb, `${model.modelName || "data"}_template.csv`, { bookType: "csv" });
   };
 
-  // --- FILE HANDLING ---
+ 
   const handleFile = (uploadedFile) => {
     setError(null);
     if (!uploadedFile) return;

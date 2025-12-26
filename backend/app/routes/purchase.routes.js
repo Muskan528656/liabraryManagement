@@ -147,7 +147,7 @@ module.exports = (app) => {
     }
   });
 
-  // Get purchase details by book_id
+ 
 router.get("/book/:bookId", fetchUser, async (req, res) => {
   try {
     const { bookId } = req.params;

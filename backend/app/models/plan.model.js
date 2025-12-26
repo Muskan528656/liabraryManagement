@@ -96,7 +96,7 @@ const Plan = {
     },
 
     async deletePlan(id) {
-        // First check if plan is being used in subscriptions
+ 
         const checkQuery = `
             SELECT COUNT(*) as subscription_count 
             FROM ${schema}.subscriptions 

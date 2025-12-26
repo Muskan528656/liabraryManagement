@@ -77,16 +77,16 @@ module.exports = (app) => {
   });
 
 
-  // router.get("/issue/:issueId", fetchUser, async (req, res) => {
-  //   try {
-  //     BookSubmission.init(req.userinfo.tenantcode);
-  //     const submissions = await BookSubmission.findByIssueId(req.params.issueId);
-  //     return res.status(200).json({ success: true, data: submissions });
-  //   } catch (error) {
-  //     console.error("Error fetching submissions by issue ID:", error);
-  //     return res.status(500).json({ errors: "Internal server error" });
-  //   }
-  // });
+
+
+
+
+
+
+
+
+
+
 
 
   router.get(
@@ -207,79 +207,79 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-router.put(
-  "/cancel/:issueId",
-  fetchUser,
-  [
-    body("cancellation_reason").optional().isString().withMessage("Cancellation reason must be a string"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+  router.put(
+    "/cancel/:issueId",
+    fetchUser,
+    [
+      body("cancellation_reason").optional().isString().withMessage("Cancellation reason must be a string"),
+    ],
+    async (req, res) => {
+      try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(400).json({ errors: errors.array() });
+        }
 
-      const userId = req.userinfo?.id || req.userinfo?.id || null;
-      if (!userId) {
-        return res.status(400).json({ errors: "User ID is required" });
-      }
+        const userId = req.userinfo?.id || req.userinfo?.id || null;
+        if (!userId) {
+          return res.status(400).json({ errors: "User ID is required" });
+        }
 
-      BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode);
 
-      const result = await BookSubmission.cancelIssue(
-        req.params.issueId,
-        userId,
-        req.body.cancellation_reason || "Cancelled by librarian"
-      );
+        const result = await BookSubmission.cancelIssue(
+          req.params.issueId,
+          userId,
+          req.body.cancellation_reason || "Cancelled by librarian"
+        );
 
-      // नोटिफिकेशन भेजें (वैकल्पिक)
-      if (result.success) {
-        try {
-          Notification.init(req.userinfo.tenantcode);
 
-          // issue से user की जानकारी लें
-          const issueQuery = `
+        if (result.success) {
+          try {
+            Notification.init(req.userinfo.tenantcode);
+
+
+            const issueQuery = `
             SELECT bi.issued_to, b.title 
             FROM ${req.userinfo.tenantcode}.book_issues bi
             LEFT JOIN ${req.userinfo.tenantcode}.books b ON bi.book_id = b.id
             WHERE bi.id = $1
           `;
-          const issueResult = await sql.query(issueQuery, [req.params.issueId]);
+            const issueResult = await sql.query(issueQuery, [req.params.issueId]);
 
-          if (issueResult.rows.length > 0) {
-            const issue = issueResult.rows[0];
+            if (issueResult.rows.length > 0) {
+              const issue = issueResult.rows[0];
 
-            const notification = await Notification.create({
-              user_id: issue.issued_to,
-              title: "Book Issue Cancelled",
-              message: `Your issue for book "${issue.title}" has been cancelled.`,
-              type: "issue_cancelled",
-              related_id: req.params.issueId,
-              related_type: "book_issue"
-            });
+              const notification = await Notification.create({
+                user_id: issue.issued_to,
+                title: "Book Issue Cancelled",
+                message: `Your issue for book "${issue.title}" has been cancelled.`,
+                type: "issue_cancelled",
+                related_id: req.params.issueId,
+                related_type: "book_issue"
+              });
 
-            if (req.app.get('io')) {
-              const io = req.app.get('io');
-              io.to(`user_${issue.issued_to}`).emit("new_notification", notification);
+              if (req.app.get('io')) {
+                const io = req.app.get('io');
+                io.to(`user_${issue.issued_to}`).emit("new_notification", notification);
+              }
             }
+          } catch (notifError) {
+            console.error("Error creating cancellation notification:", notifError);
+
           }
-        } catch (notifError) {
-          console.error("Error creating cancellation notification:", notifError);
-          // नोटिफिकेशन एरर को अनदेखा करें
         }
+
+        return res.status(200).json(result);
+
+      } catch (error) {
+        console.error("Error cancelling issue:", error);
+        return res.status(500).json({
+          success: false,
+          errors: error.message
+        });
       }
-
-      return res.status(200).json(result);
-
-    } catch (error) {
-      console.error("Error cancelling issue:", error);
-      return res.status(500).json({ 
-        success: false, 
-        errors: error.message 
-      });
     }
-  }
-);
-  app.use("/api/book_submissions", router);
+  );
+  app.use(process.env.BASE_API_URL + "/api/book_submissions", router);
 };

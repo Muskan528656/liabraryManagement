@@ -119,14 +119,14 @@ const PublisherDetail = () => {
         ],
     };
 
-    // const lookupNavigation = {
-    //   author_name: {
-    //     path: "author",
-    //     idField: "author_id",
-    //     labelField: "author_name"
-    //   },
+ 
+ 
+ 
+ 
+ 
+ 
 
-    // }
+ 
 
     return (
         <>
@@ -139,10 +139,10 @@ const PublisherDetail = () => {
                             moduleLabel="publisher"
                             icon="fa fa-address-card"
                             fields={fields}
-                        // lookupNavigation={lookupNavigation}
-                        // externalData={externalData}
-                        // data={book}
-                        // fetchBookData={fetchBookData}
+ 
+ 
+ 
+ 
                         />
                     )}
                 </Col>

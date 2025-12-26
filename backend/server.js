@@ -22,8 +22,10 @@ app.use(
 );
 
 const fileUpload = require("express-fileupload");
+app.use(fileUpload());
+
 const path = require("path");
-const sendMail = require("./app/utils/mailer");
+// const sendMail = require("./app/utils/ Mailer.js");
 const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
@@ -111,7 +113,7 @@ require("./app/routes/dashbard.router.js")(app);
 require('./app/routes/objecttype.routes.js')(app);
 
 
-//  upload middleware
+ 
 app.use(fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 },
   abortOnLimit: true,

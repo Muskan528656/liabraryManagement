@@ -40,14 +40,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [userRoleName, setUserRoleName] = useState("");
   const [userDisplayName, setUserDisplayName] = useState("");
 
-  // Calculate total unread count from both sources
+
   const totalUnreadCount = React.useMemo(() => {
     const allUnread = allNotifications.filter(n => !n.is_read).length;
     const dueUnread = dueNotifications.filter(n => !n.is_read).length;
     return allUnread + dueUnread;
   }, [allNotifications, dueNotifications]);
 
-  // Filter notifications based on active tab
+
   const filteredNotifications = React.useMemo(() => {
     const combined = [...dueNotifications, ...allNotifications];
 
@@ -56,7 +56,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     } else if (activeTab === "READ") {
       return combined.filter(n => n.is_read);
     } else {
-      // ALL tab - show everything
+
       return combined;
     }
   }, [allNotifications, dueNotifications, activeTab]);
@@ -614,19 +614,19 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
-        // Update in allNotifications
+
         setAllNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId ? { ...n, is_read: true } : n
           )
         );
-        // Update in dueNotifications
+
         setDueNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId ? { ...n, is_read: true } : n
           )
         );
-        // Update unread count
+
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
@@ -642,7 +642,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       );
       const result = await response.json();
       if (result.success) {
-        // Mark all as read in both arrays
+
         setAllNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
         setDueNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
         setUnreadCount(0);
@@ -652,14 +652,14 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // Handle notification click - marks as read immediately
+
   const handleNotificationClick = (notification) => {
-    // If not read, mark as read
+
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
 
-    // Set notification as read locally for immediate UI update
+
     setAllNotifications((prev) =>
       prev.map((n) =>
         n.id === notification.id ? { ...n, is_read: true } : n
@@ -671,12 +671,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       )
     );
 
-    // You can add specific navigation based on notification type
+
     if (notification.type === 'book_due') {
       navigate("/mybooks");
     }
 
-    // Don't close the dropdown on click - let user see multiple notifications
+
   };
 
   return (
@@ -727,7 +727,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             gap: "0.5rem",
           }}
         >
-       
+          <img
+            src="/Logo.png"
+
+            height="50"
+            style={{ height: "50px", marginLeft: '20px', objectFit: "contain" }}
+          />
           <span>{Company?.company_name || "Adhwaa Al-Hedaya School"}</span>
         </Navbar.Brand>
 

@@ -27,17 +27,20 @@ const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
+console.log("Root Directory:", rootDir);
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
+console.log("frontendPublicDir:", frontendPublicDir);
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
+console.log("frontendUploadsDir:", frontendUploadsDir);
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
+console.log("libraryCardUploadDir:", libraryCardUploadDir);
 
-// Ensure directories exist
 const ensureDirectory = (dirPath) => {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
 };
 [frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
-// Delete file helper
+
 const deleteFileIfExists = (filePath = "") => {
   if (!filePath || typeof filePath !== "string") return;
 
@@ -54,7 +57,7 @@ const deleteFileIfExists = (filePath = "") => {
   }
 };
 
-// Multer configuration
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, libraryCardUploadDir),
   filename: (req, file, cb) => {
@@ -76,9 +79,9 @@ module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
 
-  // ============ GET ROUTES ============
 
-  // GET object types
+
+
   router.get("/object-types", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -97,7 +100,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET auto-config card number
+
   router.get("/auto-config-card", fetchUser, async (req, res) => {
     try {
       const userId = req.userinfo?.id || null;
@@ -109,7 +112,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET all library cards
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -121,7 +124,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET by card number
+
   router.get("/card/:cardNumber", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -134,7 +137,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET by student ID
+
   router.get("/student/:studentId", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -147,7 +150,7 @@ module.exports = (app) => {
     }
   });
 
-  // GET by ID (MUST BE LAST GET ROUTE)
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -160,9 +163,9 @@ module.exports = (app) => {
     }
   });
 
-  // ============ POST ROUTES ============
 
-  // POST create new library card
+
+
   router.post(
     "/",
     fetchUser,
@@ -190,12 +193,12 @@ module.exports = (app) => {
           image: cardData.image ? "[IMAGE DATA]" : "null"
         });
 
-        // Handle image
+
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
           console.log("📷 Image uploaded:", cardData.image);
         } else if (req.body.image && req.body.image.startsWith("data:image/")) {
-          // Handle base64 image
+
           try {
             const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
             if (matches) {
@@ -215,12 +218,12 @@ module.exports = (app) => {
           }
         }
 
-        // Handle is_active from status
+
         if (cardData.status !== undefined) {
           cardData.is_active = cardData.status === 'true' || cardData.status === true;
         }
 
-        // Map plan_id to subscription_id for backend compatibility
+
         if (cardData.plan_id !== undefined) {
           cardData.subscription_id = cardData.plan_id;
           delete cardData.plan_id;
@@ -240,126 +243,126 @@ module.exports = (app) => {
     }
   );
 
-  // ============ PUT ROUTE ============
 
-  // PUT update library card
- router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
-  try {
-    LibraryCard.init(req.userinfo.tenantcode);
 
-    // Check if card exists
-    const existingCard = await LibraryCard.findById(req.params.id);
-    if (!existingCard) {
-      return res.status(404).json({ error: "Library card not found" });
-    }
 
-    const userId = req.userinfo?.id || null;
-    const cardData = { ...req.body };
-    const previousImagePath = existingCard.image;
+  router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
+    try {
+      LibraryCard.init(req.userinfo.tenantcode);
 
-    console.log("🔄 Updating library card:", req.params.id);
-    console.log("Update data:", cardData);
 
-    // Handle image upload
-    if (req.file) {
-      // Delete old image if exists
-      if (previousImagePath) {
-        deleteFileIfExists(previousImagePath);
+      const existingCard = await LibraryCard.findById(req.params.id);
+      if (!existingCard) {
+        return res.status(404).json({ error: "Library card not found" });
       }
-      cardData.image = `/uploads/librarycards/${req.file.filename}`;
-    } else if (cardData.image === 'null' || cardData.image === null) {
-      // If image is explicitly set to null, delete old image
-      if (previousImagePath) {
-        deleteFileIfExists(previousImagePath);
+
+      const userId = req.userinfo?.id || null;
+      const cardData = { ...req.body };
+      const previousImagePath = existingCard.image;
+
+      console.log("🔄 Updating library card:", req.params.id);
+      console.log("Update data:", cardData);
+
+
+      if (req.file) {
+
+        if (previousImagePath) {
+          deleteFileIfExists(previousImagePath);
+        }
+        cardData.image = `/uploads/librarycards/${req.file.filename}`;
+      } else if (cardData.image === 'null' || cardData.image === null) {
+
+        if (previousImagePath) {
+          deleteFileIfExists(previousImagePath);
+        }
+        cardData.image = null;
       }
-      cardData.image = null;
-    }
 
-    // Handle is_active from status
-    if (cardData.status !== undefined) {
-      cardData.is_active = cardData.status === 'true' || cardData.status === true;
-    }
 
-    // Map plan_id to subscription_id for backend compatibility
-    if (cardData.plan_id !== undefined) {
-      cardData.subscription_id = cardData.plan_id;
-      delete cardData.plan_id;
-    }
-
-    // ✅ FIX: Handle type_id to type mapping
-    if (cardData.type_id !== undefined && !cardData.type) {
-      cardData.type = cardData.type_id;
-      delete cardData.type_id;
-    }
-
-    // Update name if first_name or last_name changed
-    if (cardData.first_name || cardData.last_name) {
-      const firstName = cardData.first_name || existingCard.first_name;
-      const lastName = cardData.last_name || existingCard.last_name;
-      cardData.name = `${firstName} ${lastName}`;
-    }
-
-    // Format date fields if present
-    if (cardData.dob) {
-      // Convert dob to proper date format
-      cardData.dob = new Date(cardData.dob);
-    }
-
-    if (cardData.registration_date) {
-      // Convert registration_date to proper date format
-      cardData.registration_date = new Date(cardData.registration_date);
-    }
-
-    // Clean up data - remove any undefined or null fields that shouldn't be updated
-    const fieldsToUpdate = {
-      ...cardData,
-      lastmodifiedbyid: userId,
-      lastmodifieddate: new Date()
-    };
-
-    // Remove any empty strings if they should be treated as null
-    Object.keys(fieldsToUpdate).forEach(key => {
-      if (fieldsToUpdate[key] === '' && key !== 'name') {
-        fieldsToUpdate[key] = null;
+      if (cardData.status !== undefined) {
+        cardData.is_active = cardData.status === 'true' || cardData.status === true;
       }
-    });
 
-    console.log("Final update data:", fieldsToUpdate);
 
-    // Update the card
-    const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
+      if (cardData.plan_id !== undefined) {
+        cardData.subscription_id = cardData.plan_id;
+        delete cardData.plan_id;
+      }
 
-    // Format response to include all fields
-    const responseCard = {
-      ...updatedCard,
-      // Ensure date fields are properly formatted
-      dob: updatedCard.dob ? new Date(updatedCard.dob).toISOString().split('T')[0] : null,
-      registration_date: updatedCard.registration_date ? new Date(updatedCard.registration_date).toISOString().split('T')[0] : null,
-      // Map subscription_id back to plan_id for frontend
-      plan_id: updatedCard.subscription_id,
-      // Map type back to type_id for frontend
-      type_id: updatedCard.type
-    };
 
-    return res.status(200).json({
-      success: true,
-      data: responseCard,
-      message: "Library card updated successfully",
-    });
-  } catch (error) {
-    console.error("❌ Error updating library card:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
+      if (cardData.type_id !== undefined && !cardData.type) {
+        cardData.type = cardData.type_id;
+        delete cardData.type_id;
+      }
 
-  // ============ DELETE ROUTE ============
 
-  // DELETE library card
+      if (cardData.first_name || cardData.last_name) {
+        const firstName = cardData.first_name || existingCard.first_name;
+        const lastName = cardData.last_name || existingCard.last_name;
+        cardData.name = `${firstName} ${lastName}`;
+      }
+
+
+      if (cardData.dob) {
+
+        cardData.dob = new Date(cardData.dob);
+      }
+
+      if (cardData.registration_date) {
+
+        cardData.registration_date = new Date(cardData.registration_date);
+      }
+
+
+      const fieldsToUpdate = {
+        ...cardData,
+        lastmodifiedbyid: userId,
+        lastmodifieddate: new Date()
+      };
+
+
+      Object.keys(fieldsToUpdate).forEach(key => {
+        if (fieldsToUpdate[key] === '' && key !== 'name') {
+          fieldsToUpdate[key] = null;
+        }
+      });
+
+      console.log("Final update data:", fieldsToUpdate);
+
+
+      const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
+
+
+      const responseCard = {
+        ...updatedCard,
+
+        dob: updatedCard.dob ? new Date(updatedCard.dob).toISOString().split('T')[0] : null,
+        registration_date: updatedCard.registration_date ? new Date(updatedCard.registration_date).toISOString().split('T')[0] : null,
+
+        plan_id: updatedCard.subscription_id,
+
+        type_id: updatedCard.type
+      };
+
+      return res.status(200).json({
+        success: true,
+        data: responseCard,
+        message: "Library card updated successfully",
+      });
+    } catch (error) {
+      console.error("❌ Error updating library card:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+
+
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
 
-      // Get card before deletion to delete image
+
       const card = await LibraryCard.findById(req.params.id);
       if (card && card.image) {
         deleteFileIfExists(card.image);
@@ -382,9 +385,9 @@ module.exports = (app) => {
     }
   });
 
-  // ============ IMPORT ROUTE ============
 
-  // POST import library cards
+
+
   router.post("/import", fetchUser, async (req, res) => {
     try {
       const { members } = req.body;
@@ -398,7 +401,7 @@ module.exports = (app) => {
       const results = [];
       for (const member of members) {
         try {
-          // Generate card number if not provided
+
           if (!member.card_number) {
             member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
           }
@@ -427,6 +430,6 @@ module.exports = (app) => {
     }
   });
 
-  // Register router
+
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };

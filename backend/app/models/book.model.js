@@ -19,18 +19,18 @@ async function findAll() {
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
-                    p.name AS publisher_name,
+                    pub.name AS publisher_name,
                     (
-                      SELECT p.unit_price 
-                      FROM ${this.schema}.purchases p 
-                      WHERE p.book_id = b.id 
-                      ORDER BY p.purchase_date DESC, p.createddate DESC 
+                      SELECT pur.unit_price 
+                      FROM ${this.schema}.purchases pur 
+                      WHERE pur.book_id = b.id 
+                      ORDER BY pur.purchase_date DESC, pur.createddate DESC 
                       LIMIT 1
                     ) AS price
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
+                   LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
                    ORDER BY b.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -48,11 +48,11 @@ async function findById(id) {
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
-                    p.name AS publisher_name
+                    pub.name AS publisher_name
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
+                   LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
                    WHERE b.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
@@ -96,7 +96,7 @@ async function create(bookData, userId) {
       bookData.title || "Scanned Book",
       bookData.author_id || bookData.authorId || null,
       bookData.category_id || bookData.categoryId || null,
-      bookData.isbn || `SCAN-${Date.now()}`,
+      bookData.isbn || null,
       totalCopies,
       availableCopies,
       bookData.company_id || bookData.companyId || null,
@@ -203,17 +203,17 @@ async function findByAgeRange(minAge, maxAge) {
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
-                    p.name AS publisher_name
+                    pub.name AS publisher_name
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-                   LEFT JOIN ${this.schema}.publisher p ON b.publisher_id = p.id
+                   LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
                    WHERE b.available_copies > 0 AND b.status = 'available'`;
 
     const params = [];
     let paramIndex = 1;
 
-    // Add age filtering conditions
+ 
     if (minAge !== null && minAge !== undefined) {
       query += ` AND (b.min_age IS NULL OR b.min_age <= $${paramIndex})`;
       params.push(minAge);

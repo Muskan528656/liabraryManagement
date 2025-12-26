@@ -8,7 +8,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const RolePermission = require("../models/rolePermission.model.js");
+const RolePermission = require("../models/rolepermission.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {

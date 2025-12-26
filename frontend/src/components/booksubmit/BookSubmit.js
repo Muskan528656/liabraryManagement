@@ -20,7 +20,6 @@ import { useNavigate } from "react-router-dom";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
-import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
@@ -80,11 +79,11 @@ const BookSubmit = () => {
     const isbnInputRef = React.useRef(null);
     const cardInputRef = React.useRef(null);
 
-    // Helper function to safely get book price from purchase details
+
     const getBookPriceFromPurchaseDetails = (purchaseDetails) => {
         if (!purchaseDetails) return 0;
 
-        // Try to parse different possible price fields
+
         const priceFields = ['price', 'unit_price', 'total_price'];
         for (const field of priceFields) {
             if (purchaseDetails[field] !== undefined && purchaseDetails[field] !== null) {
@@ -831,7 +830,7 @@ const BookSubmit = () => {
     const handleSearchModeChange = (e) => {
         const newMode = e.target.value;
 
-        // ✅ CLEAR BOTH TIMERS
+
         if (isbnInputRef.current?.timer) {
             clearTimeout(isbnInputRef.current.timer);
         }
@@ -906,7 +905,7 @@ const BookSubmit = () => {
         }
     };
 
-    // Handle Edit Click
+
     const handleEditClick = (issueItem) => {
         setSelectedIssue(issueItem);
         setEditFormData({
@@ -951,7 +950,7 @@ const BookSubmit = () => {
                 due_date: editFormData.due_date,
                 condition_before: editFormData.condition_before,
                 remarks: editFormData.remarks,
-                // Keep other fields same as original record
+
                 book_id: selectedIssue.book_id,
                 issued_to: selectedIssue.issued_to,
                 book_title: selectedIssue.book_title,
@@ -960,7 +959,7 @@ const BookSubmit = () => {
                 card_number: selectedIssue.card_number
             };
 
-            // Use PUT request to update the entire issue record
+
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
                 "PUT",
@@ -984,9 +983,9 @@ const BookSubmit = () => {
                     message: "Issue updated successfully"
                 });
 
-                // Refresh the list
+
                 await fetchAllIssuedBooks();
-                // If we have current search results, update them too
+
                 if (bookIssues.length > 0) {
                     const updatedBookIssues = bookIssues.map(item =>
                         item.id === selectedIssue.id ? { ...item, ...updateData } : item
@@ -1028,12 +1027,12 @@ const BookSubmit = () => {
         try {
             setLoading(true);
 
-            // Prepare the cancellation data - update status to "cancelled"
+
             const cancelData = {
                 status: "cancelled",
                 cancellation_reason: "Cancelled by librarian",
                 cancellation_date: new Date().toISOString(),
-                // Keep all other original data
+
                 book_id: selectedIssue.book_id,
                 issued_to: selectedIssue.issued_to,
                 book_title: selectedIssue.book_title,
@@ -1048,7 +1047,7 @@ const BookSubmit = () => {
 
             console.log("cancel data", cancelData)
 
-            // Use PUT request to update the status
+
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
                 "PUT",
@@ -1073,9 +1072,9 @@ const BookSubmit = () => {
                     message: "Issue cancelled successfully"
                 });
 
-                // Refresh the list
+
                 await fetchAllIssuedBooks();
-                // Update local state to remove the cancelled issue from current view
+
                 const updatedBookIssues = bookIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedCardIssues = cardIssues.filter(item => item.id !== selectedIssue.id);
                 const updatedAllIssues = allIssuedBooks.filter(item => item.id !== selectedIssue.id);
@@ -1319,7 +1318,7 @@ const BookSubmit = () => {
             studentName.includes(query)
         );
     }).filter(submission => {
-        // Apply advanced filters
+
         return applyAdvancedFilters([submission], submittedBooksFilters).length > 0;
     });
 
@@ -1480,24 +1479,25 @@ const BookSubmit = () => {
                 }
 
                 return (
-                    <div className="btn-group">
+                    <div>
                         <Button
-                            variant="primary"
+                            className="btn-custom"
                             size="sm"
                             onClick={() => handleSubmitClick(record)}
                             title="Submit Return"
                         >
                             <i className="fa-solid fa-check-circle"></i> Submit
                         </Button>
-                        <Button
+                        {/* <Button
                             variant="outline-secondary"
                             size="sm"
                             onClick={() => handleEditClick(record)}
                             title="Edit Issue"
                         >
                             <i className="fa-solid fa-edit"></i>
-                        </Button>
+                        </Button> */}
                         <Button
+                            className="m-1"
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleCancelClick(record)}
@@ -1630,15 +1630,15 @@ const BookSubmit = () => {
                 </span>
             )
         },
-        {
-            field: "status",
-            label: "Status",
-            width: 100,
-            render: (value) => getStatusBadge(value)
-        }
+        // {
+        //     field: "status",
+        //     label: "Status",
+        //     width: 100,
+        //     render: (value) => getStatusBadge(value)
+        // }
     ];
 
-    // Advanced Filter Configuration for Submitted Books
+
     const submittedBooksFilterFields = [
         {
             name: "status",
@@ -1671,7 +1671,7 @@ const BookSubmit = () => {
 
     return (
         <>
-            <Container fluid className="mt-2">
+            <Container fluid >
                 <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden" }}>
                     <Card.Body className="p-0">
                         <Tab.Container
@@ -1777,202 +1777,188 @@ const BookSubmit = () => {
                                 <Tab.Pane eventKey="submit">
                                     <Row>
                                         <Col xs={12}>
-                                            <Card className="shadow-sm" style={{
+                                            {/* <Card className="shadow-sm" style={{
                                                 background: "#f3e8ff",
                                                 border: "1px solid #d8b4fe",
                                                 borderRadius: "8px"
-                                            }}>
-                                                <Card.Body>
-                                                    <Row className="align-items-center">
-                                                        {/* Search By Dropdown */}
-                                                        <Col md={3}>
-                                                            <Form.Group className="mb-0">
-                                                                <Form.Label className="fw-bold small">Search By</Form.Label>
-                                                                <Form.Select
-                                                                    value={searchMode}
-                                                                    onChange={handleSearchModeChange}
-                                                                    style={{
-                                                                        border: "2px solid #8b5cf6",
-                                                                        borderRadius: "6px",
-                                                                        fontSize: "0.9rem",
-                                                                        height: "40px",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                >
-                                                                    <option value="isbn">Search by ISBN</option>
-                                                                    <option value="card">Search by Library Card</option>
-                                                                </Form.Select>
-                                                            </Form.Group>
-                                                        </Col>
+                                            }}> */}
+                                            {/* <Card.Body> */}
+                                            <Row className="align-items-center">
+                                                {/* Search By Dropdown */}
+                                                <Col md={3}>
+                                                    <Form.Group >
+                                                        <Form.Label className="fw-bold small">Search By</Form.Label>
+                                                        <Form.Select
+                                                            value={searchMode}
+                                                            onChange={handleSearchModeChange}
+                                                            style={{
+                                                                border: "2px solid #8b5cf6",
+                                                                borderRadius: "6px",
+                                                                fontSize: "0.9rem",
+                                                                height: "40px",
+                                                            }}
+                                                        >
+                                                            <option value="isbn">Search by ISBN</option>
+                                                            <option value="card">Search by Library Card</option>
+                                                        </Form.Select>
+                                                    </Form.Group>
+                                                </Col>
 
-                                                        {/* Search Input with Scan Button */}
-                                                        <Col md={6}>
-                                                            <Form.Group className="mb-0">
-                                                                <Form.Label className="fw-bold small">
-                                                                    {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
-                                                                </Form.Label>
-                                                                <InputGroup>
-                                                                    <Form.Control
-                                                                        ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
-                                                                        type="text"
-                                                                        placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
-                                                                        value={searchMode === "isbn" ? isbn : cardNumber}
-                                                                        onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
-                                                                        onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
-                                                                        autoFocus
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderRadius: "6px 0 0 6px",
-                                                                            height: "40px",
-                                                                            fontSize: "0.9rem",
-                                                                            padding: "0.375rem 0.75rem"
-                                                                        }}
-                                                                    />
-                                                                    {loading && (
-                                                                        <InputGroup.Text style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderLeft: "none",
-                                                                            borderRadius: "0",
-                                                                            backgroundColor: "#f8f9fa",
-                                                                            height: "40px",
-                                                                            padding: "0.375rem 0.75rem"
-                                                                        }}>
-                                                                            <Spinner animation="border" size="sm" />
-                                                                        </InputGroup.Text>
-                                                                    )}
-
-                                                                    {/* Clear Button */}
-                                                                    <Button
-                                                                        variant="outline-secondary"
-                                                                        onClick={handleClearSearch}
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderLeft: loading ? "none" : "1px solid #dee2e6",
-                                                                            borderRadius: "0",
-                                                                            minWidth: "40px",
-                                                                            backgroundColor: "#f8f9fa",
-                                                                            height: "40px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "center",
-                                                                            padding: "0.375rem"
-                                                                        }}
-                                                                    >
-                                                                        <i className="fa-solid fa-xmark"></i>
-                                                                    </Button>
-
-                                                                    {/* Scan Button */}
-                                                                    <Button
-                                                                        variant="primary"
-                                                                        onClick={handleScanButtonClick}
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            backgroundColor: "#1e3a8a",
-                                                                            border: "none",
-                                                                            borderRadius: "0 6px 6px 0",
-                                                                            fontWeight: "600",
-                                                                            fontSize: "0.875rem",
-                                                                            padding: "0.375rem 0.75rem",
-                                                                            height: "40px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "center",
-                                                                            minWidth: "80px"
-                                                                        }}
-                                                                    >
-                                                                        {loading ? (
-                                                                            <Spinner animation="border" size="sm" className="me-1" />
-                                                                        ) : (
-                                                                            <i className="fa-solid fa-camera me-1"></i>
-                                                                        )}
-                                                                        Scan
-                                                                    </Button>
-                                                                </InputGroup>
-                                                            </Form.Group>
-                                                        </Col>
-
-                                                        {/* Book Details Column - Shows book info right next to search input */}
-                                                        <Col md={3}>
-                                                            {book && (
-                                                                <div className="h-100 d-flex align-items-center">
-                                                                    <Card className="w-100" style={{
-                                                                        border: "1px solid #e5e7eb",
-                                                                        borderRadius: "6px",
-                                                                        background: "#f8f9fa",
-                                                                        marginTop: "24px"
-                                                                    }}>
-                                                                        <Card.Body className="p-2">
-                                                                            <h6 className="mb-2 fw-bold" style={{
-                                                                                color: "#1e3a8a",
-                                                                                fontSize: "13px",
-                                                                                whiteSpace: "nowrap",
-                                                                                overflow: "hidden",
-                                                                                textOverflow: "ellipsis"
-                                                                            }}>
-                                                                                <i className="fa-solid fa-book me-2"></i>
-                                                                                Book Found
-                                                                            </h6>
-                                                                            <div className="small" style={{ fontSize: "12px" }}>
-                                                                                <div className="text-truncate mb-1" title={book.title} style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Title:</strong> <span style={{ marginLeft: "124px" }}>{book.title}</span>
-                                                                                </div>
-                                                                                <div className="mb-1" style={{ marginBottom: "4px" }}>
-                                                                                    <strong>ISBN:</strong> <span style={{ marginLeft: "124px" }}>{book.isbn}</span>
-                                                                                </div>
-                                                                                <div className="text-truncate">
-                                                                                    <strong>Author:</strong> <span style={{ marginLeft: "124px" }}>{book.author || "N/A"}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </Card.Body>
-                                                                    </Card>
-                                                                </div>
+                                                {/* Search Input with Scan Button */}
+                                                <Col md={6}>
+                                                    <Form.Group >
+                                                        <Form.Label className="fw-bold small">
+                                                            {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
+                                                        </Form.Label>
+                                                        <InputGroup>
+                                                            <Form.Control
+                                                                ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
+                                                                type="text"
+                                                                placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
+                                                                value={searchMode === "isbn" ? isbn : cardNumber}
+                                                                onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
+                                                                onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
+                                                                autoFocus
+                                                                disabled={loading}
+                                                                style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderRadius: "6px 0 0 6px",
+                                                                    height: "40px",
+                                                                    fontSize: "0.9rem",
+                                                                }}
+                                                            />
+                                                            {loading && (
+                                                                <InputGroup.Text style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: "none",
+                                                                    borderRadius: "0",
+                                                                    backgroundColor: "#f8f9fa",
+                                                                    height: "40px",
+                                                                }}>
+                                                                    <Spinner animation="border" size="sm" />
+                                                                </InputGroup.Text>
                                                             )}
 
-                                                            {libraryCard && !book && (
-                                                                <div className="h-100 d-flex align-items-center">
-                                                                    <Card className="w-100" style={{
-                                                                        border: "1px solid #e5e7eb",
-                                                                        borderRadius: "6px",
-                                                                        background: "#f8f9fa",
-                                                                        marginTop: "24px"
+                                                            {/* Clear Button */}
+                                                            <Button
+                                                                variant="outline-secondary"
+                                                                onClick={handleClearSearch}
+                                                                disabled={loading}
+                                                                style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: loading ? "none" : "1px solid #dee2e6",
+                                                                    borderRadius: "0",
+                                                                    minWidth: "40px",
+                                                                    backgroundColor: "#f8f9fa",
+                                                                    height: "40px",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+
+                                                                }}
+                                                            >
+                                                                <i className="fa-solid fa-xmark"></i>
+                                                            </Button>
+
+                                                            {/* Scan Button */}
+                                                            <Button
+
+                                                                onClick={handleScanButtonClick}
+                                                                disabled={loading}
+                                                                className="btn-custom"
+
+                                                            >
+                                                                {loading ? (
+                                                                    <Spinner animation="border" size="sm" className="me-1" />
+                                                                ) : (
+                                                                    <i className="fa-solid fa-camera me-1"></i>
+                                                                )}
+                                                                Scan
+                                                            </Button>
+                                                        </InputGroup>
+                                                    </Form.Group>
+                                                </Col>
+
+                                                {/* Book Details Column - Shows book info right next to search input */}
+                                                <Col md={3}>
+                                                    {book && (
+                                                        <div className="h-100 d-flex align-items-center">
+                                                            <Card className="w-100" style={{
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "6px",
+                                                                background: "#f8f9fa",
+                                                                marginTop: "24px"
+                                                            }}>
+                                                                <Card.Body className="p-2">
+                                                                    <h6 className="mb-2 fw-bold" style={{
+                                                                        color: "#1e3a8a",
+                                                                        fontSize: "13px",
+                                                                        whiteSpace: "nowrap",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis"
                                                                     }}>
-                                                                        <Card.Body className="p-2">
-                                                                            <h6 className="mb-2 fw-bold" style={{
-                                                                                color: "#1e3a8a",
-                                                                                fontSize: "13px",
-                                                                                whiteSpace: "nowrap",
-                                                                                overflow: "hidden",
-                                                                                textOverflow: "ellipsis"
-                                                                            }}>
-                                                                                <i className="fa-solid fa-id-card me-2"></i>
-                                                                                Card Found
-                                                                            </h6>
-                                                                            <div className="small" style={{ fontSize: "12px" }}>
-                                                                                <div className="text-truncate mb-1" title={getUserDisplayName(libraryCard)} style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Holder:</strong> <span style={{ marginLeft: "8px" }}>{getUserDisplayName(libraryCard)}</span>
-                                                                                </div>
-                                                                                <div className="mb-1" style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Card No:</strong> <span style={{ marginLeft: "8px" }}>{libraryCard.card_number}</span>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <strong>Issues:</strong> <span style={{ marginLeft: "8px" }}>{cardIssues.length}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </Card.Body>
-                                                                    </Card>
-                                                                </div>
-                                                            )}
-                                                        </Col>
-                                                    </Row>
-                                                </Card.Body>
-                                            </Card>
+                                                                        <i className="fa-solid fa-book me-2"></i>
+                                                                        Book Found
+                                                                    </h6>
+                                                                    <div className="small" style={{ fontSize: "12px" }}>
+                                                                        <div className="text-truncate mb-1" title={book.title} style={{ marginBottom: "4px" }}>
+                                                                            <strong>Title:</strong> <span style={{ marginLeft: "124px" }}>{book.title}</span>
+                                                                        </div>
+                                                                        <div className="mb-1" style={{ marginBottom: "4px" }}>
+                                                                            <strong>ISBN:</strong> <span style={{ marginLeft: "124px" }}>{book.isbn}</span>
+                                                                        </div>
+                                                                        <div className="text-truncate">
+                                                                            <strong>Author:</strong> <span style={{ marginLeft: "124px" }}>{book.author || "N/A"}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        </div>
+                                                    )}
+
+                                                    {libraryCard && !book && (
+                                                        <div className="h-100 d-flex align-items-center">
+                                                            <Card className="w-100" style={{
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "6px",
+                                                                background: "#f8f9fa",
+                                                                marginTop: "24px"
+                                                            }}>
+                                                                <Card.Body className="p-2">
+                                                                    <h6 className="mb-2 fw-bold" style={{
+                                                                        color: "#1e3a8a",
+                                                                        fontSize: "13px",
+                                                                        whiteSpace: "nowrap",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis"
+                                                                    }}>
+                                                                        <i className="fa-solid fa-id-card me-2"></i>
+                                                                        Card Found
+                                                                    </h6>
+                                                                    <div className="small" style={{ fontSize: "12px" }}>
+                                                                        <div className="text-truncate mb-1" title={getUserDisplayName(libraryCard)} style={{ marginBottom: "4px" }}>
+                                                                            <strong>Holder:</strong> <span style={{ marginLeft: "8px" }}>{getUserDisplayName(libraryCard)}</span>
+                                                                        </div>
+                                                                        <div className="mb-1" style={{ marginBottom: "4px" }}>
+                                                                            <strong>Card No:</strong> <span style={{ marginLeft: "8px" }}>{libraryCard.card_number}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <strong>Issues:</strong> <span style={{ marginLeft: "8px" }}>{cardIssues.length}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        </div>
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                            {/* </Card.Body> */}
+                                            {/* </Card> */}
                                         </Col>
                                     </Row>
 
-                                    {/* Table Section - Takes full width below the Book Identification card */}
-                                    <Row className="mt-4">
+
+                                    <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
                                                 <Card.Header style={{
@@ -2077,7 +2063,7 @@ const BookSubmit = () => {
                                 <Tab.Pane eventKey="submitted">
                                     <Row>
                                         <Col lg={12}>
-                                            {/* Advanced Filter for Submitted Books */}
+
                                             <AdvancedFilter
                                                 fields={submittedBooksFilterFields}
                                                 onFilterChange={setSubmittedBooksFilters}
@@ -2194,7 +2180,7 @@ const BookSubmit = () => {
                         <div>
                             <Row>
                                 <Col md={8}>
-                                    {/* Left Column - Issue Information and Condition Assessment */}
+
                                     <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
                                         <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
                                             <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
@@ -2461,22 +2447,15 @@ const BookSubmit = () => {
                     )}
                 </Modal.Body>
                 <Modal.Footer style={{ padding: "15px 20px" }}>
-                    <Button variant="secondary" onClick={handleModalClose} disabled={loading} style={{ fontSize: "14px", padding: "8px 16px" }}>
+                    <Button className="btn-secondary-custom" onClick={handleModalClose} disabled={loading} style={{ fontSize: "14px", padding: "8px 16px" }}>
                         Cancel
                     </Button>
                     <Button
-                        variant="success"
+
+                        className="btn-custom"
                         onClick={handleFinalSubmit}
                         disabled={loading || isCalculating || isLoadingPurchaseDetails || (conditionAfter === "Lost" && (!lostBookPrice || !!lostBookPriceError))}
-                        style={{
-                            background: penalty.penalty > 0
-                                ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-                                : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                            border: "none",
-                            fontSize: "14px",
-                            padding: "8px 20px",
-                            fontWeight: "600"
-                        }}
+
                     >
                         {loading ? (
                             <>
@@ -2493,7 +2472,7 @@ const BookSubmit = () => {
             </Modal>
 
             {/* Edit Modal */}
-            <Modal show={showEditModal} onHide={handleModalClose} centered>
+            {/* <Modal show={showEditModal} onHide={handleModalClose} centered>
                 <Modal.Header closeButton style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                     <Modal.Title>
                         Edit Issue
@@ -2565,7 +2544,7 @@ const BookSubmit = () => {
                         )}
                     </Button>
                 </Modal.Footer>
-            </Modal>
+            </Modal> */}
 
             {/* Cancel Modal */}
             <Modal show={showCancelModal} onHide={handleModalClose} centered>
