@@ -227,13 +227,13 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         filterFields: [
             { name: 'title', label: 'Title', type: 'text' },
- 
+
             { name: 'author_id', label: 'Author', type: 'select', options: authors?.map(author => ({ value: author.id?.toString(), label: author.name || `Author ${author.id}` })) || [] },
             { name: 'category_id', label: 'Category', type: 'select', options: categories?.map(category => ({ value: category.id?.toString(), label: category.name || `Category ${category.id}` })) || [] },
             { name: 'publisher_id', label: 'Publisher', type: 'select', options: publishers?.map(publisher => ({ value: publisher.id?.toString(), label: publisher.name || `Publisher ${publisher.id}` })) || [] },
- 
- 
- 
+
+
+
         ],
         lookupNavigation: {
             author_name: {

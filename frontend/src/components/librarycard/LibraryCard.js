@@ -551,22 +551,7 @@ const LibraryCard = (props) => {
 
   return (
     <>
-      {/* <div className="mb-3">
-        <Button
-        
-        variant=""
-          onClick={() => setShowLibraryImportModal(true)}
-          className="btn btn-outline-primary"
-        >
-          <i className="fa-solid fa-upload me-2"></i> Import Member
-        </Button>
-      </div>      */}
-      {/* <DynamicCRUD
-        {...finalConfig}
-        icon="fa-solid fa-id-card"
-        subscriptionsData={subscriptionsData}
-        usersData={usersData}
-      /> */}
+    
 
       <DynamicCRUD
         {...finalConfig}
@@ -577,7 +562,7 @@ const LibraryCard = (props) => {
         headerActions={[
           {
             key: "import-member",
-            label: "Import Member",
+            label: "Import",
             icon: "fa-solid fa-upload",
             variant: "outline-primary",
             onClick: () => setShowLibraryImportModal(true),
