@@ -41,7 +41,7 @@ const ScrollToTop = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%)",
+                        background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)",
                         border: "none",
                         boxShadow: "0 4px 12px rgba(111, 66, 193, 0.3)",
                         transition: "all 0.3s ease",

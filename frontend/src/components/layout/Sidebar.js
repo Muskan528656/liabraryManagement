@@ -136,7 +136,7 @@ export default function Sidebar({ open, handleDrawerClose }) {
             className={`sidebar-item mb-2 ${isActive(item.path) ? "sidebar-item-active" : ""
               }`}
             style={{
-              color: isActive(item.path) ? "#6f42c1" : "#8b5cf6",
+              color: isActive(item.path) ? "var(--primary-color)" : "#8b5cf6",
               background: isActive(item.path)
                 ? "rgba(111, 66, 193, 0.1)"
                 : "transparent",

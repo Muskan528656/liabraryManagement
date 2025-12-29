@@ -239,7 +239,7 @@ const Submodule = () => {
               <NavDropdown
                 title={
                   <>
-                    <i className="fs-7 fa-solid fa-ellipsis"></i>
+              <i className="fa-solid fa-ellipsis-vertical fs-6"></i>
                     <span className="ms-1">More</span>
                   </>
                 }

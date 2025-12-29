@@ -546,12 +546,12 @@ const LibraryCard = (props) => {
   const handleLibraryImport = (data) => {
     console.log("Library Import Data:", data);
     alert(`Importing ${data.type} data from file: ${data.file.name}`);
- 
+
   };
 
   return (
     <>
-    
+
 
       <DynamicCRUD
         {...finalConfig}
@@ -584,12 +584,12 @@ const LibraryCard = (props) => {
         <Modal.Header
           closeButton
           style={{
-            background: "var(--primar-color)",
+            backgroundColor: "var(--primary-background-color)",
             color: "white",
             borderBottom: "none"
           }}
         >
-          <Modal.Title style={{ color: "white" }}>
+          <Modal.Title style={{ color: "var(--primary-color)", }}>
             <i className="fa-solid fa-id-card me-2"></i> Member Information
           </Modal.Title>
         </Modal.Header>
@@ -598,7 +598,7 @@ const LibraryCard = (props) => {
           {selectedCard && (
             <div style={{
               background: "white",
-              border: "2px solid #6f42c1",
+              border: "2px solid var(--primary-color)",
               borderRadius: "10px",
               padding: "20px",
               maxWidth: "500px",
@@ -615,7 +615,7 @@ const LibraryCard = (props) => {
                       height: '80px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '3px solid #6f42c1'
+                      border: '3px solid var(--primary-color)',
                     }}
                   />
                 ) : (
@@ -628,9 +628,9 @@ const LibraryCard = (props) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto',
-                    border: '3px solid #6f42c1'
+                    border: '3px solid var(--primary-color)',
                   }}>
-                    <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "#6f42c1" }}></i>
+                    <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "var(--primary-color)" }}></i>
                   </div>
                 )}
               </div>
@@ -683,7 +683,7 @@ const LibraryCard = (props) => {
                   marginTop: "10px",
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: "#6f42c1",
+                  color: "var(--primary-color)",
                   fontFamily: "monospace"
                 }}>
                   {generateCardNumber(selectedCard)}

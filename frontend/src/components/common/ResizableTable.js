@@ -255,11 +255,11 @@ const ResizableTable = ({
         <>
             {/* Pagination */}
             {totalPages > 1 && (
-             
-                    <div>
-                        Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
-                        {safeData.length} records
-                    </div>
+
+                <div className="m-1">
+                    Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
+                    {safeData.length} records
+                </div>
 
             )}
             <div

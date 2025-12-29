@@ -23,7 +23,7 @@ const Loader = ({ size = "md" }) => {
                     width: sizeMap[size],
                     height: sizeMap[size],
                     borderWidth: "4px",
-                    borderColor: "#6f42c1",
+                    borderColor: "var(--primary-color)",
                     borderRightColor: "transparent",
                 }}
             >

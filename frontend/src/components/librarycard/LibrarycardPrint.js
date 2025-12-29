@@ -32,8 +32,8 @@ export const handlePrintBarcode = (
         <title>Library Card - ${generateCardNumber(card)}</title>
         <style>
           body { font-family: Arial; background: white; padding: 20px; }
-          .library-card { border: 3px solid #6f42c1; border-radius: 15px; max-width: 500px; margin: 0 auto; }
-          .card-header { background: #6f42c1; color: white; padding: 15px; text-align: center; border-radius: 12px 12px 0 0; }
+          .library-card { border: 3px solid var(--primary-color); border-radius: 15px; max-width: 500px; margin: 0 auto; }
+          .card-header { background: var(--primary-color); color: white; padding: 15px; text-align: center; border-radius: 12px 12px 0 0; }
           .card-body { padding: 20px; }
           .barcode-container { text-align: center; padding: 15px; }
           @media print { @page { margin: 0.5cm; } }
@@ -48,11 +48,11 @@ export const handlePrintBarcode = (
         ? `
     <div style="display:flex; justify-content:center; margin-bottom:15px;">
       <img src="${imageUrl}" 
-        style="width:80px;height:80px;border-radius:50%;border:3px solid #6f42c1;object-fit:cover;">
+        style="width:80px;height:80px;border-radius:50%;border:3px solid var(--primary-color);object-fit:cover;">
     </div>`
         : `
     <div style="display:flex; justify-content:center; margin-bottom:15px;">
-      <div style="width:80px;height:80px;border-radius:50%;background:#eee;border:3px solid #6f42c1;display:flex;align-items:center;justify-content:center;">
+      <div style="width:80px;height:80px;border-radius:50%;background:#eee;border:3px solid var(--primary-color);display:flex;align-items:center;justify-content:center;">
         <span>User</span>
       </div>
     </div>`

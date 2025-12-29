@@ -169,7 +169,7 @@ const FormModal = ({
                         height: "150px",
                         objectFit: "cover",
                         borderRadius: "50%",
-                        border: "4px solid #6f42c1",
+                        border: "4px solid var(--primary-color)",
                         boxShadow: "0 4px 12px rgba(111, 66, 193, 0.3)",
                       }}
                     />
@@ -222,7 +222,7 @@ const FormModal = ({
 
       case "text":
       case "email":
- 
+
       case "number":
       case "tel":
         return (
@@ -407,17 +407,20 @@ const FormModal = ({
               <span>
                 {field.label} {field.required && <span className="text-danger">*</span>}
               </span>
-              <span className="fw-bold">{formData[field.name] ? "Yes" : "No"}</span>
+              <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
             </Form.Label>
 
             <div
               className="custom-toggle"
-              onClick={() => handleFieldChange(field, !formData[field.name])}
+              // onClick={() => handleFieldChange(field, !formData[field.name])}
+              onClick={() =>
+                handleFieldChange(field, formData[field.name] === true ? false : true)
+              }
               style={{
                 width: "55px",
                 height: "28px",
                 borderRadius: "20px",
-                background: formData[field.name] ? "#6f42c1" : "#d1d5db",
+                background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
                 position: "relative",
                 cursor: "pointer",
                 transition: "0.3s",
@@ -473,7 +476,7 @@ const FormModal = ({
                     style={{
                       padding: "12px 16px",
                       backgroundColor: "var(--secondary-color)",
- 
+
                       marginBottom: "20px",
                       borderRadius: "6px",
                     }}
@@ -534,7 +537,7 @@ const FormModal = ({
               onClick={onSubmit}
               disabled={loading}
               className="btn-custom d-flex align-items-center justify-content-center"
-            
+
             >
               {loading ? (
                 <>

@@ -1,126 +1,3 @@
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
 
 import moment from 'moment';
@@ -144,14 +21,14 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         modelName: "UserRole",
         fields: {
             "role_name": "Role Name",
-            "is_active": "Status" 
+            "is_active": "Status"
         },
         required: ["role_name"],
     });
 
     return {
         moduleName: "user_roles",
-        moduleLabel: "User Role",
+        moduleLabel: " Role",
         apiEndpoint: "user-role",
         importMatchFields: [],
         importModel: UserRoleModel,

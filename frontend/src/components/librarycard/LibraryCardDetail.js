@@ -78,7 +78,7 @@ const LibraryCardDetail = ({
 
   const DISABLED_FIELDS_ON_EDIT = useMemo(() => new Set(), []);
   const READONLY_FIELDS_ON_EDIT = useMemo(
-    () => new Set(["user_email", "card_number"]),
+    () => new Set(["user_email", "card_number", "createddate", "lastmodifieddate"]),
     []
   );
 
@@ -234,11 +234,11 @@ const LibraryCardDetail = ({
     const endDate = new Date(subscription.end_date);
     const today = new Date();
 
- 
+
     const totalDays =
       (endDate - startDate) / (1000 * 60 * 60 * 24);
 
- 
+
     const usedDays =
       (today - startDate) / (1000 * 60 * 60 * 24);
 
@@ -268,7 +268,7 @@ const LibraryCardDetail = ({
     const userName = userNames[userId] || `User ${userId}`;
     const userAvatar =
       userAvatars[userId] ||
-      `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+      `https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=${size}`;
 
     const handleUserClick = () => {
       if (clickable && userId) {
@@ -867,7 +867,7 @@ const LibraryCardDetail = ({
               }}
             ></div>
           </div>
-
+          {/* 
           <div style={{
             background: "#f8f9fa",
             padding: "15px",
@@ -918,7 +918,7 @@ const LibraryCardDetail = ({
               )}
             </div>
 
-          </div>
+          </div> */}
         </Card.Body>
       </Card>
     );
@@ -1064,7 +1064,7 @@ const LibraryCardDetail = ({
                   userId
                 ] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   fullName || "User"
-                )}&background=6f42c1&color=fff&size=32`;
+                )}&background=11439b&color=fff&size=32`;
               }
             }
           }
@@ -1073,7 +1073,7 @@ const LibraryCardDetail = ({
           names[userId] = `User ${userId}`;
           avatars[
             userId
-          ] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
+          ] = `https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=32`;
         }
       }
 
@@ -1925,11 +1925,7 @@ const LibraryCardDetail = ({
                         disabled={saving}
                       >
                         <i className="fa-solid fa-check me-2"></i>
-                        {saving
-                          ? "Saving..."
-                          : hasDataChanged()
-                            ? `Save - ${formatDateDDMMYYYY(new Date())}`
-                            : "Save"}
+                        Save
                       </button>
                       <button
                         className="custom-btn-secondary"
@@ -1941,7 +1937,7 @@ const LibraryCardDetail = ({
                       </button>
                     </div>
                   )}
-                  {!isEditing && (
+                  {/* {!isEditing && (
                     <button
                       onClick={handleDelete}
                       className="ms-2 custom-btn-delete-detail"
@@ -1949,7 +1945,7 @@ const LibraryCardDetail = ({
                       <i className="fa-solid fa-trash me-2"></i>
                       Delete
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
 
@@ -2009,7 +2005,7 @@ const LibraryCardDetail = ({
                             padding: "0.375rem 0.75rem",
                           }}
                         >
-                          <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                          <i className="fa-solid fa-search" style={{ color: "var(--primary-color)" }}></i>
                         </InputGroup.Text>
                         <Form.Control
                           placeholder="Search books..."

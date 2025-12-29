@@ -1,137 +1,137 @@
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 import React from "react";
- 
+
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getAuthorConfig = (externalData = {}, props = {}) => {
 
- 
+
     const AuthorModel = createModel({
         modelName: "Author",
         fields: {
@@ -147,7 +147,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
         moduleLabel: "Author",
         apiEndpoint: "author",
 
- 
+
         importMatchFields: [],
         importModel: AuthorModel,
 
@@ -209,19 +209,19 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 label: "Bio",
                 type: "textarea",
                 colSize: 6,
-           
+
                 render: (value, onChange) => (
                     <textarea
                         name="bio"
                         value={value || ""}
-                        onChange={onChange} 
+                        onChange={onChange}
                         rows={3}
                         placeholder="Enter bio"
                         className="form-control"
                         style={{
                             width: "100%",
                             resize: "none",
-                            background: "#fff", 
+                            background: "#fff",
                             borderRadius: "6px",
                             padding: "8px",
                             border: "1px solid #ddd",
@@ -253,8 +253,8 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true,
- 
+            allowDelete: false,
+
             showImportButton: true,
         },
         details: [

@@ -150,14 +150,14 @@ const TableHeader = ({
           {title}
         </h5>
 
-        {totalCount !== undefined && (
+        {/* {totalCount !== undefined && (
           <Badge bg="light" text="dark">
             <span className="detail-h3">
               Total: {totalCount}{" "}
               {totalLabel || (totalCount === 1 ? "Item" : "Items")}
             </span>
           </Badge>
-        )}
+        )} */}
 
         {showFiltered && filteredCount !== undefined && (
           <Badge bg="info">
@@ -169,7 +169,7 @@ const TableHeader = ({
 
       <div className="d-flex gap-2 flex-wrap align-items-center detail-h3">
 
-        {showSearch && (
+        {/* {showSearch && (
           <InputGroup size="sm" style={{ width: "250px", maxWidth: "100%" }}>
             <InputGroup.Text>
               <i
@@ -185,7 +185,7 @@ const TableHeader = ({
               }
             />
           </InputGroup>
-        )}
+        )} */}
 
         {showColumnVisibility && allColumns.length > 0 && (
           <Dropdown>

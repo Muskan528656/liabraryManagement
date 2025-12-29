@@ -1,94 +1,94 @@
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 import React from "react";
- 
+
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getCategoryConfig = (externalData = {}, props = {}) => {
 
- 
+
     const CategoryModel = createModel({
         modelName: "Category",
         fields: {
@@ -103,7 +103,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         moduleLabel: "Category",
         apiEndpoint: "category",
 
- 
+
         importMatchFields: [],
         importModel: CategoryModel,
 
@@ -163,8 +163,8 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             showActions: true,
             showAddButton: true,
             allowEdit: true,
-            allowDelete: true,
- 
+            allowDelete: false,
+
             showImportButton: true,
         },
         details: [

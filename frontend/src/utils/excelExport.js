@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 
  
-const PURPLE_PRIMARY = '6f42c1'; // Main purple
+const PURPLE_PRIMARY = '11439b'; // Main purple
 const PURPLE_LIGHT = 'E9D5FF'; // Light purple matching sidebar (#e9d5ff)
 const PURPLE_DARK = '8b5cf6'; // Lighter purple for borders
 const WHITE = 'FFFFFF';

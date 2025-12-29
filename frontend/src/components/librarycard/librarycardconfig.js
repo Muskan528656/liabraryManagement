@@ -116,7 +116,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             console.warn("No plans data found");
         }
 
- 
+
         const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
@@ -255,7 +255,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
     return {
         moduleName: "librarycards",
-        moduleLabel: "Library Members",
+        moduleLabel: " Members",
         apiEndpoint: "librarycard",
         columns: defaultColumns,
         initialFormData: {
@@ -376,7 +376,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
-                {
+            {
                 name: "plan_id",
                 label: "Plan",
                 type: "select",
@@ -464,11 +464,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 idField: "id",
                 labelField: "name",
             },
- 
- 
- 
- 
- 
+
+
+
+
+
         },
 
         features: {
@@ -486,16 +486,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         },
 
         filterFields: [
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
+
+
+
+
+
+
+
+
+
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -503,42 +503,42 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 type: "select",
                 options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
             },
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
             {
                 name: "first_name",
                 field: "first_name",
                 label: "First Name",
                 type: "text",
             },
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
+
+
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
             {
                 name: "registration_date",
                 field: "registration_date",

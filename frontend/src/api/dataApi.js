@@ -139,9 +139,9 @@ export default class DataApi {
     }
 
     updateLibraryCard(formData, id) {
+        console.log("formData in api is", formData);
         return axios.put(`${this.baseUrl}/${id}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 ...this.getHeaders()
             }
         });

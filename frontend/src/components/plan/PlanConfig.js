@@ -128,7 +128,7 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowDelete: true,
+            allowDelete: false,
             allowEdit: true,
             showImportButton: true,
         },

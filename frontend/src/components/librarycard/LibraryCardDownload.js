@@ -52,7 +52,7 @@ export const handleDownloadBarcode = (
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, cardWidth, cardHeight);
 
-            ctx.fillStyle = "#6f42c1";
+            ctx.fillStyle = "var(--primary-color)";
             ctx.font = "bold 26px Arial";
             ctx.textAlign = "center";
             ctx.fillText("LIBRARY CARD", cardWidth / 2, 40);
@@ -115,7 +115,7 @@ export const handleDownloadBarcode = (
                     ctx.drawImage(userImg, imgX, imgY, size, size);
                     ctx.restore();
 
-                    ctx.strokeStyle = "#6f42c1";
+                    ctx.strokeStyle = "var(--primary-color)";
                     ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.arc(imgX + size / 2, imgY + size / 2, size / 2, 0, Math.PI * 2);

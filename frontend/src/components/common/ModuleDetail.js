@@ -238,7 +238,7 @@ const ModuleDetail = ({
     const userName = userNames[userId] || `User ${userId}`;
     const userAvatar =
       userAvatars[userId] ||
-      `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+      `https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=${size}`;
 
     const handleUserClick = (e) => {
       e.stopPropagation();
@@ -322,7 +322,7 @@ const ModuleDetail = ({
                   : "U";
                 avatars[userId] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   fullName || "User"
-                )}&background=6f42c1&color=fff&size=32`;
+                )}&background=11439b&color=fff&size=32`;
               }
             }
           }
@@ -330,7 +330,7 @@ const ModuleDetail = ({
           console.error(`Error fetching user ${userId}:`, error);
           names[userId] = `User ${userId}`;
           avatars[userId] =
-            "https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32";
+            "https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=32";
         }
       }
 
@@ -822,7 +822,7 @@ const ModuleDetail = ({
 
   const handleFieldChange = (fieldKey, value, field) => {
     if (isEditing && tempData) {
- 
+
       if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
         field.onChange(value, tempData, setTempData);
         return;
@@ -1040,7 +1040,7 @@ const ModuleDetail = ({
                 width: "60px",
                 height: "30px",
                 borderRadius: "20px",
-                background: value ? "#6f42c1" : "#d1d5db",
+                background: value ? "var(--primary-color)" : "#d1d5db",
                 position: "relative",
                 cursor: "pointer",
                 transition: "0.3s",
@@ -1349,7 +1349,7 @@ const ModuleDetail = ({
                       style={{
                         color: "var(--primary-color)",
                         background: "vae(--primary-background-color)",
- 
+
                         borderRadius: "10px",
                       }}
                     >

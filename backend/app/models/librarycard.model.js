@@ -113,111 +113,111 @@ async function resolveTypeId(typeName) {
   return result.rows.length ? result.rows[0].id : null;
 }
 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
 
- 
- 
- 
 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
 
- 
 
- 
- 
- 
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function create(cardData, userId) {
   console.log("📥 Model.create() - Received cardData:", {
     ...cardData,
@@ -252,10 +252,10 @@ async function create(cardData, userId) {
       );
 
     if (isUUID) {
- 
+
       cardData.type_id = cardData.type;
     } else {
- 
+
       const resolvedTypeId = await resolveTypeId(cardData.type);
 
       if (!resolvedTypeId) {
@@ -329,7 +329,7 @@ async function create(cardData, userId) {
       cardData.last_name || null,
       fullName || null,
 
- 
+
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
@@ -381,20 +381,20 @@ async function updateById(id, cardData, userId) {
     console.log("📝 Updating library card ID:", id);
     console.log("📋 Update data received:", cardData);
 
- 
+
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
       idx++;
     }
 
- 
+
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
 
       console.log("Type value received:", typeValue, "Type:", typeof typeValue);
 
- 
+
       if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
         console.log(`✅ Converted type to integer: ${typeValue}`);
@@ -406,7 +406,7 @@ async function updateById(id, cardData, userId) {
       console.log(`✅ Type field set to: ${typeValue}`);
     }
 
- 
+
     const allowedFields = [
       "card_number",
       "image",
@@ -519,7 +519,7 @@ async function resolveTypeId(typeInput) {
       return resultById.rows[0].id;
     }
 
- 
+
     const queryByName = `
       SELECT id FROM ${schema}.library_member_types 
       WHERE LOWER(name) = LOWER($1) OR LOWER(code) = LOWER($1)
@@ -567,7 +567,7 @@ async function deleteById(id) {
   } catch (error) {
     console.error("Error in deleteById:", error);
 
- 
+
     if (error.code === '23503') { // foreign_key_violation
       throw new Error("Cannot delete member. Related records exist.");
     }

@@ -7,18 +7,18 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
     const { vendors = [], books = [], authors = [], categories = [] } = data;
 
     console.log("props", props)
-    
+
     const company = props?.company?.[0] || {};
-    
-  
+
+
     const currencySymbol = company.currency || "₹";
 
-    console.log("currencySymbol=>",currencySymbol);
+    console.log("currencySymbol=>", currencySymbol);
 
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
- 
+
             "Vendor": "Vendor",
             "Book": "Book",
             "ISBN": "ISBN",
@@ -41,15 +41,15 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             field: "unit_price",
             label: "Unit Price",
             sortable: true,
- 
+
             render: (value, record) => `${currencySymbol} ${parseFloat(record.unit_price || 0).toFixed(2)}`
 
         },
-        { 
-            field: "total_amount", 
-            label: "Total Amount", 
-            sortable: true, 
- 
+        {
+            field: "total_amount",
+            label: "Total Amount",
+            sortable: true,
+
             render: (value, record) => `${currencySymbol} ${parseFloat(record.total_amount || 0).toFixed(2)}`
 
         },
@@ -169,7 +169,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             showImportButton: true,
             showAdvancedFilter: true,
         },
-         filterFields: [
+        filterFields: [
             { name: 'vendor_name', label: 'Vendor Name', type: 'text' },
             { name: 'book_title', label: 'Book Title', type: 'text' },
             { name: 'purchase_date', label: 'Purchase Date', type: 'date' },
@@ -181,7 +181,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             categories: "category",
             company: "company"
         },
-        
+
         customHandlers: {
             handleBulkInsert: () => { window.location.href = '/purchase/bulk'; },
             handleAdd: (navigate) => { navigate('/purchase/bulk'); },
@@ -237,7 +237,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                 });
             },
             onImportComplete: async (successfulRecords, apiEndpoint) => {
-                // Update book prices and quantities after importing purchase data
+
                 if (successfulRecords && successfulRecords.length > 0) {
                     try {
                         const DataApi = (await import("../../api/dataApi")).default;
@@ -245,29 +245,28 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
 
                         for (const purchase of successfulRecords) {
                             if (purchase.book_id && purchase.unit_price && purchase.quantity) {
-                                // Get current book data
+
                                 const bookResponse = await bookApi.getById(purchase.book_id);
                                 if (bookResponse.data && bookResponse.data.data) {
                                     const currentBook = bookResponse.data.data;
 
-                                    // Update book price if it's different
                                     const newPrice = parseFloat(purchase.unit_price);
                                     const currentPrice = parseFloat(currentBook.price || 0);
 
-                                    // Update book quantity (add to existing total_copies)
+
                                     const purchaseQuantity = parseInt(purchase.quantity) || 0;
                                     const currentTotalCopies = parseInt(currentBook.total_copies || 0);
                                     const newTotalCopies = currentTotalCopies + purchaseQuantity;
 
                                     const updateData = { ...currentBook };
 
-                                    // Only update price if it's different
+
                                     if (currentPrice !== newPrice) {
                                         updateData.price = newPrice;
                                         console.log(`Updated price for book ${currentBook.title} from ${currentPrice} to ${newPrice}`);
                                     }
 
-                                    // Always update total_copies by adding the purchased quantity
+
                                     updateData.total_copies = newTotalCopies;
                                     console.log(`Updated total_copies for book ${currentBook.title} from ${currentTotalCopies} to ${newTotalCopies}`);
 

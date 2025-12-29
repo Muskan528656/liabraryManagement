@@ -1931,67 +1931,7 @@ const BookSubmit = () => {
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                                <Card.Header style={{
-                                                    background: "#f8fafc",
-                                                    border: "none",
-                                                    borderBottom: "2px solid #d1d5db",
-                                                }}>
-                                                    <Row className="align-items-center">
-                                                        <Col>
-                                                            <h5 className="mb-0 fw-bold" style={{
-                                                                color: "#1f2937",
-                                                                fontSize: "18px",
-                                                                letterSpacing: "0.3px"
-                                                            }}>
-                                                                {bookIssues.length > 0 ? "Issued Books for this ISBN" :
-                                                                    cardIssues.length > 0 ? "Issued Books for this Library Card" :
-                                                                        "All Issued Books"}
-                                                                <span style={{ color: "orange", fontSize: "14px", marginLeft: "8px" }}>
-                                                                    ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
-                                                                </span>
-                                                            </h5>
-                                                        </Col>
-                                                        <Col xs="auto">
-                                                            <InputGroup style={{ maxWidth: "250px" }}>
-                                                                <InputGroup.Text
-                                                                    style={{
-                                                                        background: "#1e3a8a",
-                                                                        borderColor: "#1e3a8a",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                >
-                                                                    <i className="fa-solid fa-search" style={{ color: "White" }}></i>
-                                                                </InputGroup.Text>
-
-                                                                <Form.Control
-                                                                    placeholder="Search by title, ISBN, name..."
-                                                                    value={searchTerm}
-                                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                                    style={{
-                                                                        borderColor: "#1e3a8a",
-                                                                        fontSize: "0.875rem",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                />
-
-                                                                {searchTerm && (
-                                                                    <Button
-                                                                        variant="outline-secondary"
-                                                                        onClick={() => setSearchTerm("")}
-                                                                        style={{
-                                                                            border: "1px solid #1e3a8a",
-                                                                            backgroundColor: "white",
-                                                                            borderRadius: "0 6px 6px 0",
-                                                                            height: "38px"
-                                                                        }}
-                                                                    >
-                                                                        <i className="fa-solid fa-times"></i>
-                                                                    </Button>
-                                                                )}
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Row>
-                                                </Card.Header>
+                                       
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
                                                     columns={issueColumns}

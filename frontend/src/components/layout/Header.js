@@ -730,7 +730,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Brand>
 
         {/* Search Bar */}
-        <div style={{ flex: 1, maxWidth: "500px", margin: "0 2rem" }}>
+        {/* <div style={{ flex: 1, maxWidth: "500px", margin: "0 2rem" }}>
           <Form onSubmit={handleBarcodeSearch}>
             <InputGroup>
               <Form.Control
@@ -765,11 +765,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               </Button>
             </InputGroup>
           </Form>
-        </div>
+        </div> */}
 
         {/* Right Side: Bell Icon + Admin Dropdown */}
         <div className="d-flex align-items-center gap-2">
-          {/* Country Flag */}
+          {/* 
           {getCountryFlag() && (
             <img
               src={getCountryFlag()}
@@ -783,7 +783,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 border: "1px solid #eee"
               }}
             />
-          )}
+          )} */}
 
           <Dropdown
             show={showNotifications}
