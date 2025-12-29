@@ -10,7 +10,7 @@ const Subscription = (props) => {
     const [allowedBooks, setAllowedBooks] = useState(10);
     const { timeZone } = useTimeZone();
 
-    console.log("sdfghjgfdewertyu", timeZone);
+ 
 
     useEffect(() => {
         const loadMaxBooks = async () => {

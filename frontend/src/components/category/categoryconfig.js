@@ -178,7 +178,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
-                console.log("Category saved:", response);
+ 
             }
         }
     };

@@ -25,11 +25,11 @@ const LibraryCard = (props) => {
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
 
-  console.log("sdfghjgfdewertyu", timeZone);
+ 
 
   const fetchSubscriptions = useCallback(async () => {
     try {
-      console.log("Fetching subscriptions data...");
+ 
       const subscriptionApi = new DataApi("subscriptions");
       const response = await subscriptionApi.fetchAll();
 
@@ -48,7 +48,7 @@ const LibraryCard = (props) => {
         }
       }
 
-      console.log(`Fetched ${subscriptionData.length} subscriptions`);
+ 
       setSubscriptionsData(subscriptionData);
       return subscriptionData;
     } catch (error) {
@@ -61,7 +61,7 @@ const LibraryCard = (props) => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      console.log("Fetching users data...");
+ 
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
 
@@ -77,7 +77,7 @@ const LibraryCard = (props) => {
         }
       }
 
-      console.log(`Fetched ${usersData.length} users`);
+ 
       setUsersData(usersData);
       return usersData;
     } catch (error) {
@@ -93,7 +93,7 @@ const LibraryCard = (props) => {
         setLoadingConfig(true);
         setConfigError(null);
 
-        console.log("Initializing library card configuration...");
+ 
 
 
         const [subscriptions, users] = await Promise.all([
@@ -108,16 +108,12 @@ const LibraryCard = (props) => {
           ...props
         };
 
-        console.log("External data for config:", {
-          subscriptionsCount: subscriptions.length,
-          usersCount: users.length
-        });
-
+      
 
         const config = await getLibraryCardConfig(externalData, timeZone);
         setBaseConfig(config);
 
-        console.log("Base config loaded successfully");
+ 
 
       } catch (error) {
         console.error("Error initializing config:", error);
@@ -136,7 +132,7 @@ const LibraryCard = (props) => {
 
     const buildFinalConfig = () => {
       try {
-        console.log("Building final configuration...");
+ 
 
 
         const final = {
@@ -218,7 +214,7 @@ const LibraryCard = (props) => {
 
 
           onSubmit: async (formData, setFormData) => {
-            console.log("Submitting form data:", formData);
+ 
 
 
             if (!formData.user_id) {
@@ -251,7 +247,7 @@ const LibraryCard = (props) => {
             }
 
             try {
-              console.log("Sending data to API:", formData);
+ 
               const response = await DataApi.createLibraryCard(formData);
 
               if (!response?.data?.success) {
@@ -262,7 +258,7 @@ const LibraryCard = (props) => {
               }
 
               const newCard = response.data.data;
-              console.log("Card created successfully:", newCard);
+ 
 
 
               handleModalOpen(newCard);
@@ -306,7 +302,7 @@ const LibraryCard = (props) => {
 
 
             onDataLoad: (data) => {
-              console.log("Transforming table data:", data?.length);
+ 
 
               if (!Array.isArray(data)) return data;
 
@@ -413,7 +409,7 @@ const LibraryCard = (props) => {
           }
         };
 
-        console.log("Final configuration built successfully");
+ 
         setFinalConfig(final);
 
       } catch (error) {
@@ -434,7 +430,7 @@ const LibraryCard = (props) => {
   }, [showBarcodeModal, selectedCard]);
 
   const handleModalOpen = (card) => {
-    console.log("Opening barcode modal for card:", card);
+ 
     setSelectedCard(card);
     setBarcodeError(null);
     setShowBarcodeModal(true);
@@ -544,7 +540,7 @@ const LibraryCard = (props) => {
   }
 
   const handleLibraryImport = (data) => {
-    console.log("Library Import Data:", data);
+ 
     alert(`Importing ${data.type} data from file: ${data.file.name}`);
 
   };

@@ -124,7 +124,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
-                console.log("User Role saved:", response);
+ 
             },
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {

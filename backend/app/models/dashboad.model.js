@@ -11,7 +11,7 @@ function init(schema_name) {
 
 const getDashboardStats = async () => {
   try {
-    console.log("Fetching dashboard stats...");
+ 
     const stats = {};
 
     const totoalcopies = await sql.query(`SELECT COUNT(*) FROM demo.total_copies`);
@@ -91,7 +91,7 @@ const getDashboardStats = async () => {
       stats.issued_percentage = 0;
     }
 
-    console.log("Dashboard stats fetched successfully:", stats);
+ 
     return stats;
 
   } catch (error) {
@@ -101,7 +101,7 @@ const getDashboardStats = async () => {
 };
 const fetchAll = async () => {
   try {
-    console.log("Fetching alert metrics...");
+ 
 
     const result = await sql.query(`
       SELECT 
@@ -153,7 +153,7 @@ const fetchAll = async () => {
       LIMIT 1;
     `);
 
-    console.log("Alert metrics fetched:", result);
+ 
 
     if (result.rows && result.rows.length > 0) {
       return [result.rows[0]];
@@ -189,14 +189,14 @@ const fetchAll = async () => {
 
 const getCompleteDashboardData = async () => {
   try {
-    console.log("Fetching complete dashboard data...");
+ 
 
 
     const [stats, metrics] = await Promise.all([
       getDashboardStats(),
       fetchAll()
     ]);
-    console.log("statstatsstatss", stats)
+ 
     const completeData = {
       summary: {
         totoalcopies: stats.totoalcopies,
@@ -215,7 +215,7 @@ const getCompleteDashboardData = async () => {
       dailyActivity: stats.daily_activity
     };
 
-    console.log("Complete dashboard data:", completeData);
+ 
     return completeData;
 
   } catch (error) {

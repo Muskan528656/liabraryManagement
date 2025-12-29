@@ -116,7 +116,7 @@ const BulkIssue = () => {
     }
   }, [selectedCard, subscriptions, plans]);
 
-  
+
   useEffect(() => {
     if (books.length === 0) {
       setFilteredBooksByAge([]);
@@ -124,48 +124,48 @@ const BulkIssue = () => {
     }
 
     if (!selectedCard || memberAge === null) {
-    
+
       setFilteredBooksByAge(books);
       return;
     }
 
-    console.log(` Filtering books for member age: ${memberAge}`);
+
 
     const filtered = books.filter(book => {
-     
+
       const minAge = getNumberValue(book.min_age);
       const maxAge = getNumberValue(book.max_age);
 
-    
+
       const bookTitle = book.title || "Unknown Book";
       const bookAgeRange = `${minAge}-${maxAge}`;
 
-      
+
       const isGeneralBook = (minAge === 0 && maxAge === 0) ||
         (book.min_age === null && book.max_age === null) ||
         (minAge === 0 && maxAge === 999);
 
-   
-  
-      const ageRangeWidth = maxAge - minAge;
-      const isNarrowRange = ageRangeWidth <= 5; 
 
-     
+
+      const ageRangeWidth = maxAge - minAge;
+      const isNarrowRange = ageRangeWidth <= 5;
+
+
       const isWithinRange = memberAge >= minAge && memberAge <= maxAge;
 
       const shouldInclude = isGeneralBook || (isNarrowRange && isWithinRange);
 
       if (shouldInclude) {
-        console.log(` INCLUDED: "${bookTitle}" (${bookAgeRange}) for age ${memberAge} - General: ${isGeneralBook}, Narrow: ${isNarrowRange}, Within: ${isWithinRange}`);
+
       } else {
-        console.log(`EXCLUDED: "${bookTitle}" (${bookAgeRange}) for age ${memberAge} - Range too broad: ${ageRangeWidth} years`);
+
       }
 
       return shouldInclude;
     });
 
     setFilteredBooksByAge(filtered);
- 
+
 
   }, [books, selectedCard, memberAge]);
   const getNumberValue = (value) => {
@@ -241,20 +241,11 @@ const BulkIssue = () => {
         plansList = planResponse;
       }
 
-     
-      console.log("📚 Books loaded:", {
-        count: booksList.length,
-        sample: booksList.slice(0, 3).map(b => ({
-          title: b.title,
-          min_age: b.min_age,
-          max_age: b.max_age,
-          type_min: typeof b.min_age,
-          type_max: typeof b.max_age
-        }))
-      });
+
+
 
       setBooks(booksList);
-      setFilteredBooksByAge(booksList); 
+      setFilteredBooksByAge(booksList);
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
       setPlans(plansList);
@@ -313,7 +304,7 @@ const BulkIssue = () => {
           });
         } else {
           setMemberAge(null);
-          console.log("No DOB found for member");
+
         }
 
         let personalAllowed = 0;
@@ -547,15 +538,9 @@ const BulkIssue = () => {
     );
   };
 
-  // UPDATED: Simple book options without complex grouping
   const getBookOptions = () => {
     const booksToShow = filteredBooksByAge;
 
-    console.log("📋 getBookOptions called:", {
-      memberAge,
-      booksToShowCount: booksToShow.length,
-      allBooksCount: books.length
-    });
 
     if (booksToShow.length === 0) {
       return [{
@@ -566,7 +551,6 @@ const BulkIssue = () => {
       }];
     }
 
-    // Simple options without groups
     const options = booksToShow.map((book) => {
       const minAge = getNumberValue(book.min_age);
       const maxAge = getNumberValue(book.max_age);
@@ -576,15 +560,14 @@ const BulkIssue = () => {
 
       const ageLabel = isGeneral ? "All Ages" : `${minAge}-${maxAge} years`;
 
-      // Check if book is already issued to this member
+
       const isAlreadyIssued = selectedCard ? isBookIssuedToSelectedCard(book.id) : false;
 
-      // Check if book is out of stock
       const isOutOfStock = book.available_copies !== undefined && parseInt(book.available_copies) <= 0;
 
       let label = `${book.title} ${book.isbn ? `(${book.isbn})` : ""}`;
 
-      // Add indicators for disabled books
+
       if (isAlreadyIssued) {
         label += " (Already Issued)";
       } else if (isOutOfStock) {

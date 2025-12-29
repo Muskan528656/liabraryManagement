@@ -27,9 +27,9 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, async (req, res) => {
     try {
-      console.log("Fetching all book submissions for tenant:", req.userinfo.tenantcode);
+ 
       BookSubmission.init(req.userinfo.tenantcode);
-      console.log('req.userinfo.tenantcode', req.userinfo.tenantcode);
+ 
 
       const submissions = await BookSubmission.findAll();
       return res.status(200).json({ success: true, data: submissions });

@@ -32,7 +32,7 @@ const Purchase = (props) => {
     timeZone
   );
 
-  console.log("Final Purchase Config:", finalConfig);
+ 
 
   return (
     <DynamicCRUD

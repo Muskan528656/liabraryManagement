@@ -31,8 +31,8 @@ async function create(submissionData, userId) {
   try {
     await sql.query('BEGIN');
 
-    console.log(" Starting book submission for issue_id:", submissionData.issue_id);
-    console.log(" Submission data:", submissionData);
+ 
+ 
 
 
     const issueRes = await sql.query(
@@ -45,7 +45,7 @@ async function create(submissionData, userId) {
 
     if (!issueRes.rows.length) throw new Error("Issue not found");
     const issue = issueRes.rows[0];
-    console.log(" Issue found:", issue.id, "Book:", issue.title);
+ 
 
     if (issue.return_date) throw new Error("Book already returned");
 
@@ -58,7 +58,7 @@ async function create(submissionData, userId) {
 
     if (!memberRes.rows.length) throw new Error("Library member not found");
     const member = memberRes.rows[0];
-    console.log(" Member found:", member.id, "Name:", member.first_name, member.last_name);
+ 
 
 
     const settingRes = await sql.query(
@@ -69,19 +69,19 @@ async function create(submissionData, userId) {
     if (settingRes.rows.length > 0) {
       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
     }
-    console.log(" Fine per day:", finePerDay);
+ 
 
 
     const today = new Date();
     const dueDate = new Date(issue.due_date);
     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
-    console.log(" Days overdue:", daysOverdue);
+ 
 
 
     const conditionBefore = submissionData.condition_before || "Good";
     const conditionAfter = submissionData.condition_after || "Good";
     const conditionAfterLower = conditionAfter.toLowerCase();
-    console.log(" Condition - Before:", conditionBefore, "After:", conditionAfter);
+ 
 
 
     let bookPurchasePrice = 0;
@@ -89,7 +89,7 @@ async function create(submissionData, userId) {
 
     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
       try {
-        console.log(" Fetching purchase price for book_id:", issue.book_id);
+ 
 
         const purchaseRes = await sql.query(
           `SELECT unit_price, purchase_date, quantity, total_amount
@@ -103,12 +103,12 @@ async function create(submissionData, userId) {
         if (purchaseRes.rows.length > 0) {
           purchaseDetails = purchaseRes.rows[0];
           bookPurchasePrice = purchaseDetails.unit_price || 0;
-          console.log(" Purchase price found:", bookPurchasePrice);
+ 
         } else {
           bookPurchasePrice = submissionData.book_price ||
             submissionData.lost_book_price ||
             0;
-          console.log(" No purchase record, using frontend price:", bookPurchasePrice);
+ 
         }
       } catch (error) {
         console.error(" Error fetching purchase price:", error);
@@ -129,7 +129,7 @@ async function create(submissionData, userId) {
       latePenalty = daysOverdue * finePerDay;
       totalPenalty += latePenalty;
       penaltyType = "late";
-      console.log("Late penalty:", latePenalty, "for", daysOverdue, "days");
+ 
     }
 
 
@@ -137,15 +137,15 @@ async function create(submissionData, userId) {
       damageLostPenalty = bookPurchasePrice;
       totalPenalty += damageLostPenalty;
       penaltyType = "lost";
-      console.log(" Lost penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+ 
     } else if (conditionAfterLower === "damaged") {
       damageLostPenalty = bookPurchasePrice * 0.5;
       totalPenalty += damageLostPenalty;
       penaltyType = "damaged";
-      console.log(" Damage penalty:", damageLostPenalty, "based on price:", bookPurchasePrice);
+ 
     }
 
-    console.log(" Total penalty:", totalPenalty, "Type:", penaltyType);
+ 
 
 
     const submissionRes = await sql.query(
@@ -169,7 +169,7 @@ async function create(submissionData, userId) {
     );
 
     const submission = submissionRes.rows[0];
-    console.log(" Book submission created with ID:", submission.id);
+ 
 
 
     if (conditionAfterLower !== "lost") {
@@ -181,9 +181,9 @@ async function create(submissionData, userId) {
          WHERE id = $1`,
         [issue.book_id, userId]
       );
-      console.log(" Available copies increased for book:", issue.book_id);
+ 
     } else {
-      console.log(" Book is LOST - available copies NOT increased");
+ 
     }
 
 
@@ -199,7 +199,7 @@ async function create(submissionData, userId) {
     let penaltyMasterId = null;
     if (totalPenalty > 0) {
       try {
-        console.log(" Inserting into penalty_master with penalty:", totalPenalty);
+ 
 
         const penaltyInsertResult = await sql.query(
           `INSERT INTO demo.penalty_master
@@ -232,7 +232,7 @@ async function create(submissionData, userId) {
         );
 
         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
-        console.log(" Penalty master record created with ID:", penaltyMasterId);
+ 
       } catch (error) {
         console.error(" Error inserting into penalty_master:", error);
         console.error("Error details:", error.message);
@@ -240,7 +240,7 @@ async function create(submissionData, userId) {
 
       }
     } else {
-      console.log(" No penalty to insert into penalty_master");
+ 
     }
 
 
@@ -261,10 +261,10 @@ async function create(submissionData, userId) {
       [issue.id, userId, issueStatus]
     );
 
-    console.log(" Book issue marked as", issueStatus, "ID:", issue.id);
+ 
 
     await sql.query('COMMIT');
-    console.log("Transaction completed successfully");
+ 
 
 
     return {
@@ -398,7 +398,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
   try {
     await sql.query('BEGIN');
 
-    console.log("Cancelling issue:", issueId);
+ 
 
 
     const issueRes = await sql.query(
@@ -437,7 +437,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
     } catch (statusError) {
 
-      console.log(" 'cancelled' status not allowed, trying 'cancelled'");
+ 
 
       await sql.query(
         `UPDATE demo.book_issues 
@@ -457,7 +457,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       throw new Error("Failed to update issue status");
     }
 
-    console.log("issue.book_idissue.book_id", issue.book_id)
+ 
 
     await sql.query(
       `UPDATE demo.books
@@ -484,7 +484,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
     );
 
     await sql.query('COMMIT');
-    console.log(` Issue ${finalStatus} successfully:`, issueId);
+ 
 
     return {
       success: true,
@@ -767,7 +767,7 @@ function cleanupEmailTracker() {
 
 async function sendDueReminder() {
   try {
-    console.log(" Starting due reminder process...");
+ 
 
 
     cleanupEmailTracker();
@@ -781,8 +781,8 @@ async function sendDueReminder() {
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayDateStr = today.toISOString().split('T')[0];
 
-    console.log(` Looking for books due on: ${tomorrowStr}`);
-    console.log(`Today: ${todayDateStr}`);
+ 
+ 
 
     const query = `
       SELECT 
@@ -804,12 +804,12 @@ async function sendDueReminder() {
       ORDER BY lm.email, bi.due_date
     `;
 
-    console.log("Executing query for due books...");
+ 
     const result = await sql.query(query, [tomorrowStr]);
-    console.log(` Found ${result.rows.length} due books for tomorrow`);
+ 
 
     if (result.rows.length === 0) {
-      console.log(" No books due tomorrow.");
+ 
       return;
     }
 
@@ -833,7 +833,7 @@ async function sendDueReminder() {
       });
     }
 
-    console.log(` Found ${Object.keys(groupedByMember).length} library members with due books`);
+ 
 
 
     let emailsSent = 0;
@@ -844,7 +844,7 @@ async function sendDueReminder() {
       const member = groupedByMember[memberId];
 
       if (hasEmailBeenSent('due', memberId)) {
-        console.log(`⏭Skipping due reminder for ${member.name} - already sent today`);
+ 
         emailsSkipped++;
         continue;
       }
@@ -863,9 +863,9 @@ async function sendDueReminder() {
       }
 
       try {
-        console.log(` Preparing due email for: ${member.name} (${member.email})`);
-        console.log(`   Books due: ${member.books.length}`);
-        console.log(`   Card Number: ${member.card_number || 'N/A'}`);
+ 
+ 
+ 
 
 
         const html = dueTemplate({
@@ -883,7 +883,7 @@ async function sendDueReminder() {
             }\n\nDue Date: ${tomorrowStr}\nCard Number: ${member.card_number || 'N/A'}\n\nPlease return or renew them on time.\n\nLibrary Management System`
         });
 
-        console.log(` Due email sent to: ${member.email}`);
+ 
         emailsSent++;
 
 
@@ -896,13 +896,13 @@ async function sendDueReminder() {
     }
 
 
-    console.log("\nDUE REMINDER REPORT =====================");
-    console.log(`Total library members found: ${Object.keys(groupedByMember).length}`);
-    console.log(`New emails sent: ${emailsSent}`);
-    console.log(`Already sent today: ${emailsSkipped}`);
-    console.log(`Emails failed: ${emailsFailed}`);
-    console.log(`Total books processed: ${result.rows.length}`);
-    console.log("==========================================\n");
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
   } catch (error) {
     console.error(" CRITICAL ERROR in sendDueReminder:", error);
@@ -916,7 +916,7 @@ async function sendDueReminder() {
 
 async function sendOverdueReminder() {
   try {
-    console.log(" Starting overdue reminder process...");
+ 
 
 
     cleanupEmailTracker();
@@ -924,7 +924,7 @@ async function sendOverdueReminder() {
 
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    console.log(` Today's date: ${todayStr}`);
+ 
 
 
     let penaltyPerDay = 0;
@@ -941,7 +941,7 @@ async function sendOverdueReminder() {
       if (penaltyResult.rows.length > 0) {
         penaltyPerDay = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
       }
-      console.log(` Penalty per day: ₹${penaltyPerDay}`);
+ 
     } catch (penaltyError) {
       console.warn(" Could not fetch penalty settings, using 0");
     }
@@ -991,12 +991,12 @@ ORDER BY lm.email`;
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
-    console.log(" Executing query for overdue books...");
+ 
     const result = await sql.query(query, [yesterdayStr]);
-    console.log(`found ${result.rows.length} overdue books`);
+ 
 
     if (result.rows.length === 0) {
-      console.log(" No overdue books found.");
+ 
       return;
     }
 
@@ -1015,7 +1015,7 @@ ORDER BY lm.email`;
 
       const trackerKey = `${book.issued_to}_${book.id}`;
       if (hasEmailBeenSent('overdue', trackerKey)) {
-        console.log(` Skipping overdue reminder for ${book.student_name} - book "${book.book_title}" already notified today`);
+ 
         emailsSkipped++;
         continue;
       }
@@ -1026,12 +1026,12 @@ ORDER BY lm.email`;
       const overdueDays = Math.max(0, Math.floor(timeDiff / (1000 * 3600 * 24)));
       const penaltyAmount = penaltyPerDay * overdueDays;
 
-      console.log(`\n Processing: ${book.book_title}`);
-      console.log(`   Library Member: ${book.student_name} (${book.student_email})`);
-      console.log(`   Card Number: ${book.card_number || 'N/A'}`);
-      console.log(`   Due Date: ${book.due_date}`);
-      console.log(`   Overdue Days: ${overdueDays}`);
-      console.log(`   Penalty: ₹${penaltyAmount}`);
+ 
+ 
+ 
+ 
+ 
+ 
 
       try {
 
@@ -1060,7 +1060,7 @@ ORDER BY lm.email`;
             `Library Management System`
         });
 
-        console.log(` Overdue reminder sent to: ${book.student_email}`);
+ 
         emailsSent++;
 
 
@@ -1073,12 +1073,12 @@ ORDER BY lm.email`;
     }
 
 
-    console.log("\n OVERDUE REMINDER REPORT =================");
-    console.log(`Total overdue books found: ${result.rows.length}`);
-    console.log(`New emails sent: ${emailsSent}`);
-    console.log(`Already sent today: ${emailsSkipped}`);
-    console.log(`Emails failed: ${emailsFailed}`);
-    console.log("==========================================\n");
+ 
+ 
+ 
+ 
+ 
+ 
 
   } catch (error) {
     console.error(" CRITICAL ERROR in sendOverdueReminder:", error);
@@ -1091,7 +1091,7 @@ ORDER BY lm.email`;
 }
 
 async function sendAllReminders() {
-  console.log(" ===== STARTING ALL LIBRARY REMINDERS =====\n");
+ 
 
   const startTime = Date.now();
 
@@ -1099,7 +1099,7 @@ async function sendAllReminders() {
 
     await sendDueReminder();
 
-    console.log("\n---\n");
+ 
 
 
     await sendOverdueReminder();
@@ -1110,8 +1110,8 @@ async function sendAllReminders() {
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
 
-    console.log(`\n All reminders completed in ${duration.toFixed(2)} seconds`);
-    console.log("===== END LIBRARY REMINDERS =====\n");
+ 
+ 
   }
 }
 
@@ -1246,7 +1246,7 @@ async function checkOverdueStatus(issueId) {
   }
 }
 
-console.log(" Cron jobs scheduled - Each member will receive only ONE email per day for each reminder type");
+ 
 
 cron.schedule("0 0 9 * * *", sendDueReminder);
 cron.schedule("0 0 9 * * *", sendOverdueReminder);

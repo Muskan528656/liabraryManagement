@@ -3,6 +3,7 @@ import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import DataApi from "../../api/dataApi";
 import { createModel } from "../common/UniversalCSVXLSXImporter"; // Import createModel
+import { Badge } from "react-bootstrap";
 
 export const planDataDependencies = {
     company: "company",
@@ -99,15 +100,16 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
                 placeholder: "Enter number of allowed books",
                 colSize: 6,
             },
+
             {
                 name: "is_active",
                 label: "Status",
                 type: "toggle",
+                colSize: 12,
                 options: [
                     { value: true, label: "Active" },
-                    { value: false, label: "Inactive" },
-                ],
-                colSize: 6,
+                    { value: false, label: "Inactive" }
+                ]
             },
         ],
 

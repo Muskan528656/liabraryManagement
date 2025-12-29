@@ -40,8 +40,8 @@ async function findById(id) {
  
 async function create(categoryData, userId) {
   try {
-    console.log("Creating category with data:", categoryData);
-    console.log("User ID:", userId);
+ 
+ 
     
     const query = `INSERT INTO demo.categories 
                    (name, description, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
@@ -54,12 +54,12 @@ async function create(categoryData, userId) {
       userId || null,
     ];
     
-    console.log("SQL Query:", query);
-    console.log("Values:", values);
+ 
+ 
     
     const result = await sql.query(query, values);
     
-    console.log("Insert result:", result.rows);
+ 
     
     if (result.rows.length > 0) {
       return result.rows[0];

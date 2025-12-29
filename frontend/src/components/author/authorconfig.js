@@ -269,7 +269,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
-                console.log("Author saved:", response);
+ 
             }
         }
     };

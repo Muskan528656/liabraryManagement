@@ -25,7 +25,7 @@ const PurchaseDetail = () => {
 
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
-      console.log("respnse =>",response);
+ 
       if (response?.data) {
         setTimeZone(response.data.time_zone);
         setCurrencySymbol(response.data.currency_symbol || "₹");

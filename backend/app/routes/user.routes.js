@@ -59,7 +59,7 @@ module.exports = (app) => {
       userId
     );
 
-    console.log('uploadPath = ', uploadPath)
+ 
 
     // Ensure directory exists
     fs.mkdirSync(uploadPath, { recursive: true });
@@ -141,9 +141,9 @@ module.exports = (app) => {
 
         const tenantcode = req.userinfo?.tenantcode;
         const companyid = req.userinfo?.companyid;
-        console.log("Creating user - tenantcode:", tenantcode);
-        console.log("Creating user - companyid:", companyid);
-        console.log("req.userinfo:", req.userinfo);
+ 
+ 
+ 
 
         if (!tenantcode) {
           console.error("Error: tenantcode is missing from req.userinfo");
@@ -163,7 +163,7 @@ module.exports = (app) => {
             `, [tenantcode]);
             if (companyCheck.rows.length > 0) {
               finalCompanyId = companyCheck.rows[0].id;
-              console.log("Fetched companyId from tenantcode:", tenantcode, "Company ID:", finalCompanyId);
+ 
             } else {
               console.error("Company not found for tenantcode:", tenantcode);
               return res.status(400).json({

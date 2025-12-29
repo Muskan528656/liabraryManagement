@@ -152,7 +152,7 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
-      console.log("reposne->>>", response)
+ 
       if (response.data && Array.isArray(response.data)) {
 
         const activeIssues = response.data.filter(
@@ -631,7 +631,7 @@ const BookIssue = () => {
                         : "No books have been issued yet"
                     }
                     onRowClick={(issue) => {
-                      console.log("Issue clicked:", issue);
+ 
                     }}
                   />
                 </Card.Body>

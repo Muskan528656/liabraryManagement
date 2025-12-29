@@ -378,8 +378,8 @@ async function updateById(id, cardData, userId) {
     const values = [];
     let idx = 1;
 
-    console.log("📝 Updating library card ID:", id);
-    console.log("📋 Update data received:", cardData);
+ 
+ 
 
 
     if (cardData.is_active !== undefined) {
@@ -392,18 +392,18 @@ async function updateById(id, cardData, userId) {
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
 
-      console.log("Type value received:", typeValue, "Type:", typeof typeValue);
+ 
 
 
       if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
-        console.log(`✅ Converted type to integer: ${typeValue}`);
+ 
       }
 
       updates.push("type_id = $" + idx);
       values.push(typeValue);
       idx++;
-      console.log(`✅ Type field set to: ${typeValue}`);
+ 
     }
 
 
@@ -501,7 +501,7 @@ async function resolveTypeId(typeInput) {
   try {
     if (!typeInput) return null;
 
-    console.log("🔍 Resolving type ID for:", typeInput);
+ 
 
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(typeInput)) {
       return typeInput;
@@ -515,7 +515,7 @@ async function resolveTypeId(typeInput) {
     const resultById = await sql.query(queryById, [typeInput.toString()]);
 
     if (resultById.rows.length > 0) {
-      console.log(`✅ Found type ID: ${resultById.rows[0].id} for input: ${typeInput}`);
+ 
       return resultById.rows[0].id;
     }
 
@@ -528,7 +528,7 @@ async function resolveTypeId(typeInput) {
     const resultByName = await sql.query(queryByName, [typeInput.toString().toLowerCase()]);
 
     if (resultByName.rows.length > 0) {
-      console.log(`✅ Found type ID: ${resultByName.rows[0].id} for input: ${typeInput}`);
+ 
       return resultByName.rows[0].id;
     }
 

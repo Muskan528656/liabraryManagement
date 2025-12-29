@@ -70,7 +70,7 @@ export const handleDownloadBarcode = (
             }
 
             const drawDetailsAndBarcode = () => {
-                console.log("card->>>>>", card)
+ 
 
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#000";

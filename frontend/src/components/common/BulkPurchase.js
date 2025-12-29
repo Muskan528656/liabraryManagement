@@ -204,7 +204,7 @@ const BulkPurchasePage = () => {
     };
 
     const fetchBookByISBN = async (isbn) => {
-        console.log("Fetching book data for ISBN:", isbn);
+ 
         const bookData = {
             isbn: isbn,
             title: "",
@@ -216,13 +216,13 @@ const BulkPurchasePage = () => {
         try {
  
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
-            console.log("Calling Google Books API:", googleBooksUrl);
+ 
 
             const googleResponse = await fetch(googleBooksUrl);
 
             if (googleResponse.ok) {
                 const data = await googleResponse.json();
-                console.log("Google Books response:", data);
+ 
 
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
@@ -277,10 +277,10 @@ const BulkPurchasePage = () => {
                         bookData.page_count = volumeInfo.pageCount;
                     }
 
-                    console.log("Final book data from Google Books:", bookData);
+ 
                     return bookData;
                 } else {
-                    console.log("No results found for ISBN:", isbn);
+ 
  
                     const titleSearchUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(isbn)}&key=${GOOGLE_BOOKS_API_KEY}`;
                     const titleResponse = await fetch(titleSearchUrl);
@@ -295,17 +295,17 @@ const BulkPurchasePage = () => {
                                 bookData.author_name = volumeInfo.authors.join(", ");
                             }
 
-                            console.log("Found book with title search:", bookData);
+ 
                             return bookData;
                         }
                     }
                 }
             }
         } catch (error) {
-            console.log("Google Books API failed:", error);
+ 
         }
 
-        console.log("Google Books API failed, returning basic data");
+ 
         return bookData;
     };
 
@@ -388,15 +388,15 @@ const BulkPurchasePage = () => {
 
         setBarcodeProcessing(true);
         try {
-            console.log("Processing barcode:", barcode);
+ 
 
             const isbnCheck = isValidISBN(barcode);
             if (isbnCheck) {
-                console.log("Valid ISBN detected:", isbnCheck);
+ 
                 const isbn = isbnCheck.value;
 
                 const bookData = await fetchBookByISBN(isbn);
-                console.log("Fetched book data:", bookData);
+ 
 
  
                 if (bookData.author_name) {
@@ -536,7 +536,7 @@ const BulkPurchasePage = () => {
     };
 
     const handleBarcodeScanned = (barcode) => {
-        console.log('Barcode scanned:', barcode);
+ 
         setBarcodeInput(barcode);
 
         setTimeout(() => {

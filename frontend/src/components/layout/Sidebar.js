@@ -34,7 +34,7 @@ export default function Sidebar({ open, handleDrawerClose }) {
     try {
       const api = new DataApi("module");
       const resp = await api.fetchAll();
-      console.log("Modules fetched from DB:", resp);
+ 
       const result = resp?.data;
       if (result && result.success && Array.isArray(result.records)) {
         setModulesFromDB(result.records);
@@ -68,7 +68,7 @@ export default function Sidebar({ open, handleDrawerClose }) {
         };
       });
 
-    console.log("Active modules in sidebar:", moduleItems.length);
+ 
     return moduleItems;
   };
 

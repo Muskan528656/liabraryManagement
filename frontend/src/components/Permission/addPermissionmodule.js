@@ -46,7 +46,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
     useEffect(() => {
         if (editingItem && modules.length > 0 && roles.length > 0) {
-            console.log("Editing item received:", editingItem);
+ 
 
 
             const selectedRole = roles.find(r => r.id === editingItem.role_id);
@@ -205,7 +205,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             return;
         }
 
-        console.log("Submitting form data:", formData);
+ 
         onSave(formData);
     };
 

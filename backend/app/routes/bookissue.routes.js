@@ -232,14 +232,14 @@ module.exports = (app) => {
 
   router.post("/issue", fetchUser, async (req, res) => {
     try {
-      console.log("📩 Received Issue Book request:", req.userinfo);
+ 
       BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
 
     } catch (error) {
-      console.log("❌ Route Error:", error);
+ 
       return res.status(500).json({ success: false, message: "Server error" });
     }
   });
@@ -425,7 +425,7 @@ module.exports = (app) => {
   router.get("/:bookId/issued-count", fetchUser, async (req, res) => {
     try {
       const bookId = req.params.bookId;
-      console.log("boookid->>>>>>>>", bookId)
+ 
 
       BookIssue.init(req.userinfo.tenantcode);
       const issuedCount = await BookIssue.getIssuedCountByBookId(bookId);

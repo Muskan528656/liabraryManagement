@@ -53,10 +53,10 @@
 
 // io.on("connection", (socket) => {
 
-//   console.log(" New socket connected:", socket.id);
+//    
 
 //   socket.on("setup", (userData) => {
-//     console.log(" Setup event received:", userData);
+//      
 
 //     const userId = userData.id || userData.userId;
 
@@ -66,8 +66,8 @@
 //       socket.data.userId = userId;
 //       socket.data.deviceId = userData.deviceId;
 
-//       console.log(`User ${userId} connected to rooms: ${userId}, user_${userId}`);
-//       console.log(`   Device ID: ${socket.data.deviceId}`);
+//        
+//        
 //     } else {
 //       console.warn(" No user ID found in setup data:", userData);
 //     }
@@ -76,11 +76,11 @@
 //   });
 
 //   socket.on("notification_read", (data) => {
-//     console.log(" Notification read:", data);
+//      
 //   });
 
 //   socket.on("disconnect", () => {
-//     console.log(` User disconnected: ${socket.id}`);
+//      
 //   });
 // });
 
@@ -120,8 +120,8 @@
 // }));
 
 // server.listen(PORT, () => {
-//   console.log(`✅ Server is running on port ${PORT}`);
-//   console.log(`🌐 Base API URL: ${process.env.BASE_API_URL}`);
+//    
+//    
 // });
 
 
@@ -180,10 +180,10 @@ app.set('io', io);
 
 io.on("connection", (socket) => {
 
-  console.log(" New socket connected:", socket.id);
+ 
 
   socket.on("setup", (userData) => {
-    console.log(" Setup event received:", userData);
+ 
 
     const userId = userData.id || userData.userId;
 
@@ -193,8 +193,8 @@ io.on("connection", (socket) => {
       socket.data.userId = userId;
       socket.data.deviceId = userData.deviceId;
 
-      console.log(`User ${userId} connected to rooms: ${userId}, user_${userId}`);
-      console.log(`   Device ID: ${socket.data.deviceId}`);
+ 
+ 
     } else {
       console.warn(" No user ID found in setup data:", userData);
     }
@@ -203,11 +203,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("notification_read", (data) => {
-    console.log(" Notification read:", data);
+ 
   });
 
   socket.on("disconnect", () => {
-    console.log(` User disconnected: ${socket.id}`);
+ 
   });
 });
 
@@ -247,6 +247,6 @@ app.use(fileUpload({
 }));
 
 server.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-  console.log(`🌐 Base API URL: ${process.env.BASE_API_URL}`);
+ 
+ 
 });

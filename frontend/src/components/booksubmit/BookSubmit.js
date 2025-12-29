@@ -112,7 +112,7 @@ const BookSubmit = () => {
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Library Settings:", data);
+ 
 
                 let settings = {};
                 if (data.success && data.data && Array.isArray(data.data)) {
@@ -124,7 +124,7 @@ const BookSubmit = () => {
                 }
 
                 setLibrarySettings(settings);
-                console.log("Fine per day set to:", settings.fine_per_day);
+ 
             } else {
                 console.error("Failed to fetch library settings");
                 const defaultSettings = {
@@ -157,11 +157,11 @@ const BookSubmit = () => {
                 "GET"
             );
 
-            console.log("Fetch Purchase Details Response:", resp);
+ 
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Book Purchase Details:", data);
+ 
 
                 let purchaseDetails = null;
                 if (data.success && data.data) {
@@ -204,7 +204,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
-            console.log("Fetched active issues:", issues);
+ 
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -291,14 +291,14 @@ const BookSubmit = () => {
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
             );
-            console.log("Fetch Submitted Books Response:", submissionsResp);
+ 
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
             }
 
             const response = await submissionsResp.json();
             let submissions = [];
-            console.log("Submitted Books Data:", response);
+ 
             if (response.success !== undefined) {
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
@@ -973,7 +973,7 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
-            console.log("Update Issue Result:", result);
+ 
             if (result.success) {
                 PubSub.publish("RECORD_SUCCESS_TOAST", {
                     title: "Success",
@@ -1018,7 +1018,7 @@ const BookSubmit = () => {
     };
 
     const handleCancelConfirm = async () => {
-        console.log("Cancelling issue:", selectedIssue);
+ 
         if (!selectedIssue) return;
 
         try {
@@ -1184,7 +1184,7 @@ const BookSubmit = () => {
                 Object.entries(submitData).filter(([_, v]) => v !== undefined)
             );
 
-            console.log("Submitting book data:", cleanedData);
+ 
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,

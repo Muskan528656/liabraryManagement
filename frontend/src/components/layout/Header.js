@@ -358,7 +358,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
-        console.log("Decoded user from token:", user);
+ 
         setUserInfo(user);
 
         if (user.role_name || user.userrole_name) {
@@ -476,10 +476,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   useEffect(() => {
     if (socket) {
-      console.log("🔔 Setting up notification listener for socket:", socket.id);
+ 
 
       const handleNewNotification = (notification) => {
-        console.log("📬 New notification received via socket:", notification);
+ 
         setAllNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
 
@@ -494,7 +494,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       socket.on("new_notification", handleNewNotification);
 
       return () => {
-        console.log("🔕 Removing notification listener");
+ 
         socket.off("new_notification", handleNewNotification);
       };
     } else {

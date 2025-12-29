@@ -10,7 +10,7 @@ import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import City_State from "../../constants/CityState.json";
 
 
-console.log(COUNTRY_CODES)
+ 
 const PublisherDetail = () => {
 
     const { id } = useParams();
@@ -19,7 +19,7 @@ const PublisherDetail = () => {
 
     const [totalBooks, setTotalBooks] = useState(0);
 
-    console.log("Book ID from URL:", id);
+ 
     const { timeZone } = useTimeZone();
     const fetchBookData = async (bookId) => {
         try {
@@ -30,8 +30,8 @@ const PublisherDetail = () => {
             const bookData = bookResponse?.data || {};
             setBook(bookData);
 
-            console.log("book api", bookApi)
-            console.log("bookData", bookData)
+ 
+ 
 
         } catch (error) {
             console.error("Error fetching book or book issues:", error);
@@ -43,7 +43,7 @@ const PublisherDetail = () => {
     useEffect(() => {
         if (id) {
             fetchBookData(id);
-            console.log("country", COUNTRY_CODES)
+ 
         }
     }, [id]);
 

@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -35,16 +35,16 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/by-age/:age", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
       const memberAge = parseInt(req.params.age);
-      
+
       if (isNaN(memberAge) || memberAge < 0) {
         return res.status(400).json({ errors: "Invalid age parameter" });
       }
-      
+
       const books = await Book.findByAgeRange(memberAge, memberAge);
       return res.status(200).json(books);
     } catch (error) {
@@ -52,7 +52,7 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-  
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -67,7 +67,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/isbn/:isbn", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -83,7 +83,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
@@ -96,15 +96,15 @@ module.exports = (app) => {
         return value.trim().length > 0;
       }).withMessage("Title is required"),
       body("author_id").optional().custom((value) => {
-          
+
         return true;
       }),
       body("category_id").optional().custom((value) => {
-          
+
         return true;
       }),
       body("publisher_id").optional().custom((value) => {
-          
+
         return true;
       }),
       body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
@@ -116,7 +116,7 @@ module.exports = (app) => {
       }),
       body("isbn").optional().custom((value) => {
         if (value === null || value === undefined || value === "") {
-          return true;        
+          return true;
         }
         return value.trim().length > 0;
       }).withMessage("ISBN is required"),
@@ -130,7 +130,7 @@ module.exports = (app) => {
 
         Book.init(req.userinfo.tenantcode);
 
-    
+
         if (req.body.isbn && req.body.isbn.trim()) {
           const existingBook = await Book.findByISBN(req.body.isbn);
           if (existingBook) {
@@ -153,7 +153,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
@@ -181,13 +181,13 @@ module.exports = (app) => {
 
         Book.init(req.userinfo.tenantcode);
 
- 
+
         const existingBook = await Book.findById(req.params.id);
         if (!existingBook) {
           return res.status(404).json({ errors: "Book not found" });
         }
 
- 
+
         const duplicateBook = await Book.findByISBN(
           req.body.isbn,
           req.params.id
@@ -211,7 +211,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -226,7 +226,7 @@ module.exports = (app) => {
     }
   });
 
- 
-  app.use(process.env.BASE_API_URL+"/api/book", router);
+
+  app.use(process.env.BASE_API_URL + "/api/book", router);
 };
 

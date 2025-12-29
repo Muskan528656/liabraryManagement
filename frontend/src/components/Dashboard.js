@@ -292,9 +292,9 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   //   upcomingIssues.forEach(issue => {
   //     const memberId = issue.member_id || issue.card_id;
   //     const dueDate = new Date(issue.due_date);
-  //     console.log("Processing issue for member ID:", memberId, "Due Date:", dueDate);
-  //     console.log("Issue details:", issue);
-  //     console.log("Current membersMap:", membersMap);
+  //      
+  //      
+  //      
   //     if (!membersMap.has(memberId)) {
   //       membersMap.set(memberId, {
   //         id: memberId,
@@ -327,7 +327,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   //   setUpcomingDueMembers(membersList);
 
-  //   console.log("Upcoming Due Members:", upcomingDueMembers);
+  //    
   // };
 
   const getDefaultPhoto = (id) => {
@@ -390,7 +390,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
-      console.log("Latest Members:", latestMembersSorted);
+ 
 
       setLatestMembers(latestMembersSorted);
 
@@ -1166,7 +1166,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                 src={member.image}
                                 alt={member.name}
                                 onError={(e) => {
-                                  console.log("Image failed to load:", member.image);
+ 
                                   e.target.onerror = null;
                                   
                                 }}

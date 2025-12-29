@@ -23,7 +23,7 @@ const BookDetail = () => {
     { value: "spiral", label: "Spiral" },
   ];
 
-  console.log("Book ID from URL:", id);
+ 
   const { timeZone } = useTimeZone();
   const fetchBookData = async (bookId) => {
     try {
@@ -38,7 +38,7 @@ const BookDetail = () => {
       setBook(bookData);
       const total = bookData.total_copies || 0;
       const available = bookData.available_copies || 0;
-      console.log("Total Copies:", total, "Available Copies:", available);
+ 
       setTotalBooks(total);
       setAvailableBooks(available);
 

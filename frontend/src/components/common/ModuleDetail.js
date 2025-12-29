@@ -345,7 +345,7 @@ const ModuleDetail = ({
     try {
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
-      console.log(`Fetched `, response);
+
       if (response && response.data) {
         const responseData = response.data;
         if (responseData.success && responseData.data) {
@@ -422,11 +422,6 @@ const ModuleDetail = ({
   };
 
   useEffect(() => {
-    console.log("ModuleDetail useEffect running with:", {
-      id,
-      moduleApi,
-      moduleName,
-    });
 
     const loadData = async () => {
       try {
@@ -487,7 +482,7 @@ const ModuleDetail = ({
           const payload = response?.data ?? [];
           fetchedOptions[key] = normalizeListResponse(payload);
         } catch (error) {
-          console.error(`Error fetching lookup data for ${key}:`, error);
+
           fetchedOptions[key] = [];
         }
       }
@@ -602,12 +597,7 @@ const ModuleDetail = ({
   const formatValue = (value, field) => {
     if (value === null || value === undefined || value === "") return "—";
 
-    console.log(
-      `Formatting field: ${field.key}, value:`,
-      value,
-      "type:",
-      field.type
-    );
+
 
     if (field.type === "toggle") {
       const boolValue = Boolean(value);
@@ -702,7 +692,7 @@ const ModuleDetail = ({
     return String(value);
   };
 
-  console.log("Location state:", location?.state);
+
   useEffect(() => {
     setTempData(location?.state?.rowData);
   }, [location?.state?.isEdit]);
@@ -730,10 +720,10 @@ const ModuleDetail = ({
         return false;
       });
 
-      console.log("Saving data:", tempData);
-      console.log("Has file upload:", hasFileUpload);
-      console.log("Image value:", tempData.image);
-      console.log("Image type:", typeof tempData.image);
+
+
+
+
 
       const api = new DataApi(moduleApi);
       let response;
@@ -744,13 +734,13 @@ const ModuleDetail = ({
         for (const [key, value] of Object.entries(tempData)) {
           if (key === "image") {
             if (value instanceof File) {
-              console.log("Appending new image file:", value.name);
+
               formDataToSend.append("image", value);
             } else if (value === null || value === "null") {
-              console.log("Removing image");
+
               formDataToSend.append("image", "");
             } else if (typeof value === "string" && value) {
-              console.log("Keeping existing image URL:", value);
+
               formDataToSend.append("image", value);
             }
           } else {
@@ -764,12 +754,12 @@ const ModuleDetail = ({
           }
         }
 
-        console.log("FormData content:");
+
         for (let pair of formDataToSend.entries()) {
-          console.log(pair[0] + ":", pair[1]);
+
         }
 
-        console.log("Calling updateFormData with ID:", id);
+
         response = await api.updateFormData(formDataToSend, id);
       } else {
         const cleanData = { ...tempData };
@@ -779,12 +769,12 @@ const ModuleDetail = ({
           }
         });
 
-        console.log("Calling simple update with ID:", id);
-        console.log("Update data (cleaned):", cleanData);
+
+
         response = await api.update(cleanData, id);
       }
 
-      console.log("Update response:", response);
+
 
       if (response && response.data) {
         await fetchData();
@@ -798,12 +788,7 @@ const ModuleDetail = ({
         setIsEditing(false);
       }
     } catch (err) {
-      console.error("Update error:", err);
-      console.error("Error details:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
+
 
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
@@ -837,7 +822,7 @@ const ModuleDetail = ({
       if (fieldKey === 'country' || fieldKey === 'country_code') {
         const countryInfo = getCountryInfo(value);
 
-        console.log('Country changed to:', value, 'Country info:', countryInfo);
+
 
 
         if (countryInfo.timezone) {
@@ -964,7 +949,7 @@ const ModuleDetail = ({
     );
   }
 
-  console.log("Fields before normalization:", fields);
+
   const normalizedFields = {
     details: fields?.details || [],
   };
@@ -1008,13 +993,7 @@ const ModuleDetail = ({
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
     if (field.type === "toggle") {
-      console.log("Toggle Field Debug:", {
-        fieldName: field.key,
-        fieldLabel: field.label,
-        currentValue: currentData ? currentData[field.key] : "undefined",
-        isEditing: isEditing,
-        currentData: currentData,
-      });
+
     }
 
 

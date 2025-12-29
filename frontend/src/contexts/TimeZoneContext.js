@@ -20,7 +20,7 @@ export const TimeZoneProvider = ({ children }) => {
   const { userInfo } = useUser();
 
   const setCompanyTimeZone = (tz) => {
-    console.log("setCompanyTimeZone called =", tz);
+ 
     setTimeZone(tz);
   };
 
@@ -34,7 +34,7 @@ export const TimeZoneProvider = ({ children }) => {
       const UserApi = new DataApi("user");
       const response = await UserApi.fetchById(userInfo.id);
       if (response?.data) {
-        console.log("resposne ===", response.data?.time_zone)
+ 
         setTimeZone(response.data?.time_zone || "UTC");
         setCompanyInfo(response.data);
       }
@@ -45,7 +45,7 @@ export const TimeZoneProvider = ({ children }) => {
 
   useEffect(() => {
     if (userInfo) {
-      console.log("FETCH COMPANY");
+ 
       fetchCompanyDetails();
     }
   }, [userInfo]);

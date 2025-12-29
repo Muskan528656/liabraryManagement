@@ -6,14 +6,14 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
 
     const { vendors = [], books = [], authors = [], categories = [] } = data;
 
-    console.log("props", props)
+ 
 
     const company = props?.company?.[0] || {};
 
 
     const currencySymbol = company.currency || "₹";
 
-    console.log("currencySymbol=>", currencySymbol);
+ 
 
     const PurchaseModel = createModel({
         modelName: "Purchase",
@@ -263,12 +263,12 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
 
                                     if (currentPrice !== newPrice) {
                                         updateData.price = newPrice;
-                                        console.log(`Updated price for book ${currentBook.title} from ${currentPrice} to ${newPrice}`);
+ 
                                     }
 
 
                                     updateData.total_copies = newTotalCopies;
-                                    console.log(`Updated total_copies for book ${currentBook.title} from ${currentTotalCopies} to ${newTotalCopies}`);
+ 
 
                                     await bookApi.update(purchase.book_id, updateData);
                                 }

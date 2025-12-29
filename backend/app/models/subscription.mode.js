@@ -136,7 +136,7 @@ async function create(data, userId) {
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Subscription not found");
-    console.log("datadata", data)
+ 
     const query = `
         UPDATE demo.subscriptions
         SET plan_name = $2,
