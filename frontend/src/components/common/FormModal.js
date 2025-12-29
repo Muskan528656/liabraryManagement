@@ -401,34 +401,23 @@ const FormModal = ({
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
       case "toggle":
-        // Current value को proper boolean में convert करें
-        const currentValue = formData[field.name];
-        const boolValue = typeof currentValue === 'string'
-          ? currentValue === 'true' || currentValue === '1'
-          : Boolean(currentValue);
-
         return (
           <Form.Group className="mb-3" key={field.name}>
-            <Form.Label className="d-flex justify-content-between align-items-center">
+            <Form.Label className="d-flex justify-content-between">
               <span>
                 {field.label} {field.required && <span className="text-danger">*</span>}
               </span>
-              <span
-                className={`badge ${boolValue ? 'bg-success' : 'bg-secondary'}`}
-                style={{ fontSize: '0.8rem' }}
-              >
-                {boolValue ? 'Active' : 'Inactive'}
-              </span>
+              <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
             </Form.Label>
 
             <div
               className="custom-toggle"
-              onClick={() => handleFieldChange(field, !boolValue)}
+              onClick={() => handleFieldChange(field, !formData[field.name])}
               style={{
                 width: "55px",
                 height: "28px",
                 borderRadius: "20px",
-                background: boolValue ? "var(--primary-color)" : "#d1d5db",
+                background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
                 position: "relative",
                 cursor: "pointer",
                 transition: "0.3s",
@@ -442,7 +431,7 @@ const FormModal = ({
                   borderRadius: "50%",
                   position: "absolute",
                   top: "3px",
-                  left: boolValue ? "29px" : "3px",
+                  left: formData[field.name] ? "29px" : "3px",
                   transition: "0.3s",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                 }}

@@ -1768,7 +1768,7 @@ textarea.form-control[required] {
 
 /* Bootstrap Pagination Override - Global */
 .pagination .page-link {
-  color: #8b5cf6 !important;
+  color: var(--primary-color) !important;
   border-color: #e2e8f0 !important;
 }
 
@@ -1780,7 +1780,7 @@ textarea.form-control[required] {
 
 .pagination .page-link:hover:not(.disabled):not(.active) {
   background-color: rgba(111, 66, 193, 0.1) !important;
-  border-color: #8b5cf6 !important;
+  border-color: var(--primary-color) !important;
   color: var(--primary-color) !important;
 }
 
@@ -1824,7 +1824,7 @@ textarea.form-control[required] {
 .resizable-table-container {
   scrollbar-width: thin;
   /* scrollbar-color: rgba(111, 66, 193, 0.3) transparent;/ */
-  scrollbar-color: var(--primary-background-color) transparent;
+  scrollbar-color: var(--primary-color) transparent;
   -webkit-overflow-scrolling: touch;
 }
 

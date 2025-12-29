@@ -97,8 +97,8 @@ const DynamicCRUD = ({
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState([]);
- 
- 
+    console.log("formData", formData)
+    console.log("Data", data)
 
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
@@ -125,9 +125,9 @@ const DynamicCRUD = ({
     }, []);
 
     const handleNameClick = useCallback((item, isEdit) => {
- 
+        console.log("handleNameClick called with isEdit:", isEdit);
         setIsEditable(isEdit)
- 
+        console.log("isEditable in DynamicCRUD:", item);
         if (nameClickHandler) {
             nameClickHandler(item);
             return;
@@ -145,7 +145,7 @@ const DynamicCRUD = ({
                 try {
 
                     if (isEdit) {
- 
+                        console.log("isEdit->>>", isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
                             state: { isEdit: true, rowData: item },
                         });
@@ -383,10 +383,10 @@ const DynamicCRUD = ({
     const filteredData = useMemo(() => {
         let result = data;
 
- 
- 
- 
- 
+        console.log('advancedFilters = ', advancedFilters);
+        console.log('result = ', result);
+        console.log('searchTerm = ', searchTerm);
+        console.log('showSearch = ', showSearch);
 
 
 
@@ -427,7 +427,7 @@ const DynamicCRUD = ({
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
- 
+            console.log("Fetching data from API endpoint:", apiEndpoint);
             const response = await api.fetchAll();
             if (response.data !== undefined) {
                 const normalizedData = normalizeListResponse(response.data);
@@ -450,7 +450,7 @@ const DynamicCRUD = ({
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
- 
+        console.log("fetchRelatedData called");
         try {
             const selectFields = formFields.filter(field =>
                 field && field.type === "select" && field.options && typeof field.options === "string"
@@ -638,7 +638,7 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
- 
+        console.log("onSubmitonSubmitonSubmitonSubmit,", formData);
 
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
@@ -683,9 +683,9 @@ const DynamicCRUD = ({
                 if (editingItem) {
                     response = await api.update(submitData, editingItem.id);
                 } else {
- 
+                    console.log("submitDatasubmitData", submitData)
                     response = await api.create(submitData);
- 
+                    console.log("Respinse", response)
                 }
             } else {
                 const submitData = { ...formData };
@@ -890,7 +890,7 @@ const DynamicCRUD = ({
 
         return buttons;
     }, [
-        showImportButton,       
+        showImportButton,
         showImportExport,
         showBulkInsert,
         showAddButton,
@@ -899,7 +899,7 @@ const DynamicCRUD = ({
         handleBulkInsert,
         handleAdd,
         customActionButtons,
-        setShowImportModal       
+        setShowImportModal
     ]);
 
 
@@ -964,8 +964,8 @@ const DynamicCRUD = ({
 
             <Row className="justify-content-center">
                 <Col lg={12} xl={12}>
-                    <Card 
-                    style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+                    <Card
+                        style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
                                 <Loader />

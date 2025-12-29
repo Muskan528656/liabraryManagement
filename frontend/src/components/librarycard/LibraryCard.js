@@ -25,11 +25,11 @@ const LibraryCard = (props) => {
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
 
- 
+
 
   const fetchSubscriptions = useCallback(async () => {
     try {
- 
+
       const subscriptionApi = new DataApi("subscriptions");
       const response = await subscriptionApi.fetchAll();
 
@@ -48,7 +48,7 @@ const LibraryCard = (props) => {
         }
       }
 
- 
+
       setSubscriptionsData(subscriptionData);
       return subscriptionData;
     } catch (error) {
@@ -61,7 +61,7 @@ const LibraryCard = (props) => {
 
   const fetchUsers = useCallback(async () => {
     try {
- 
+
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
 
@@ -77,7 +77,7 @@ const LibraryCard = (props) => {
         }
       }
 
- 
+
       setUsersData(usersData);
       return usersData;
     } catch (error) {
@@ -93,7 +93,7 @@ const LibraryCard = (props) => {
         setLoadingConfig(true);
         setConfigError(null);
 
- 
+
 
 
         const [subscriptions, users] = await Promise.all([
@@ -108,12 +108,12 @@ const LibraryCard = (props) => {
           ...props
         };
 
-      
+
 
         const config = await getLibraryCardConfig(externalData, timeZone);
         setBaseConfig(config);
 
- 
+
 
       } catch (error) {
         console.error("Error initializing config:", error);
@@ -132,7 +132,7 @@ const LibraryCard = (props) => {
 
     const buildFinalConfig = () => {
       try {
- 
+
 
 
         const final = {
@@ -214,7 +214,7 @@ const LibraryCard = (props) => {
 
 
           onSubmit: async (formData, setFormData) => {
- 
+
 
 
             if (!formData.user_id) {
@@ -247,7 +247,7 @@ const LibraryCard = (props) => {
             }
 
             try {
- 
+
               const response = await DataApi.createLibraryCard(formData);
 
               if (!response?.data?.success) {
@@ -258,7 +258,7 @@ const LibraryCard = (props) => {
               }
 
               const newCard = response.data.data;
- 
+
 
 
               handleModalOpen(newCard);
@@ -302,7 +302,7 @@ const LibraryCard = (props) => {
 
 
             onDataLoad: (data) => {
- 
+
 
               if (!Array.isArray(data)) return data;
 
@@ -409,7 +409,7 @@ const LibraryCard = (props) => {
           }
         };
 
- 
+
         setFinalConfig(final);
 
       } catch (error) {
@@ -430,7 +430,7 @@ const LibraryCard = (props) => {
   }, [showBarcodeModal, selectedCard]);
 
   const handleModalOpen = (card) => {
- 
+
     setSelectedCard(card);
     setBarcodeError(null);
     setShowBarcodeModal(true);
@@ -540,7 +540,7 @@ const LibraryCard = (props) => {
   }
 
   const handleLibraryImport = (data) => {
- 
+
     alert(`Importing ${data.type} data from file: ${data.file.name}`);
 
   };
@@ -557,25 +557,24 @@ const LibraryCard = (props) => {
 
         headerActions={[
           {
-            key: "import-member",
-            label: "Import",
-            icon: "fa-solid fa-upload",
+
             variant: "outline-primary",
+            size: "sm",
+            icon: "fa-solid fa-arrow-down",
+            key: "import-member",
             onClick: () => setShowLibraryImportModal(true),
             order: 1,
           },
         ]}
       />
 
-
-      {/* Library Import Modal */}
       <LibraryImportModal
         show={showLibraryImportModal}
         onClose={() => setShowLibraryImportModal(false)}
         onImport={handleLibraryImport}
       />
 
-      {/* Barcode Modal */}
+     
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
