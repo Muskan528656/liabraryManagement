@@ -26,16 +26,16 @@ async function create(submissionData, userId) {
   if (!schema) throw new Error("Schema not initialized");
   if (!submissionData.issue_id) throw new Error("Issue ID required");
 
-  const client = await sql.connect();
+
 
   try {
-    await client.query('BEGIN');
+    await sql.query('BEGIN');
 
     console.log(" Starting book submission for issue_id:", submissionData.issue_id);
     console.log(" Submission data:", submissionData);
 
 
-    const issueRes = await client.query(
+    const issueRes = await sql.query(
       `SELECT bi.*, b.title, b.isbn, b.available_copies
        FROM demo.book_issues bi
        LEFT JOIN demo.books b ON bi.book_id = b.id
@@ -50,7 +50,7 @@ async function create(submissionData, userId) {
     if (issue.return_date) throw new Error("Book already returned");
 
 
-    const memberRes = await client.query(
+    const memberRes = await sql.query(
       `SELECT * FROM demo.library_members 
        WHERE id = $1 AND is_active = true`,
       [issue.issued_to]
@@ -61,7 +61,7 @@ async function create(submissionData, userId) {
     console.log(" Member found:", member.id, "Name:", member.first_name, member.last_name);
 
 
-    const settingRes = await client.query(
+    const settingRes = await sql.query(
       `SELECT * FROM demo.library_setting LIMIT 1`
     );
 
@@ -91,7 +91,7 @@ async function create(submissionData, userId) {
       try {
         console.log(" Fetching purchase price for book_id:", issue.book_id);
 
-        const purchaseRes = await client.query(
+        const purchaseRes = await sql.query(
           `SELECT unit_price, purchase_date, quantity, total_amount
            FROM demo.purchases 
            WHERE book_id = $1 
@@ -148,7 +148,7 @@ async function create(submissionData, userId) {
     console.log(" Total penalty:", totalPenalty, "Type:", penaltyType);
 
 
-    const submissionRes = await client.query(
+    const submissionRes = await sql.query(
       `INSERT INTO demo.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
          condition_before, condition_after, remarks,
@@ -173,7 +173,7 @@ async function create(submissionData, userId) {
 
 
     if (conditionAfterLower !== "lost") {
-      await client.query(
+      await sql.query(
         `UPDATE demo.books
          SET available_copies = COALESCE(available_copies, 0) + 1,
              lastmodifieddate = CURRENT_TIMESTAMP,
@@ -201,7 +201,7 @@ async function create(submissionData, userId) {
       try {
         console.log(" Inserting into penalty_master with penalty:", totalPenalty);
 
-        const penaltyInsertResult = await client.query(
+        const penaltyInsertResult = await sql.query(
           `INSERT INTO demo.penalty_master
            (company_id, penalty_type, book_id, issue_id,
             book_title, isbn, issued_to, card_number,
@@ -251,7 +251,7 @@ async function create(submissionData, userId) {
       issueStatus = 'damaged';
     }
 
-    await client.query(
+    await sql.query(
       `UPDATE demo.book_issues
        SET return_date = CURRENT_DATE, 
            status = $3,
@@ -263,7 +263,7 @@ async function create(submissionData, userId) {
 
     console.log(" Book issue marked as", issueStatus, "ID:", issue.id);
 
-    await client.query('COMMIT');
+    await sql.query('COMMIT');
     console.log("Transaction completed successfully");
 
 
@@ -317,7 +317,7 @@ async function create(submissionData, userId) {
     };
 
   } catch (error) {
-    await client.query('ROLLBACK');
+    await sql.query('ROLLBACK');
     console.error(" Book submission failed:", error);
     console.error("Error stack:", error.stack);
 
@@ -329,7 +329,7 @@ async function create(submissionData, userId) {
 
     throw error;
   } finally {
-    client.release();
+
   }
 }
 async function findById(id) {
@@ -393,15 +393,15 @@ async function findAll() {
 async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
   if (!schema) throw new Error("Schema not initialized");
 
-  const client = await sql.connect();
+
 
   try {
-    await client.query('BEGIN');
+    await sql.query('BEGIN');
 
     console.log("Cancelling issue:", issueId);
 
 
-    const issueRes = await client.query(
+    const issueRes = await sql.query(
       `SELECT * FROM demo.book_issues WHERE id = $1`,
       [issueId]
     );
@@ -423,7 +423,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
     try {
 
-      await client.query(
+      await sql.query(
         `UPDATE demo.book_issues 
          SET status = 'cancelled',
              return_date = CURRENT_TIMESTAMP,
@@ -437,11 +437,11 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
     } catch (statusError) {
 
-      console.log(" 'cancelled' status not allowed, trying 'returned'");
+      console.log(" 'cancelled' status not allowed, trying 'cancelled'");
 
-      await client.query(
+      await sql.query(
         `UPDATE demo.book_issues 
-         SET status = 'returned',
+         SET status = 'cancelled',
              return_date = CURRENT_TIMESTAMP,
              lastmodifieddate = CURRENT_TIMESTAMP,
              lastmodifiedbyid = $1,
@@ -449,7 +449,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
          WHERE id = $3`,
         [userId, reason, issueId]
       );
-      finalStatus = 'returned';
+      finalStatus = 'cancelled';
       statusUpdated = true;
     }
 
@@ -457,18 +457,17 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       throw new Error("Failed to update issue status");
     }
 
+    console.log("issue.book_idissue.book_id", issue.book_id)
 
-    await client.query(
+    await sql.query(
       `UPDATE demo.books
-       SET available_copies = COALESCE(available_copies, 0) + 1,
-           lastmodifieddate = CURRENT_TIMESTAMP,
-           lastmodifiedbyid = $2
-       WHERE id = $1`,
+   SET available_copies = available_copies + 1,
+       lastmodifieddate = CURRENT_TIMESTAMP,
+       lastmodifiedbyid = $2
+   WHERE id = $1`,
       [issue.book_id, userId]
     );
-
-
-    await client.query(
+    await sql.query(
       `INSERT INTO demo.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
          condition_before, condition_after, remarks,
@@ -484,7 +483,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       ]
     );
 
-    await client.query('COMMIT');
+    await sql.query('COMMIT');
     console.log(` Issue ${finalStatus} successfully:`, issueId);
 
     return {
@@ -500,11 +499,11 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
     };
 
   } catch (error) {
-    await client.query('ROLLBACK');
+    await sql.query('ROLLBACK');
     console.error("Error cancelling issue:", error);
     throw error;
   } finally {
-    client.release();
+    //do nothing
   }
 }
 async function findByIssueId(issueId) {
@@ -1247,14 +1246,10 @@ async function checkOverdueStatus(issueId) {
   }
 }
 
-console.log("✅ Cron jobs scheduled - Each member will receive only ONE email per day for each reminder type");
+console.log(" Cron jobs scheduled - Each member will receive only ONE email per day for each reminder type");
 
-cron.schedule("*/5 * * * * *", sendDueReminder);
-cron.schedule("*/5 * * * * *", sendOverdueReminder);
-
-// cron.schedule("0 9 * * *", sendDueReminder);
-// cron.schedule("0 10 * * *", sendOverdueReminder);
-
+cron.schedule("0 0 9 * * *", sendDueReminder);
+cron.schedule("0 0 9 * * *", sendOverdueReminder);
 
 module.exports = {
   init,
