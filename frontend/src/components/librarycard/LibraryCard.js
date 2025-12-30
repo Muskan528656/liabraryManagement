@@ -25,11 +25,11 @@ const LibraryCard = (props) => {
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
 
-  console.log("sdfghjgfdewertyu", timeZone);
+
 
   const fetchSubscriptions = useCallback(async () => {
     try {
-      console.log("Fetching subscriptions data...");
+
       const subscriptionApi = new DataApi("subscriptions");
       const response = await subscriptionApi.fetchAll();
 
@@ -48,7 +48,7 @@ const LibraryCard = (props) => {
         }
       }
 
-      console.log(`Fetched ${subscriptionData.length} subscriptions`);
+
       setSubscriptionsData(subscriptionData);
       return subscriptionData;
     } catch (error) {
@@ -61,7 +61,7 @@ const LibraryCard = (props) => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      console.log("Fetching users data...");
+
       const userApi = new DataApi("user");
       const response = await userApi.fetchAll();
 
@@ -77,7 +77,7 @@ const LibraryCard = (props) => {
         }
       }
 
-      console.log(`Fetched ${usersData.length} users`);
+
       setUsersData(usersData);
       return usersData;
     } catch (error) {
@@ -93,7 +93,7 @@ const LibraryCard = (props) => {
         setLoadingConfig(true);
         setConfigError(null);
 
-        console.log("Initializing library card configuration...");
+
 
 
         const [subscriptions, users] = await Promise.all([
@@ -108,16 +108,12 @@ const LibraryCard = (props) => {
           ...props
         };
 
-        console.log("External data for config:", {
-          subscriptionsCount: subscriptions.length,
-          usersCount: users.length
-        });
 
 
         const config = await getLibraryCardConfig(externalData, timeZone);
         setBaseConfig(config);
 
-        console.log("Base config loaded successfully");
+
 
       } catch (error) {
         console.error("Error initializing config:", error);
@@ -136,7 +132,7 @@ const LibraryCard = (props) => {
 
     const buildFinalConfig = () => {
       try {
-        console.log("Building final configuration...");
+
 
 
         const final = {
@@ -218,7 +214,7 @@ const LibraryCard = (props) => {
 
 
           onSubmit: async (formData, setFormData) => {
-            console.log("Submitting form data:", formData);
+
 
 
             if (!formData.user_id) {
@@ -251,7 +247,7 @@ const LibraryCard = (props) => {
             }
 
             try {
-              console.log("Sending data to API:", formData);
+
               const response = await DataApi.createLibraryCard(formData);
 
               if (!response?.data?.success) {
@@ -262,7 +258,7 @@ const LibraryCard = (props) => {
               }
 
               const newCard = response.data.data;
-              console.log("Card created successfully:", newCard);
+
 
 
               handleModalOpen(newCard);
@@ -306,7 +302,7 @@ const LibraryCard = (props) => {
 
 
             onDataLoad: (data) => {
-              console.log("Transforming table data:", data?.length);
+
 
               if (!Array.isArray(data)) return data;
 
@@ -413,7 +409,7 @@ const LibraryCard = (props) => {
           }
         };
 
-        console.log("Final configuration built successfully");
+
         setFinalConfig(final);
 
       } catch (error) {
@@ -434,7 +430,7 @@ const LibraryCard = (props) => {
   }, [showBarcodeModal, selectedCard]);
 
   const handleModalOpen = (card) => {
-    console.log("Opening barcode modal for card:", card);
+
     setSelectedCard(card);
     setBarcodeError(null);
     setShowBarcodeModal(true);
@@ -544,14 +540,14 @@ const LibraryCard = (props) => {
   }
 
   const handleLibraryImport = (data) => {
-    console.log("Library Import Data:", data);
+
     alert(`Importing ${data.type} data from file: ${data.file.name}`);
- 
+
   };
 
   return (
     <>
-    
+
 
       <DynamicCRUD
         {...finalConfig}
@@ -561,35 +557,34 @@ const LibraryCard = (props) => {
 
         headerActions={[
           {
-            key: "import-member",
-            label: "Import",
-            icon: "fa-solid fa-upload",
+
             variant: "outline-primary",
+            size: "sm",
+            icon: "fa-solid fa-arrow-down",
+            key: "import-member",
             onClick: () => setShowLibraryImportModal(true),
             order: 1,
           },
         ]}
       />
 
-
-      {/* Library Import Modal */}
       <LibraryImportModal
         show={showLibraryImportModal}
         onClose={() => setShowLibraryImportModal(false)}
         onImport={handleLibraryImport}
       />
 
-      {/* Barcode Modal */}
+     
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
           style={{
-            background: "var(--primar-color)",
+            backgroundColor: "var(--primary-background-color)",
             color: "white",
             borderBottom: "none"
           }}
         >
-          <Modal.Title style={{ color: "white" }}>
+          <Modal.Title style={{ color: "var(--primary-color)", }}>
             <i className="fa-solid fa-id-card me-2"></i> Member Information
           </Modal.Title>
         </Modal.Header>
@@ -598,7 +593,7 @@ const LibraryCard = (props) => {
           {selectedCard && (
             <div style={{
               background: "white",
-              border: "2px solid #6f42c1",
+              border: "2px solid var(--primary-color)",
               borderRadius: "10px",
               padding: "20px",
               maxWidth: "500px",
@@ -615,7 +610,7 @@ const LibraryCard = (props) => {
                       height: '80px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '3px solid #6f42c1'
+                      border: '3px solid var(--primary-color)',
                     }}
                   />
                 ) : (
@@ -628,9 +623,9 @@ const LibraryCard = (props) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto',
-                    border: '3px solid #6f42c1'
+                    border: '3px solid var(--primary-color)',
                   }}>
-                    <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "#6f42c1" }}></i>
+                    <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "var(--primary-color)" }}></i>
                   </div>
                 )}
               </div>
@@ -683,7 +678,7 @@ const LibraryCard = (props) => {
                   marginTop: "10px",
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: "#6f42c1",
+                  color: "var(--primary-color)",
                   fontFamily: "monospace"
                 }}>
                   {generateCardNumber(selectedCard)}

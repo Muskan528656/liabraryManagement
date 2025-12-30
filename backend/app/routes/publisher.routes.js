@@ -72,7 +72,7 @@ module.exports = (app) => {
  
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            console.log("check--->", req)
+ 
             return res.status(400).json({
                 success: false,
                 errors: errors.array(),
@@ -80,8 +80,8 @@ module.exports = (app) => {
         }
         try {
             const userId = req.userinfo.id;
-            console.log("user id is", req.userinfo.id)
-            console.log("id is ", userId)
+ 
+ 
             Publisher.init(req.userinfo.tenantcode);
             const data = await Publisher.insertPublisher(req.body, userId);
             return res.status(201).json({
@@ -108,9 +108,9 @@ module.exports = (app) => {
     ], fetchUser, async (req, res) => {
  
         const errors = validationResult(req);
-        console.log("errors=>", errors)
+ 
         if (!errors.isEmpty()) {
-            console.log("check--->")
+ 
             return res.status(400).json({
                 success: false,
                 errors: errors.array(),

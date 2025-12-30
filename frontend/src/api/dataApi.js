@@ -98,7 +98,7 @@ export default class DataApi {
 
 
     fetchIssuedCountByBookId(bookId) {
-        console.log("AAAA", bookId)
+ 
         if (!bookId) throw new Error("Book ID required");
 
         const url = `${this.baseUrl}/${bookId}/issued-count`;
@@ -106,7 +106,7 @@ export default class DataApi {
     }
 
     fetchSubmitCountByBookId(bookId) {
-        console.log("bookId in api is", bookId);
+ 
         const url = bookId ? `${this.baseUrl}/${bookId}/submit-count` : this.baseUrl;
         return axios.get(url, {
             headers: {
@@ -139,9 +139,9 @@ export default class DataApi {
     }
 
     updateLibraryCard(formData, id) {
+ 
         return axios.put(`${this.baseUrl}/${id}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 ...this.getHeaders()
             }
         });

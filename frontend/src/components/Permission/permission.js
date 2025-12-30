@@ -20,7 +20,7 @@ const Permission = () => {
             setLoading(true);
             const api = new DataApi("permissions");
             const result = await api.fetchAll();
-            console.log("API Response:", result);
+ 
 
             let permissionsData = [];
 
@@ -30,7 +30,7 @@ const Permission = () => {
                 permissionsData = result.data;
             }
 
-            console.log("Permissions Data:", permissionsData);
+ 
             setPermissions(permissionsData || []);
             setLoading(false);
         } catch (err) {
@@ -44,7 +44,7 @@ const Permission = () => {
         try {
             const api = new DataApi("user-role");
             const res = await api.fetchAll();
-            console.log("Roles API response:", res);
+ 
 
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
             setRoles(rolesArray);
@@ -60,7 +60,7 @@ const Permission = () => {
 
     const handleSavePermission = async (formData) => {
         try {
-            console.log("Form data to save:", formData);
+ 
 
             const api = new DataApi("permissions");
             const savedPermissions = [];
@@ -84,11 +84,11 @@ const Permission = () => {
 
                 try {
                     if (existingPerm) {
-                        console.log("Updating permission:", existingPerm.id);
+ 
                         await api.update(existingPerm.id, permissionData);
                         savedPermissions.push({ ...permissionData, id: existingPerm.id });
                     } else {
-                        console.log("Creating new permission for module:", permission.module_name);
+ 
                         const response = await api.create(permissionData);
                         savedPermissions.push({ ...permissionData, id: response.data?.id });
                     }

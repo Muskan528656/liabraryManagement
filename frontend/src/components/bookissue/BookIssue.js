@@ -152,7 +152,7 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
-      console.log("reposne->>>", response)
+ 
       if (response.data && Array.isArray(response.data)) {
 
         const activeIssues = response.data.filter(
@@ -265,7 +265,7 @@ const BookIssue = () => {
             navigate(`/book/${record.book_id}`);
           }}
           style={{
-            color: "#6f42c1",
+            color: "var(--primary-color)",
             textDecoration: "none",
             fontWeight: "600",
           }}
@@ -333,7 +333,7 @@ const BookIssue = () => {
                 navigate(`/librarycard/${userId}`, { state: record });
               }}
               style={{
-                color: "#6f42c1",
+                color: "var(--primary-color)",
                 textDecoration: "none",
                 fontWeight: 500,
               }}
@@ -383,7 +383,7 @@ const BookIssue = () => {
                 window.open(`/user/${userId}`, "_blank");
               }}
               style={{
-                color: "#6f42c1",
+                color: "var(--primary-color)",
                 textDecoration: "none",
                 fontWeight: 500,
                 cursor: "pointer",
@@ -559,7 +559,7 @@ const BookIssue = () => {
                   >
                     <i
                       className="fa-solid fa-search"
-                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                      style={{ color: "var(--primary-color)", fontSize: "0.875rem" }}
                     ></i>
                   </InputGroup.Text>
 
@@ -631,7 +631,7 @@ const BookIssue = () => {
                         : "No books have been issued yet"
                     }
                     onRowClick={(issue) => {
-                      console.log("Issue clicked:", issue);
+ 
                     }}
                   />
                 </Card.Body>

@@ -25,8 +25,8 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             {value ? "Active" : "Inactive"}
         </span >
     );
-    console.log(COUNTRY_CODES)
-    console.log("exp", City_State)
+ 
+ 
 
     return {
         moduleName: "publisher",
@@ -144,9 +144,9 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
         validationRules: (formData, allBooks, editingBook) => {
             const errors = [];
 
-            console.log("formdata is->", formData);
-            console.log("errors--->", errors)
-            console.log("book", allBooks);
+ 
+ 
+ 
 
  
             if (!formData.name?.trim()) errors.push("name is required");

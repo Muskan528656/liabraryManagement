@@ -112,7 +112,7 @@ const BookSubmit = () => {
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Library Settings:", data);
+ 
 
                 let settings = {};
                 if (data.success && data.data && Array.isArray(data.data)) {
@@ -124,7 +124,7 @@ const BookSubmit = () => {
                 }
 
                 setLibrarySettings(settings);
-                console.log("Fine per day set to:", settings.fine_per_day);
+ 
             } else {
                 console.error("Failed to fetch library settings");
                 const defaultSettings = {
@@ -157,11 +157,11 @@ const BookSubmit = () => {
                 "GET"
             );
 
-            console.log("Fetch Purchase Details Response:", resp);
+ 
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Book Purchase Details:", data);
+ 
 
                 let purchaseDetails = null;
                 if (data.success && data.data) {
@@ -204,7 +204,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
-            console.log("Fetched active issues:", issues);
+ 
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -291,14 +291,14 @@ const BookSubmit = () => {
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
             );
-            console.log("Fetch Submitted Books Response:", submissionsResp);
+ 
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
             }
 
             const response = await submissionsResp.json();
             let submissions = [];
-            console.log("Submitted Books Data:", response);
+ 
             if (response.success !== undefined) {
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
@@ -976,7 +976,7 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
-            console.log("Update Issue Result:", result);
+ 
             if (result.success) {
                 PubSub.publish("RECORD_SUCCESS_TOAST", {
                     title: "Success",
@@ -1021,7 +1021,7 @@ const BookSubmit = () => {
     };
 
     const handleCancelConfirm = async () => {
-        console.log("Cancelling issue:", selectedIssue);
+ 
         if (!selectedIssue) return;
 
         try {
@@ -1214,7 +1214,7 @@ const BookSubmit = () => {
                 Object.entries(submitData).filter(([_, v]) => v !== undefined)
             );
 
-            console.log("Submitting book data:", cleanedData);
+ 
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,
@@ -1961,67 +1961,7 @@ const BookSubmit = () => {
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                                <Card.Header style={{
-                                                    background: "#f8fafc",
-                                                    border: "none",
-                                                    borderBottom: "2px solid #d1d5db",
-                                                }}>
-                                                    <Row className="align-items-center">
-                                                        <Col>
-                                                            <h5 className="mb-0 fw-bold" style={{
-                                                                color: "#1f2937",
-                                                                fontSize: "18px",
-                                                                letterSpacing: "0.3px"
-                                                            }}>
-                                                                {bookIssues.length > 0 ? "Issued Books for this ISBN" :
-                                                                    cardIssues.length > 0 ? "Issued Books for this Library Card" :
-                                                                        "All Issued Books"}
-                                                                <span style={{ color: "orange", fontSize: "14px", marginLeft: "8px" }}>
-                                                                    ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
-                                                                </span>
-                                                            </h5>
-                                                        </Col>
-                                                        <Col xs="auto">
-                                                            <InputGroup style={{ maxWidth: "250px" }}>
-                                                                <InputGroup.Text
-                                                                    style={{
-                                                                        background: "#1e3a8a",
-                                                                        borderColor: "#1e3a8a",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                >
-                                                                    <i className="fa-solid fa-search" style={{ color: "White" }}></i>
-                                                                </InputGroup.Text>
-
-                                                                <Form.Control
-                                                                    placeholder="Search by title, ISBN, name..."
-                                                                    value={searchTerm}
-                                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                                    style={{
-                                                                        borderColor: "#1e3a8a",
-                                                                        fontSize: "0.875rem",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                />
-
-                                                                {searchTerm && (
-                                                                    <Button
-                                                                        variant="outline-secondary"
-                                                                        onClick={() => setSearchTerm("")}
-                                                                        style={{
-                                                                            border: "1px solid #1e3a8a",
-                                                                            backgroundColor: "white",
-                                                                            borderRadius: "0 6px 6px 0",
-                                                                            height: "38px"
-                                                                        }}
-                                                                    >
-                                                                        <i className="fa-solid fa-times"></i>
-                                                                    </Button>
-                                                                )}
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Row>
-                                                </Card.Header>
+                                       
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
                                                     columns={issueColumns}

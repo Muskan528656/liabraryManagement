@@ -27,13 +27,13 @@ const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
-console.log("Root Directory:", rootDir);
+ 
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
-console.log("frontendPublicDir:", frontendPublicDir);
+ 
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
-console.log("frontendUploadsDir:", frontendUploadsDir);
+ 
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
-console.log("libraryCardUploadDir:", libraryCardUploadDir);
+ 
 
 const ensureDirectory = (dirPath) => {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -49,7 +49,7 @@ const deleteFileIfExists = (filePath = "") => {
     try {
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
-        console.log("🗑 Deleted file:", absolutePath);
+ 
       }
     } catch (err) {
       console.error("Error deleting file:", err.message);
@@ -196,7 +196,7 @@ module.exports = (app) => {
 
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
-          console.log("📷 Image uploaded:", cardData.image);
+ 
         } else if (req.body.image && req.body.image.startsWith("data:image/")) {
 
           try {
@@ -260,8 +260,8 @@ module.exports = (app) => {
       const cardData = { ...req.body };
       const previousImagePath = existingCard.image;
 
-      console.log("🔄 Updating library card:", req.params.id);
-      console.log("Update data:", cardData);
+ 
+ 
 
 
       if (req.file) {
@@ -327,7 +327,7 @@ module.exports = (app) => {
         }
       });
 
-      console.log("Final update data:", fieldsToUpdate);
+ 
 
 
       const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);

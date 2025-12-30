@@ -13,7 +13,7 @@ const statusBadge = (value) => (
 );
 
 export const getSubscriptionConfig = (externalData = {}, allowedBooks = 10, timeZone) => {
-    console.log("Config Timezone:", timeZone);
+ 
 
     return {
         moduleName: "subscriptions",

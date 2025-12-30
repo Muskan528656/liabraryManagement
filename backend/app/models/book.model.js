@@ -83,7 +83,7 @@ async function create(bookData, userId) {
       throw new Error(`Available copies (${availableCopies}) cannot exceed total copies (${totalCopies})`);
     }
 
-    console.log("bookdataaa->>>", bookData);
+
 
     const query = `INSERT INTO ${this.schema}.books 
                    (title, author_id, category_id, isbn, total_copies, available_copies, 
@@ -110,8 +110,9 @@ async function create(bookData, userId) {
       bookData.max_age || bookData.maxAge || null,
       bookData.inventory_binding || null,
     ];
-
+    console.log("Creating book with values:", bookData.price);
     const result = await sql.query(query, values);
+    console.log("Book created with ID:", result.rows[0].id);
     return result.rows[0] || null;
 
   } catch (error) {
@@ -213,7 +214,7 @@ async function findByAgeRange(minAge, maxAge) {
     const params = [];
     let paramIndex = 1;
 
- 
+
     if (minAge !== null && minAge !== undefined) {
       query += ` AND (b.min_age IS NULL OR b.min_age <= $${paramIndex})`;
       params.push(minAge);

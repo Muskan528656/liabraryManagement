@@ -13,7 +13,7 @@
 
 const { fetchUser } = require("../middleware/fetchuser.js");
 const Dashboard = require("../models/dashboad.model.js");
-console.log('connect dashbard');
+ 
 
 module.exports = (app) => {
     var router = require("express").Router();
@@ -21,7 +21,7 @@ module.exports = (app) => {
         try {
 
             const result = await Dashboard.fetchAll();
-            console.log('dashboard fetch all result', result);
+ 
             res.status(200).json({ success: true, data: result });
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -32,10 +32,10 @@ module.exports = (app) => {
 
     router.get("/stats", async (req, res) => {
         try {
-            console.log('stats router connect');
+ 
 
             const result = await Dashboard.getDashboardStats();
-            console.log("result->>>",result)
+ 
             res.status(200).json({ success: true, data: result });
 
         } catch (error) {

@@ -23,10 +23,10 @@ export const saveImportedData = async ({
 }) => {
  
   try {
-    console.log("data =>", data);
-    console.log("relatedData =>", relatedData);
-    console.log("Available relatedData keys:", Object.keys(relatedData));
-    console.log("Form fields with select type:", formFields.filter(f => f.type === 'select').map(f => ({ name: f.name, options: f.options })));
+ 
+ 
+ 
+ 
 
     const mainApi = new DataApi(apiEndpoint);
 
@@ -80,12 +80,12 @@ export const saveImportedData = async ({
 
       // Special handling for books and vendors - check for existing records first
       if (optionKey === 'books' || optionKey === 'vendors') {
-        console.log(`Checking for existing ${optionKey} with name: ${labelValue}`);
+ 
 
         // For books, also check ISBN if available
         if (optionKey === 'books' && rowData.isbn) {
           const isbnNorm = rowData.isbn.toString().trim().toLowerCase();
-          console.log(`Checking ISBN: ${isbnNorm} for book: ${labelValue}`);
+ 
 
           // Check if book exists by ISBN
           const existingBooks = relatedData[optionKey] || [];
@@ -94,7 +94,7 @@ export const saveImportedData = async ({
           );
 
           if (bookByISBN) {
-            console.log(`Found existing book by ISBN: ${bookByISBN.title} (ID: ${bookByISBN.id})`);
+ 
             index.set(norm, bookByISBN.id);
             return bookByISBN.id;
           }
@@ -107,7 +107,7 @@ export const saveImportedData = async ({
         }
 
         // If not found, proceed to auto-create if configured
-        console.log(`No existing ${optionKey} found for: ${labelValue}, will attempt to create if autoCreateRelated is configured`);
+ 
       }
 
       const cfg = autoCreateRelated[optionKey];
@@ -135,7 +135,7 @@ export const saveImportedData = async ({
         const isbnValue = rowData.isbn || rowData.ISBN || rowData.Isbn || rowData['Book ISBN'] || rowData['book isbn'] || rowData['ISBN Number'] || rowData['isbn number'];
         if (isbnValue) {
           payload.isbn = isbnValue;
-          console.log(`Including ISBN "${isbnValue}" in book creation payload`);
+ 
         }
       }
 
@@ -160,17 +160,17 @@ export const saveImportedData = async ({
  
     const transformedData = [];
 
-    console.log("Starting data transformation...");
-    console.log("Available formFields:", formFields.map(f => ({ name: f.name, label: f.label, type: f.type, options: f.options })));
-    console.log("Available relatedData keys:", Object.keys(relatedData));
+ 
+ 
+ 
 
     for (const row of data) {
       const transformed = {};
-      console.log("Processing row:", row);
+ 
 
       for (const key of Object.keys(row)) {
         const rawValue = row[key];
-        console.log(`Processing column "${key}" with value "${rawValue}"`);
+ 
 
         // Improved field mapping logic
         const formField = formFields.find((f) => {
@@ -200,12 +200,12 @@ export const saveImportedData = async ({
           return false;
         });
 
-        console.log(`Found formField for "${key}":`, formField ? { name: formField.name, type: formField.type, options: formField.options } : null);
+ 
 
         if (!formField) {
           const safeKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
           transformed[safeKey] = rawValue;
-          console.log(`No formField found, using safe key "${safeKey}"`);
+ 
           continue;
         }
 
@@ -215,13 +215,13 @@ export const saveImportedData = async ({
           const optionKey =
             typeof formField.options === "string" ? formField.options : null;
 
-          console.log(`Processing select field "${fieldName}" with optionKey "${optionKey}"`);
-          console.log(`Available relatedData for "${optionKey}":`, relatedData[optionKey]);
+ 
+ 
 
           if (optionKey) {
             const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
             transformed[fieldName] = relatedId;
-            console.log(`Converted "${rawValue}" to ID "${relatedId}" for field "${fieldName}"`);
+ 
 
             // For required select fields, warn if ID is null
             if (formField.required && !relatedId) {
@@ -229,19 +229,19 @@ export const saveImportedData = async ({
             }
           } else {
             transformed[fieldName] = null;
-            console.log(`No optionKey found for select field "${fieldName}"`);
+ 
         }
         } else if (formField.type === "number") {
           const num = parseInt(rawValue, 10);
           transformed[fieldName] = isNaN(num) ? 0 : num;
-          console.log(`Converted "${rawValue}" to number ${transformed[fieldName]} for field "${fieldName}"`);
+ 
         } else {
           transformed[fieldName] = rawValue;
-          console.log(`Using raw value "${rawValue}" for field "${fieldName}"`);
+ 
         }
       }
 
-      console.log("Transformed row:", transformed);
+ 
       transformedData.push(transformed);
     }
 

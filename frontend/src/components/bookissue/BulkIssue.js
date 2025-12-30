@@ -1,6 +1,4 @@
 
-
-// @ts-nocheck
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -118,6 +116,7 @@ const BulkIssue = () => {
     }
   }, [selectedCard, subscriptions, plans]);
 
+
   useEffect(() => {
     if (books.length === 0) {
       setFilteredBooksByAge([]);
@@ -125,35 +124,55 @@ const BulkIssue = () => {
     }
 
     if (!selectedCard || memberAge === null) {
+
       setFilteredBooksByAge(books);
       return;
     }
+
+
+
     const filtered = books.filter(book => {
-      const minAge = parseInt(book.min_age) || 0;
-      const maxAge = parseInt(book.max_age) || 999;
+
+      const minAge = getNumberValue(book.min_age);
+      const maxAge = getNumberValue(book.max_age);
 
 
-      if (minAge === 0 && maxAge === 0) {
-        return true;
+      const bookTitle = book.title || "Unknown Book";
+      const bookAgeRange = `${minAge}-${maxAge}`;
+
+
+      const isGeneralBook = (minAge === 0 && maxAge === 0) ||
+        (book.min_age === null && book.max_age === null) ||
+        (minAge === 0 && maxAge === 999);
+
+
+
+      const ageRangeWidth = maxAge - minAge;
+      const isNarrowRange = ageRangeWidth <= 5;
+
+
+      const isWithinRange = memberAge >= minAge && memberAge <= maxAge;
+
+      const shouldInclude = isGeneralBook || (isNarrowRange && isWithinRange);
+
+      if (shouldInclude) {
+
+      } else {
+
       }
-      const isAgeValid = memberAge >= minAge && memberAge <= maxAge;
 
-      return isAgeValid;
+      return shouldInclude;
     });
 
     setFilteredBooksByAge(filtered);
-    console.log("Age filtering:", {
-      memberAge,
-      totalBooks: books.length,
-      filteredBooks: filtered.length,
-      booksWithAgeRestriction: books.filter(b => {
-        const minAge = parseInt(b.min_age) || 0;
-        const maxAge = parseInt(b.max_age) || 999;
-        return minAge > 0 || maxAge > 0;
-      }).length
-    });
+
 
   }, [books, selectedCard, memberAge]);
+  const getNumberValue = (value) => {
+    if (value === null || value === undefined || value === '') return 0;
+    const num = parseInt(value);
+    return isNaN(num) ? 0 : num;
+  };
 
   const resetMemberInfo = () => {
     setMemberInfo(null);
@@ -222,6 +241,9 @@ const BulkIssue = () => {
         plansList = planResponse;
       }
 
+
+
+
       setBooks(booksList);
       setFilteredBooksByAge(booksList);
       setUsers(usersList);
@@ -269,23 +291,21 @@ const BulkIssue = () => {
         const member = memberResp.data;
         setMemberInfo(member);
 
-
         const memberDob = member.dob || member.date_of_birth || member.birth_date;
         let age = null;
 
         if (memberDob) {
           age = calculateMemberAge(memberDob);
           setMemberAge(age);
-        }
-        if (memberDob) {
-          age = calculateMemberAge(memberDob);
-          setMemberAge(age);
-          console.log("Member age calculated:", { dob: memberDob, age });
+          console.log("Member age calculated:", {
+            dob: memberDob,
+            age,
+            memberName: `${member.first_name || ''} ${member.last_name || ''}`
+          });
         } else {
           setMemberAge(null);
-          console.log("No DOB found for member");
-        }
 
+        }
 
         let personalAllowed = 0;
         if (member.allowed_books !== undefined && member.allowed_books !== null) {
@@ -303,7 +323,6 @@ const BulkIssue = () => {
         setMemberPersonalAllowedBooks(personalAllowed);
         setMemberExtraAllowance(personalAllowed);
 
-
         let planId = null;
         if (member.plan_id) {
           planId = member.plan_id;
@@ -317,7 +336,6 @@ const BulkIssue = () => {
         let planDuration = 7;
         let dailyLimit = 2;
 
-
         if (planId && plans.length > 0) {
           plan = plans.find(p => {
             return (
@@ -327,11 +345,11 @@ const BulkIssue = () => {
           });
 
           if (plan) {
-
             subscriptionBooks = parseInt(plan.allowed_books || 0);
             if (isNaN(subscriptionBooks) || subscriptionBooks < 0) {
               subscriptionBooks = 0;
-            } if (plan.duration_days) {
+            }
+            if (plan.duration_days) {
               planDuration = parseInt(plan.duration_days);
             }
 
@@ -521,65 +539,56 @@ const BulkIssue = () => {
   };
 
   const getBookOptions = () => {
-    const booksToShow = filteredBooksByAge.length > 0 ? filteredBooksByAge : books;
+    const booksToShow = filteredBooksByAge;
 
-    console.log("getBookOptions:", {
-      totalBooks: books.length,
-      filteredBooks: filteredBooksByAge.length,
-      memberAge,
-      booksToShow: booksToShow.length
-    });
 
-    // Define age groups
-    const ageGroups = [
-      { label: "General (All Ages)", min: 0, max: 0 },
-      { label: "0-5 years", min: 0, max: 5 },
-      { label: "6-12 years", min: 6, max: 12 },
-      { label: "13-18 years", min: 13, max: 18 },
-      { label: "19-25 years", min: 19, max: 25 },
-      { label: "26+ years", min: 26, max: 999 }
-    ];
+    if (booksToShow.length === 0) {
+      return [{
+        label: selectedCard && memberAge !== null
+          ? `No books available for age ${memberAge} years`
+          : "No books available",
+        options: []
+      }];
+    }
 
-    // Filter groups based on member age
-    const relevantGroups = memberAge !== null
-      ? ageGroups.filter(group => {
-          if (group.min === 0 && group.max === 0) {
-            // General group: show if member age is null or if there are general books
-            return true;
-          } else {
-            // Specific age groups: show only if member's age falls within this group
-            return memberAge >= group.min && memberAge <= group.max;
-          }
-        })
-      : ageGroups; // If no member selected, show all groups
+    const options = booksToShow.map((book) => {
+      const minAge = getNumberValue(book.min_age);
+      const maxAge = getNumberValue(book.max_age);
 
-    // Group books by age categories
-    const groupedOptions = relevantGroups.map(group => {
-      const groupBooks = booksToShow.filter(book => {
-        const minAge = parseInt(book.min_age) || 0;
-        const maxAge = parseInt(book.max_age) || 999;
+      const isGeneral = (minAge === 0 && maxAge === 0) ||
+        (book.min_age === null && book.max_age === null);
 
-        if (group.min === 0 && group.max === 0) {
-          // General books: no age restrictions or min_age = 0 and max_age = 0
-          return minAge === 0 && maxAge === 0;
-        } else {
-          // Specific age groups: check if book's age range fits within the group
-          return minAge <= group.max && maxAge >= group.min;
-        }
-      });
+      const ageLabel = isGeneral ? "All Ages" : `${minAge}-${maxAge} years`;
+
+
+      const isAlreadyIssued = selectedCard ? isBookIssuedToSelectedCard(book.id) : false;
+
+      const isOutOfStock = book.available_copies !== undefined && parseInt(book.available_copies) <= 0;
+
+      let label = `${book.title} ${book.isbn ? `(${book.isbn})` : ""}`;
+
+
+      if (isAlreadyIssued) {
+        label += " (Already Issued)";
+      } else if (isOutOfStock) {
+        label += " (Out of Stock)";
+      }
 
       return {
-        label: `${group.label} (${groupBooks.length})`,
-        options: groupBooks.map((b) => ({
-          value: b.id,
-          label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""}`,
-          subLabel: `Available: ${b.available_copies || 0}`,
-          data: b,
-        }))
+        value: book.id,
+        label: label,
+        subLabel: `Available: ${book.available_copies || 0} | Age: ${ageLabel}`,
+        data: book,
+        isDisabled: isAlreadyIssued || isOutOfStock,
       };
-    }).filter(group => group.options.length > 0); // Only show groups with books
+    });
 
-    return groupedOptions;
+    return [{
+      label: selectedCard && memberAge !== null
+        ? `Books for age ${memberAge} years (${booksToShow.length})`
+        : `All Books (${booksToShow.length})`,
+      options: options
+    }];
   };
 
   const availableForSelect = (option) => {
@@ -655,7 +664,6 @@ const BulkIssue = () => {
       return false;
     }
 
-
     if (selectedBooks.length > dailyLimitCount) {
       showErrorToast(
         `Daily limit is ${dailyLimitCount} books per day. ` +
@@ -710,6 +718,7 @@ const BulkIssue = () => {
       );
       return false;
     }
+
     const unavailableBooks = [];
     selectedBooks.forEach(book => {
       const bookData = book.data;
@@ -724,6 +733,7 @@ const BulkIssue = () => {
       );
       return false;
     }
+
     if (memberInfo && memberInfo.is_active !== undefined && !memberInfo.is_active) {
       showErrorToast("This library member is inactive. Please select an active member.");
       return false;
@@ -995,27 +1005,7 @@ const BulkIssue = () => {
       </div>
     </Tooltip>
   );
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
 
-  // const memberAge = memberInfo ? calculateAge(memberInfo.dob) : null;
-  const ageFilteredBooks = getBookOptions().filter((book) => {
-    if (memberAge === null) return true;
-
-    const minAge = book.min_age ?? 0;
-    const maxAge = book.max_age ?? Infinity;
-
-    return memberAge >= minAge && memberAge <= maxAge;
-  });
   return (
     <Container
       fluid
@@ -1423,15 +1413,6 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {/* {selectedCard && memberInfo && memberInfo.is_active &&
-                    selectedBooks.length >= Math.min(remainingForCard, remainingForToday) &&
-                    Math.min(remainingForCard, remainingForToday) > 0 && (
-                      <Form.Text className="text-warning fw-bold">
-                        <i className="fa-solid fa-lock me-1"></i>
-                        You have selected the maximum allowed books for this transaction.
-                      </Form.Text>
-                    )} */}
-
                   {selectedCard && (
                     <Form.Text className="text-dark small d-block mt-1">
                       <i className="fa-solid fa-lightbulb me-1"></i>
@@ -1439,12 +1420,12 @@ const BulkIssue = () => {
                     </Form.Text>
                   )}
 
-                  {/* {selectedCard && memberAge !== null && (
+                  {selectedCard && memberAge !== null && (
                     <Form.Text className="text-info small d-block mt-1">
                       <i className="fa-solid fa-filter me-1"></i>
                       Showing books filtered for age {memberAge} years. {filteredBooksByAge.length} of {books.length} books available.
                     </Form.Text>
-                  )} */}
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -1550,13 +1531,10 @@ const BulkIssue = () => {
                       onChange={(e) => setDueDate(e.target.value)}
                       min={issueDate}
                     />
-                    <Form.Text className="text-muted small">
-                      Duration: {durationDays} days
-                    </Form.Text>
                   </Col>
                   <Col md={4}>
                     <Button
-                      className="w-100 py-2 fw-bold text-white border-0"
+                      className="btn btn-custom"
                       style={{
                         backgroundColor: `var(--primary-color)`,
                       }}
@@ -1581,10 +1559,13 @@ const BulkIssue = () => {
                         </>
                       ) : (
                         <>
-                          <i className="fa-solid fa-book me-2"></i>
-                          Confirm Issue ({selectedBooks.length})
+                          <i className=" fa-solid fa-book me-2"></i>
+                          Confirm Issue
                         </>
                       )}
+                      <Form.Text className="m-1 text-white small">
+                        {durationDays} days
+                      </Form.Text>
                     </Button>
                   </Col>
                 </Row>

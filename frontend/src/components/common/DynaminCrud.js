@@ -890,7 +890,7 @@ const DynamicCRUD = ({
 
         return buttons;
     }, [
-        showImportButton,       
+        showImportButton,
         showImportExport,
         showBulkInsert,
         showAddButton,
@@ -899,7 +899,7 @@ const DynamicCRUD = ({
         handleBulkInsert,
         handleAdd,
         customActionButtons,
-        setShowImportModal       
+        setShowImportModal
     ]);
 
 
@@ -964,8 +964,8 @@ const DynamicCRUD = ({
 
             <Row className="justify-content-center">
                 <Col lg={12} xl={12}>
-                    <Card 
-                    style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
+                    <Card
+                        style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
                                 <Loader />

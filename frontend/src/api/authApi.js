@@ -9,7 +9,7 @@ const AuthApi = {
         password: credentials.password || "",
         tcode: credentials.tcode ? credentials.tcode.trim().toLowerCase() : "",
       };
-      console.log("LOGIGIG",loginData)
+ 
       let response = await fetch(constants.API_BASE_URL + "/api/auth/login", {
         method: "POST",
         mode: "cors",
@@ -18,9 +18,9 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
-      console.log("loginDataloginDataloginData",loginData)
+ 
       const result = await response.json();
-      console.log("result",result)
+ 
       debugger;
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);

@@ -105,7 +105,7 @@ module.exports = (app) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-        console.log("req.userinfo.tenantcodereq.userinfo.tenantcode", req.userinfo.tenantcode)
+ 
         Author.init(req.userinfo.tenantcode);
         const existingAuthor = await Author.findById(req.params.id);
         if (!existingAuthor) {

@@ -12,7 +12,7 @@ import { API_BASE_URL } from "../../constants/CONSTANT";
 const Company = () => {
   const { timeZone, setCompanyTimeZone } = useTimeZone();
 
-  console.log("timeZone = ", timeZone);
+ 
 
   const [Company, setCompany] = useState({
     name: "",
@@ -147,7 +147,7 @@ const Company = () => {
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
 
-          console.log('response.data ==>>', response.data);
+ 
           setCompanyTimeZone(updatedCompany.time_zone);
 
           PubSub.publish("RECORD_SAVED_TOAST", {
@@ -170,7 +170,7 @@ const Company = () => {
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
 
-          console.log('response.data ==>>', response.data);
+ 
 
           if (updatedCompany.time_zone) {
             setCompanyTimeZone(updatedCompany.time_zone);
@@ -559,7 +559,7 @@ const Company = () => {
                                 (mimeType === 'image/gif' && fileExtension === '.gif');
 
                               if (!isValidMimeType || !isValidExtension || !isValidCombination) {
-                                console.log('File rejected:', { isValidMimeType, isValidExtension, isValidCombination });
+ 
                                 PubSub.publish("RECORD_ERROR_TOAST", {
                                   title: "Error",
                                   message: "Only JPEG, PNG, and GIF images are allowed",

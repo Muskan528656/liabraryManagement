@@ -475,7 +475,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 return cleanedData;
             },
             afterSave: (response, editingItem) => {
-                console.log("Vendor saved:", response);
+ 
             }
         },
         exportConfig: {

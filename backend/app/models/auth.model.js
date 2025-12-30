@@ -23,7 +23,7 @@ async function createUser(newUser) {
 
   if (!finalCompanyId && this.companyId) {
     finalCompanyId = this.companyId;
-    console.log("Using companyId from Auth.init:", finalCompanyId);
+ 
   }
 
   if (!finalCompanyId && this.schema) {
@@ -35,7 +35,7 @@ async function createUser(newUser) {
       `, [this.schema]);
       if (companyCheck.rows.length > 0) {
         finalCompanyId = companyCheck.rows[0].id;
-        console.log("Fetched companyId from schema:", this.schema, "Company ID:", finalCompanyId);
+ 
       } else {
         console.error("Company not found for schema:", this.schema);
       }
@@ -49,7 +49,7 @@ async function createUser(newUser) {
     throw new Error(`Company ID is required for user creation. Schema: ${this.schema}`);
   }
 
-  console.log("Creating user with companyId:", finalCompanyId, "in schema:", this.schema);
+ 
 
 
   if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
@@ -73,7 +73,7 @@ async function createUser(newUser) {
       country_code,
     ]
   );
-  console.log("User created successfully. Result:", result.rows[0]);
+ 
   if (result.rowCount > 0) {
     return result.rows[0];
   }
@@ -86,7 +86,7 @@ async function findByEmail(email) {
   }
 
   const emailLower = email ? email.toLowerCase().trim() : "";
-  console.log(`Finding user by email: ${emailLower} in schema: ${this.schema}`);
+ 
 
   try {
 
@@ -97,12 +97,12 @@ async function findByEmail(email) {
     `, [emailLower]);
 
     if (!userCheck || userCheck.rows.length === 0) {
-      console.log("User not found in schema:", this.schema, "for email:", emailLower);
+ 
       return null;
     }
 
     const user = userCheck.rows[0];
-    console.log("User found:", { id: user.id, companyid: user.companyid, email: user.email });
+ 
 
 
     const result = await sql.query(`
@@ -158,7 +158,7 @@ async function findByEmail(email) {
     }
 
 
-    console.log("Company info not found, returning user only");
+ 
     return {
       userinfo: {
         id: user.id,
@@ -195,7 +195,7 @@ async function findById(id) {
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) return result.rows[0];
   } catch (error) {
-    console.log("error ", error);
+ 
   }
   return null;
 }
@@ -242,7 +242,7 @@ async function findAll(userinfo) {
       if (result.rows.length > 0) return result.rows;
     }
   } catch (error) {
-    console.log("error ", error);
+ 
   }
 
   return null;
@@ -294,7 +294,7 @@ async function getAllManager(role) {
     const result = await sql.query(query);
     return result.rows;
   } catch (errMsg) {
-    console.log("errMsg===>", errMsg);
+ 
     return [];
   }
 }
@@ -325,7 +325,7 @@ async function updateById(id, userRec) {
     );
     if (result.rowCount > 0) return "Updated successfully";
   } catch (error) {
-    console.log("error ", error);
+ 
   }
 
   return null;
@@ -367,7 +367,7 @@ async function checkCompanybyTcode(tcode) {
 
   try {
     const result = await sql.query(query, [tcode]);
-    console.log("result", result);
+ 
     if (result.rows.length > 0) {
       return result.rows;
     }

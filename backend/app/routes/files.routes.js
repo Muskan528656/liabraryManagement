@@ -86,7 +86,7 @@ module.exports = app => {
 
                     newReq.filetype = 'jpg';
                 } else {
-                    console.log('The title does not contain "jpg"');
+ 
                 }
 
                 const fileRec = await File.create(newReq, req.userinfo.id);
@@ -115,7 +115,7 @@ module.exports = app => {
                         })
                     }
                 } catch (e) {
-                    console.log("An error occurred.", e)
+ 
                 }
 
 
@@ -153,7 +153,7 @@ module.exports = app => {
                 return res.status(200).json({ "success": false, "message": "No record found" });
             }
         } catch (error) {
-            console.log('System Error:', error);
+ 
             return res.status(400).json({ "success": false, "message": error });
         }
     });
@@ -175,13 +175,13 @@ module.exports = app => {
             let filePath = process.env.FILE_UPLOAD_PATH + '/' + req.userinfo.tenantcode + '/' + parentId + "/" + fileId;
             res.attachment(fileTitle + '.' + fileType);
             res.download(filePath + '.' + fileType, fileTitle, function (err) {
-                console.log('err:', err);
+ 
                 if (err) {
                     return res.status(400).json({ "Error": false, "message": err });
                 }
             });
         } catch (error) {
-            console.log('System Error:', error);
+ 
             return res.status(400).json({ "Error": false, "message": error });
         }
     });

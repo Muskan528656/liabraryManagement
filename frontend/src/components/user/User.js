@@ -7,7 +7,7 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 const Users = (props) => {
   const { timeZone, companyInfo } = useTimeZone();
 
-  console.log("woeweoiruweoiwe", timeZone);
+ 
   const baseConfig = getUserConfig();
 
   const { data, loading, error } = useDataManager(

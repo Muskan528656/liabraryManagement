@@ -94,7 +94,7 @@ async function create(userData, userId) {
     if (!userData.companyid) {
       throw new Error("Company ID is required for user creation.");
     }
-    console.log("userData", userData)
+ 
 
     const query = `
       INSERT INTO ${this.schema}."user"
@@ -235,8 +235,8 @@ async function create(userData, userId) {
 
 
 async function updateById(id, userData) {
-  console.log("update id is", id);
-  console.log("userData", userData);
+ 
+ 
 
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
@@ -260,7 +260,7 @@ async function updateById(id, userData) {
       }
     };
 
-    console.log("userData before adding fields", userData);
+ 
 
  
     add("firstname", userData.firstname);
@@ -308,7 +308,7 @@ async function updateById(id, userData) {
  
     const result = await sql.query(query, values);
 
-    console.log("result",result)
+ 
     return result.rows.length ? result.rows[0] : null;
 
   } catch (error) {

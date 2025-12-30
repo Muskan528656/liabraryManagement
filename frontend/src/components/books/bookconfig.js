@@ -91,7 +91,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "authors",
                 required: true,
-                placeholder: "Select author",
+             
                 colSize: 6,
             },
             {
@@ -100,7 +100,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "categories",
                 required: true,
-                placeholder: "Select category",
+              
                 colSize: 6,
             },
             {
@@ -109,7 +109,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "publishers",
                 required: false,
-                placeholder: "Select publisher",
+          
                 colSize: 6,
             },
             {
