@@ -397,13 +397,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
                 onChange: (file, formData, setFormData) => {
-                    if (file) {
-                        setFormData((prev) => ({
-                            ...prev,
-                            image: file,
-                        }));
-                    }
-                },
+                console.log("🖼️ [FRONTEND] Image field onChange triggered");
+                console.log("🖼️ [FRONTEND] File parameter:", file);
+                console.log("🖼️ [FRONTEND] File type:", file instanceof File ? "File object" : typeof file);
+                if (file instanceof File) {
+                    console.log("🖼️ [FRONTEND] File details:", {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type
+                    });
+                } else if (file === null) {
+                    console.log("🗑️ [FRONTEND] Image being cleared (null)");
+                } else {
+                    console.log("🖼️ [FRONTEND] File value:", file);
+                }
+                console.log("🖼️ [FRONTEND] Current formData.image before update:", formData.image);
+
+                setFormData({
+                    ...formData,
+                    image: file, // File object or null to clear
+                });
+
+                console.log("🖼️ [FRONTEND] FormData updated with image:", file);
+            },
             },
             {
                 name: "status",
@@ -414,6 +430,22 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     { value: false, label: "Inactive" },
                 ],
                 colSize: 6,
+            },
+            {
+                name: "createddate",
+                label: "Create Date",
+                type: "date",
+                required: false,
+                colSize: 6,
+                readOnlyWhenEditing: true,
+            },
+            {
+                name: "lastmodifieddate",
+                label: "Last Modified Date",
+                type: "date",
+                required: false,
+                colSize: 6,
+                readOnlyWhenEditing: true,
             },
         ],
 
@@ -486,16 +518,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         },
 
         filterFields: [
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -503,42 +525,18 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 type: "select",
                 options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
             },
- 
- 
- 
- 
- 
- 
             {
                 name: "first_name",
                 field: "first_name",
                 label: "First Name",
                 type: "text",
             },
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
- 
- 
- 
- 
- 
- 
             {
                 name: "registration_date",
                 field: "registration_date",
@@ -639,17 +637,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 }
                 return data;
             },
-
             beforeEdit: (item) => {
                 console.log("beforeEdit called with:", item);
-
                 const preparedData = { ...item };
-
                 if (preparedData.hasOwnProperty("is_active")) {
                     preparedData.status = preparedData.is_active;
                 }
-
-
                 if (preparedData.plan_id) {
                     const selectedPlan = plansList.find(p => p.value == preparedData.plan_id)?.data;
                     if (selectedPlan) {
@@ -664,40 +657,30 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 console.log("Prepared data for edit:", preparedData);
                 return preparedData;
             },
-
             beforeSubmit: (formData, isEditing, originalData) => {
                 console.log("=== BEFORE SUBMIT ===");
                 console.log("Form data:", formData);
                 console.log("Is editing:", isEditing);
                 console.log("Original data:", originalData);
-
                 const errors = [];
                 const submitData = { ...formData };
-
-
                 if (submitData.selectedPlan) {
                     delete submitData.selectedPlan;
                 }
-
                 if (submitData.status !== undefined) {
                     submitData.is_active = Boolean(submitData.status);
                     delete submitData.status;
                 }
-
                 if (submitData.type_id) {
                     submitData.type = submitData.type_id;
                     delete submitData.type_id;
                 }
-
                 if (!submitData.user_id) {
                     errors.push("Please select a member");
                 }
-
                 if (!submitData.issue_date) {
                     errors.push("Issue date is required");
                 }
-
-
                 if (submitData.plan_id) {
                     const selectedPlan = plansList.find(p => p.value == submitData.plan_id)?.data;
                     if (selectedPlan && !selectedPlan.is_active) {

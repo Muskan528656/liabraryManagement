@@ -9,7 +9,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import {
   Card,
-  Row,
+  Row, 
   Col,
   Badge,
   Button,
@@ -1345,38 +1345,32 @@ const LibraryCardDetail = ({
 
       let response;
 
-      if (selectedImageFile) {
-        console.log("CASE 1: New image uploaded");
+      console.log("CASE: Always sending FormData for consistency");
 
-        const formData = new FormData();
+      const formData = new FormData();
 
-        Object.keys(payload).forEach(key => {
-          if (payload[key] !== null && payload[key] !== undefined) {
-            formData.append(key, payload[key]);
-          }
-        });
-
-        formData.append("image", selectedImageFile);
-
-        console.log("FORMDATA SENT:");
-        for (let p of formData.entries()) console.log(p[0], p[1]);
-
-        response = await api.updateLibraryCard(formData, id);
-      } else {
-        console.log("CASE 2: No new image, using existing");
-
-        const requestPayload = { ...payload };
-        if (data?.image) {
-          if (typeof data.image === 'object' && data.image !== null) {
-            requestPayload.image = data.image.name || data.image;
-          } else {
-            requestPayload.image = data.image;
-          }
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          formData.append(key, payload[key]);
         }
+      });
 
-        console.log("Sending JSON payload:", requestPayload);
-        response = await api.update(requestPayload, id);
+      if (selectedImageFile) {
+        console.log("Including new image file");
+        formData.append("image", selectedImageFile);
+      } else if (data?.image) {
+        console.log("Including existing image path");
+        if (typeof data.image === 'object' && data.image !== null) {
+          formData.append("image", data.image.name || data.image);
+        } else {
+          formData.append("image", data.image);
+        }
       }
+
+      console.log("FORMDATA SENT:");
+      for (let p of formData.entries()) console.log(p[0], p[1]);
+
+      response = await api.updateLibraryCard(formData, id);
 
       let updatedData =
         response?.data?.data ||

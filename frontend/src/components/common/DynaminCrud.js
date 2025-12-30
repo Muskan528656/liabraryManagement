@@ -522,8 +522,17 @@ const DynamicCRUD = ({
 
     const getProcessedFormFields = useCallback(() => {
         return formFields.map(field => {
-            if (!field || field.type !== 'select' || !field.options) {
-                return field;
+            if (!field) return field;
+
+            let processedField = { ...field };
+
+            // Handle readOnlyWhenEditing
+            if (field.readOnlyWhenEditing && editingItem) {
+                processedField.readOnly = true;
+            }
+
+            if (field.type !== 'select' || !field.options) {
+                return processedField;
             }
 
             try {
@@ -564,20 +573,19 @@ const DynamicCRUD = ({
                     }
                 }
 
-                return {
-                    ...field,
-                    options: optionsArray
-                };
+                processedField.options = optionsArray;
+
+                return processedField;
 
             } catch (error) {
                 console.error(`Error processing field ${field.name}:`, error);
                 return {
-                    ...field,
+                    ...processedField,
                     options: []
                 };
             }
         });
-    }, [formFields, relatedData, formData]);
+    }, [formFields, relatedData, formData, editingItem]);
 
 
 
@@ -666,23 +674,40 @@ const DynamicCRUD = ({
                 const submitData = new FormData();
 
                 Object.keys(formData).forEach(key => {
-                    if (formData[key] !== null && formData[key] !== undefined) {
+                    const value = formData[key];
+                    if (value !== null && value !== undefined && value !== '') {
                         const fieldConfig = formFields.find(f => f && f.name === key);
                         if (fieldConfig && fieldConfig.type === 'file') {
-                            if (formData[key] instanceof File) {
-                                submitData.append(key, formData[key]);
-                            } else if (formData[key]) {
-                                submitData.append(key, formData[key]);
+                            if (value instanceof File) {
+                                submitData.append(key, value);
+                            } else if (value) {
+                                submitData.append(key, value);
                             }
                         } else {
-                            submitData.append(key, formData[key]);
+                            // Convert to string for multipart/form-data compatibility
+                            submitData.append(key, String(value));
+                        }
+                    } else if (value === null) {
+                        // Handle null values for file fields (e.g., to remove images)
+                        const fieldConfig = formFields.find(f => f && f.name === key);
+                        if (fieldConfig && fieldConfig.type === 'file') {
+                            submitData.append(key, 'null');
                         }
                     }
                 });
 
                 if (editingItem) {
-                    response = await api.update(submitData, editingItem.id);
+                    console.log("🔄 [FRONTEND] Updating existing item, ID:", editingItem.id);
+                    // Use specific method for library cards to handle multipart/form-data correctly
+                    if (apiEndpoint === 'librarycard') {
+                        console.log("📚 [FRONTEND] Using library card specific update method");
+                        response = await api.updateLibraryCard(submitData, editingItem.id);
+                    } else {
+                        console.log("📝 [FRONTEND] Using generic update method");
+                        response = await api.update(submitData, editingItem.id);
+                    }
                 } else {
+                    console.log("➕ [FRONTEND] Creating new item");
                     console.log("submitDatasubmitData", submitData)
                     response = await api.create(submitData);
                     console.log("Respinse", response)

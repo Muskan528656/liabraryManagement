@@ -528,6 +528,21 @@ module.exports = (app) => {
         return res.status(200).json({ success: true, data: company });
       } catch (error) {
         console.error("Error updating company:", error);
+
+        // Handle multipart parsing errors specifically
+        if (error.message && error.message.includes('Unexpected end of form')) {
+          return res.status(400).json({
+            errors: "File upload failed. Please ensure the file is not corrupted and try again."
+          });
+        }
+
+        // Handle file size limit exceeded
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            errors: "File size exceeds the 5MB limit."
+          });
+        }
+
         return res.status(500).json({ errors: error.message });
       }
     }

@@ -530,7 +530,7 @@ const BulkIssue = () => {
       booksToShow: booksToShow.length
     });
 
-    // Define age groups
+    // Define age groups array with labels and ranges
     const ageGroups = [
       { label: "General (All Ages)", min: 0, max: 0 },
       { label: "0-5 years", min: 0, max: 5 },
@@ -540,11 +540,11 @@ const BulkIssue = () => {
       { label: "26+ years", min: 26, max: 999 }
     ];
 
-    // Filter groups based on member age
+    // Filter groups based on member age (preserve age filtering by member age)
     const relevantGroups = memberAge !== null
       ? ageGroups.filter(group => {
           if (group.min === 0 && group.max === 0) {
-            // General group: show if member age is null or if there are general books
+            // General group: always show for age-filtered members
             return true;
           } else {
             // Specific age groups: show only if member's age falls within this group
@@ -995,27 +995,7 @@ const BulkIssue = () => {
       </div>
     </Tooltip>
   );
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
 
-  // const memberAge = memberInfo ? calculateAge(memberInfo.dob) : null;
-  const ageFilteredBooks = getBookOptions().filter((book) => {
-    if (memberAge === null) return true;
-
-    const minAge = book.min_age ?? 0;
-    const maxAge = book.max_age ?? Infinity;
-
-    return memberAge >= minAge && memberAge <= maxAge;
-  });
   return (
     <Container
       fluid

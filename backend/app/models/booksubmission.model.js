@@ -768,7 +768,7 @@ function cleanupEmailTracker() {
 
 async function sendDueReminder() {
   try {
-    console.log(" Starting due reminder process...");
+    // console.log(" Starting due reminder process...");
 
 
     cleanupEmailTracker();
@@ -782,8 +782,8 @@ async function sendDueReminder() {
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayDateStr = today.toISOString().split('T')[0];
 
-    console.log(` Looking for books due on: ${tomorrowStr}`);
-    console.log(`Today: ${todayDateStr}`);
+    // console.log(` Looking for books due on: ${tomorrowStr}`);
+    // console.log(`Today: ${todayDateStr}`);
 
     const query = `
       SELECT 
@@ -805,12 +805,10 @@ async function sendDueReminder() {
       ORDER BY lm.email, bi.due_date
     `;
 
-    console.log("Executing query for due books...");
     const result = await sql.query(query, [tomorrowStr]);
-    console.log(` Found ${result.rows.length} due books for tomorrow`);
 
     if (result.rows.length === 0) {
-      console.log(" No books due tomorrow.");
+      // console.log(" No books due tomorrow.");
       return;
     }
 
@@ -834,7 +832,7 @@ async function sendDueReminder() {
       });
     }
 
-    console.log(` Found ${Object.keys(groupedByMember).length} library members with due books`);
+    // console.log(` Found ${Object.keys(groupedByMember).length} library members with due books`);
 
 
     let emailsSent = 0;
@@ -845,7 +843,7 @@ async function sendDueReminder() {
       const member = groupedByMember[memberId];
 
       if (hasEmailBeenSent('due', memberId)) {
-        console.log(`⏭Skipping due reminder for ${member.name} - already sent today`);
+        // console.log(`⏭Skipping due reminder for ${member.name} - already sent today`);
         emailsSkipped++;
         continue;
       }
