@@ -705,14 +705,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         }}
       >
         {/* Brand */}
-        <div className="fw-bold  pt-0">
-            <img
-              src="/Logo.png"
-              // width="100" 
-              height="60"
-            style={{ height: "60px", marginLeft: '20px', objectFit: "contain" }}
-            />
-          </div>
+       
         <Navbar.Brand
           href="#"
           className="fw-bold "
