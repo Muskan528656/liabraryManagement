@@ -20,6 +20,38 @@ import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
 
+
+const styles = `
+  .member-card { border-radius: 20px; overflow: hidden; }
+  .stat-box { 
+    padding: 15px; 
+    border-radius: 12px; 
+    transition: transform 0.2s;
+    border: 1px solid rgba(0,0,0,0.03);
+  }
+  .stat-box:hover { transform: translateY(-2px); }
+  .profile-header-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 80px;
+    margin-bottom: -40px;
+  }
+  .avatar-container {
+    position: relative;
+    display: inline-block;
+    padding: 3px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f9fa;
+  }
+  .detail-row:last-child { border-bottom: none; }
+`;
 const BulkIssue = () => {
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
@@ -1115,8 +1147,67 @@ const BulkIssue = () => {
                       <h5 className="fw-bold mb-1">
                         {getMemberName()}
                       </h5>
-
-                      {memberAge !== null && (
+                      <div className="mb-2">
+                        <Row>
+                          {/* 
+                        <Col lg={4} className="text-start">
+                          <Badge
+                            bg={memberInfo?.is_active ? "success" : "danger"}
+                            className="me-1"
+                          >
+                            {memberInfo?.is_active ? (
+                              <><i className="fa-solid fa-check-circle me-1"></i> Active</>
+                            ) : (
+                              <><i className="fa-solid fa-times-circle me-1"></i> Inactive</>
+                            )}
+                          </Badge>
+                        </Col> */}
+                          <Col className="text-center">
+                            <Badge
+                              bg={(memberPlan?.is_active || memberSubscription?.is_active) ? "success" : "danger"}
+                              className="mb-1"
+                            >
+                              <i className="fa-solid fa-crown me-1"></i>
+                              {memberPlan?.plan_name || memberSubscription?.plan_name || memberSubscription?.name || 'Plan'}
+                              {(memberPlan?.is_active || memberSubscription?.is_active) ? " ✓" : " ✗"}
+                            </Badge>
+                          </Col>
+                          {/* <Col lg={8} className="text-end">
+                          <OverlayTrigger
+                            placement="top"
+                            delay={{ show: 250, hide: 400 }}
+                            overlay={limitsTooltip}
+                          > 
+                            <Badge
+                              bg="info"
+                              className="me-1"
+                              style={{ cursor: "pointer" }}
+                            >
+                              <i className="fa-solid fa-chart-simple me-1"></i>
+                              Limits Info
+                            </Badge>
+                          </OverlayTrigger>
+                        </Col> */}
+                        </Row>
+                        {/* <Row>
+                        <Col lg={3} className="text-start mt-1">
+                          <small className="text-muted">
+                            Card Number: {selectedCard.data.card_number || 'N/A'}
+                          </small>
+                        </Col>
+                        <Col lg={3} className="mt-1">
+                          <small className="text-muted">
+                            member age : {memberAge !== null ? `${memberAge} years` : 'N/A'}
+                          </small>  
+                        </Col>
+                        <Col lg={4} className="mt-1">
+                          <small className="text-muted">  
+                            filtered books : {filteredBooksByAge.length} books available for this age
+                          </small>
+                        </Col>
+                      </Row> */}
+                      </div>
+                      {/* {memberAge !== null && (
                         <div className="text-dark small mb-2">
                           <i className="fa-solid fa-cake-candles me-1"></i>
                           Age: {memberAge} years
@@ -1125,16 +1216,16 @@ const BulkIssue = () => {
                             {filteredBooksByAge.length} books available for this age
                           </span>
                         </div>
-                      )}
+                      )} */}
 
-                      {memberInfo?.card_number && (
+                      {/* {memberInfo?.card_number && (
                         <div className="text-muted small mb-2">
                           <i className="fa-solid fa-id-card me-1"></i>
                           Card: {memberInfo.card_number}
                         </div>
-                      )}
+                      )} */}
 
-                      {(memberPlan || memberSubscription) && (
+                      {/* {(memberPlan || memberSubscription) && (
                         <div className="mt-2">
                           <Badge
                             bg={(memberPlan?.is_active || memberSubscription?.is_active) ? "success" : "danger"}
@@ -1148,8 +1239,8 @@ const BulkIssue = () => {
                             {systemMaxBooks} books total • {dailyLimitCount} per day • {durationDays} days
                           </div>
                         </div>
-                      )}
-
+                      )} */}
+                      {/* 
                       <div className="small text-muted mt-2">
                         {memberInfo?.email && (
                           <div className="mb-1">
@@ -1169,13 +1260,13 @@ const BulkIssue = () => {
                             )}
                           </div>
                         )}
-                      </div>
+                      </div> */}
                     </div>
 
-                    <hr className="my-3" style={{ borderColor: "#f0f0f0" }} />
+                    {/* <hr className="my-3" style={{ borderColor: "#f0f0f0" }} /> */}
 
                     <Row className="g-2 mb-3">
-                      <Col xs={3}>
+                      <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
                           <div className="small text-muted">Total Issued</div>
                           <div className="h5 mb-0 fw-bold text-primary">
@@ -1183,7 +1274,7 @@ const BulkIssue = () => {
                           </div>
                         </div>
                       </Col>
-                      <Col xs={3}>
+                      <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
                           <div className="small text-muted">Issued Today</div>
                           <div className="h5 mb-0 fw-bold text-dark">
@@ -1191,7 +1282,7 @@ const BulkIssue = () => {
                           </div>
                         </div>
                       </Col>
-                      <Col xs={3}>
+                      <Col xs={4}>
                         <div className="p-2 bg-light rounded-3">
                           <div className="small text-muted">Total Allowed</div>
                           <div className="h5 mb-0 fw-bold text-dark">
@@ -1199,15 +1290,12 @@ const BulkIssue = () => {
                           </div>
                         </div>
                       </Col>
-                      <Col xs={3}>
-                        <div className="p-2 bg-light rounded-3">
-                          <div className="small text-muted">Can Issue Now</div>
-                          <div className="h5 mb-0 fw-bold text-success">
-                            {Math.min(remainingForCard, remainingForToday)}
-                          </div>
-                        </div>
-                      </Col>
                     </Row>
+
+                    {/* i need functionlity total issued when click show book name */}
+                    <div>
+
+                    </div>
 
                     <div className="text-start">
                       <div className="d-flex justify-content-between small mb-1">
@@ -1283,6 +1371,8 @@ const BulkIssue = () => {
               </Card.Body>
             </Card>
           </Col>
+
+
 
           <Col lg={8} md={7}>
             <Card
