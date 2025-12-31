@@ -1247,8 +1247,8 @@ async function checkOverdueStatus(issueId) {
 }
 
 
-cron.schedule("* * * * *", sendDueReminder);
-cron.schedule("* * * * *", sendOverdueReminder);
+// cron.schedule("* * * * *", sendDueReminder);
+// cron.schedule("* * * * *", sendOverdueReminder);
 // cron.schedule("0 0 9 * * *", sendDueReminder);
 // cron.schedule("0 0 9 * * *", sendOverdueReminder);
 
