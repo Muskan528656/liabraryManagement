@@ -1,3 +1,7 @@
+
+
+
+
 /**
  * Handles all incoming request for /api/librarycard endpoint
  * DB table: demo.library_members
@@ -19,15 +23,20 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
+const LibraryCard = require("../models/librarycard.model.js");
+const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
- 
+// console.log("Root Directory:", rootDir);
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
- 
+// console.log("frontendPublicDir:", frontendPublicDir);
+
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
- 
+// console.log("frontendUploadsDir:", frontendUploadsDir);
+
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
- 
+
+// console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
 
 const ensureDirectory = (dirPath) => {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -43,7 +52,7 @@ const deleteFileIfExists = (filePath = "") => {
     try {
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
- 
+
       }
     } catch (err) {
       console.error("Error deleting file:", err.message);
@@ -53,68 +62,24 @@ const deleteFileIfExists = (filePath = "") => {
 
 
 const storage = multer.diskStorage({
-  destination: (_, __, cb) => cb(null, libraryCardUploadDir),
-  filename: (_, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `librarycard-${unique}${path.extname(file.originalname)}`);
-  },
+  destination: (req, file, cb) => cb(null, libraryCardUploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'librarycard-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
+
+console.log("Multer storage configured for library cards.", storage);
 
 const upload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: (_, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"));
-  },
-});
-
-// Custom middleware to handle multer errors gracefully
-const safeUpload = (fieldName) => {
-  return (req, res, next) => {
-    if (!req.files || !req.files[fieldName]) {
-      return next(); // optional image
-    }
-
-    const file = req.files[fieldName];
-
-    if (!file.mimetype.startsWith("image/")) {
-      return res.status(400).json({
-        success: false,
-        message: "Only image files are allowed",
-      });
-    }
-
-    const MAX_SIZE = 2 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return res.status(400).json({
-        success: false,
-        message: "Image size must be less than 2MB",
-      });
-    }
-
-    next();
-  };
-};
-
-const conditionalUpload = (req, res, next) => {
-  if (
-    req.headers["content-type"] &&
-    req.headers["content-type"].includes("multipart/form-data")
-  ) {
-    upload.single("image")(req, res, (err) => {
-      if (err) {
-        console.error("Multer error:", err.message);
-        // Skip multer on error, continue with request
-        return next();
-      }
-      next();
-    });
-  } else {
-    next();
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
   }
-};
-
+});
+console.log("Multer upload configured for library cards.", upload);
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
@@ -140,21 +105,18 @@ module.exports = (app) => {
     }
   });
 
+
   router.get("/auto-config-card", fetchUser, async (req, res) => {
     try {
       const userId = req.userinfo?.id || null;
-      const cardNumber = await generateAutoNumberSafe(
-        "library_members",
-        userId,
-        "LIB-",
-        5
-      );
+      const cardNumber = await generateAutoNumberSafe("library_members", userId, 'LIB-', 5);
       res.json({ card_number: cardNumber });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Auto-config failed" });
     }
   });
+
 
   router.get("/", fetchUser, async (req, res) => {
     try {
@@ -167,45 +129,44 @@ module.exports = (app) => {
     }
   });
 
+
   router.get("/card/:cardNumber", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findByCardNumber(req.params.cardNumber);
-      if (!card)
-        return res.status(404).json({ error: "Library card not found" });
+      if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
       console.error("Error fetching library card:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
+
 
   router.get("/student/:studentId", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findByStudentId(req.params.studentId);
-      if (!card)
-        return res.status(404).json({ error: "Library card not found" });
+      if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
       console.error("Error fetching library card:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
+
 
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findById(req.params.id);
-      if (!card)
-        return res.status(404).json({ error: "Library card not found" });
+      if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
       console.error("Error fetching library card:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
-
 
 
 
@@ -233,28 +194,23 @@ module.exports = (app) => {
 
         console.log("📥 Creating library card with data:", {
           ...cardData,
-          image: cardData.image ? "[IMAGE DATA]" : "null",
+          image: cardData.image ? "[IMAGE DATA]" : "null"
         });
 
 
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
- 
+
         } else if (req.body.image && req.body.image.startsWith("data:image/")) {
 
           try {
             const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
             if (matches) {
               const ext = matches[1];
-              const base64Data = req.body.image.replace(
-                /^data:image\/\w+;base64,/,
-                ""
-              );
+              const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
               const buffer = Buffer.from(base64Data, "base64");
 
-              const uniqueFile = `base64-${Date.now()}-${Math.random()
-                .toString()
-                .slice(2)}.${ext}`;
+              const uniqueFile = `base64-${Date.now()}-${Math.random().toString().slice(2)}.${ext}`;
               const filePath = path.join(libraryCardUploadDir, uniqueFile);
 
               fs.writeFileSync(filePath, buffer);
@@ -266,10 +222,11 @@ module.exports = (app) => {
           }
         }
 
+
         if (cardData.status !== undefined) {
-          cardData.is_active =
-            cardData.status === "true" || cardData.status === true;
+          cardData.is_active = cardData.status === 'true' || cardData.status === true;
         }
+
 
         if (cardData.plan_id !== undefined) {
           cardData.subscription_id = cardData.plan_id;
@@ -291,8 +248,6 @@ module.exports = (app) => {
   );
 
 
-
-
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -307,8 +262,8 @@ module.exports = (app) => {
       const cardData = { ...req.body };
       const previousImagePath = existingCard.image;
 
- 
- 
+
+
 
 
       if (req.file) {
@@ -318,7 +273,7 @@ module.exports = (app) => {
         }
         cardData.image = `/uploads/librarycards/${req.file.filename}`;
       } else if (cardData.image === 'null' || cardData.image === null) {
-
+        console.log("else if block for image nullification triggered.");
         if (previousImagePath) {
           deleteFileIfExists(previousImagePath);
         }
@@ -374,7 +329,7 @@ module.exports = (app) => {
         }
       });
 
- 
+
 
 
       const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
@@ -409,6 +364,7 @@ module.exports = (app) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
 
+
       const card = await LibraryCard.findById(req.params.id);
       if (card && card.image) {
         deleteFileIfExists(card.image);
@@ -423,7 +379,7 @@ module.exports = (app) => {
       return res.status(200).json({
         success: true,
         message: result.message,
-        data: result.data,
+        data: result.data
       });
     } catch (error) {
       console.error("❌ Error deleting library card:", error);
@@ -447,13 +403,9 @@ module.exports = (app) => {
       const results = [];
       for (const member of members) {
         try {
+
           if (!member.card_number) {
-            member.card_number = await generateAutoNumberSafe(
-              "library_members",
-              userId,
-              "LIB-",
-              5
-            );
+            member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
           }
 
           const card = await LibraryCard.create(member, userId);
@@ -462,26 +414,24 @@ module.exports = (app) => {
           results.push({
             success: false,
             error: error.message,
-            member: {
-              ...member,
-              card_number: member.card_number || "NOT_GENERATED",
-            },
+            member: { ...member, card_number: member.card_number || 'NOT_GENERATED' }
           });
         }
       }
 
-      const successCount = results.filter((r) => r.success).length;
+      const successCount = results.filter(r => r.success).length;
 
       return res.status(200).json({
         success: true,
         message: `Imported ${successCount} out of ${members.length} members`,
-        results,
+        results
       });
     } catch (error) {
       console.error("❌ Error importing members:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });
+
 
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };

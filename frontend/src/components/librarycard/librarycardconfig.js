@@ -41,7 +41,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         customHandlers.handleBarcodePreview ||
         ((card) => console.warn("Barcode preview handler not provided", card));
 
- 
+
 
     let defaultCountryCode = "";
     let plansList = [];
@@ -68,7 +68,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     defaultCountryCode = codePart;
                 }
 
- 
+
             }
         }
 
@@ -76,7 +76,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         const plansApi = new DataApi("plans");
         const plansResponse = await plansApi.fetchAll();
 
- 
+
 
         let plansData = [];
 
@@ -91,7 +91,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             plansData = plansResponse;
         }
 
- 
+
 
         if (plansData.length > 0) {
             plansList = plansData
@@ -102,7 +102,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                         plan.is_active === 1 ||
                         plan.is_active === "1";
 
- 
+
                     return isActive;
                 })
                 .map(plan => ({
@@ -111,7 +111,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: plan // Store full plan data for details
                 }));
 
- 
+
         } else {
             console.warn("No plans data found");
         }
@@ -120,7 +120,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
- 
+
 
         let objectTypeData = [];
 
@@ -134,7 +134,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             objectTypeData = objectTypeResponse;
         }
 
- 
+
 
         if (objectTypeData.length > 0) {
             objectTypesList = objectTypeData
@@ -145,7 +145,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: type
                 }));
 
- 
+
         } else {
             console.warn("No object type data found");
         }
@@ -154,9 +154,9 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         defaultCountryCode = "+91"; // Default to India if company fetch fails
     }
 
- 
- 
- 
+
+
+
 
     const defaultColumns = [
         {
@@ -647,7 +647,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             handleBarcodePreview,
 
             onDataLoad: (data) => {
- 
+
 
                 if (Array.isArray(data)) {
                     return data.map((item) => {
@@ -672,7 +672,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 return data;
             },
             beforeEdit: (item) => {
- 
+
 
                 const preparedData = { ...item };
                 if (preparedData.hasOwnProperty("is_active")) {
@@ -682,21 +682,21 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const selectedPlan = plansList.find(p => p.value == preparedData.plan_id)?.data;
                     if (selectedPlan) {
                         preparedData.selectedPlan = selectedPlan;
- 
+
                     } else if (preparedData.plan && typeof preparedData.plan === 'object') {
                         preparedData.selectedPlan = preparedData.plan;
- 
+
                     }
                 }
 
- 
+
                 return preparedData;
             },
             beforeSubmit: (formData, isEditing, originalData) => {
- 
- 
- 
- 
+
+
+
+
 
                 const errors = [];
                 const submitData = { ...formData };
@@ -729,8 +729,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Image size must be less than 2MB");
                 }
 
- 
- 
+
+
 
                 return {
                     errors,
@@ -739,17 +739,17 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             afterSubmit: (response, formData, isEditing) => {
- 
- 
- 
- 
+
+
+
+
 
                 return response;
             }
         },
 
         transformResponse: (response) => {
- 
+
 
             if (response && response.data) {
                 let data = response.data;

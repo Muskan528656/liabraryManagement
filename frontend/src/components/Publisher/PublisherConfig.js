@@ -25,12 +25,12 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             {value ? "Active" : "Inactive"}
         </span >
     );
- 
- 
+
+
 
     return {
         moduleName: "publisher",
-        moduleLabel: "publisher",
+        moduleLabel: "Publisher",
         apiEndpoint: "publisher",
         importMatchFields: [],
         initialFormData: {
@@ -44,10 +44,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             is_active: true
         },
         columns: [
-            {
-                field: "salutation",
-                label: "Salutation",
-            },
+
             {
                 field: "name",
                 label: "Name",
@@ -144,21 +141,21 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
         validationRules: (formData, allBooks, editingBook) => {
             const errors = [];
 
- 
- 
- 
 
- 
+
+
+
+
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
             if (!formData.city?.trim()) errors.push("city is required");
             if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
 
- 
- 
- 
- 
+
+
+
+
 
             return errors;
         },
@@ -174,7 +171,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
- 
+
             showImportButton: true,
         },
 

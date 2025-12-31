@@ -112,7 +112,7 @@ const LibraryCardDetail = ({
 
   const getImageUrl = useCallback(
     (imagePath) => {
- 
+
 
       if (!imagePath) {
         return "/default-user.png";
@@ -142,13 +142,13 @@ const LibraryCardDetail = ({
           }
 
           const fullUrl = `${normalizedFileHost}${cleanPath}`;
- 
+
           return fullUrl;
         }
 
         if (cleanPath && !cleanPath.includes('/')) {
           const fullUrl = `${normalizedFileHost}/uploads/librarycards/${cleanPath}`;
- 
+
           return fullUrl;
         }
       }
@@ -453,19 +453,19 @@ const LibraryCardDetail = ({
   }, [data?.subscription_id]);
 
   const fetchCardData = async () => {
- 
+
     try {
       const api = new DataApi("librarycard");
 
       const response = await api.fetchById(id);
 
- 
+
 
       if (response && response.data) {
         const card = response.data;
         setCardData(card);
 
- 
+
 
         if (card.id) {
           await fetchBookCounts(card.id);
@@ -485,12 +485,12 @@ const LibraryCardDetail = ({
   const fetchBookCounts = async (userId, cardId) => {
     try {
 
- 
- 
+
+
 
       const issueApi = new DataApi("bookissue");
       const issuesResponse = await issueApi.fetchAll();
- 
+
       if (issuesResponse && issuesResponse.data) {
         const issues = Array.isArray(issuesResponse.data)
           ? issuesResponse.data
@@ -501,7 +501,7 @@ const LibraryCardDetail = ({
             issue.issued_to === userId
 
 
- 
+
           return matchesCard
         });
         setIssuedCount(cardIssues.length);
@@ -535,11 +535,11 @@ const LibraryCardDetail = ({
       const api = new DataApi("librarycard");
       const res = await api.get("/object-types");
 
- 
+
 
       if (res.data?.success) {
         setObjectTypes(res.data.data || []);
- 
+
       } else {
         console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
         setObjectTypes([]);
@@ -1173,7 +1173,7 @@ const LibraryCardDetail = ({
         (field) => field.type === "select" && typeof field.options === "string"
       );
 
- 
+
 
       const lookupDataObj = {};
       const endpointMap = {
@@ -1188,7 +1188,7 @@ const LibraryCardDetail = ({
         if (!lookupDataObj[optionKey]) {
           try {
             const endpoint = endpointMap[optionKey] || optionKey;
- 
+
 
             const api = new DataApi(endpoint);
             const response = await api.fetchAll();
@@ -1239,7 +1239,7 @@ const LibraryCardDetail = ({
                   : [data];
               }
 
- 
+
             }
           } catch (error) {
             console.error(`Error fetching lookup data for ${optionKey}:`, error);
@@ -1298,7 +1298,7 @@ const LibraryCardDetail = ({
 
 
   const handleSave = async () => {
- 
+
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1321,7 +1321,7 @@ const LibraryCardDetail = ({
 
           if (field === "type_id") {
             payload["type"] = value;
- 
+
           }
           else if (field === "father_guardian_name") {
             payload["father_guardian_name"] = value;
@@ -1340,8 +1340,8 @@ const LibraryCardDetail = ({
         }
       });
 
- 
- 
+
+
 
       let response;
 
@@ -1361,13 +1361,12 @@ const LibraryCardDetail = ({
 
         formData.append("image", selectedImageFile);
 
-        console.log("FORMDATA SENT:");
 
-        for (let p of formData.entries()) console.log(p[0], p[1]);
+        for (let p of formData.entries())
 
-        response = await api.updateLibraryCard(formData, id);
-
+          response = await api.updateLibraryCard(formData, id);
       } else {
+
 
         const requestPayload = { ...payload };
 
@@ -1397,6 +1396,8 @@ const LibraryCardDetail = ({
 
         response;
 
+
+
       if (updatedData && typeof updatedData === 'object') {
 
         if (updatedData.image && typeof updatedData.image === "object" && Object.keys(updatedData.image).length === 0) {
@@ -1418,6 +1419,8 @@ const LibraryCardDetail = ({
         }
 
       }
+
+
 
       if (updatedData) {
 
@@ -1490,7 +1493,7 @@ const LibraryCardDetail = ({
     const fallbackImage = data?.image || cardData?.image;
     if (fallbackImage) {
       const imageUrl = getImageUrl(fallbackImage);
- 
+
       setImagePreview(imageUrl);
     } else {
       setImagePreview("/default-user.png");
@@ -1538,7 +1541,7 @@ const LibraryCardDetail = ({
 
     handleFieldChange("image", file);
 
- 
+
 
     event.target.value = "";
   };

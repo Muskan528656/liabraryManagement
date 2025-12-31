@@ -163,7 +163,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     label: `${country.country_code} - ${country.country}`
                 })),
                 required: true,
-        
+
                 defaultValue: defaultCountryCode,
                 colSize: 3,
                 section: "Contact Person Information"
@@ -475,7 +475,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 return cleanedData;
             },
             afterSave: (response, editingItem) => {
- 
+
             }
         },
         exportConfig: {

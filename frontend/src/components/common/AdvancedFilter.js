@@ -142,7 +142,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     value={localFilters[fName] || ""}
                     onChange={(e) => handleChange(fName, e.target.value)}
                   >
-                    <option value="">Select {field.label}</option>
+                  {/* //  <option value="">Select {field.label}</option> */}
                     {field.options?.map((opt, i) => (
                       <option key={i} value={opt.value}>{opt.label}</option>
                     ))}
@@ -172,21 +172,21 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
           <Col xs={12} md={2} className="d-flex align-items-end gap-2">
             <div className="d-flex gap-2" style={{ height: '38px' }}>
               <Button
-               
+
                 size="sm"
                 onClick={handleClear}
                 className="d-flex align-items-center gap-1 h-100"
-           
+
               >
                 <i className="fa-solid fa-xmark"></i>
                 Clear
               </Button>
               <Button
-               
+
                 size="sm"
                 onClick={handleSearch}
                 className="btn-custom d-flex align-items-center gap-1 h-100"
-             
+
               >
                 <i className="fa-solid fa-filter"></i>
                 Apply

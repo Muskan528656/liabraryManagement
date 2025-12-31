@@ -574,7 +574,7 @@ const LibraryCard = (props) => {
         onImport={handleLibraryImport}
       />
 
-     
+
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
