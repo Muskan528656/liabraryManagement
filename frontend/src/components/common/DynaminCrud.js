@@ -837,7 +837,7 @@ const DynamicCRUD = ({
                 icon: "fa-solid fa-arrow-down",
 
 
-                // label: `Import ${moduleLabel}`,
+                label: `Import ${moduleLabel}`,
                 onClick: async () => {
                     if (Object.keys(relatedData).length === 0) {
                         await fetchRelatedData();
