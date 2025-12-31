@@ -350,15 +350,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 colSize: 6,
             },
 
-            {
-                name: "age",
-                label: "Age",
-                type: "number",
-                required: false,
-                placeholder: "Enter age",
-                colSize: 3,
-                props: { min: 0, max: 120 }
-            },
+            // {
+            //     name: "age",
+            //     label: "Age",
+            //     type: "number",
+            //     required: false,
+            //     placeholder: "Enter age",
+            //     colSize: 3,
+            //     props: { min: 0, max: 120 }
+            // },
             {
                 name: "registration_date",
                 label: "Registration Date",
@@ -488,26 +488,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         filterFields: [
 
 
-
-
-
-
-
-
-
-
             {
                 name: "plan_id",
                 field: "plan_id",
                 label: "Plan",
                 type: "select",
-                options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
+                options: plansList.length > 0 ? [{ value: "" }, ...plansList] : [{ value: "", }],
             },
-
-
-
-
-
 
             {
                 name: "first_name",
@@ -517,27 +504,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
-
-
-
-
-
-
-
-
-
-
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
-
-
-
-
-
 
             {
                 name: "registration_date",
@@ -580,7 +552,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const age = calculateAge(value);
                     return (
                         <div>
-                            {/* <div>{formatDateToDDMMYYYY(value)}</div> */}
+
                             {age !== "-" && (
                                 <small className="text-muted"> {age}</small>
                             )}
@@ -664,12 +636,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
                 return preparedData;
             },
-
             beforeSubmit: (formData, isEditing, originalData) => {
-
-
-
-
 
                 const errors = [];
                 const submitData = { ...formData };
@@ -710,9 +677,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Image size must be less than 2MB");
                 }
 
-
-
-
                 return {
                     errors,
                     processedData: submitData
@@ -720,11 +684,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             afterSubmit: (response, formData, isEditing) => {
-
-
-
-
-
                 return response;
             }
         },
@@ -773,6 +732,3 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
     };
 };
-
-
-

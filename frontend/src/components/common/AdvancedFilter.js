@@ -142,7 +142,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     value={localFilters[fName] || ""}
                     onChange={(e) => handleChange(fName, e.target.value)}
                   >
-                  {/* //  <option value="">Select {field.label}</option> */}
+                    <option value="">Select {field.label}</option>
                     {field.options?.map((opt, i) => (
                       <option key={i} value={opt.value}>{opt.label}</option>
                     ))}

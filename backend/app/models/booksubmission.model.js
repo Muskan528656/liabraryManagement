@@ -20,20 +20,13 @@ function init(schema_name) {
   schema = schema_name;
 }
 
-
-
 async function create(submissionData, userId) {
+  console.log("submissionData", submissionData);
   if (!schema) throw new Error("Schema not initialized");
   if (!submissionData.issue_id) throw new Error("Issue ID required");
 
-
-
   try {
     await sql.query('BEGIN');
-
-
-
-
 
     const issueRes = await sql.query(
       `SELECT bi.*, b.title, b.isbn, b.available_copies
@@ -47,8 +40,15 @@ async function create(submissionData, userId) {
     const issue = issueRes.rows[0];
 
 
-    if (issue.return_date) throw new Error("Book already returned");
+    if (issue.return_date) {
+      throw new Error("Book already returned");
+    }
 
+
+    if (issue.status === 'cancelled') {
+      console.log("issueueuueeu", issue.status);
+      throw new Error("Cancelled issue cannot be submitted");
+    }
 
     const memberRes = await sql.query(
       `SELECT * FROM demo.library_members 
@@ -59,8 +59,6 @@ async function create(submissionData, userId) {
     if (!memberRes.rows.length) throw new Error("Library member not found");
     const member = memberRes.rows[0];
 
-
-
     const settingRes = await sql.query(
       `SELECT * FROM demo.library_setting LIMIT 1`
     );
@@ -70,82 +68,61 @@ async function create(submissionData, userId) {
       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
     }
 
-
-
     const today = new Date();
     const dueDate = new Date(issue.due_date);
-    const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
-
-
+    const daysOverdue = Math.max(
+      Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)),
+      0
+    );
 
     const conditionBefore = submissionData.condition_before || "Good";
     const conditionAfter = submissionData.condition_after || "Good";
     const conditionAfterLower = conditionAfter.toLowerCase();
 
-
-
     let bookPurchasePrice = 0;
     let purchaseDetails = null;
 
     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
-      try {
+      const purchaseRes = await sql.query(
+        `SELECT unit_price, purchase_date, quantity, total_amount
+         FROM demo.purchases 
+         WHERE book_id = $1 
+         ORDER BY purchase_date DESC, createddate DESC 
+         LIMIT 1`,
+        [issue.book_id]
+      );
 
-
-        const purchaseRes = await sql.query(
-          `SELECT unit_price, purchase_date, quantity, total_amount
-           FROM demo.purchases 
-           WHERE book_id = $1 
-           ORDER BY purchase_date DESC, createddate DESC 
-           LIMIT 1`,
-          [issue.book_id]
-        );
-
-        if (purchaseRes.rows.length > 0) {
-          purchaseDetails = purchaseRes.rows[0];
-          bookPurchasePrice = purchaseDetails.unit_price || 0;
-
-        } else {
-          bookPurchasePrice = submissionData.book_price ||
-            submissionData.lost_book_price ||
-            0;
-
-        }
-      } catch (error) {
-        console.error(" Error fetching purchase price:", error);
-        bookPurchasePrice = submissionData.book_price ||
+      if (purchaseRes.rows.length > 0) {
+        purchaseDetails = purchaseRes.rows[0];
+        bookPurchasePrice = purchaseDetails.unit_price || 0;
+      } else {
+        bookPurchasePrice =
+          submissionData.book_price ||
           submissionData.lost_book_price ||
           0;
       }
     }
-
 
     let totalPenalty = 0;
     let penaltyType = "none";
     let latePenalty = 0;
     let damageLostPenalty = 0;
 
-
     if (daysOverdue > 0) {
       latePenalty = daysOverdue * finePerDay;
       totalPenalty += latePenalty;
       penaltyType = "late";
-
     }
-
 
     if (conditionAfterLower === "lost") {
       damageLostPenalty = bookPurchasePrice;
       totalPenalty += damageLostPenalty;
       penaltyType = "lost";
-
     } else if (conditionAfterLower === "damaged") {
       damageLostPenalty = bookPurchasePrice * 0.5;
       totalPenalty += damageLostPenalty;
       penaltyType = "damaged";
-
     }
-
-
 
 
     const submissionRes = await sql.query(
@@ -159,7 +136,9 @@ async function create(submissionData, userId) {
         issue.id,
         issue.book_id,
         userId,
-        submissionData.submit_date ? new Date(submissionData.submit_date) : new Date(),
+        submissionData.submit_date
+          ? new Date(submissionData.submit_date)
+          : new Date(),
         conditionBefore,
         conditionAfter,
         submissionData.remarks || "",
@@ -171,8 +150,10 @@ async function create(submissionData, userId) {
     const submission = submissionRes.rows[0];
 
 
-
-    if (conditionAfterLower !== "lost") {
+    if (
+      issue.status !== 'cancelled' &&
+      conditionAfterLower !== 'lost'
+    ) {
       await sql.query(
         `UPDATE demo.books
          SET available_copies = COALESCE(available_copies, 0) + 1,
@@ -181,79 +162,15 @@ async function create(submissionData, userId) {
          WHERE id = $1`,
         [issue.book_id, userId]
       );
-
-    } else {
-
     }
-
-
-    let companyId = null;
-    if (submissionData.company_id) {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(submissionData.company_id)) {
-        companyId = submissionData.company_id;
-      }
-    }
-
-
-    let penaltyMasterId = null;
-    if (totalPenalty > 0) {
-      try {
-
-
-        const penaltyInsertResult = await sql.query(
-          `INSERT INTO demo.penalty_master
-           (company_id, penalty_type, book_id, issue_id,
-            book_title, isbn, issued_to, card_number,
-            issue_date, due_date,
-            condition_before, condition_after,
-            book_amount, per_day_amount,
-            createddate, createdbyid, is_paid)
-           VALUES
-           ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP,$15,false)
-           RETURNING id`,
-          [
-            companyId,
-            penaltyType,
-            issue.book_id,
-            issue.id,
-            issue.title,
-            issue.isbn,
-            member.id,
-            member.card_number || null,
-            issue.issue_date,
-            issue.due_date,
-            conditionBefore,
-            conditionAfter,
-            totalPenalty,
-            finePerDay,
-            userId
-          ]
-        );
-
-        penaltyMasterId = penaltyInsertResult.rows[0]?.id;
-
-      } catch (error) {
-        console.error(" Error inserting into penalty_master:", error);
-        console.error("Error details:", error.message);
-        console.error("SQL State:", error.code);
-
-      }
-    } else {
-
-    }
-
 
     let issueStatus = 'returned';
-    if (conditionAfterLower === 'lost') {
-      issueStatus = 'lost';
-    } else if (conditionAfterLower === 'damaged') {
-      issueStatus = 'damaged';
-    }
+    if (conditionAfterLower === 'lost') issueStatus = 'lost';
+    else if (conditionAfterLower === 'damaged') issueStatus = 'damaged';
 
     await sql.query(
       `UPDATE demo.book_issues
-       SET return_date = CURRENT_DATE, 
+       SET return_date = CURRENT_DATE,
            status = $3,
            lastmodifieddate = CURRENT_TIMESTAMP,
            lastmodifiedbyid = $2
@@ -261,77 +178,339 @@ async function create(submissionData, userId) {
       [issue.id, userId, issueStatus]
     );
 
-
-
     await sql.query('COMMIT');
-
-
 
     return {
       success: true,
       message: "Book submitted successfully",
       data: {
         submission_id: submission.id,
-        totalPenalty: totalPenalty,
-        penaltyType: penaltyType,
-        daysOverdue: daysOverdue,
-        bookPurchasePrice: bookPurchasePrice,
-        latePenalty: latePenalty,
-        damageLostPenalty: damageLostPenalty,
-        member_details: {
-          id: member.id,
-          name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.name || 'N/A',
-          email: member.email || 'N/A',
-          card_number: member.card_number || 'N/A'
-        },
-        book_details: {
-          id: issue.book_id,
-          title: issue.title || 'N/A',
-          isbn: issue.isbn || 'N/A'
-        },
-        issue_details: {
-          id: issue.id,
-          issue_date: issue.issue_date,
-          due_date: issue.due_date,
-          return_date: new Date().toISOString().split('T')[0],
-          status: issueStatus
-        },
-        submission_details: {
-          submit_date: submission.submit_date,
-          condition_before: conditionBefore,
-          condition_after: conditionAfter,
-          remarks: submissionData.remarks || ""
-        },
-        purchase_details: purchaseDetails ? {
-          unit_price: purchaseDetails.unit_price,
-          purchase_date: purchaseDetails.purchase_date,
-          quantity: purchaseDetails.quantity,
-          total_amount: purchaseDetails.total_amount
-        } : null,
-        penalty_details: {
-          penalty_master_id: penaltyMasterId,
-          fine_per_day: finePerDay,
-          total_penalty: totalPenalty
-        }
+        totalPenalty,
+        penaltyType,
+        daysOverdue,
+        latePenalty,
+        damageLostPenalty
       }
     };
 
   } catch (error) {
     await sql.query('ROLLBACK');
-    console.error(" Book submission failed:", error);
-    console.error("Error stack:", error.stack);
-
-    if (error.message.includes("foreign key constraint")) {
-      throw new Error("Database constraint error. Please check if all related records exist.");
-    } else if (error.message.includes("connection")) {
-      throw new Error("Database connection error. Please try again.");
-    }
-
+    console.error("Book submission failed:", error);
     throw error;
-  } finally {
-
   }
 }
+
+
+// async function create(submissionData, userId) {
+//   if (!schema) throw new Error("Schema not initialized");
+//   if (!submissionData.issue_id) throw new Error("Issue ID required");
+
+
+
+//   try {
+//     await sql.query('BEGIN');
+
+
+
+
+
+//     const issueRes = await sql.query(
+//       `SELECT bi.*, b.title, b.isbn, b.available_copies
+//        FROM demo.book_issues bi
+//        LEFT JOIN demo.books b ON bi.book_id = b.id
+//        WHERE bi.id = $1`,
+//       [submissionData.issue_id]
+//     );
+
+//     if (!issueRes.rows.length) throw new Error("Issue not found");
+//     const issue = issueRes.rows[0];
+
+
+//     if (issue.return_date) throw new Error("Book already returned");
+
+
+//     const memberRes = await sql.query(
+//       `SELECT * FROM demo.library_members 
+//        WHERE id = $1 AND is_active = true`,
+//       [issue.issued_to]
+//     );
+
+//     if (!memberRes.rows.length) throw new Error("Library member not found");
+//     const member = memberRes.rows[0];
+
+
+
+//     const settingRes = await sql.query(
+//       `SELECT * FROM demo.library_setting LIMIT 1`
+//     );
+
+//     let finePerDay = 5;
+//     if (settingRes.rows.length > 0) {
+//       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
+//     }
+
+
+
+//     const today = new Date();
+//     const dueDate = new Date(issue.due_date);
+//     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
+
+
+
+//     const conditionBefore = submissionData.condition_before || "Good";
+//     const conditionAfter = submissionData.condition_after || "Good";
+//     const conditionAfterLower = conditionAfter.toLowerCase();
+
+
+
+//     let bookPurchasePrice = 0;
+//     let purchaseDetails = null;
+
+//     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
+//       try {
+
+
+//         const purchaseRes = await sql.query(
+//           `SELECT unit_price, purchase_date, quantity, total_amount
+//            FROM demo.purchases 
+//            WHERE book_id = $1 
+//            ORDER BY purchase_date DESC, createddate DESC 
+//            LIMIT 1`,
+//           [issue.book_id]
+//         );
+
+//         if (purchaseRes.rows.length > 0) {
+//           purchaseDetails = purchaseRes.rows[0];
+//           bookPurchasePrice = purchaseDetails.unit_price || 0;
+
+//         } else {
+//           bookPurchasePrice = submissionData.book_price ||
+//             submissionData.lost_book_price ||
+//             0;
+
+//         }
+//       } catch (error) {
+//         console.error(" Error fetching purchase price:", error);
+//         bookPurchasePrice = submissionData.book_price ||
+//           submissionData.lost_book_price ||
+//           0;
+//       }
+//     }
+
+
+//     let totalPenalty = 0;
+//     let penaltyType = "none";
+//     let latePenalty = 0;
+//     let damageLostPenalty = 0;
+
+
+//     if (daysOverdue > 0) {
+//       latePenalty = daysOverdue * finePerDay;
+//       totalPenalty += latePenalty;
+//       penaltyType = "late";
+
+//     }
+
+
+//     if (conditionAfterLower === "lost") {
+//       damageLostPenalty = bookPurchasePrice;
+//       totalPenalty += damageLostPenalty;
+//       penaltyType = "lost";
+
+//     } else if (conditionAfterLower === "damaged") {
+//       damageLostPenalty = bookPurchasePrice * 0.5;
+//       totalPenalty += damageLostPenalty;
+//       penaltyType = "damaged";
+
+//     }
+
+
+
+
+//     const submissionRes = await sql.query(
+//       `INSERT INTO demo.book_submissions
+//         (issue_id, book_id, submitted_by, submit_date,
+//          condition_before, condition_after, remarks,
+//          days_overdue, penalty, createddate, createdbyid)
+//        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3)
+//        RETURNING *`,
+//       [
+//         issue.id,
+//         issue.book_id,
+//         userId,
+//         submissionData.submit_date ? new Date(submissionData.submit_date) : new Date(),
+//         conditionBefore,
+//         conditionAfter,
+//         submissionData.remarks || "",
+//         daysOverdue,
+//         totalPenalty
+//       ]
+//     );
+
+//     const submission = submissionRes.rows[0];
+
+
+
+//     if (conditionAfterLower !== "lost") {
+//       await sql.query(
+//         `UPDATE demo.books
+//          SET available_copies = COALESCE(available_copies, 0) + 1,
+//              lastmodifieddate = CURRENT_TIMESTAMP,
+//              lastmodifiedbyid = $2
+//          WHERE id = $1`,
+//         [issue.book_id, userId]
+//       );
+
+//     } else {
+
+//     }
+
+
+//     let companyId = null;
+//     if (submissionData.company_id) {
+//       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+//       if (uuidRegex.test(submissionData.company_id)) {
+//         companyId = submissionData.company_id;
+//       }
+//     }
+
+
+//     let penaltyMasterId = null;
+//     if (totalPenalty > 0) {
+//       try {
+
+
+//         const penaltyInsertResult = await sql.query(
+//           `INSERT INTO demo.penalty_master
+//            (company_id, penalty_type, book_id, issue_id,
+//             book_title, isbn, issued_to, card_number,
+//             issue_date, due_date,
+//             condition_before, condition_after,
+//             book_amount, per_day_amount,
+//             createddate, createdbyid, is_paid)
+//            VALUES
+//            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,CURRENT_TIMESTAMP,$15,false)
+//            RETURNING id`,
+//           [
+//             companyId,
+//             penaltyType,
+//             issue.book_id,
+//             issue.id,
+//             issue.title,
+//             issue.isbn,
+//             member.id,
+//             member.card_number || null,
+//             issue.issue_date,
+//             issue.due_date,
+//             conditionBefore,
+//             conditionAfter,
+//             totalPenalty,
+//             finePerDay,
+//             userId
+//           ]
+//         );
+
+//         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
+
+//       } catch (error) {
+//         console.error(" Error inserting into penalty_master:", error);
+//         console.error("Error details:", error.message);
+//         console.error("SQL State:", error.code);
+
+//       }
+//     } else {
+
+//     }
+
+
+//     let issueStatus = 'returned';
+//     if (conditionAfterLower === 'lost') {
+//       issueStatus = 'lost';
+//     } else if (conditionAfterLower === 'damaged') {
+//       issueStatus = 'damaged';
+//     }
+
+//     await sql.query(
+//       `UPDATE demo.book_issues
+//        SET return_date = CURRENT_DATE, 
+//            status = $3,
+//            lastmodifieddate = CURRENT_TIMESTAMP,
+//            lastmodifiedbyid = $2
+//        WHERE id = $1`,
+//       [issue.id, userId, issueStatus]
+//     );
+
+
+
+//     await sql.query('COMMIT');
+
+
+
+//     return {
+//       success: true,
+//       message: "Book submitted successfully",
+//       data: {
+//         submission_id: submission.id,
+//         totalPenalty: totalPenalty,
+//         penaltyType: penaltyType,
+//         daysOverdue: daysOverdue,
+//         bookPurchasePrice: bookPurchasePrice,
+//         latePenalty: latePenalty,
+//         damageLostPenalty: damageLostPenalty,
+//         member_details: {
+//           id: member.id,
+//           name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.name || 'N/A',
+//           email: member.email || 'N/A',
+//           card_number: member.card_number || 'N/A'
+//         },
+//         book_details: {
+//           id: issue.book_id,
+//           title: issue.title || 'N/A',
+//           isbn: issue.isbn || 'N/A'
+//         },
+//         issue_details: {
+//           id: issue.id,
+//           issue_date: issue.issue_date,
+//           due_date: issue.due_date,
+//           return_date: new Date().toISOString().split('T')[0],
+//           status: issueStatus
+//         },
+//         submission_details: {
+//           submit_date: submission.submit_date,
+//           condition_before: conditionBefore,
+//           condition_after: conditionAfter,
+//           remarks: submissionData.remarks || ""
+//         },
+//         purchase_details: purchaseDetails ? {
+//           unit_price: purchaseDetails.unit_price,
+//           purchase_date: purchaseDetails.purchase_date,
+//           quantity: purchaseDetails.quantity,
+//           total_amount: purchaseDetails.total_amount
+//         } : null,
+//         penalty_details: {
+//           penalty_master_id: penaltyMasterId,
+//           fine_per_day: finePerDay,
+//           total_penalty: totalPenalty
+//         }
+//       }
+//     };
+
+//   } catch (error) {
+//     await sql.query('ROLLBACK');
+//     console.error(" Book submission failed:", error);
+//     console.error("Error stack:", error.stack);
+
+//     if (error.message.includes("foreign key constraint")) {
+//       throw new Error("Database constraint error. Please check if all related records exist.");
+//     } else if (error.message.includes("connection")) {
+//       throw new Error("Database connection error. Please try again.");
+//     }
+
+//     throw error;
+//   } finally {
+
+//   }
+// }
 async function findById(id) {
   try {
     if (!schema) {

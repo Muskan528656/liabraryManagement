@@ -25,61 +25,80 @@ const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+require("dotenv").config();
 
 const rootDir = path.resolve(__dirname, "../../..");
-// console.log("Root Directory:", rootDir);
-const frontendPublicDir = path.join(rootDir, "frontend", "public");
-// console.log("frontendPublicDir:", frontendPublicDir);
+console.log("Root Directory:", rootDir);
 
+const frontendPublicDir = process.env.FRONTEND_PUBLIC_DIR || path.join(rootDir, "frontend", "public");
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
-// console.log("frontendUploadsDir:", frontendUploadsDir);
-
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
 
-// console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
+console.log("Library Card Upload Directory:", libraryCardUploadDir);
 
 const ensureDirectory = (dirPath) => {
-  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Created directory: ${dirPath}`);
+  }
 };
-[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
+[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
 const deleteFileIfExists = (filePath = "") => {
   if (!filePath || typeof filePath !== "string") return;
 
-  if (filePath.startsWith('/')) {
-    const absolutePath = path.join(frontendPublicDir, filePath.slice(1));
-    try {
+  try {
+    if (filePath.startsWith('/uploads/')) {
+      const absolutePath = path.join(rootDir, "frontend", "public", filePath);
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
-
+        console.log(`Deleted file: ${absolutePath}`);
       }
-    } catch (err) {
-      console.error("Error deleting file:", err.message);
     }
+
+    else if (!path.isAbsolute(filePath)) {
+      const absolutePath = path.join(frontendPublicDir, filePath);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+        console.log(`Deleted file: ${absolutePath}`);
+      }
+    }
+
+    else {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted file: ${filePath}`);
+      }
+    }
+  } catch (err) {
+    console.error("Error deleting file:", err.message);
   }
 };
 
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, libraryCardUploadDir),
+  destination: (req, file, cb) => {
+    cb(null, libraryCardUploadDir);
+  },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'librarycard-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-console.log("Multer storage configured for library cards.", storage);
-
 const upload = multer({
-  storage,
+  storage: storage,
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
   }
 });
-console.log("Multer upload configured for library cards.", upload);
+
+console.log("Multer configured successfully for library cards.");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
@@ -435,3 +454,6 @@ module.exports = (app) => {
 
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };
+
+
+
