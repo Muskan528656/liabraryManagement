@@ -292,9 +292,9 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   //   upcomingIssues.forEach(issue => {
   //     const memberId = issue.member_id || issue.card_id;
   //     const dueDate = new Date(issue.due_date);
-  //     console.log("Processing issue for member ID:", memberId, "Due Date:", dueDate);
-  //     console.log("Issue details:", issue);
-  //     console.log("Current membersMap:", membersMap);
+  //      
+  //      
+  //      
   //     if (!membersMap.has(memberId)) {
   //       membersMap.set(memberId, {
   //         id: memberId,
@@ -327,7 +327,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   //   setUpcomingDueMembers(membersList);
 
-  //   console.log("Upcoming Due Members:", upcomingDueMembers);
+  //    
   // };
 
   const getDefaultPhoto = (id) => {
@@ -390,7 +390,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
-      console.log("Latest Members:", latestMembersSorted);
+ 
 
       setLatestMembers(latestMembersSorted);
 
@@ -1162,11 +1162,11 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                         >
                           <div className="d-flex align-items-center">
                             <div className="position-relative me-2">
-                              <img
+                              {/* <img
                                 src={member.image}
                                 alt={member.name}
                                 onError={(e) => {
-                                  console.log("Image failed to load:", member.image);
+ 
                                   e.target.onerror = null;
                                   
                                 }}
@@ -1177,8 +1177,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                   objectFit: "cover",
                                   border: "2px solid #e2e8f0"
                                 }}
-                              />
-                              <div style={{
+                              /> */}
+                              {/* <div style={{
                                 position: "absolute",
                                 bottom: 0,
                                 right: 0,
@@ -1187,7 +1187,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                 borderRadius: "50%",
                                 background: statusColor,
                                 border: "2px solid white"
-                              }}></div>
+                              }}></div> */}
                             </div>
                             <div>
                               <p className="mb-0 fw-semibold" style={{ fontSize: '13px' }}>

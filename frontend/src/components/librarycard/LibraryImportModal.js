@@ -74,11 +74,11 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
       const api = new DataApi("librarycard");
       const res = await api.get("/object-types");
 
-      console.log("Fetched Object Types Response:", res);
+ 
 
       if (res.data?.success) {
         setObjectTypes(res.data.data || []);
-        console.log(`Set ${res.data.data?.length || 0} object types`);
+ 
       } else {
         console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
         setObjectTypes([]);

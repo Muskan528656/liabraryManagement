@@ -54,7 +54,7 @@ async function insertPublisher(data, userId) {
 async function updatePublisherByid(id, data, userId) {
     try {
         const current = await findPublisherById(id, this.schema);
-        console.log("current is", current)
+ 
         if (!current) {
             throw new Error("Publisher not found");
         }
@@ -87,7 +87,7 @@ async function updatePublisherByid(id, data, userId) {
  
         ];
         const result = await sql.query(query, values);
-        console.log("Result in updatePublisherByid:", result);
+ 
         return result.rows[0];
     } catch (error) {
         console.error("Error in updatePublisherByid:", error);

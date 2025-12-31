@@ -411,7 +411,7 @@ module.exports = (app) => {
         }
 
         const userId = req.user?.id || null;
-        console.log("Creating company with data:", req.body);
+ 
         
         const company = await Company.create(req.body, userId);
         if (!company) {
@@ -495,7 +495,7 @@ module.exports = (app) => {
                             (mimeType === 'image/gif' && fileExtension === '.gif');
 
           if (!isValidMimeType || !isValidExtension || !isJpegFile) {
-            console.log('Backend file rejected:', { isValidMimeType, isValidExtension, isJpegFile });
+ 
             return res.status(400).json({ errors: "Only JPEG, PNG, and GIF images are allowed" });
           }
 
@@ -514,7 +514,7 @@ module.exports = (app) => {
           companyData.logourl = `/uploads/companies/${filename}`;
         }
 
-        console.log("company update data->>", companyData)
+ 
         const company = await Company.updateById(req.params.id, companyData, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to update company" });

@@ -347,7 +347,7 @@ async function findById(id) {
 
 
 async function create(companyData, userId) {
-  console.log("Comapny data->>>", companyData)
+ 
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -415,7 +415,7 @@ async function updateById(id, companyData, userId) {
     if (!currentCompany) {
       throw new Error("Company not found");
     }
-    console.log("companyDatacompanyData",companyData)
+ 
     
     const query = `UPDATE public.company 
                    SET name = $2, tenantcode = $3, userlicenses = $4, isactive = $5, 

@@ -78,7 +78,7 @@ const LibraryCardDetail = ({
 
   const DISABLED_FIELDS_ON_EDIT = useMemo(() => new Set(), []);
   const READONLY_FIELDS_ON_EDIT = useMemo(
-    () => new Set(["user_email", "card_number"]),
+    () => new Set(["user_email", "card_number", "createddate", "lastmodifieddate"]),
     []
   );
 
@@ -112,7 +112,7 @@ const LibraryCardDetail = ({
 
   const getImageUrl = useCallback(
     (imagePath) => {
-      console.log("Getting image URL for:", imagePath);
+ 
 
       if (!imagePath) {
         return "/default-user.png";
@@ -142,13 +142,13 @@ const LibraryCardDetail = ({
           }
 
           const fullUrl = `${normalizedFileHost}${cleanPath}`;
-          console.log("Constructed image URL:", fullUrl);
+ 
           return fullUrl;
         }
 
         if (cleanPath && !cleanPath.includes('/')) {
           const fullUrl = `${normalizedFileHost}/uploads/librarycards/${cleanPath}`;
-          console.log("Constructed filename URL:", fullUrl);
+ 
           return fullUrl;
         }
       }
@@ -234,11 +234,11 @@ const LibraryCardDetail = ({
     const endDate = new Date(subscription.end_date);
     const today = new Date();
 
- 
+
     const totalDays =
       (endDate - startDate) / (1000 * 60 * 60 * 24);
 
- 
+
     const usedDays =
       (today - startDate) / (1000 * 60 * 60 * 24);
 
@@ -268,7 +268,7 @@ const LibraryCardDetail = ({
     const userName = userNames[userId] || `User ${userId}`;
     const userAvatar =
       userAvatars[userId] ||
-      `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=${size}`;
+      `https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=${size}`;
 
     const handleUserClick = () => {
       if (clickable && userId) {
@@ -453,19 +453,19 @@ const LibraryCardDetail = ({
   }, [data?.subscription_id]);
 
   const fetchCardData = async () => {
-    console.log("check---->")
+ 
     try {
       const api = new DataApi("librarycard");
 
       const response = await api.fetchById(id);
 
-      console.log("responsecarddata", response)
+ 
 
       if (response && response.data) {
         const card = response.data;
         setCardData(card);
 
-        console.log("cardcardcard", card)
+ 
 
         if (card.id) {
           await fetchBookCounts(card.id);
@@ -485,12 +485,12 @@ const LibraryCardDetail = ({
   const fetchBookCounts = async (userId, cardId) => {
     try {
 
-      console.log("bookcount", userId)
-      console.log("cardId", cardId)
+ 
+ 
 
       const issueApi = new DataApi("bookissue");
       const issuesResponse = await issueApi.fetchAll();
-      console.log("issuesResponse", issuesResponse)
+ 
       if (issuesResponse && issuesResponse.data) {
         const issues = Array.isArray(issuesResponse.data)
           ? issuesResponse.data
@@ -501,7 +501,7 @@ const LibraryCardDetail = ({
             issue.issued_to === userId
 
 
-          console.log("matchesCardmatchesCardmatchesCard", matchesCard)
+ 
           return matchesCard
         });
         setIssuedCount(cardIssues.length);
@@ -535,11 +535,11 @@ const LibraryCardDetail = ({
       const api = new DataApi("librarycard");
       const res = await api.get("/object-types");
 
-      console.log("Fetched Object Types Response:", res);
+ 
 
       if (res.data?.success) {
         setObjectTypes(res.data.data || []);
-        console.log(`Set ${res.data.data?.length || 0} object types`);
+ 
       } else {
         console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
         setObjectTypes([]);
@@ -867,7 +867,7 @@ const LibraryCardDetail = ({
               }}
             ></div>
           </div>
-
+          {/* 
           <div style={{
             background: "#f8f9fa",
             padding: "15px",
@@ -918,7 +918,7 @@ const LibraryCardDetail = ({
               )}
             </div>
 
-          </div>
+          </div> */}
         </Card.Body>
       </Card>
     );
@@ -1064,7 +1064,7 @@ const LibraryCardDetail = ({
                   userId
                 ] = `https://ui-avatars.com/api/?name=${encodeURIComponent(
                   fullName || "User"
-                )}&background=6f42c1&color=fff&size=32`;
+                )}&background=11439b&color=fff&size=32`;
               }
             }
           }
@@ -1073,7 +1073,7 @@ const LibraryCardDetail = ({
           names[userId] = `User ${userId}`;
           avatars[
             userId
-          ] = `https://ui-avatars.com/api/?name=User&background=6f42c1&color=fff&size=32`;
+          ] = `https://ui-avatars.com/api/?name=User&background=11439b&color=fff&size=32`;
         }
       }
 
@@ -1173,7 +1173,7 @@ const LibraryCardDetail = ({
         (field) => field.type === "select" && typeof field.options === "string"
       );
 
-      console.log("Debug - Lookup fields (string options only):", lookupFields);
+ 
 
       const lookupDataObj = {};
       const endpointMap = {
@@ -1188,7 +1188,7 @@ const LibraryCardDetail = ({
         if (!lookupDataObj[optionKey]) {
           try {
             const endpoint = endpointMap[optionKey] || optionKey;
-            console.log(`Fetching data for endpoint: ${endpoint}`);
+ 
 
             const api = new DataApi(endpoint);
             const response = await api.fetchAll();
@@ -1239,7 +1239,7 @@ const LibraryCardDetail = ({
                   : [data];
               }
 
-              console.log(`Fetched ${lookupDataObj[optionKey]?.length} items for ${optionKey}`);
+ 
             }
           } catch (error) {
             console.error(`Error fetching lookup data for ${optionKey}:`, error);
@@ -1298,7 +1298,7 @@ const LibraryCardDetail = ({
 
 
   const handleSave = async () => {
-    console.log("Saving data...");
+ 
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1321,7 +1321,7 @@ const LibraryCardDetail = ({
 
           if (field === "type_id") {
             payload["type"] = value;
-            console.log(`✅ Type field: ${field} -> type: ${value}`);
+ 
           }
           else if (field === "father_guardian_name") {
             payload["father_guardian_name"] = value;
@@ -1340,78 +1340,111 @@ const LibraryCardDetail = ({
         }
       });
 
-      console.log("Final payload for save:", payload);
-      console.log("Selected file:", selectedImageFile);
+ 
+ 
 
       let response;
 
-      console.log("CASE: Always sending FormData for consistency");
-
-      const formData = new FormData();
-
-      Object.keys(payload).forEach(key => {
-        if (payload[key] !== null && payload[key] !== undefined) {
-          formData.append(key, payload[key]);
-        }
-      });
-
       if (selectedImageFile) {
-        console.log("Including new image file");
+
+        const formData = new FormData();
+
+        Object.keys(payload).forEach(key => {
+
+          if (payload[key] !== null && payload[key] !== undefined) {
+
+            formData.append(key, payload[key]);
+
+          }
+
+        });
+
         formData.append("image", selectedImageFile);
-      } else if (data?.image) {
-        console.log("Including existing image path");
-        if (typeof data.image === 'object' && data.image !== null) {
-          formData.append("image", data.image.name || data.image);
-        } else {
-          formData.append("image", data.image);
+
+        console.log("FORMDATA SENT:");
+
+        for (let p of formData.entries()) console.log(p[0], p[1]);
+
+        response = await api.updateLibraryCard(formData, id);
+
+      } else {
+
+        const requestPayload = { ...payload };
+
+        if (data?.image) {
+
+          if (typeof data.image === 'object' && data.image !== null) {
+
+            requestPayload.image = data.image.name || data.image;
+
+          } else {
+
+            requestPayload.image = data.image;
+
+          }
+
         }
+
+        response = await api.update(requestPayload, id);
+
       }
-
-      console.log("FORMDATA SENT:");
-      for (let p of formData.entries()) console.log(p[0], p[1]);
-
-      response = await api.updateLibraryCard(formData, id);
 
       let updatedData =
+
         response?.data?.data ||
+
         response?.data ||
+
         response;
 
-      console.log("Backend response:", updatedData);
-
       if (updatedData && typeof updatedData === 'object') {
+
         if (updatedData.image && typeof updatedData.image === "object" && Object.keys(updatedData.image).length === 0) {
-          console.log("Fixing empty image object from backend");
 
           if (selectedImageFile) {
+
             updatedData.image = `/uploads/librarycards/${selectedImageFile.name}`;
+
           } else if (data?.image) {
+
             updatedData.image = data.image;
+
           } else {
+
             updatedData.image = null;
+
           }
+
         }
+
       }
 
-      console.log("FINAL updatedData:", updatedData);
-
       if (updatedData) {
+
         setData(updatedData);
+
         setOriginalData(JSON.parse(JSON.stringify(updatedData)));
+
         setCardData(updatedData);
+
       }
 
       PubSub.publish("RECORD_SAVED_TOAST", {
+
         title: "Success",
+
         message: `${moduleLabel} updated successfully`,
+
       });
 
       resetImageSelection();
+
       await fetchCardData();
 
       setRefreshCounter(prev => prev + 1);
 
       setIsEditing(false);
+
       setTempData(null);
 
     } catch (error) {
@@ -1457,7 +1490,7 @@ const LibraryCardDetail = ({
     const fallbackImage = data?.image || cardData?.image;
     if (fallbackImage) {
       const imageUrl = getImageUrl(fallbackImage);
-      console.log("Resetting to image URL:", imageUrl);
+ 
       setImagePreview(imageUrl);
     } else {
       setImagePreview("/default-user.png");
@@ -1505,7 +1538,7 @@ const LibraryCardDetail = ({
 
     handleFieldChange("image", file);
 
-    console.log("Image selected:", file.name, file.size, file.type);
+ 
 
     event.target.value = "";
   };
@@ -1919,11 +1952,7 @@ const LibraryCardDetail = ({
                         disabled={saving}
                       >
                         <i className="fa-solid fa-check me-2"></i>
-                        {saving
-                          ? "Saving..."
-                          : hasDataChanged()
-                            ? `Save - ${formatDateDDMMYYYY(new Date())}`
-                            : "Save"}
+                        Save
                       </button>
                       <button
                         className="custom-btn-secondary"
@@ -1935,7 +1964,7 @@ const LibraryCardDetail = ({
                       </button>
                     </div>
                   )}
-                  {!isEditing && (
+                  {/* {!isEditing && (
                     <button
                       onClick={handleDelete}
                       className="ms-2 custom-btn-delete-detail"
@@ -1943,7 +1972,7 @@ const LibraryCardDetail = ({
                       <i className="fa-solid fa-trash me-2"></i>
                       Delete
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
 
@@ -2003,7 +2032,7 @@ const LibraryCardDetail = ({
                             padding: "0.375rem 0.75rem",
                           }}
                         >
-                          <i className="fa-solid fa-search" style={{ color: "#6f42c1" }}></i>
+                          <i className="fa-solid fa-search" style={{ color: "var(--primary-color)" }}></i>
                         </InputGroup.Text>
                         <Form.Control
                           placeholder="Search books..."
@@ -2181,7 +2210,7 @@ const LibraryCardDetail = ({
         cancelText="Cancel"
       />
     </Container>
-  );
+  )
 };
 
 export default LibraryCardDetail;

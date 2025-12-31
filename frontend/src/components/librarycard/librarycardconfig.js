@@ -41,7 +41,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         customHandlers.handleBarcodePreview ||
         ((card) => console.warn("Barcode preview handler not provided", card));
 
-    console.log("External data:", externalData);
+ 
 
     let defaultCountryCode = "";
     let plansList = [];
@@ -68,7 +68,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     defaultCountryCode = codePart;
                 }
 
-                console.log("Default country code from company:", defaultCountryCode);
+ 
             }
         }
 
@@ -76,7 +76,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         const plansApi = new DataApi("plans");
         const plansResponse = await plansApi.fetchAll();
 
-        console.log("Plans API Response:", plansResponse);
+ 
 
         let plansData = [];
 
@@ -91,7 +91,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             plansData = plansResponse;
         }
 
-        console.log("Extracted plans data:", plansData);
+ 
 
         if (plansData.length > 0) {
             plansList = plansData
@@ -102,7 +102,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                         plan.is_active === 1 ||
                         plan.is_active === "1";
 
-                    console.log(`Plan ${plan.plan_name}: is_active = ${plan.is_active}, filtered = ${isActive}`);
+ 
                     return isActive;
                 })
                 .map(plan => ({
@@ -111,16 +111,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: plan // Store full plan data for details
                 }));
 
-            console.log("Filtered active plans list:", plansList);
+ 
         } else {
             console.warn("No plans data found");
         }
 
- 
+
         const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
-        console.log("Object Type API Response:", objectTypeResponse);
+ 
 
         let objectTypeData = [];
 
@@ -134,7 +134,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             objectTypeData = objectTypeResponse;
         }
 
-        console.log("Extracted object type data:", objectTypeData);
+ 
 
         if (objectTypeData.length > 0) {
             objectTypesList = objectTypeData
@@ -145,7 +145,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: type
                 }));
 
-            console.log("Filtered active object types list:", objectTypesList);
+ 
         } else {
             console.warn("No object type data found");
         }
@@ -154,9 +154,9 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         defaultCountryCode = "+91"; // Default to India if company fetch fails
     }
 
-    console.log("Final defaultCountryCode:", defaultCountryCode);
-    console.log("Final plansList:", plansList);
-    console.log("Final objectTypesList:", objectTypesList);
+ 
+ 
+ 
 
     const defaultColumns = [
         {
@@ -255,7 +255,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
 
     return {
         moduleName: "librarycards",
-        moduleLabel: "Library Members",
+        moduleLabel: " Members",
         apiEndpoint: "librarycard",
         columns: defaultColumns,
         initialFormData: {
@@ -376,7 +376,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
-                {
+            {
                 name: "plan_id",
                 label: "Plan",
                 type: "select",
@@ -496,11 +496,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 idField: "id",
                 labelField: "name",
             },
- 
- 
- 
- 
- 
+
+
+
+
+
         },
 
         features: {
@@ -518,6 +518,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         },
 
         filterFields: [
+
+
+
+
+
+
+
+
+
+
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -525,18 +535,42 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 type: "select",
                 options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
             },
+
+
+
+
+
+
             {
                 name: "first_name",
                 field: "first_name",
                 label: "First Name",
                 type: "text",
             },
+
+
+
+
+
+
+
+
+
+
+
+
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
+
+
+
+
+
+
             {
                 name: "registration_date",
                 field: "registration_date",
@@ -613,7 +647,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             handleBarcodePreview,
 
             onDataLoad: (data) => {
-                console.log("onDataLoad called with:", data);
+ 
 
                 if (Array.isArray(data)) {
                     return data.map((item) => {
@@ -638,7 +672,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 return data;
             },
             beforeEdit: (item) => {
-                console.log("beforeEdit called with:", item);
+ 
+
                 const preparedData = { ...item };
                 if (preparedData.hasOwnProperty("is_active")) {
                     preparedData.status = preparedData.is_active;
@@ -647,21 +682,22 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const selectedPlan = plansList.find(p => p.value == preparedData.plan_id)?.data;
                     if (selectedPlan) {
                         preparedData.selectedPlan = selectedPlan;
-                        console.log("Loaded selectedPlan for editing:", selectedPlan);
+ 
                     } else if (preparedData.plan && typeof preparedData.plan === 'object') {
                         preparedData.selectedPlan = preparedData.plan;
-                        console.log("Loaded selectedPlan from item.plan:", preparedData.plan);
+ 
                     }
                 }
 
-                console.log("Prepared data for edit:", preparedData);
+ 
                 return preparedData;
             },
             beforeSubmit: (formData, isEditing, originalData) => {
-                console.log("=== BEFORE SUBMIT ===");
-                console.log("Form data:", formData);
-                console.log("Is editing:", isEditing);
-                console.log("Original data:", originalData);
+ 
+ 
+ 
+ 
+
                 const errors = [];
                 const submitData = { ...formData };
                 if (submitData.selectedPlan) {
@@ -693,8 +729,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Image size must be less than 2MB");
                 }
 
-                console.log("Processed submit data:", submitData);
-                console.log("Errors:", errors);
+ 
+ 
 
                 return {
                     errors,
@@ -703,17 +739,17 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             afterSubmit: (response, formData, isEditing) => {
-                console.log("=== AFTER SUBMIT ===");
-                console.log("Response:", response);
-                console.log("Form data:", formData);
-                console.log("Is editing:", isEditing);
+ 
+ 
+ 
+ 
 
                 return response;
             }
         },
 
         transformResponse: (response) => {
-            console.log("transformResponse called with:", response);
+ 
 
             if (response && response.data) {
                 let data = response.data;

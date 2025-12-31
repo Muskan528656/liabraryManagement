@@ -74,7 +74,7 @@ const BarcodeScanPurchase = ({
             <i className={`fa-solid ${loading ? 'fa-spinner fa-spin' : 'fa-search'}`}></i>
           </Button>
         </InputGroup>
-        
+
         {scanningBook && (
           <Alert variant="success" className="mt-3">
             <i className="fa-solid fa-check-circle me-2"></i>

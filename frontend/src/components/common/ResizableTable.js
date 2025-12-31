@@ -230,30 +230,21 @@ const ResizableTable = ({
         return items;
     };
 
-    if (loading) {
-        return (
-            <div className="text-center p-4">
-                <div
-                    className="spinner-border"
-                    role="status"
-                    style={{
-                        width: "50px",
-                        height: "50px",
-                        borderWidth: "4px",
-                        borderColor: "var(--primary-color)",
-                        borderRightColor: "transparent",
-                    }}
-                >
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        );
-    }
 
     return (
+
         <>
+            {/* Pagination */}
+            {totalPages > 1 && (
+
+                <div className="m-1">
+                    Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
+                    {safeData.length} records
+                </div>
+
+            )}
             <div
-                className="table-responsive resizable-table-container"
+                className="mt-2 table-responsive resizable-table-container"
                 style={{
                     border: "1px solid #e2e8f0",
                     borderRadius: "8px",
@@ -263,8 +254,6 @@ const ResizableTable = ({
                     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                     width: "100%",
                     maxWidth: "100%",
-
-
 
                     position: "relative",
                     display: "block",
@@ -297,7 +286,7 @@ const ResizableTable = ({
                                             background: "#201c24ff !important",
                                             fontWeight: "600",
                                             color: "var(--primary-color)",
-                                            borderBottom: "2px solid #e9d5ff",
+                                            borderBottom: "2px solid #000000ff",
 
 
                                             letterSpacing: "0.5px"
@@ -338,7 +327,7 @@ const ResizableTable = ({
                                             background: "#f3e9fc",
                                             fontWeight: "600",
                                             color: "var(--primary-color)",
-                                            borderBottom: "2px solid #e9d5ff",
+                                            // borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
 
 
@@ -559,69 +548,15 @@ const ResizableTable = ({
                                     </tr>
                                 ))
                             )}
-                            {/* Lazy Loading Trigger */}
-                            {currentPage === 1 && visibleRows < safeData.length && (
-                                <tr ref={loadMoreRef}>
-                                    <td
-                                        colSpan={
-                                            columns.length + (showCheckbox ? 1 : 0) + (showSerialNumber ? 1 : 0) + (showActions ? 1 : 0)
-                                        }
-                                        className="text-center py-3"
-                                        style={{ height: "50px" }}
-                                    >
-                                        {isLoadingMore && (
-                                            <div className="d-flex justify-content-center align-items-center">
-                                                <div
-                                                    className="spinner-border spinner-border-sm"
-                                                    role="status"
-                                                    style={{
-                                                        width: "20px",
-                                                        height: "20px",
-                                                        borderWidth: "2px",
-                                                        borderColor: "var(--primary-color)",
-                                                        borderRightColor: "transparent",
-                                                    }}
-                                                >
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                                <span className="ms-2 text-muted" >
-                                                    Loading more...
-                                                </span>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            )}
+
                         </tbody>
                     </Table>
                 </div>
             </div>
-
-            {/* Pagination */}
             {totalPages > 1 && (
-                <div
-                    className="d-flex justify-content-between align-items-center mt-3 detail-h3"
-                    style={{
-                        padding: "12px 16px",
-                        background: "#fafbfc",
-                        border: "1px solid #e2e8f0",
-                        borderTop: "none",
-                        borderRadius: "0 0 8px 8px"
-                    }}
-                >
-                    <div>
-                        Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
-                        {safeData.length} records
-                    </div>
-                    <Pagination className="mb-0" style={{ marginBottom: 0 }}>
-                        <Pagination.First
-                            onClick={() => onPageChange(1)}
-                            disabled={currentPage === 1}
-                            style={{
-                                borderColor: "#e2e8f0",
-                                color: currentPage === 1 ? "#9ca3af" : "var(--primary-color)"
-                            }}
-                        />
+                <div className="d-flex justify-content-end">
+                    <Pagination className="mb-0">
+
                         <Pagination.Prev
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
@@ -630,7 +565,9 @@ const ResizableTable = ({
                                 color: currentPage === 1 ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
+
                         {renderPaginationItems()}
+
                         <Pagination.Next
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
@@ -639,6 +576,7 @@ const ResizableTable = ({
                                 color: currentPage === totalPages ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
+
                         <Pagination.Last
                             onClick={() => onPageChange(totalPages)}
                             disabled={currentPage === totalPages}
@@ -647,9 +585,11 @@ const ResizableTable = ({
                                 color: currentPage === totalPages ? "#9ca3af" : "var(--primary-color)"
                             }}
                         />
+
                     </Pagination>
                 </div>
             )}
+
         </>
     );
 };

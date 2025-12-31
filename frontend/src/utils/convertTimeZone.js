@@ -50,13 +50,13 @@ function resolveTimezone(timeZone) {
 
 
 export function convertToUserTimezone(dateInput, timeZone) {
-  console.log("dateInput =", dateInput);
-  console.log("timeZone =", timeZone);
+ 
+ 
 
   if (!dateInput) return "";
 
   const normalizedDate = normalizeDateInput(dateInput);
-  console.log("normalizedDate =", normalizedDate);
+ 
 
   const date = new Date(normalizedDate);
 
@@ -66,7 +66,7 @@ export function convertToUserTimezone(dateInput, timeZone) {
   }
 
   const targetTimeZone = resolveTimezone(timeZone);
-  console.log("Resolved TimeZone =", targetTimeZone);
+ 
 
   try {
     const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -80,8 +80,8 @@ export function convertToUserTimezone(dateInput, timeZone) {
       timeZone: targetTimeZone,
     });
 
-    console.log("formatter ", formatter);
-    console.log("formatter2333 ", formatter.format(date).replace(", ", " "));
+ 
+ 
 
     return formatter.format(date).replace(", ", " ");
   } catch (err) {

@@ -20,7 +20,6 @@ import { useNavigate } from "react-router-dom";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
-import DataApi from "../../api/dataApi";
 import ResizableTable from "../common/ResizableTable";
 import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
@@ -113,7 +112,7 @@ const BookSubmit = () => {
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Library Settings:", data);
+ 
 
                 let settings = {};
                 if (data.success && data.data && Array.isArray(data.data)) {
@@ -125,7 +124,7 @@ const BookSubmit = () => {
                 }
 
                 setLibrarySettings(settings);
-                console.log("Fine per day set to:", settings.fine_per_day);
+ 
             } else {
                 console.error("Failed to fetch library settings");
                 const defaultSettings = {
@@ -158,11 +157,11 @@ const BookSubmit = () => {
                 "GET"
             );
 
-            console.log("Fetch Purchase Details Response:", resp);
+ 
 
             if (resp.ok) {
                 const data = await resp.json();
-                console.log("Book Purchase Details:", data);
+ 
 
                 let purchaseDetails = null;
                 if (data.success && data.data) {
@@ -205,7 +204,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
-            console.log("Fetched active issues:", issues);
+ 
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -292,14 +291,14 @@ const BookSubmit = () => {
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
             );
-            console.log("Fetch Submitted Books Response:", submissionsResp);
+ 
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
             }
 
             const response = await submissionsResp.json();
             let submissions = [];
-            console.log("Submitted Books Data:", response);
+ 
             if (response.success !== undefined) {
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
@@ -974,7 +973,7 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
-            console.log("Update Issue Result:", result);
+ 
             if (result.success) {
                 PubSub.publish("RECORD_SUCCESS_TOAST", {
                     title: "Success",
@@ -1019,7 +1018,7 @@ const BookSubmit = () => {
     };
 
     const handleCancelConfirm = async () => {
-        console.log("Cancelling issue:", selectedIssue);
+ 
         if (!selectedIssue) return;
 
         try {
@@ -1185,7 +1184,7 @@ const BookSubmit = () => {
                 Object.entries(submitData).filter(([_, v]) => v !== undefined)
             );
 
-            console.log("Submitting book data:", cleanedData);
+ 
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,
@@ -1452,7 +1451,7 @@ const BookSubmit = () => {
                 return (
                     <div>
                         <Button
-                            variant="primary"
+                            className="btn-custom"
                             size="sm"
                             onClick={() => handleSubmitClick(record)}
                             title="Submit Return"
@@ -1468,7 +1467,7 @@ const BookSubmit = () => {
                             <i className="fa-solid fa-edit"></i>
                         </Button> */}
                         <Button
-className="m-1"
+                            className="m-1"
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleCancelClick(record)}
@@ -1601,12 +1600,12 @@ className="m-1"
                 </span>
             )
         },
-        {
-            field: "status",
-            label: "Status",
-            width: 100,
-            render: (value) => getStatusBadge(value)
-        }
+        // {
+        //     field: "status",
+        //     label: "Status",
+        //     width: 100,
+        //     render: (value) => getStatusBadge(value)
+        // }
     ];
 
 
@@ -1753,257 +1752,186 @@ className="m-1"
                                                 border: "1px solid #d8b4fe",
                                                 borderRadius: "8px"
                                             }}> */}
-                                                {/* <Card.Body> */}
-                                                    <Row className="align-items-center">
-                                                        {/* Search By Dropdown */}
-                                                        <Col md={3}>
-                                                            <Form.Group >
-                                                                <Form.Label className="fw-bold small">Search By</Form.Label>
-                                                                <Form.Select
-                                                                    value={searchMode}
-                                                                    onChange={handleSearchModeChange}
-                                                                    style={{
-                                                                        border: "2px solid #8b5cf6",
-                                                                        borderRadius: "6px",
-                                                                        fontSize: "0.9rem",
-                                                                        height: "40px",
-                                                                    }}
-                                                                >
-                                                                    <option value="isbn">Search by ISBN</option>
-                                                                    <option value="card">Search by Library Card</option>
-                                                                </Form.Select>
-                                                            </Form.Group>
-                                                        </Col>
+                                            {/* <Card.Body> */}
+                                            <Row className="align-items-center">
+                                                {/* Search By Dropdown */}
+                                                <Col md={3}>
+                                                    <Form.Group >
+                                                        <Form.Label className="fw-bold small">Search By</Form.Label>
+                                                        <Form.Select
+                                                            value={searchMode}
+                                                            onChange={handleSearchModeChange}
+                                                            style={{
+                                                                border: "2px solid #8b5cf6",
+                                                                borderRadius: "6px",
+                                                                fontSize: "0.9rem",
+                                                                height: "40px",
+                                                            }}
+                                                        >
+                                                            <option value="isbn">Search by ISBN</option>
+                                                            <option value="card">Search by Library Card</option>
+                                                        </Form.Select>
+                                                    </Form.Group>
+                                                </Col>
 
-                                                        {/* Search Input with Scan Button */}
-                                                        <Col md={6}>
-                                                            <Form.Group >
-                                                                <Form.Label className="fw-bold small">
-                                                                    {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
-                                                                </Form.Label>
-                                                                <InputGroup>
-                                                                    <Form.Control
-                                                                        ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
-                                                                        type="text"
-                                                                        placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
-                                                                        value={searchMode === "isbn" ? isbn : cardNumber}
-                                                                        onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
-                                                                        onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
-                                                                        autoFocus
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderRadius: "6px 0 0 6px",
-                                                                            height: "40px",
-                                                                            fontSize: "0.9rem",
-                                                                        }}
-                                                                    />
-                                                                    {loading && (
-                                                                        <InputGroup.Text style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderLeft: "none",
-                                                                            borderRadius: "0",
-                                                                            backgroundColor: "#f8f9fa",
-                                                                            height: "40px",
-                                                                        }}>
-                                                                            <Spinner animation="border" size="sm" />
-                                                                        </InputGroup.Text>
-                                                                    )}
-
-                                                                    {/* Clear Button */}
-                                                                    <Button
-                                                                        variant="outline-secondary"
-                                                                        onClick={handleClearSearch}
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            border: "1px solid #dee2e6",
-                                                                            borderLeft: loading ? "none" : "1px solid #dee2e6",
-                                                                            borderRadius: "0",
-                                                                            minWidth: "40px",
-                                                                            backgroundColor: "#f8f9fa",
-                                                                            height: "40px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "center",
-                                                                  
-                                                                        }}
-                                                                    >
-                                                                        <i className="fa-solid fa-xmark"></i>
-                                                                    </Button>
-
-                                                                    {/* Scan Button */}
-                                                                    <Button
-                                                                        variant="primary"
-                                                                        onClick={handleScanButtonClick}
-                                                                        disabled={loading}
-                                                                        style={{
-                                                                            backgroundColor: "#1e3a8a",
-                                                                            border: "none",
-                                                                            borderRadius: "0 6px 6px 0",
-                                                                            fontWeight: "600",
-                                                                            fontSize: "0.875rem",
-                                                                            padding: "0.375rem 0.75rem",
-                                                                            height: "40px",
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "center",
-                                                                            minWidth: "80px"
-                                                                        }}
-                                                                    >
-                                                                        {loading ? (
-                                                                            <Spinner animation="border" size="sm" className="me-1" />
-                                                                        ) : (
-                                                                            <i className="fa-solid fa-camera me-1"></i>
-                                                                        )}
-                                                                        Scan
-                                                                    </Button>
-                                                                </InputGroup>
-                                                            </Form.Group>
-                                                        </Col>
-
-                                                        {/* Book Details Column - Shows book info right next to search input */}
-                                                        <Col md={3}>
-                                                            {book && (
-                                                                <div className="h-100 d-flex align-items-center">
-                                                                    <Card className="w-100" style={{
-                                                                        border: "1px solid #e5e7eb",
-                                                                        borderRadius: "6px",
-                                                                        background: "#f8f9fa",
-                                                                        marginTop: "24px"
-                                                                    }}>
-                                                                        <Card.Body className="p-2">
-                                                                            <h6 className="mb-2 fw-bold" style={{
-                                                                                color: "#1e3a8a",
-                                                                                fontSize: "13px",
-                                                                                whiteSpace: "nowrap",
-                                                                                overflow: "hidden",
-                                                                                textOverflow: "ellipsis"
-                                                                            }}>
-                                                                                <i className="fa-solid fa-book me-2"></i>
-                                                                                Book Found
-                                                                            </h6>
-                                                                            <div className="small" style={{ fontSize: "12px" }}>
-                                                                                <div className="text-truncate mb-1" title={book.title} style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Title:</strong> <span style={{ marginLeft: "124px" }}>{book.title}</span>
-                                                                                </div>
-                                                                                <div className="mb-1" style={{ marginBottom: "4px" }}>
-                                                                                    <strong>ISBN:</strong> <span style={{ marginLeft: "124px" }}>{book.isbn}</span>
-                                                                                </div>
-                                                                                <div className="text-truncate">
-                                                                                    <strong>Author:</strong> <span style={{ marginLeft: "124px" }}>{book.author || "N/A"}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </Card.Body>
-                                                                    </Card>
-                                                                </div>
+                                                {/* Search Input with Scan Button */}
+                                                <Col md={6}>
+                                                    <Form.Group >
+                                                        <Form.Label className="fw-bold small">
+                                                            {searchMode === "isbn" ? "ISBN Number" : "Library Card Number"}
+                                                        </Form.Label>
+                                                        <InputGroup>
+                                                            <Form.Control
+                                                                ref={searchMode === "isbn" ? isbnInputRef : cardInputRef}
+                                                                type="text"
+                                                                placeholder={searchMode === "isbn" ? "Enter ISBN number..." : "Enter Library Card number..."}
+                                                                value={searchMode === "isbn" ? isbn : cardNumber}
+                                                                onChange={searchMode === "isbn" ? handleIsbnChange : handleCardNumberChange}
+                                                                onKeyDown={searchMode === "isbn" ? handleIsbnKeyDown : handleCardKeyDown}
+                                                                autoFocus
+                                                                disabled={loading}
+                                                                style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderRadius: "6px 0 0 6px",
+                                                                    height: "40px",
+                                                                    fontSize: "0.9rem",
+                                                                }}
+                                                            />
+                                                            {loading && (
+                                                                <InputGroup.Text style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: "none",
+                                                                    borderRadius: "0",
+                                                                    backgroundColor: "#f8f9fa",
+                                                                    height: "40px",
+                                                                }}>
+                                                                    <Spinner animation="border" size="sm" />
+                                                                </InputGroup.Text>
                                                             )}
 
-                                                            {libraryCard && !book && (
-                                                                <div className="h-100 d-flex align-items-center">
-                                                                    <Card className="w-100" style={{
-                                                                        border: "1px solid #e5e7eb",
-                                                                        borderRadius: "6px",
-                                                                        background: "#f8f9fa",
-                                                                        marginTop: "24px"
+                                                            {/* Clear Button */}
+                                                            <Button
+                                                                variant="outline-secondary"
+                                                                onClick={handleClearSearch}
+                                                                disabled={loading}
+                                                                style={{
+                                                                    border: "1px solid #dee2e6",
+                                                                    borderLeft: loading ? "none" : "1px solid #dee2e6",
+                                                                    borderRadius: "0",
+                                                                    minWidth: "40px",
+                                                                    backgroundColor: "#f8f9fa",
+                                                                    height: "40px",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+
+                                                                }}
+                                                            >
+                                                                <i className="fa-solid fa-xmark"></i>
+                                                            </Button>
+
+                                                            {/* Scan Button */}
+                                                            <Button
+
+                                                                onClick={handleScanButtonClick}
+                                                                disabled={loading}
+                                                                className="btn-custom"
+
+                                                            >
+                                                                {loading ? (
+                                                                    <Spinner animation="border" size="sm" className="me-1" />
+                                                                ) : (
+                                                                    <i className="fa-solid fa-camera me-1"></i>
+                                                                )}
+                                                                Scan
+                                                            </Button>
+                                                        </InputGroup>
+                                                    </Form.Group>
+                                                </Col>
+
+                                                {/* Book Details Column - Shows book info right next to search input */}
+                                                <Col md={3}>
+                                                    {book && (
+                                                        <div className="h-100 d-flex align-items-center">
+                                                            <Card className="w-100" style={{
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "6px",
+                                                                background: "#f8f9fa",
+                                                                marginTop: "24px"
+                                                            }}>
+                                                                <Card.Body className="p-2">
+                                                                    <h6 className="mb-2 fw-bold" style={{
+                                                                        color: "#1e3a8a",
+                                                                        fontSize: "13px",
+                                                                        whiteSpace: "nowrap",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis"
                                                                     }}>
-                                                                        <Card.Body className="p-2">
-                                                                            <h6 className="mb-2 fw-bold" style={{
-                                                                                color: "#1e3a8a",
-                                                                                fontSize: "13px",
-                                                                                whiteSpace: "nowrap",
-                                                                                overflow: "hidden",
-                                                                                textOverflow: "ellipsis"
-                                                                            }}>
-                                                                                <i className="fa-solid fa-id-card me-2"></i>
-                                                                                Card Found
-                                                                            </h6>
-                                                                            <div className="small" style={{ fontSize: "12px" }}>
-                                                                                <div className="text-truncate mb-1" title={getUserDisplayName(libraryCard)} style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Holder:</strong> <span style={{ marginLeft: "8px" }}>{getUserDisplayName(libraryCard)}</span>
-                                                                                </div>
-                                                                                <div className="mb-1" style={{ marginBottom: "4px" }}>
-                                                                                    <strong>Card No:</strong> <span style={{ marginLeft: "8px" }}>{libraryCard.card_number}</span>
-                                                                                </div>
-                                                                                <div>
-                                                                                    <strong>Issues:</strong> <span style={{ marginLeft: "8px" }}>{cardIssues.length}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </Card.Body>
-                                                                    </Card>
-                                                                </div>
-                                                            )}
-                                                        </Col>
-                                                    </Row>
-                                                {/* </Card.Body> */}
+                                                                        <i className="fa-solid fa-book me-2"></i>
+                                                                        Book Found
+                                                                    </h6>
+                                                                    <div className="small" style={{ fontSize: "12px" }}>
+                                                                        <div className="text-truncate mb-1" title={book.title} style={{ marginBottom: "4px" }}>
+                                                                            <strong>Title:</strong> <span style={{ marginLeft: "124px" }}>{book.title}</span>
+                                                                        </div>
+                                                                        <div className="mb-1" style={{ marginBottom: "4px" }}>
+                                                                            <strong>ISBN:</strong> <span style={{ marginLeft: "124px" }}>{book.isbn}</span>
+                                                                        </div>
+                                                                        <div className="text-truncate">
+                                                                            <strong>Author:</strong> <span style={{ marginLeft: "124px" }}>{book.author || "N/A"}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        </div>
+                                                    )}
+
+                                                    {libraryCard && !book && (
+                                                        <div className="h-100 d-flex align-items-center">
+                                                            <Card className="w-100" style={{
+                                                                border: "1px solid #e5e7eb",
+                                                                borderRadius: "6px",
+                                                                background: "#f8f9fa",
+                                                                marginTop: "24px"
+                                                            }}>
+                                                                <Card.Body className="p-2">
+                                                                    <h6 className="mb-2 fw-bold" style={{
+                                                                        color: "#1e3a8a",
+                                                                        fontSize: "13px",
+                                                                        whiteSpace: "nowrap",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis"
+                                                                    }}>
+                                                                        <i className="fa-solid fa-id-card me-2"></i>
+                                                                        Card Found
+                                                                    </h6>
+                                                                    <div className="small" style={{ fontSize: "12px" }}>
+                                                                        <div className="text-truncate mb-1" title={getUserDisplayName(libraryCard)} style={{ marginBottom: "4px" }}>
+                                                                            <strong>Holder:</strong> <span style={{ marginLeft: "8px" }}>{getUserDisplayName(libraryCard)}</span>
+                                                                        </div>
+                                                                        <div className="mb-1" style={{ marginBottom: "4px" }}>
+                                                                            <strong>Card No:</strong> <span style={{ marginLeft: "8px" }}>{libraryCard.card_number}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <strong>Issues:</strong> <span style={{ marginLeft: "8px" }}>{cardIssues.length}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </Card.Body>
+                                                            </Card>
+                                                        </div>
+                                                    )}
+                                                </Col>
+                                            </Row>
+                                            {/* </Card.Body> */}
                                             {/* </Card> */}
                                         </Col>
                                     </Row>
 
-                                
+
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                                <Card.Header style={{
-                                                    background: "#f8fafc",
-                                                    border: "none",
-                                                    borderBottom: "2px solid #d1d5db",
-                                                }}>
-                                                    <Row className="align-items-center">
-                                                        <Col>
-                                                            <h5 className="mb-0 fw-bold" style={{
-                                                                color: "#1f2937",
-                                                                fontSize: "18px",
-                                                                letterSpacing: "0.3px"
-                                                            }}>
-                                                                {bookIssues.length > 0 ? "Issued Books for this ISBN" :
-                                                                    cardIssues.length > 0 ? "Issued Books for this Library Card" :
-                                                                        "All Issued Books"}
-                                                                <span style={{ color: "orange", fontSize: "14px", marginLeft: "8px" }}>
-                                                                    ({filteredIssuedBooks.length} Issue{filteredIssuedBooks.length !== 1 ? 's' : ''})
-                                                                </span>
-                                                            </h5>
-                                                        </Col>
-                                                        <Col xs="auto">
-                                                            <InputGroup style={{ maxWidth: "250px" }}>
-                                                                <InputGroup.Text
-                                                                    style={{
-                                                                        background: "#1e3a8a",
-                                                                        borderColor: "#1e3a8a",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                >
-                                                                    <i className="fa-solid fa-search" style={{ color: "White" }}></i>
-                                                                </InputGroup.Text>
-
-                                                                <Form.Control
-                                                                    placeholder="Search by title, ISBN, name..."
-                                                                    value={searchTerm}
-                                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                                    style={{
-                                                                        borderColor: "#1e3a8a",
-                                                                        fontSize: "0.875rem",
-                                                                        padding: "0.375rem 0.75rem"
-                                                                    }}
-                                                                />
-
-                                                                {searchTerm && (
-                                                                    <Button
-                                                                        variant="outline-secondary"
-                                                                        onClick={() => setSearchTerm("")}
-                                                                        style={{
-                                                                            border: "1px solid #1e3a8a",
-                                                                            backgroundColor: "white",
-                                                                            borderRadius: "0 6px 6px 0",
-                                                                            height: "38px"
-                                                                        }}
-                                                                    >
-                                                                        <i className="fa-solid fa-times"></i>
-                                                                    </Button>
-                                                                )}
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Row>
-                                                </Card.Header>
+                                       
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
                                                     columns={issueColumns}
@@ -2045,7 +1973,7 @@ className="m-1"
                                 <Tab.Pane eventKey="submitted">
                                     <Row>
                                         <Col lg={12}>
-                                       
+
                                             <AdvancedFilter
                                                 fields={submittedBooksFilterFields}
                                                 onFilterChange={setSubmittedBooksFilters}
@@ -2162,7 +2090,7 @@ className="m-1"
                         <div>
                             <Row>
                                 <Col md={8}>
-                                 
+
                                     <Card className="mb-3" style={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
                                         <Card.Header className="py-2 px-3" style={{ backgroundColor: "var(--secondary-color)", }}>
                                             <h6 className="mb-0" style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
@@ -2429,22 +2357,15 @@ className="m-1"
                     )}
                 </Modal.Body>
                 <Modal.Footer style={{ padding: "15px 20px" }}>
-                    <Button variant="secondary" onClick={handleModalClose} disabled={loading} style={{ fontSize: "14px", padding: "8px 16px" }}>
+                    <Button className="btn-secondary-custom" onClick={handleModalClose} disabled={loading} style={{ fontSize: "14px", padding: "8px 16px" }}>
                         Cancel
                     </Button>
                     <Button
-                        variant="success"
+
+                        className="btn-custom"
                         onClick={handleFinalSubmit}
                         disabled={loading || isCalculating || isLoadingPurchaseDetails || (conditionAfter === "Lost" && (!lostBookPrice || !!lostBookPriceError))}
-                        style={{
-                            background: penalty.penalty > 0
-                                ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-                                : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                            border: "none",
-                            fontSize: "14px",
-                            padding: "8px 20px",
-                            fontWeight: "600"
-                        }}
+
                     >
                         {loading ? (
                             <>

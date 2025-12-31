@@ -39,12 +39,12 @@ module.exports = (app) => {
     ],
 
     async (req, res) => {
-      console.log("Inside createuser route");
+ 
       const tenantcode = req.userinfo?.tenantcode;
       const companyid = req.userinfo?.companyid;
-      console.log("tenantcode---", tenantcode);
-      console.log("companyid---", companyid);
-      console.log("req.userinfo---", req.userinfo);
+ 
+ 
+ 
 
       if (!tenantcode) {
         console.error("Error: tenantcode is missing from req.userinfo");
@@ -130,7 +130,7 @@ module.exports = (app) => {
 
 
       const userCompanyId = req.userinfo.companyid || companyid;
-      console.log("userCompanyId---", userCompanyId);
+ 
 
       try {
         const newUser = await Auth.createUser({
@@ -149,7 +149,7 @@ module.exports = (app) => {
           country_code: country_code ? String(country_code).trim() : "+91",
         });
 
-        console.log("newUser---", newUser);
+ 
         if (newUser) {
 
           const tokenPayload = {
@@ -161,7 +161,7 @@ module.exports = (app) => {
 
           const authToken = jwt.sign(tokenPayload, process.env.JWT_SECRET);
 
-          console.log("userrole---", userrole);
+ 
 
 
           if (userrole === "USER") {
@@ -176,7 +176,7 @@ module.exports = (app) => {
             try {
               await Mailer.sendEmail(email, emailData, null, "user_created");
             } catch (error) {
-              console.log("Failed to send welcome email:", error);
+ 
             }
           }
 
@@ -218,7 +218,7 @@ module.exports = (app) => {
         const tcode = req.body.tcode ? req.body.tcode.trim().toLowerCase() : "";
 
 
-        console.log("Login attempt - Email:", email, "Tcode:", tcode, "Password length:", password.length);
+ 
 
         const errors = validationResult(req);
 
@@ -238,7 +238,7 @@ module.exports = (app) => {
 
         const checkForTcode = await Auth.checkCompanybyTcode(tcode);
         if (!checkForTcode) {
-          console.log("Company not found for tcode:", tcode);
+ 
           return res.status(400).json({
             success,
             errors:
@@ -251,15 +251,15 @@ module.exports = (app) => {
         const actualTenantcode = companyData?.tenantcode || tcode;
         const companyId = companyData?.id || null;
 
-        console.log("Initializing Auth with tenantcode:", actualTenantcode, "companyId:", companyId);
+ 
 
 
         await Auth.init(actualTenantcode, companyId);
 
         const userRec = await Auth.findByEmail(email);
         if (!userRec) {
-          console.log("User not found for email:", email, "in schema:", actualTenantcode);
-          console.log("Schema being used:", Auth.schema || "not set");
+ 
+ 
 
 
           try {
@@ -278,7 +278,7 @@ module.exports = (app) => {
               }
             }
           } catch (err) {
-            console.log("Error checking inactive user:", err.message);
+ 
           }
 
           return res
@@ -289,7 +289,7 @@ module.exports = (app) => {
 
 
         if (!userInfo || !userInfo.password) {
-          console.log("Password not found in userInfo for email:", email);
+ 
           return res
             .status(400)
             .json({ success, errors: "User account error. Please contact administrator." });
@@ -301,7 +301,7 @@ module.exports = (app) => {
           String(userInfo.password)
         );
         if (!passwordCompare) {
-          console.log("Password mismatch for email:", email);
+ 
           return res
             .status(400)
             .json({ success, errors: "Try to login with correct credentials" });
@@ -342,7 +342,7 @@ module.exports = (app) => {
           userInfo.modules = modules;
         }
 
-        console.log("Token payload - userrole:", userInfo.userrole, "companyid:", userInfo.companyid, "plan:", userInfo.plan?.name, "modules count:", userInfo.modules?.length || 0, "module URLs:", userInfo.modules?.map(m => m.url));
+ 
 
         const authToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
           expiresIn: "5h",
@@ -362,7 +362,7 @@ module.exports = (app) => {
           .json({ success, authToken, refreshToken });
 
       } catch (error) {
-        console.log(error);
+ 
         res.status(400).json({ success, errors: error });
       }
     }

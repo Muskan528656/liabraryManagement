@@ -93,8 +93,8 @@ const EditProfile = () => {
           formData,
           {
             headers: {
-              Authorization: sessionStorage.getItem("token").startsWith("Bearer ") 
-                ? sessionStorage.getItem("token") 
+              Authorization: sessionStorage.getItem("token").startsWith("Bearer ")
+                ? sessionStorage.getItem("token")
                 : `Bearer ${sessionStorage.getItem("token")}`,
             },
           }
@@ -143,13 +143,13 @@ const EditProfile = () => {
                     />
                   )}
 
-                  <div
+                  {/* <div
                     className="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2"
                     style={{ cursor: "pointer" }}
                     onClick={() => fileInputRef.current.click()}
                   >
                     <i className="fa-solid fa-camera text-white"></i>
-                  </div>
+                  </div> */}
                 </div>
 
                 <input
@@ -233,7 +233,7 @@ const EditProfile = () => {
                     </Col>
 
                     <Col xs={12} className="text-end mt-3">
-                      <Button type="submit" disabled={!isFormValid}>
+                      <Button className="btn-custom" type="submit" disabled={!isFormValid}>
                         Save Changes
                       </Button>
                     </Col>

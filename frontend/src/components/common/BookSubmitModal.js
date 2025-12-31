@@ -15,7 +15,7 @@ const BookSubmitModal = ({ show, onHide }) => {
             >
                 <Modal.Header closeButton className="border-bottom">
                     <div className="d-flex align-items-center">
-                        <i className="fa-solid fa-book-bookmark me-3" style={{ fontSize: "24px", color: "#6f42c1" }}></i>
+                        <i className="fa-solid fa-book-bookmark me-3" style={{ fontSize: "24px", color: "var(--primary-color)" }}></i>
                         <Modal.Title className="fw-bold" style={{ color: "#2d3748" }}>
                             Book Submission
                         </Modal.Title>

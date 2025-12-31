@@ -51,7 +51,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             const exactTz = matchedCountry.timezones.find(t => t.zoneName === companyInfo.time_zone);
 
             defaultTimeZone = exactTz ? exactTz.zoneName : matchedCountry.timezones[0]?.zoneName;
-            console.log("defaultTimeZone", defaultTimeZone)
+ 
         } else {
             defaultCountryName = companyInfo.country || "";
             defaultCountryCode = companyInfo.country_code || "";
@@ -230,7 +230,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
 
 
                     const currentCountryName = formData?.country || defaultCountryName;
-                    console.log("currentCountryName", currentCountryName)
+ 
 
                     const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
 
@@ -312,7 +312,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         },
 
         initializeFormData: (existingData) => {
-            console.log(existingData)
+ 
             if (!existingData) return null;
 
             return {

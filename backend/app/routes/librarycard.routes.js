@@ -21,25 +21,36 @@ const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
+ 
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
+ 
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
+ 
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
-const LibraryCard = require("../models/librarycard.model.js");
-const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+ 
 
-[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach((dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
+const ensureDirectory = (dirPath) => {
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+};
+[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
-const deleteFileIfExists = (relativePath = "") => {
-  if (!relativePath?.startsWith("/")) return;
 
-  const absPath = path.join(frontendPublicDir, relativePath.slice(1));
-  if (fs.existsSync(absPath)) {
-    fs.unlinkSync(absPath);
-    console.log("🗑️ Deleted old image:", absPath);
+const deleteFileIfExists = (filePath = "") => {
+  if (!filePath || typeof filePath !== "string") return;
+
+  if (filePath.startsWith('/')) {
+    const absolutePath = path.join(frontendPublicDir, filePath.slice(1));
+    try {
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+ 
+      }
+    } catch (err) {
+      console.error("Error deleting file:", err.message);
+    }
   }
 };
+
 
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, libraryCardUploadDir),
@@ -107,6 +118,9 @@ const conditionalUpload = (req, res, next) => {
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
+
+
+
 
   router.get("/object-types", fetchUser, async (req, res) => {
     try {
@@ -192,6 +206,9 @@ module.exports = (app) => {
     }
   });
 
+
+
+
   router.post(
     "/",
     fetchUser,
@@ -219,10 +236,12 @@ module.exports = (app) => {
           image: cardData.image ? "[IMAGE DATA]" : "null",
         });
 
+
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
-          console.log("📷 Image uploaded:", cardData.image);
+ 
         } else if (req.body.image && req.body.image.startsWith("data:image/")) {
+
           try {
             const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
             if (matches) {
@@ -271,144 +290,120 @@ module.exports = (app) => {
     }
   );
 
-  router.put(
-    "/:id",
-    fetchUser,
-    async (req, res) => {
-      console.log("🔄 [BACKEND] Starting library card update for ID:", req.params.id);
-      console.log("🔄 [BACKEND] Request headers:", {
-        'content-type': req.headers['content-type'],
-        'content-length': req.headers['content-length']
-      });
-      console.log("🔄 [BACKEND] Request body keys:", Object.keys(req.body || {}));
-      console.log("🔄 [BACKEND] Request body:", req.body);
 
-      try {
-        LibraryCard.init(req.userinfo.tenantcode);
 
-        const card = await LibraryCard.findById(req.params.id);
-        if (!card) {
-          console.log("❌ [BACKEND] Library card not found for ID:", req.params.id);
-          return res
-            .status(404)
-            .json({ success: false, message: "Library card not found" });
-        }
 
-        console.log("📋 [BACKEND] Existing card data:", {
-          id: card.id,
-          card_number: card.card_number,
-          image: card.image,
-          user_id: card.user_id
-        });
+  router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
+    try {
+      LibraryCard.init(req.userinfo.tenantcode);
 
-        const userId = req.userinfo.id;
-        const data = { ...req.body };
 
-        let oldImagePath = null;
-
-        // Check if this is a multipart request
-        const isMultipart = req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data');
-        console.log("🔍 [BACKEND] Is multipart request:", isMultipart);
-
-        if (isMultipart) {
-          console.log("📎 [BACKEND] Processing multipart data...");
-          try {
-            // Process multipart data
-            await new Promise((resolve, reject) => {
-              upload.single("image")(req, res, (err) => {
-                if (err) {
-                  console.error("❌ [BACKEND] Multer error:", err.message);
-                  return reject(err);
-                }
-                console.log("✅ [BACKEND] Multer processing completed");
-                resolve();
-              });
-            });
-
-            console.log("📎 [BACKEND] After multer - req.file:", req.file ? {
-              filename: req.file.filename,
-              originalname: req.file.originalname,
-              size: req.file.size
-            } : null);
-            console.log("📎 [BACKEND] After multer - req.body:", req.body);
-
-            // Handle uploaded image
-            if (req.file) {
-              data.image = `/uploads/librarycards/${req.file.filename}`;
-              oldImagePath = card.image;
-              console.log("🖼️ [BACKEND] New image uploaded:", data.image);
-              console.log("🗑️ [BACKEND] Old image to delete:", oldImagePath);
-            } else if (req.body.image === "") {
-              // Clear the image if empty string is sent
-              data.image = null;
-              oldImagePath = card.image;
-              console.log("🗑️ [BACKEND] Clearing image (empty string received)");
-            } else {
-              console.log("📎 [BACKEND] No image change - keeping existing image");
-            }
-          } catch (multerError) {
-            console.error("❌ [BACKEND] Multipart processing error:", multerError);
-            // Continue with the request even if multer fails
-          }
-        } else {
-          console.log("📄 [BACKEND] Processing JSON data (no multipart)");
-        }
-
-        // Normalize fields
-        if (data.status !== undefined) {
-          data.is_active = data.status === "true" || data.status === true;
-          console.log("🔄 [BACKEND] Normalized status:", data.status, "->", data.is_active);
-        }
-        if (data.plan_id !== undefined) {
-          data.subscription_id = data.plan_id;
-          delete data.plan_id;
-          console.log("🔄 [BACKEND] Normalized plan_id:", data.plan_id, "-> subscription_id:", data.subscription_id);
-        }
-        if (data.type_id !== undefined) {
-          data.type = data.type_id;
-          delete data.type_id;
-          console.log("🔄 [BACKEND] Normalized type_id:", data.type_id, "-> type:", data.type);
-        }
-
-        const fieldsToUpdate = {
-          ...data,
-          lastmodifiedbyid: userId,
-          lastmodifieddate: new Date(),
-        };
-
-        console.log("💾 [BACKEND] Fields to update:", fieldsToUpdate);
-        await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
-        console.log("✅ [BACKEND] Database update completed");
-
-        // Delete old image only after successful update
-        if (oldImagePath) {
-          console.log("🗑️ [BACKEND] Deleting old image file:", oldImagePath);
-          deleteFileIfExists(oldImagePath);
-        }
-
-        const updatedCard = await LibraryCard.findById(req.params.id);
-        console.log("📋 [BACKEND] Updated card data:", {
-          id: updatedCard.id,
-          card_number: updatedCard.card_number,
-          image: updatedCard.image,
-          user_id: updatedCard.user_id
-        });
-
-        console.log("✅ [BACKEND] Library card update completed successfully");
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data: updatedCard,
-            message: "Library card updated successfully",
-          });
-      } catch (err) {
-        console.error("❌ [BACKEND] Update error:", err);
-        console.error("❌ [BACKEND] Error stack:", err.stack);
-        return res.status(500).json({ success: false, message: err.message });
+      const existingCard = await LibraryCard.findById(req.params.id);
+      if (!existingCard) {
+        return res.status(404).json({ error: "Library card not found" });
       }
+
+      const userId = req.userinfo?.id || null;
+      const cardData = { ...req.body };
+      const previousImagePath = existingCard.image;
+
+ 
+ 
+
+
+      if (req.file) {
+
+        if (previousImagePath) {
+          deleteFileIfExists(previousImagePath);
+        }
+        cardData.image = `/uploads/librarycards/${req.file.filename}`;
+      } else if (cardData.image === 'null' || cardData.image === null) {
+
+        if (previousImagePath) {
+          deleteFileIfExists(previousImagePath);
+        }
+        cardData.image = null;
+      }
+
+
+      if (cardData.status !== undefined) {
+        cardData.is_active = cardData.status === 'true' || cardData.status === true;
+      }
+
+
+      if (cardData.plan_id !== undefined) {
+        cardData.subscription_id = cardData.plan_id;
+        delete cardData.plan_id;
+      }
+
+
+      if (cardData.type_id !== undefined && !cardData.type) {
+        cardData.type = cardData.type_id;
+        delete cardData.type_id;
+      }
+
+
+      if (cardData.first_name || cardData.last_name) {
+        const firstName = cardData.first_name || existingCard.first_name;
+        const lastName = cardData.last_name || existingCard.last_name;
+        cardData.name = `${firstName} ${lastName}`;
+      }
+
+
+      if (cardData.dob) {
+
+        cardData.dob = new Date(cardData.dob);
+      }
+
+      if (cardData.registration_date) {
+
+        cardData.registration_date = new Date(cardData.registration_date);
+      }
+
+
+      const fieldsToUpdate = {
+        ...cardData,
+        lastmodifiedbyid: userId,
+        lastmodifieddate: new Date()
+      };
+
+
+      Object.keys(fieldsToUpdate).forEach(key => {
+        if (fieldsToUpdate[key] === '' && key !== 'name') {
+          fieldsToUpdate[key] = null;
+        }
+      });
+
+ 
+
+
+      const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
+
+
+      const responseCard = {
+        ...updatedCard,
+
+        dob: updatedCard.dob ? new Date(updatedCard.dob).toISOString().split('T')[0] : null,
+        registration_date: updatedCard.registration_date ? new Date(updatedCard.registration_date).toISOString().split('T')[0] : null,
+
+        plan_id: updatedCard.subscription_id,
+
+        type_id: updatedCard.type
+      };
+
+      return res.status(200).json({
+        success: true,
+        data: responseCard,
+        message: "Library card updated successfully",
+      });
+    } catch (error) {
+      console.error("❌ Error updating library card:", error);
+      return res.status(500).json({ error: error.message });
     }
-  );
+  });
+
+
+
 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
@@ -435,6 +430,9 @@ module.exports = (app) => {
       return res.status(500).json({ error: error.message });
     }
   });
+
+
+
 
   router.post("/import", fetchUser, async (req, res) => {
     try {

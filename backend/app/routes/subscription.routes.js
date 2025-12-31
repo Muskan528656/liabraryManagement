@@ -60,7 +60,7 @@ module.exports = (app) => {
                     is_active = true
                 } = req.body;
 
-                console.log("Creating subscription with data:", req.body);
+ 
 
                 const planExists = await sql.query(
                     "SELECT id FROM demo.plan WHERE id = $1",
@@ -139,9 +139,9 @@ module.exports = (app) => {
                 }
 
 
-                console.log("req.userinfo:", req.userinfo);
-                console.log("req.userinfo?.id:", req.userinfo?.id);
-                console.log("Type of req.userinfo?.id:", typeof req.userinfo?.id);
+ 
+ 
+ 
 
 
                 const createdById = req.userinfo?.id;
@@ -162,13 +162,13 @@ module.exports = (app) => {
 
                     if (userQuery.rows.length > 0) {
                         createdByIdValue = userQuery.rows[0].id;
-                        console.log("Found user in database with ID:", createdByIdValue);
+ 
                     } else {
 
                         createdByIdValue = createdById;
                     }
                 } catch (dbError) {
-                    console.log("Error querying users table:", dbError.message);
+ 
                     createdByIdValue = createdById;
                 }
 
@@ -190,7 +190,7 @@ module.exports = (app) => {
                     lastmodifieddate: new Date(),
                 };
 
-                console.log("Prepared subscription data:", subscriptionData);
+ 
 
 
                 const columns = Object.keys(subscriptionData);
@@ -204,14 +204,14 @@ module.exports = (app) => {
                 RETURNING *
             `;
 
-                console.log("Insert query:", insertQuery);
-                console.log("Values:", values);
+ 
+ 
 
 
                 const result = await sql.query(insertQuery, values);
                 const newSubscription = result.rows[0];
 
-                console.log("New subscription created:", newSubscription);
+ 
 
 
                 await sql.query(
@@ -293,7 +293,7 @@ module.exports = (app) => {
                 return res.status(400).json({ success: false, error: errorMessages });
             }
 
-            console.log("Request body for update:", req.body);
+ 
 
             try {
                 const subscriptionId = req.params.id;
@@ -349,8 +349,8 @@ module.exports = (app) => {
                 RETURNING *
             `;
 
-                console.log("Update query:", updateQuery);
-                console.log("Update values:", values);
+ 
+ 
 
                 const result = await sql.query(updateQuery, values);
 

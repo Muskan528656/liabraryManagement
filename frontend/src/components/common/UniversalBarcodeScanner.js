@@ -186,7 +186,7 @@ const UniversalBarcodeScanner = () => {
 
         try {
             const detectedType = await detectDataType(barcode.trim());
-            console.log("Detected data type:", detectedType);
+ 
 
             if (detectedType && detectedType.type === "librarycard" && detectedType.navigate) {
                 setLoading(false);
@@ -471,7 +471,7 @@ const UniversalBarcodeScanner = () => {
     };
 
     const detectDataType = async (barcode) => {
-        console.log("Processing barcode:", barcode);
+ 
 
         const isbnCheck = isValidISBN(barcode);
         if (!isbnCheck) {
@@ -682,7 +682,7 @@ const UniversalBarcodeScanner = () => {
                         contact_person: publisherDetails?.contact_person || ""
                     };
 
-                    console.log("Creating new publisher:", publisherData);
+ 
                     const newPublisherResponse = await publisherApi.create(publisherData);
 
                     if (newPublisherResponse.data && newPublisherResponse.data.success) {
@@ -690,11 +690,11 @@ const UniversalBarcodeScanner = () => {
                         PubSub.publish("RECORD_SAVED_TOAST", {
                             message: `Publisher "${cleanPublisherName}" created successfully`,
                         });
-                        console.log("Publisher created with ID:", foundPublisher.id);
+ 
                         return foundPublisher.id;
                     }
                 } else {
-                    console.log("Publisher already exists:", foundPublisher.id);
+ 
                     // Update publisher details if needed
                     if (publisherDetails) {
                         const updateData = {};
@@ -710,9 +710,9 @@ const UniversalBarcodeScanner = () => {
                         if (Object.keys(updateData).length > 0) {
                             try {
                                 await publisherApi.update({ ...foundPublisher, ...updateData }, foundPublisher.id);
-                                console.log("Publisher details updated");
+ 
                             } catch (e) {
-                                console.log("Could not update publisher details:", e);
+ 
                             }
                         }
                     }
@@ -769,7 +769,7 @@ const UniversalBarcodeScanner = () => {
                             try {
                                 await authorApi.update({ ...foundAuthor, ...updateData }, foundAuthor.id);
                             } catch (e) {
-                                console.log("Could not update author details:", e);
+ 
                             }
                         }
                     }
@@ -813,7 +813,7 @@ const UniversalBarcodeScanner = () => {
                         try {
                             await categoryApi.update({ ...foundCategory, description: categoryDescription }, foundCategory.id);
                         } catch (e) {
-                            console.log("Could not update category description:", e);
+ 
                         }
                     }
                 }
@@ -829,7 +829,7 @@ const UniversalBarcodeScanner = () => {
     };
 
     const fetchBookFromGoogleBooks = async (isbn) => {
-        console.log("Fetching book data for ISBN from Google Books:", isbn);
+ 
 
         const bookData = {
             isbn: isbn,
@@ -852,13 +852,13 @@ const UniversalBarcodeScanner = () => {
 
         try {
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
-            console.log("Calling Google Books API:", googleBooksUrl);
+ 
 
             const response = await fetch(googleBooksUrl);
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Google Books API response:", data);
+ 
 
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
@@ -900,7 +900,7 @@ const UniversalBarcodeScanner = () => {
                     if (volumeInfo.pageCount) {
                         bookData.pageCount = volumeInfo.pageCount;
                         bookData.pages = volumeInfo.pageCount;
-                        console.log(`Page count from Google Books: ${volumeInfo.pageCount} pages`);
+ 
                     }
 
                     if (volumeInfo.publisher) {
@@ -942,15 +942,15 @@ const UniversalBarcodeScanner = () => {
                         bookData.cover_image = bookData.coverImage;
                     }
 
-                    console.log("Final book data from Google Books:", bookData);
+ 
                     return bookData;
                 } else {
-                    console.log("No book found for ISBN:", isbn);
+ 
                     bookData.title = `Book with ISBN: ${isbn}`;
                     return bookData;
                 }
             } else {
-                console.log("Google Books API failed with status:", response.status);
+ 
                 bookData.title = `Book with ISBN: ${isbn}`;
                 return bookData;
             }

@@ -4,10 +4,10 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 const SubscriptionDetail = () => {
-    console.log("its running are not")
+ 
     const { timeZone } = useTimeZone();
 
-    console.log('timeZone ===>>> ', timeZone)
+ 
 
 
     const fields = {
