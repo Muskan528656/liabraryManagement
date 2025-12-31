@@ -27,13 +27,16 @@ const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
- 
+console.log("Root Directory:", rootDir);
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
- 
+console.log("frontendPublicDir:", frontendPublicDir);
+
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
- 
+console.log("frontendUploadsDir:", frontendUploadsDir);
+
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
- 
+
+console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
 
 const ensureDirectory = (dirPath) => {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
@@ -49,7 +52,7 @@ const deleteFileIfExists = (filePath = "") => {
     try {
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
- 
+
       }
     } catch (err) {
       console.error("Error deleting file:", err.message);
@@ -66,6 +69,8 @@ const storage = multer.diskStorage({
   }
 });
 
+console.log("Multer storage configured for library cards.", storage);
+
 const upload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -74,7 +79,7 @@ const upload = multer({
     else cb(new Error('Only image files are allowed'));
   }
 });
-
+console.log("Multer upload configured for library cards.", upload);
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
@@ -165,7 +170,6 @@ module.exports = (app) => {
 
 
 
-
   router.post(
     "/",
     fetchUser,
@@ -196,7 +200,7 @@ module.exports = (app) => {
 
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
- 
+
         } else if (req.body.image && req.body.image.startsWith("data:image/")) {
 
           try {
@@ -244,8 +248,6 @@ module.exports = (app) => {
   );
 
 
-
-
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
@@ -260,8 +262,8 @@ module.exports = (app) => {
       const cardData = { ...req.body };
       const previousImagePath = existingCard.image;
 
- 
- 
+
+
 
 
       if (req.file) {
@@ -271,7 +273,7 @@ module.exports = (app) => {
         }
         cardData.image = `/uploads/librarycards/${req.file.filename}`;
       } else if (cardData.image === 'null' || cardData.image === null) {
-
+        console.log("else if block for image nullification triggered.");
         if (previousImagePath) {
           deleteFileIfExists(previousImagePath);
         }
@@ -327,7 +329,7 @@ module.exports = (app) => {
         }
       });
 
- 
+
 
 
       const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);

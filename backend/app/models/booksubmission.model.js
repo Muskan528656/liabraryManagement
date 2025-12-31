@@ -31,8 +31,8 @@ async function create(submissionData, userId) {
   try {
     await sql.query('BEGIN');
 
- 
- 
+
+
 
 
     const issueRes = await sql.query(
@@ -45,7 +45,7 @@ async function create(submissionData, userId) {
 
     if (!issueRes.rows.length) throw new Error("Issue not found");
     const issue = issueRes.rows[0];
- 
+
 
     if (issue.return_date) throw new Error("Book already returned");
 
@@ -58,7 +58,7 @@ async function create(submissionData, userId) {
 
     if (!memberRes.rows.length) throw new Error("Library member not found");
     const member = memberRes.rows[0];
- 
+
 
 
     const settingRes = await sql.query(
@@ -69,19 +69,19 @@ async function create(submissionData, userId) {
     if (settingRes.rows.length > 0) {
       finePerDay = Number(settingRes.rows[0].fine_per_day) || 5;
     }
- 
+
 
 
     const today = new Date();
     const dueDate = new Date(issue.due_date);
     const daysOverdue = Math.max(Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24)), 0);
- 
+
 
 
     const conditionBefore = submissionData.condition_before || "Good";
     const conditionAfter = submissionData.condition_after || "Good";
     const conditionAfterLower = conditionAfter.toLowerCase();
- 
+
 
 
     let bookPurchasePrice = 0;
@@ -89,7 +89,7 @@ async function create(submissionData, userId) {
 
     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
       try {
- 
+
 
         const purchaseRes = await sql.query(
           `SELECT unit_price, purchase_date, quantity, total_amount
@@ -103,12 +103,12 @@ async function create(submissionData, userId) {
         if (purchaseRes.rows.length > 0) {
           purchaseDetails = purchaseRes.rows[0];
           bookPurchasePrice = purchaseDetails.unit_price || 0;
- 
+
         } else {
           bookPurchasePrice = submissionData.book_price ||
             submissionData.lost_book_price ||
             0;
- 
+
         }
       } catch (error) {
         console.error(" Error fetching purchase price:", error);
@@ -129,7 +129,7 @@ async function create(submissionData, userId) {
       latePenalty = daysOverdue * finePerDay;
       totalPenalty += latePenalty;
       penaltyType = "late";
- 
+
     }
 
 
@@ -137,15 +137,15 @@ async function create(submissionData, userId) {
       damageLostPenalty = bookPurchasePrice;
       totalPenalty += damageLostPenalty;
       penaltyType = "lost";
- 
+
     } else if (conditionAfterLower === "damaged") {
       damageLostPenalty = bookPurchasePrice * 0.5;
       totalPenalty += damageLostPenalty;
       penaltyType = "damaged";
- 
+
     }
 
- 
+
 
 
     const submissionRes = await sql.query(
@@ -169,7 +169,7 @@ async function create(submissionData, userId) {
     );
 
     const submission = submissionRes.rows[0];
- 
+
 
 
     if (conditionAfterLower !== "lost") {
@@ -181,9 +181,9 @@ async function create(submissionData, userId) {
          WHERE id = $1`,
         [issue.book_id, userId]
       );
- 
+
     } else {
- 
+
     }
 
 
@@ -199,7 +199,7 @@ async function create(submissionData, userId) {
     let penaltyMasterId = null;
     if (totalPenalty > 0) {
       try {
- 
+
 
         const penaltyInsertResult = await sql.query(
           `INSERT INTO demo.penalty_master
@@ -232,7 +232,7 @@ async function create(submissionData, userId) {
         );
 
         penaltyMasterId = penaltyInsertResult.rows[0]?.id;
- 
+
       } catch (error) {
         console.error(" Error inserting into penalty_master:", error);
         console.error("Error details:", error.message);
@@ -240,7 +240,7 @@ async function create(submissionData, userId) {
 
       }
     } else {
- 
+
     }
 
 
@@ -261,10 +261,10 @@ async function create(submissionData, userId) {
       [issue.id, userId, issueStatus]
     );
 
- 
+
 
     await sql.query('COMMIT');
- 
+
 
 
     return {
@@ -398,7 +398,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
   try {
     await sql.query('BEGIN');
 
- 
+
 
 
     const issueRes = await sql.query(
@@ -437,7 +437,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
     } catch (statusError) {
 
- 
+
 
       await sql.query(
         `UPDATE demo.book_issues 
@@ -457,7 +457,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
       throw new Error("Failed to update issue status");
     }
 
- 
+
 
     await sql.query(
       `UPDATE demo.books
@@ -484,7 +484,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
     );
 
     await sql.query('COMMIT');
- 
+
 
     return {
       success: true,
@@ -767,7 +767,7 @@ function cleanupEmailTracker() {
 
 async function sendDueReminder() {
   try {
- 
+
 
 
     cleanupEmailTracker();
@@ -781,8 +781,8 @@ async function sendDueReminder() {
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayDateStr = today.toISOString().split('T')[0];
 
- 
- 
+
+
 
     const query = `
       SELECT 
@@ -804,12 +804,12 @@ async function sendDueReminder() {
       ORDER BY lm.email, bi.due_date
     `;
 
- 
+
     const result = await sql.query(query, [tomorrowStr]);
- 
+
 
     if (result.rows.length === 0) {
- 
+
       return;
     }
 
@@ -833,7 +833,7 @@ async function sendDueReminder() {
       });
     }
 
- 
+
 
 
     let emailsSent = 0;
@@ -844,7 +844,7 @@ async function sendDueReminder() {
       const member = groupedByMember[memberId];
 
       if (hasEmailBeenSent('due', memberId)) {
- 
+
         emailsSkipped++;
         continue;
       }
@@ -863,9 +863,9 @@ async function sendDueReminder() {
       }
 
       try {
- 
- 
- 
+
+
+
 
 
         const html = dueTemplate({
@@ -883,7 +883,7 @@ async function sendDueReminder() {
             }\n\nDue Date: ${tomorrowStr}\nCard Number: ${member.card_number || 'N/A'}\n\nPlease return or renew them on time.\n\nLibrary Management System`
         });
 
- 
+
         emailsSent++;
 
 
@@ -896,13 +896,13 @@ async function sendDueReminder() {
     }
 
 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
 
   } catch (error) {
     console.error(" CRITICAL ERROR in sendDueReminder:", error);
@@ -916,7 +916,7 @@ async function sendDueReminder() {
 
 async function sendOverdueReminder() {
   try {
- 
+
 
 
     cleanupEmailTracker();
@@ -924,7 +924,7 @@ async function sendOverdueReminder() {
 
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
- 
+
 
 
     let penaltyPerDay = 0;
@@ -941,7 +941,7 @@ async function sendOverdueReminder() {
       if (penaltyResult.rows.length > 0) {
         penaltyPerDay = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
       }
- 
+
     } catch (penaltyError) {
       console.warn(" Could not fetch penalty settings, using 0");
     }
@@ -991,12 +991,12 @@ ORDER BY lm.email`;
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
- 
+
     const result = await sql.query(query, [yesterdayStr]);
- 
+
 
     if (result.rows.length === 0) {
- 
+
       return;
     }
 
@@ -1015,7 +1015,7 @@ ORDER BY lm.email`;
 
       const trackerKey = `${book.issued_to}_${book.id}`;
       if (hasEmailBeenSent('overdue', trackerKey)) {
- 
+
         emailsSkipped++;
         continue;
       }
@@ -1026,12 +1026,12 @@ ORDER BY lm.email`;
       const overdueDays = Math.max(0, Math.floor(timeDiff / (1000 * 3600 * 24)));
       const penaltyAmount = penaltyPerDay * overdueDays;
 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
 
       try {
 
@@ -1060,7 +1060,7 @@ ORDER BY lm.email`;
             `Library Management System`
         });
 
- 
+
         emailsSent++;
 
 
@@ -1073,12 +1073,12 @@ ORDER BY lm.email`;
     }
 
 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
 
   } catch (error) {
     console.error(" CRITICAL ERROR in sendOverdueReminder:", error);
@@ -1091,7 +1091,7 @@ ORDER BY lm.email`;
 }
 
 async function sendAllReminders() {
- 
+
 
   const startTime = Date.now();
 
@@ -1099,7 +1099,7 @@ async function sendAllReminders() {
 
     await sendDueReminder();
 
- 
+
 
 
     await sendOverdueReminder();
@@ -1110,8 +1110,8 @@ async function sendAllReminders() {
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
 
- 
- 
+
+
   }
 }
 
@@ -1246,10 +1246,11 @@ async function checkOverdueStatus(issueId) {
   }
 }
 
- 
 
-cron.schedule("0 0 9 * * *", sendDueReminder);
-cron.schedule("0 0 9 * * *", sendOverdueReminder);
+cron.schedule("* * * * *", sendDueReminder);
+cron.schedule("* * * * *", sendOverdueReminder);
+// cron.schedule("0 0 9 * * *", sendDueReminder);
+// cron.schedule("0 0 9 * * *", sendOverdueReminder);
 
 module.exports = {
   init,
