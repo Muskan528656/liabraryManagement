@@ -27,16 +27,16 @@ const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
-console.log("Root Directory:", rootDir);
+// console.log("Root Directory:", rootDir);
 const frontendPublicDir = path.join(rootDir, "frontend", "public");
-console.log("frontendPublicDir:", frontendPublicDir);
+// console.log("frontendPublicDir:", frontendPublicDir);
 
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
-console.log("frontendUploadsDir:", frontendUploadsDir);
+// console.log("frontendUploadsDir:", frontendUploadsDir);
 
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
 
-console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
+// console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
 
 const ensureDirectory = (dirPath) => {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
