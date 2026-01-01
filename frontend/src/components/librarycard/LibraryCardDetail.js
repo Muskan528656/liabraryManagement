@@ -103,9 +103,11 @@ const LibraryCardDetail = ({
     []
   );
   const normalizedFileHost = useMemo(() => {
-    return API_BASE_URL || window.location.origin;
+    if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
+      return API_BASE_URL.replace("/ibs", "");
+    }
+    return window.location.origin;
   }, []);
-
 
 
   const getImageUrl = useCallback(
