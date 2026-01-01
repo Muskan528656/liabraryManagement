@@ -168,9 +168,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 const imagePath = value;
                 if (imagePath) {
 
-                    const cleanApiBaseUrl = API_BASE_URL
+                    const cleanApiBaseUrl =
+                        typeof API_BASE_URL === "string"
+                            ? API_BASE_URL.replace(/\/ibs\/?/g, "/")
+                            : "";
 
                     console.log(`Rendering image for row: ${cleanApiBaseUrl}${imagePath}`);
+
                     const imgSrc = imagePath.startsWith("https")
                         ? imagePath
                         : `${cleanApiBaseUrl}${imagePath}`;
