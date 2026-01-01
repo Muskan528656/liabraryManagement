@@ -168,14 +168,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 const imagePath = value;
                 if (imagePath) {
 
-                    const cleanApiBaseUrl =
-                        typeof API_BASE_URL === "string"
-                            ? API_BASE_URL.replace(/\/ibs\/?/g, "/")
-                            : "";
+                    const cleanApiBaseUrl = API_BASE_URL.replace(/\/ibs$/, '');
 
                     console.log(`Rendering image for row: ${cleanApiBaseUrl}${imagePath}`);
-
-                    const imgSrc = imagePath.startsWith("https")
+                    const imgSrc = imagePath.startsWith("http")
                         ? imagePath
                         : `${cleanApiBaseUrl}${imagePath}`;
 
@@ -192,7 +188,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                                 border: "2px solid #e2e8f0"
                             }}
                             onError={(e) => {
-
+                                // Fallback image
                                 e.target.onerror = null;
                                 e.target.src = "/default-user.png";
                             }}
