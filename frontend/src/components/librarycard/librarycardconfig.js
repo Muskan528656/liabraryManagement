@@ -167,9 +167,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             render: (value, row) => {
                 const imagePath = value;
                 if (imagePath) {
+                  
+                    const cleanApiBaseUrl = API_BASE_URL.replace(/\/ibs$/, '');
+
+                    console.log(`Rendering image for row: ${cleanApiBaseUrl}${imagePath}`);
                     const imgSrc = imagePath.startsWith("http")
                         ? imagePath
-                        : `${API_BASE_URL}${imagePath}`;
+                        : `${cleanApiBaseUrl}${imagePath}`;
 
                     return (
                         <img
@@ -183,16 +187,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                                 objectFit: "cover",
                                 border: "2px solid #e2e8f0"
                             }}
+                            onError={(e) => {
+                           
+                                e.target.onerror = null;
+                                e.target.src = "/default-user.png";
+                            }}
                         />
                     );
                 }
-
-                return (
-                    <div className="table-user-placeholder">
-                        <i className="fa-solid fa-user"></i>
-                    </div>
-                );
-            },
+                return <span>No Image</span>;
+            }
         },
 
         { field: "card_number", label: "Card Number", sortable: true },

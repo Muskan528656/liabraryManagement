@@ -211,11 +211,7 @@ module.exports = (app) => {
         const userId = req.userinfo?.id || null;
         const cardData = { ...req.body };
 
-        console.log("📥 Creating library card with data:", {
-          ...cardData,
-          image: cardData.image ? "[IMAGE DATA]" : "null"
-        });
-
+    
 
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
