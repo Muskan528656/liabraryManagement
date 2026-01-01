@@ -64,9 +64,9 @@ export const handleDownloadBarcode = (
             if (imagePath) {
                 if (imagePath.startsWith("http")) imageUrl = imagePath;
                 else if (imagePath.startsWith("/uploads/"))
-                    imageUrl = `${API_BASE_URL.replace("/ibs", "")}${imagePath}`;
+                    imageUrl = `${API_BASE_URL}${imagePath}`;
                 else
-                    imageUrl = `${API_BASE_URL.replace("/ibs", "")}/uploads/librarycards/${imagePath}`;
+                    imageUrl = `${API_BASE_URL}/uploads/librarycards/${imagePath}`;
             }
 
             const drawDetailsAndBarcode = () => {

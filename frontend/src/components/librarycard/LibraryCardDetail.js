@@ -110,7 +110,7 @@ const LibraryCardDetail = ({
 
   const getImageUrl = useCallback(
     (imagePath) => {
-
+      console.log("Getting image URL for path:", imagePath);
 
       if (!imagePath) {
         return "/default-user.png";

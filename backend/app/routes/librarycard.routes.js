@@ -53,7 +53,6 @@ const deleteFileIfExists = (filePath = "") => {
       const absolutePath = path.join(rootDir, "frontend", "public", filePath);
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
-        console.log(`Deleted file: ${absolutePath}`);
       }
     }
 
@@ -61,14 +60,13 @@ const deleteFileIfExists = (filePath = "") => {
       const absolutePath = path.join(frontendPublicDir, filePath);
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
-        console.log(`Deleted file: ${absolutePath}`);
       }
     }
 
     else {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log(`Deleted file: ${filePath}`);
+     
       }
     }
   } catch (err) {

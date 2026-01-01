@@ -97,18 +97,9 @@ const DynamicCRUD = ({
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState([]);
-    console.log("formData", formData)
-    console.log("Data", data)
-    const TooltipButton = ({ label, children }) => (
-        <OverlayTrigger
-            placement="top"
-            overlay={<Tooltip>{label}</Tooltip>}
-        >
-            <span className="d-inline-block">
-                {children}
-            </span>
-        </OverlayTrigger>
-    );
+    // console.log("formData", formData)
+    // console.log("Data", data)
+    
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -348,7 +339,7 @@ const DynamicCRUD = ({
 
     useEffect(() => {
         setFormData(initialFormData);
-    }, [initialFormData]);
+    }, []);
 
     useEffect(() => {
         const token = sessionStorage.getItem("token");
