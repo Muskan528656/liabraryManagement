@@ -474,19 +474,7 @@ const LibraryCard = (props) => {
     }
   };
 
-  const handleAutoConfig = async (setFormData) => {
-    try {
-      const response = await DataApi.autoConfigCard();
-      if (response?.data?.card_number) {
-        setFormData(prev => ({ ...prev, card_number: response.data.card_number }));
-        return response.data.card_number;
-      }
-      return null;
-    } catch (err) {
-      console.error("Auto-config failed:", err);
-      return null;
-    }
-  };
+
 
   const generateDefaultISBN = (card) => {
     try {

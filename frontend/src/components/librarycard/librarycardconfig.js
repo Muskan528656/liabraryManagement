@@ -41,7 +41,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         customHandlers.handleBarcodePreview ||
         ((card) => console.warn("Barcode preview handler not provided", card));
 
- 
+
 
     let defaultCountryCode = "";
     let plansList = [];
@@ -68,7 +68,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     defaultCountryCode = codePart;
                 }
 
- 
+
             }
         }
 
@@ -76,7 +76,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         const plansApi = new DataApi("plans");
         const plansResponse = await plansApi.fetchAll();
 
- 
+
 
         let plansData = [];
 
@@ -91,7 +91,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             plansData = plansResponse;
         }
 
- 
+
 
         if (plansData.length > 0) {
             plansList = plansData
@@ -102,7 +102,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                         plan.is_active === 1 ||
                         plan.is_active === "1";
 
- 
+
                     return isActive;
                 })
                 .map(plan => ({
@@ -111,7 +111,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: plan // Store full plan data for details
                 }));
 
- 
+
         } else {
             console.warn("No plans data found");
         }
@@ -120,7 +120,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
- 
+
 
         let objectTypeData = [];
 
@@ -134,7 +134,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             objectTypeData = objectTypeResponse;
         }
 
- 
+
 
         if (objectTypeData.length > 0) {
             objectTypesList = objectTypeData
@@ -145,7 +145,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     data: type
                 }));
 
- 
+
         } else {
             console.warn("No object type data found");
         }
@@ -154,9 +154,9 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         defaultCountryCode = "+91"; // Default to India if company fetch fails
     }
 
- 
- 
- 
+
+
+
 
     const defaultColumns = [
         {
@@ -167,9 +167,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             render: (value, row) => {
                 const imagePath = value;
                 if (imagePath) {
+
+                    const cleanApiBaseUrl = API_BASE_URL.replace(/\/ibs$/, '');
+
+                    console.log(`Rendering image for row: ${cleanApiBaseUrl}${imagePath}`);
                     const imgSrc = imagePath.startsWith("http")
                         ? imagePath
-                        : `${API_BASE_URL}${imagePath}`;
+                        : `${cleanApiBaseUrl}${imagePath}`;
 
                     return (
                         <img
@@ -183,16 +187,16 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                                 objectFit: "cover",
                                 border: "2px solid #e2e8f0"
                             }}
+                            onError={(e) => {
+                                // Fallback image
+                                e.target.onerror = null;
+                                e.target.src = "/default-user.png";
+                            }}
                         />
                     );
                 }
-
-                return (
-                    <div className="table-user-placeholder">
-                        <i className="fa-solid fa-user"></i>
-                    </div>
-                );
-            },
+                return <span>No Image</span>;
+            }
         },
 
         { field: "card_number", label: "Card Number", sortable: true },
@@ -350,15 +354,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 colSize: 6,
             },
 
-            {
-                name: "age",
-                label: "Age",
-                type: "number",
-                required: false,
-                placeholder: "Enter age",
-                colSize: 3,
-                props: { min: 0, max: 120 }
-            },
+            // {
+            //     name: "age",
+            //     label: "Age",
+            //     type: "number",
+            //     required: false,
+            //     placeholder: "Enter age",
+            //     colSize: 3,
+            //     props: { min: 0, max: 120 }
+            // },
             {
                 name: "registration_date",
                 label: "Registration Date",
@@ -488,26 +492,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         filterFields: [
 
 
-
-
-
-
-
-
-
-
             {
                 name: "plan_id",
                 field: "plan_id",
                 label: "Plan",
                 type: "select",
-                options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
+                options: plansList.length > 0 ? [{ value: "" }, ...plansList] : [{ value: "", }],
             },
-
-
-
-
-
 
             {
                 name: "first_name",
@@ -517,27 +508,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
-
-
-
-
-
-
-
-
-
-
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
-
-
-
-
-
 
             {
                 name: "registration_date",
@@ -580,7 +556,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const age = calculateAge(value);
                     return (
                         <div>
-                            {/* <div>{formatDateToDDMMYYYY(value)}</div> */}
+
                             {age !== "-" && (
                                 <small className="text-muted"> {age}</small>
                             )}
@@ -615,7 +591,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             handleBarcodePreview,
 
             onDataLoad: (data) => {
- 
+
 
                 if (Array.isArray(data)) {
                     return data.map((item) => {
@@ -641,7 +617,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             beforeEdit: (item) => {
- 
+
 
                 const preparedData = { ...item };
 
@@ -654,22 +630,17 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const selectedPlan = plansList.find(p => p.value == preparedData.plan_id)?.data;
                     if (selectedPlan) {
                         preparedData.selectedPlan = selectedPlan;
- 
+
                     } else if (preparedData.plan && typeof preparedData.plan === 'object') {
                         preparedData.selectedPlan = preparedData.plan;
- 
+
                     }
                 }
 
- 
+
                 return preparedData;
             },
-
             beforeSubmit: (formData, isEditing, originalData) => {
- 
- 
- 
- 
 
                 const errors = [];
                 const submitData = { ...formData };
@@ -710,9 +681,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Image size must be less than 2MB");
                 }
 
- 
- 
-
                 return {
                     errors,
                     processedData: submitData
@@ -720,17 +688,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             afterSubmit: (response, formData, isEditing) => {
- 
- 
- 
- 
-
                 return response;
             }
         },
 
         transformResponse: (response) => {
- 
+
 
             if (response && response.data) {
                 let data = response.data;
@@ -773,6 +736,3 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
     };
 };
-
-
-

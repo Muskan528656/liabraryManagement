@@ -114,7 +114,18 @@
 
 
 import React from "react";
-import { Badge, InputGroup, Form, Button, Dropdown } from "react-bootstrap";
+import { Badge, InputGroup, Form, Button, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+
+const TooltipButton = ({ label, children }) => (
+  <OverlayTrigger
+    placement="top"
+    overlay={<Tooltip>{label}</Tooltip>}
+  >
+    <span className="d-inline-block">
+      {children}
+    </span>
+  </OverlayTrigger>
+);
 
 const TableHeader = ({
   title,
@@ -189,13 +200,15 @@ const TableHeader = ({
 
         {showColumnVisibility && allColumns.length > 0 && (
           <Dropdown>
-            <Dropdown.Toggle
-              variant="outline-secondary"
-              size="sm"
-              className="custom-btn-table-header"
-            >
-              <i className="fs-7 fa-solid fa-gear"></i>
-            </Dropdown.Toggle>
+            <TooltipButton label="Show / Hide Columns">
+              <Dropdown.Toggle
+                variant="outline-secondary"
+                size="sm"
+                className="custom-btn-table-header"
+              >
+                <i className="fs-7 fa-solid fa-gear"></i>
+              </Dropdown.Toggle>
+            </TooltipButton>
 
             <Dropdown.Menu
               align="end"
@@ -262,21 +275,18 @@ const TableHeader = ({
               </Button>
             ))}
 
-        {actionButtons.map((button, index) => (
-          <button
-            key={index}
-            onClick={button.onClick}
-            className="custom-btn-table-header"
-            disabled={button.disabled}
-          >
-            {button.icon && (
-              <i
-                className={`${button.icon} ${button.label ? "me-1" : ""
-                  }`}
-              ></i>
-            )}
-            {button.label}
-          </button>
+        {actionButtons.map((btn, index) => (
+          <TooltipButton key={index} label={btn.label}>
+            <Button
+              variant={btn.variant}
+              size={btn.size}
+              onClick={btn.onClick}
+              style={btn.style}
+              className="custom-btn-table-header"
+            >
+              <i className={btn.icon}></i>
+            </Button>
+          </TooltipButton>
         ))}
       </div>
     </div>
