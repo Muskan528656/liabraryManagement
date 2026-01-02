@@ -113,9 +113,8 @@ async function resolveTypeId(typeName) {
   return result.rows.length ? result.rows[0].id : null;
 }
 
-
 async function create(cardData, userId) {
-
+  console.log(" Creating library member with data:", cardData);
   /* ================= CARD NUMBER ================= */
 
   if (!cardData.card_number) {
@@ -134,7 +133,6 @@ async function create(cardData, userId) {
   /* ================= RESOLVE TYPE ================= */
 
   if (cardData.type) {
-
     const isUUID =
       typeof cardData.type === "string" &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -142,10 +140,8 @@ async function create(cardData, userId) {
       );
 
     if (isUUID) {
-
       cardData.type_id = cardData.type;
     } else {
-
       const resolvedTypeId = await resolveTypeId(cardData.type);
 
       if (!resolvedTypeId) {
@@ -155,7 +151,6 @@ async function create(cardData, userId) {
       cardData.type_id = resolvedTypeId;
     }
   }
-
 
   try {
     /* ================= FIELDS ================= */
@@ -178,7 +173,7 @@ async function create(cardData, userId) {
       "country_code",
 
       "registration_date",
-
+      "plan_id",
       "type_id",
       "createddate",
       "lastmodifieddate",
@@ -219,7 +214,6 @@ async function create(cardData, userId) {
       cardData.last_name || null,
       fullName || null,
 
-
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
@@ -228,7 +222,7 @@ async function create(cardData, userId) {
       cardData.phone_number || null,
       cardData.country_code || null,
       cardData.registration_date || null,
-
+      cardData.plan_id || null,
       cardData.type_id || null,
       new Date(),
       new Date(),
@@ -236,14 +230,7 @@ async function create(cardData, userId) {
       userId,
     ];
 
-    console.log("📋 Inserting library member:", {
-      card_number: values[0],
-      is_active: values[1],
-      father_gurdian_name: values[7],
-      parent_contact: values[8],
-      dob: values[9],
-      createdbyid: values[values.length - 2],
-    });
+
 
     const result = await sql.query(query, values);
 
@@ -251,7 +238,6 @@ async function create(cardData, userId) {
 
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
-
   } catch (error) {
     console.error("❌ Error in create:", {
       message: error.message,

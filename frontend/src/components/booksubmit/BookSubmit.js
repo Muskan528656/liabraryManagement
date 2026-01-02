@@ -112,7 +112,7 @@ const BookSubmit = () => {
 
             if (resp.ok) {
                 const data = await resp.json();
- 
+
 
                 let settings = {};
                 if (data.success && data.data && Array.isArray(data.data)) {
@@ -124,7 +124,7 @@ const BookSubmit = () => {
                 }
 
                 setLibrarySettings(settings);
- 
+
             } else {
                 console.error("Failed to fetch library settings");
                 const defaultSettings = {
@@ -157,11 +157,11 @@ const BookSubmit = () => {
                 "GET"
             );
 
- 
+
 
             if (resp.ok) {
                 const data = await resp.json();
- 
+
 
                 let purchaseDetails = null;
                 if (data.success && data.data) {
@@ -204,7 +204,7 @@ const BookSubmit = () => {
             }
 
             const issues = await issuesResp.json();
- 
+
             setAllIssuedBooks(issues || []);
             setDisplayedIssuedBooks(issues || []);
         } catch (error) {
@@ -291,14 +291,14 @@ const BookSubmit = () => {
                 `${constants.API_BASE_URL}/api/book_submissions`,
                 "GET"
             );
- 
+
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
             }
 
             const response = await submissionsResp.json();
             let submissions = [];
- 
+
             if (response.success !== undefined) {
                 if (Array.isArray(response.data)) {
                     submissions = response.data;
@@ -918,6 +918,7 @@ const BookSubmit = () => {
     };
 
     const handleCancelClick = (issueItem) => {
+        console.log("Cancel click for issue:", issueItem);
         setSelectedIssue(issueItem);
         setShowCancelModal(true);
     };
@@ -973,7 +974,7 @@ const BookSubmit = () => {
             }
 
             const result = await resp.json();
- 
+
             if (result.success) {
                 PubSub.publish("RECORD_SUCCESS_TOAST", {
                     title: "Success",
@@ -1018,7 +1019,7 @@ const BookSubmit = () => {
     };
 
     const handleCancelConfirm = async () => {
- 
+
         if (!selectedIssue) return;
 
         try {
@@ -1184,7 +1185,7 @@ const BookSubmit = () => {
                 Object.entries(submitData).filter(([_, v]) => v !== undefined)
             );
 
- 
+
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/book_submissions`,
@@ -1931,7 +1932,7 @@ const BookSubmit = () => {
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
-                                       
+
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
                                                     columns={issueColumns}

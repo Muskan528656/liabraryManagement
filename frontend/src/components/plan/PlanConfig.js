@@ -118,6 +118,9 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             if (!formData.plan_name?.trim()) errors.push("Plan name is required");
             if (!formData.duration_days || formData.duration_days <= 0) errors.push("Duration must be a positive number");
             if (formData.allowed_books < 0) errors.push("Allowed books cannot be negative");
+            if (formData.allowed_books < formData.max_allowed_books_at_time) {
+                errors.push("Total allowed books cannot be less than max books allowed at a time");
+            }
             return errors;
         },
 

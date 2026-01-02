@@ -26,7 +26,6 @@ async function create(submissionData, userId) {
   if (!submissionData.issue_id) throw new Error("Issue ID required");
 
   try {
-    await sql.query('BEGIN');
 
     const issueRes = await sql.query(
       `SELECT bi.*, b.title, b.isbn, b.available_copies
@@ -151,9 +150,10 @@ async function create(submissionData, userId) {
 
 
     if (
-      issue.status !== 'cancelled' &&
-      conditionAfterLower !== 'lost'
+      issue.status == "cancelled" ||
+      conditionAfterLower == 'lost'
     ) {
+      console.log("updating book copies");
       await sql.query(
         `UPDATE demo.books
          SET available_copies = COALESCE(available_copies, 0) + 1,
@@ -1426,8 +1426,8 @@ async function checkOverdueStatus(issueId) {
 }
 
 
-// cron.schedule("* * * * *", sendDueReminder);
-// cron.schedule("* * * * *", sendOverdueReminder);
+ cron.schedule('*/5 * * * * *', sendDueReminder);
+cron.schedule('*/5 * * * * *', sendOverdueReminder);
 // cron.schedule("0 0 9 * * *", sendDueReminder);
 // cron.schedule("0 0 9 * * *", sendOverdueReminder);
 

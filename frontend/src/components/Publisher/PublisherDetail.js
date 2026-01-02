@@ -10,7 +10,7 @@ import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import City_State from "../../constants/CityState.json";
 
 
- 
+
 const PublisherDetail = () => {
 
     const { id } = useParams();
@@ -19,7 +19,7 @@ const PublisherDetail = () => {
 
     const [totalBooks, setTotalBooks] = useState(0);
 
- 
+
     const { timeZone } = useTimeZone();
     const fetchBookData = async (bookId) => {
         try {
@@ -30,8 +30,8 @@ const PublisherDetail = () => {
             const bookData = bookResponse?.data || {};
             setBook(bookData);
 
- 
- 
+
+
 
         } catch (error) {
             console.error("Error fetching book or book issues:", error);
@@ -43,7 +43,7 @@ const PublisherDetail = () => {
     useEffect(() => {
         if (id) {
             fetchBookData(id);
- 
+
         }
     }, [id]);
 
@@ -56,7 +56,7 @@ const PublisherDetail = () => {
             },
             {
                 key: "name",
-                label: "name",
+                label: "Name",
                 type: "text"
             },
             {
@@ -119,14 +119,14 @@ const PublisherDetail = () => {
         ],
     };
 
- 
- 
- 
- 
- 
- 
 
- 
+
+
+
+
+
+
+
 
     return (
         <>
@@ -136,13 +136,9 @@ const PublisherDetail = () => {
                         <ModuleDetail
                             moduleName="publisher"
                             moduleApi="publisher"
-                            moduleLabel="publisher"
+                            moduleLabel="Publisher"
                             icon="fa fa-address-card"
                             fields={fields}
- 
- 
- 
- 
                         />
                     )}
                 </Col>

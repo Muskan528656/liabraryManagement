@@ -12,7 +12,7 @@ import { API_BASE_URL } from "../../constants/CONSTANT";
 const Company = () => {
   const { timeZone, setCompanyTimeZone } = useTimeZone();
 
- 
+
 
   const [Company, setCompany] = useState({
     name: "",
@@ -120,8 +120,8 @@ const Company = () => {
       setIsUploading(true);
       const companyId = getCompanyIdFromToken();
       const token = sessionStorage.getItem("token");
-      
- 
+
+
       if (selectedLogoFile) {
         const formData = new FormData();
         formData.append('image', selectedLogoFile);
@@ -147,7 +147,7 @@ const Company = () => {
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
 
- 
+
           setCompanyTimeZone(updatedCompany.time_zone);
 
           PubSub.publish("RECORD_SAVED_TOAST", {
@@ -158,7 +158,7 @@ const Company = () => {
           PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
         }
       } else {
- 
+
         const companyApi = new DataApi("company");
         const response = await companyApi.update(tempCompany, companyId);
 
@@ -170,7 +170,7 @@ const Company = () => {
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
 
- 
+
 
           if (updatedCompany.time_zone) {
             setCompanyTimeZone(updatedCompany.time_zone);
@@ -503,8 +503,8 @@ const Company = () => {
                               ? logoPreview
                               : tempCompany.logourl
                                 ? (tempCompany.logourl.startsWith('http') || tempCompany.logourl.startsWith('blob:')
-                                    ? tempCompany.logourl
-                                    : `${API_BASE_URL}${tempCompany.logourl}`)
+                                  ? tempCompany.logourl
+                                  : `${API_BASE_URL}${tempCompany.logourl}`)
                                 : Company?.logourl
                                   ? `${API_BASE_URL}${Company.logourl}?${new Date().getTime()}`
                                   : "/default-logo.png"
@@ -559,7 +559,7 @@ const Company = () => {
                                 (mimeType === 'image/gif' && fileExtension === '.gif');
 
                               if (!isValidMimeType || !isValidExtension || !isValidCombination) {
- 
+
                                 PubSub.publish("RECORD_ERROR_TOAST", {
                                   title: "Error",
                                   message: "Only JPEG, PNG, and GIF images are allowed",

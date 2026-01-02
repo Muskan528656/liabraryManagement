@@ -356,30 +356,6 @@ const DynamicCRUD = ({
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const filteredData = useMemo(() => {
         let result = data;
 
