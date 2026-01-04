@@ -13,7 +13,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             "email": "Email",
             "bio": "Bio"
         },
-        required: ["name"], 
+        required: ["name"],
     });
 
     return {
@@ -143,7 +143,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
- 
+
             }
         }
     };
