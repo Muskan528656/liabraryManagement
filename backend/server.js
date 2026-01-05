@@ -152,14 +152,19 @@ app.use(
 const fileUpload = require("express-fileupload");
 const path = require("path");
 // const sendMail = require("./app/utils/mailer");
-const publicUploadsPath = "/var/www/html/uploads/files"; // <- absolute folder for server
-
+// const publicUploadsPath = path.join(__dirname, "../frontend/public/uploads");
+const publicUploadsPath ="/var/www/html/uploads/";
+// const publicUploadsPath ="../frontend/public/uploads";
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
 }
+const legacyUploadsPath = path.join(__dirname, "uploads");
 
 app.use("/uploads", express.static(publicUploadsPath));
 
+if (fs.existsSync(legacyUploadsPath)) {
+  app.use("/uploads", express.static(legacyUploadsPath));
+}
 app.get("/ibs", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });
