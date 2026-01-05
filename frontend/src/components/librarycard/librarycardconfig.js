@@ -194,7 +194,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 );
             }
         }
-,
+        ,
 
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
