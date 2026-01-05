@@ -390,7 +390,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
- 
+
 
       setLatestMembers(latestMembersSorted);
 
@@ -1149,6 +1149,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                 <div className="list-group list-group-flush">
                   {upcomingDueMembers.length > 0 ? (
                     upcomingDueMembers.slice(0, 5).map((member, idx) => {
+                      console.log("memember", member)
                       const statusColor = getDueStatusColor(member.due_date);
                       return (
                         <div
@@ -1162,13 +1163,12 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                         >
                           <div className="d-flex align-items-center">
                             <div className="position-relative me-2">
-                              {/* <img
+                              <img
                                 src={member.image}
-                                alt={member.name}
+
                                 onError={(e) => {
- 
                                   e.target.onerror = null;
-                                  
+
                                 }}
                                 style={{
                                   width: "36px",
@@ -1177,7 +1177,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                   objectFit: "cover",
                                   border: "2px solid #e2e8f0"
                                 }}
-                              /> */}
+                              />
                               {/* <div style={{
                                 position: "absolute",
                                 bottom: 0,
