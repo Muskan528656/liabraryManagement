@@ -50,22 +50,15 @@ const upload = multer({
   }
 });
 
-// ------------------- HELPER -------------------
+
 const deleteFileIfExists = (filePath) => {
   if (!filePath) return;
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join("/var/www/html/uploads", filePath.replace(/^\/uploads\//, ""));
   if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
 };
-
-
-console.log("Multer configured successfully for library cards.");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
-
-
-
-
   router.get("/object-types", fetchUser, async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
