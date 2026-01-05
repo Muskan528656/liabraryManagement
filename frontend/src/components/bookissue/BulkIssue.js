@@ -4787,7 +4787,7 @@ const BulkIssue = () => {
                             <div className="small text-muted">
                               {showIssuedBooks} Issued Books
                             </div>
-
+                            {issuedCountForSelectedCard}
                           </Button>
 
                         </div>
