@@ -311,12 +311,48 @@ useEffect(() => {
       );
       setLibraryCards(activeCards);
 
-      const activeIssues = issuesList.filter(
-        (issue) =>
-          issue.status !== "returned" &&
-          (issue.return_date == null || issue.return_date === undefined || issue.return_date === "")
+      // Fetch submitted books
+      let submissionsList = [];
+      try {
+        const submissionsResp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/book_submissions`, "GET");
+        if (submissionsResp.ok) {
+          const submissionsData = await submissionsResp.json();
+          submissionsList = normalize(submissionsData);
+        }
+      } catch (error) {
+        console.error("Error fetching submissions:", error);
+      }
+
+      // Include all issues that are not returned (issued, cancelled, etc.)
+      const allNonReturnedIssues = issuesList.filter(
+        (issue) => issue.status !== "returned"
       );
-      setIssuedBooks(activeIssues);
+
+      // Transform submissions to match issue format for display
+      const transformedSubmissions = submissionsList.map(submission => ({
+        id: `submission_${submission.id}`,
+        book_id: submission.book_id,
+        book_title: submission.book_title,
+        book_isbn: submission.book_isbn,
+        card_id: submission.card_id || submission.issued_to,
+        card_number: submission.card_number,
+        issued_to: submission.issued_to,
+        issued_to_name: submission.issued_to_name,
+        issue_date: submission.issue_date,
+        due_date: submission.due_date,
+        status: "submitted",
+        quantity: 1,
+        condition_before: submission.condition_before,
+        remarks: submission.remarks,
+        submit_date: submission.submit_date,
+        penalty: submission.penalty_amount || submission.penalty,
+        condition_after: submission.condition_after
+      }));
+
+      // Combine issues and submissions
+      const combinedBooks = [...allNonReturnedIssues, ...transformedSubmissions];
+
+      setIssuedBooks(combinedBooks);
 
       setDurationDays(7);
       setSystemMaxBooks(6);
@@ -587,7 +623,7 @@ useEffect(() => {
         return (
           issCardId?.toString() === selectedCard.value.toString() &&
           issBookId?.toString() === bookId.toString() &&
-          iss.status !== "returned" &&
+          iss.status === "issued" &&
           (iss.return_date == null || iss.return_date === undefined || iss.return_date === "")
         );
       }
@@ -1301,7 +1337,7 @@ useEffect(() => {
 
                     <Row className="g-2 mb-3">
                       <Col xs={4}>
-                        <div className="bg-light rounded-3">
+                        <div className="p-2 b-none bg-light rounded-3">
                            <Button
                         variant=""
                         size="sm"
@@ -1311,10 +1347,7 @@ useEffect(() => {
                        <div className="small text-muted">
                         {showIssuedBooks} Issued Books 
                         </div> 
-                        <div className="h5 mb-0 fw-bold text-dark">
-                           {issuedCountForSelectedCard}
-                          </div>
-                      
+                       
                       </Button>
                         
                         </div>
@@ -1337,7 +1370,6 @@ useEffect(() => {
                       </Col>
                     </Row>
 
-                    {/* i need functionlity total issued when click show book name */}
                     <div>
                      
                       {showIssuedBooks && (
@@ -1347,6 +1379,7 @@ useEffect(() => {
                             <thead>
                               <tr>
                                 <th>Title</th>
+                                <th>Quantity</th>
                                 <th>ISBN</th>
                                 <th>Language</th>
                                 <th>Status</th>
@@ -1358,19 +1391,21 @@ useEffect(() => {
                                 const title = book ? book.title : 'Unknown Book';
                                 const isbn = book ? book.isbn : 'N/A';
                                 const language = book ? book.language : 'N/A';
+                                const quantity = issue.quantity || issue.qty || 1;
 
                                 return (
                                   <tr key={index}>
-                                    <td>{title}</td>
-                                    <td>{isbn}</td>
-                                    <td>{language}</td>
+                                    <td>{ title }</td>
+                                    <td>{ quantity || 0 }</td>
+                                    <td>{ isbn }</td>
+                                    <td>{ language }</td>
                                     <td>
                                       {issue.status === "issued" ? (
                                         <Badge bg="success">Issued</Badge>  
                                       ) : issue.status === "submitted" ? (
                                         <Badge bg="secondary">Submitted</Badge>
                                       ) : (
-                                        <Badge bg="warning">Returned</Badge>
+                                        <Badge bg="danger">Cancelled</Badge>
                                       )}
                                     </td>
                                   </tr>

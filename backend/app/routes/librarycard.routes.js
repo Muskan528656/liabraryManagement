@@ -25,6 +25,7 @@ const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+const sql = require("../models/db.js");
 
 const rootDir = path.resolve(__dirname, "../../..");
 // console.log("Root Directory:", rootDir);
@@ -182,6 +183,11 @@ module.exports = (app) => {
       body("type_id").optional().isString(),
     ],
     async (req, res) => {
+      console.log("📥 Received request to create library card:", {
+        ...req.body,
+        image: req.file ? "[FILE DATA]" : req.body.image ? "[BASE64 DATA]" : null
+      });
+
       try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -191,6 +197,7 @@ module.exports = (app) => {
         LibraryCard.init(req.userinfo.tenantcode);
         const userId = req.userinfo?.id || null;
         const cardData = { ...req.body };
+        const originalPlanId = cardData.plan_id; // Store original plan_id for subscription creation
 
         console.log("📥 Creating library card with data:", {
           ...cardData,
@@ -228,18 +235,73 @@ module.exports = (app) => {
         }
 
 
-        if (cardData.plan_id !== undefined) {
-          cardData.subscription_id = cardData.plan_id;
-          delete cardData.plan_id;
-        }
-
+        
+      if (cardData.plan_id !== undefined) {
+        cardData.subscription_id = cardData.plan_id;
+        // Keep plan_id for library_members table
+      }
+        
+        cardData.plan_id = originalPlanId;
         const card = await LibraryCard.create(cardData, userId);
 
+        // Create subscription if plan_id was provided
+        if (originalPlanId) {
+          try {
+            // Fetch plan details
+            const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
+            const planResult = await sql.query(planQuery, [originalPlanId]);
+            if (planResult.rows.length === 0) {
+              console.error("Plan not found for subscription creation");
+            } else {
+              const plan = planResult.rows[0];
+              const startDate = new Date().toISOString().split('T')[0];
+              const endDate = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+              const subscriptionData = {
+                plan_id: originalPlanId,
+                member_id: card.id,
+                user_id: userId,
+                card_id: card.id,
+                plan_name: plan.plan_name,
+                duration_days: plan.duration_days,
+                allowed_books: plan.allowed_books,
+                start_date: startDate,
+                end_date: endDate,
+                is_active: true,
+                createdbyid: userId,
+                lastmodifiedbyid: userId,
+                createddate: new Date(),
+                lastmodifieddate: new Date(),
+              };
+
+              const columns = Object.keys(subscriptionData);
+              const values = Object.values(subscriptionData);
+              const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+              const columnNames = columns.join(', ');
+
+              const insertQuery = `
+                INSERT INTO ${req.userinfo.tenantcode}.subscriptions (${columnNames})
+                VALUES (${placeholders})
+                RETURNING *
+              `;
+
+              await sql.query(insertQuery, values);
+              console.log("Subscription created successfully for library card");
+            }
+          } catch (subError) {
+            console.error("Error creating subscription:", subError);
+            // Don't fail the library card creation if subscription fails
+          }
+        }
+
+        console.log("✅ Library card created successfully:", card);
         return res.status(201).json({
           success: true,
           data: card,
           message: "Library card created successfully",
+
         });
+
       } catch (error) {
         console.error("❌ Error creating library card:", error);
         return res.status(500).json({ error: error.message });
@@ -403,12 +465,62 @@ module.exports = (app) => {
       const results = [];
       for (const member of members) {
         try {
+          const originalPlanId = member.plan_id; // Store original plan_id for subscription creation
 
           if (!member.card_number) {
             member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
           }
 
           const card = await LibraryCard.create(member, userId);
+
+          // Create subscription if plan_id was provided
+          if (originalPlanId) {
+            try {
+              // Fetch plan details
+              const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
+              const planResult = await sql.query(planQuery, [originalPlanId]);
+              if (planResult.rows.length > 0) {
+                const plan = planResult.rows[0];
+                const startDate = new Date().toISOString().split('T')[0];
+                const endDate = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+                const subscriptionData = {
+                  plan_id: originalPlanId,
+                  member_id: card.id,
+                  user_id: userId,
+                  card_id: card.id,
+                  plan_name: plan.plan_name,
+                  duration_days: plan.duration_days,
+                  allowed_books: plan.allowed_books,
+                  start_date: startDate,
+                  end_date: endDate,
+                  is_active: true,
+                  createdbyid: userId,
+                  lastmodifiedbyid: userId,
+                  createddate: new Date(),
+                  lastmodifieddate: new Date(),
+                };
+
+                const columns = Object.keys(subscriptionData);
+                const values = Object.values(subscriptionData);
+                const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+                const columnNames = columns.join(', ');
+
+                const insertQuery = `
+                  INSERT INTO ${req.userinfo.tenantcode}.subscriptions (${columnNames})
+                  VALUES (${placeholders})
+                  RETURNING *
+                `;
+
+                await sql.query(insertQuery, values);
+                console.log("Subscription created successfully for imported library card");
+              }
+            } catch (subError) {
+              console.error("Error creating subscription for imported member:", subError);
+              // Don't fail the import if subscription fails
+            }
+          }
+
           results.push({ success: true, data: card });
         } catch (error) {
           results.push({

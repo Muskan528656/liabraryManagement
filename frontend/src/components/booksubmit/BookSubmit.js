@@ -1296,8 +1296,6 @@ const BookSubmit = () => {
         switch (status?.toLowerCase()) {
             case 'issued':
                 return <Badge bg="primary">Issued</Badge>;
-            case 'returned':
-                return <Badge bg="success">Returned</Badge>;
             case 'submitted':
                 return <Badge bg="info">Submitted</Badge>;
             case 'cancelled':
@@ -1454,7 +1452,7 @@ const BookSubmit = () => {
                             className="btn-custom"
                             size="sm"
                             onClick={() => handleSubmitClick(record)}
-                            title="Submit Return"
+                            title="Submitted Issue"
                         >
                             <i className="fa-solid fa-check-circle"></i> Submit
                         </Button>
@@ -1471,7 +1469,7 @@ const BookSubmit = () => {
                             variant="outline-danger"
                             size="sm"
                             onClick={() => handleCancelClick(record)}
-                            title="Cancel Issue"
+                            title="Cancelled Issue"
                         >
                             <i className="fa-solid fa-times"></i>
                         </Button>

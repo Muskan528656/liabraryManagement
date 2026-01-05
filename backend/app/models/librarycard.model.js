@@ -53,7 +53,7 @@ async function findById(id) {
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
       LEFT JOIN ${schema}.plan p
-        ON lm.subscription_id = p.id
+        ON lm.plan_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
       WHERE lm.id = $1
@@ -113,9 +113,8 @@ async function resolveTypeId(typeName) {
   return result.rows.length ? result.rows[0].id : null;
 }
 
-
 async function create(cardData, userId) {
- 
+  console.log(" Creating library member with data:", cardData);
   /* ================= CARD NUMBER ================= */
 
   if (!cardData.card_number) {
@@ -134,7 +133,6 @@ async function create(cardData, userId) {
   /* ================= RESOLVE TYPE ================= */
 
   if (cardData.type) {
-
     const isUUID =
       typeof cardData.type === "string" &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -142,10 +140,8 @@ async function create(cardData, userId) {
       );
 
     if (isUUID) {
-
       cardData.type_id = cardData.type;
     } else {
-
       const resolvedTypeId = await resolveTypeId(cardData.type);
 
       if (!resolvedTypeId) {
@@ -155,7 +151,6 @@ async function create(cardData, userId) {
       cardData.type_id = resolvedTypeId;
     }
   }
-
 
   try {
     /* ================= FIELDS ================= */
@@ -178,7 +173,7 @@ async function create(cardData, userId) {
       "country_code",
 
       "registration_date",
-
+      "plan_id",
       "type_id",
       "createddate",
       "lastmodifieddate",
@@ -206,8 +201,9 @@ async function create(cardData, userId) {
         ? cardData.is_active
         : cardData.status === true || cardData.status === "true";
 
-    const fullName = `${cardData.first_name || ""} ${cardData.last_name || ""
-      }`.trim();
+    const fullName = `${cardData.first_name || ""} ${
+      cardData.last_name || ""
+    }`.trim();
 
     const values = [
       cardData.card_number,
@@ -219,7 +215,6 @@ async function create(cardData, userId) {
       cardData.last_name || null,
       fullName || null,
 
-
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
@@ -228,7 +223,7 @@ async function create(cardData, userId) {
       cardData.phone_number || null,
       cardData.country_code || null,
       cardData.registration_date || null,
-
+      cardData.plan_id || null,
       cardData.type_id || null,
       new Date(),
       new Date(),
@@ -251,7 +246,6 @@ async function create(cardData, userId) {
 
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
-
   } catch (error) {
     console.error("❌ Error in create:", {
       message: error.message,
@@ -268,34 +262,23 @@ async function updateById(id, cardData, userId) {
     const values = [];
     let idx = 1;
 
- 
- 
-
-
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
       idx++;
     }
 
-
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
 
- 
-
-
-      if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
+      if (!isNaN(typeValue) && typeValue !== null && typeValue !== "") {
         typeValue = parseInt(typeValue);
- 
       }
 
       updates.push("type_id = $" + idx);
       values.push(typeValue);
       idx++;
- 
     }
-
 
     const allowedFields = [
       "card_number",
@@ -311,14 +294,12 @@ async function updateById(id, cardData, userId) {
       "country_code",
       "dob",
       "father_gurdian_name",
-      "parent_contact"
+      "parent_contact",
     ];
 
-
-    allowedFields.forEach(field => {
+    allowedFields.forEach((field) => {
       if (cardData[field] !== undefined) {
-
-        if (field === 'name') {
+        if (field === "name") {
           if (!cardData[field] && cardData.first_name && cardData.last_name) {
             updates.push(`name = $${idx}`);
             values.push(`${cardData.first_name} ${cardData.last_name}`);
@@ -328,22 +309,18 @@ async function updateById(id, cardData, userId) {
             values.push(cardData[field]);
             idx++;
           }
-        }
-
-        else if (field === 'dob' || field === 'registration_date') {
+        } else if (field === "dob" || field === "registration_date") {
           if (cardData[field]) {
             updates.push(`${field} = $${idx}`);
             const dateValue = new Date(cardData[field]);
             values.push(dateValue);
             idx++;
-          } else if (cardData[field] === null || cardData[field] === '') {
+          } else if (cardData[field] === null || cardData[field] === "") {
             updates.push(`${field} = $${idx}`);
             values.push(null);
             idx++;
           }
-        }
-
-        else if (field !== 'name') {
+        } else if (field !== "name") {
           updates.push(`${field} = $${idx}`);
           values.push(cardData[field]);
           idx++;
@@ -357,7 +334,6 @@ async function updateById(id, cardData, userId) {
     idx++;
 
     if (updates.length === 0) {
-
       return await findById(id);
     }
 
@@ -376,11 +352,9 @@ async function updateById(id, cardData, userId) {
       throw new Error("Record not found");
     }
 
-
     const updatedRecord = await findById(id);
 
     return updatedRecord;
-
   } catch (error) {
     console.error("❌ Error in updateById:", error);
     throw error;
@@ -391,9 +365,11 @@ async function resolveTypeId(typeInput) {
   try {
     if (!typeInput) return null;
 
- 
-
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(typeInput)) {
+    if (
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        typeInput
+      )
+    ) {
       return typeInput;
     }
 
@@ -405,26 +381,24 @@ async function resolveTypeId(typeInput) {
     const resultById = await sql.query(queryById, [typeInput.toString()]);
 
     if (resultById.rows.length > 0) {
- 
       return resultById.rows[0].id;
     }
-
 
     const queryByName = `
       SELECT id FROM ${schema}.library_member_types 
       WHERE LOWER(name) = LOWER($1) OR LOWER(code) = LOWER($1)
     `;
 
-    const resultByName = await sql.query(queryByName, [typeInput.toString().toLowerCase()]);
+    const resultByName = await sql.query(queryByName, [
+      typeInput.toString().toLowerCase(),
+    ]);
 
     if (resultByName.rows.length > 0) {
- 
       return resultByName.rows[0].id;
     }
 
     console.warn(`❌ Could not resolve type ID for: ${typeInput}`);
     return null;
-
   } catch (error) {
     console.error("Error resolving type ID:", error);
     return null;
@@ -445,20 +419,19 @@ async function deleteById(id) {
       return {
         success: true,
         message: "Library member deleted successfully",
-        data: result.rows[0]
+        data: result.rows[0],
       };
     }
 
     return {
       success: false,
-      message: "Record not found"
+      message: "Record not found",
     };
-
   } catch (error) {
     console.error("Error in deleteById:", error);
 
-
-    if (error.code === '23503') { // foreign_key_violation
+    if (error.code === "23503") {
+      // foreign_key_violation
       throw new Error("Cannot delete member. Related records exist.");
     }
 
@@ -486,7 +459,6 @@ async function findByUserId(userId) {
 
     const result = await sql.query(query, [userId]);
     return result.rows[0] || null;
-
   } catch (error) {
     console.error("Error in findByUserId:", error);
     throw error;
@@ -526,7 +498,6 @@ async function search(searchTerm) {
 
     const result = await sql.query(query, [`%${searchTerm}%`]);
     return result.rows;
-
   } catch (error) {
     console.error("Error in search:", error);
     throw error;
@@ -544,5 +515,5 @@ module.exports = {
   create,
   updateById,
   deleteById,
-  search
+  search,
 };

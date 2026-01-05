@@ -184,7 +184,36 @@ module.exports = (app) => {
 
         const updatedIssue = result.rows[0];
 
- 
+        // If status changed to cancelled, increase book available copies
+        console.log("Checking cancellation condition:");
+        console.log("updateData.status:", updateData.status);
+        console.log("existingIssue.status:", existingIssue.status);
+        console.log("existingIssue.book_id:", existingIssue.book_id);
+        console.log("existingIssue.issued_to:", existingIssue.issued_to);
+
+        if (updateData.status === "cancelled" && existingIssue.status !== "cancelled") {
+          console.log("Cancellation condition met, updating inventory...");
+          try {
+            const updateBookQuery = `
+              UPDATE ${req.userinfo.tenantcode}.books
+              SET available_copies = LEAST(available_copies + 1, total_copies),
+                  lastmodifiedbyid = $2,
+                  lastmodifieddate = CURRENT_TIMESTAMP
+              WHERE id = $1
+              RETURNING available_copies, total_copies
+            `;
+
+            const bookResult = await sql.query(updateBookQuery, [existingIssue.book_id, userId]);
+            console.log("Book inventory updated on cancellation:", bookResult.rows[0]);
+
+          } catch (bookUpdateError) {
+            console.error("Error updating book inventory on cancellation:", bookUpdateError);
+            // Don't fail the entire operation, just log the error
+          }
+        } else {
+          console.log("Cancellation condition not met, skipping inventory update");
+        }
+
         if (updateData.status && updateData.status !== existingIssue.status) {
           try {
             Notification.init(req.userinfo.tenantcode);
