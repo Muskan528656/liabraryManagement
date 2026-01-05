@@ -4469,7 +4469,7 @@ const BulkIssue = () => {
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? "#8b5cf6"
+        ? "var(--primary-color)"
         : state.isFocused
           ? "#f3f0ff"
           : "white",
