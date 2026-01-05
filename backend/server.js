@@ -152,14 +152,12 @@ app.use(
 const fileUpload = require("express-fileupload");
 const path = require("path");
 // const sendMail = require("./app/utils/mailer");
-const publicUploadsPath = process.env.PROD; // Absolute path
-
-// ✅ Ensure folder exists
+const publicUploadsPath = "/var/www/html/uploads/images";
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
 }
+const legacyUploadsPath = path.join(__dirname, "uploads");
 
-// ✅ Serve static files
 app.use("/uploads", express.static(publicUploadsPath));
 
 if (fs.existsSync(legacyUploadsPath)) {
