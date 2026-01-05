@@ -153,6 +153,7 @@ const fileUpload = require("express-fileupload");
 const path = require("path");
 // const sendMail = require("./app/utils/mailer");
 const publicUploadsPath = path.join(__dirname, process.env.PROD);
+console.log('path', process.env.PROD);
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
 }
