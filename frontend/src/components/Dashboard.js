@@ -1163,7 +1163,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                         >
                           <div className="d-flex align-items-center">
                             <div className="position-relative me-2">
-                              <img
+                              {/* <img
                                 src={member.image}
 
                                 onError={(e) => {
@@ -1177,7 +1177,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                                   objectFit: "cover",
                                   border: "2px solid #e2e8f0"
                                 }}
-                              />
+                              /> */}
                               {/* <div style={{
                                 position: "absolute",
                                 bottom: 0,
