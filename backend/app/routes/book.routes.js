@@ -118,7 +118,7 @@ module.exports = (app) => {
         return true;
       }).custom((value, { req }) => {
         if (value !== undefined && value !== null && value !== "" &&
-            req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
           if (parseInt(value) < parseInt(req.body.min_age)) {
             throw new Error("Max age cannot be less than min age");
           }
@@ -164,7 +164,6 @@ module.exports = (app) => {
     }
   );
 
-
   router.put(
     "/:id",
     fetchUser,
@@ -185,7 +184,7 @@ module.exports = (app) => {
         return true;
       }).custom((value, { req }) => {
         if (value !== undefined && value !== null && value !== "" &&
-            req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
           if (parseInt(value) < parseInt(req.body.min_age)) {
             throw new Error("Max age cannot be less than min age");
           }
@@ -232,8 +231,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);

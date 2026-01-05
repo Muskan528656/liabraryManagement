@@ -516,7 +516,7 @@ const BookIssue = () => {
                     marginBottom: "-1px"
                   }}
                 >
-                  <i className="fa-solid fa-book-return me-2"></i>
+
                   <span>Issue New Book</span>
                 </Nav.Link>
               </Nav.Item>

@@ -795,7 +795,7 @@ const ModuleDetail = ({
 
      PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
-         message: `Failed to update ${moduleLabel}: ${errorMessage}`,
+        message: `Failed to update ${moduleLabel}: ${errorMessage}`,
       });
     } finally {
       setSaving(false);

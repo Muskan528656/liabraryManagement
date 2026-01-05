@@ -9,7 +9,6 @@ function init(schema_name) {
 
   this.schema = schema_name;
 }
-
 async function findAll() {
   try {
     if (!this.schema) {
@@ -77,7 +76,6 @@ async function findById(id) {
     throw error;
   }
 }
-
 
 async function create(bookData, userId) {
   console.log("Creating book with data:", bookData);

@@ -114,7 +114,7 @@ async function resolveTypeId(typeName) {
 }
 
 async function create(cardData, userId) {
- console.log("Creating library card with data:", cardData);
+  console.log("Creating library card with data:", cardData);
   if (!cardData.card_number) {
     cardData.card_number = await generateAutoNumberSafe(
       "library_members",
