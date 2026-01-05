@@ -165,39 +165,36 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             type: "image",
             width: "80px",
             render: (value, row) => {
-                const imagePath = value;
-                if (imagePath) {
+                const cleanApiBaseUrl = API_BASE_URL?.replace(/\/ibs$/, "");
+                const defaultImage = "/default-user.png";
 
-                    const cleanApiBaseUrl = API_BASE_URL.replace(/\/ibs$/, '');
+                const imgSrc = value
+                    ? value.startsWith("http")
+                        ? value
+                        : `${cleanApiBaseUrl}${value}`
+                    : defaultImage;
 
-                    console.log(`Rendering image for row: ${cleanApiBaseUrl}${imagePath}`);
-                    const imgSrc = imagePath.startsWith("http")
-                        ? imagePath
-                        : `${cleanApiBaseUrl}${imagePath}`;
-
-                    return (
-                        <img
-                            src={imgSrc}
-                            alt={row.first_name || "User"}
-                            className="table-user-image"
-                            style={{
-                                width: "39px",
-                                height: "39px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                border: "2px solid #e2e8f0"
-                            }}
-                            onError={(e) => {
-                                // Fallback image
-                                e.target.onerror = null;
-                                e.target.src = "/default-user.png";
-                            }}
-                        />
-                    );
-                }
-                return <span>No Image</span>;
+                return (
+                    <img
+                        src={imgSrc}
+                        alt={row.first_name || "User"}
+                        className="table-user-image"
+                        style={{
+                            width: "39px",
+                            height: "39px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "2px solid #e2e8f0"
+                        }}
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = defaultImage;
+                        }}
+                    />
+                );
             }
-        },
+        }
+,
 
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },

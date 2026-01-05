@@ -67,6 +67,7 @@ async function findById(id) {
 
 
 async function create(bookData, userId) {
+  console.log("Creating book with data:", bookData);
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");

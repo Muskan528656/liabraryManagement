@@ -112,7 +112,7 @@ module.exports = (app) => {
       body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
       body("status")
         .optional()
-        .isIn(["issued", "lost", "damaged","cancelled"])
+        .isIn(["issued", "returned", "lost", "damaged", "cancelled"])
         .withMessage("Status must be one of: issued, returned, lost, damaged, cancelled"),
     ],
     async (req, res) => {
@@ -128,7 +128,7 @@ module.exports = (app) => {
 
         BookIssue.init(req.userinfo.tenantcode);
 
- 
+
         const existingIssue = await BookIssue.findById(issueId);
         if (!existingIssue) {
           return res.status(404).json({
@@ -137,18 +137,18 @@ module.exports = (app) => {
           });
         }
 
- 
+
         const updateFields = [];
         const updateValues = [];
         let paramCounter = 1;
 
- 
+
         updateFields.push(`lastmodifieddate = NOW()`);
         updateFields.push(`lastmodifiedbyid = $${paramCounter}`);
         updateValues.push(userId);
         paramCounter++;
 
- 
+
         const allowedFields = [
           "issue_date",
           "due_date",
@@ -184,7 +184,36 @@ module.exports = (app) => {
 
         const updatedIssue = result.rows[0];
 
- 
+        // If status changed to cancelled, increase book available copies
+        console.log("Checking cancellation condition:");
+        console.log("updateData.status:", updateData.status);
+        console.log("existingIssue.status:", existingIssue.status);
+        console.log("existingIssue.book_id:", existingIssue.book_id);
+        console.log("existingIssue.issued_to:", existingIssue.issued_to);
+
+        if (updateData.status === "cancelled" && existingIssue.status !== "cancelled") {
+          console.log("Cancellation condition met, updating inventory...");
+          try {
+            const updateBookQuery = `
+              UPDATE ${req.userinfo.tenantcode}.books
+              SET available_copies = LEAST(available_copies + 1, total_copies),
+                  lastmodifiedbyid = $2,
+                  lastmodifieddate = CURRENT_TIMESTAMP
+              WHERE id = $1
+              RETURNING available_copies, total_copies
+            `;
+
+            const bookResult = await sql.query(updateBookQuery, [existingIssue.book_id, userId]);
+            console.log("Book inventory updated on cancellation:", bookResult.rows[0]);
+
+          } catch (bookUpdateError) {
+            console.error("Error updating book inventory on cancellation:", bookUpdateError);
+            // Don't fail the entire operation, just log the error
+          }
+        } else {
+          console.log("Cancellation condition not met, skipping inventory update");
+        }
+
         if (updateData.status && updateData.status !== existingIssue.status) {
           try {
             Notification.init(req.userinfo.tenantcode);
@@ -229,17 +258,16 @@ module.exports = (app) => {
     }
   );
 
-
   router.post("/issue", fetchUser, async (req, res) => {
     try {
- 
+
       BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
 
     } catch (error) {
- 
+
       return res.status(500).json({ success: false, message: "Server error" });
     }
   });
@@ -425,7 +453,7 @@ module.exports = (app) => {
   router.get("/:bookId/issued-count", fetchUser, async (req, res) => {
     try {
       const bookId = req.params.bookId;
- 
+
 
       BookIssue.init(req.userinfo.tenantcode);
       const issuedCount = await BookIssue.getIssuedCountByBookId(bookId);

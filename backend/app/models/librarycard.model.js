@@ -53,7 +53,7 @@ async function findById(id) {
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
       LEFT JOIN ${schema}.plan p
-        ON lm.subscription_id = p.id
+        ON lm.plan_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
       WHERE lm.id = $1
@@ -114,9 +114,7 @@ async function resolveTypeId(typeName) {
 }
 
 async function create(cardData, userId) {
-  console.log(" Creating library member with data:", cardData);
-  /* ================= CARD NUMBER ================= */
-
+ console.log("Creating library card with data:", cardData);
   if (!cardData.card_number) {
     cardData.card_number = await generateAutoNumberSafe(
       "library_members",
@@ -130,7 +128,6 @@ async function create(cardData, userId) {
     }
   }
 
-  /* ================= RESOLVE TYPE ================= */
 
   if (cardData.type) {
     const isUUID =
@@ -153,7 +150,6 @@ async function create(cardData, userId) {
   }
 
   try {
-    /* ================= FIELDS ================= */
 
     const fields = [
       "card_number",
@@ -189,8 +185,6 @@ async function create(cardData, userId) {
       VALUES (${placeholders})
       RETURNING *
     `;
-
-    /* ================= VALUES ================= */
 
     const imageValue = cardData.hasOwnProperty("image")
       ? cardData.image || null
@@ -234,7 +228,6 @@ async function create(cardData, userId) {
 
     const result = await sql.query(query, values);
 
-    /* ================= RETURN FULL RECORD ================= */
 
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
@@ -253,23 +246,14 @@ async function updateById(id, cardData, userId) {
     const updates = [];
     const values = [];
     let idx = 1;
-
-
-
-
-
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
       idx++;
     }
 
-
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
-
-
-
 
       if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
@@ -444,7 +428,7 @@ async function deleteById(id) {
     console.error("Error in deleteById:", error);
 
 
-    if (error.code === '23503') { // foreign_key_violation
+    if (error.code === '23503') {
       throw new Error("Cannot delete member. Related records exist.");
     }
 

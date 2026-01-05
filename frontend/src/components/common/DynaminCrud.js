@@ -1052,7 +1052,7 @@ const getActionButtons = useCallback(() => {
                     setFormData(initialFormData);
                 }}
                 title={editingItem ? `Edit ${moduleLabel}` : `Add New ${moduleLabel}`}
-                icon="fa-solid fa-book"
+                icon={icon}
                 formData={formData}
                 setFormData={setFormData}
                 fields={processedFormFields}
