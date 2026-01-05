@@ -91,7 +91,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "authors",
                 required: true,
-             
+
                 colSize: 6,
             },
             {
@@ -100,7 +100,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "categories",
                 required: true,
-              
+
                 colSize: 6,
             },
             {
@@ -109,7 +109,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 type: "select",
                 options: "publishers",
                 required: false,
-          
+
                 colSize: 6,
             },
             {
@@ -190,13 +190,15 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             } else if (formData.min_age < 0) {
                 errors.push("Min age must be non-negative");
             }
-            if (formData.max_age !== undefined && formData.max_age !== null && formData.max_age !== "" && formData.max_age < 0) {
-                errors.push("Max age must be non-negative");
-            }
             if (formData.max_age !== undefined && formData.max_age !== null && formData.max_age !== "" &&
                 formData.min_age !== undefined && formData.min_age !== null && formData.min_age !== "" &&
-                formData.max_age < formData.min_age) {
+                parseInt(formData.max_age) < parseInt(formData.min_age)) {
                 errors.push("Max age cannot be less than min age");
+            }
+            if (formData.available_copies !== undefined && formData.available_copies !== null && formData.available_copies !== "" &&
+                formData.total_copies !== undefined && formData.total_copies !== null && formData.total_copies !== "" &&
+                parseInt(formData.available_copies) > parseInt(formData.total_copies)) {
+                errors.push("Available copies cannot exceed total copies");
             }
 
             const duplicate = allBooks.find(

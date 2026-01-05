@@ -788,11 +788,15 @@ const ModuleDetail = ({
         setIsEditing(false);
       }
     } catch (err) {
+      let errorMessage = err.message;
+      if (err.response && err.response.data && err.response.data.errors) {
+        errorMessage = err.response.data.errors;
+      }
 
 
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
-        message: `Failed to update ${moduleLabel}: ${err.message}`,
+        message: `Failed to update ${moduleLabel}: ${errorMessage}`,
       });
     } finally {
       setSaving(false);

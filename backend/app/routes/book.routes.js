@@ -108,9 +108,20 @@ module.exports = (app) => {
         return true;
       }),
       body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
-        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
-          throw new Error("Max age cannot be less than min age");
+      body("max_age").optional().custom((value) => {
+        if (value !== undefined && value !== null && value !== "") {
+          const numValue = parseInt(value);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error("Max age must be a non-negative integer");
+          }
+        }
+        return true;
+      }).custom((value, { req }) => {
+        if (value !== undefined && value !== null && value !== "" &&
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          if (parseInt(value) < parseInt(req.body.min_age)) {
+            throw new Error("Max age cannot be less than min age");
+          }
         }
         return true;
       }),
@@ -153,7 +164,6 @@ module.exports = (app) => {
     }
   );
 
-
   router.put(
     "/:id",
     fetchUser,
@@ -164,9 +174,20 @@ module.exports = (app) => {
       body("category_id").notEmpty().withMessage("Category ID is required"),
       body("publisher_id").optional(),
       body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
-        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
-          throw new Error("Max age cannot be less than min age");
+      body("max_age").optional().custom((value) => {
+        if (value !== undefined && value !== null && value !== "") {
+          const numValue = parseInt(value);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error("Max age must be a non-negative integer");
+          }
+        }
+        return true;
+      }).custom((value, { req }) => {
+        if (value !== undefined && value !== null && value !== "" &&
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          if (parseInt(value) < parseInt(req.body.min_age)) {
+            throw new Error("Max age cannot be less than min age");
+          }
         }
         return true;
       }),
@@ -210,8 +231,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
