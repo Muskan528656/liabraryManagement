@@ -16,7 +16,7 @@ export const handlePrintBarcode = (
 
     const imagePath = card.user_image || card.image;
     let imageUrl = null;
-    const baseUrl = API_BASE_URL.replace("/ibs", "");
+    const baseUrl = API_BASE_URL
 
     if (imagePath) {
       imageUrl = imagePath.startsWith("http")

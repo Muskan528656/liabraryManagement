@@ -112,7 +112,7 @@ module.exports = (app) => {
       body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
       body("status")
         .optional()
-        .isIn(["issued", "returned", "lost", "damaged","cancelled"])
+        .isIn(["issued", "returned", "lost", "damaged", "cancelled"])
         .withMessage("Status must be one of: issued, returned, lost, damaged, cancelled"),
     ],
     async (req, res) => {
@@ -128,7 +128,7 @@ module.exports = (app) => {
 
         BookIssue.init(req.userinfo.tenantcode);
 
- 
+
         const existingIssue = await BookIssue.findById(issueId);
         if (!existingIssue) {
           return res.status(404).json({
@@ -137,18 +137,18 @@ module.exports = (app) => {
           });
         }
 
- 
+
         const updateFields = [];
         const updateValues = [];
         let paramCounter = 1;
 
- 
+
         updateFields.push(`lastmodifieddate = NOW()`);
         updateFields.push(`lastmodifiedbyid = $${paramCounter}`);
         updateValues.push(userId);
         paramCounter++;
 
- 
+
         const allowedFields = [
           "issue_date",
           "due_date",
@@ -258,17 +258,16 @@ module.exports = (app) => {
     }
   );
 
-
   router.post("/issue", fetchUser, async (req, res) => {
     try {
- 
+
       BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
 
     } catch (error) {
- 
+
       return res.status(500).json({ success: false, message: "Server error" });
     }
   });
@@ -454,7 +453,7 @@ module.exports = (app) => {
   router.get("/:bookId/issued-count", fetchUser, async (req, res) => {
     try {
       const bookId = req.params.bookId;
- 
+
 
       BookIssue.init(req.userinfo.tenantcode);
       const issuedCount = await BookIssue.getIssuedCountByBookId(bookId);

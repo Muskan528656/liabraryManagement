@@ -19,7 +19,6 @@ const VendorDetail = () => {
   const fields = {
     title: "name",
     subtitle: "company_name",
-    status: "status",
     details: [
       { key: "name", label: "Vendor Name", type: "text" },
       { key: "company_name", label: "Company Name", type: "text" },
@@ -31,10 +30,6 @@ const VendorDetail = () => {
         key: "status",
         label: "Status",
         type: "toggle",
-        badgeConfig: {
-          true_label: "Active",
-          false_label: "Inactive",
-        },
       },
 
       {

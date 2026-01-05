@@ -165,35 +165,36 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             type: "image",
             width: "80px",
             render: (value, row) => {
-                const imagePath = value;
-                if (imagePath) {
-                    const imgSrc = imagePath.startsWith("http")
-                        ? imagePath
-                        : `${API_BASE_URL}${imagePath}`;
+                const cleanApiBaseUrl = API_BASE_URL?.replace(/\/ibs$/, "");
+                const defaultImage = "/default-user.png";
 
-                    return (
-                        <img
-                            src={imgSrc}
-                            alt={row.first_name || "User"}
-                            className="table-user-image"
-                            style={{
-                                width: "39px",
-                                height: "39px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                border: "2px solid #e2e8f0"
-                            }}
-                        />
-                    );
-                }
+                const imgSrc = value
+                    ? value.startsWith("http")
+                        ? value
+                        : `${cleanApiBaseUrl}${value}`
+                    : defaultImage;
 
                 return (
-                    <div className="table-user-placeholder">
-                        <i className="fa-solid fa-user"></i>
-                    </div>
+                    <img
+                        src={imgSrc}
+                        alt={row.first_name || "User"}
+                        className="table-user-image"
+                        style={{
+                            width: "39px",
+                            height: "39px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "2px solid #e2e8f0"
+                        }}
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = defaultImage;
+                        }}
+                    />
                 );
-            },
-        },
+            }
+        }
+,
 
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
@@ -272,7 +273,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             issue_date: new Date().toISOString().split("T")[0],
             plan_id: "",
             selectedPlan: null,
-            status: "active",
+            status: true,
             image: null,
             father_gurdian_name: "",
             parent_contact: "",
@@ -301,7 +302,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 name: "first_name",
                 label: "First Name",
                 type: "text",
-                required: false,
+                required: true,
                 placeholder: "Enter first name",
                 colSize: 6,
             },
@@ -309,7 +310,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 name: "last_name",
                 label: "Last Name",
                 type: "text",
-                required: false,
+                required: true,
                 placeholder: "Enter last name",
                 colSize: 6,
             },
@@ -317,7 +318,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 name: "email",
                 label: "Email",
                 type: "email",
-                required: false,
+                required: true,
                 placeholder: "Enter email address",
                 colSize: 6,
             },
@@ -350,15 +351,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 colSize: 6,
             },
 
-            {
-                name: "age",
-                label: "Age",
-                type: "number",
-                required: false,
-                placeholder: "Enter age",
-                colSize: 3,
-                props: { min: 0, max: 120 }
-            },
+            // {
+            //     name: "age",
+            //     label: "Age",
+            //     type: "number",
+            //     required: false,
+            //     placeholder: "Enter age",
+            //     colSize: 3,
+            //     props: { min: 0, max: 120 }
+            // },
             {
                 name: "registration_date",
                 label: "Registration Date",
@@ -520,26 +521,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         filterFields: [
 
 
-
-
-
-
-
-
-
-
             {
                 name: "plan_id",
                 field: "plan_id",
                 label: "Plan",
                 type: "select",
-                options: plansList.length > 0 ? [{ value: "", label: "All Plans" }, ...plansList] : [{ value: "", label: "All Plans" }],
+                options: plansList.length > 0 ? [{ value: "" }, ...plansList] : [{ value: "", }],
             },
-
-
-
-
-
 
             {
                 name: "first_name",
@@ -549,27 +537,12 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
 
-
-
-
-
-
-
-
-
-
-
             {
                 name: "phone_number",
                 field: "phone_number",
                 label: "Phone Number",
                 type: "text",
             },
-
-
-
-
-
 
             {
                 name: "registration_date",
@@ -612,7 +585,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     const age = calculateAge(value);
                     return (
                         <div>
-                            {/* <div>{formatDateToDDMMYYYY(value)}</div> */}
+
                             {age !== "-" && (
                                 <small className="text-muted"> {age}</small>
                             )}
@@ -694,10 +667,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
             beforeSubmit: (formData, isEditing, originalData) => {
 
-
-
-
-
                 const errors = [];
                 const submitData = { ...formData };
                 if (submitData.selectedPlan) {
@@ -729,9 +698,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Image size must be less than 2MB");
                 }
 
-
-
-
                 return {
                     errors,
                     processedData: submitData
@@ -739,11 +705,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             },
 
             afterSubmit: (response, formData, isEditing) => {
-
-
-
-
-
                 return response;
             }
         },
@@ -792,6 +753,3 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         }
     };
 };
-
-
-

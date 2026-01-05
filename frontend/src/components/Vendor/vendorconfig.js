@@ -89,7 +89,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             state: "",
             pincode: "",
             country: "India",
-            status: "active",
+            status: true,
             country_code: defaultCountryCode
         },
         columns: [
@@ -172,6 +172,8 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 name: "phone",
                 label: "Phone",
                 type: "tel",
+                required: true,
+
                 placeholder: "Enter phone number",
                 colSize: 3,
                 section: "Contact Person Information",
@@ -322,10 +324,10 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
                 section: "Company Information",
                 options: [
-                    { value: "active", label: "Active" },
-                    { value: "inactive", label: "Inactive" }
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
                 ],
-                defaultValue: "active"
+                defaultValue: true
             },
         ],
         validationRules: (formData, allVendors, editingVendor) => {
@@ -519,7 +521,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 state: "",
                 pincode: "",
                 country: "India",
-                status: "active",
+                status: true,
                 country_code: defaultCountryCode
             };
         }

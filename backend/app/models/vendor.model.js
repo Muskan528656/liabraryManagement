@@ -140,7 +140,7 @@ async function updateById(id, vendorData, userId) {
     }
     if (vendorData.status !== undefined) {
       updateFields.push(`status = $${paramIndex++}`);
-      values.push(vendorData.status || 'active');
+      values.push(vendorData.status);
     }
     if (vendorData.company_id !== undefined || vendorData.companyId !== undefined) {
       updateFields.push(`company_id = $${paramIndex++}`);

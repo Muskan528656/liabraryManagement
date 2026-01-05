@@ -144,7 +144,7 @@ const BulkPurchasePage = () => {
                     issue.status.toLowerCase() === "issued"
                 ).length;
                 returnedCount = issuedResponse.data.filter(issue =>
-                    issue.status.toLowerCase() === "returned"
+                    issue.status.toLowerCase() === "submitted"
                 ).length;
             }
 

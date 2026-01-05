@@ -27,60 +27,78 @@ const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
 const sql = require("../models/db.js");
 
+require("dotenv").config();
+
 const rootDir = path.resolve(__dirname, "../../..");
-// console.log("Root Directory:", rootDir);
-const frontendPublicDir = path.join(rootDir, "frontend", "public");
-// console.log("frontendPublicDir:", frontendPublicDir);
+console.log("Root Directory:", rootDir);
 
+const frontendPublicDir = process.env.FRONTEND_PUBLIC_DIR || path.join(rootDir, "frontend", "public");
 const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
-// console.log("frontendUploadsDir:", frontendUploadsDir);
-
 const libraryCardUploadDir = path.join(frontendUploadsDir, "librarycards");
 
-// console.log("libraryCardUploadDir Directory:", libraryCardUploadDir);
+console.log("Library Card Upload Directory:", libraryCardUploadDir);
 
 const ensureDirectory = (dirPath) => {
-  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Created directory: ${dirPath}`);
+  }
 };
-[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
+[frontendPublicDir, frontendUploadsDir, libraryCardUploadDir].forEach(ensureDirectory);
 
 const deleteFileIfExists = (filePath = "") => {
   if (!filePath || typeof filePath !== "string") return;
 
-  if (filePath.startsWith('/')) {
-    const absolutePath = path.join(frontendPublicDir, filePath.slice(1));
-    try {
+  try {
+    if (filePath.startsWith('/uploads/')) {
+      const absolutePath = path.join(rootDir, "frontend", "public", filePath);
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
+      }
+    }
+
+    else if (!path.isAbsolute(filePath)) {
+      const absolutePath = path.join(frontendPublicDir, filePath);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    }
+
+    else {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
 
       }
-    } catch (err) {
-      console.error("Error deleting file:", err.message);
     }
+  } catch (err) {
+    console.error("Error deleting file:", err.message);
   }
 };
 
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, libraryCardUploadDir),
+  destination: (req, file, cb) => {
+    cb(null, libraryCardUploadDir);
+  },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'librarycard-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-console.log("Multer storage configured for library cards.", storage);
-
 const upload = multer({
-  storage,
+  storage: storage,
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
   }
 });
-console.log("Multer upload configured for library cards.", upload);
+
+console.log("Multer configured successfully for library cards.");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
@@ -169,6 +187,130 @@ module.exports = (app) => {
     }
   });
 
+  // router.post(
+  //   "/",
+  //   fetchUser,
+  //   upload.single("image"),
+  //   [
+  //     body("first_name").notEmpty().withMessage("First name is required"),
+  //     body("last_name").notEmpty().withMessage("Last name is required"),
+  //     body("email").optional().isEmail().withMessage("Valid email required"),
+  //     body("phone_number").optional().isString(),
+  //     body("type_id").optional().isString(),
+  //   ],
+  //   async (req, res) => {
+
+
+  //     try {
+  //       const errors = validationResult(req);
+  //       if (!errors.isEmpty()) {
+  //         return res.status(400).json({ errors: errors.array() });
+  //       }
+
+  //       LibraryCard.init(req.userinfo.tenantcode);
+  //       const userId = req.userinfo?.id || null;
+  //       const cardData = { ...req.body };
+  //       const originalPlanId = cardData.plan_id; 
+
+
+  //       if (req.file) {
+  //         cardData.image = `/uploads/librarycards/${req.file.filename}`;
+
+  //       } else if (req.body.image && req.body.image.startsWith("data:image/")) {
+
+  //         try {
+  //           const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
+  //           if (matches) {
+  //             const ext = matches[1];
+  //             const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
+  //             const buffer = Buffer.from(base64Data, "base64");
+
+  //             const uniqueFile = `base64-${Date.now()}-${Math.random().toString().slice(2)}.${ext}`;
+  //             const filePath = path.join(libraryCardUploadDir, uniqueFile);
+
+  //             fs.writeFileSync(filePath, buffer);
+  //             cardData.image = `/uploads/librarycards/${uniqueFile}`;
+  //           }
+  //         } catch (err) {
+  //           console.error("Base64 image error:", err);
+  //           cardData.image = null;
+  //         }
+  //       }
+
+
+  //       if (cardData.status !== undefined) {
+  //         cardData.is_active = cardData.status === 'true' || cardData.status === true;
+  //       }
+
+
+  //       if (cardData.plan_id !== undefined) {
+  //         cardData.subscription_id = cardData.plan_id;
+  //         delete cardData.plan_id;
+  //       }
+
+  //       const card = await LibraryCard.create(cardData, userId);
+
+  //       // Create subscription if plan_id was provided
+  //       if (originalPlanId) {
+  //         try {
+  //           // Fetch plan details
+  //           const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
+  //           const planResult = await sql.query(planQuery, [originalPlanId]);
+  //           if (planResult.rows.length === 0) {
+  //             console.error("Plan not found for subscription creation");
+  //           } else {
+  //             const plan = planResult.rows[0];
+  //             const startDate = new Date().toISOString().split('T')[0];
+  //             const endDate = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  //             const subscriptionData = {
+  //               plan_id: originalPlanId,
+  //               member_id: card.id,
+  //               user_id: userId,
+  //               card_id: card.id,
+  //               plan_name: plan.plan_name,
+  //               duration_days: plan.duration_days,
+  //               allowed_books: plan.allowed_books,
+  //               start_date: startDate,
+  //               end_date: endDate,
+  //               is_active: true,
+  //               createdbyid: userId,
+  //               lastmodifiedbyid: userId,
+  //               createddate: new Date(),
+  //               lastmodifieddate: new Date(),
+  //             };
+
+  //             const columns = Object.keys(subscriptionData);
+  //             const values = Object.values(subscriptionData);
+  //             const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+  //             const columnNames = columns.join(', ');
+
+  //             const insertQuery = `
+  //               INSERT INTO ${req.userinfo.tenantcode}.subscriptions (${columnNames})
+  //               VALUES (${placeholders})
+  //               RETURNING *
+  //             `;
+
+  //             await sql.query(insertQuery, values);
+  //             console.log("Subscription created successfully for library card");
+  //           }
+  //         } catch (subError) {
+  //           console.error("Error creating subscription:", subError);
+
+  //         }
+  //       }
+
+  //       return res.status(201).json({
+  //         success: true,
+  //         data: card,
+  //         message: "Library card created successfully",
+  //       });
+  //     } catch (error) {
+  //       console.error("❌ Error creating library card:", error);
+  //       return res.status(500).json({ error: error.message });
+  //     }
+  //   }
+  // );
 
 
   router.post(
@@ -235,19 +377,19 @@ module.exports = (app) => {
         }
 
 
+
+        if (cardData.plan_id !== undefined) {
+          cardData.subscription_id = cardData.plan_id;
         
-      if (cardData.plan_id !== undefined) {
-        cardData.subscription_id = cardData.plan_id;
-        // Keep plan_id for library_members table
-      }
-        
+        }
+
         cardData.plan_id = originalPlanId;
         const card = await LibraryCard.create(cardData, userId);
 
-        // Create subscription if plan_id was provided
+       
         if (originalPlanId) {
           try {
-            // Fetch plan details
+          
             const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
             const planResult = await sql.query(planQuery, [originalPlanId]);
             if (planResult.rows.length === 0) {
@@ -290,11 +432,11 @@ module.exports = (app) => {
             }
           } catch (subError) {
             console.error("Error creating subscription:", subError);
-            // Don't fail the library card creation if subscription fails
+
           }
         }
 
-        console.log("✅ Library card created successfully:", card);
+
         return res.status(201).json({
           success: true,
           data: card,
@@ -303,12 +445,11 @@ module.exports = (app) => {
         });
 
       } catch (error) {
-        console.error("❌ Error creating library card:", error);
+
         return res.status(500).json({ error: error.message });
       }
     }
   );
-
 
   router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
     try {
@@ -323,10 +464,6 @@ module.exports = (app) => {
       const userId = req.userinfo?.id || null;
       const cardData = { ...req.body };
       const previousImagePath = existingCard.image;
-
-
-
-
 
       if (req.file) {
 
@@ -451,7 +588,6 @@ module.exports = (app) => {
 
 
 
-
   router.post("/import", fetchUser, async (req, res) => {
     try {
       const { members } = req.body;
@@ -465,7 +601,7 @@ module.exports = (app) => {
       const results = [];
       for (const member of members) {
         try {
-          const originalPlanId = member.plan_id; // Store original plan_id for subscription creation
+          const originalPlanId = member.plan_id;
 
           if (!member.card_number) {
             member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
@@ -473,10 +609,10 @@ module.exports = (app) => {
 
           const card = await LibraryCard.create(member, userId);
 
-          // Create subscription if plan_id was provided
+
           if (originalPlanId) {
             try {
-              // Fetch plan details
+
               const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
               const planResult = await sql.query(planQuery, [originalPlanId]);
               if (planResult.rows.length > 0) {
@@ -517,7 +653,6 @@ module.exports = (app) => {
               }
             } catch (subError) {
               console.error("Error creating subscription for imported member:", subError);
-              // Don't fail the import if subscription fails
             }
           }
 
@@ -545,5 +680,51 @@ module.exports = (app) => {
   });
 
 
+  // router.post("/import", fetchUser, async (req, res) => {
+  //   try {
+  //     const { members } = req.body;
+  //     if (!Array.isArray(members)) {
+  //       return res.status(400).json({ error: "Members should be an array" });
+  //     }
+
+  //     LibraryCard.init(req.userinfo.tenantcode);
+  //     const userId = req.userinfo?.id || null;
+
+  //     const results = [];
+  //     for (const member of members) {
+  //       try {
+
+  //         if (!member.card_number) {
+  //           member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
+  //         }
+
+  //         const card = await LibraryCard.create(member, userId);
+  //         results.push({ success: true, data: card });
+  //       } catch (error) {
+  //         results.push({
+  //           success: false,
+  //           error: error.message,
+  //           member: { ...member, card_number: member.card_number || 'NOT_GENERATED' }
+  //         });
+  //       }
+  //     }
+
+  //     const successCount = results.filter(r => r.success).length;
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: `Imported ${successCount} out of ${members.length} members`,
+  //       results
+  //     });
+  //   } catch (error) {
+  //     console.error("❌ Error importing members:", error);
+  //     return res.status(500).json({ error: "Internal server error" });
+  //   }
+  // });
+
+
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };
+
+
+

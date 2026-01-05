@@ -102,17 +102,17 @@ const LibraryCardDetail = ({
     ],
     []
   );
-
   const normalizedFileHost = useMemo(() => {
     if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
-      return API_BASE_URL.replace(/\/ibs$/, "");
+      return API_BASE_URL.replace("/ibs", "");
     }
     return window.location.origin;
   }, []);
 
+
   const getImageUrl = useCallback(
     (imagePath) => {
-
+      console.log("Getting image URL for path:", imagePath);
 
       if (!imagePath) {
         return "/default-user.png";
@@ -1483,6 +1483,7 @@ const LibraryCardDetail = ({
   };
 
   const resetImageSelection = () => {
+    console.log("Resetting image selection", imageObjectUrlRef);
     if (imageObjectUrlRef.current) {
       URL.revokeObjectURL(imageObjectUrlRef.current);
       imageObjectUrlRef.current = null;
@@ -1491,6 +1492,9 @@ const LibraryCardDetail = ({
     setSelectedImageFile(null);
 
     const fallbackImage = data?.image || cardData?.image;
+
+
+    console.log("Fallback image on reset:", fallbackImage);
     if (fallbackImage) {
       const imageUrl = getImageUrl(fallbackImage);
 

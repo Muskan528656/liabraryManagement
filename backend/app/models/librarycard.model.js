@@ -114,9 +114,7 @@ async function resolveTypeId(typeName) {
 }
 
 async function create(cardData, userId) {
-  console.log(" Creating library member with data:", cardData);
-  /* ================= CARD NUMBER ================= */
-
+ console.log("Creating library card with data:", cardData);
   if (!cardData.card_number) {
     cardData.card_number = await generateAutoNumberSafe(
       "library_members",
@@ -130,7 +128,6 @@ async function create(cardData, userId) {
     }
   }
 
-  /* ================= RESOLVE TYPE ================= */
 
   if (cardData.type) {
     const isUUID =
@@ -153,7 +150,6 @@ async function create(cardData, userId) {
   }
 
   try {
-    /* ================= FIELDS ================= */
 
     const fields = [
       "card_number",
@@ -189,8 +185,6 @@ async function create(cardData, userId) {
       VALUES (${placeholders})
       RETURNING *
     `;
-
-    /* ================= VALUES ================= */
 
     const imageValue = cardData.hasOwnProperty("image")
       ? cardData.image || null
@@ -231,18 +225,10 @@ async function create(cardData, userId) {
       userId,
     ];
 
-    console.log("📋 Inserting library member:", {
-      card_number: values[0],
-      is_active: values[1],
-      father_gurdian_name: values[7],
-      parent_contact: values[8],
-      dob: values[9],
-      createdbyid: values[values.length - 2],
-    });
+
 
     const result = await sql.query(query, values);
 
-    /* ================= RETURN FULL RECORD ================= */
 
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
@@ -261,7 +247,6 @@ async function updateById(id, cardData, userId) {
     const updates = [];
     const values = [];
     let idx = 1;
-
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
@@ -271,8 +256,9 @@ async function updateById(id, cardData, userId) {
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
 
-      if (!isNaN(typeValue) && typeValue !== null && typeValue !== "") {
+      if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
+
       }
 
       updates.push("type_id = $" + idx);
@@ -365,11 +351,9 @@ async function resolveTypeId(typeInput) {
   try {
     if (!typeInput) return null;
 
-    if (
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        typeInput
-      )
-    ) {
+
+
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(typeInput)) {
       return typeInput;
     }
 
@@ -430,8 +414,8 @@ async function deleteById(id) {
   } catch (error) {
     console.error("Error in deleteById:", error);
 
-    if (error.code === "23503") {
-      // foreign_key_violation
+
+    if (error.code === '23503') {
       throw new Error("Cannot delete member. Related records exist.");
     }
 

@@ -3,22 +3,13 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
-
     const { vendors = [], books = [], authors = [], categories = [] } = data;
-
- 
-
     const company = props?.company?.[0] || {};
-
-
     const currencySymbol = company.currency || "₹";
-
- 
 
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-
             "Vendor": "Vendor",
             "Book": "Book",
             "ISBN": "ISBN",
@@ -41,17 +32,13 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             field: "unit_price",
             label: "Unit Price",
             sortable: true,
-
             render: (value, record) => `${currencySymbol} ${parseFloat(record.unit_price || 0).toFixed(2)}`
-
         },
         {
             field: "total_amount",
             label: "Total Amount",
             sortable: true,
-
             render: (value, record) => `${currencySymbol} ${parseFloat(record.total_amount || 0).toFixed(2)}`
-
         },
         {
             field: "purchase_date",
@@ -139,8 +126,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
         apiEndpoint: "purchase",
         importMatchFields: ["vendor_id", "book_id", "quantity", "purchase_date"],
         importModel: PurchaseModel,
-
-
         autoCreateRelated: {
             vendors: {
                 endpoint: "vendor",
@@ -151,11 +136,9 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                 labelField: "title"
             }
         },
-
         columns: allColumns,
         field: { details: formFields },
         formFields: formFields,
-
         features: {
             showBulkInsert: false,
             showImportExport: true,
@@ -181,7 +164,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             categories: "category",
             company: "company"
         },
-
         customHandlers: {
             handleBulkInsert: () => { window.location.href = '/purchase/bulk'; },
             handleAdd: (navigate) => { navigate('/purchase/bulk'); },
@@ -190,7 +172,10 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                 const unitPrice = parseFloat(formData.unit_price) || 0;
                 const totalAmount = quantity * unitPrice;
 
-                if (formData.total_amount !== totalAmount) {
+                // String comparison करें numeric comparison के बजाय
+                const currentTotalAmount = parseFloat(formData.total_amount) || 0;
+
+                if (Math.abs(currentTotalAmount - totalAmount) > 0.01) { // Floating point comparison tolerance
                     setFormData(prev => ({
                         ...prev,
                         total_amount: totalAmount.toFixed(2)
@@ -237,7 +222,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                 });
             },
             onImportComplete: async (successfulRecords, apiEndpoint) => {
-
                 if (successfulRecords && successfulRecords.length > 0) {
                     try {
                         const DataApi = (await import("../../api/dataApi")).default;
@@ -245,7 +229,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
 
                         for (const purchase of successfulRecords) {
                             if (purchase.book_id && purchase.unit_price && purchase.quantity) {
-
                                 const bookResponse = await bookApi.getById(purchase.book_id);
                                 if (bookResponse.data && bookResponse.data.data) {
                                     const currentBook = bookResponse.data.data;
@@ -253,22 +236,17 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
                                     const newPrice = parseFloat(purchase.unit_price);
                                     const currentPrice = parseFloat(currentBook.price || 0);
 
-
                                     const purchaseQuantity = parseInt(purchase.quantity) || 0;
                                     const currentTotalCopies = parseInt(currentBook.total_copies || 0);
                                     const newTotalCopies = currentTotalCopies + purchaseQuantity;
 
                                     const updateData = { ...currentBook };
 
-
                                     if (currentPrice !== newPrice) {
                                         updateData.price = newPrice;
- 
                                     }
 
-
                                     updateData.total_copies = newTotalCopies;
- 
 
                                     await bookApi.update(purchase.book_id, updateData);
                                 }
@@ -290,7 +268,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             { key: "purchase_date", header: "Purchase Date", width: 15 },
             { key: "notes", header: "Notes", width: 20 },
         ],
-
         lookupNavigation: {
             vendor_name: { path: "vendor", idField: "vendor_id", labelField: "vendor_name" },
             book_title: { path: "book", idField: "book_id", labelField: "book_title" }

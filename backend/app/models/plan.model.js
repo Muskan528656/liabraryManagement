@@ -20,20 +20,24 @@ const Plan = {
     },
 
     async insertPlan(data) {
+        console.log("Inserting plan with data:", data);
         const query = `
-            INSERT INTO ${schema}.plan 
-            (plan_name, duration_days, allowed_books, max_allowed_books_at_time, createdbyid, createddate, lastmodifieddate, is_active)
-            VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6)
-            RETURNING id, plan_name, duration_days, allowed_books, max_allowed_books_at_time, is_active, createddate, createdbyid
-        `;
+        INSERT INTO ${schema}.plan 
+        (plan_name, duration_days, allowed_books, max_allowed_books_at_time, 
+         createdbyid, createddate, lastmodifieddate, lastmodifiedbyid, is_active)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $5, $6)
+        RETURNING id, plan_name, duration_days, allowed_books, 
+                  max_allowed_books_at_time, is_active, createddate, 
+                  createdbyid, lastmodifieddate, lastmodifiedbyid
+    `;
 
         const result = await sql.query(query, [
             data.plan_name,
             data.duration_days,
-            data.allowed_books !== undefined ? data.allowed_books : 0,
-            data.max_allowed_books_at_time !== undefined ? data.max_allowed_books_at_time : 0,
-            data.createdbyid || data.createdby,
-            data.is_active !== undefined ? data.is_active : true,
+            data.allowed_books,
+            data.max_allowed_books_at_time,
+            data.createdbyid,
+            data.is_active
         ]);
 
         return result.rows[0];
@@ -96,7 +100,7 @@ const Plan = {
     },
 
     async deletePlan(id) {
- 
+
         const checkQuery = `
             SELECT COUNT(*) as subscription_count 
             FROM ${schema}.subscriptions 
