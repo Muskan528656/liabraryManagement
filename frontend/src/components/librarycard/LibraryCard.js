@@ -532,6 +532,7 @@ const LibraryCard = (props) => {
     alert(`Importing ${data.type} data from file: ${data.file.name}`);
 
   };
+  const cleanApiBaseUrl = API_BASE_URL?.replace(/\/ibs$/, "");
 
   return (
     <>
@@ -587,18 +588,24 @@ const LibraryCard = (props) => {
               maxWidth: "500px",
               margin: "0 auto"
             }}>
-              {/* User Image */}
+
               <div style={{ textAlign: "center", marginBottom: "20px" }}>
                 {selectedCard.image ? (
                   <img
-                    src={selectedCard.image.startsWith("http") ? selectedCard.image : `${API_BASE_URL}${selectedCard.image}`}
-                    alt={selectedCard.first_name || 'User'}
+                    src={
+                      selectedCard.image
+                        ? selectedCard.image.startsWith("http")
+                          ? selectedCard.image
+                          : `${cleanApiBaseUrl}${selectedCard.image}`
+                        : ""
+                    }
+                    alt={selectedCard.first_name || "User"}
                     style={{
-                      width: '80px',
-                      height: '80px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '3px solid var(--primary-color)',
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "3px solid var(--primary-color)",
                     }}
                   />
                 ) : (
