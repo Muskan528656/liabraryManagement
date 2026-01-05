@@ -160,9 +160,6 @@ if (!fs.existsSync(publicUploadsPath)) {
 
 app.use("/uploads", express.static(publicUploadsPath));
 
-if (fs.existsSync(legacyUploadsPath)) {
-  app.use("/uploads", express.static(legacyUploadsPath));
-}
 app.get("/ibs", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });
