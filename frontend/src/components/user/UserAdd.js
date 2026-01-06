@@ -11,6 +11,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CountryCode from "../../constants/CountryCode.json";
 import DataApi from "../../api/dataApi";
+import PubSub from "pubsub-js";
 
 
 const EyeIcon = () => (
@@ -177,13 +178,22 @@ const UserAdd = () => {
         navigate(`/users`);
       } else {
         if (typeof result.errors === "string") {
-          toast.error(`${result.errors}`);
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Save Error",
+            message: result.errors
+          });
         } else {
-          toast.error("An error occurred.");
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Save Error",
+            message: "An error occurred."
+          });
         }
       }
     } catch (error) {
-      toast.error("An error occurred while saving the record.");
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Save Error",
+        message: "An error occurred while saving the record."
+      });
     } finally {
       setIsSending(false);
     }

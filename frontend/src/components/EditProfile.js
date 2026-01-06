@@ -8,6 +8,7 @@ import DataApi from "../api/dataApi";
 import axios from "axios";
 import { API_BASE_URL } from "../constants/CONSTANT";
 import { COUNTRY_CODES } from "../constants/COUNTRY_CODES";
+import PubSub from "pubsub-js";
 
 const EditProfile = () => {
   const fileInputRef = useRef(null);
@@ -54,7 +55,10 @@ const EditProfile = () => {
           setImagePreview(storedImage);
         }
       } catch (error) {
-        toast.error("Failed to load profile");
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Load Error",
+          message: "Failed to load profile"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -112,7 +116,10 @@ const EditProfile = () => {
       await userApi.update(profileData, userId);
       toast.success("Profile updated successfully");
     } catch {
-      toast.error("Update failed");
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Update Error",
+        message: "Update failed"
+      });
     }
   };
 

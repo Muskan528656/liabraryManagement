@@ -340,6 +340,7 @@
 import React, { useState } from 'react';
 import { Card, Form, Button, Table, Alert, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import PubSub from 'pubsub-js';
 
 const PurchaseDataImport = ({ selectedFile, onFileChange, loading }) => {
     const [previewData, setPreviewData] = useState([]);
@@ -352,7 +353,10 @@ const PurchaseDataImport = ({ selectedFile, onFileChange, loading }) => {
  
             const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
             if (!validTypes.includes(file.type) && !file.name.endsWith('.csv')) {
-                toast.error('Please upload a CSV or Excel file');
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Import Error",
+                    message: "Please upload a CSV or Excel file"
+                });
                 return;
             }
 
@@ -390,12 +394,18 @@ const PurchaseDataImport = ({ selectedFile, onFileChange, loading }) => {
 
     const handleImport = async () => {
         if (!selectedFile) {
-            toast.error('Please select a file first');
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Import Error",
+                message: "Please select a file first"
+            });
             return;
         }
 
         if (Object.keys(mapping).length === 0) {
-            toast.error('Please map all required columns');
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Import Error",
+                message: "Please map all required columns"
+            });
             return;
         }
 
@@ -419,7 +429,10 @@ const PurchaseDataImport = ({ selectedFile, onFileChange, loading }) => {
             
         } catch (error) {
             console.error('Import error:', error);
-            toast.error('Failed to import purchase data');
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Import Error",
+                message: "Failed to import purchase data"
+            });
         }
     };
 
