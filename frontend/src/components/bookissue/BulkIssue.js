@@ -191,21 +191,52 @@ useEffect(() => {
     return;
   }
 
-  const filtered = books.filter(book => {
-  const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
-  const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
+    // const filtered = books.filter(book => {
+    //   const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
+    //   const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
 
-  
-  if (min === null || max === null) return false;
-  if (min === 0 && max === 0) return false;
+    //   //check also zero age books 
+    //   if (min === 0 && max === 0) {
+    //     return true;
+    //   }
 
-  if (memberAge === null || memberAge === undefined) return false;
+    //   //if member age is zero  
+    //   if (memberAge === 0) {
+    //     return min === null && max === null;
+    //   }
 
-  return max <= memberAge;
-});
+    //   if (min === null) {
+    //     return false;
+    //   }
+    //   if (min < memberAge) {
+    //     return false;
+    //   }
+    //   if (max !== null && memberAge > max) return false;
+
+    //   return true;
+    // });
+
+    const filtered = books.filter(book => {
+      const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
+      const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
 
 
+      if (min === null || max === null) return false;
+      if (min === 0 && max === 0) return false;
 
+      if (memberAge === null || memberAge === undefined) return false;
+
+      return max <= memberAge;
+    });
+
+    console.log("Member Age:", memberAge);
+    console.table(filtered.map(b => ({
+      title: b.title,
+      min: b.min_age,
+      max: b.max_age
+    })));
+
+    console.log('filtered= ', filtered)
 
 
   console.log("Member Age:", memberAge);

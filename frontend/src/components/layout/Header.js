@@ -855,7 +855,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               {totalUnreadCount > 0 && (
                 <span
                   className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: "10px", padding: "2px 5px" }}
+                  style={{ fontSize: "10px", padding: "3px 5px" , marginTop : "8px" , marginLeft : "-12px" }}
                 >
                   {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
                 </span>
