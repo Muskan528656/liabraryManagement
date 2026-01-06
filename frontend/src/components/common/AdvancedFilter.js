@@ -1,55 +1,70 @@
 import React, { useState, useMemo } from "react";
 import { Row, Col, Form, Button, Badge, Card } from "react-bootstrap";
 
-/**
- * MODERN DYNAMIC ADVANCED FILTER
- * Professional UI with dynamic field mapping
- */
+export const applyAdvancedFilters = (data = [], filterValues = {}) => {
 
-export const applyAdvancedFilters = (data, filterValues) => {
-  if (!filterValues || Object.values(filterValues).every(v => v === "" || v === null)) {
+  if (
+    !filterValues ||
+    Object.values(filterValues).every(
+      v => v === "" || v === null || v === undefined
+    )
+  ) {
     return data;
   }
 
-  return data.filter((item) => {
-    return Object.keys(filterValues).every((key) => {
-      const filterValue = filterValues[key];
-      if (filterValue === "" || filterValue === null) return true;
+  return data.filter(item =>
+    Object.keys(filterValues).every(key => {
+      let filterValue = filterValues[key];
 
-      if (key.endsWith("_from") || key.endsWith("_to")) {
-        const actualFieldName = key.replace("_from", "").replace("_to", "");
-        const itemValue = item[actualFieldName];
-        if (!itemValue) return false;
-
-        const itemDate = new Date(itemValue);
-        const filterDate = new Date(filterValue);
-
-        if (key.endsWith("_from")) {
-          return itemDate >= filterDate;
-        } else {
-          filterDate.setHours(23, 59, 59, 999);
-          return itemDate <= filterDate;
-        }
-      }
+      if (filterValue === "" || filterValue === null || filterValue === undefined)
+        return true;
 
       const itemValue = item[key];
-      const searchStr = String(filterValue).toLowerCase().trim();
-      const itemStr = String(itemValue || "").toLowerCase().trim();
 
-      if (!isNaN(filterValue) && filterValue !== "" && typeof itemValue === 'number') {
-        return String(itemValue) === String(filterValue);
+      if (filterValue === "true") filterValue = true;
+      if (filterValue === "false") filterValue = false;
+
+      if (typeof filterValue === "boolean") {
+        return itemValue === filterValue;
       }
 
-      return itemStr.includes(searchStr);
-    });
-  });
+      if (key.endsWith("_from") || key.endsWith("_to")) {
+        const field = key.replace("_from", "").replace("_to", "");
+        if (!item[field]) return false;
+
+        const itemDate = new Date(item[field]).toLocaleDateString("en-CA");
+        const filterDate = filterValue;
+
+        if (key.endsWith("_from")) return itemDate >= filterDate;
+        if (key.endsWith("_to")) return itemDate <= filterDate;
+      }
+
+      if (typeof itemValue === "number") {
+        return itemValue === Number(filterValue);
+      }
+
+      return String(itemValue || "")
+        .toLowerCase()
+        .includes(String(filterValue).toLowerCase());
+    })
+  );
 };
 
+
+
 const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }) => {
+
+  console.log("onFilterChange:", onFilterChange);
+  console.log("AdvancedFilter fields:", fields);
+
+
   const [localFilters, setLocalFilters] = useState({});
   const [isExpanded, setIsExpanded] = useState(true);
 
   const handleChange = (name, value) => {
+    
+    console.log("name",name,"value",value);
+    
     setLocalFilters(prev => ({ ...prev, [name]: value }));
   };
 
