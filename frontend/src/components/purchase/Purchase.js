@@ -31,9 +31,6 @@ const Purchase = (props) => {
     { ...props, company },
     timeZone
   );
-
- 
-
   return (
     <DynamicCRUD
       {...finalConfig}
@@ -41,5 +38,4 @@ const Purchase = (props) => {
     />
   );
 };
-
 export default Purchase;

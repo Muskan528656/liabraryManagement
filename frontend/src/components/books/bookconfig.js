@@ -216,7 +216,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         features: {
             showBulkInsert: false,
-            showImportExport: true, // MUST BE TRUE
+            showImportExport: true, 
             showDetailView: true,
             showSearch: true,
             showColumnVisibility: true,
