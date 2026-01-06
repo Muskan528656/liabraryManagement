@@ -138,7 +138,7 @@ const BulkIssue = () => {
     if (!issueDate || autoCalculated) return;
 
     const duration = durationDays;
-    console.log("duration=>",duration);
+    console.log("duration=>", duration);
 
     const d = new Date(issueDate);
     d.setDate(d.getDate() + duration);
@@ -374,11 +374,11 @@ const BulkIssue = () => {
         penalty: submission.penalty_amount || submission.penalty,
         condition_after: submission.condition_after
       }));
-      
+
       const combinedBooks = [...allNonReturnedIssues, ...transformedSubmissions];
-      
+
       setIssuedBooks(combinedBooks);
-      
+
       setDurationDays(0);
       setSystemMaxBooks(6);
       setTotalAllowedBooks(6);
