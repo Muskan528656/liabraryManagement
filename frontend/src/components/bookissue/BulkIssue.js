@@ -63,7 +63,7 @@ const BulkIssue = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedBooks, setSelectedBooks] = useState([]);
 
-  const [durationDays, setDurationDays] = useState(7);
+  const [durationDays, setDurationDays] = useState(15);
   const [systemMaxBooks, setSystemMaxBooks] = useState(6);
   const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
   const [totalAllowedBooks, setTotalAllowedBooks] = useState(6);
@@ -137,7 +137,9 @@ const BulkIssue = () => {
   useEffect(() => {
     if (!issueDate || autoCalculated) return;
 
-    const duration = durationDays || 15;
+    const duration = durationDays;
+    console.log("duration=>",duration);
+
     const d = new Date(issueDate);
     d.setDate(d.getDate() + duration);
 
@@ -170,6 +172,12 @@ const BulkIssue = () => {
 
     const diffTime = end.getTime() - start.getTime();
     const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+    console.log("Issue and Due Date changed:", {
+      issueDate,
+      dueDate,
+      diffDays
+    });
 
     setConfirmDays(diffDays);
   }, [issueDate, dueDate]);
@@ -366,12 +374,12 @@ const BulkIssue = () => {
         penalty: submission.penalty_amount || submission.penalty,
         condition_after: submission.condition_after
       }));
-
+      
       const combinedBooks = [...allNonReturnedIssues, ...transformedSubmissions];
-
+      
       setIssuedBooks(combinedBooks);
-
-      setDurationDays(7);
+      
+      setDurationDays(0);
       setSystemMaxBooks(6);
       setTotalAllowedBooks(6);
       setDailyLimitCount(2);
@@ -442,7 +450,7 @@ const BulkIssue = () => {
         let subscription = null;
         let plan = null;
         let subscriptionBooks = 0;
-        let planDuration = 7;
+        let planDuration = 0;
         let dailyLimit = 2;
 
         if (planId && plans.length > 0) {
@@ -544,6 +552,12 @@ const BulkIssue = () => {
         setSubscriptionAllowedBooks(subscriptionBooks);
         setDurationDays(planDuration);
         setDailyLimitCount(dailyLimit);
+
+        // Calculate due date based on new duration
+        const d = new Date(issueDate);
+        d.setDate(d.getDate() + planDuration);
+        setDueDate(d.toISOString().split("T")[0]);
+        setAutoCalculated(true);
 
         const systemMax = subscriptionBooks > 0 ? subscriptionBooks : 6;
         setSystemMaxBooks(systemMax);
