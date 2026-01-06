@@ -390,7 +390,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5);
 
- 
+
 
       setLatestMembers(latestMembersSorted);
 
@@ -961,7 +961,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     },
     {
       title: "Book Copies Availability",
-      value: `${formatNumber(metrics.total_copies)}/${formatNumber(metrics.availableBooks)}`,
+      value: `${formatNumber(metrics.availableBooks)} / ${formatNumber(metrics.total_copies)}`,
       icon: "fa-layer-group",
       color: ACCENT_COLOR,
       bgColor: "#e0e7ff",
@@ -1000,7 +1000,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         <Container fluid>
           <Card style={{
             ...styles.card,
-            background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, ${INFO_COLOR} 100%)`,
+            background: `linear - gradient(135deg, ${PRIMARY_COLOR} 0 %, ${INFO_COLOR} 100 %)`,
             color: "white",
             marginBottom: "30px",
             border: 'none'
@@ -1057,7 +1057,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
               <InteractiveCard
                 onClick={() => handleCardClick(card.type)}
                 style={card.type === "dueSoon" || card.type === "overdue" ? {
-                  borderLeft: `4px solid ${card.color}`
+                  borderLeft: `4px solid ${card.color} `
                 } : {}}
               >
                 <Card.Body className="p-3">
@@ -1101,7 +1101,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                       justifyContent: "center",
                       minWidth: "40px"
                     }}>
-                      <i className={`fa-solid ${card.icon}`} style={{
+                      <i className={`fa - solid ${card.icon} `} style={{
                         fontSize: "18px",
                         color: card.color
                       }}></i>
@@ -1149,6 +1149,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                 <div className="list-group list-group-flush">
                   {upcomingDueMembers.length > 0 ? (
                     upcomingDueMembers.slice(0, 5).map((member, idx) => {
+                      console.log("memember", member)
                       const statusColor = getDueStatusColor(member.due_date);
                       return (
                         <div
@@ -1164,11 +1165,10 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                             <div className="position-relative me-2">
                               {/* <img
                                 src={member.image}
-                                alt={member.name}
+
                                 onError={(e) => {
- 
                                   e.target.onerror = null;
-                                  
+
                                 }}
                                 style={{
                                   width: "36px",
@@ -1306,7 +1306,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                             background: '#e0e7ff',
                             color: PRIMARY_COLOR
                           }}>
-                          <i className={`fa-solid ${cat.icon}`}></i>
+                          <i className={`fa - solid ${cat.icon} `}></i>
                         </div>
                         <span className="fw-semibold text-dark" style={{ fontSize: '13px' }}>
                           {cat.name.length > 18 ? cat.name.substring(0, 18) + "..." : cat.name}

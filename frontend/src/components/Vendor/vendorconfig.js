@@ -468,9 +468,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 } else {
                     cleanedData.country_code = defaultCountryCode;
                 }
-
-                // Ensure status is properly set
-                if (!cleanedData.status) {
+   if (!cleanedData.status) {
                     cleanedData.status = "active";
                 }
 
