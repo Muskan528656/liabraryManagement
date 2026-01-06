@@ -149,10 +149,7 @@ async function create(submissionData, userId) {
     const submission = submissionRes.rows[0];
 
 
-    if (
-      issue.status == "cancelled" ||
-      conditionAfterLower == 'lost'
-    ) {
+    if (conditionAfterLower !== 'lost') {
       console.log("updating book copies");
       await sql.query(
         `UPDATE demo.books
