@@ -710,6 +710,10 @@ const ModuleDetail = ({
   };
 
   const handleSave = async () => {
+
+    console.log("hello check");
+    console.log("tempData-->", tempData);
+    
     try {
       setSaving(true);
 
@@ -730,6 +734,9 @@ const ModuleDetail = ({
 
       if (hasFileUpload) {
         const formDataToSend = new FormData();
+
+        console.log("tempData-->", tempData);
+        console.log("formDataToSend before loop-->", formDataToSend);
 
         for (const [key, value] of Object.entries(tempData)) {
           if (key === "image") {
@@ -806,6 +813,7 @@ const ModuleDetail = ({
 
 
   const handleFieldChange = (fieldKey, value, field) => {
+    console.log("Field Change:", fieldKey, value);
     if (isEditing && tempData) {
 
       if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {

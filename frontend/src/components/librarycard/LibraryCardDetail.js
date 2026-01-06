@@ -1303,6 +1303,8 @@ const LibraryCardDetail = ({
 
   const handleSave = async () => {
 
+    console.log("Temp Data on Save:", tempData);
+
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1448,6 +1450,7 @@ const LibraryCardDetail = ({
   };
 
   const handleFieldChange = (fieldKey, value) => {
+    console.log(`Field Changed: ${fieldKey} =`, value);
     if (isEditing) {
       setTempData((prev) => ({
         ...(prev || {}),

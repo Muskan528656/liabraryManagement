@@ -114,10 +114,8 @@ async function resolveTypeId(typeName) {
 }
 
 
+/* ================= CARD NUMBER ================= */
 async function create(cardData, userId) {
-
-  /* ================= CARD NUMBER ================= */
-
   if (!cardData.card_number) {
     cardData.card_number = await generateAutoNumberSafe(
       "library_members",
@@ -532,7 +530,51 @@ async function search(searchTerm) {
     throw error;
   }
 }
+//name check
+// async function findByName(name, excludeId = null) {
+//   try {
+//     if (!this.schema) {
+//       throw new Error("Schema not initialized. Call init() first.");
+//     }
+//     let query = `SELECT * FROM ${this.schema}.library_members WHERE name = $1`;
+//     const params = [name];
 
+//     if (excludeId) {
+//       query += ` AND id != $2`;
+//       params.push(excludeId);
+//     }
+
+//     const result = await sql.query(query, params);
+//     return result.rows.length > 0 ? result.rows[0] : null;
+//   } catch (error) {
+//     console.error("Error in findByName:", error);
+//     throw error;
+//   }
+// }
+//email check
+// async function findByEmail(email, excludeId = null) {
+//   try {
+//     console.log("Checking email:", email);
+//     console.log("Exclude ID:", excludeId);
+//     console.log("schema:", this.schema);
+//     if (!this.schema) {
+//       throw new Error("Schema not initialized. Call init() first.");
+//     }
+//     let query = `SELECT * FROM ${this.schema}.library_members WHERE email = $1`;
+//     const params = [email];
+
+//     if (excludeId) {
+//       query += ` AND id != $2`;
+//       params.push(excludeId);
+//     }
+
+//     const result = await sql.query(query, params);
+//     return result.rows.length > 0 ? result.rows[0] : null;
+//   } catch (error) {
+//     console.error("Error in findByEmail:", error);
+//     throw error;
+//   }
+// }
 module.exports = {
   init,
   getAllRecords,
@@ -545,4 +587,6 @@ module.exports = {
   updateById,
   deleteById,
   search
+  // findByName,
+  // findByEmail
 };

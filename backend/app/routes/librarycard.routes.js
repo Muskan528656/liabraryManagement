@@ -25,6 +25,7 @@ const fs = require("fs");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+const { UserData } = require("facebook-nodejs-business-sdk");
 require("dotenv").config();
 
 const rootDir = path.resolve(__dirname, "../../..");
@@ -66,7 +67,7 @@ const deleteFileIfExists = (filePath = "") => {
     else {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-     
+
       }
     }
   } catch (err) {
@@ -98,6 +99,8 @@ const upload = multer({
 
 console.log("Multer configured successfully for library cards.");
 module.exports = (app) => {
+
+
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
 
@@ -191,16 +194,23 @@ module.exports = (app) => {
     "/",
     fetchUser,
     upload.single("image"),
-    [
-      body("first_name").notEmpty().withMessage("First name is required"),
-      body("last_name").notEmpty().withMessage("Last name is required"),
-      body("email").optional().isEmail().withMessage("Valid email required"),
-      body("phone_number").optional().isString(),
-      body("type_id").optional().isString(),
-    ],
+    // [
+    //   body("first_name").notEmpty().withMessage("First name is required"),
+    //   body("last_name").notEmpty().withMessage("Last name is required"),
+    //   body("email").optional().isEmail().withMessage("Valid email required"),
+    //   body("phone_number").optional().isString(),
+    //   body("type_id").optional().isString(),
+    // ],
+    // [
+    //   body("email").optional().custom((value) => {
+    //     return true;
+    //   }),
+    // ],
     async (req, res) => {
       try {
+        console.log("Library card creation request body:", req.body);
         const errors = validationResult(req);
+        console.log("library Validation errors:", errors);
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
@@ -209,7 +219,26 @@ module.exports = (app) => {
         const userId = req.userinfo?.id || null;
         const cardData = { ...req.body };
 
-    
+        console.log("library card")
+        // // name check
+        // if (req.body.first_name) {
+        //   const existingVendor = await LibraryCard.findByName(req.body.first_name);
+        //   if (existingVendor) {
+        //     return res
+        //       .status(400)
+        //       .json({ errors: "Vendor with this name already exists" });
+        //   }
+        // }
+
+        //email check
+        //   if (req.body.email) {
+        //   const existingVendor = await LibraryCard.findByEmail(req.body.email);
+        //   if (existingVendor) {
+        //     return res
+        //       .status(400)
+        //       .json({ errors: "Vendor with this email already exists" });
+        //   }
+        // }
 
         if (req.file) {
           cardData.image = `/uploads/librarycards/${req.file.filename}`;
@@ -248,13 +277,15 @@ module.exports = (app) => {
 
         const card = await LibraryCard.create(cardData, userId);
 
+        console.log(" Library card created:", card.id);
+        console.log("carddata", cardData)
         return res.status(201).json({
           success: true,
           data: card,
           message: "Library card created successfully",
         });
       } catch (error) {
-        console.error("❌ Error creating library card:", error);
+        console.error(" Error creating library card:", error);
         return res.status(500).json({ error: error.message });
       }
     }

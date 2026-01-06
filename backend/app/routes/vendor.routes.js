@@ -19,6 +19,7 @@ const { fetchUser } = require("../middleware/fetchuser.js");
 const Vendor = require("../models/vendor.model.js");
 
 module.exports = (app) => {
+
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
@@ -54,16 +55,20 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-
     [
- 
       body("name").optional().custom((value) => {
         return true;
       }),
     ],
     async (req, res) => {
       try {
+
+        console.log("Vendor data-->:", req.body);  
+
         const errors = validationResult(req);
+
+        console.log("Validation vendor errors:", errors);
+
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
@@ -102,8 +107,11 @@ module.exports = (app) => {
       body("name").notEmpty().withMessage("Name is required"),
     ],
     async (req, res) => {
+      
       try {
         const errors = validationResult(req);
+        console.log("Validation errors:", errors);
+        console.log("req.body:", req.body);
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
@@ -112,6 +120,8 @@ module.exports = (app) => {
 
  
         const existingVendor = await Vendor.findById(req.params.id);
+
+        console.log("Existing vendor:", existingVendor);
         if (!existingVendor) {
           return res.status(404).json({ errors: "Vendor not found" });
         }
@@ -129,6 +139,7 @@ module.exports = (app) => {
 
         const userId = req.userinfo.id;
         const vendor = await Vendor.updateById(req.params.id, req.body, userId);
+        console.log("vendor --->", vendor);
         if (!vendor) {
           return res.status(400).json({ errors: "Failed to update vendor" });
         }

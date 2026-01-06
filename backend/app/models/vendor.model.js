@@ -66,7 +66,7 @@ async function create(vendorData, userId) {
       vendorData.state || null,
       vendorData.pincode || null,
       vendorData.country || 'India',
-      vendorData.status || 'active',
+      vendorData.status || true,
       userId || null,
       vendorData.company_id || vendorData.companyId || null,
       vendorData.country_code || vendorData.country_code || null,
@@ -89,6 +89,11 @@ async function updateById(id, vendorData, userId) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
+    console.log("id",id)
+    console.log("vendorData",vendorData)
+    console.log("userId",userId)
+
+    console.log("vendor status",vendorData.status)
 
     const updateFields = [];
     const values = [id];
@@ -140,7 +145,7 @@ async function updateById(id, vendorData, userId) {
     }
     if (vendorData.status !== undefined) {
       updateFields.push(`status = $${paramIndex++}`);
-      values.push(vendorData.status || 'active');
+      values.push(vendorData.status);
     }
     if (vendorData.company_id !== undefined || vendorData.companyId !== undefined) {
       updateFields.push(`company_id = $${paramIndex++}`);

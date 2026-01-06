@@ -216,6 +216,7 @@ const LibraryCard = (props) => {
           onSubmit: async (formData, setFormData) => {
 
 
+            console.log("Submitting form data:", formData);
 
             if (!formData.user_id) {
               alert("Please select a user");
@@ -247,11 +248,12 @@ const LibraryCard = (props) => {
             }
 
             try {
-
+              console.log("Creating library card with data:", formData);
               const response = await DataApi.createLibraryCard(formData);
-
+              console.log("API response for creating library card:", response.data?.message);
               if (!response?.data?.success) {
                 const errorMsg = response?.data?.message || 'Failed to create library card';
+
                 console.error("API Error:", response);
                 alert(errorMsg);
                 return false;
@@ -353,33 +355,33 @@ const LibraryCard = (props) => {
           },
 
 
-          validationRules: (formData, allCards, editingCard) => {
-            const errors = {};
+          // validationRules: (formData, allCards, editingCard) => {
+          //   const errors = {};
 
-            if (!formData.user_id) {
-              errors.user_id = "Please select a user";
-            }
+          //   if (!formData.user_id) {
+          //     errors.user_id = "Please select a user";
+          //   }
 
-            if (formData.subscription_id) {
-              const subscription = subscriptionsData.find(sub => sub.id === formData.subscription_id);
-              if (!subscription) {
-                errors.subscription_id = "Selected subscription is invalid";
-              }
-            }
+          //   if (formData.subscription_id) {
+          //     const subscription = subscriptionsData.find(sub => sub.id === formData.subscription_id);
+          //     if (!subscription) {
+          //       errors.subscription_id = "Selected subscription is invalid";
+          //     }
+          //   }
 
 
-            const existingCard = allCards?.find(
-              card => card.user_id === formData.user_id &&
-                card.is_active &&
-                card.id !== editingCard?.id
-            );
+          //   const existingCard = allCards?.find(
+          //     card => card.user_id === formData.user_id &&
+          //       card.is_active &&
+          //       card.id !== editingCard?.id
+          //   );
 
-            if (existingCard) {
-              errors.user_id = "This user already has an active library card";
-            }
+          //   if (existingCard) {
+          //     errors.user_id = "This user already has an active library card";
+          //   }
 
-            return errors;
-          },
+          //   return errors;
+          // },
 
 
           beforeSubmit: (formData, isEditing) => {

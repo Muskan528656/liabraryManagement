@@ -205,17 +205,17 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         { field: "email", label: "Email", sortable: true },
 
         { field: "phone_number", label: "Phone Number", sortable: true },
-        {
-            field: "type_id",
-            label: "Type",
-            sortable: true,
-            render: (value) => {
-                const typeObj = objectTypesList.find(
-                    (t) => t.value === value
-                );
-                return typeObj ? typeObj.label : "-";
-            }
-        }
+        // {
+        //     field: "type_id",
+        //     label: "Type",
+        //     sortable: true,
+        //     render: (value) => {
+        //         const typeObj = objectTypesList.find(
+        //             (t) => t.value === value
+        //         );
+        //         return typeObj ? typeObj.label : "-";
+        //     }
+        // }
         ,
         {
             field: "dob",
@@ -276,7 +276,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             issue_date: new Date().toISOString().split("T")[0],
             plan_id: "",
             selectedPlan: null,
-            status: "active",
+            status: true,
             image: null,
             father_gurdian_name: "",
             parent_contact: "",
@@ -305,7 +305,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 name: "first_name",
                 label: "First Name",
                 type: "text",
-                required: false,
+                required: true,
                 placeholder: "Enter first name",
                 colSize: 6,
             },
@@ -422,35 +422,69 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-            const errors = {};
+            
+            console.log("Validating formData:", formData);
+            console.log("All cards:", allCards);
+            console.log("Editing card:", editingCard);
+            const errors = [];
 
-            if (!formData.user_id) {
-                errors.user_id = "Member is required";
+             if (!formData.first_name?.trim()) {
+                errors.push("First name is required")
+                console.log("Validation error: First name is required");
             }
 
-            if (!formData.issue_date) {
-                errors.issue_date = "Issue date is required";
-            }
-
-            if (formData.plan_id) {
-                const selectedPlan = plansList.find(p => p.value == formData.plan_id)?.data;
-                if (selectedPlan && !selectedPlan.is_active) {
-                    errors.plan_id = "Selected plan is inactive. Please select an active plan.";
+              if (!formData.email?.trim()) {
+                errors.push("Email is required");
+            } else {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    errors.push("Please enter a valid email address");
                 }
             }
 
-            if (formData.user_id) {
-                const existingCard = allCards?.find(
-                    (card) =>
-                        card.user_id === formData.user_id &&
-                        (card.is_active === true || card.is_active === "true" || card.status === "active") &&
-                        card.id !== editingCard?.id
-                );
+            // const duplicateName = allCards.find(
+            //     card => card.first_name?.toLowerCase() === formData.first_name?.toLowerCase() &&
+            //         card.id !== editingCard?.id
+            // );
+            // if (duplicateName) {
+            //     errors.push("Card with this name already exists");
+            // }
 
-                if (existingCard) {
-                    errors.user_id = "Member already has an active library card";
-                }
+            const duplicateEmail = allCards.find(
+                card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                    card.id !== editingCard?.id
+            );
+            if (duplicateEmail) {
+                errors.push("Card with this email already exists");
             }
+
+            // if (!formData.user_id) {
+            //     errors.user_id = "Member is required";
+            // }
+
+            // if (!formData.issue_date) {
+            //     errors.issue_date = "Issue date is required";
+            // }
+
+            // if (formData.plan_id) {
+            //     const selectedPlan = plansList.find(p => p.value == formData.plan_id)?.data;
+            //     if (selectedPlan && !selectedPlan.is_active) {
+            //         errors.plan_id = "Selected plan is inactive. Please select an active plan.";
+            //     }
+            // }
+
+            // if (formData.user_id) {
+            //     const existingCard = allCards?.find(
+            //         (card) =>
+            //             card.user_id === formData.user_id &&
+            //             (card.is_active === true || card.is_active === "true" || card.status === "active") &&
+            //             card.id !== editingCard?.id
+            //     );
+
+            //     if (existingCard) {
+            //         errors.user_id = "Member already has an active library card";
+            //     }
+            // }
 
             return errors;
         },

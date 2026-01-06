@@ -59,10 +59,14 @@ const FormModal = ({
   };
 
   const handleInputChange = (name, value) => {
+    console.log("Input change:", name, value);
     setFormData({ ...formData, [name]: value });
   };
 
   const handleFieldChange = (field, value) => {
+
+    console.log("Handling field change for", field.name, "with value", value);
+    console.log("Current formData:", formData);
     if (field.onChange) {
       field.onChange(value, formData, setFormData);
     } else {
@@ -146,6 +150,8 @@ const FormModal = ({
     const error = validationErrors[field.name];
     const isRequired = field.required;
     const fieldId = `field-${field.name}`;
+
+    console.log("Rendering field:", field.name, "of type:", field.type, "with value:", value);
 
     switch (field.type) {
       case "file":
@@ -400,9 +406,13 @@ const FormModal = ({
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
+
+
+        
       case "toggle":
         return (
           <Form.Group className="mb-3" key={field.name}>
+            {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
             <Form.Label className="d-flex justify-content-between">
               <span>
                 {field.label} {field.required && <span className="text-danger">*</span>}
@@ -413,6 +423,7 @@ const FormModal = ({
             <div
               className="custom-toggle"
               onClick={() => handleFieldChange(field, !formData[field.name])}
+              
               style={{
                 width: "55px",
                 height: "28px",
@@ -443,6 +454,10 @@ const FormModal = ({
       default:
         return null;
     }
+
+
+
+
   };
 
   return (

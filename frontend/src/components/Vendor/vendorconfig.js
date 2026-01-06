@@ -89,7 +89,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             state: "",
             pincode: "",
             country: "India",
-            status: "active",
+            status: true,
             country_code: defaultCountryCode
         },
         columns: [
@@ -149,6 +149,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 name: "company_name",
                 label: "Company Name",
+                
                 type: "text",
                 placeholder: "Enter company name",
                 colSize: 6,
@@ -162,7 +163,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                     value: country.country_code,
                     label: `${country.country_code} - ${country.country}`
                 })),
-                required: true,
+               
 
                 defaultValue: defaultCountryCode,
                 colSize: 3,
@@ -171,6 +172,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 name: "phone",
                 label: "Phone",
+                required: true,
                 type: "tel",
                 placeholder: "Enter phone number",
                 colSize: 3,
@@ -189,6 +191,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 name: "email",
                 label: "Email",
                 type: "email",
+                required: true,
                 placeholder: "Enter email address",
                 colSize: 6,
                 section: "Contact Person Information",
@@ -322,13 +325,18 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
                 section: "Company Information",
                 options: [
-                    { value: "active", label: "Active" },
-                    { value: "inactive", label: "Inactive" }
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
                 ],
-                defaultValue: "active"
+                defaultValue: true
             },
         ],
         validationRules: (formData, allVendors, editingVendor) => {
+
+            console.log("Validating formData:", formData);
+            console.log("All vendors:", allVendors);
+            console.log("Editing vendor:", editingVendor);
+
             const errors = [];
             if (!formData.name?.trim()) {
                 errors.push("Name is required");
@@ -519,7 +527,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 state: "",
                 pincode: "",
                 country: "India",
-                status: "active",
+                status: true,
                 country_code: defaultCountryCode
             };
         }
