@@ -77,7 +77,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "salutation",
                 label: "Salutation",
                 type: "text",
-                required: true,
+                required: false,
                 placeholder: "Enter salutation",
                 colSize: 6,
             },
@@ -123,7 +123,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 name: "country",
                 label: "Country",
                 type: "text",
-                required: true,
+                required: false,
                 placeholder: "Select a country",
                 colSize: 6
             },
@@ -142,19 +142,11 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             const errors = [];
 
 
-
-
-
-
             if (!formData.name?.trim()) errors.push("name is required");
             if (!formData.email?.trim()) errors.push("email is required");
-            if (!formData.city?.trim()) errors.push("city is required");
-            if (!formData.country?.trim()) errors.push("country is required");
+            // if (!formData.city?.trim()) errors.push("city is required");
+            // if (!formData.country?.trim()) errors.push("country is required");
             if (!formData.phone) errors.push("phone is required");
-
-
-
-
 
 
             return errors;

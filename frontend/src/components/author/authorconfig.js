@@ -106,7 +106,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
         ],
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];
-            if (!formData.name?.trim()) errors.push("Name is required");
+            if (!formData.name?.trim()) errors.push("Author Name is required");
 
             const duplicate = allAuthors.find(
                 author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&

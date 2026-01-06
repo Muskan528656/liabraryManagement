@@ -398,29 +398,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
                 onChange: (file, formData, setFormData) => {
-                console.log("🖼️ [FRONTEND] Image field onChange triggered");
-                console.log("🖼️ [FRONTEND] File parameter:", file);
-                console.log("🖼️ [FRONTEND] File type:", file instanceof File ? "File object" : typeof file);
-                if (file instanceof File) {
-                    console.log("🖼️ [FRONTEND] File details:", {
-                        name: file.name,
-                        size: file.size,
-                        type: file.type
+                    console.log("🖼️ [FRONTEND] Image field onChange triggered");
+                    console.log("🖼️ [FRONTEND] File parameter:", file);
+                    console.log("🖼️ [FRONTEND] File type:", file instanceof File ? "File object" : typeof file);
+                    if (file instanceof File) {
+                        console.log("🖼️ [FRONTEND] File details:", {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        });
+                    } else if (file === null) {
+                        console.log("🗑️ [FRONTEND] Image being cleared (null)");
+                    } else {
+                        console.log("🖼️ [FRONTEND] File value:", file);
+                    }
+                    console.log("🖼️ [FRONTEND] Current formData.image before update:", formData.image);
+
+                    setFormData({
+                        ...formData,
+                        image: file, // File object or null to clear
                     });
-                } else if (file === null) {
-                    console.log("🗑️ [FRONTEND] Image being cleared (null)");
-                } else {
-                    console.log("🖼️ [FRONTEND] File value:", file);
-                }
-                console.log("🖼️ [FRONTEND] Current formData.image before update:", formData.image);
 
-                setFormData({
-                    ...formData,
-                    image: file, // File object or null to clear
-                });
-
-                console.log("🖼️ [FRONTEND] FormData updated with image:", file);
-            },
+                
+                },
             },
             {
                 name: "status",

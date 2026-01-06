@@ -1,87 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React from "react";
 
 import { createModel } from "../common/UniversalCSVXLSXImporter";
@@ -95,7 +12,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             "name": "Name",
             "description": "Description"
         },
-        required: ["name"], // Based on validationRules
+        required: ["name"],
     });
 
     return {
@@ -142,7 +59,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
         ],
         validationRules: (formData, allCategories, editingCategory) => {
             const errors = [];
-            if (!formData.name?.trim()) errors.push("Name is required");
+            if (!formData.name?.trim()) errors.push("Category Name is required");
 
             const duplicate = allCategories.find(
                 category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
@@ -178,7 +95,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
- 
+
             }
         }
     };
