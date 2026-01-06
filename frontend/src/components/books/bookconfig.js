@@ -201,6 +201,12 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 errors.push("Available copies cannot exceed total copies");
             }
 
+            if (formData.available_copies !== undefined && formData.available_copies !== null && formData.available_copies !== "" &&
+                formData.total_copies !== undefined && formData.total_copies !== null && formData.total_copies !== "" &&
+                parseInt(formData.available_copies) > parseInt(formData.total_copies)) {
+                errors.push("Available copies cannot exceed total copies");
+            }
+
             const duplicate = allBooks.find(
                 book => book.isbn === formData.isbn && book.id !== editingBook?.id
             );

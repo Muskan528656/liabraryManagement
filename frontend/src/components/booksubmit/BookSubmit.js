@@ -1297,7 +1297,6 @@ const BookSubmit = () => {
         switch (status?.toLowerCase()) {
             case 'issued':
                 return <Badge bg="primary">Issued</Badge>;
-
             case 'submitted':
                 return <Badge bg="info">Submitted</Badge>;
             case 'cancelled':

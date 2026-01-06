@@ -28,8 +28,26 @@ const ToastManager = () => {
   }, []);
 
   const addToast = (message, type = "success") => {
+    // Ensure message is always a string
+    let safeMessage = message;
+    if (typeof message === 'object' && message !== null) {
+      // If it's an error object with specific keys, extract meaningful info
+      if (message.message) {
+        safeMessage = message.message;
+      } else if (message.error) {
+        safeMessage = message.error;
+      } else if (message.name && message.code) {
+        safeMessage = `${message.name}: ${message.code}`;
+      } else {
+        // Fallback: stringify the object
+        safeMessage = JSON.stringify(message);
+      }
+    } else if (typeof message !== 'string') {
+      safeMessage = String(message);
+    }
+
     const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type, show: true }]);
+    setToasts((prev) => [...prev, { id, message: safeMessage, type, show: true }]);
   };
 
   const removeToast = (id) => {

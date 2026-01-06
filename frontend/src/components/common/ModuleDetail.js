@@ -793,8 +793,7 @@ const ModuleDetail = ({
         errorMessage = err.response.data.errors;
       }
 
-
-      PubSub.publish("RECORD_ERROR_TOAST", {
+     PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
         message: `Failed to update ${moduleLabel}: ${errorMessage}`,
       });

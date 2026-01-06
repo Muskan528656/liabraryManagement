@@ -9,7 +9,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import {
   Card,
-  Row,
+  Row, 
   Col,
   Badge,
   Button,
@@ -1347,13 +1347,16 @@ const LibraryCardDetail = ({
 
       if (selectedImageFile) {
 
-
         const formData = new FormData();
 
         Object.keys(payload).forEach(key => {
+
           if (payload[key] !== null && payload[key] !== undefined) {
+
             formData.append(key, payload[key]);
+
           }
+
         });
 
         formData.append("image", selectedImageFile);
@@ -1366,58 +1369,85 @@ const LibraryCardDetail = ({
 
 
         const requestPayload = { ...payload };
+
         if (data?.image) {
+
           if (typeof data.image === 'object' && data.image !== null) {
+
             requestPayload.image = data.image.name || data.image;
+
           } else {
+
             requestPayload.image = data.image;
+
           }
+
         }
 
-
         response = await api.update(requestPayload, id);
+
       }
 
       let updatedData =
+
         response?.data?.data ||
+
         response?.data ||
+
         response;
 
 
 
       if (updatedData && typeof updatedData === 'object') {
+
         if (updatedData.image && typeof updatedData.image === "object" && Object.keys(updatedData.image).length === 0) {
 
-
           if (selectedImageFile) {
+
             updatedData.image = `/uploads/librarycards/${selectedImageFile.name}`;
+
           } else if (data?.image) {
+
             updatedData.image = data.image;
+
           } else {
+
             updatedData.image = null;
+
           }
+
         }
+
       }
 
 
 
       if (updatedData) {
+
         setData(updatedData);
+
         setOriginalData(JSON.parse(JSON.stringify(updatedData)));
+
         setCardData(updatedData);
+
       }
 
       PubSub.publish("RECORD_SAVED_TOAST", {
+
         title: "Success",
+
         message: `${moduleLabel} updated successfully`,
+
       });
 
       resetImageSelection();
+
       await fetchCardData();
 
       setRefreshCounter(prev => prev + 1);
 
       setIsEditing(false);
+
       setTempData(null);
 
     } catch (error) {
@@ -2187,7 +2217,7 @@ const LibraryCardDetail = ({
         cancelText="Cancel"
       />
     </Container>
-  );
+  )
 };
 
 export default LibraryCardDetail;
