@@ -419,35 +419,34 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-            const errors = {};
 
-            if (!formData.user_id) {
-                errors.user_id = "Member is required";
+
+            const errors = [];
+
+            if (!formData.first_name?.trim()) {
+                errors.push("First name is required")
+                console.log("Validation error: First name is required");
             }
 
-            if (!formData.issue_date) {
-                errors.issue_date = "Issue date is required";
-            }
-
-            if (formData.plan_id) {
-                const selectedPlan = plansList.find(p => p.value == formData.plan_id)?.data;
-                if (selectedPlan && !selectedPlan.is_active) {
-                    errors.plan_id = "Selected plan is inactive. Please select an active plan.";
+            if (!formData.email?.trim()) {
+                errors.push("Email is required");
+            } else {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    errors.push("Please enter a valid email address");
                 }
             }
 
-            if (formData.user_id) {
-                const existingCard = allCards?.find(
-                    (card) =>
-                        card.user_id === formData.user_id &&
-                        (card.is_active === true || card.is_active === "true" || card.status === "active") &&
-                        card.id !== editingCard?.id
-                );
 
-                if (existingCard) {
-                    errors.user_id = "Member already has an active library card";
-                }
+
+            const duplicateEmail = allCards.find(
+                card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                    card.id !== editingCard?.id
+            );
+            if (duplicateEmail) {
+                errors.push("Card with this email already exists");
             }
+
 
             return errors;
         },
@@ -465,10 +464,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 idField: "id",
                 labelField: "name",
             },
-
-
-
-
 
         },
 
