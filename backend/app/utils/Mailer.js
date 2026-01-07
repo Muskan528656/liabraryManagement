@@ -1,4 +1,4 @@
- 
+
 const transporter = require("./MailConfig");
 
 const sendMail = async ({ to, subject, text, html }) => {
@@ -10,7 +10,7 @@ const sendMail = async ({ to, subject, text, html }) => {
             text,
             html,
         });
- 
+
         return info;
     } catch (err) {
         console.error("Email error:", err);

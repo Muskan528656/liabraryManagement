@@ -1,130 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React from "react";
 
 import { createModel } from "../common/UniversalCSVXLSXImporter";
@@ -139,7 +13,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             "email": "Email",
             "bio": "Bio"
         },
-        required: ["name"], // Based on validationRules
+        required: ["name"],
     });
 
     return {
@@ -269,7 +143,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
- 
+
             }
         }
     };

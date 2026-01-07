@@ -11,6 +11,7 @@ import { handleDownloadBarcode } from './LibraryCardDownload';
 import { handlePrintBarcode } from './LibrarycardPrint';
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import LibraryImportModal from "./LibraryImportModal";
+import { useMemo } from "react";
 
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -25,7 +26,12 @@ const LibraryCard = (props) => {
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
 
-
+  const normalizedApiBaseUrl = useMemo(() => {
+    if (typeof API_BASE_URL === "string") {
+      return API_BASE_URL.replace(/\/ibs$/, "");
+    }
+    return "";
+  }, []);
 
   const fetchSubscriptions = useCallback(async () => {
     try {
@@ -593,7 +599,11 @@ const LibraryCard = (props) => {
               <div style={{ textAlign: "center", marginBottom: "20px" }}>
                 {selectedCard.image ? (
                   <img
-                    src={selectedCard.image.startsWith("http") ? selectedCard.image : `${API_BASE_URL}${selectedCard.image}`}
+                    src={
+                      selectedCard.image.startsWith("http")
+                        ? selectedCard.image
+                        : `${normalizedApiBaseUrl}${selectedCard.image}`
+                    }
                     alt={selectedCard.first_name || 'User'}
                     style={{
                       width: '80px',

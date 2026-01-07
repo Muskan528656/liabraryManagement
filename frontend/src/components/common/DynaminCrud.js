@@ -99,7 +99,7 @@ const DynamicCRUD = ({
     const [advancedFilters, setAdvancedFilters] = useState([]);
     // console.log("formData", formData)
     // console.log("Data", data)
-    
+
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -352,30 +352,6 @@ const DynamicCRUD = ({
             }
         }
     }, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -836,73 +812,73 @@ console.log("formDaformDataformDataformData", formData);
     }, []);
 
 
-const getActionButtons = useCallback(() => {
-    const buttons = [];
+    const getActionButtons = useCallback(() => {
+        const buttons = [];
 
-    if (showImportButton) {
-        buttons.push({
-        variant: "outline-primary",
-        size: "sm",
-        icon: "fa-solid fa-arrow-down",
-        label: `Import ${moduleLabel}`,
-        onClick: async () => {
-            if (Object.keys(relatedData).length === 0) {
-            await fetchRelatedData();
-            }
-            setShowImportModal(true);
-        },
-        });
-    }
+        if (showImportButton) {
+            buttons.push({
+                variant: "outline-primary",
+                size: "sm",
+                icon: "fa-solid fa-arrow-down",
+                label: `Import ${moduleLabel}`,
+                onClick: async () => {
+                    if (Object.keys(relatedData).length === 0) {
+                        await fetchRelatedData();
+                    }
+                    setShowImportModal(true);
+                },
+            });
+        }
 
-    if (showImportExport) {
-        buttons.push({
-        variant: "outline-primary",
-        size: "sm",
-        icon: "fa-solid fa-arrow-up",
-        label: "Export",
-        onClick: handleExport,
-        });
-    }
+        if (showImportExport) {
+            buttons.push({
+                variant: "outline-primary",
+                size: "sm",
+                icon: "fa-solid fa-arrow-up",
+                label: "Export",
+                onClick: handleExport,
+            });
+        }
 
-    if (showBulkInsert) {
-        buttons.push({
-        variant: "outline-primary",
-        size: "sm",
-        icon: "fa-solid fa-layer-group",
-        label: "Bulk Insert",
-        onClick: handleBulkInsert,
-        });
-    }
+        if (showBulkInsert) {
+            buttons.push({
+                variant: "outline-primary",
+                size: "sm",
+                icon: "fa-solid fa-layer-group",
+                label: "Bulk Insert",
+                onClick: handleBulkInsert,
+            });
+        }
 
-    if (showAddButton) {
-        buttons.push({
-        size: "sm",
-        icon: "fa-solid fa-plus",
-        label: `Add ${moduleLabel}`,
-        onClick: handleAdd,
-        style: {
-            background: "var(--primary-color)",
-            border: "none",
-        },
-        });
-    }
+        if (showAddButton) {
+            buttons.push({
+                size: "sm",
+                icon: "fa-solid fa-plus",
+                label: `Add ${moduleLabel}`,
+                onClick: handleAdd,
+                style: {
+                    background: "var(--primary-color)",
+                    border: "none",
+                },
+            });
+        }
 
-    if (customActionButtons.length > 0) {
-        buttons.push(...customActionButtons);
-    }
+        if (customActionButtons.length > 0) {
+            buttons.push(...customActionButtons);
+        }
 
-    return buttons;
+        return buttons;
     }, [
-    showImportButton,
-    showImportExport,
-    showBulkInsert,
-    showAddButton,
-    moduleLabel,
-    handleExport,
-    handleBulkInsert,
-    handleAdd,
-    customActionButtons,
-    setShowImportModal,
+        showImportButton,
+        showImportExport,
+        showBulkInsert,
+        showAddButton,
+        moduleLabel,
+        handleExport,
+        handleBulkInsert,
+        handleAdd,
+        customActionButtons,
+        setShowImportModal,
     ]);
 
 

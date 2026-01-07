@@ -358,7 +358,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const token = sessionStorage.getItem("token");
       if (token) {
         const user = jwt_decode(token);
- 
+
         setUserInfo(user);
 
         if (user.role_name || user.userrole_name) {
@@ -476,10 +476,10 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
   useEffect(() => {
     if (socket) {
- 
+
 
       const handleNewNotification = (notification) => {
- 
+
         setAllNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
 
@@ -494,7 +494,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       socket.on("new_notification", handleNewNotification);
 
       return () => {
- 
+
         socket.off("new_notification", handleNewNotification);
       };
     } else {
@@ -599,6 +599,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
       if (response.data) {
+        console.log("Fetched company data:", response.data);
         setCompany(response.data);
       }
     } catch (error) {
@@ -721,12 +722,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src="/Logo.png"
+            src={Company?.company_logo_url || "/Logo.png"}
+            // src="/Logo.png"
 
             height="50"
             style={{ height: "50px", marginLeft: '20px', objectFit: "contain" }}
           />
-          <span>{Company?.company_name || "Adhwaa Al-Hedaya School"}</span>
+          <span>{Company?.name}</span>
         </Navbar.Brand>
 
         {/* Search Bar */}
@@ -768,6 +770,49 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </div> */}
 
         {/* Right Side: Bell Icon + Admin Dropdown */}
+
+        <button
+          className="shadow-lg pulse-button"
+          style={{
+            position: "fixed",
+            bottom: "100px",
+            right: "20px",
+            zIndex: 1000,
+            width: "54px",
+            height: "54px",
+            borderRadius: "50%",
+            backgroundImage: "url('/logoo.webp')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            // border: "2px solid var(--primary-color)",
+            boxShadow: "0 4px 16px rgba(139, 92, 246, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0",
+            transition: "all 0.3s ease",
+            position: "relative"
+          }}
+        >
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(139, 92, 246, 0.7)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>sadfghjhgfd
+            <i className="fas fa-barcode" style={{
+              fontSize: "24px",
+              color: "white",
+              zIndex: 2
+            }}></i>asdsdfsdgfd
+          </div>
+        </button>
         <div className="d-flex align-items-center gap-2">
           {/* 
           {getCountryFlag() && (
@@ -784,6 +829,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }}
             />
           )} */}
+
 
           <Dropdown
             show={showNotifications}
@@ -828,6 +874,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   overflow: "hidden",
                 }}
               >
+
                 {/* HEADER */}
                 <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                   <h6 className="mb-0 fw-bold">Notifications</h6>
@@ -1079,6 +1126,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               </div>
             </Dropdown.Menu>
           </Dropdown>
+
         </div>
       </div>
 

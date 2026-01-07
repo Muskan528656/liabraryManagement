@@ -149,7 +149,6 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 name: "company_name",
                 label: "Company Name",
-                
                 type: "text",
                 placeholder: "Enter company name",
                 colSize: 6,
@@ -172,8 +171,9 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             {
                 name: "phone",
                 label: "Phone",
-                required: true,
                 type: "tel",
+                required: true,
+
                 placeholder: "Enter phone number",
                 colSize: 3,
                 section: "Contact Person Information",
@@ -420,7 +420,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         ],
 
         details: [
-            { key: "name", label: "Vendor Name", type: "text" },
+            { key: "name", label: "Vendsssssor Name", type: "text", required: true },
             { key: "company_name", label: "Company Name", type: "text" },
             { key: "email", label: "Email", type: "email" },
             { key: "phone", label: "Phone", type: "tel" },
@@ -448,6 +448,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { key: "created_at", label: "Created At", type: "date" },
             { key: "updated_at", label: "Updated At", type: "date" },
         ],
+
         customHandlers: {
             beforeSave: (formData, editingItem) => {
                 const cleanedData = { ...formData };
@@ -474,9 +475,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 } else {
                     cleanedData.country_code = defaultCountryCode;
                 }
-
-                // Ensure status is properly set
-                if (!cleanedData.status) {
+   if (!cleanedData.status) {
                     cleanedData.status = "active";
                 }
 

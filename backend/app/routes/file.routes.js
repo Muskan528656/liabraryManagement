@@ -13,7 +13,7 @@ const fs = require("fs");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
- 
+
   const MIMEType = new Map([
     ["text/csv", "csv"],
     ["application/msword", "doc"],
@@ -49,127 +49,6 @@ module.exports = (app) => {
     ["application/zip", "zip"],
   ]);
 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
 
   router.post("/:id", fetchUser, async (req, res) => {
     try {
@@ -187,17 +66,17 @@ module.exports = (app) => {
         "attachment"
       );
 
- 
+
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
 
- 
+
       for (const fileDetail of fileArray) {
         const fileExtension = path.extname(fileDetail.name);
         let newFileName = fileDetail.name;
 
- 
+
         let filePath = path.join(uploadPath, newFileName);
         if (fs.existsSync(filePath)) {
           const timestamp = Date.now();
@@ -229,7 +108,7 @@ module.exports = (app) => {
         fs.writeFileSync(filePath, fileDetail.data);
       }
 
- 
+
       if (req.body.audio) {
         try {
           const audioBuffer = Buffer.from(req.body.audio, "base64");
@@ -251,5 +130,5 @@ module.exports = (app) => {
     }
   });
 
-   app.use(process.env.BASE_API_URL + "/api/files", router);
+  app.use(process.env.BASE_API_URL + "/api/files", router);
 };

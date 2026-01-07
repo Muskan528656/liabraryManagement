@@ -151,6 +151,7 @@ const ModuleDetail = ({
   moduleApi,
   moduleLabel,
   icon,
+  validationRules,
   fields,
   relatedModules = [],
   customHeader = null,
@@ -712,7 +713,25 @@ const ModuleDetail = ({
   const handleSave = async () => {
 
     console.log("hello check");
-    console.log("tempData-->", tempData);
+    console.log("tempDataCheck-->", tempData);
+
+    //  if (customHandlers.beforeSave) {
+    //         const customResult = customHandlers.beforeSave(formData, editingItem);
+    //         if (customResult === false) return;
+    //     }
+
+    //  if (validationRules) {
+    //             const errors = validationRules(formData, data, editingItem);
+    //             console.log("validationRules",validationRules);
+    //             console.log("errors",errors);
+    //             if (errors.length > 0) {
+    //                 PubSub.publish("RECORD_ERROR_TOAST", {
+    //                     title: "Validation Error",
+    //                     message: errors.join(", "),
+    //                 });
+    //                 return;
+    //             }
+    //         }
     
     try {
       setSaving(true);
@@ -795,12 +814,24 @@ const ModuleDetail = ({
         setIsEditing(false);
       }
     } catch (err) {
+      let errorMessage = err.message;
+      console.log("Error during save:", err);
+      console.log("Error response data:", errorMessage);
+      
+      if (err.response && err.response.data && err.response.data.errors) {
+        errorMessage = err.response.data.errors;
+      }
 
 
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
-        message: `Failed to update ${moduleLabel}: ${err.message}`,
+        message: ` ${errorMessage}`,
       });
+
+      //  PubSub.publish("RECORD_ERROR_TOAST", {
+      //   title: "Update Failed",
+      //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
+      // });
     } finally {
       setSaving(false);
     }

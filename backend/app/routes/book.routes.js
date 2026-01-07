@@ -83,7 +83,6 @@ module.exports = (app) => {
     }
   });
 
-
   router.post(
     "/",
     fetchUser,
@@ -108,9 +107,20 @@ module.exports = (app) => {
         return true;
       }),
       body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
-        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
-          throw new Error("Max age cannot be less than min age");
+      body("max_age").optional().custom((value) => {
+        if (value !== undefined && value !== null && value !== "") {
+          const numValue = parseInt(value);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error("Max age must be a non-negative integer");
+          }
+        }
+        return true;
+      }).custom((value, { req }) => {
+        if (value !== undefined && value !== null && value !== "" &&
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          if (parseInt(value) < parseInt(req.body.min_age)) {
+            throw new Error("Max age cannot be less than min age");
+          }
         }
         return true;
       }),
@@ -152,8 +162,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
   router.put(
     "/:id",
     fetchUser,
@@ -164,9 +172,20 @@ module.exports = (app) => {
       body("category_id").notEmpty().withMessage("Category ID is required"),
       body("publisher_id").optional(),
       body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().isInt({ min: 0 }).withMessage("Max age must be a non-negative integer").custom((value, { req }) => {
-        if (value !== undefined && req.body.min_age !== undefined && value < req.body.min_age) {
-          throw new Error("Max age cannot be less than min age");
+      body("max_age").optional().custom((value) => {
+        if (value !== undefined && value !== null && value !== "") {
+          const numValue = parseInt(value);
+          if (isNaN(numValue) || numValue < 0) {
+            throw new Error("Max age must be a non-negative integer");
+          }
+        }
+        return true;
+      }).custom((value, { req }) => {
+        if (value !== undefined && value !== null && value !== "" &&
+          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+          if (parseInt(value) < parseInt(req.body.min_age)) {
+            throw new Error("Max age cannot be less than min age");
+          }
         }
         return true;
       }),
@@ -211,7 +230,153 @@ module.exports = (app) => {
     }
   );
 
+  // router.post(
+  //   "/",
+  //   fetchUser,
 
+  //   [
+  //     body("title").optional().custom((value) => {
+  //       if (value === null || value === undefined || value === "") {
+  //         return true;
+  //       }
+  //       return value.trim().length > 0;
+  //     }).withMessage("Title is required"),
+  //     body("author_id").optional().custom((value) => {
+
+  //       return true;
+  //     }),
+  //     body("category_id").optional().custom((value) => {
+
+  //       return true;
+  //     }),
+  //     body("publisher_id").optional().custom((value) => {
+
+  //       return true;
+  //     }),
+  //     body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
+  //     body("max_age").optional().custom((value) => {
+  //       if (value !== undefined && value !== null && value !== "") {
+  //         const numValue = parseInt(value);
+  //         if (isNaN(numValue) || numValue < 0) {
+  //           throw new Error("Max age must be a non-negative integer");
+  //         }
+  //       }
+  //       return true;
+  //     }).custom((value, { req }) => {
+  //       if (value !== undefined && value !== null && value !== "" &&
+  //         req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+  //         if (parseInt(value) < parseInt(req.body.min_age)) {
+  //           throw new Error("Max age cannot be less than min age");
+  //         }
+  //       }
+  //       return true;
+  //     }),
+  //     body("isbn").optional().custom((value) => {
+  //       if (value === null || value === undefined || value === "") {
+  //         return true;
+  //       }
+  //       return value.trim().length > 0;
+  //     }).withMessage("ISBN is required"),
+  //   ],
+  //   async (req, res) => {
+  //     try {
+  //       const errors = validationResult(req);
+  //       if (!errors.isEmpty()) {
+  //         return res.status(400).json({ errors: errors.array() });
+  //       }
+
+  //       Book.init(req.userinfo.tenantcode);
+
+
+  //       if (req.body.isbn && req.body.isbn.trim()) {
+  //         const existingBook = await Book.findByISBN(req.body.isbn);
+  //         if (existingBook) {
+  //           return res
+  //             .status(400)
+  //             .json({ errors: "Book with this ISBN already exists" });
+  //         }
+  //       }
+
+  //       const userId = req.userinfo?.id || null;
+  //       const book = await Book.create(req.body, userId);
+  //       if (!book) {
+  //         return res.status(400).json({ errors: "Failed to create book" });
+  //       }
+  //       return res.status(200).json({ success: true, data: book });
+  //     } catch (error) {
+  //       console.error("Error creating book:", error);
+  //       return res.status(500).json({ errors: error.message });
+  //     }
+  //   }
+  // );
+
+  // router.put(
+  //   "/:id",
+  //   fetchUser,
+
+  //   [
+  //     body("title").notEmpty().withMessage("Title is required"),
+  //     body("author_id").notEmpty().withMessage("Author ID is required"),
+  //     body("category_id").notEmpty().withMessage("Category ID is required"),
+  //     body("publisher_id").optional(),
+  //     body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
+  //     body("max_age").optional().custom((value) => {
+  //       if (value !== undefined && value !== null && value !== "") {
+  //         const numValue = parseInt(value);
+  //         if (isNaN(numValue) || numValue < 0) {
+  //           throw new Error("Max age must be a non-negative integer");
+  //         }
+  //       }
+  //       return true;
+  //     }).custom((value, { req }) => {
+  //       if (value !== undefined && value !== null && value !== "" &&
+  //         req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
+  //         if (parseInt(value) < parseInt(req.body.min_age)) {
+  //           throw new Error("Max age cannot be less than min age");
+  //         }
+  //       }
+  //       return true;
+  //     }),
+  //     body("isbn").notEmpty().withMessage("ISBN is required"),
+  //   ],
+  //   async (req, res) => {
+  //     try {
+  //       const errors = validationResult(req);
+  //       if (!errors.isEmpty()) {
+  //         return res.status(400).json({ errors: errors.array() });
+  //       }
+
+  //       Book.init(req.userinfo.tenantcode);
+
+
+  //       const existingBook = await Book.findById(req.params.id);
+  //       if (!existingBook) {
+  //         return res.status(404).json({ errors: "Book not found" });
+  //       }
+
+
+  //       const duplicateBook = await Book.findByISBN(
+  //         req.body.isbn,
+  //         req.params.id
+  //       );
+  //       if (duplicateBook) {
+  //         return res
+  //           .status(400)
+  //           .json({ errors: "Book with this ISBN already exists" });
+  //       }
+
+  //       const userId = req.userinfo?.id || null;
+  //       const book = await Book.updateById(req.params.id, req.body, userId);
+  //       if (!book) {
+  //         return res.status(400).json({ errors: "Failed to update book" });
+  //       }
+  //       return res.status(200).json({ success: true, data: book });
+  //     } catch (error) {
+  //       console.error("Error updating book:", error);
+  //       return res.status(500).json({ errors: error.message });
+  //     }
+  //   }
+  // );
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);

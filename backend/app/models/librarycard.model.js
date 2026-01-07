@@ -53,7 +53,7 @@ async function findById(id) {
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
       LEFT JOIN ${schema}.plan p
-        ON lm.subscription_id = p.id
+        ON lm.plan_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
       WHERE lm.id = $1
@@ -113,9 +113,8 @@ async function resolveTypeId(typeName) {
   return result.rows.length ? result.rows[0].id : null;
 }
 
-
-/* ================= CARD NUMBER ================= */
 async function create(cardData, userId) {
+  console.log("Creating library card with data:", cardData);
   if (!cardData.card_number) {
     cardData.card_number = await generateAutoNumberSafe(
       "library_members",
@@ -129,10 +128,8 @@ async function create(cardData, userId) {
     }
   }
 
-  /* ================= RESOLVE TYPE ================= */
 
   if (cardData.type) {
-
     const isUUID =
       typeof cardData.type === "string" &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -140,10 +137,8 @@ async function create(cardData, userId) {
       );
 
     if (isUUID) {
-
       cardData.type_id = cardData.type;
     } else {
-
       const resolvedTypeId = await resolveTypeId(cardData.type);
 
       if (!resolvedTypeId) {
@@ -154,9 +149,7 @@ async function create(cardData, userId) {
     }
   }
 
-
   try {
-    /* ================= FIELDS ================= */
 
     const fields = [
       "card_number",
@@ -176,7 +169,7 @@ async function create(cardData, userId) {
       "country_code",
 
       "registration_date",
-
+      "plan_id",
       "type_id",
       "createddate",
       "lastmodifieddate",
@@ -192,8 +185,6 @@ async function create(cardData, userId) {
       VALUES (${placeholders})
       RETURNING *
     `;
-
-    /* ================= VALUES ================= */
 
     const imageValue = cardData.hasOwnProperty("image")
       ? cardData.image || null
@@ -217,7 +208,6 @@ async function create(cardData, userId) {
       cardData.last_name || null,
       fullName || null,
 
-
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
@@ -226,7 +216,7 @@ async function create(cardData, userId) {
       cardData.phone_number || null,
       cardData.country_code || null,
       cardData.registration_date || null,
-
+      cardData.plan_id || null,
       cardData.type_id || null,
       new Date(),
       new Date(),
@@ -234,22 +224,13 @@ async function create(cardData, userId) {
       userId,
     ];
 
-    console.log("📋 Inserting library member:", {
-      card_number: values[0],
-      is_active: values[1],
-      father_gurdian_name: values[7],
-      parent_contact: values[8],
-      dob: values[9],
-      createdbyid: values[values.length - 2],
-    });
+
 
     const result = await sql.query(query, values);
 
-    /* ================= RETURN FULL RECORD ================= */
 
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
-
   } catch (error) {
     console.error("❌ Error in create:", {
       message: error.message,
@@ -265,23 +246,14 @@ async function updateById(id, cardData, userId) {
     const updates = [];
     const values = [];
     let idx = 1;
-
-
-
-
-
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
       idx++;
     }
 
-
     if (cardData.type !== undefined) {
       let typeValue = cardData.type;
-
-
-
 
       if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
         typeValue = parseInt(typeValue);
@@ -456,7 +428,7 @@ async function deleteById(id) {
     console.error("Error in deleteById:", error);
 
 
-    if (error.code === '23503') { // foreign_key_violation
+    if (error.code === '23503') {
       throw new Error("Cannot delete member. Related records exist.");
     }
 

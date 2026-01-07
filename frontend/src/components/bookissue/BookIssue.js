@@ -152,7 +152,7 @@ const BookIssue = () => {
       setLoadingIssuedBooks(true);
       const issueApi = new DataApi("bookissue");
       const response = await issueApi.fetchAll();
- 
+      console.log("reposne->>>", response)
       if (response.data && Array.isArray(response.data)) {
 
         const activeIssues = response.data.filter(
@@ -265,7 +265,7 @@ const BookIssue = () => {
             navigate(`/book/${record.book_id}`);
           }}
           style={{
-            color: "var(--primary-color)",
+            color: "#6f42c1",
             textDecoration: "none",
             fontWeight: "600",
           }}
@@ -333,7 +333,7 @@ const BookIssue = () => {
                 navigate(`/librarycard/${userId}`, { state: record });
               }}
               style={{
-                color: "var(--primary-color)",
+                color: "#6f42c1",
                 textDecoration: "none",
                 fontWeight: 500,
               }}
@@ -383,7 +383,7 @@ const BookIssue = () => {
                 window.open(`/user/${userId}`, "_blank");
               }}
               style={{
-                color: "var(--primary-color)",
+                color: "#6f42c1",
                 textDecoration: "none",
                 fontWeight: 500,
                 cursor: "pointer",
@@ -480,8 +480,8 @@ const BookIssue = () => {
       label: "Status",
       width: 120,
       render: (value) => (
-        <Badge bg={value === "returned" ? "secondary" : "primary"}>
-          {value === "returned" ? "Returned" : "Issued"}
+        <Badge bg={value === "submitted" ? "secondary" : "primary"}>
+          {value === "submitted" ? "Submitted" : "Issued"}
         </Badge>
       ),
     },
@@ -516,7 +516,6 @@ const BookIssue = () => {
                     marginBottom: "-1px"
                   }}
                 >
-                  {/* <i className="fa-solid fa-book-return me-2"></i> */}
                   <span>Issue New Book</span>
                 </Nav.Link>
               </Nav.Item>
@@ -559,7 +558,7 @@ const BookIssue = () => {
                   >
                     <i
                       className="fa-solid fa-search"
-                      style={{ color: "var(--primary-color)", fontSize: "0.875rem" }}
+                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
                     ></i>
                   </InputGroup.Text>
 
@@ -631,7 +630,7 @@ const BookIssue = () => {
                         : "No books have been issued yet"
                     }
                     onRowClick={(issue) => {
- 
+                      console.log("Issue clicked:", issue);
                     }}
                   />
                 </Card.Body>

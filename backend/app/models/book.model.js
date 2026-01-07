@@ -9,24 +9,26 @@ function init(schema_name) {
 
   this.schema = schema_name;
 }
-
 async function findAll() {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT 
+    const query = `SELECT
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
                     pub.name AS publisher_name,
-                    (
-                      SELECT pur.unit_price 
-                      FROM ${this.schema}.purchases pur 
-                      WHERE pur.book_id = b.id 
-                      ORDER BY pur.purchase_date DESC, pur.createddate DESC 
-                      LIMIT 1
-                    ) AS price
+                    CASE
+                      WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
+                      ELSE (
+                        SELECT pur.unit_price::text
+                        FROM ${this.schema}.purchases pur
+                        WHERE pur.book_id = b.id
+                        ORDER BY pur.purchase_date DESC, pur.createddate DESC
+                        LIMIT 1
+                      )
+                    END AS price
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
@@ -44,11 +46,21 @@ async function findById(id) {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT 
+    const query = `SELECT
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
-                    pub.name AS publisher_name
+                    pub.name AS publisher_name,
+                    CASE
+                      WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
+                      ELSE (
+                        SELECT pur.unit_price::text
+                        FROM ${this.schema}.purchases pur
+                        WHERE pur.book_id = b.id
+                        ORDER BY pur.purchase_date DESC, pur.createddate DESC
+                        LIMIT 1
+                      )
+                    END AS price
                    FROM ${this.schema}.books b
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
@@ -65,8 +77,8 @@ async function findById(id) {
   }
 }
 
-
 async function create(bookData, userId) {
+  console.log("Creating book with data:", bookData);
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");

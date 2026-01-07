@@ -19,9 +19,8 @@ const VendorDetail = () => {
   const fields = {
     title: "name",
     subtitle: "company_name",
-    status: "status",
     details: [
-      { key: "name", label: "Vendor Name", type: "text" },
+      { key: "name", label: "Vendor Name", type: "text", required: true },
       { key: "company_name", label: "Company Name", type: "text" },
       { key: "email", label: "Email", type: "email" },
       { key: "phone", label: "Phone", type: "text" },
@@ -32,10 +31,6 @@ const VendorDetail = () => {
         key: "status",
         label: "Status",
         type: "toggle",
-        // badgeConfig: {
-        //   true_label: "Active",
-        //   false_label: "Inactive",
-        // },
       },
 
       {
@@ -66,54 +61,7 @@ const VendorDetail = () => {
     ],
   };
 
-  //validation 
-  // validationRules: (formData, allVendors, editingVendor) => {
-
-  //   console.log("Validating formData:", formData);
-  //   console.log("All vendors:", allVendors);
-  //   console.log("Editing vendor:", editingVendor);
-
-  //   const errors = [];
-  //   if (!formData.name?.trim()) {
-  //     errors.push("Name is required");
-  //   }
-
-  //   if (!formData.email?.trim()) {
-  //     errors.push("Email is required");
-  //   } else {
-  //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  //     if (!emailRegex.test(formData.email)) {
-  //       errors.push("Please enter a valid email address");
-  //     }
-  //   }
-
-  //   if (!formData.phone?.trim()) {
-  //     errors.push("Phone is required");
-  //   } else {
-  //     const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-  //     if (!phoneRegex.test(formData.phone)) {
-  //       errors.push("Please enter a valid phone number");
-  //     }
-  //   }
-
-  //   const duplicateName = allVendors.find(
-  //     vendor => vendor.name?.toLowerCase() === formData.name?.toLowerCase() &&
-  //       vendor.id !== editingVendor?.id
-  //   );
-  //   if (duplicateName) {
-  //     errors.push("Vendor with this name already exists");
-  //   }
-
-  //   const duplicateEmail = allVendors.find(
-  //     vendor => vendor.email?.toLowerCase() === formData.email?.toLowerCase() &&
-  //       vendor.id !== editingVendor?.id
-  //   );
-  //   if (duplicateEmail) {
-  //     errors.push("Vendor with this email already exists");
-  //   }
-
-  //   return errors;
-  // },
+ 
 
   return (
     <ModuleDetail
