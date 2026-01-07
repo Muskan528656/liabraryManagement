@@ -4,6 +4,9 @@ const { body, validationResult } = require("express-validator");
 const Subscription = require("../models/subscription.mode.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const sql = require("../models/db.js");
+
+// UUID regex for validation
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 module.exports = (app) => {
 
     router.get("/", fetchUser, async (req, res) => {
