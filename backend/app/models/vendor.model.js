@@ -80,7 +80,53 @@ async function findById(id) {
 }
 
 
+// async function create(vendorData, userId) {
+//   try {
+//     if (!this.schema) {
+//       throw new Error("Schema not initialized. Call init() first.");
+//     }
+
+//     const status =
+//       vendorData.status === true ||
+//       vendorData.status === "true" ||
+//       vendorData.status === "active"
+//         ? true
+//         : false;
+
+//     const query = `INSERT INTO ${this.schema}.vendors 
+//       (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code) 
+//       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15) 
+//       RETURNING *`;
+
+//     const values = [
+//       vendorData.name || "Scanned Vendor",
+//       vendorData.company_name || vendorData.companyName || null,
+//       vendorData.email || null,
+//       vendorData.phone || null,
+//       vendorData.gst_number || vendorData.gstNumber || null,
+//       vendorData.pan_number || vendorData.panNumber || null,
+//       vendorData.address || null,
+//       vendorData.city || null,
+//       vendorData.state || null,
+//       vendorData.pincode || null,
+//       vendorData.country || "India",
+//       status, // ✅ boolean
+//       userId || null,
+//       vendorData.company_id || vendorData.companyId || null,
+//       vendorData.country_code || null,
+//     ];
+
+//     const result = await sql.query(query, values);
+//     return result.rows[0] || null;
+//   } catch (error) {
+//     console.error("Error in create:", error);
+//     throw error;
+//   }
+// }
+
 async function create(vendorData, userId) {
+  console.log("vendorData",vendorData );
+  
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -89,28 +135,47 @@ async function create(vendorData, userId) {
     const status =
       vendorData.status === true ||
       vendorData.status === "true" ||
-      vendorData.status === "active"
-        ? true
-        : false;
+      vendorData.status === "active";
 
-    const query = `INSERT INTO ${this.schema}.vendors 
-      (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code) 
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15) 
-      RETURNING *`;
+    const query = `
+      INSERT INTO ${this.schema}.vendors
+      (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status,
+       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15)
+      
+      ON CONFLICT (gst_number)
+      DO UPDATE SET
+        name               = EXCLUDED.name,
+        company_name       = EXCLUDED.company_name,
+        email              = EXCLUDED.email,
+        phone              = EXCLUDED.phone,
+        pan_number         = EXCLUDED.pan_number,
+        address            = EXCLUDED.address,
+        city               = EXCLUDED.city,
+        state              = EXCLUDED.state,
+        pincode            = EXCLUDED.pincode,
+        country            = EXCLUDED.country,
+        status             = EXCLUDED.status,
+        lastmodifieddate   = NOW(),
+        lastmodifiedbyid   = EXCLUDED.lastmodifiedbyid,
+        country_code       = EXCLUDED.country_code
+
+      RETURNING *;
+    `;
 
     const values = [
       vendorData.name || "Scanned Vendor",
       vendorData.company_name || vendorData.companyName || null,
       vendorData.email || null,
       vendorData.phone || null,
-      vendorData.gst_number || vendorData.gstNumber || null,
+      vendorData.gst_number || vendorData.gstNumber || null, // 🔑 UNIQUE
       vendorData.pan_number || vendorData.panNumber || null,
       vendorData.address || null,
       vendorData.city || null,
       vendorData.state || null,
       vendorData.pincode || null,
       vendorData.country || "India",
-      status, // ✅ boolean
+      status,
       userId || null,
       vendorData.company_id || vendorData.companyId || null,
       vendorData.country_code || null,

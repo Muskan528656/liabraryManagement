@@ -10,6 +10,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         modelName: "Book",
         fields: {
             title: "Title",
+            price: "Price",
             author_id: "Author",
             category_id: "Category",
             publisher_id: "Publisher",
@@ -48,7 +49,15 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
             },
             publishers: {
                 endpoint: "publisher",
-                labelField: "name"
+                labelField: "name",
+                extraPayload: {
+                    email: "auto@generated.com",
+                    phone: "0000000000",
+                    city: "Auto Generated",
+                    country: "Auto Generated",
+                    state: "",
+                    salutation: "Mr."
+                }
             }
         },
 

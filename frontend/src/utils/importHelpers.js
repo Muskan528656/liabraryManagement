@@ -21,12 +21,8 @@ export const saveImportedData = async ({
   autoCreateRelated = {},
   customHandlers = {},
 }) => {
- 
+
   try {
- 
- 
- 
- 
 
     const mainApi = new DataApi(apiEndpoint);
 
@@ -92,6 +88,7 @@ export const saveImportedData = async ({
           const bookByISBN = existingBooks.find(book =>
             book.isbn && book.isbn.toString().trim().toLowerCase() === isbnNorm
           );
+
 
           if (bookByISBN) {
  
@@ -160,84 +157,192 @@ export const saveImportedData = async ({
  
     const transformedData = [];
 
- 
- 
- 
+    console.log('Starting transformation for data rows:', data.length);
+    console.log('CSV headers found:', Object.keys(data[0] || {}));
 
     for (const row of data) {
       const transformed = {};
- 
+
+      console.log('Processing row:', row);
 
       for (const key of Object.keys(row)) {
         const rawValue = row[key];
- 
 
-        // Improved field mapping logic
-        const formField = formFields.find((f) => {
-          if (!f) return false;
+        console.log(`Processing CSV key: "${key}", rawValue: "${rawValue}"`);
 
-          const csvKey = key.toLowerCase().trim();
-          const fieldLabel = f.label?.toLowerCase().trim();
-          const fieldName = f.name?.toLowerCase().trim();
+        // Field mapping logic - handle both array and object formats
+        let fieldName = null;
+        let fieldType = 'text';
+        let optionKey = null;
+        let isRequired = false;
 
-          // Direct label match
-          if (fieldLabel === csvKey) return true;
+        const csvKey = key.toLowerCase().trim();
 
-          // Direct name match (without _id suffix for select fields)
-          if (fieldName === csvKey || fieldName === csvKey + '_id') return true;
+        if (Array.isArray(formFields)) {
+          // Array format: [{ name, label, type, options, required }, ...] or [{ field, label, ... }]
 
-          // Handle common variations
-          if (f.type === 'select') {
-            // For select fields, CSV might have "Vendor" but field name is "vendor_id"
-            const baseName = fieldName.replace('_id', '');
-            if (csvKey === baseName || csvKey.includes(baseName)) return true;
+          const formField = formFields.find((f) => {
+            if (!f) return false;
+
+            const fieldLabel = f.label?.toLowerCase().trim();
+            const fieldNameCheck = (f.name || f.field)?.toLowerCase().trim(); // Support both 'name' and 'field' properties
+
+            // Priority 1: Exact label match
+            if (fieldLabel === csvKey) {
+              return true;
+            }
+
+            // Priority 2: Exact name/field match (without _id suffix for select fields)
+            if (fieldNameCheck === csvKey || fieldNameCheck === csvKey + '_id') {
+              return true;
+            }
+
+            // Priority 3: Handle select fields with base name matching
+            if (f.type === 'select') {
+              const baseName = fieldNameCheck.replace('_id', '');
+              if (csvKey === baseName) {
+                return true;
+              }
+            }
+
+            // Priority 4: Strict fuzzy matching - only if CSV header contains ALL words from field label
+            const labelWords = fieldLabel?.split(/\s+/).filter(w => w.length > 0) || [];
+            if (labelWords.length > 0) {
+              const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
+              if (allLabelWordsInCsv) {
+                return true;
+              }
+            }
+
+            // Priority 5: Check if CSV key words are all in field name (for compound field names)
+            const csvWords = csvKey.split(/_+/).filter(w => w.length > 0);
+            if (csvWords.length > 1) { // Only apply for compound CSV keys like 'company_name'
+              const allCsvWordsInField = csvWords.every(word => fieldNameCheck.includes(word));
+              if (allCsvWordsInField) {
+                return true;
+              }
+            }
+
+            return false;
+          });
+
+          if (formField) {
+            fieldName = formField.name || formField.field; // Support both 'name' and 'field' properties
+            fieldType = formField.type || 'text';
+            optionKey = typeof formField.options === "string" ? formField.options : null;
+            isRequired = formField.required || false;
+          }
+        } else {
+          // Object format: { fieldName: fieldLabel }
+          // Find all possible matches, then pick the best one
+          const possibleMatches = [];
+
+          Object.keys(formFields).forEach(key => {
+            const fieldLabel = formFields[key].toLowerCase().trim();
+
+            // Priority 1: Exact label match (highest priority)
+            if (fieldLabel === csvKey) {
+              possibleMatches.push({ key, priority: 1, labelLength: fieldLabel.length });
+              return;
+            }
+
+            // Priority 2: Exact name match
+            if (key === csvKey) {
+              possibleMatches.push({ key, priority: 2, labelLength: fieldLabel.length });
+              return;
+            }
+
+            // Priority 3: Field label is fully contained in CSV header
+            if (csvKey.includes(fieldLabel)) {
+              possibleMatches.push({ key, priority: 3, labelLength: fieldLabel.length });
+              return;
+            }
+
+            // Priority 4: CSV header is fully contained in field label
+            if (fieldLabel.includes(csvKey)) {
+              possibleMatches.push({ key, priority: 4, labelLength: fieldLabel.length });
+              return;
+            }
+
+            // Priority 5: All words from field label are in CSV header
+            const labelWords = fieldLabel.split(/\s+/).filter(w => w.length > 0);
+            if (labelWords.length > 0) {
+              const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
+              if (allLabelWordsInCsv) {
+                possibleMatches.push({ key, priority: 5, labelLength: fieldLabel.length });
+              }
+            }
+
+            // Debug logging for company_name field
+            if (key === 'company_name') {
+              console.log('Debug company_name mapping (object format):', {
+                csvKey,
+                fieldLabel,
+                key,
+                exactLabelMatch: fieldLabel === csvKey,
+                exactNameMatch: key === csvKey,
+                csvContainsLabel: csvKey.includes(fieldLabel),
+                labelContainsCsv: fieldLabel.includes(csvKey)
+              });
+            }
+          });
+
+          // Sort by priority (lower number = higher priority), then by label length (longer = better)
+          possibleMatches.sort((a, b) => {
+            if (a.priority !== b.priority) return a.priority - b.priority;
+            return b.labelLength - a.labelLength; // Prefer longer labels for same priority
+          });
+
+          const matchingFieldName = possibleMatches.length > 0 ? possibleMatches[0].key : null;
+
+          // Additional debug for company_name
+          if (matchingFieldName === 'company_name' || csvKey.includes('company')) {
+            console.log('Company name mapping result:', {
+              csvKey,
+              matchingFieldName,
+              possibleMatches: possibleMatches.map(m => ({ key: m.key, priority: m.priority }))
+            });
           }
 
-          // Fuzzy matching for common cases
-          if (csvKey.includes(fieldLabel) || fieldLabel?.includes(csvKey)) return true;
-          if (csvKey.includes(fieldName.replace('_id', '')) || fieldName.replace('_id', '').includes(csvKey)) return true;
+          if (matchingFieldName) {
+            fieldName = matchingFieldName;
+            // Determine type based on field name patterns
+            if (matchingFieldName.includes('status') || matchingFieldName.includes('country_code') ||
+                matchingFieldName.includes('state') || matchingFieldName.includes('city')) {
+              fieldType = 'select';
+            } else {
+              fieldType = 'text';
+            }
+            // For object format, assume no related entities (optionKey = null)
+            optionKey = null;
+            isRequired = false;
+          }
+        }
 
-          return false;
-        });
-
- 
-
-        if (!formField) {
+        if (!fieldName) {
           const safeKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
           transformed[safeKey] = rawValue;
- 
           continue;
         }
 
-        const fieldName = formField.name;
+        if (fieldType === "select" && optionKey) {
+          // This is a related entity select field (e.g., vendor_id, company_id)
+          const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
+          transformed[fieldName] = relatedId;
 
-        if (formField.type === "select" && formField.options) {
-          const optionKey =
-            typeof formField.options === "string" ? formField.options : null;
-
- 
- 
-
-          if (optionKey) {
-            const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
-            transformed[fieldName] = relatedId;
- 
-
-            // For required select fields, warn if ID is null
-            if (formField.required && !relatedId) {
-              console.warn(`Required field "${fieldName}" could not be resolved for value "${rawValue}". This may cause validation errors.`);
-            }
-          } else {
-            transformed[fieldName] = null;
- 
-        }
-        } else if (formField.type === "number") {
+          // For required select fields, warn if ID is null
+          if (isRequired && !relatedId) {
+            console.warn(`Required field "${fieldName}" could not be resolved for value "${rawValue}". This may cause validation errors.`);
+          }
+        } else if (fieldType === "select") {
+          // This is a direct value select field (e.g., country_code, status)
+          // Set the value directly from CSV
+          transformed[fieldName] = rawValue;
+        } else if (fieldType === "number") {
           const num = parseInt(rawValue, 10);
           transformed[fieldName] = isNaN(num) ? 0 : num;
- 
         } else {
           transformed[fieldName] = rawValue;
- 
         }
       }
 
@@ -284,15 +389,57 @@ export const saveImportedData = async ({
         createdCount++;
         successfulRecords.push({ ...item, id: result.data?.data?.id || result.data?.id }); // Add the created record with ID
       } catch (err) {
- 
- 
-        if (err.response && (err.response.status === 400 || err.response.status === 409 || err.response.status === 422)) {
-          console.warn("Skipping row due to server validation/duplicate:", item, err.response.data);
-          skippedCount++;
+
+        console.log("Error response details:", {
+          status: err.response?.status,
+          data: err.response?.data,
+          message: err.message,
+          fullError: err
+        });
+
+        // Check for any error status that might indicate a duplicate
+        if (err.response) {
+          const status = err.response.status;
+          const errorMessage = err.response.data?.message || err.response.data?.error || '';
+          const errorData = JSON.stringify(err.response.data || {});
+          const fullErrorText = errorData + ' ' + errorMessage;
+
+          console.log("Full error analysis:", {
+            status,
+            errorMessage,
+            errorData,
+            fullErrorText
+          });
+
+          // Check for duplicate indicators in any status code
+          const isDuplicate = fullErrorText.toLowerCase().includes('duplicate') ||
+                             fullErrorText.toLowerCase().includes('already exists') ||
+                             fullErrorText.toLowerCase().includes('unique constraint') ||
+                             fullErrorText.toLowerCase().includes('already exist') ||
+                             fullErrorText.toLowerCase().includes('exists');
+
+          console.log("Duplicate detection result:", {
+            isDuplicate,
+            status,
+            fullErrorText: fullErrorText.substring(0, 200) // First 200 chars
+          });
+
+          if (isDuplicate) {
+            console.warn("Skipping duplicate row:", item);
+            PubSub.publish("RECORD_ERROR_TOAST", {
+              title: "Duplicate Entry",
+              message: "This record already exists and was skipped.",
+            });
+            skippedCount++;
+          } else if (status === 400 || status === 409 || status === 422) {
+            console.warn("Skipping row due to validation error:", item, err.response.data);
+            skippedCount++;
+          } else {
+            console.error("Unexpected error status:", status, err.response.data);
+            errorCount++;
+          }
         } else {
- 
- 
-          console.error("Critical error saving row:", err);
+          console.error("Critical error saving row (no response):", err);
           errorCount++;
         }
       }
