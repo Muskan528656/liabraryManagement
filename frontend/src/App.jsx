@@ -54,7 +54,7 @@ import PlanDetail from "./components/plan/PlanDetail";
 import Publisher from "./components/Publisher/Publisher";
 import PublisherDetail from "./components/Publisher/PublisherDetail";
 
-const ENDPOINT = "https://admin.watconnect.com" || "http://localhost:3003";
+const ENDPOINT = "http://localhost:3003";
 
 function AppContent() {
   const { userInfo, isLoading } = useUser();

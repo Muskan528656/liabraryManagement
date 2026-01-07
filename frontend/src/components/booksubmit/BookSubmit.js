@@ -1573,8 +1573,18 @@ const BookSubmit = () => {
             }
         },
         {
+            field: "condition_before",
+            label: "Condition Before",
+            width: 120,
+            render: (value) => (
+                <Badge bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
+                    {value || "Good"}
+                </Badge>
+            )
+        },
+        {
             field: "condition_after",
-            label: "Condition",
+            label: "Condition After",
             width: 120,
             render: (value) => (
                 <Badge bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>

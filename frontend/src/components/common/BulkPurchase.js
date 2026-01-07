@@ -68,7 +68,7 @@ const BulkPurchasePage = () => {
     const [barcodeProcessing, setBarcodeProcessing] = useState(false);
     const [company, setCompany] = useState("");
 
- 
+
     const GOOGLE_BOOKS_API_KEY = "AIzaSyAC2OqFGAIdOaCSWswm-mjiwoY-kzPJT-0";
 
     function getCompanyIdFromToken() {
@@ -204,7 +204,7 @@ const BulkPurchasePage = () => {
     };
 
     const fetchBookByISBN = async (isbn) => {
- 
+
         const bookData = {
             isbn: isbn,
             title: "",
@@ -214,23 +214,23 @@ const BulkPurchasePage = () => {
         };
 
         try {
- 
+
             const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
- 
+
 
             const googleResponse = await fetch(googleBooksUrl);
 
             if (googleResponse.ok) {
                 const data = await googleResponse.json();
- 
+
 
                 if (data.items && data.items.length > 0) {
                     const volumeInfo = data.items[0].volumeInfo;
 
- 
+
                     bookData.title = volumeInfo.title || "";
 
- 
+
                     if (volumeInfo.authors && volumeInfo.authors.length > 0) {
                         bookData.author_name = volumeInfo.authors.join(", ");
                         bookData.author_details = {
@@ -241,7 +241,7 @@ const BulkPurchasePage = () => {
                         };
                     }
 
- 
+
                     if (volumeInfo.categories && volumeInfo.categories.length > 0) {
                         const category = volumeInfo.categories[0];
                         const categoryName = category
@@ -252,36 +252,36 @@ const BulkPurchasePage = () => {
                         bookData.category_description = category;
                     }
 
- 
+
                     if (volumeInfo.language) {
                         bookData.language = volumeInfo.language.toUpperCase();
                     }
 
- 
+
                     if (volumeInfo.description) {
                         bookData.description = volumeInfo.description;
                     }
 
- 
+
                     if (volumeInfo.publishedDate) {
                         bookData.published_date = volumeInfo.publishedDate;
                     }
 
- 
+
                     if (volumeInfo.publisher) {
                         bookData.publisher = volumeInfo.publisher;
                     }
 
- 
+
                     if (volumeInfo.pageCount) {
                         bookData.page_count = volumeInfo.pageCount;
                     }
 
- 
+
                     return bookData;
                 } else {
- 
- 
+
+
                     const titleSearchUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(isbn)}&key=${GOOGLE_BOOKS_API_KEY}`;
                     const titleResponse = await fetch(titleSearchUrl);
 
@@ -295,17 +295,17 @@ const BulkPurchasePage = () => {
                                 bookData.author_name = volumeInfo.authors.join(", ");
                             }
 
- 
+
                             return bookData;
                         }
                     }
                 }
             }
         } catch (error) {
- 
+
         }
 
- 
+
         return bookData;
     };
 
@@ -388,17 +388,17 @@ const BulkPurchasePage = () => {
 
         setBarcodeProcessing(true);
         try {
- 
+
 
             const isbnCheck = isValidISBN(barcode);
             if (isbnCheck) {
- 
+
                 const isbn = isbnCheck.value;
 
                 const bookData = await fetchBookByISBN(isbn);
- 
 
- 
+
+
                 if (bookData.author_name) {
                     const authorId = await findOrCreateAuthor(bookData.author_name, bookData.author_details);
                     if (authorId) {
@@ -406,7 +406,7 @@ const BulkPurchasePage = () => {
                     }
                 }
 
- 
+
                 if (bookData.category_name) {
                     const categoryId = await findOrCreateCategory(bookData.category_name, bookData.category_description);
                     if (categoryId) {
@@ -425,7 +425,7 @@ const BulkPurchasePage = () => {
                 };
             }
 
- 
+
             if (/\d/.test(barcode) && /[A-Za-z]/.test(barcode)) {
                 const possibleIsbns = barcode.match(/[\dX]{10,13}/g);
                 if (possibleIsbns) {
@@ -469,7 +469,7 @@ const BulkPurchasePage = () => {
                 }
             }
 
- 
+
             if (barcode.length > 3) {
                 return {
                     title: barcode.trim(),
@@ -536,7 +536,7 @@ const BulkPurchasePage = () => {
     };
 
     const handleBarcodeScanned = (barcode) => {
- 
+
         setBarcodeInput(barcode);
 
         setTimeout(() => {
@@ -735,7 +735,7 @@ const BulkPurchasePage = () => {
             setLoading(true);
             const bookApi = new DataApi("book");
 
- 
+
             const bookDataToSend = {
                 ...bookFormData,
                 title: bookFormData.title.trim(),
@@ -750,7 +750,7 @@ const BulkPurchasePage = () => {
                 let newBookId = null;
                 const bookData = response.data;
 
- 
+
                 newBookId = bookData.id || bookData._id ||
                     (bookData.data && (bookData.data.id || bookData.data._id));
 
@@ -953,7 +953,7 @@ const BulkPurchasePage = () => {
                         </div>
 
                         <div className="border rounded" style={{
-                            maxHeight: 'calc(100vh - 400px)',
+                            // maxHeight: 'calc(100vh - 400px)',
                             overflow: 'auto',
                             backgroundColor: 'white',
                             width: '100%',
@@ -966,7 +966,241 @@ const BulkPurchasePage = () => {
                                 position: 'relative',
                                 zIndex: 1
                             }}>
+
                                 <Table bordered hover className="mb-0" style={{ width: '100%', tableLayout: 'fixed' }}>
+                                    <thead style={{
+                                        position: 'sticky',
+                                        top: 0,
+                                        zIndex: 10,
+                                        backgroundColor: '#f8f9fa'
+                                    }}>
+                                        <tr>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '22%' }} >
+                                                {/* <div className="d-flex align-items-center"> */}
+                                                <span>Vendor</span>
+                                                <span className="text-danger ms-1">*</span>
+                                                {/* </div> */}
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '22%' }} >
+                                                <div className="d-flex align-items-center">
+                                                    <span>Book</span>
+                                                    <span className="text-danger ms-1">*</span>
+                                                </div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '8%' }}>
+                                                <div className="d-flex align-items-center">
+                                                    <span>Qty</span>
+                                                    <span className="text-danger ms-1">*</span>
+                                                </div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '10%' }} >
+                                                <div className="d-flex align-items-center">
+                                                    <span>Unit Price</span>
+                                                    <span className="text-danger ms-1">*</span>
+                                                </div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '12%' }} >
+                                                <div className="text-center">Total Amount</div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '12%' }}>
+                                                <div>Purchase Date</div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '12%' }} >
+                                                <div>Notes</div>
+                                            </th>
+                                            <th style={{ background: 'var(--primary-background-color)', width: '2%' }} >
+                                                <div>Actions</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {multiInsertRows.map((row, index) => (
+                                            <tr key={index} className={index % 2 === 0 ? 'table-row-light' : ''}>
+                                                <td className="border-end p-2" style={{ width: '22%' }}>
+                                                    <div className="d-flex gap-1 align-items-center">
+                                                        <div className="flex-grow-1" style={{ minWidth: '0' }}>
+                                                            <Select
+                                                                value={getSelectedVendorForRow(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                                options={vendorOptions}
+                                                                placeholder="Select Vendor"
+                                                                isClearable
+                                                                isSearchable
+                                                                menuPlacement="auto"
+                                                                styles={{
+                                                                    control: (base, state) => ({
+                                                                        ...base,
+                                                                        width: "100%",
+                                                                        minHeight: "36px",
+                                                                        fontSize: "14px",
+                                                                        borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#dee2e6",
+                                                                        backgroundColor: row.vendor_id ? "#f8fff9" : "white",
+                                                                        "&:hover": {
+                                                                            borderColor: row.vendor_id ? "#28a745" : "#8b5cf6",
+                                                                        },
+                                                                    }),
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                    }),
+                                                                    menuPortal: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999
+                                                                    }),
+                                                                    singleValue: (base) => ({
+                                                                        ...base,
+                                                                        maxWidth: 'calc(100% - 40px)',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }),
+                                                                    placeholder: (base) => ({
+                                                                        ...base,
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    })
+                                                                }}
+                                                                menuPortalTarget={document.body}
+                                                                menuShouldScrollIntoView={false}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="link"
+                                                            size="sm"
+                                                            onClick={() => setShowAddVendorModal(true)}
+                                                            title="Add New Vendor"
+                                                            className="p-0 text-primary flex-shrink-0"
+                                                        >
+                                                            <i className="fs-5 fa-solid fa-plus-square"></i>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '22%' }}>
+                                                    <div className="d-flex gap-1 align-items-center">
+                                                        <div className="flex-grow-1" style={{ minWidth: '0' }}>
+                                                            <Select
+                                                                value={getSelectedBook(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                                                options={bookOptions}
+                                                                placeholder="Select Book"
+                                                                isClearable
+                                                                isSearchable
+                                                                menuPlacement="auto"
+                                                                styles={{
+                                                                    control: (base, state) => ({
+                                                                        ...base,
+                                                                        width: "100%",
+                                                                        minHeight: "36px",
+                                                                        fontSize: "14px",
+                                                                        borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#dee2e6",
+                                                                        backgroundColor: row.book_id ? "#f8fff9" : "white",
+                                                                        "&:hover": {
+                                                                            borderColor: row.book_id ? "#28a745" : "#8b5cf6",
+                                                                        },
+                                                                    }),
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                    }),
+                                                                    menuPortal: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999
+                                                                    }),
+                                                                    singleValue: (base) => ({
+                                                                        ...base,
+                                                                        maxWidth: 'calc(100% - 40px)',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }),
+                                                                    placeholder: (base) => ({
+                                                                        ...base,
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    })
+                                                                }}
+                                                                menuPortalTarget={document.body}
+                                                                menuShouldScrollIntoView={false}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="link"
+                                                            size="sm"
+                                                            onClick={() => setShowAddBookModal(true)}
+                                                            title="Add New Book"
+                                                            className="p-0 text-success flex-shrink-0"
+                                                        >
+                                                            <i className="fs-5 fa-solid fa-plus-square"></i>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '8%' }}>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.quantity}
+                                                        onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                                                        min="1"
+                                                        className="border-0 p-1"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '10%' }}>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.unit_price}
+                                                        onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                                                        min="0"
+                                                        step="0.01"
+                                                        className="border-0 p-1"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '12%' }}>
+                                                    <div className="bg-light p-2 rounded text-center">
+                                                        <span className="fw-semibold text-primary">
+                                                            {company?.currency} {((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '12%' }}>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={row.purchase_date}
+                                                        onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                                                        className="border-0 p-1"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '12%' }}>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={row.notes}
+                                                        onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                                                        placeholder="Add notes..."
+                                                        className="border-0 p-1"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="text-center p-1" style={{ width: '2%' }}>
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveRow(index)}
+                                                        disabled={multiInsertRows.length === 1}
+                                                        title="Remove Row"
+                                                        className="p-1 text-danger"
+                                                        style={{ minWidth: 'auto' }}
+                                                    >
+                                                        <i className="fa-solid fa-trash fa-sm"></i>
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                                {/* <Table bordered hover className="mb-0" style={{ width: '100%', tableLayout: 'fixed' }}>
                                     <thead style={{
                                         position: 'sticky',
                                         top: 0,
@@ -1029,6 +1263,7 @@ const BulkPurchasePage = () => {
                                                                 styles={{
                                                                     control: (base, state) => ({
                                                                         ...base,
+                                                                        width: "100%",
                                                                         minHeight: "36px",
                                                                         fontSize: "14px",
                                                                         borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#dee2e6",
@@ -1075,6 +1310,167 @@ const BulkPurchasePage = () => {
                                                                 styles={{
                                                                     control: (base, state) => ({
                                                                         ...base,
+                                                                        width: "100%",
+                                                                        minHeight: "36px",
+                                                                        fontSize: "14px",
+                                                                        borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#dee2e6",
+                                                                        backgroundColor: row.book_id ? "#f8fff9" : "white",
+                                                                        "&:hover": {
+                                                                            borderColor: row.book_id ? "#28a745" : "#8b5cf6",
+                                                                        },
+                                                                    }),
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                    }),
+                                                                    menuPortal: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999
+                                                                    })
+                                                                }}
+                                                                menuPortalTarget={document.body}
+                                                                menuShouldScrollIntoView={false}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="link"
+                                                            size="sm"
+                                                            onClick={() => setShowAddBookModal(true)}
+                                                            title="Add New Book"
+                                                            className="p-0 text-success"
+                                                        >
+                                                            <i className="fs-4 fa-solid fa-plus-square"></i>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '8%' }}>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.quantity}
+                                                        onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
+                                                        min="1"
+                                                        className="border-0 p-2"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '10%' }}>
+                                                    <Form.Control
+                                                        type="number"
+                                                        value={row.unit_price}
+                                                        onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
+                                                        min="0"
+                                                        step="0.01"
+                                                        className="border-0 p-2"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '12%' }}>
+                                                    <div className="bg-light p-2 rounded text-center">
+                                                        <span className="fw-semibold text-primary">
+                                                            {company?.currency} {((parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0)).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '12%' }}>
+                                                    <Form.Control
+                                                        type="date"
+                                                        value={row.purchase_date}
+                                                        onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
+                                                        className="border-0 p-2"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '15%' }}>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={row.notes}
+                                                        onChange={(e) => handleMultiRowChange(index, "notes", e.target.value)}
+                                                        placeholder="Add notes..."
+                                                        className="border-0 p-2"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td className="text-center p-1" style={{ width: '3%', minWidth: '50px' }}>
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveRow(index)}
+                                                        disabled={multiInsertRows.length === 1}
+                                                        title="Remove Row"
+                                                        className="p-1 text-danger"
+                                                        style={{ minWidth: '30px' }}
+                                                    >
+                                                        <i className="fa-solid fa-trash fa-sm"></i>
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    {/* <tbody>
+                                        {multiInsertRows.map((row, index) => (
+                                            <tr key={index} className={index % 2 === 0 ? 'table-row-light' : ''}>
+                                                <td className="border-end p-2" style={{ width: '20%' }}>
+                                                    <div className="d-flex gap-1 align-items-center">
+                                                        <div className="flex-grow-1">
+                                                            <Select
+                                                                value={getSelectedVendorForRow(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "vendor_id", selectedOption ? selectedOption.value : "")}
+                                                                options={vendorOptions}
+                                                                placeholder="Select Vendor"
+                                                                isClearable
+                                                                isSearchable
+                                                                menuPlacement="auto"
+                                                                styles={{
+                                                                    control: (base, state) => ({
+                                                                        ...base,
+                                                                        width: "200px",
+                                                                        minHeight: "36px",
+                                                                        fontSize: "14px",
+                                                                        borderColor: state.isFocused ? "#8b5cf6" : row.vendor_id ? "#28a745" : "#dee2e6",
+                                                                        backgroundColor: row.vendor_id ? "#f8fff9" : "white",
+                                                                        "&:hover": {
+                                                                            borderColor: row.vendor_id ? "#28a745" : "#8b5cf6",
+                                                                        },
+                                                                    }),
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                    }),
+                                                                    menuPortal: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999
+                                                                    })
+                                                                }}
+                                                                menuPortalTarget={document.body}
+                                                                menuShouldScrollIntoView={false}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="link"
+                                                            size="sm"
+                                                            onClick={() => setShowAddVendorModal(true)}
+                                                            title="Add New Vendor"
+                                                            className="p-0 text-primary"
+                                                        >
+                                                            <i className="fs-4 fa-solid fa-plus-square"></i>
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                <td className="border-end p-2" style={{ width: '25%' }}>
+                                                    <div className="d-flex gap-1 align-items-center">
+                                                        <div className="flex-grow-1">
+                                                            <Select
+                                                                value={getSelectedBook(index)}
+                                                                onChange={(selectedOption) => handleMultiRowChange(index, "book_id", selectedOption ? selectedOption.value : "")}
+                                                                options={bookOptions}
+                                                                placeholder="Select Book"
+                                                                isClearable
+                                                                isSearchable
+                                                                menuPlacement="auto"
+                                                                styles={{
+                                                                    control: (base, state) => ({
+                                                                        ...base,
+                                                                           width: "200px",
                                                                         minHeight: "36px",
                                                                         fontSize: "14px",
                                                                         borderColor: state.isFocused ? "#8b5cf6" : row.book_id ? "#28a745" : "#dee2e6",
@@ -1168,13 +1564,13 @@ const BulkPurchasePage = () => {
                                                 </td>
                                             </tr>
                                         ))}
-                                    </tbody>
-                                </Table>
+                                    </tbody> */}
+                                {/* </Table> */}
                             </div>
-                        </div>
+                        </div >
 
                         {/* Purchase Summary */}
-                        <Row className="mt-4">
+                        < Row className="mt-4" >
                             <Col lg={8}></Col>
                             <Col lg={4}>
                                 <Card className="shadow-sm border-0" style={{
@@ -1255,7 +1651,7 @@ const BulkPurchasePage = () => {
                                     </Card.Body>
                                 </Card>
                             </Col>
-                        </Row>
+                        </Row >
                     </>
                 );
 
@@ -1690,7 +2086,6 @@ const BulkPurchasePage = () => {
                     border: none;
                     color: #6c757d;
                     font-weight: 500;
-                    padding: 0.5rem 1rem;
                     margin-right: 0.5rem;
                     border-radius: 8px 8px 0 0;
                     transition: all 0.3s ease;

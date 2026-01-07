@@ -143,7 +143,7 @@ const fileUpload = require("express-fileupload");
 const app = express();
 
 
-const MODE = process.env.NODE_ENV || "production"; 
+const MODE = process.env.NODE_ENV || "production";
 const PORT = process.env.PORT || 3003;
 const BASE_PATH =
   MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
@@ -215,7 +215,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("notification_read", (data) => {
-   
+
   });
 
   socket.on("disconnect", () => {
