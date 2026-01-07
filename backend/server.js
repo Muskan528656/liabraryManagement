@@ -142,26 +142,19 @@ const fileUpload = require("express-fileupload");
 
 const app = express();
 
-/* ==========================
-   ENV CONFIG
-========================== */
-const MODE = process.env.NODE_ENV || "production"; // production | sandbox
+
+const MODE = process.env.NODE_ENV || "production"; 
 const PORT = process.env.PORT || 3003;
 const BASE_PATH =
   MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
 
-/* ==========================
-   MIDDLEWARE
-========================== */
+
 app.set("view engine", "ejs");
 
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-/* ==========================
-   FILE UPLOAD SETUP
-========================== */
 const publicUploadsPath = "/var/www/html/uploads/";
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
@@ -182,9 +175,7 @@ app.use(
   })
 );
 
-/* ==========================
-   WELCOME API (SANDBOX / PROD)
-========================== */
+
 app.get(BASE_PATH, (req, res) => {
   res.json({
     mode: MODE.toUpperCase(),
@@ -195,9 +186,7 @@ app.get(BASE_PATH, (req, res) => {
   });
 });
 
-/* ==========================
-   HTTP + SOCKET.IO
-========================== */
+
 const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
@@ -226,17 +215,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("notification_read", (data) => {
-    // handle read logic
+   
   });
 
   socket.on("disconnect", () => {
     console.log("Socket disconnected:", socket.id);
   });
 });
-
-/* ==========================
-   ROUTES
-========================== */
 require("./app/routes/auth.routes.js")(app);
 require("./app/routes/book.routes.js")(app);
 require("./app/routes/author.routes.js")(app);
@@ -263,9 +248,7 @@ require("./app/routes/mail.routes.js")(app);
 require("./app/routes/dashbard.router.js")(app);
 require("./app/routes/objecttype.routes.js")(app);
 
-/* ==========================
-   SERVER START
-========================== */
+
 server.listen(PORT, () => {
   console.log(
     `🚀 Server running in ${MODE.toUpperCase()} mode on port ${PORT}`
