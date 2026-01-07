@@ -144,7 +144,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 required: true,
                 placeholder: "Enter contact person name",
                 colSize: 6,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "company_name",
@@ -152,7 +152,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter company name",
                 colSize: 6,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "country_code",
@@ -166,7 +166,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
 
                 defaultValue: defaultCountryCode,
                 colSize: 3,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "phone",
@@ -176,7 +176,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
 
                 placeholder: "Enter phone number",
                 colSize: 3,
-                section: "Contact Person Information",
+                section: "Vendor Contact  Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
                         const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
@@ -193,7 +193,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "email",
                 placeholder: "Enter email address",
                 colSize: 6,
-                section: "Contact Person Information",
+                section: "Vendor Contact  Information",
                 customValidation: (value, formData, allVendors, editingVendor) => {
                     if (value && value.trim()) {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
