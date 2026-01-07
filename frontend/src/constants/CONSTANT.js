@@ -1,9 +1,22 @@
-export const API_BASE_URL =
-  window.location.hostname === "localhost"
-    ? "http://localhost:3003"
-    : `${window.location.protocol}//${window.location.hostname}/ibs`;
+// export const API_BASE_URL =
+//   window.location.hostname === "localhost"
+//     ? "http://localhost:3003"
+//     : `${window.location.protocol}//${window.location.hostname}/ibs`;
 
-export const FRONTEND_URL = `${window.location.protocol}//${window.location.hostname}`;
+// export const FRONTEND_URL = `${window.location.protocol}//${window.location.hostname}`;
+
+const { protocol, hostname, port, pathname } = window.location;
+
+const isLocal = hostname === "localhost";
+const isSandbox = pathname.startsWith("/sandbox");
+
+export const API_BASE_URL = isLocal
+  ? "http://localhost:3003"
+  : isSandbox
+    ? `${protocol}//${hostname}:4000/sandbox/ibs`
+    : `${protocol}//${hostname}:3003/ibs`;
+
+export const FRONTEND_URL = `${protocol}//${hostname}${port ? `:${port}` : ""}`;
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
 export const EDIT_LEAD = "EDIT_LEAD";
