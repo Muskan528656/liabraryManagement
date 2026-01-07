@@ -1,22 +1,29 @@
-// export const API_BASE_URL =
-//   window.location.hostname === "localhost"
-//     ? "http://localhost:3003"
-//     : `${window.location.protocol}//${window.location.hostname}/ibs`;
+// src/config/constants.js
 
-// export const FRONTEND_URL = `${window.location.protocol}//${window.location.hostname}`;
-
+// Get window location info
 const { protocol, hostname, port, pathname } = window.location;
 
+// Environment checks
 const isLocal = hostname === "localhost";
+
+// Sandbox check: starts with /library-sandbox (handles subpaths too)
 const isSandbox = pathname.startsWith("/library-sandbox");
 
+// API Base URLs
 export const API_BASE_URL = isLocal
-  ? "http://localhost:3003"
+  ? "http://localhost:3003"                  // Local backend
   : isSandbox
-    ? `${protocol}//${hostname}:4000/sandbox/ibs`
-    : `${protocol}//${hostname}:3003/ibs`;
+    ? `${protocol}//${hostname}:4000/sandbox/ibs` // Sandbox backend
+    : `${protocol}//${hostname}:3003/ibs`;        // Production backend
 
-export const FRONTEND_URL = `${protocol}//${hostname}${port ? `:${port}` : ""}`;
+// Frontend URLs
+export const FRONTEND_URL = isLocal
+  ? `${protocol}//${hostname}:3000`                       // Local frontend
+  : isSandbox
+    ? `${protocol}//${hostname}/library-sandbox`         // Sandbox frontend
+    : `${protocol}//${hostname}`;                        // Production frontend
+
+// Permission constants
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
 export const EDIT_LEAD = "EDIT_LEAD";
@@ -38,6 +45,7 @@ export const VIEW_BUSINESS = "VIEW_BUSINESS";
 export const EDIT_BUSINESS = "EDIT_BUSINESS";
 export const DELETE_BUSINESS = "DELETE_BUSINESS";
 
+// Supported file types
 export const PDF = "pdf";
 export const DOC = "doc";
 export const DOCX = "docx";

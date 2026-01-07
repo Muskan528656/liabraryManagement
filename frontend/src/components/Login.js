@@ -25,10 +25,8 @@ const Login = () => {
           sessionStorage.setItem("token", result.authToken);
           sessionStorage.setItem("r-t", result.refreshToken);
           sessionStorage.setItem("myimage", "/abdul-pathan.png");
-          const currentUrl = window.location.href;
-
-          if (currentUrl.includes("/library-sandbox")) {
-            window.location.assign("/library-sandbox/");
+          if (window.location.pathname.startsWith("/sandbox")) {
+            window.location.assign("/sandbox/");
           } else {
             window.location.assign("/");
           }
@@ -91,10 +89,6 @@ const Login = () => {
                       width="600"
                       height="600"
 
-
-
-
-
                     />
 
                   </div>
@@ -119,7 +113,7 @@ const Login = () => {
                     >
                       <i className="fa-solid fa-book"></i>
                     </div>
-                    <h3 className="fw-bold">Sign In</h3>
+                    <h3 className="fw-bold">Signadsfjaksjdhaklsdfhsakld In sandbox</h3>
                     <h4
                       className="fw-bold"
                       style={{
