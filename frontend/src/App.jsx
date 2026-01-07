@@ -96,6 +96,7 @@ function AppContent() {
     return <div>Loading...</div>;
   }
 
+
   if (!userInfo) {
     return (
       <>
@@ -115,8 +116,8 @@ function AppContent() {
   return (
     <TimeZoneProvider>
       <ToastManager />
-      <Router>
-        <Routes>
+      <Router basename="/library_sandbox">
+        <Routes> 
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Main socket={connectedSocket} />}>
             <Route index element={<Dashboard />} />
