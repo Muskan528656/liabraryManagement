@@ -23,7 +23,7 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -35,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -50,35 +50,41 @@ module.exports = (app) => {
     }
   });
 
- 
   router.post(
     "/",
     fetchUser,
-
-    [
- 
-      body("name").optional().custom((value) => {
-        return true;
-      }),
-    ],
+    // [
+    //   body("name").optional().custom((value) => {
+    //     return true;
+    //   }),
+    // ],
     async (req, res) => {
       try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
+
+        // console.log("Vendor data-->:", req.body);
+
+        // const errors = validationResult(req);
+
+        // console.log("Validation vendor errors:", errors);
+
+        // if (!errors.isEmpty()) {
+        //   return res.status(400).json({ errors: errors.array() });
+        // }
 
         Vendor.init(req.userinfo.tenantcode);
 
- 
-        if (req.body.name) {
-          const existingVendor = await Vendor.findByName(req.body.name);
-          if (existingVendor) {
-            return res
-              .status(400)
-              .json({ errors: "Vendor with this name already exists" });
-          }
-        }
+
+        // if (req.body.name) {
+        //   const existingVendor = await Vendor.findByName(req.body.name);
+        //   if (existingVendor) {
+        //     return res
+        //       .status(400)
+        //       .json({ errors: "Vendor with this name already exists" });
+        //   }
+        // }
+        // else {
+        //   return res.status(400).json({ errors: "Name is required" });
+        // }
 
         const userId = req.userinfo.id;
         const vendor = await Vendor.create(req.body, userId);
@@ -93,54 +99,87 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
-
     [
-      body("name").notEmpty().withMessage("Name is required"),
+      body("name")
+        .trim()
+        .notEmpty()
+        .withMessage("Name is required"),
+
+      body("email")
+        .trim()
+        .toLowerCase()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Please enter a valid email address"),
+
+      body("phone")
+        .trim()
+        .notEmpty()
+        .withMessage("Phone is required")
+        .isNumeric()
+        .withMessage("Phone number must contain only digits")
+      // .isLength({ min: 10, max: 10 })
+      // .withMessage("Phone number must be 10 digits"),
     ],
     async (req, res) => {
       try {
         const errors = validationResult(req);
+
         if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+          return res.status(400).json({
+            errors: errors.array()[0].msg
+          });
         }
 
         Vendor.init(req.userinfo.tenantcode);
 
- 
         const existingVendor = await Vendor.findById(req.params.id);
         if (!existingVendor) {
-          return res.status(404).json({ errors: "Vendor not found" });
+          return res.status(404).json({
+            message: "Vendor not found"
+          });
         }
 
- 
-        const duplicateVendor = await Vendor.findByName(
-          req.body.name,
+        const duplicateVendor = await Vendor.findByEmail(
+          req.body.email,
           req.params.id
         );
+
+        console.log("Duplicate vendor check:", duplicateVendor);
+
         if (duplicateVendor) {
           return res
             .status(400)
-            .json({ errors: "Vendor with this name already exists" });
+            .json({ errors: "Vendor with this email already exists" });
+        } else {
+
         }
 
         const userId = req.userinfo.id;
-        const vendor = await Vendor.updateById(req.params.id, req.body, userId);
-        if (!vendor) {
-          return res.status(400).json({ errors: "Failed to update vendor" });
-        }
-        return res.status(200).json({ success: true, data: vendor });
+        const vendor = await Vendor.updateById(
+          req.params.id,
+          req.body,
+          userId
+        );
+
+        return res.status(200).json({
+          success: true,
+          data: vendor
+        });
       } catch (error) {
         console.error("Error updating vendor:", error);
-        return res.status(500).json({ errors: error.message });
+        return res.status(500).json({
+          message: error.message
+        });
       }
     }
   );
 
- 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
@@ -155,8 +194,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  app.use(process.env.BASE_API_URL+"/api/vendor", router);
+
+  app.use(process.env.BASE_API_URL + "/api/vendor", router);
 
 };
 
