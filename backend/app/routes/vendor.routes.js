@@ -180,6 +180,7 @@ module.exports = (app) => {
     }
   );
 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);

@@ -21,15 +21,22 @@ const Plan = {
 
     async insertPlan(data) {
         console.log("Inserting plan with data:", data);
+
+        const isActive =
+            data.is_active === true ||
+            data.is_active === "true" ||
+            data.is_active === "active" ||
+            data.is_active === "Active";
+
         const query = `
-        INSERT INTO ${schema}.plan 
-        (plan_name, duration_days, allowed_books, max_allowed_books_at_time, 
-         createdbyid, createddate, lastmodifieddate, lastmodifiedbyid, is_active)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $5, $6)
-        RETURNING id, plan_name, duration_days, allowed_books, 
-                  max_allowed_books_at_time, is_active, createddate, 
-                  createdbyid, lastmodifieddate, lastmodifiedbyid
-    `;
+            INSERT INTO ${schema}.plan 
+            (plan_name, duration_days, allowed_books, max_allowed_books_at_time, 
+            createdbyid, createddate, lastmodifieddate, lastmodifiedbyid, is_active)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $5, $6)
+            RETURNING id, plan_name, duration_days, allowed_books, 
+                    max_allowed_books_at_time, is_active, createddate, 
+                    createdbyid, lastmodifieddate, lastmodifiedbyid
+        `;
 
         const result = await sql.query(query, [
             data.plan_name,
@@ -37,11 +44,11 @@ const Plan = {
             data.allowed_books,
             data.max_allowed_books_at_time,
             data.createdbyid,
-            data.is_active
+            isActive // ✅ boolean
         ]);
 
         return result.rows[0];
-    },
+        },
 
     async updatePlan(data) {
         const updates = [];
