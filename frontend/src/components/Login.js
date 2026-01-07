@@ -25,7 +25,14 @@ const Login = () => {
           sessionStorage.setItem("token", result.authToken);
           sessionStorage.setItem("r-t", result.refreshToken);
           sessionStorage.setItem("myimage", "/abdul-pathan.png");
-          window.location.assign("/");
+          const currentUrl = window.location.href;
+
+          if (currentUrl.includes("/library-sandbox")) {
+            window.location.assign("/library-sandbox/");
+          } else {
+            window.location.assign("/");
+          }
+
         } else {
           setShow(true);
           setErrorMessage(result.errors);
@@ -83,11 +90,11 @@ const Login = () => {
                       src="Untitled design (7).png"
                       width="600"
                       height="600"
- 
- 
- 
- 
- 
+
+
+
+
+
                     />
 
                   </div>
