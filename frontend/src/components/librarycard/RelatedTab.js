@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Badge, Button, Form, Spinner, Table, ProgressBar } from "react-bootstrap";
+import { Row, Col, Card, Badge, Button, Form, Spinner, Table, ProgressBar, Toast } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
 
 const RelatedTabContent = ({ id, data, refresh }) => {
@@ -128,11 +128,11 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                 setSelectedPlanId("");
                 await fetchRelatedData();
             } else {
-                alert("Failed to assign. Please try again.");
+                Toast.error("Failed to assign. Please try again.");
             }
         } catch (err) {
             console.error(err);
-            alert("Error assigning plan");
+            Toast.error("Error assigning plan");
         } finally {
             setAssigningPlan(false);
         }
@@ -144,9 +144,18 @@ const RelatedTabContent = ({ id, data, refresh }) => {
         try {
             // Deactivate current active plan
             if (activePlan && activePlan.id) {
-                const id = typeof activePlan.id === 'object' ? activePlan.id.id : activePlan.id;
+                console.log('activePlan.id:', activePlan.id, 'type:', typeof activePlan.id);
+                let id = activePlan.id;
+                if (typeof id === 'object') {
+                    id = id.id || id._id || id;
+                }
+                if (typeof id === 'object') {
+                    console.error('Unable to extract ID from activePlan.id:', activePlan.id);
+                    return;
+                }
+                console.log('Final ID to update:', id);
                 const subApi = new DataApi('subscriptions');
-                await subApi.update(String(id), { is_active: false });
+                await subApi.update({ is_active: false },String(id));
             }
 
             // Assign new plan
@@ -368,22 +377,27 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                     </div>
 
                                     <div className="d-flex justify-content-between align-items-start position-relative z-1 mb-4">
-                                        <div className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
+                                        <div className="glass-effect px-3 py-1 mt-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
                                             Library Card
                                         </div>
                                         <div className="d-flex align-items-center gap-2">
                                             <Button
                                                 variant="light"
                                                 size="sm"
-                                                className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase"
+                                                style={{
+                                                    color:"var(--primary-color)",
+                                                    borderColor:"var(--primary-background-color)",
+                                                    border:"none"
+                                                }}
+                                                className="glass-effect px-3 py-1 mt-1 rounded-pill small fw-bold text-white text-uppercase letter-spacing-1"
                                                 onClick={handleOpenChangePlan}
                                             >
-                                                <i className="fa-solid fa-exchange-alt me-1"></i>
+                                                <i className="fa-solid fa-exchange-alt me-1 "></i>
                                                 Change Plan
                                             </Button>
-                                            <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                                            {/* <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
                                                 <i className="fa-solid fa-check"></i>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
 
@@ -418,47 +432,6 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                         </div>
                                     </div>
                                 </div>
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
                             )}
 
                             {!isAddingPlan && !activePlan && (
