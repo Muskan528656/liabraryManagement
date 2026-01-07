@@ -88,8 +88,8 @@ async function create(vendorData, userId) {
 
     const status =
       vendorData.status === true ||
-      vendorData.status === "true" ||
-      vendorData.status === "active"
+        vendorData.status === "true" ||
+        vendorData.status === "active"
         ? true
         : false;
 
