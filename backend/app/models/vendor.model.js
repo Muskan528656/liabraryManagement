@@ -9,6 +9,42 @@ let schema = "";
 function init(schema_name) {
   this.schema = schema_name;
 }
+async function findByEmail(email, excludeId = null) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    console.log("Finding vendor by email:", email, "Excluding ID:", excludeId);
+    const cleanEmail = email?.trim();
+    console.log("Cleaned email:", cleanEmail);
+
+    // Base query
+    let query = `
+      SELECT *
+      FROM ${this.schema}.vendors
+      WHERE email = $1
+    `;
+    const params = [cleanEmail];
+    // Exclude current ID if provided
+    if (excludeId) {
+      query += `AND id != $2`;
+      params.push(excludeId);
+    }
+
+    console.log("Constructed query:", query);
+    console.log("Parameters for query:", params);
+
+    const result = await sql.query(query, params);
+
+    console.log("Query result:", result.rows);
+    return result.rows.length > 0 ? result.rows[0] : null;
+
+  } catch (error) {
+    console.error("Error in findByName:", error);
+    throw error;
+  }
+}
 
 
 async function findAll() {
@@ -45,15 +81,23 @@ async function findById(id) {
 
 
 async function create(vendorData, userId) {
-
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
+
+    const status =
+      vendorData.status === true ||
+      vendorData.status === "true" ||
+      vendorData.status === "active"
+        ? true
+        : false;
+
     const query = `INSERT INTO ${this.schema}.vendors 
-                   (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id , country_code) 
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW(), $13, $13, $14,$15) 
-                   RETURNING *`;
+      (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code) 
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15) 
+      RETURNING *`;
+
     const values = [
       vendorData.name || "Scanned Vendor",
       vendorData.company_name || vendorData.companyName || null,
@@ -65,22 +109,21 @@ async function create(vendorData, userId) {
       vendorData.city || null,
       vendorData.state || null,
       vendorData.pincode || null,
-      vendorData.country || 'India',
-      vendorData.status || true,
+      vendorData.country || "India",
+      status, // ✅ boolean
       userId || null,
       vendorData.company_id || vendorData.companyId || null,
-      vendorData.country_code || vendorData.country_code || null,
+      vendorData.country_code || null,
     ];
+
     const result = await sql.query(query, values);
-    if (result.rows.length > 0) {
-      return result.rows[0];
-    }
-    return null;
+    return result.rows[0] || null;
   } catch (error) {
     console.error("Error in create:", error);
     throw error;
   }
 }
+
 
 
 async function updateById(id, vendorData, userId) {
@@ -246,6 +289,7 @@ module.exports = {
   create,
   updateById,
   deleteById,
+  // findByName,
   findByEmail,
 };
 

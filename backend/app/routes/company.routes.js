@@ -1,259 +1,3 @@
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
-
-
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
-
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
-
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
 
 /**
  * Handles all incoming request for /api/company endpoint
@@ -280,8 +24,8 @@ module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
 
   const countryCodesPath = path.join(__dirname, "../constants/CountryCode.json");
-  
- 
+
+
   let CountryCode = [];
   try {
     if (fs.existsSync(countryCodesPath)) {
@@ -389,7 +133,7 @@ module.exports = (app) => {
       body("systememail").isEmail().withMessage("Valid system email is required"),
       body("adminemail").isEmail().withMessage("Valid admin email is required"),
       body("isactive").isBoolean().withMessage("isActive must be a boolean value"),
- 
+
       body("currency_symbol").optional().isString().withMessage("Currency symbol must be a string"),
       body("currency").optional().isString().withMessage("Currency must be a string"),
     ],
@@ -411,8 +155,8 @@ module.exports = (app) => {
         }
 
         const userId = req.user?.id || null;
- 
-        
+
+
         const company = await Company.create(req.body, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to create company" });
@@ -491,11 +235,11 @@ module.exports = (app) => {
 
           // For JPEG files, accept both .jpg and .jpeg extensions
           const isJpegFile = (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
-                            (mimeType === 'image/png' && fileExtension === '.png') ||
-                            (mimeType === 'image/gif' && fileExtension === '.gif');
+            (mimeType === 'image/png' && fileExtension === '.png') ||
+            (mimeType === 'image/gif' && fileExtension === '.gif');
 
           if (!isValidMimeType || !isValidExtension || !isJpegFile) {
- 
+
             return res.status(400).json({ errors: "Only JPEG, PNG, and GIF images are allowed" });
           }
 
@@ -514,7 +258,7 @@ module.exports = (app) => {
           companyData.logourl = `/uploads/companies/${filename}`;
         }
 
- 
+
         const company = await Company.updateById(req.params.id, companyData, userId);
         if (!company) {
           return res.status(400).json({ errors: "Failed to update company" });
@@ -528,6 +272,21 @@ module.exports = (app) => {
         return res.status(200).json({ success: true, data: company });
       } catch (error) {
         console.error("Error updating company:", error);
+
+        // Handle multipart parsing errors specifically
+        if (error.message && error.message.includes('Unexpected end of form')) {
+          return res.status(400).json({
+            errors: "File upload failed. Please ensure the file is not corrupted and try again."
+          });
+        }
+
+        // Handle file size limit exceeded
+        if (error.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            errors: "File size exceeds the 5MB limit."
+          });
+        }
+
         return res.status(500).json({ errors: error.message });
       }
     }

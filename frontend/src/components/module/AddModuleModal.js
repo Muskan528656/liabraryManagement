@@ -35,7 +35,10 @@ const AddModuleModal = (props) => {
     e.preventDefault();
     const isValid = rowRecord.name && rowRecord.status;
     if (!isValid) {
-      toast.error("Required fields are missing.");
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Validation Error",
+        message: "Required fields are missing."
+      });
       return;
     }
 
@@ -53,11 +56,17 @@ const AddModuleModal = (props) => {
         });
         props.onRefreshData();
       } else {
-        toast.error(result.message || "Failed to save record.");
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Save Error",
+          message: result.message || "Failed to save record."
+        });
       }
     } catch (error) {
       console.error("Error during save operation", error);
-      toast.error("An unexpected error occurred while saving the record.");
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Save Error",
+        message: "An unexpected error occurred while saving the record."
+      });
     }
   };
 

@@ -150,6 +150,7 @@ const FormModal = ({
     const error = validationErrors[field.name];
     const isRequired = field.required;
     const fieldId = `field-${field.name}`;
+    const isReadOnly = field.readOnly || (field.readOnlyWhenEditing && editingItem);
 
     console.log("Rendering field:", field.name, "of type:", field.type, "with value:", value);
 
@@ -244,6 +245,7 @@ const FormModal = ({
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               disabled={field.disabled}
+              readOnly={isReadOnly}
               isInvalid={!!error}
               {...field.props}
             />
@@ -268,6 +270,7 @@ const FormModal = ({
                 value={value}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
                 disabled={field.disabled}
+                readOnly={isReadOnly}
                 isInvalid={!!error}
                 style={{ borderRight: "none" }}
                 {...field.props}
@@ -306,9 +309,9 @@ const FormModal = ({
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               disabled={field.disabled}
-              readOnly={field.readOnly}         // ⭐ Added
+              readOnly={isReadOnly}
               style={
-                field.readOnly
+                isReadOnly
                   ? {
                     background: "#f8f9fa",
                     resize: "none",
@@ -337,7 +340,7 @@ const FormModal = ({
                 onChange={(selected) => handleFieldChange(field, selected?.value || "")}
                 options={field.options || []}
                 isClearable={field.clearable !== false}
-                isDisabled={field.disabled}
+                isDisabled={field.disabled || isReadOnly}
                 placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
                 loadOptions={field.loadOptions}
                 defaultOptions={field.defaultOptions}
@@ -349,7 +352,7 @@ const FormModal = ({
                 id={fieldId}
                 value={value}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
-                disabled={field.disabled}
+                disabled={field.disabled || isReadOnly}
                 isInvalid={!!error}
                 {...field.props}
               >
@@ -379,6 +382,7 @@ const FormModal = ({
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               disabled={field.disabled}
+              readOnly={isReadOnly}
               isInvalid={!!error}
               {...field.props}
             />
@@ -395,7 +399,7 @@ const FormModal = ({
               label={field.label}
               checked={!!value}
               onChange={(e) => handleFieldChange(field, e.target.checked)}
-              disabled={field.disabled}
+              disabled={field.disabled || isReadOnly}
               id={fieldId}
               {...field.props}
             />
@@ -422,15 +426,14 @@ const FormModal = ({
 
             <div
               className="custom-toggle"
-              onClick={() => handleFieldChange(field, !formData[field.name])}
-              
+              onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
               style={{
                 width: "55px",
                 height: "28px",
                 borderRadius: "20px",
                 background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
                 position: "relative",
-                cursor: "pointer",
+                cursor: isReadOnly ? "not-allowed" : "pointer",
                 transition: "0.3s",
               }}
             >

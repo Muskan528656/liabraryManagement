@@ -20,7 +20,7 @@ const BulkPurchasePage = () => {
     const [multiInsertRows, setMultiInsertRows] = useState([{
         vendor_id: "",
         book_id: "",
-        quantity: 1,
+        quantity: 0,
         unit_price: 0,
         purchase_date: new Date().toISOString().split('T')[0],
         notes: ""
@@ -332,7 +332,7 @@ const BulkPurchasePage = () => {
                     const newAuthorResponse = await authorApi.create(authorData);
                     if (newAuthorResponse.data && newAuthorResponse.data.success) {
                         foundAuthor = newAuthorResponse.data.data;
-                        toast.success(`Author "${primaryAuthorName}" created successfully`);
+                        PubSub.publish("RECORD_SAVED_TOAST", { message: `Author "${primaryAuthorName}" created successfully` });
                         await fetchAuthors();
                     }
                 }
@@ -343,7 +343,7 @@ const BulkPurchasePage = () => {
             }
         } catch (error) {
             console.error("Error finding/creating author:", error);
-            toast.error("Error creating author");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Author Error", message: "Error creating author" });
         }
         return null;
     };
@@ -378,7 +378,7 @@ const BulkPurchasePage = () => {
             }
         } catch (error) {
             console.error("Error finding/creating category:", error);
-            toast.error("Error creating category");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Category Error", message: "Error creating category" });
         }
         return null;
     };
@@ -485,7 +485,7 @@ const BulkPurchasePage = () => {
             return null;
         } catch (error) {
             console.error("Error processing barcode data:", error);
-            toast.error("Failed to process barcode data");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Processing Error", message: "Failed to process barcode data" });
             return null;
         } finally {
             setBarcodeProcessing(false);
@@ -494,7 +494,7 @@ const BulkPurchasePage = () => {
 
     const handleBarcodeLookup = async (barcode) => {
         if (!barcode.trim()) {
-            toast.error("Please enter a barcode/ISBN");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Please enter a barcode/ISBN" });
             return;
         }
 
@@ -529,7 +529,7 @@ const BulkPurchasePage = () => {
                 ...prev,
                 isbn: barcode
             }));
-            toast.error("Failed to process barcode. Please check the format and try again.");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Processing Error", message: "Failed to process barcode. Please check the format and try again." });
         } finally {
             setLoading(false);
         }
@@ -681,7 +681,7 @@ const BulkPurchasePage = () => {
 
     const handleAddVendor = async () => {
         if (!vendorFormData.name || !vendorFormData.name.trim()) {
-            toast.error("Vendor name is required");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Vendor name is required" });
             return;
         }
 
@@ -709,7 +709,7 @@ const BulkPurchasePage = () => {
             }
         } catch (error) {
             console.error("Error adding vendor:", error);
-            toast.error("Failed to add vendor");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Failed to add vendor" });
         } finally {
             setLoading(false);
         }
@@ -717,17 +717,17 @@ const BulkPurchasePage = () => {
 
     const handleAddBook = async () => {
         if (!bookFormData.title || !bookFormData.title.trim()) {
-            toast.error("Book title is required");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Book title is required" });
             return;
         }
 
         if (!bookFormData.author_id) {
-            toast.error("Author is required");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Author is required" });
             return;
         }
 
         if (!bookFormData.category_id) {
-            toast.error("Category is required");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Category is required" });
             return;
         }
 
@@ -773,55 +773,56 @@ const BulkPurchasePage = () => {
                         available_copies: 1,
                     });
                 } else {
-                    toast.error("Book created but could not get book ID");
+                    PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Book created but could not get book ID" });
                     setShowAddBookModal(false);
                 }
             } else {
-                toast.error("Failed to add book");
+                PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Failed to add book" });
             }
         } catch (error) {
             console.error("Error adding book:", error);
-            toast.error("Failed to add book: " + (error.message || "Unknown error"));
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Failed to add book: " + (error.message || "Unknown error") });
         } finally {
             setLoading(false);
         }
     };
 
     const handleSavePurchases = async () => {
-        const partiallyFilledRows = [];
+        // Enhanced validation with specific field error messages
+        const validationErrors = [];
         multiInsertRows.forEach((row, index) => {
-            const hasSomeFields = row.vendor_id || row.book_id || row.quantity || row.unit_price;
-            const hasAllRequiredFields = row.vendor_id && row.book_id && row.quantity && row.unit_price;
+            const missingFields = [];
+            if (!row.vendor_id) missingFields.push("Vendor");
+            if (!row.book_id) missingFields.push("Book");
+            if (!row.quantity || row.quantity <= 0) missingFields.push("Quantity");
+            if (!row.unit_price || row.unit_price <= 0) missingFields.push("Unit Price");
 
-            if (hasSomeFields && !hasAllRequiredFields) {
-                partiallyFilledRows.push(index + 1);
+            if (missingFields.length > 0) {
+                validationErrors.push(`Row ${index + 1}: Missing ${missingFields.join(", ")}`);
             }
         });
 
-        if (partiallyFilledRows.length > 0) {
-            toast.error(`Row(s) ${partiallyFilledRows.join(", ")} are partially filled. Please fill all required fields.`);
+        if (validationErrors.length > 0) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: validationErrors.join("; ")
+            });
             return;
         }
 
         const convertedData = multiInsertRows
-            .map((row) => {
-                if (!row.vendor_id || !row.book_id || !row.quantity || !row.unit_price) {
-                    return null;
-                }
-                return {
-                    vendor_id: row.vendor_id,
-                    book_id: row.book_id,
-                    quantity: parseInt(row.quantity) || 1,
-                    unit_price: parseFloat(row.unit_price) || 0,
-                    purchase_date: row.purchase_date || new Date().toISOString().split('T')[0],
-                    notes: row.notes || "",
-                    total_amount: (parseInt(row.quantity) || 1) * (parseFloat(row.unit_price) || 0),
-                };
-            })
-            .filter((purchase) => purchase !== null);
+            .map((row) => ({
+                vendor_id: row.vendor_id,
+                book_id: row.book_id,
+                quantity: parseInt(row.quantity) || 1,
+                unit_price: parseFloat(row.unit_price) || 0,
+                purchase_date: row.purchase_date || new Date().toISOString().split('T')[0],
+                notes: row.notes || "",
+                total_amount: (parseInt(row.quantity) || 1) * (parseFloat(row.unit_price) || 0),
+            }));
 
         if (convertedData.length === 0) {
-            toast.error("Please fill at least one complete purchase entry");
+            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Please fill at least one complete purchase entry" });
             return;
         }
 
@@ -831,17 +832,22 @@ const BulkPurchasePage = () => {
             let successCount = 0;
             let failCount = 0;
 
-            for (const purchaseData of convertedData) {
+            for (let i = 0; i < convertedData.length; i++) {
+                const purchaseData = convertedData[i];
                 try {
                     await purchaseApi.create(purchaseData);
                     successCount++;
+                    // Show individual success toast for each record
+                    PubSub.publish("RECORD_SAVED_TOAST", {
+                        message: `Purchase record ${i + 1} saved successfully`
+                    });
                 } catch (error) {
                     console.error("Error creating purchase:", error);
                     failCount++;
                     const errorMsg = error.response?.data?.error || error.response?.data?.errors || error.message || "Failed to create purchase";
                     PubSub.publish("RECORD_ERROR_TOAST", {
                         title: "Purchase Error",
-                        message: errorMsg
+                        message: `Row ${i + 1}: ${errorMsg}`
                     });
                 }
             }
@@ -861,7 +867,7 @@ const BulkPurchasePage = () => {
             }
 
             if (failCount > 0) {
-                toast.error(`Failed to create ${failCount} purchase${failCount > 1 ? 's' : ''}`);
+                PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: `Failed to create ${failCount} purchase${failCount > 1 ? 's' : ''}` });
             }
         } catch (error) {
             console.error("Error in bulk insert:", error);

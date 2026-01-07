@@ -201,6 +201,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
                 errors.push("Available copies cannot exceed total copies");
             }
 
+
             const duplicate = allBooks.find(
                 book => book.isbn === formData.isbn && book.id !== editingBook?.id
             );
@@ -215,7 +216,7 @@ export const getBooksConfig = (externalData = {}, props = {}, timeZone) => {
         },
         features: {
             showBulkInsert: false,
-            showImportExport: true, // MUST BE TRUE
+            showImportExport: true, 
             showDetailView: true,
             showSearch: true,
             showColumnVisibility: true,

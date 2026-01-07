@@ -27,9 +27,9 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, async (req, res) => {
     try {
- 
+
       BookSubmission.init(req.userinfo.tenantcode);
- 
+
 
       const submissions = await BookSubmission.findAll();
       return res.status(200).json({ success: true, data: submissions });
@@ -116,13 +116,6 @@ module.exports = (app) => {
     "/",
     fetchUser,
 
-    [
-      body("issue_id").notEmpty().isUUID().withMessage("Issue ID is required and must be a valid UUID"),
-      body("condition_before").optional().isString().trim().withMessage("Condition before must be a string"),
-      body("condition_after").optional().isString().trim().withMessage("Condition after must be a string"),
-      body("remarks").optional().isString().trim().withMessage("Remarks must be a string"),
-      body("submit_date").optional().isISO8601().withMessage("Submit date must be a valid date"),
-    ],
     async (req, res) => {
       try {
         const errors = validationResult(req);

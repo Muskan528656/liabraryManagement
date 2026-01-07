@@ -411,12 +411,13 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         filterFields: [
             { name: 'name', label: 'Vendor Name', type: 'text' },
             {
-                name: 'status', label: 'Status', type: 'select', options: [
-                    { value: 'active', label: 'Active' },
-                    { value: 'inactive', label: 'Inactive' }
+                name: 'status', label: 'Status', type: 'select',
+                options : [
+                    { label: "Active", value: true },
+                    { label: "Inactive", value: false }
                 ]
             },
-            { name: 'company_name', label: 'Company Name', type: 'text' } // Fixed: Changed from "Book Name" to "Company Name"
+            { name: 'company_name', label: 'Company Name', type: 'text' } 
         ],
 
         details: [

@@ -51,7 +51,6 @@ module.exports = (app) => {
     }
   });
 
-
   router.post(
     "/",
     fetchUser,
@@ -125,8 +124,8 @@ module.exports = (app) => {
         .withMessage("Phone is required")
         .isNumeric()
         .withMessage("Phone number must contain only digits")
-        // .isLength({ min: 10, max: 10 })
-        // .withMessage("Phone number must be 10 digits"),
+      // .isLength({ min: 10, max: 10 })
+      // .withMessage("Phone number must be 10 digits"),
     ],
     async (req, res) => {
       try {
@@ -147,7 +146,7 @@ module.exports = (app) => {
           });
         }
 
-         const duplicateVendor = await Vendor.findByEmail(
+        const duplicateVendor = await Vendor.findByEmail(
           req.body.email,
           req.params.id
         );
@@ -181,8 +180,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {

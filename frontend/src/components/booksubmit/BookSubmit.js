@@ -1324,7 +1324,6 @@ const BookSubmit = () => {
         switch (status?.toLowerCase()) {
             case 'issued':
                 return <Badge bg="primary">Issued</Badge>;
-
             case 'submitted':
                 return <Badge bg="info">Submitted</Badge>;
             case 'cancelled':
@@ -1631,15 +1630,14 @@ const BookSubmit = () => {
 
     const submittedBooksFilterFields = [
         {
-            name: "status",
+            name: "condition_after",
             label: "Status",
             type: "select",
             options: [
-                { value: "cancel", label: "Cancel" },
-                { value: "issued", label: "Issued" },
-                { value: "lost", label: "Lost" },
-                { value: "damage", label: "Damage" },
-                { value: "fair", label: "Fair" }
+                { value: "Good", label: "Good" },
+                { value: "Fair", label: "Fair" },
+                { value: "Damaged", label: "Damaged" },
+                { value: "Lost", label: "Lost" },
             ]
         },
         {

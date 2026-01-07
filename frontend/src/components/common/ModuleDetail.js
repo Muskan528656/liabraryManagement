@@ -743,11 +743,6 @@ const ModuleDetail = ({
         return false;
       });
 
-
-
-
-
-
       const api = new DataApi(moduleApi);
       let response;
 
@@ -822,10 +817,9 @@ const ModuleDetail = ({
         errorMessage = err.response.data.errors;
       }
 
-
       PubSub.publish("RECORD_ERROR_TOAST", {
         title: "Update Failed",
-        message: ` ${errorMessage}`,
+        message: ` ${moduleLabel}: ${errorMessage}`,
       });
 
       //  PubSub.publish("RECORD_ERROR_TOAST", {

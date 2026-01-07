@@ -3,7 +3,6 @@ import ModuleDetail from "../common/ModuleDetail";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import moment from "moment";
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },

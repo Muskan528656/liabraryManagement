@@ -707,7 +707,6 @@ module.exports = (app) => {
               }
             } catch (subError) {
               console.error("Error creating subscription for imported member:", subError);
-
             }
           }
 
