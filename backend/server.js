@@ -167,13 +167,13 @@ if (fs.existsSync(legacyUploadsPath)) {
   app.use("/uploads", express.static(legacyUploadsPath));
 }
 
-app.use(
-  fileUpload({
-    limits: { fileSize: 5 * 1024 * 1024 },
-    abortOnLimit: true,
-    createParentPath: true,
-  })
-);
+// app.use(
+//   fileUpload({
+//     limits: { fileSize: 5 * 1024 * 1024 },
+//     abortOnLimit: true,
+//     createParentPath: true,
+//   })
+// );
 
 
 app.get(BASE_PATH, (req, res) => {
