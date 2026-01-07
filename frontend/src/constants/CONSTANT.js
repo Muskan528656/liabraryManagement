@@ -8,7 +8,7 @@
 const { protocol, hostname, port, pathname } = window.location;
 
 const isLocal = hostname === "localhost";
-const isSandbox = pathname.startsWith("/sandbox");
+const isSandbox = pathname.startsWith("/library-sandbox");
 
 export const API_BASE_URL = isLocal
   ? "http://localhost:3003"
