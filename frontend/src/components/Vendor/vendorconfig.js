@@ -139,7 +139,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         formFields: [
             {
                 name: "name",
-                label: "Contact Person Name",
+                label: "Vendor Name",
                 type: "text",
                 required: true,
                 placeholder: "Enter contact person name",
@@ -406,12 +406,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { name: 'name', label: 'Vendor Name', type: 'text' },
             {
                 name: 'status', label: 'Status', type: 'select',
-                options : [
+                options: [
                     { label: "Active", value: true },
                     { label: "Inactive", value: false }
                 ]
             },
-            { name: 'company_name', label: 'Company Name', type: 'text' } 
+            { name: 'company_name', label: 'Company Name', type: 'text' }
         ],
 
         details: [
@@ -469,7 +469,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 } else {
                     cleanedData.country_code = defaultCountryCode;
                 }
-   if (!cleanedData.status) {
+                if (!cleanedData.status) {
                     cleanedData.status = "active";
                 }
 
