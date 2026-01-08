@@ -250,6 +250,7 @@ require("./app/routes/objecttype.routes.js")(app);
 
 
 server.listen(PORT, () => {
+  console.log("process.env.BASE_API_UR", process.env.BASE_API_UR)
   console.log(
     `🚀 Server running in ${MODE.toUpperCase()} mode on port ${PORT}`
   );

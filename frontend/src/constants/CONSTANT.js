@@ -8,16 +8,16 @@ const isSandbox = pathname.startsWith("/library-sandbox");
 console.log('isSandbox - muskan test-->', isSandbox);
 
 export const API_BASE_URL = isLocal
-  ? "http://localhost:3003"                 
+  ? "http://localhost:3003"
   : isSandbox
-    ? `${protocol}//${hostname}:4000/library-sandbox/ibs` 
-    : `${protocol}//${hostname}:3003/ibs`;       
+    ? `${protocol}//${hostname}:4000/library-sandbox/ibs`
+    : `${protocol}//${hostname}:3003/ibs`;
 
 export const FRONTEND_URL = isLocal
-  ? `${protocol}//${hostname}:3000`                       
+  ? `${protocol}//${hostname}:3000`
   : isSandbox
-    ? `${protocol}//${hostname}/library-sandbox`        
-    : `${protocol}//${hostname}`;                      
+    ? `${protocol}//${hostname}/library-sandbox`
+    : `${protocol}//${hostname}`;
 
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
