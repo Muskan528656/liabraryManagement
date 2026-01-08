@@ -115,7 +115,7 @@ function AppContent() {
   return (
     <TimeZoneProvider>
       <ToastManager />
-      <Router basename="/library-sandbox">
+      <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Main socket={connectedSocket} />}>

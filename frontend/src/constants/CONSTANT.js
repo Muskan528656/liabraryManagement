@@ -1,29 +1,24 @@
-// src/config/constants.js
 
-// Get window location info
 const { protocol, hostname, port, pathname } = window.location;
 
-// Environment checks
 const isLocal = hostname === "localhost";
 
-// Sandbox check: starts with /library-sandbox (handles subpaths too)
 const isSandbox = pathname.startsWith("/library-sandbox");
 
-// API Base URLs
+console.log('isSandbox - muskan test-->', isSandbox);
+
 export const API_BASE_URL = isLocal
-  ? "http://localhost:3003"                  // Local backend
+  ? "http://localhost:3003"                 
   : isSandbox
-    ? `${protocol}//${hostname}:4000/sandbox/ibs` // Sandbox backend
-    : `${protocol}//${hostname}:3003/ibs`;        // Production backend
+    ? `${protocol}//${hostname}:4000/library-sandbox/ibs` 
+    : `${protocol}//${hostname}:3003/ibs`;       
 
-// Frontend URLs
 export const FRONTEND_URL = isLocal
-  ? `${protocol}//${hostname}:3000`                       // Local frontend
+  ? `${protocol}//${hostname}:3000`                       
   : isSandbox
-    ? `${protocol}//${hostname}/library-sandbox`         // Sandbox frontend
-    : `${protocol}//${hostname}`;                        // Production frontend
+    ? `${protocol}//${hostname}/library-sandbox`        
+    : `${protocol}//${hostname}`;                      
 
-// Permission constants
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
 export const EDIT_LEAD = "EDIT_LEAD";

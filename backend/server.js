@@ -146,7 +146,7 @@ const app = express();
 const MODE = process.env.NODE_ENV || "production";
 const PORT = process.env.PORT || 3003;
 const BASE_PATH =
-  MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
+  MODE === "sandbox" ? "/library-sandbox/ibs" : "/ibs";
 
 
 app.set("view engine", "ejs");
