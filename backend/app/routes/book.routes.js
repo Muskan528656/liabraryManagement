@@ -391,7 +391,7 @@ module.exports = (app) => {
     }
   });
 
-  console.log("process.env.BASE_API_UR", process.env.BASE_API_UR)
+  console.log("process.env.BASE_API_UR", BASE_API_URL)
 
 
   app.use(process.env.BASE_API_URL + "/api/book", router);
