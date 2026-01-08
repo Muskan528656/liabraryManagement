@@ -73,18 +73,15 @@ module.exports = (app) => {
 
         Vendor.init(req.userinfo.tenantcode);
 
-
-        // if (req.body.name) {
-        //   const existingVendor = await Vendor.findByName(req.body.name);
-        //   if (existingVendor) {
-        //     return res
-        //       .status(400)
-        //       .json({ errors: "Vendor with this name already exists" });
-        //   }
-        // }
-        // else {
-        //   return res.status(400).json({ errors: "Name is required" });
-        // }
+        // Check for duplicate vendor by email
+        if (req.body.email) {
+          const existingVendor = await Vendor.findByEmail(req.body.email);
+          if (existingVendor) {
+            return res
+              .status(400)
+              .json({ errors: "Vendor with this email already exists" });
+          }
+        }
 
         const userId = req.userinfo.id;
         const vendor = await Vendor.create(req.body, userId);

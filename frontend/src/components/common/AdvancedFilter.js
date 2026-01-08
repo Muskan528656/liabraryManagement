@@ -188,8 +188,13 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
           <div className="d-flex gap-2 ">
             <Button
               size="sm"
+              variant=""
               onClick={handleClear}
               className="btn-paper btn-paper-clear d-flex align-items-center gap-1 h-75 px-2"
+              style={{
+                color:'var(--primary-color)',
+                border:'1px solid var(--primary-color)',
+              }}
               >
               <i className="fa-solid fa-xmark"></i>
               Clear
@@ -197,23 +202,20 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
             <Button
               size="sm"
+              variant=""
               onClick={handleSearch}
               className="btn-paper btn-paper-apply d-flex align-items-center gap-1 h-75 px-2"
+              style={{
+                background:'var(--primary-color)',
+                color:'#fff',
+              }}
               >
               <i className="fa-solid fa-paper-plane"></i> 
               Apply
             </Button>
           </div>
         </Col>
-        <style>{`
-          .btn-paper-apply i {
-            font-size: 0.85rem;
-            transform: rotate(10deg); 
-            margin-right: 4px;
-          }
-        `}</style>
         </Row>
-
       )}
     </div>
   );

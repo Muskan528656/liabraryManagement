@@ -197,13 +197,13 @@ const Notification = {
                     issued_by_user.email AS issued_by_email,
                     lc.card_number,
                     lc.id AS card_id
-                   FROM demo.book_issues bi
-                   LEFT JOIN demo.books b ON bi.book_id = b.id
-                   LEFT JOIN demo."user" issued_to_user ON bi.issued_to = issued_to_user.id
-                   LEFT JOIN demo."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN demo.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   FROM ${schema}.book_issues bi
+                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+                   LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
+                   LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
+                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    ORDER BY bi.createddate DESC`;
-    const result = await sql.query(query);
+    const result = await sql.query(query);  
 
     if (result.rows.length > 0) {
       return { success: true, data: result.rows };
@@ -217,12 +217,9 @@ const Notification = {
 },
 
 checkbeforeDue: async function () {
-
   let notifications = [];
   try {
-    const response = await getAllBooks();
- 
-
+    const response = await this.getAllBooks();
     const submittedBooks = response.data;
 
     const today = new Date();
@@ -231,35 +228,44 @@ checkbeforeDue: async function () {
 
     notifications = [];
 
-    submittedBooks.forEach(book => {
+    for (const book of submittedBooks) {
       const dueDate = new Date(book.due_date);
- 
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
         dueDate.getMonth() === tomorrow.getMonth() &&
         dueDate.getDate() === tomorrow.getDate()
       ) {
+        // Check if notification already exists for this issue
+        const existingNotification = await sql.query(
+          `SELECT id FROM ${schema}.notifications
+           WHERE user_id = $1 AND type = 'due_reminder' AND related_id = $2 AND related_type = 'book_issue'
+           AND DATE(created_at) = CURRENT_DATE`,
+          [book.issued_to, book.id]
+        );
 
-        notifications.push({
-          message: `Your book is due tomorrow. Please return "${book.book_title}"  to avoid penalties.`,
-          user: book.issued_by,
-          due_date: dueDate,
-          return_date: book.return_date,
-          type: 'due_date',
-          quantity: 1,
-        });
+        if (existingNotification.rows.length === 0) {
+          // Create notification in database
+          const notification = await this.create({
+            user_id: book.issued_to,
+            title: 'Book Due Tomorrow',
+            message: `Your book "${book.book_title}" is due tomorrow. Please return it to avoid penalties.`,
+            type: 'due_reminder',
+            related_id: book.id,
+            related_type: 'book_issue'
+          });
+
+          notifications.push(notification);
+        }
       }
-    });
+    }
 
- 
     return notifications;
-    
+
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error in checkbeforeDue:", error);
+    throw error;
   }
- 
- 
 }
 
 

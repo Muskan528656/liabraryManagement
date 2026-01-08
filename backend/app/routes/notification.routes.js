@@ -11,6 +11,7 @@ const router = express.Router();
 const Notification = require("../models/notification.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 
+
 module.exports = (app) => {
  
   router.get("/", fetchUser, async (req, res) => {
@@ -42,7 +43,7 @@ module.exports = (app) => {
  
  
       try {
-        const notifications = await BookSubmission.checkbeforeDue();
+        const notifications = await Notification.checkbeforeDue();
  
         
         return res.status(200).json({

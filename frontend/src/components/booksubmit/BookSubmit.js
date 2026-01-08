@@ -1296,13 +1296,13 @@ const BookSubmit = () => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge bg="primary">Issued</Badge>;
+                return <Badge className="px-2" bg="primary">Issued</Badge>;
             case 'submitted':
-                return <Badge bg="info">Submitted</Badge>;
+                return <Badge className="px-2" bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge bg="secondary">Cancelled</Badge>;
+                return <Badge className="px-2" bg="secondary">Cancelled</Badge>;
             case 'overdue':
-                return <Badge bg="danger">Overdue</Badge>;
+                return <Badge className="px-2" bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }
@@ -1575,9 +1575,9 @@ const BookSubmit = () => {
         {
             field: "condition_before",
             label: "Condition Before",
-            width: 120,
+            width: 80,
             render: (value) => (
-                <Badge bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
+                <Badge className="px-2" bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
                     {value || "Good"}
                 </Badge>
             )
@@ -1586,10 +1586,17 @@ const BookSubmit = () => {
             field: "condition_after",
             label: "Condition After",
             width: 120,
-            render: (value) => (
-                <Badge bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
-                    {value || "Good"}
-                </Badge>
+            render: (value, record) => (
+                // console.log("value=>", value,"record", record.penalty)
+        
+                <div>
+                    <Badge className="px-2 me-1" bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
+                        {value || "Good"}
+                    </Badge>
+                    {value === "Good" && record.penalty > 0 && record.days_overdue > 0 && (
+                        <Badge bg="warning" className="px-2">Due Amount</Badge>
+                    )}
+                </div>
             )
         },
         {
@@ -1927,8 +1934,6 @@ const BookSubmit = () => {
                                             {/* </Card> */}
                                         </Col>
                                     </Row>
-
-
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>

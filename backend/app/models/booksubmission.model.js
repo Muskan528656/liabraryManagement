@@ -9,6 +9,7 @@ const sql = require("./db.js");
 const cron = require("node-cron");
 const sendMail = require("../utils/Mailer.js");
 const { dueTemplate, overdueTemplate } = require("../../app/utils/ReminderTemplate");
+const Notification = require("./notification.model.js");
 
 let schema = "";
 const emailTracker = {
@@ -17,6 +18,7 @@ const emailTracker = {
 };
 
 function init(schema_name) {
+  console.log("schema_name", schema_name);
   schema = schema_name;
 }
 
@@ -24,9 +26,7 @@ function init(schema_name) {
 //   console.log("submissionData", submissionData);
 //   if (!schema) throw new Error("Schema not initialized");
 //   if (!submissionData.issue_id) throw new Error("Issue ID required");
-
 //   try {
-
 //     const issueRes = await sql.query(
 //       `SELECT bi.*, b.title, b.isbn, b.available_copies
 //        FROM demo.book_issues bi
@@ -681,17 +681,20 @@ async function deleteById(id) {
 
 async function getAllBooks() {
   try {
-    const query = `SELECT 
+    if (!schema) throw new Error("Schema not initialized");
+    const query = `SELECT
                     bi.*,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
                     lm.first_name || ' ' || lm.last_name AS student_name,
                     lm.email AS student_email,
                     lm.card_number
-                   FROM demo.book_issues bi
-                   LEFT JOIN demo.books b ON bi.book_id = b.id
-                   LEFT JOIN demo.library_members lm ON bi.issued_to = lm.id
+                   FROM ${schema}.book_issues bi
+                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
                    WHERE lm.is_active = true
+                   AND bi.return_date IS NULL
+                   AND bi.status = 'issued'
                    ORDER BY bi.createddate DESC`;
     const result = await sql.query(query);
 
@@ -709,7 +712,11 @@ async function getAllBooks() {
 async function checkbeforeDue() {
   let notifications = [];
   try {
+
     const response = await getAllBooks();
+    
+    console.log("getAllBook", response);
+
     const submittedBooks = response.data;
 
     const today = new Date();
@@ -718,8 +725,11 @@ async function checkbeforeDue() {
 
     notifications = [];
 
+    
+
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
+      console.log("Due Date:", dueDate, "Tomorrow:", tomorrow);
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
@@ -735,9 +745,12 @@ async function checkbeforeDue() {
           type: 'due_date',
           quantity: 1,
         });
+
+        
       }
     });
-
+    
+    console.log("Notification data:", notifications);
     return notifications;
 
   } catch (error) {
@@ -1106,7 +1119,6 @@ ORDER BY lm.email`;
 
         emailsSent++;
 
-
         await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error) {
@@ -1114,15 +1126,6 @@ ORDER BY lm.email`;
         emailsFailed++;
       }
     }
-
-
-
-
-
-
-
-
-
   } catch (error) {
     console.error(" CRITICAL ERROR in sendOverdueReminder:", error);
     console.error("Error details:", {
