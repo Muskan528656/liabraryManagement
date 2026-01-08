@@ -184,30 +184,34 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
             );
           })}
 
-          <Col xs={12} md={2} className="d-flex align-items-end gap-2">
-            <div className="d-flex gap-2" style={{ height: '38px' }}>
-              <Button
-
-                size="sm"
-                onClick={handleClear}
-                className="d-flex align-items-center gap-1 h-100"
-
+         <Col xs={12} md={2} className="d-flex align-items-end gap-2">
+          <div className="d-flex gap-2 ">
+            <Button
+              size="sm"
+              onClick={handleClear}
+              className="btn-paper btn-paper-clear d-flex align-items-center gap-1 h-75 px-2"
               >
-                <i className="fa-solid fa-xmark"></i>
-                Clear
-              </Button>
-              <Button
+              <i className="fa-solid fa-xmark"></i>
+              Clear
+            </Button>
 
-                size="sm"
-                onClick={handleSearch}
-                className="btn-custom d-flex align-items-center gap-1 h-100"
-
+            <Button
+              size="sm"
+              onClick={handleSearch}
+              className="btn-paper btn-paper-apply d-flex align-items-center gap-1 h-75 px-2"
               >
-                <i className="fa-solid fa-filter"></i>
-                Apply
-              </Button>
-            </div>
-          </Col>
+              <i className="fa-solid fa-paper-plane"></i> 
+              Apply
+            </Button>
+          </div>
+        </Col>
+        <style>{`
+          .btn-paper-apply i {
+            font-size: 0.85rem;
+            transform: rotate(10deg); 
+            margin-right: 4px;
+          }
+        `}</style>
         </Row>
 
       )}

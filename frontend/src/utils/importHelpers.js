@@ -24,6 +24,10 @@ export const saveImportedData = async ({
 
   try {
 
+    console.log('data = ', data);
+    console.log('apiEndpoint = ', apiEndpoint);
+    console.log('formFields = ', formFields);
+
     const mainApi = new DataApi(apiEndpoint);
 
     let createdCount = 0;
@@ -118,6 +122,9 @@ export const saveImportedData = async ({
       }
 
       const api = relatedApiCache[optionKey];
+
+      console.log("api",api);
+      
 
       const labelField = cfg.labelField || "name";
       const extraPayload = cfg.extraPayload || {};
@@ -327,6 +334,10 @@ export const saveImportedData = async ({
 
         if (fieldType === "select" && optionKey) {
           // This is a related entity select field (e.g., vendor_id, company_id)
+          console.log("optionKey =>",optionKey);
+          console.log("rawValue =>",);
+          console.log("row =>",row);
+          
           const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
           transformed[fieldName] = relatedId;
 
