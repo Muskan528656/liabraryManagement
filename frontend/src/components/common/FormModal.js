@@ -404,7 +404,7 @@ const FormModal = ({
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
-      case "toggle":
+      // case "toggle":
         return (
           <Form.Group className="mb-3" key={field.name}>
             <Form.Label className="d-flex justify-content-between">
@@ -444,7 +444,61 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-      default:
+     
+     case "toggle":
+        const toggleValue = !!formData[field.name];
+
+        return (
+          <Form.Group className="mb-3" key={field.name}>
+            <Form.Label>
+              {field.label} {field.required && <span className="text-danger">*</span>}
+            </Form.Label>
+
+            {isReadOnly && (
+              <div>
+                <span
+                  className={`badge ${toggleValue ? "bg-success" : "bg-danger"}`}
+                  style={{ padding: "8px 12px", fontSize: "14px" }}
+                >
+                  {toggleValue ? "Active" : "Inactive"}
+                </span>
+              </div>
+            )}
+
+            {!isReadOnly && (
+              <div
+                className="custom-toggle "
+                onClick={() => handleFieldChange(field, !toggleValue)}
+                style={{
+                  width: "55px",
+                  height: "28px",
+                  borderRadius: "20px",
+                  background: toggleValue ? "var(--primary-color)" : "#d1d5db",
+                  position: "relative",
+                  cursor: "pointer",
+                  transition: "0.3s",
+                }}
+              >
+                <div
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    background: "#fff",
+                    borderRadius: "50%",
+                    position: "absolute",
+                    top: "3px",
+                    left: toggleValue ? "29px" : "3px",
+                    transition: "0.3s",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                  }}
+                />
+              </div>
+            )}
+
+            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+          </Form.Group>
+        );
+        default:
         return null;
     }
   };

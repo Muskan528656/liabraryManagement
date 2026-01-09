@@ -990,9 +990,79 @@ const ModuleDetail = ({
     const isNonEditableField = nonEditableFields.includes(field.key);
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
-    if (field.type === "toggle") {
 
-    }
+
+    // if (field.type === "toggle") {
+    //   const value = currentData ? Boolean(currentData[field.key]) : false;
+
+    //   return (
+    //     <Form.Group key={index} className="mb-3">
+    //        <Form.Label className="fw-semibold">
+    //     {field.label}
+    //   </Form.Label>
+
+    //     {!isEditing && (
+    //     <Badge
+    //       bg={value ? "success" : "danger"}
+    //       className="px-3 py-2 fs-6"
+    //     >
+    //       {value ? "Active" : "Inactive"}
+    //     </Badge>
+    //   )}
+    //       {/* <Form.Label className="fw-semibold d-flex justify-content-between align-items-center">
+    //         <span>{field.label}</span>
+    //         {!isEditing && (
+    //           <span className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+    //             {value ? "Active" : "Inactive"}
+    //           </span>
+    //         )}
+    //       </Form.Label> */}
+
+    //       {isEditing && !isNonEditableField ? (
+    //         <div
+    //           className="custom-toggle mt-2"
+    //           onClick={() => handleFieldChange(field.key, !value)}
+    //           style={{
+    //             width: "60px",
+    //             height: "30px",
+    //             borderRadius: "20px",
+    //             background: value ? "var(--primary-color)" : "#d1d5db",
+    //             position: "relative",
+    //             cursor: "pointer",
+    //             transition: "0.3s",
+    //           }}
+    //         >
+    //           <div
+    //             style={{
+    //               width: "24px",
+    //               height: "24px",
+    //               background: "#fff",
+    //               borderRadius: "50%",
+    //               position: "absolute",
+    //               top: "3px",
+    //               left: value ? "33px" : "3px",
+    //               transition: "0.3s",
+    //               boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    //             }}
+    //           ></div>
+    //         </div>
+    //       ) : (
+    //         <Form.Control
+    //           type="text"
+    //           readOnly
+    //           value={value ? "Active" : "Inactive"}
+    //           style={{
+    //             pointerEvents: "none",
+    //             opacity: 0.9,
+    //             backgroundColor: value ? "#d4edda" : "#f8d7da",
+    //             color: value ? "#155724" : "#721c24",
+    //             border: value ? "1px solid #c3e6cb" : "1px solid #f5c6cb",
+    //           }}
+    //         />
+    //       )}
+    //     </Form.Group>
+    //   );
+    // }
 
 
     if (field.type === "toggle") {
@@ -1000,18 +1070,22 @@ const ModuleDetail = ({
 
       return (
         <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold d-flex justify-content-between align-items-center">
-            <span>{field.label}</span>
-            {!isEditing && (
-              <span className={`badge ${value ? "bg-success" : "bg-danger"}`}>
-                {value ? "Active" : "Inactive"}
-              </span>
-            )}
+          <Form.Label className="fw-semibold">
+            {/* {field.label} */}
           </Form.Label>
 
-          {isEditing && !isNonEditableField ? (
+          {!isEditing && (
+            <Badge 
+              bg={value ? "success" : "danger"}
+              className="px-3 py-2 fs-6"
+            >
+              {value ? "Active" : "Inactive"}
+            </Badge>
+          )}
+
+          {isEditing && !isNonEditableField && (
             <div
-              className="custom-toggle"
+              className="custom-toggle mt-2"
               onClick={() => handleFieldChange(field.key, !value)}
               style={{
                 width: "60px",
@@ -1035,26 +1109,12 @@ const ModuleDetail = ({
                   transition: "0.3s",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                 }}
-              ></div>
+              />
             </div>
-          ) : (
-            <Form.Control
-              type="text"
-              readOnly
-              value={value ? "Active" : "Inactive"}
-              style={{
-                pointerEvents: "none",
-                opacity: 0.9,
-                backgroundColor: value ? "#d4edda" : "#f8d7da",
-                color: value ? "#155724" : "#721c24",
-                border: value ? "1px solid #c3e6cb" : "1px solid #f5c6cb",
-              }}
-            />
           )}
-        </Form.Group>
+      </Form.Group>
       );
     }
-
 
     if (
       (!isEditing || shouldShowAsReadOnly) &&
