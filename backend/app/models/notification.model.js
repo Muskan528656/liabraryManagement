@@ -17,33 +17,33 @@ const Notification = {
     schema = schema_name;
   },
 
- 
-  findAll: async function (userId, isRead = null) {
-    let query = `
-      SELECT * FROM ${schema}.notifications 
-      WHERE user_id = $1
-    `;
-    let params = [userId];
 
-    if (isRead !== null) {
-      query += ` AND is_read = $2`;
-      params.push(isRead);
-    }
+  // findAll: async function (userId, isRead = null) {
+  //   let query = `
+  //     SELECT * FROM ${schema}.notifications 
+  //     WHERE user_id = $1
+  //   `;
+  //   let params = [userId];
 
-    query += ` ORDER BY created_at DESC`;
+  //   if (isRead !== null) {
+  //     query += ` AND is_read = $2`;
+  //     params.push(isRead);
+  //   }
 
-    try {
-      const result = await sql.query(query, params);
-      return result.rows;
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      throw error;
-    }
-  },
+  //   query += ` ORDER BY created_at DESC`;
 
-  
+  //   try {
+  //     const result = await sql.query(query, params);
+  //     return result.rows;
+  //   } catch (error) {
+  //     console.error("Error fetching notifications:", error);
+  //     throw error;
+  //   }
+  // },
 
- 
+
+
+
   getUnreadCount: async function (userId) {
     try {
       const result = await sql.query(
@@ -58,7 +58,7 @@ const Notification = {
     }
   },
 
- 
+
   create: async function (notification) {
     const { user_id, title, message, type, related_id, related_type } = notification;
 
@@ -77,7 +77,7 @@ const Notification = {
     }
   },
 
- 
+
   markAsRead: async function (notificationId, userId) {
     try {
       const result = await sql.query(
@@ -94,7 +94,7 @@ const Notification = {
     }
   },
 
- 
+
   markAllAsRead: async function (userId) {
     try {
       const result = await sql.query(
@@ -111,7 +111,7 @@ const Notification = {
     }
   },
 
- 
+
   delete: async function (notificationId, userId) {
     try {
       const result = await sql.query(
@@ -127,7 +127,7 @@ const Notification = {
     }
   },
 
- 
+
   createBroadcast: async function (userIds, notification) {
     const { title, message, type, related_id, related_type } = notification;
     const values = userIds.map((userId, index) =>
@@ -154,7 +154,7 @@ const Notification = {
     }
   },
 
- 
+
   getOverdueBooks: async function () {
     try {
       const result = await sql.query(
@@ -185,8 +185,8 @@ const Notification = {
 
 
   getAllBooks: async function () {
-  try {
-    const query = `SELECT 
+    try {
+      const query = `SELECT 
                     bi.*,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
@@ -203,70 +203,70 @@ const Notification = {
                    LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
                    LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    ORDER BY bi.createddate DESC`;
-    const result = await sql.query(query);  
+      const result = await sql.query(query);
 
-    if (result.rows.length > 0) {
-      return { success: true, data: result.rows };
+      if (result.rows.length > 0) {
+        return { success: true, data: result.rows };
+      }
+
+      return { success: false, data: [] };
+    } catch (error) {
+      console.error("Data not found:", error);
+      throw error;
     }
+  },
 
-    return { success: false, data: [] };
-  } catch (error) {
-    console.error("Data not found:", error);
-    throw error;
-  }
-},
+  checkbeforeDue: async function () {
+    let notifications = [];
+    try {
+      const response = await this.getAllBooks();
+      const submittedBooks = response.data;
 
-checkbeforeDue: async function () {
-  let notifications = [];
-  try {
-    const response = await this.getAllBooks();
-    const submittedBooks = response.data;
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
 
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
+      notifications = [];
 
-    notifications = [];
+      for (const book of submittedBooks) {
+        const dueDate = new Date(book.due_date);
 
-    for (const book of submittedBooks) {
-      const dueDate = new Date(book.due_date);
+        if (
+          dueDate.getFullYear() === tomorrow.getFullYear() &&
+          dueDate.getMonth() === tomorrow.getMonth() &&
+          dueDate.getDate() === tomorrow.getDate()
+        ) {
 
-      if (
-        dueDate.getFullYear() === tomorrow.getFullYear() &&
-        dueDate.getMonth() === tomorrow.getMonth() &&
-        dueDate.getDate() === tomorrow.getDate()
-      ) {
-        // Check if notification already exists for this issue
-        const existingNotification = await sql.query(
-          `SELECT id FROM ${schema}.notifications
+          const existingNotification = await sql.query(
+            `SELECT id FROM ${schema}.notifications
            WHERE user_id = $1 AND type = 'due_reminder' AND related_id = $2 AND related_type = 'book_issue'
            AND DATE(created_at) = CURRENT_DATE`,
-          [book.issued_to, book.id]
-        );
+            [book.issued_to, book.id]
+          );
 
-        if (existingNotification.rows.length === 0) {
-          // Create notification in database
-          const notification = await this.create({
-            user_id: book.issued_to,
-            title: 'Book Due Tomorrow',
-            message: `Your book "${book.book_title}" is due tomorrow. Please return it to avoid penalties.`,
-            type: 'due_reminder',
-            related_id: book.id,
-            related_type: 'book_issue'
-          });
+          if (existingNotification.rows.length === 0) {
+        
+            const notification = await this.create({
+              user_id: book.issued_to,
+              title: 'Book Due Tomorrow',
+              message: `Your book "${book.book_title}" is due tomorrow. Please return it to avoid penalties.`,
+              type: 'due_reminder',
+              related_id: book.id,
+              related_type: 'book_issue'
+            });
 
-          notifications.push(notification);
+            notifications.push(notification);
+          }
         }
       }
+
+      return notifications;
+
+    } catch (error) {
+      console.error("❌ Error in checkbeforeDue:", error);
+      throw error;
     }
-
-    return notifications;
-
-  } catch (error) {
-    console.error("❌ Error in checkbeforeDue:", error);
-    throw error;
   }
-}
 
 
 

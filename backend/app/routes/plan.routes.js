@@ -145,10 +145,7 @@ module.exports = (app) => {
                 if (duration_days !== undefined) {
                     if (duration_days === null || duration_days === "" || duration_days <= 0) {
                         return res.status(400).json({
-                            errors: [{
-                                msg: "Duration must be a positive number",
-                                param: "duration_days"
-                            }]
+                            errors: "Duration must be a positive number"
                         });
                     }
                 }
@@ -159,10 +156,8 @@ module.exports = (app) => {
                 if (max_allowed_books_at_time !== undefined && allowed_books !== undefined) {
                     if (max_allowed_books_at_time > allowed_books) {
                         return res.status(400).json({
-                            errors: [{
-                                msg: "Max books allowed at a time cannot be greater than total allowed books",
-                                param: "max_allowed_books_at_time"
-                            }]
+                            errors:
+                                "Max books allowed at a time cannot be greater than total allowed books"
                         });
                     }
                 }
@@ -181,17 +176,16 @@ module.exports = (app) => {
                 const fieldsToUpdate = Object.keys(updateData);
                 if (fieldsToUpdate.length <= 2) {
                     return res.status(400).json({
-                        errors: [{
-                            msg: "No valid fields to update",
-                            param: "general"
-                        }]
+                        errors: "No valid fields to update"
                     });
                 }
 
                 const result = await Plan.updatePlan(updateData);
 
                 if (!result) {
-                    return res.status(404).json({ errors: "Plan not found" });
+                    return res.status(404).json({
+                        errors: "Plan not found"
+                    });
                 }
 
                 return res.status(200).json({
@@ -202,16 +196,15 @@ module.exports = (app) => {
             } catch (err) {
                 console.error(err);
 
-                if (err.code === '23502') {
+                if (err.code === "23502") {
                     return res.status(400).json({
-                        errors: [{
-                            msg: "Required field cannot be null",
-                            param: err.column
-                        }]
+                        errors: "Plan name is required"
                     });
                 }
+                return res.status(500).json({
+                    errors: "Internal Server Error"
+                });
 
-                res.status(500).json({ errors: "Internal Server Error" });
             }
         });
 

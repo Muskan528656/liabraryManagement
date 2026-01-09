@@ -249,7 +249,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
                 section: "Company Information",
                 options: states,
-                placeholder: "Select State",
+
                 customValidation: (value) => {
                     if (!value || !value.trim()) {
                         return "State is required";
@@ -273,7 +273,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                             label: city.label
                         }));
                 },
-                placeholder: "Select City",
+
                 customValidation: (value, formData) => {
                     if (formData?.state && (!value || !value.trim())) {
                         return "City is required when state is selected";

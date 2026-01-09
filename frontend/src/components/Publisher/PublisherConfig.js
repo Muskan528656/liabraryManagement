@@ -21,7 +21,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
     });
 
     const statusBadge = (value) => (
-        <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+        <span style={{ padding: "5px" }} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
             {value ? "Active" : "Inactive"}
         </span >
     );
@@ -142,16 +142,53 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             const errors = [];
 
 
-            if (!formData.name?.trim()) errors.push("name is required");
-            if (!formData.email?.trim()) errors.push("email is required");
-            // if (!formData.city?.trim()) errors.push("city is required");
-            // if (!formData.country?.trim()) errors.push("country is required");
-            if (!formData.phone) errors.push("phone is required");
+            // if (!formData.name?.trim()) errors.push("name is required");
+            // if (!formData.email?.trim()) errors.push("email is required");
+            // // if (!formData.city?.trim()) errors.push("city is required");
+            // // if (!formData.country?.trim()) errors.push("country is required");
+            // if (!formData.phone) errors.push("phone is required");
+
+            if (!formData.name?.trim()) {
+                errors.push("Name is required");
+            }
+
+            if (!formData.email?.trim()) {
+                errors.push("Email is required");
+            } else {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    errors.push("Please enter a valid email address");
+                }
+            }
+
+            if (!formData.phone?.trim()) {
+                errors.push("Phone is required");
+            } else {
+                const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+                if (!phoneRegex.test(formData.phone)) {
+                    errors.push("Please enter a valid phone number");
+                }
+            }
+
+            const duplicateName = allBooks.find(
+                book => book.name?.toLowerCase() === formData.name?.toLowerCase() &&
+                    book.id !== editingBook?.id
+            );
+            if (duplicateName) {
+                errors.push("Book with this name already exists");
+            }
+
+            const duplicateEmail = allBooks.find(
+                book => book.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                    book.id !== editingBook?.id
+            );
+            if (duplicateEmail) {
+                errors.push("Book with this email already exists");
+            }
 
 
             return errors;
         },
-
         features: {
             showBulkInsert: false,
             showImportExport: true,
