@@ -11,6 +11,7 @@ import BookSubmit from "../booksubmit/BookSubmit";
 import DataApi from "../../api/dataApi";
 import Submodule from "./Submodule";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
+import { useMemo } from "react";
 
 export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [modulesFromDB, setModulesFromDB] = useState([]);
   const [activeTab, setActiveTab] = useState("ALL"); // ALL | UNREAD | READ
 
+  
+
   const [formData, setFormData] = useState({
     book_barcode: "",
     condition_after: "Good",
@@ -41,28 +44,37 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [userDisplayName, setUserDisplayName] = useState("");
 
 
-  const totalUnreadCount = React.useMemo(() => {
-    const allUnread = allNotifications.filter(n => !n.is_read).length;
-    const dueUnread = dueNotifications.filter(n => !n.is_read).length;
-    return allUnread + dueUnread;
-  }, [allNotifications, dueNotifications]);
+  const allCombinedNotifications = React.useMemo(() => {
+  return [...dueNotifications, ...allNotifications];
+  }, [dueNotifications, allNotifications]);
 
 
-  const filteredNotifications = React.useMemo(() => {
-    const combined = [...dueNotifications, ...allNotifications];
+   const totalUnreadCount = useMemo(() => {
+    return allCombinedNotifications.filter(n => !n.is_read).length;
+  }, [allCombinedNotifications]);
 
-    if (activeTab === "UNREAD") {
-      return combined.filter(n => !n.is_read);
-    } else if (activeTab === "READ") {
-      return combined.filter(n => n.is_read);
-    } else {
+  // const totalUnreadCount = React.useMemo(() => {
+  //   const allUnread = allNotifications.filter(n => !n.is_read).length;
+  //   const dueUnread = dueNotifications.filter(n => !n.is_read).length;
+  //   return allUnread + dueUnread;
+  // }, [allNotifications, dueNotifications]);
 
-      return combined;
-    }
-  }, [allNotifications, dueNotifications, activeTab]);
 
-  console.log('filteredNotifications = ', filteredNotifications)
-  console.log('allNotifications = ', allNotifications)
+  // const filteredNotifications = React.useMemo(() => {
+  //   const combined = [...dueNotifications, ...allNotifications];
+
+  //   if (activeTab === "UNREAD") {
+  //     return combined.filter(n => !n.is_read);
+  //   } else if (activeTab === "READ") {
+  //     return combined.filter(n => n.is_read);
+  //   } else {
+
+  //     return combined;
+  //   }
+  // }, [allNotifications, dueNotifications, activeTab]);
+
+
+
 
   const fetchUserProfile = async () => {
     if (!userInfo || !userInfo.id) return;
@@ -342,19 +354,23 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   };
 
   const fetchDueNotifications = async () => {
-    try {
-      const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/notifications/due_notifications`,
-        "GET"
-      );
-      const result = await response.json();
-      if (result.success) {
-        setDueNotifications(result.notifications || []);
-      }
-    } catch (error) {
-      console.error("Error fetching due notifications:", error);
+  try {
+    const response = await helper.fetchWithAuth(
+      `${constants.API_BASE_URL}/api/notifications/due_notifications`,
+      "GET"
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setDueNotifications(result.notifications || []);
+      // setDueNotificationCount(result.notifications?.length || 0);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching due notifications:", error);
+  }
+};
+
 
   useEffect(() => {
     try {
@@ -438,6 +454,18 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       });
     return moduleItems;
   };
+
+
+    useEffect(() => {
+    if (!socket) return;
+
+    const onNewNotification = (notification) => {
+      setAllNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on("new_notification", onNewNotification);
+    return () => socket.off("new_notification", onNewNotification);
+  }, [socket]);
 
   const menuItems = getMenuItems();
 
@@ -532,11 +560,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const getUserInitials = () => {
     if (userInfo) {
       if (userInfo.username) {
-        const firstLetter = userInfo.username.trim().charAt(0).toUpperCase();
+        const firstLetter = userInfo.username[0].trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
       if (userInfo.firstname) {
-        const firstLetter = userInfo.firstname.trim().charAt(0).toUpperCase();
+        const firstLetter = userInfo.firstname[0].trim().charAt(0).toUpperCase();
         if (firstLetter) return firstLetter;
       }
       if (userInfo.email) {
@@ -724,11 +752,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             gap: "0.5rem",
           }}
         >
-          <img
-            src={Company?.company_logo_url || "/Logo.png"}
-
-
-            height="50"
+          <img src={Company?.company_logo_url || "/Logo.png"}height="50"
             style={{ height: "50px", marginLeft: '20px', objectFit: "contain" }}
           />
           <span>{Company?.name}</span>
@@ -840,7 +864,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               setShowNotifications(isOpen);
               if (isOpen) {
                 fetchAllNotifications();
-                fetchUnreadCount();
                 fetchDueNotifications();
               }
             }}
@@ -856,14 +879,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }}
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
-              {totalUnreadCount > 0 && (
-                <span
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: "10px", padding: "3px 5px" , marginTop : "8px" , marginLeft : "-12px" }}
-                >
-                  {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
-                </span>
-              )}
+               {totalUnreadCount > 0 && (
+              <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                {totalUnreadCount}
+              </span>
+            )}
             </Dropdown.Toggle>
 
             {showNotifications && (
@@ -892,7 +912,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 </div>
 
                 {/* TABS */}
-                <div className="d-flex mx-3 my-2 bg-light rounded-pill p-1">
+                {/* <div className="d-flex mx-3 my-2 bg-light rounded-pill p-1">
                   {["ALL", "UNREAD", "READ"].map((tab) => (
                     <div
                       key={tab}
@@ -908,10 +928,67 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                       {tab}
                     </div>
                   ))}
-                </div>
+                </div> */}
 
+<div style={{ maxHeight: "320px", overflowY: "auto" }}>
+              {allCombinedNotifications.length === 0 ? (
+                <div className="text-center text-muted py-4">
+                  No notifications
+                </div>
+              ) : (
+                allCombinedNotifications.slice(0, 10).map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => handleNotificationClick(n)}
+                    style={{
+                      padding: "12px",
+                      cursor: "pointer",
+                      background: n.is_read ? "#fff" : "#f3f6ff",
+                      borderBottom: "1px solid #eee",
+                      display: "flex",
+                      gap: "10px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        background: "#e5edff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <i className="fa-solid fa-bell"></i>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: n.is_read ? 400 : 600 }}>
+                        {n.message || n.title}
+                      </div>
+                      <small className="text-muted">
+                        {n.created_at || n.due_date}
+                      </small>
+                    </div>
+
+                    {!n.is_read && (
+                      <span
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          background: "#2563eb",
+                          borderRadius: "50%",
+                          marginTop: "6px",
+                        }}
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
                 {/* NOTIFICATIONS LIST */}
-                <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                {/* <div style={{ maxHeight: "320px", overflowY: "auto" }}>
                   {filteredNotifications.length === 0 ? (
                     <div className="text-center text-muted py-4">
                       {activeTab === "UNREAD"
@@ -936,7 +1013,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           position: "relative",
                         }}
                       >
-                        {/* ICON */}
+                      
                         <div
                           style={{
                             width: "42px",
@@ -957,7 +1034,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           )}
                         </div>
 
-                        {/* CONTENT */}
                         <div style={{ flex: 1 }}>
                           <div
                             style={{
@@ -973,7 +1049,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           </div>
                         </div>
 
-                        {/* UNREAD INDICATOR - shows only if unread */}
                         {!notification.is_read && (
                           <div
                             style={{
@@ -987,7 +1062,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                       </div>
                     ))
                   )}
-                </div>
+                </div> */}
 
                 {/* FOOTER */}
                 <div

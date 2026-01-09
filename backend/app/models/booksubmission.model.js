@@ -863,7 +863,6 @@ async function sendDueReminder() {
 
     const result = await sql.query(query, [tomorrowStr]);
 
-
     if (result.rows.length === 0) {
 
       return;

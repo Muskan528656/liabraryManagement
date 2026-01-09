@@ -40,23 +40,28 @@ module.exports = (app) => {
  
     router.get("/due_notifications", fetchUser, async (req, res) => {
   
- 
- 
+
       try {
-        const notifications = await Notification.checkbeforeDue();
- 
+        Notification.init(req.userinfo.tenantcode);
+        console.log("Fetching due notifications for user:", req.userinfo.id);
+        const allNotifications = await Notification.findAll();
+        console.log("allNotifications", allNotifications);
+        
+        const dueNotifications = allNotifications.filter(n => n.type === 'due_reminder');
+
+        console.log("dueNotifications", dueNotifications);
         
         return res.status(200).json({
           success: true,
-          notifications,
+          notifications: dueNotifications,
         });
-  
+
       } catch (error) {
-        console.error("❌ Error fetching notifications:", error);
-  
+        console.error("❌ Error fetching due notifications:", error);
+
         return res.status(500).json({
           success: false,
-          message: "Failed to fetch notifications",
+          message: "Failed to fetch due notifications",
           error: error.message
         });
       }
@@ -248,6 +253,49 @@ module.exports = (app) => {
       return res.status(500).json({
         success: false,
         message: "Error broadcasting notification",
+        error: error.message
+      });
+    }
+  });
+
+  router.post("/create-due-reminder", fetchUser, async (req, res) => {
+    try {
+      const { user_id, book_title, issue_id, due_date } = req.body;
+
+      if (!user_id || !book_title || !issue_id || !due_date) {
+        return res.status(400).json({
+          success: false,
+          message: "user_id, book_title, issue_id, and due_date are required"
+        });
+      }
+
+      Notification.init(req.userinfo.tenantcode);
+      const notification = await Notification.createDueReminderIfTomorrow(
+        req.userinfo.tenantcode,
+        user_id,
+        book_title,
+        issue_id,
+        new Date(due_date),
+        req.app
+      );
+
+      if (notification) {
+        return res.status(201).json({
+          success: true,
+          message: "Due reminder notification created successfully",
+          notification: notification
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "No notification needed (due date is not tomorrow or notification already exists)"
+        });
+      }
+    } catch (error) {
+      console.error("Error creating due reminder notification:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error creating due reminder notification",
         error: error.message
       });
     }

@@ -18,22 +18,12 @@ const Notification = {
   },
 
  
-  findAll: async function (userId, isRead = null) {
+  findAll: async function () {
     let query = `
-      SELECT * FROM ${schema}.notifications 
-      WHERE user_id = $1
+      SELECT * FROM ${schema}.notifications where type='due_reminder'
     `;
-    let params = [userId];
-
-    if (isRead !== null) {
-      query += ` AND is_read = $2`;
-      params.push(isRead);
-    }
-
-    query += ` ORDER BY created_at DESC`;
-
     try {
-      const result = await sql.query(query, params);
+      const result = await sql.query(query);
       return result.rows;
     } catch (error) {
       console.error("Error fetching notifications:", error);
