@@ -6,6 +6,7 @@ const cors = require("cors");
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
 const app = express();
 
