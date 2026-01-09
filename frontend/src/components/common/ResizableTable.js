@@ -7,7 +7,7 @@ const ResizableTable = ({
     loading = false,
     searchTerm = "",
     currentPage = 1,
-    recordsPerPage = 20,
+    recordsPerPage = 10,
     onPageChange = () => { },
     showSerialNumber = true,
     showActions = true,

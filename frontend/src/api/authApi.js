@@ -9,7 +9,7 @@ const AuthApi = {
         password: credentials.password || "",
         tcode: credentials.tcode ? credentials.tcode.trim().toLowerCase() : "",
       };
- 
+
       let response = await fetch(constants.API_BASE_URL + "/api/auth/login", {
         method: "POST",
         mode: "cors",
@@ -18,10 +18,10 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
- 
+
       const result = await response.json();
- 
-      debugger;
+
+
       if (result.success) {
         sessionStorage.setItem("token", result.authToken);
         sessionStorage.setItem("r-t", result.refreshToken);
@@ -64,7 +64,7 @@ const AuthApi = {
   async refreshToken() {
     const refreshToken = sessionStorage.getItem("r-t");
     if (!refreshToken) {
- 
+
       this.logout();
       return;
     }

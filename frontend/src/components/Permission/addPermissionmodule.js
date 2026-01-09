@@ -46,7 +46,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
     useEffect(() => {
         if (editingItem && modules.length > 0 && roles.length > 0) {
- 
+
 
 
             const selectedRole = roles.find(r => r.id === editingItem.role_id);
@@ -205,7 +205,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             return;
         }
 
- 
+
         onSave(formData);
     };
 
@@ -284,64 +284,64 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                             </option>
                         ))}
                     </Form.Select>
-               
+
                 </Form.Group>
 
                 {/* <div className="border rounded p-2 bg-white"> */}
-                    
 
-                    {loading ? (
-                        <div className="text-center py-3">
-                            <i className="fa-solid fa-spinner fa-spin fs-5 me-2"></i>
-                            <small>Loading modules...</small>
-                        </div>
-                    ) : (
-                        <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                            <Table bordered hover className="mb-0 table-sm">
-                                <thead className="table-light sticky-top" style={{ top: 0 }}>
-                                    <tr>
-                                        <th width="40%" className="py-1 fw-bold fs-6">
-                                           
-                                            Module
-                                        </th>
-                                        {renderSelectAllCheckbox("view", "View")}
-                                        {renderSelectAllCheckbox("create", "Create")}
-                                        {renderSelectAllCheckbox("edit", "Edit")}
-                                        {renderSelectAllCheckbox("delete", "Delete")}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {modules.length > 0 ? (
-                                        modules.map(module => (
-                                            <tr key={module.id} className="fs-6">
-                                                <td className="py-1 fw-medium">
-                                                    <div className="d-flex align-items-center">
-                                                    
-                                                        <span className="text-truncate" style={{ maxWidth: '150px' }} title={module.name}>
-                                                            {module.name || "Unnamed"}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                {renderPermissionCell(module.id, 'allow_view')}
-                                                {renderPermissionCell(module.id, 'allow_create')}
-                                                {renderPermissionCell(module.id, 'allow_edit')}
-                                                {renderPermissionCell(module.id, 'allow_delete')}
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="5" className="text-center py-3 text-muted">
-                                                <i className="fa-solid fa-spinner fa-spin me-1"></i>
-                                                <small>Loading modules...</small>
+
+                {loading ? (
+                    <div className="text-center py-3">
+                        <i className="fa-solid fa-spinner fa-spin fs-5 me-2"></i>
+                        <small>Loading modules...</small>
+                    </div>
+                ) : (
+                    <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <Table bordered hover className="mb-0 table-sm">
+                            <thead className="table-light sticky-top" style={{ top: 0 }}>
+                                <tr>
+                                    <th width="40%" className="py-1 fw-bold fs-6">
+
+                                        Module
+                                    </th>
+                                    {renderSelectAllCheckbox("view", "View")}
+                                    {renderSelectAllCheckbox("create", "Create")}
+                                    {renderSelectAllCheckbox("edit", "Edit")}
+                                    {renderSelectAllCheckbox("delete", "Delete")}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {modules.length > 0 ? (
+                                    modules.map(module => (
+                                        <tr key={module.id} className="fs-6">
+                                            <td className="py-1 fw-medium">
+                                                <div className="d-flex align-items-center">
+
+                                                    <span className="text-truncate" style={{ maxWidth: '150px' }} title={module.name}>
+                                                        {module.name || "Unnamed"}
+                                                    </span>
+                                                </div>
                                             </td>
+                                            {renderPermissionCell(module.id, 'allow_view')}
+                                            {renderPermissionCell(module.id, 'allow_create')}
+                                            {renderPermissionCell(module.id, 'allow_edit')}
+                                            {renderPermissionCell(module.id, 'allow_delete')}
                                         </tr>
-                                    )}
-                                </tbody>
-                            </Table>
-                        </div>
-                    )}
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="text-center py-3 text-muted">
+                                            <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                                            <small>Loading modules...</small>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </Table>
+                    </div>
+                )}
 
-          
+
                 {/* </div> */}
             </Modal.Body>
 
