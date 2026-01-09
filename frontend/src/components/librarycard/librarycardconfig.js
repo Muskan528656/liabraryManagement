@@ -246,7 +246,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     row.status === "active";
 
                 return (
-                    <Badge bg={isActive ? "success" : "secondary"}>
+                    <Badge className="px-2" bg={isActive ? "success" : "secondary"}>
                         {isActive ? "Active" : "Inactive"}
                     </Badge>
                 );

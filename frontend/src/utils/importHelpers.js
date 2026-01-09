@@ -24,7 +24,23 @@ export const saveImportedData = async ({
 
   try {
 
+    console.log('data = ', data);
+    console.log('apiEndpoint = ', apiEndpoint);
+    console.log('formFields = ', formFields);
+
     const mainApi = new DataApi(apiEndpoint);
+
+    // For vendor imports, ensure we have existing vendors data for duplicate checking
+    if (apiEndpoint === 'vendors' && (!relatedData.vendors || relatedData.vendors.length === 0)) {
+      try {
+        const vendorApi = new DataApi('vendors');
+        const existingVendors = await vendorApi.fetchAll();
+        relatedData.vendors = existingVendors.data?.data || existingVendors.data || [];
+        console.log('Fetched existing vendors for duplicate checking:', relatedData.vendors.length);
+      } catch (error) {
+        console.warn('Failed to fetch existing vendors for duplicate checking:', error);
+      }
+    }
 
     let createdCount = 0;
     let skippedCount = 0;
@@ -83,17 +99,28 @@ export const saveImportedData = async ({
           const isbnNorm = rowData.isbn.toString().trim().toLowerCase();
  
 
-          // Check if book exists by ISBN
+        // Check if book exists by ISBN
           const existingBooks = relatedData[optionKey] || [];
           const bookByISBN = existingBooks.find(book =>
             book.isbn && book.isbn.toString().trim().toLowerCase() === isbnNorm
           );
 
-
           if (bookByISBN) {
- 
             index.set(norm, bookByISBN.id);
             return bookByISBN.id;
+          }
+        }
+
+        // For vendors, also check email if available
+        if (optionKey === 'vendors' && rowData.email) {
+          const emailNorm = rowData.email.toString().trim().toLowerCase();
+          const existingVendors = relatedData[optionKey] || [];
+          const vendorByEmail = existingVendors.find(vendor =>
+            vendor.email && vendor.email.toString().trim().toLowerCase() === emailNorm
+          );
+          if (vendorByEmail) {
+            index.set(norm, vendorByEmail.id);
+            return vendorByEmail.id;
           }
         }
 
@@ -119,6 +146,9 @@ export const saveImportedData = async ({
 
       const api = relatedApiCache[optionKey];
 
+      console.log("api",api);
+      
+
       const labelField = cfg.labelField || "name";
       const extraPayload = cfg.extraPayload || {};
       const payload = {
@@ -132,7 +162,16 @@ export const saveImportedData = async ({
         const isbnValue = rowData.isbn || rowData.ISBN || rowData.Isbn || rowData['Book ISBN'] || rowData['book isbn'] || rowData['ISBN Number'] || rowData['isbn number'];
         if (isbnValue) {
           payload.isbn = isbnValue;
- 
+
+        }
+      }
+
+      // For vendors, also include email if available in rowData
+      if (optionKey === 'vendors') {
+        // Check for email in various possible column names
+        const emailValue = rowData.email || rowData.Email || rowData['Vendor Email'] || rowData['vendor email'] || rowData['Email Address'] || rowData['email address'];
+        if (emailValue) {
+          payload.email = emailValue;
         }
       }
 
@@ -327,6 +366,10 @@ export const saveImportedData = async ({
 
         if (fieldType === "select" && optionKey) {
           // This is a related entity select field (e.g., vendor_id, company_id)
+          console.log("optionKey =>",optionKey);
+          console.log("rawValue =>",);
+          console.log("row =>",row);
+          
           const relatedId = await getOrCreateRelatedId(optionKey, rawValue, row);
           transformed[fieldName] = relatedId;
 
@@ -356,7 +399,21 @@ export const saveImportedData = async ({
       finalData = customHandlers.onImportDataTransform(transformedData);
     }
 
- 
+    // For vendor imports, deduplicate by email to prevent duplicates within the same import batch
+    if (apiEndpoint === 'vendors') {
+      const emailMap = new Map();
+      finalData = finalData.filter(item => {
+        if (!item.email) return true; // Keep items without email
+        const emailKey = item.email.toString().trim().toLowerCase();
+        if (emailMap.has(emailKey)) {
+          console.log('Skipping duplicate vendor in import batch:', item.email);
+          return false; // Skip duplicate
+        }
+        emailMap.set(emailKey, true);
+        return true; // Keep first occurrence
+      });
+    }
+
     for (const item of finalData) {
  
       const hasData = Object.values(item).some(
@@ -378,7 +435,16 @@ export const saveImportedData = async ({
           )
         );
 
-      if (isClientSideDuplicate) {
+      // Special duplicate check for vendor imports using email
+      const isVendorDuplicateByEmail =
+        apiEndpoint === 'vendors' &&
+        item.email &&
+        Array.isArray(relatedData.vendors) &&
+        relatedData.vendors.some(vendor =>
+          vendor.email && vendor.email.toString().trim().toLowerCase() === item.email.toString().trim().toLowerCase()
+        );
+
+      if (isClientSideDuplicate || isVendorDuplicateByEmail) {
         skippedCount++;
         continue; // Skip without hitting API
       }

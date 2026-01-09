@@ -61,6 +61,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   }, [allNotifications, dueNotifications, activeTab]);
 
+  console.log('filteredNotifications = ', filteredNotifications)
+  console.log('allNotifications = ', allNotifications)
+
   const fetchUserProfile = async () => {
     if (!userInfo || !userInfo.id) return;
 
@@ -341,7 +344,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const fetchDueNotifications = async () => {
     try {
       const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/book_submissions/due_notifications`,
+        `${constants.API_BASE_URL}/api/notifications/due_notifications`,
         "GET"
       );
       const result = await response.json();
@@ -657,6 +660,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const handleNotificationClick = (notification) => {
 
     if (!notification.is_read) {
+      console.log("Marking notification as read:", notification);
       markAsRead(notification.id);
     }
 

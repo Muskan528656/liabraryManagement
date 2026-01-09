@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Badge, Button, Form, Spinner, Table, ProgressBar } from "react-bootstrap";
+import { Row, Col, Card, Badge, Button, Form, Spinner, Table, ProgressBar, Toast } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
 
 const RelatedTabContent = ({ id, data, refresh }) => {
@@ -11,6 +11,10 @@ const RelatedTabContent = ({ id, data, refresh }) => {
     const [isAddingPlan, setIsAddingPlan] = useState(false);
     const [selectedPlanId, setSelectedPlanId] = useState("");
     const [assigningPlan, setAssigningPlan] = useState(false);
+
+    const [isChangingPlan, setIsChangingPlan] = useState(false);
+    const [selectedNewPlanId, setSelectedNewPlanId] = useState("");
+    const [changingPlan, setChangingPlan] = useState(false);
 
     useEffect(() => {
         if (id) fetchRelatedData();
@@ -86,6 +90,11 @@ const RelatedTabContent = ({ id, data, refresh }) => {
         await fetchPlansOnly();
     };
 
+    const handleOpenChangePlan = async () => {
+        setIsChangingPlan(true);
+        await fetchPlansOnly();
+    };
+
     const handleAssignPlan = async () => {
         if (!selectedPlanId) return;
         setAssigningPlan(true);
@@ -108,8 +117,7 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                 allowed_books: selectedPlan.allowed_books,
                 start_date: startDate.toISOString().split('T')[0],
                 end_date: endDate.toISOString().split('T')[0],
-                is_active: true,
-                status: "active"
+                is_active: true
             };
 
             const api = new DataApi('subscriptions');
@@ -120,13 +128,74 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                 setSelectedPlanId("");
                 await fetchRelatedData();
             } else {
-                alert("Failed to assign. Please try again.");
+                Toast.error("Failed to assign. Please try again.");
             }
         } catch (err) {
             console.error(err);
-            alert("Error assigning plan");
+            Toast.error("Error assigning plan");
         } finally {
             setAssigningPlan(false);
+        }
+    };
+
+    const handleChangePlan = async () => {
+        if (!selectedNewPlanId) return;
+        setChangingPlan(true);
+        try {
+            // Deactivate current active plan
+            if (activePlan && activePlan.id) {
+                console.log('activePlan.id:', activePlan.id, 'type:', typeof activePlan.id);
+                let id = activePlan.id;
+                if (typeof id === 'object') {
+                    id = id.id || id._id || id;
+                }
+                if (typeof id === 'object') {
+                    console.error('Unable to extract ID from activePlan.id:', activePlan.id);
+                    return;
+                }
+                console.log('Final ID to update:', id);
+                const subApi = new DataApi('subscriptions');
+                await subApi.update({ is_active: false },String(id));
+            }
+
+            // Assign new plan
+            const selectedPlan = allPlans.find(p => String(p.id) === String(selectedNewPlanId));
+
+            const startDate = new Date();
+            const endDate = new Date();
+            const freshDuration = parseInt(selectedPlan.duration_days) || 30;
+
+            endDate.setDate(startDate.getDate() + freshDuration);
+
+            const subscriptionData = {
+                plan_id: selectedNewPlanId,
+                member_id: id,
+                card_id: id,
+                user_id: data?.user_id || data?.id,
+                plan_name: selectedPlan.plan_name || selectedPlan.name,
+                duration_days: freshDuration,
+                allowed_books: selectedPlan.allowed_books,
+                start_date: startDate.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0],
+                is_active: true,
+                status: "active"
+            };
+
+            const api = new DataApi('subscriptions');
+            const response = await api.create(subscriptionData);
+
+            if (response?.data?.success || response?.status === 200 || response?.status === 201) {
+                setIsChangingPlan(false);
+                setSelectedNewPlanId("");
+                await fetchRelatedData();
+            } else {
+                alert("Failed to change plan. Please try again.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error changing plan");
+        } finally {
+            setChangingPlan(false);
         }
     };
 
@@ -247,7 +316,54 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                 </Card>
                             )}
 
-                            {!isAddingPlan && activePlan && (
+                            {isChangingPlan && (
+                                <Card className="border-0 rounded-4 mb-3 animate__animated animate__fadeIn">
+                                    <Card.Body className="p-4">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 className="fw-bold m-0 text-dark">
+                                                <i className="fa-solid fa-exchange-alt text-warning me-2"></i>
+                                                Change Plan
+                                            </h6>
+                                            <Button
+                                                variant="light"
+                                                size="sm"
+                                                className="rounded-circle btn-close-custom"
+                                                onClick={() => setIsChangingPlan(false)}
+                                            >
+                                                <i className="fa-solid fa-times text-muted"></i>
+                                            </Button>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <div className="input-group shadow-sm rounded-3 overflow-hidden border">
+                                                <Form.Select
+                                                    className="border-0 bg-white text-dark fw-semibold py-1"
+                                                    style={{ fontSize: '0.95rem', boxShadow: 'none' }}
+                                                    value={selectedNewPlanId}
+                                                    onChange={(e) => setSelectedNewPlanId(e.target.value)}
+                                                >
+                                                    <option value="">-- Choose a New Plan --</option>
+                                                    {allPlans.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.plan_name || p.name}</option>
+                                                    ))}
+                                                </Form.Select>
+
+                                                <Button
+                                                    variant=""
+                                                    className="px-4 fw-bold border-0"
+                                                    onClick={handleChangePlan}
+                                                    disabled={changingPlan}
+                                                    style={{ background: 'var(--primary-color)', color: 'var(--header-highlighter-color)' }}
+                                                >
+                                                    {changingPlan ? <Spinner animation="border" size="sm" /> : "Change"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            )}
+
+                            {!isAddingPlan && !isChangingPlan && activePlan && (
                                 <div
                                     className="rounded-4 p-4 position-relative text-white overflow-hidden "
                                     style={{
@@ -261,11 +377,27 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                     </div>
 
                                     <div className="d-flex justify-content-between align-items-start position-relative z-1 mb-4">
-                                        <div className="glass-effect px-3 py-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
+                                        <div className="glass-effect px-3 py-1 mt-1 rounded-pill small fw-bold text-uppercase letter-spacing-1">
                                             Library Card
                                         </div>
-                                        <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                            <i className="fa-solid fa-check"></i>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <Button
+                                                variant="light"
+                                                size="sm"
+                                                style={{
+                                                    color:"var(--primary-color)",
+                                                    borderColor:"var(--primary-background-color)",
+                                                    border:"none"
+                                                }}
+                                                className="glass-effect px-3 py-1 mt-1 rounded-pill small fw-bold text-white text-uppercase letter-spacing-1"
+                                                onClick={handleOpenChangePlan}
+                                            >
+                                                <i className="fa-solid fa-exchange-alt me-1 "></i>
+                                                Change Plan
+                                            </Button>
+                                            {/* <div className="glass-effect rounded-circle d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                                                <i className="fa-solid fa-check"></i>
+                                            </div> */}
                                         </div>
                                     </div>
 
@@ -300,47 +432,6 @@ const RelatedTabContent = ({ id, data, refresh }) => {
                                         </div>
                                     </div>
                                 </div>
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
                             )}
 
                             {!isAddingPlan && !activePlan && (

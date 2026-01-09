@@ -53,7 +53,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                         value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
 
                     return (
-                        <Badge bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                        <Badge className="px-2" bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
                             {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
                         </Badge>
                     );
@@ -78,7 +78,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 colSize: 12,
             },
             {
-                name: "is_active", // Changed key to name to be consistent with other modules
+                name: "is_active",
                 label: "Status",
                 type: "toggle",
                 colSize: 12,
@@ -124,7 +124,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
- 
+
             },
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {
