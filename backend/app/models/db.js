@@ -6,6 +6,6 @@ const connection = new Pool({
   host: dbConfig.HOST,
   database: dbConfig.DB,
   password: dbConfig.PASSWORD,
-  port: 5432,
+  port: 5433,
 })
 module.exports = connection;

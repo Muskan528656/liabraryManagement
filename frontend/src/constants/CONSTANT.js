@@ -1,13 +1,9 @@
 
-const { protocol, hostname, port, pathname } = window.location;
+export const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3003"
+    : `http://103.159.182.162:3003`;
 
-const isLocal = hostname === "localhost";
-
-const isSandbox = pathname.startsWith("/library-sandbox");
-
-console.log('isSandbox - muskan test-->', isSandbox);
-
-export const API_BASE_URL = "http://103.159.182.162:3003"
 
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";
@@ -30,7 +26,6 @@ export const VIEW_BUSINESS = "VIEW_BUSINESS";
 export const EDIT_BUSINESS = "EDIT_BUSINESS";
 export const DELETE_BUSINESS = "DELETE_BUSINESS";
 
-// Supported file types
 export const PDF = "pdf";
 export const DOC = "doc";
 export const DOCX = "docx";

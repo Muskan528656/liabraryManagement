@@ -20,6 +20,8 @@ const Login = () => {
     e.preventDefault();
     try {
       if (credentials.email && credentials.password && credentials.tcode) {
+        console.log("hheie");
+
         const result = await AuthApi.login(credentials);
         if (result.success) {
           sessionStorage.setItem("token", result.authToken);
@@ -113,7 +115,7 @@ const Login = () => {
                     >
                       <i className="fa-solid fa-book"></i>
                     </div>
-                    <h3 className="fw-bold">Signadsfjaksjdhaklsdfhsakld In sandbox</h3>
+                    <h3 className="fw-bold">Sign In sandbox</h3>
                     <h4
                       className="fw-bold"
                       style={{
@@ -121,7 +123,7 @@ const Login = () => {
                         marginTop: "0px",
                       }}
                     >
-                      Library Management Systempoiuyfdghjkljhgfdghjkljhgfhjkl
+                      Library Management System
                     </h4>
 
                   </div>
@@ -132,7 +134,7 @@ const Login = () => {
 
                   <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Company Name</Form.Label>
+                      <Form.Label>Company xcvgbhjgfdsfghName</Form.Label>
                       <Form.Control
                         type="text"
                         name="tcode"

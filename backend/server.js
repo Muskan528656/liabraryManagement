@@ -145,17 +145,28 @@ const app = express();
 
 const MODE = process.env.NODE_ENV || "production";
 const PORT = process.env.PORT || 3003;
+console.log("PORTPORT",PORT)
 const BASE_PATH =
-  MODE === "sandbox" ? "/library-sandbox/ibs" : "/ibs";
+  MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
 
 
 app.set("view engine", "ejs");
 
 app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: ["http://192.168.6.50:3001"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-//j
-const publicUploadsPath = "/var/www/html/uploads/";
+
+
+const publicUploadsPath =
+  process.platform === "win32"
+    ? path.join(__dirname, "uploads")
+    : "/var/www/html/uploads/";
+
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
 }
@@ -248,11 +259,9 @@ require("./app/routes/mail.routes.js")(app);
 require("./app/routes/dashbard.router.js")(app);
 require("./app/routes/objecttype.routes.js")(app);
 
-
-server.listen(PORT, () => {
-  console.log("process.env.BASE_API_UR", process.env.BASE_API_URL)
+server.listen(PORT, '0.0.0.0', () => {
   console.log(
-    `🚀 Server running in ${MODE.toUpperCase()} mode on port ${PORT}`
+    `🚀 Server running on http://0.0.0.0:${PORT} in ${MODE.toUpperCase()} mode`
   );
   console.log(`🌐 Base URL: ${BASE_PATH}`);
 });

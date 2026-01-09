@@ -29,7 +29,7 @@ const sql = require("../models/db.js");
 require("dotenv").config();
 
 // ------------------- UPLOAD FOLDERS -------------------
-const uploadDir = "/var/www/html/uploads/librarycards";
+const uploadDir = "./uploads/librarycards";
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 // ------------------- MULTER SETUP -------------------
