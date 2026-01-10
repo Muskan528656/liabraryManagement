@@ -23,7 +23,7 @@ const BookSubmitModal = ({ show, onHide }) => {
                 </Modal.Header>
 
                 <Modal.Body className="p-0">
-                    {/* Barcode Scan Content */}
+
                     <div style={{ minHeight: "400px", padding: "1.5rem" }}>
                         <BookSubmit tabType="barcode" />
                     </div>

@@ -39,12 +39,12 @@ module.exports = (app) => {
     ],
 
     async (req, res) => {
- 
+
       const tenantcode = req.userinfo?.tenantcode;
       const companyid = req.userinfo?.companyid;
- 
- 
- 
+
+
+
 
       if (!tenantcode) {
         console.error("Error: tenantcode is missing from req.userinfo");
@@ -130,7 +130,7 @@ module.exports = (app) => {
 
 
       const userCompanyId = req.userinfo.companyid || companyid;
- 
+
 
       try {
         const newUser = await Auth.createUser({
@@ -149,7 +149,7 @@ module.exports = (app) => {
           country_code: country_code ? String(country_code).trim() : "+91",
         });
 
- 
+
         if (newUser) {
 
           const tokenPayload = {
@@ -161,7 +161,7 @@ module.exports = (app) => {
 
           const authToken = jwt.sign(tokenPayload, process.env.JWT_SECRET);
 
- 
+
 
 
           if (userrole === "USER") {
@@ -176,7 +176,7 @@ module.exports = (app) => {
             try {
               await Mailer.sendEmail(email, emailData, null, "user_created");
             } catch (error) {
- 
+
             }
           }
 
@@ -198,6 +198,152 @@ module.exports = (app) => {
     }
   );
 
+  // router.post(
+  //   "/login",
+  //   [
+  //     body("email", "Please enter valid email").isEmail(),
+  //     body("password", "Please enter valid password").isLength({ min: 1 }),
+  //     body("tcode", "Please enter company code").exists(),
+  //   ],
+  //   async (req, res) => {
+  //     let success = false;
+
+  //     try {
+  //       const email = req.body.email ? req.body.email.trim().toLowerCase() : "";
+  //       const password = req.body.password || "";
+  //       const tcode = req.body.tcode ? req.body.tcode.trim().toLowerCase() : "";
+
+  //       const errors = validationResult(req);
+  //       if (!errors.isEmpty()) {
+  //         const errorMessages = errors.array().map((err) => err.msg).join(", ");
+  //         return res.status(400).json({ success, errors: errorMessages });
+  //       }
+
+  //       // Check company by tenant code
+  //       const checkForTcode = await Auth.checkCompanybyTcode(tcode);
+  //       if (!checkForTcode) {
+  //         return res.status(400).json({
+  //           success,
+  //           errors:
+  //             "The company name you entered is incorrect. Please check and try again.",
+  //         });
+  //       }
+
+  //       const companyData = checkForTcode[0];
+  //       const actualTenantcode = companyData?.tenantcode || tcode;
+  //       const companyId = companyData?.id || null;
+
+  //       // Initialize schema for tenant
+  //       await Auth.init(actualTenantcode, companyId);
+
+  //       // Find user by email
+  //       const userRec = await Auth.findByEmail(email);
+  //       if (!userRec) {
+  //         // Check if user exists but inactive
+  //         try {
+  //           const inactiveCheck = await sql.query(
+  //             `SELECT id, email, isactive FROM ${Auth.schema || actualTenantcode}.user 
+  //            WHERE LOWER(TRIM(email)) = $1`,
+  //             [email.toLowerCase()]
+  //           );
+
+  //           if (inactiveCheck.rows.length > 0) {
+  //             const user = inactiveCheck.rows[0];
+  //             if (!user.isactive) {
+  //               return res.status(400).json({
+  //                 success,
+  //                 errors: "Your account is inactive. Please contact administrator.",
+  //               });
+  //             }
+  //           }
+  //         } catch (err) {
+  //           console.error("Error checking inactive user:", err);
+  //         }
+
+  //         return res
+  //           .status(400)
+  //           .json({ success, errors: "User not found or inactive account" });
+  //       }
+
+  //       const userInfo = userRec.userinfo;
+
+  //       if (!userInfo || !userInfo.password) {
+  //         return res.status(400).json({
+  //           success,
+  //           errors: "User account error. Please contact administrator.",
+  //         });
+  //       }
+
+  //       // Compare password
+  //       const passwordCompare = await bcrypt.compare(
+  //         String(password),
+  //         String(userInfo.password)
+  //       );
+  //       if (!passwordCompare) {
+  //         return res.status(400).json({
+  //           success,
+  //           errors: "Try to login with correct credentials",
+  //         });
+  //       }
+
+  //       // Remove password before sending token
+  //       delete userInfo.password;
+
+  //       // Set basic info
+  //       const username = userInfo.firstname + " " + userInfo.lastname;
+  //       const userrole = userInfo.userrole || "USER"; // Ensure userrole exists
+  //       const tenantcode = userInfo.tenantcode;
+  //       const companyid = userInfo.companyid;
+  //       const modules = userInfo.modules || []; // Ensure modules are included
+  //       const plan = userInfo.plan || null; // Plan info
+
+  //       // Fetch permissions for this role
+  //       const permissions = await Auth.findPermissionsByRole(userrole);
+  //       console.log("User permissions:", permissions);
+
+  //       // Clean unnecessary fields
+  //       delete userInfo.firstname;
+  //       delete userInfo.lastname;
+  //       delete userInfo.library_settings;
+  //       delete userInfo.subscription;
+  //       delete userInfo.addons;
+
+  //       // Attach additional info
+  //       userInfo.username = username;
+  //       userInfo.userrole = userrole;
+  //       userInfo.companyid = companyid;
+  //       userInfo.tenantcode = tenantcode;
+  //       userInfo.modules = modules;
+  //       userInfo.plan = plan;
+  //       userInfo.permissions = permissions;
+
+  //       // Sign JWT token
+  //       const authToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
+  //         expiresIn: "5h",
+  //       });
+
+  //       const refreshToken = jwt.sign(
+  //         { email: userInfo.email, tenantcode: tenantcode },
+  //         process.env.JWT_REFRESH_SECERT_KEY,
+  //         { expiresIn: "7d" }
+  //       );
+
+  //       success = true;
+  //       return res
+  //         .cookie("refreshToken", refreshToken, {
+  //           httpOnly: true,
+  //           sameSite: "strict",
+  //         })
+  //         .status(200)
+  //         .json({ success, authToken, refreshToken });
+  //     } catch (error) {
+  //       console.error("Login error:", error);
+  //       res.status(400).json({ success, errors: error.message || error });
+  //     }
+  //   }
+  // );
+
+
 
   router.post(
     "/login",
@@ -218,7 +364,7 @@ module.exports = (app) => {
         const tcode = req.body.tcode ? req.body.tcode.trim().toLowerCase() : "";
 
 
- 
+
 
         const errors = validationResult(req);
 
@@ -238,7 +384,7 @@ module.exports = (app) => {
 
         const checkForTcode = await Auth.checkCompanybyTcode(tcode);
         if (!checkForTcode) {
- 
+
           return res.status(400).json({
             success,
             errors:
@@ -251,15 +397,15 @@ module.exports = (app) => {
         const actualTenantcode = companyData?.tenantcode || tcode;
         const companyId = companyData?.id || null;
 
- 
+
 
 
         await Auth.init(actualTenantcode, companyId);
 
         const userRec = await Auth.findByEmail(email);
         if (!userRec) {
- 
- 
+
+
 
 
           try {
@@ -278,7 +424,7 @@ module.exports = (app) => {
               }
             }
           } catch (err) {
- 
+
           }
 
           return res
@@ -289,7 +435,7 @@ module.exports = (app) => {
 
 
         if (!userInfo || !userInfo.password) {
- 
+
           return res
             .status(400)
             .json({ success, errors: "User account error. Please contact administrator." });
@@ -301,7 +447,7 @@ module.exports = (app) => {
           String(userInfo.password)
         );
         if (!passwordCompare) {
- 
+
           return res
             .status(400)
             .json({ success, errors: "Try to login with correct credentials" });
@@ -342,7 +488,7 @@ module.exports = (app) => {
           userInfo.modules = modules;
         }
 
- 
+
 
         const authToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
           expiresIn: "5h",
@@ -362,7 +508,7 @@ module.exports = (app) => {
           .json({ success, authToken, refreshToken });
 
       } catch (error) {
- 
+
         res.status(400).json({ success, errors: error });
       }
     }

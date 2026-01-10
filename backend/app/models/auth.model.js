@@ -2,6 +2,48 @@ const sql = require("./db.js");
 function init(schema_name) {
   this.schema = schema_name;
 }
+// async function findPermissionsByRole(roleId) {
+//   if (!roleId) return [];
+
+//   try {
+//     // Pehle role_permissions se permission_id uthao
+//     const rolePerms = await sql.query(`
+//       SELECT permission_id
+//       FROM demo.role_permissions
+//       WHERE role_id = $1
+//       ORDER BY id ASC
+//     `, [roleId]);
+
+//     if (!rolePerms.rows || rolePerms.rows.length === 0) return [];
+
+//     const permissionIds = rolePerms.rows.map(rp => rp.permission_id);
+
+//     // Phir permissions table se details uthao
+//     const permissionsResult = await sql.query(`
+//       SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
+//       FROM demo.permissions
+//       WHERE id = ANY($1::uuid[])
+//     `, [permissionIds]);
+
+//     // Map permissions per module
+//     const permissions = permissionsResult.rows.map(row => ({
+//       permissionId: row.id,
+//       moduleId: row.module_id,
+//       canView: row.allow_view || false,
+//       canCreate: row.allow_create || false,
+//       canEdit: row.allow_edit || false,
+//       canDelete: row.allow_delete || false
+//     }));
+
+//     console.log("Fetched Permissions for role:", permissions);
+//     return permissions;
+
+//   } catch (err) {
+//     console.error("Error fetching permissions for role:", err);
+//     return [];
+//   }
+// }
+
 
 
 async function createUser(newUser) {
@@ -23,7 +65,7 @@ async function createUser(newUser) {
 
   if (!finalCompanyId && this.companyId) {
     finalCompanyId = this.companyId;
- 
+
   }
 
   if (!finalCompanyId && this.schema) {
@@ -35,7 +77,7 @@ async function createUser(newUser) {
       `, [this.schema]);
       if (companyCheck.rows.length > 0) {
         finalCompanyId = companyCheck.rows[0].id;
- 
+
       } else {
         console.error("Company not found for schema:", this.schema);
       }
@@ -49,7 +91,7 @@ async function createUser(newUser) {
     throw new Error(`Company ID is required for user creation. Schema: ${this.schema}`);
   }
 
- 
+
 
 
   if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
@@ -73,7 +115,7 @@ async function createUser(newUser) {
       country_code,
     ]
   );
- 
+
   if (result.rowCount > 0) {
     return result.rows[0];
   }
@@ -86,7 +128,7 @@ async function findByEmail(email) {
   }
 
   const emailLower = email ? email.toLowerCase().trim() : "";
- 
+
 
   try {
 
@@ -97,12 +139,12 @@ async function findByEmail(email) {
     `, [emailLower]);
 
     if (!userCheck || userCheck.rows.length === 0) {
- 
+
       return null;
     }
 
     const user = userCheck.rows[0];
- 
+
 
 
     const result = await sql.query(`
@@ -114,7 +156,7 @@ async function findByEmail(email) {
         WHERE LOWER(TRIM(email)) = $1 AND isactive = true
         LIMIT 1
       )
-      
+
       SELECT json_build_object(
         -- User info
         'id', u.id,
@@ -127,7 +169,7 @@ async function findByEmail(email) {
         'userrole', u.userrole,
         'companyid', u.companyid,
         'isactive', u.isactive,
-        
+
         -- Company info - using COALESCE to handle null values
         'time_zone', COALESCE(c.time_zone, 'UTC'),
         'companyname', COALESCE(c.name, ''),
@@ -139,7 +181,7 @@ async function findByEmail(email) {
         'tenantcode', COALESCE(c.tenantcode, ''),
         'logourl', COALESCE(c.logourl, '')
       ) AS userinfo
-      
+
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
       LIMIT 1;
@@ -158,7 +200,7 @@ async function findByEmail(email) {
     }
 
 
- 
+
     return {
       userinfo: {
         id: user.id,
@@ -188,6 +230,126 @@ async function findByEmail(email) {
   }
 }
 
+// async function findByEmail(email) {
+//   if (!this.schema) {
+//     console.error("Error: Schema not initialized in findByEmail");
+//     throw new Error(
+//       "Schema name is not initialized. Please call Auth.init() first."
+//     );
+//   }
+
+//   const emailLower = email ? email.toLowerCase().trim() : "";
+
+//   try {
+//     // Step 1: Basic user check
+//     const userCheck = await sql.query(
+//       `SELECT * FROM ${this.schema}.user 
+//        WHERE LOWER(TRIM(email)) = $1 
+//        LIMIT 1`,
+//       [emailLower]
+//     );
+
+//     if (!userCheck || userCheck.rows.length === 0) {
+//       return null;
+//     }
+
+//     const user = userCheck.rows[0];
+
+//     // Step 2: Fetch detailed user info along with company info
+//     const result = await sql.query(
+//       `
+//       WITH user_info AS (
+//         SELECT 
+//           id, firstname, lastname, email, phone, country_code, 
+//           password, userrole, companyid, isactive
+//         FROM ${this.schema}.user
+//         WHERE LOWER(TRIM(email)) = $1
+//         LIMIT 1
+//       )
+//       SELECT json_build_object(
+//         'id', u.id,
+//         'firstname', u.firstname,
+//         'lastname', u.lastname,
+//         'email', u.email,
+//         'phone', COALESCE(u.phone, ''),
+//         'country_code', COALESCE(u.country_code, ''),
+//         'password', u.password,
+//         'userrole', u.userrole,
+//         'companyid', u.companyid,
+//         'isactive', u.isactive,
+
+//         -- Company info
+//         'time_zone', COALESCE(c.time_zone, 'UTC'),
+//         'companyname', COALESCE(c.name, ''),
+//         'companystreet', COALESCE(c.street, ''),
+//         'companycity', COALESCE(c.city, ''),
+//         'companypincode', COALESCE(c.pincode, ''),
+//         'companystate', COALESCE(c.state, ''),
+//         'companycountry', COALESCE(c.country, ''),
+//         'tenantcode', COALESCE(c.tenantcode, ''),
+//         'logourl', COALESCE(c.logourl, '')
+//       ) AS userinfo
+//       FROM user_info u
+//       LEFT JOIN public.company c ON c.id = u.companyid
+//       LIMIT 1;
+//     `,
+//       [emailLower]
+//     );
+
+//     if (result.rows.length > 0) {
+//       const userData = result.rows[0].userinfo;
+
+//       // Optional: Fetch permissions by role
+//       if (userData.userrole) {
+//         console.log("userData.userrole", userData.userrole)
+//         const permissions = await findPermissionsByRole(userData.userrole);
+//         userData.permissions = permissions || [];
+//       } else {
+//         userData.permissions = [];
+//       }
+
+//       // Ensure modules is always an array
+//       if (!userData.modules || !Array.isArray(userData.modules)) {
+//         userData.modules = [];
+//       }
+
+//       return { userinfo: userData };
+//     }
+
+//     // Fallback in case detailed query fails
+//     return {
+//       userinfo: {
+//         id: user.id,
+//         firstname: user.firstname,
+//         lastname: user.lastname,
+//         email: user.email,
+//         phone: user.phone || "",
+//         country_code: user.country_code || "",
+//         password: user.password,
+//         userrole: user.userrole,
+//         companyid: user.companyid,
+//         isactive: user.isactive,
+//         plan: null,
+//         modules: [],
+//         permissions: [],
+//         time_zone: "UTC",
+//         companyname: "",
+//         companystreet: "",
+//         companycity: "",
+//         companypincode: "",
+//         companystate: "",
+//         companycountry: "",
+//         tenantcode: "",
+//         logourl: "",
+//       },
+//     };
+//   } catch (error) {
+//     console.error("Error in findByEmail:", error);
+//     throw error;
+//   }
+// }
+
+
 async function findById(id) {
   try {
     let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM demo.user u`;
@@ -195,7 +357,7 @@ async function findById(id) {
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) return result.rows[0];
   } catch (error) {
- 
+
   }
   return null;
 }
@@ -242,7 +404,7 @@ async function findAll(userinfo) {
       if (result.rows.length > 0) return result.rows;
     }
   } catch (error) {
- 
+
   }
 
   return null;
@@ -294,7 +456,7 @@ async function getAllManager(role) {
     const result = await sql.query(query);
     return result.rows;
   } catch (errMsg) {
- 
+
     return [];
   }
 }
@@ -325,7 +487,7 @@ async function updateById(id, userRec) {
     );
     if (result.rowCount > 0) return "Updated successfully";
   } catch (error) {
- 
+
   }
 
   return null;
@@ -367,7 +529,7 @@ async function checkCompanybyTcode(tcode) {
 
   try {
     const result = await sql.query(query, [tcode]);
- 
+
     if (result.rows.length > 0) {
       return result.rows;
     }
@@ -390,5 +552,7 @@ module.exports = {
   getAllManager,
   checkForDuplicate,
   checkCompanybyTcode,
-  getUserCount
+  getUserCount,
+  // findPermissionsByRole
+  
 };

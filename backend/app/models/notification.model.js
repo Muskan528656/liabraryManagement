@@ -18,28 +18,28 @@ const Notification = {
   },
 
 
-  // findAll: async function (userId, isRead = null) {
-  //   let query = `
-  //     SELECT * FROM ${schema}.notifications 
-  //     WHERE user_id = $1
-  //   `;
-  //   let params = [userId];
+  findAll: async function (userId, isRead = null) {
+    let query = `
+      SELECT * FROM demo.notifications 
+      WHERE user_id = $1
+    `;
+    let params = [userId];
 
-  //   if (isRead !== null) {
-  //     query += ` AND is_read = $2`;
-  //     params.push(isRead);
-  //   }
+    if (isRead !== null) {
+      query += ` AND is_read = $2`;
+      params.push(isRead);
+    }
 
-  //   query += ` ORDER BY created_at DESC`;
+    query += ` ORDER BY createddate DESC`;
 
-  //   try {
-  //     const result = await sql.query(query, params);
-  //     return result.rows;
-  //   } catch (error) {
-  //     console.error("Error fetching notifications:", error);
-  //     throw error;
-  //   }
-  // },
+    try {
+      const result = await sql.query(query, params);
+      return result.rows;
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      throw error;
+    }
+  },
 
 
 
@@ -47,7 +47,7 @@ const Notification = {
   getUnreadCount: async function (userId) {
     try {
       const result = await sql.query(
-        `SELECT COUNT(*) as count FROM ${schema}.notifications 
+        `SELECT COUNT(*) as count FROM demo.notifications 
          WHERE user_id = $1 AND is_read = false`,
         [userId]
       );
@@ -60,16 +60,19 @@ const Notification = {
 
 
   create: async function (notification) {
-    const { user_id, title, message, type, related_id, related_type } = notification;
+    const { user_id, message, type, related_id, related_type } = notification;
 
     try {
       const result = await sql.query(
-        `INSERT INTO ${schema}.notifications 
-         (user_id, title, message, type, related_id, related_type, is_read, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, false, NOW())
-         RETURNING *`,
-        [user_id, title, message, type, related_id || null, related_type || null]
+        `
+      INSERT INTO demo.notifications 
+      (user_id, message, is_read, createddate)
+      VALUES ($1, $2, false, NOW())
+      RETURNING *
+      `,
+        [user_id, message]
       );
+
       return result.rows[0];
     } catch (error) {
       console.error("Error creating notification:", error);
@@ -78,11 +81,12 @@ const Notification = {
   },
 
 
+
   markAsRead: async function (notificationId, userId) {
     try {
       const result = await sql.query(
-        `UPDATE ${schema}.notifications 
-         SET is_read = true, read_at = NOW()
+        `UPDATE demo.notifications 
+         SET is_read = true
          WHERE id = $1 AND user_id = $2
          RETURNING *`,
         [notificationId, userId]
@@ -98,7 +102,7 @@ const Notification = {
   markAllAsRead: async function (userId) {
     try {
       const result = await sql.query(
-        `UPDATE ${schema}.notifications 
+        `UPDATE demo.notifications 
          SET is_read = true, read_at = NOW()
          WHERE user_id = $1 AND is_read = false
          RETURNING *`,
@@ -115,7 +119,7 @@ const Notification = {
   delete: async function (notificationId, userId) {
     try {
       const result = await sql.query(
-        `DELETE FROM ${schema}.notifications 
+        `DELETE FROM demo.notifications 
          WHERE id = $1 AND user_id = $2
          RETURNING *`,
         [notificationId, userId]
@@ -141,7 +145,7 @@ const Notification = {
 
     try {
       const result = await sql.query(
-        `INSERT INTO ${schema}.notifications 
+        `INSERT INTO demo.notifications 
          (user_id, title, message, type, related_id, related_type, is_read, created_at)
          VALUES ${values}
          RETURNING *`,
@@ -168,9 +172,9 @@ const Notification = {
           u.firstname,
           u.lastname,
           b.title as book_title
-         FROM ${schema}.book_issues bi
-         JOIN ${schema}.user u ON bi.user_id = u.id
-         JOIN ${schema}.books b ON bi.book_id = b.id
+         FROM demo.book_issues bi
+         JOIN demo.user u ON bi.user_id = u.id
+         JOIN demo.books b ON bi.book_id = b.id
          WHERE bi.return_date IS NULL
            AND bi.due_date < CURRENT_DATE
            AND bi.status = 'issued'
@@ -185,6 +189,7 @@ const Notification = {
 
 
   getAllBooks: async function () {
+    console.log("schemaschema", this.schema)
     try {
       const query = `SELECT 
                     bi.*,
@@ -197,11 +202,11 @@ const Notification = {
                     issued_by_user.email AS issued_by_email,
                     lc.card_number,
                     lc.id AS card_id
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}."user" issued_to_user ON bi.issued_to = issued_to_user.id
-                   LEFT JOIN ${schema}."user" issued_by_user ON bi.issued_by = issued_by_user.id
-                   LEFT JOIN ${schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+                   FROM demo.book_issues bi
+                   LEFT JOIN demo.books b ON bi.book_id = b.id
+                   LEFT JOIN demo."user" issued_to_user ON bi.issued_to = issued_to_user.id
+                   LEFT JOIN demo."user" issued_by_user ON bi.issued_by = issued_by_user.id
+                   LEFT JOIN demo.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
                    ORDER BY bi.createddate DESC`;
       const result = await sql.query(query);
 
@@ -238,16 +243,16 @@ const Notification = {
         ) {
 
           const existingNotification = await sql.query(
-            `SELECT id FROM ${schema}.notifications
-           WHERE user_id = $1 AND type = 'due_reminder' AND related_id = $2 AND related_type = 'book_issue'
-           AND DATE(created_at) = CURRENT_DATE`,
-            [book.issued_to, book.id]
+            `SELECT id FROM demo.notifications
+           WHERE user_id = $1  
+           AND DATE(createddate) = CURRENT_DATE`,
+            [book.id]
           );
 
           if (existingNotification.rows.length === 0) {
-        
+
             const notification = await this.create({
-              user_id: book.issued_to,
+              // user_id: book.issued_to,
               title: 'Book Due Tomorrow',
               message: `Your book "${book.book_title}" is due tomorrow. Please return it to avoid penalties.`,
               type: 'due_reminder',

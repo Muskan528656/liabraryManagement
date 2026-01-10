@@ -19,7 +19,6 @@ const AuthApi = {
         },
         body: JSON.stringify(loginData),
       });
-
       const result = await response.json();
 
 
