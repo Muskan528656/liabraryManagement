@@ -15,8 +15,10 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Author = require("../models/author.model.js");
+
+const { VIEW_AUTHOR } = require("../constants/permissions");
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -24,15 +26,18 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
-    try {
-      const authors = await Author.findAll();
-      return res.status(200).json(authors);
-    } catch (error) {
-      console.error("Error fetching authors:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+  router.get("/",
+    fetchUser,                 // ✅ token verify here
+    checkPermission(VIEW_AUTHOR),// ✅ permission here
+    async (req, res) => {
+      try {
+        const authors = await Author.findAll();
+        return res.status(200).json(authors);
+      } catch (error) {
+        console.error("Error fetching authors:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
+    });
 
 
   router.get("/:id", fetchUser, async (req, res) => {
@@ -97,15 +102,28 @@ module.exports = (app) => {
     fetchUser,
 
     [
-      body("name").notEmpty().withMessage("Name is required"),
+      body("name")
+        .trim()
+        .notEmpty()
+        .withMessage("Name is required"),
+
+      body("email")
+        .trim()
+        .toLowerCase()
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Please enter a valid email address"),
     ],
     async (req, res) => {
       try {
         const errors = validationResult(req);
+
         if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+          return res.status(400).json({
+            errors: errors.array()[0].msg
+          });
         }
- 
         Author.init(req.userinfo.tenantcode);
         const existingAuthor = await Author.findById(req.params.id);
         if (!existingAuthor) {
@@ -125,6 +143,7 @@ module.exports = (app) => {
           }
         }
 
+
         const userId = req.user?.id || null;
         const author = await Author.updateById(req.params.id, req.body, userId);
         if (!author) {
@@ -133,7 +152,7 @@ module.exports = (app) => {
         return res.status(200).json({ success: true, data: author });
       } catch (error) {
         console.error("Error updating author:", error);
-        return res.status(500).json({ errors: error.message });
+        return res.status(500).json({ error: error.message });
       }
     }
   );

@@ -1008,7 +1008,7 @@ const BulkPurchasePage = () => {
                                             <th style={{ background: 'var(--primary-background-color)', width: '12%' }} >
                                                 <div>Notes</div>
                                             </th>
-                                            <th style={{ background: 'var(--primary-background-color)', width: '2%' }} >
+                                            <th style={{ background: 'var(--primary-background-color)', width: '12%' }} >
                                                 <div>Actions</div>
                                             </th>
                                         </tr>

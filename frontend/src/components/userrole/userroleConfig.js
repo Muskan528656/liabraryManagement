@@ -78,7 +78,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 colSize: 12,
             },
             {
-                name: "is_active", // Changed key to name to be consistent with other modules
+                name: "is_active",
                 label: "Status",
                 type: "toggle",
                 colSize: 12,
@@ -124,7 +124,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                 return true;
             },
             afterSave: (response, editingItem) => {
- 
+
             },
             onDataLoad: (data) => {
                 if (Array.isArray(data)) {

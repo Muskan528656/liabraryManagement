@@ -1,5 +1,6 @@
 /**
  * Permissions Model
+ * Only essential functions for CRUD and role-permission management
  */
 
 const sql = require("./db.js");
@@ -8,188 +9,50 @@ function init(schema_name) {
     this.schema = schema_name;
 }
 
+// Get all permissions
 async function findAll() {
-    const query = `
-        SELECT p.*, m.name AS module_name, m.api_name AS module_api_name 
-        FROM demo.permissions p
-        LEFT JOIN demo.module m ON p.module_id = m.id
-        LEFT JOIN demo.user_role r ON p.role_id = r.id
-        ORDER BY p.createddate DESC
-    `;
+    const query = `SELECT * FROM demo.permissions ORDER BY name`;
     const result = await sql.query(query);
     return result.rows;
 }
 
+// Get permissions assigned to a role
 async function findByRole(roleId) {
     const query = `
-        SELECT p.*, m.name AS module_name, m.api_name AS module_api_name
+        SELECT p.* 
         FROM demo.permissions p
-        LEFT JOIN demo.module m ON p.module_id = m.id
-        WHERE p.role_id = $1
-        ORDER BY m.name
+        JOIN demo.role_permissions rp ON rp.permission_id = p.id
+        WHERE rp.role_id = $1
+        ORDER BY p.name
     `;
     const result = await sql.query(query, [roleId]);
     return result.rows;
 }
 
-async function findById(id) {
+// Create a new permission
+async function create(data) {
     const query = `
-        SELECT p.*, m.name AS module_name, m.api_name AS module_api_name
-        FROM demo.permissions p
-        LEFT JOIN demo.module m ON p.module_id = m.id
-        WHERE p.id = $1
-    `;
-    const result = await sql.query(query, [id]);
-    return result.rows[0] || null;
-}
-
-async function create(data, userId) {
-    const query = `
-        INSERT INTO demo.permissions
-        (role_id, module_id, allow_view, allow_create, allow_edit, allow_delete, createdbyid, lastmodifiedbyid)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+        INSERT INTO demo.permissions (name)
+        VALUES ($1)
         RETURNING *
     `;
-    const values = [
-        data.role_id,
-        data.module_id,
-        data.allow_view ?? false,
-        data.allow_create ?? false,
-        data.allow_edit ?? false,
-        data.allow_delete ?? false,
-        userId
-    ];
-    const result = await sql.query(query, values);
+    const result = await sql.query(query, [data.name]);
     return result.rows[0];
 }
 
-async function updateById(id, data, userId) {
-    const current = await findById(id);
-    if (!current) throw new Error("Permission not found");
-
+// Update permission name by ID
+async function updateById(id, data) {
     const query = `
         UPDATE demo.permissions
-        SET 
-            allow_view = $2,
-            allow_create = $3,
-            allow_edit = $4,
-            allow_delete = $5,
-            lastmodifiedbyid = $6,
-            lastmodifieddate = NOW()
+        SET name = $2
         WHERE id = $1
         RETURNING *
     `;
-    const values = [
-        id,
-        data.allow_view ?? current.allow_view,
-        data.allow_create ?? current.allow_create,
-        data.allow_edit ?? current.allow_edit,
-        data.allow_delete ?? current.allow_delete,
-        userId
-    ];
-
-    const result = await sql.query(query, values);
+    const result = await sql.query(query, [id, data.name]);
     return result.rows[0];
 }
 
-async function findByRoleId(roleId) {
-    try {
-        const query = `
-            SELECT p.*, m.module_name, m.module_description
-            FROM demo.permissions p
-            JOIN demo.modules m ON p.module_id = m.id
-            WHERE p.role_id = $1
-            ORDER BY m.module_name
-        `;
-
-        const result = await sql.query(query, [roleId]);
-        return result.rows;
-    } catch (error) {
-        console.error("Error in Permission.findByRoleId:", error);
-        throw error;
-    }
-}
-
-
-async function updateMultiple(roleId, permissions, userId) {
-    try {
-        const updatedPermissions = [];
-
-
-        await sql.query('BEGIN');
-
-        for (const perm of permissions) {
-            const { module_id, allow_view, allow_create, allow_edit, allow_delete } = perm;
-
-
-            const existingQuery = `
-                SELECT id FROM demo.permissions 
-                WHERE role_id = $1 AND module_id = $2
-            `;
-            const existingResult = await sql.query(existingQuery, [roleId, module_id]);
-
-            if (existingResult.rows.length > 0) {
-
-                const updateQuery = `
-                    UPDATE demo.permissions
-                    SET 
-                        allow_view = $3,
-                        allow_create = $4,
-                        allow_edit = $5,
-                        allow_delete = $6,
-                        lastmodifiedbyid = $7,
-                        lastmodifieddate = NOW()
-                    WHERE role_id = $1 AND module_id = $2
-                    RETURNING *
-                `;
-
-                const values = [
-                    roleId,
-                    module_id,
-                    allow_view || false,
-                    allow_create || false,
-                    allow_edit || false,
-                    allow_delete || false,
-                    userId
-                ];
-
-                const result = await sql.query(updateQuery, values);
-                updatedPermissions.push(result.rows[0]);
-            } else {
-
-                const insertQuery = `
-                    INSERT INTO demo.permissions 
-                    (role_id, module_id, allow_view, allow_create, allow_edit, allow_delete, createdbyid, lastmodifiedbyid)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-                    RETURNING *
-                `;
-
-                const values = [
-                    roleId,
-                    module_id,
-                    allow_view || false,
-                    allow_create || false,
-                    allow_edit || false,
-                    allow_delete || false,
-                    userId
-                ];
-
-                const result = await sql.query(insertQuery, values);
-                updatedPermissions.push(result.rows[0]);
-            }
-        }
-
-
-        await sql.query('COMMIT');
-
-        return updatedPermissions;
-    } catch (error) {
-
-        await sql.query('ROLLBACK');
-        console.error("Error in Permission.updateMultiple:", error);
-        throw error;
-    }
-}
+// Delete permission by ID
 async function deleteById(id) {
     const result = await sql.query(
         `DELETE FROM demo.permissions WHERE id = $1 RETURNING *`,
@@ -200,12 +63,38 @@ async function deleteById(id) {
         : { success: false, message: "Not found" };
 }
 
+// Assign multiple permissions to a role (role_permissions)
+async function updateMultiple(roleId, permissions) {
+    // permissions = array of permission IDs
+    await sql.query("BEGIN");
+
+    try {
+        // Delete old permissions
+        await sql.query(`DELETE FROM demo.role_permissions WHERE role_id = $1`, [roleId]);
+
+        // Insert new permissions
+        for (const permId of permissions) {
+            await sql.query(
+                `INSERT INTO demo.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
+                [roleId, permId]
+            );
+        }
+
+        await sql.query("COMMIT");
+        return { success: true, message: "Permissions updated for role" };
+    } catch (error) {
+        await sql.query("ROLLBACK");
+        console.error("Error in updateMultiple:", error);
+        throw error;
+    }
+}
+
 module.exports = {
     init,
     findAll,
-    findById,
     findByRole,
     create,
     updateById,
-    deleteById
+    deleteById,
+    updateMultiple
 };
