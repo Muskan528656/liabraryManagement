@@ -432,43 +432,56 @@ try {
       SELECT id
       FROM ${schema}.notifications
       WHERE user_id = $1
-        AND book_id = $2
+      AND member_id = $2
+        AND book_id = $3
         AND type = 'due_reminder'
         AND DATE(createddate) = CURRENT_DATE
       `,
-      [userId, newIssue.book_id]
+      [userId, member.member_id, newIssue.book_id]
     );
 
     if (existsRes.rows.length === 0) {
 
-      // ✅ Insert & RETURN notification
-      const insertRes = await sql.query(
-        `
-        INSERT INTO ${schema}.notifications
-        (
-          user_id,
-          member_id,
-          book_id,
-          message,
-          is_read,
-          type,
-          createddate
-        )
-        VALUES ($1, $2, $3, $4, false, $5, NOW())
-        RETURNING *
-        `,
-        [
-          userId,
-          member.member_id,
-          newIssue.book_id,
-          `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-          "due_reminder"
-        ]
-      );
+      // // ✅ Insert & RETURN notification
+      // const insertRes = await sql.query(
+      //   `
+      //   INSERT INTO ${schema}.notifications
+      //   (
+      //     user_id,
+      //     member_id,
+      //     book_id,
+      //     message,
+      //     is_read,
+      //     type,
+      //     createddate
+      //   )
+      //   VALUES ($1, $2, $3, $4, false, $5, NOW())
+      //   RETURNING *
+      //   `,
+      //   [
+      //     userId,
+      //     member.member_id,
+      //     newIssue.book_id,
+      //     `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+      //     "due_reminder"
+      //   ]
+      // );
 
-      const notification = insertRes.rows[0];
 
-      console.log("✅ Due reminder notification created and emitted");
+     let notification =  {
+         "user_id": userId,
+         "member_id": member.member_id,
+         "book_id": newIssue.book_id,
+         "message" : `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+          "type": "due_reminder"
+        }
+
+        console.log("notification=>",notification);
+      Notification.create(notification);
+    
+      // const notification = insertRes.rows[0];
+
+      // console.log("✅ Due reminder notification created and emitted:", notification.id);
     } else {
       console.log("⚠️ Due reminder already exists for today");
     }

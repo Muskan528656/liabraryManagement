@@ -83,14 +83,14 @@ module.exports = (app) => {
     }
   });
 
-  router.put("/mark-read-by-related/:relatedId/:type", fetchUser, async (req, res) => {
+  router.put("/mark-read-by-related/:relatedId/:memberId/:type", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const { relatedId, type } = req.params;
+      const { relatedId, memberId, type } = req.params;
       const userId = req.userinfo.id;
 
-      const updatedNotifications = await Notification.markAsReadByRelatedId(userId, relatedId, type);
+      const updatedNotifications = await Notification.markAsReadByRelatedId(userId, relatedId, memberId, type);
 
       return res.status(200).json({
         success: true,

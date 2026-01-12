@@ -1240,10 +1240,11 @@ const BookSubmit = () => {
                 const isSubmittedBeforeDue = submitDate < dueDate;
                 console.log("Is submitted before due date:", isSubmittedBeforeDue);
                 console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
+                console.log("Selected member ID for notification marking:", selectedIssue.issued_to);
                 if (isSubmittedBeforeDue) {
                     try {
                         await helper.fetchWithAuth(
-                            `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/due_reminder`,
+                            `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/${selectedIssue.issued_to}/due_reminder`,
                             "PUT"
                         );
                         console.log("Notifications marked as read for early submission");

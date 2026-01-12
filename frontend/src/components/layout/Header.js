@@ -402,18 +402,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return moduleItems;
   };
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const onNewNotification = (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    };
-
-    socket.on("new_notification", onNewNotification);
-    return () => socket.off("new_notification", onNewNotification);
-  }, [socket]);
-
   const menuItems = getMenuItems();
 
   useEffect(() => {
@@ -452,29 +440,41 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return location.pathname.startsWith(path);
   };
 
+  // Single consolidated useEffect for socket notifications
   useEffect(() => {
-    if (socket) {
-      const handleNewNotification = (notification) => {
-        setAllNotifications((prev) => [notification, ...prev]);
-        setUnreadCount((prev) => prev + 1);
-
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(notification.title, {
-            body: notification.message,
-            icon: "/logo.png",
-          });
-        }
-      };
-
-      socket.on("new_notification", handleNewNotification);
-
-      return () => {
-        socket.off("new_notification", handleNewNotification);
-      };
-    } else {
-      console.warn("⚠️ Socket not available for notification listener");
+    if (!socket || !userInfo || !userInfo.id) {
+      console.warn("⚠️ Socket or user info not available for notification setup");
+      return;
     }
-  }, [socket]);
+
+    console.log("🔌 Setting up socket notifications for user:", userInfo.id);
+
+    const handleNewNotification = (notification) => {
+      console.log("📨 Received new notification:", notification);
+
+      // Update notifications state
+      setNotifications(prev => [notification, ...prev]);
+      setAllNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+
+      // Show browser notification if permission granted
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(notification.title || "Library Notification", {
+          body: notification.message,
+          icon: "/logo.png",
+        });
+      }
+    };
+
+    // Listen for new notifications
+    socket.on("new_notification", handleNewNotification);
+
+    // Cleanup function
+    return () => {
+      console.log("🔌 Cleaning up socket notification listeners");
+      socket.off("new_notification", handleNewNotification);
+    };
+  }, [socket, userInfo]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -592,55 +592,55 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  const markAsRead = async (notificationId) => {
-    try {
-      const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
-        "PUT"
-      );
-      const result = await response.json();
-      if (result.success) {
-        setAllNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notificationId ? { ...n, is_read: true } : n
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
+  // const markAsRead = async (notificationId) => {
+  //   try {
+  //     const response = await helper.fetchWithAuth(
+  //       `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
+  //       "PUT"
+  //     );
+  //     const result = await response.json();
+  //     if (result.success) {
+  //       setAllNotifications((prev) =>
+  //         prev.map((n) =>
+  //           n.id === notificationId ? { ...n, is_read: true } : n
+  //         )
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error marking notification as read:", error);
+  //   }
+  // };
+
+  const markAsRead = (notificationId) => {
+
+  // setAllNotifications((prev) =>
+  //   prev.map((n) =>
+  //     n.id === notificationId
+  //       ? { ...n, is_read: false }
+  //       : n
+  //   )
+  // );
+};
 
 
-  const handleNotificationClick = async (notification) => {
+  const handleNotificationClick = (notification) => {
     if (notification.type === "book_due") {
       navigate("/mybooks");
     }
 
-    // Mark notification as read
+    // Mark notification as read (frontend only)
     if (!notification.is_read) {
-      try {
-        const response = await helper.fetchWithAuth(
-          `${constants.API_BASE_URL}/api/notifications/${notification.id}/read`,
-          "PUT"
-        );
-        const result = await response.json();
-        if (result.success) {
-          setAllNotifications((prev) =>
-            prev.map((n) =>
-              n.id === notification.id ? { ...n, is_read: true } : n
-            )
-          );
-          setNotifications((prev) =>
-            prev.map((n) =>
-              n.id === notification.id ? { ...n, is_read: true } : n
-            )
-          );
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        }
-      } catch (error) {
-        console.error("Error marking notification as read:", error);
-      }
+      setAllNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, is_read: true } : n
+        )
+      );
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, is_read: true } : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     }
   };
 
@@ -815,7 +815,27 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: n.is_read ? 400 : 600 }}>
-                            {n.message}
+                            {n.message} <br/>
+                            <p 
+                            style={{
+                              display: "inline-block",
+                              marginRight: "6px",
+                              color: "#374151",
+                              fontSize: "12px",
+                              fontWeight: "500",
+                            }}
+                            >Member Name : </p> 
+                            <span
+                              style={{
+                                display: "inline-block",
+                                marginLeft: "2px",
+                                color: "rgb(37, 99, 235)",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                              }}
+                            >
+                             {n.first_name} 
+                            </span>
                           </div>
                           <small className="text-muted">
                             {n.created_at || n.due_date}

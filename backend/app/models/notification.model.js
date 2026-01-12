@@ -8,6 +8,7 @@
 
 const sql = require("./db.js");
 
+
 let schema = "demo";
 
 function init(schema_name) {
@@ -17,10 +18,14 @@ function init(schema_name) {
 async function findAll(userId) {
   console.log("Fetching all notifications for user ID:", userId);
   const query = `
-    SELECT *
-    FROM ${schema}.notifications
-    WHERE user_id = $1
-    ORDER BY createddate DESC
+    SELECT 
+    n.*,                         
+    m.first_name
+    FROM ${schema}.notifications n
+    LEFT JOIN ${schema}.library_members m 
+      ON n.member_id = m.id
+    WHERE n.user_id = $1
+    ORDER BY n.createddate DESC;
   `;
 
   const result = await sql.query(query, [userId]);
@@ -40,28 +45,36 @@ async function getUnreadCount(userId) {
 }
 
 async function create(notification) {
-  const { user_id, message, type, related_id, related_type } = notification;
 
+ console.log("dateed=>",notification);
+ 
   const query = `
     INSERT INTO ${schema}.notifications
-    (user_id, message, type, related_id, related_type, is_read, createddate)
-    VALUES ($1, $2, $3, $4, $5, false, NOW())
-    RETURNING *
-  `;
-
+        (
+          user_id,
+          member_id,
+          book_id,
+          message,
+          is_read,
+          type,
+          createddate
+        )
+        VALUES ($1, $2, $3, $4, false, $5, NOW())
+        RETURNING *
+        `;
   const result = await sql.query(query, [
-    user_id,
-    message,
-    type || null,
-    related_id || null,
-    related_type || null
+    notification.user_id,
+    notification.member_id || null,
+    notification.book_id || null,
+    notification.message,
+    notification.type || null
   ]);
 
   const createdNotification = result.rows[0];
 
   // Emit real-time notification to the user
   if (global.io) {
-    global.io.to(`user_${user_id}`).emit("new_notification", createdNotification);
+    global.io.to(`user_${notification.user_id}`).emit("new_notification", createdNotification);
   }
 
   return createdNotification;
@@ -91,15 +104,15 @@ async function markAllAsRead(userId) {
   return result.rows;
 }
 
-async function markAsReadByRelatedId(userId, bookId, type) {
-  console.log("Marking notifications as read for user ID:", userId, "book ID:", bookId, "type:", type);
+async function markAsReadByRelatedId(userId, bookId, memberId, type) {
+  console.log("Marking notifications as read for user ID:", userId, "book ID:", bookId, "member ID:", memberId, "type:", type);
   const query = `
     UPDATE ${schema}.notifications
-    SET is_read = true WHERE user_id = $1 AND book_id = $2 AND type = $3 AND is_read = false
+    SET is_read = true WHERE user_id = $1 AND member_id = $2 AND book_id = $3 AND type = $4 AND is_read = false
     RETURNING *
   `;
 
-  const result = await sql.query(query, [userId, bookId, type]);
+  const result = await sql.query(query, [userId, memberId, bookId, type]);
   return result.rows;
 }
 
