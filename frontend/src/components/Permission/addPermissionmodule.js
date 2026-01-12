@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import DataApi from "../../api/dataApi"; // aapka API handler
+import DataApi from "../../api/dataApi";
 
 const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     const [modules, setModules] = useState([]);
@@ -20,7 +20,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         permissions: [],
     });
 
-    // Reset form when modal closes
+
     useEffect(() => {
         if (!show) {
             setFormData({ role_id: "", role_name: "", permissions: [] });
@@ -28,7 +28,6 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }
     }, [show]);
 
-    // Load modules and roles when modal opens
     useEffect(() => {
         if (show) {
             loadModules();
@@ -36,7 +35,6 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }
     }, [show]);
 
-    // Initialize permissions when editing or creating new
     useEffect(() => {
         if (modules.length === 0) return;
 

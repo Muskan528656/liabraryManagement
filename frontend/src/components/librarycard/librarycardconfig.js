@@ -418,10 +418,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-
-
             const errors = [];
-
             if (!formData.first_name?.trim()) {
                 errors.push("First name is required")
                 console.log("Validation error: First name is required");
@@ -435,9 +432,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Please enter a valid email address");
                 }
             }
-
-
-
             const duplicateEmail = allCards.find(
                 card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
                     card.id !== editingCard?.id
