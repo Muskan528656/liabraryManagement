@@ -55,6 +55,7 @@ const io = require("socket.io")(server, {
 });
 
 app.set("io", io);
+global.io = io;
 
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);

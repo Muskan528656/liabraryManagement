@@ -74,48 +74,69 @@ module.exports = (app) => {
     fetchUser,
     checkPermission("Books", "allow_create"),
     [
-      body("title").optional().custom((value) => {
-        if (value === null || value === undefined || value === "") {
-          return true;
-        }
-        return value.trim().length > 0;
-      }).withMessage("Title is required"),
-      body("author_id").optional().custom((value) => {
-
-        return true;
-      }),
-      body("category_id").optional().custom((value) => {
-
-        return true;
-      }),
-      body("publisher_id").optional().custom((value) => {
-
-        return true;
-      }),
-      body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().custom((value) => {
-        if (value !== undefined && value !== null && value !== "") {
-          const numValue = parseInt(value);
-          if (isNaN(numValue) || numValue < 0) {
-            throw new Error("Max age must be a non-negative integer");
+      body("title")
+        .optional()
+        .custom((value) => {
+          if (value === null || value === undefined || value === "") {
+            return true;
           }
-        }
-        return true;
-      }).custom((value, { req }) => {
-        if (value !== undefined && value !== null && value !== "" &&
-          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
-          if (parseInt(value) < parseInt(req.body.min_age)) {
-            throw new Error("Max age cannot be less than min age");
-          }
-        }
-        return true;
-      }),
-      body("isbn").optional().custom((value) => {
-        if (value === null || value === undefined || value === "") {
+          return value.trim().length > 0;
+        })
+        .withMessage("Title is required"),
+      body("author_id")
+        .optional()
+        .custom((value) => {
           return true;
-        }
-        return value.trim().length > 0;
-      }).withMessage("ISBN is required"),
+        }),
+      body("category_id")
+        .optional()
+        .custom((value) => {
+          return true;
+        }),
+      body("publisher_id")
+        .optional()
+        .custom((value) => {
+          return true;
+        }),
+      body("min_age")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Min age must be a non-negative integer"),
+      body("max_age")
+        .optional()
+        .custom((value) => {
+          if (value !== undefined && value !== null && value !== "") {
+            const numValue = parseInt(value);
+            if (isNaN(numValue) || numValue < 0) {
+              throw new Error("Max age must be a non-negative integer");
+            }
+          }
+          return true;
+        })
+        .custom((value, { req }) => {
+          if (
+            value !== undefined &&
+            value !== null &&
+            value !== "" &&
+            req.body.min_age !== undefined &&
+            req.body.min_age !== null &&
+            req.body.min_age !== ""
+          ) {
+            if (parseInt(value) < parseInt(req.body.min_age)) {
+              throw new Error("Max age cannot be less than min age");
+            }
+          }
+          return true;
+        }),
+      body("isbn")
+        .optional()
+        .custom((value) => {
+          if (value === null || value === undefined || value === "") {
+            return true;
+          }
+          return value.trim().length > 0;
+        })
+        .withMessage("ISBN is required"),
     ],
     async (req, res) => {
       try {
@@ -125,7 +146,6 @@ module.exports = (app) => {
         }
 
         Book.init(req.userinfo.tenantcode);
-
 
         if (req.body.isbn && req.body.isbn.trim()) {
           const existingBook = await Book.findByISBN(req.body.isbn);
@@ -157,24 +177,36 @@ module.exports = (app) => {
       body("author_id").notEmpty().withMessage("Author ID is required"),
       body("category_id").notEmpty().withMessage("Category ID is required"),
       body("publisher_id").optional(),
-      body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-      body("max_age").optional().custom((value) => {
-        if (value !== undefined && value !== null && value !== "") {
-          const numValue = parseInt(value);
-          if (isNaN(numValue) || numValue < 0) {
-            throw new Error("Max age must be a non-negative integer");
+      body("min_age")
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage("Min age must be a non-negative integer"),
+      body("max_age")
+        .optional()
+        .custom((value) => {
+          if (value !== undefined && value !== null && value !== "") {
+            const numValue = parseInt(value);
+            if (isNaN(numValue) || numValue < 0) {
+              throw new Error("Max age must be a non-negative integer");
+            }
           }
-        }
-        return true;
-      }).custom((value, { req }) => {
-        if (value !== undefined && value !== null && value !== "" &&
-          req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
-          if (parseInt(value) < parseInt(req.body.min_age)) {
-            throw new Error("Max age cannot be less than min age");
+          return true;
+        })
+        .custom((value, { req }) => {
+          if (
+            value !== undefined &&
+            value !== null &&
+            value !== "" &&
+            req.body.min_age !== undefined &&
+            req.body.min_age !== null &&
+            req.body.min_age !== ""
+          ) {
+            if (parseInt(value) < parseInt(req.body.min_age)) {
+              throw new Error("Max age cannot be less than min age");
+            }
           }
-        }
-        return true;
-      }),
+          return true;
+        }),
       body("isbn").notEmpty().withMessage("ISBN is required"),
     ],
     async (req, res) => {
@@ -186,12 +218,10 @@ module.exports = (app) => {
 
         Book.init(req.userinfo.tenantcode);
 
-
         const existingBook = await Book.findById(req.params.id);
         if (!existingBook) {
           return res.status(404).json({ errors: "Book not found" });
         }
-
 
         const duplicateBook = await Book.findByISBN(
           req.body.isbn,
@@ -230,7 +260,5 @@ module.exports = (app) => {
     }
   });
 
-
   app.use(process.env.BASE_API_URL + "/api/book", router);
 };
-
