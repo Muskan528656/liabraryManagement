@@ -102,19 +102,6 @@ async function findByEmail(email, excludeId = null) {
 }
 
 
-// async function findByEmail(email) {
-//   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
-
-//   try {
-//     const query = `SELECT * FROM ${this.schema}."user" WHERE email = $1`;
-//     const result = await sql.query(query, [email]);
-//     return result.rows.length ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByEmail:", error);
-//     throw error;
-//   }
-// }
-
 
 
 
@@ -197,83 +184,7 @@ async function create(userData, userId) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 async function updateById(id, userData) {
-
-
-
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
 
@@ -290,15 +201,11 @@ async function updateById(id, userData) {
 
 
     const add = (field, value) => {
-      if (value !== undefined && value !== null) { // Only add non-null/undefined fields
+      if (value !== undefined && value !== null) {
         updateFields.push(`${field} = $${i++}`);
         values.push(value);
       }
     };
-
-
-
-
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);

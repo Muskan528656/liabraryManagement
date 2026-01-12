@@ -23,7 +23,7 @@ function normalizeDateInput(dateInput) {
     return `${yy}-${mm}-${dd}${rest}`;
   }
 
-  return dateInput;
+  return dateInput
 }
 
 function resolveTimezone(timeZone) {

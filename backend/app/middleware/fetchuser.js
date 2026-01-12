@@ -8,8 +8,10 @@ const fetchUser = async (req, res, next) => {
   }
   try {
     token = token.includes("Bearer ") ? token.replace("Bearer ", "") : token;
+    console.log("tokentoken", token)
     const user = jwt.verify(token, process.env.JWT_SECRET);
     if (user) {
+      console.log("useruser", user)
       Auth.init(user.tenantcode);
       const userRec = await Auth.findById(user.id);
 
@@ -27,41 +29,36 @@ const fetchUser = async (req, res, next) => {
   }
 };
 
-
 const checkPermission = (requiredPermission) => {
-  console.log("requiredPermissionrequiredPermission", requiredPermission)
   return (req, res, next) => {
     try {
-      const authHeader = req.headers["authorization"];
-
-      if (!authHeader) {
+      const user = req.userinfo;
+      if (!user) {
         return res.status(401).json({
           success: false,
-          message: "Authorization token missing",
+          message: "Unauthorized",
         });
       }
 
-      const token = authHeader.split(" ")[1];
+      const userRoleName = user.role_name;
+      const permissions = user.permissions || [];
+      const permissionNames = permissions.map(p => p.permissionName);
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.userinfo = decoded;
-
-      const userRole = decoded.userrole;
-      const permissions = decoded.permissions || [];
-
-      if (userRole === "SYSTEM_ADMIN") {
+      // SYSTEM_ADMIN full access
+      if (userRoleName === "SYSTEM_ADMIN") {
         return next();
       }
 
-
+      // Global permissions
       if (
-        permissions.includes("MODIFY_ALL") ||
-        permissions.includes("VIEW_ALL")
+        permissionNames.includes("MODIFY_ALL") ||
+        permissionNames.includes("VIEW_ALL")
       ) {
         return next();
       }
-      if (!permissions.includes(requiredPermission)) {
+
+      // Specific permission check
+      if (!permissionNames.includes(requiredPermission)) {
         return res.status(403).json({
           success: false,
           message: `Permission denied: ${requiredPermission}`,
@@ -70,12 +67,14 @@ const checkPermission = (requiredPermission) => {
 
       next();
     } catch (error) {
-      return res.status(401).json({
+      console.error("Permission error:", error);
+      return res.status(500).json({
         success: false,
-        message: "Invalid or expired token",
+        message: "Permission check failed",
       });
     }
   };
 };
+
 
 module.exports = { fetchUser, checkPermission };

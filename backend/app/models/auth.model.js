@@ -2,49 +2,43 @@ const sql = require("./db.js");
 function init(schema_name) {
   this.schema = schema_name;
 }
-// async function findPermissionsByRole(roleId) {
-//   if (!roleId) return [];
+async function findPermissionsByRole(roleId) {
+  if (!roleId) return [];
 
-//   try {
-//     // Pehle role_permissions se permission_id uthao
-//     const rolePerms = await sql.query(`
-//       SELECT permission_id
-//       FROM demo.role_permissions
-//       WHERE role_id = $1
-//       ORDER BY id ASC
-//     `, [roleId]);
+  try {
+    // 1️⃣ Role se permission_ids fetch karo
+    const rolePermsResult = await sql.query(`
+      SELECT permission_id
+      FROM demo.role_permissions
+      WHERE role_id = $1
+      ORDER BY id ASC
+    `, [roleId]);
 
-//     if (!rolePerms.rows || rolePerms.rows.length === 0) return [];
+    if (!rolePermsResult.rows.length) return [];
 
-//     const permissionIds = rolePerms.rows.map(rp => rp.permission_id);
+    const permissionIds = rolePermsResult.rows.map(rp => rp.permission_id);
 
-//     // Phir permissions table se details uthao
-//     const permissionsResult = await sql.query(`
-//       SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
-//       FROM demo.permissions
-//       WHERE id = ANY($1::uuid[])
-//     `, [permissionIds]);
+    // 2️⃣ Permissions table se details fetch karo
+    const permissionsResult = await sql.query(`
+      SELECT id, name
+      FROM demo.permissions
+      WHERE id = ANY($1::uuid[])
+    `, [permissionIds]);
 
-//     // Map permissions per module
-//     const permissions = permissionsResult.rows.map(row => ({
-//       permissionId: row.id,
-//       moduleId: row.module_id,
-//       canView: row.allow_view || false,
-//       canCreate: row.allow_create || false,
-//       canEdit: row.allow_edit || false,
-//       canDelete: row.allow_delete || false
-//     }));
+    // 3️⃣ Map into expected format
+    const permissions = permissionsResult.rows.map(row => ({
+      permissionId: row.id,
+      permissionName: row.name
+    }));
 
-//     console.log("Fetched Permissions for role:", permissions);
-//     return permissions;
+    console.log("Fetched Permissions for role:", permissions);
+    return permissions;
 
-//   } catch (err) {
-//     console.error("Error fetching permissions for role:", err);
-//     return [];
-//   }
-// }
-
-
+  } catch (err) {
+    console.error("Error fetching permissions for role:", err);
+    return [];
+  }
+}
 
 async function createUser(newUser) {
   const {
@@ -121,114 +115,114 @@ async function createUser(newUser) {
   }
   return null;
 }
-async function findByEmail(email) {
-  if (!this.schema) {
-    console.error("Error: Schema not initialized in findByEmail");
-    throw new Error("Schema name is not initialized. Please call Auth.init() first.");
-  }
+// async function findByEmail(email) {
+//   if (!this.schema) {
+//     console.error("Error: Schema not initialized in findByEmail");
+//     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
+//   }
 
-  const emailLower = email ? email.toLowerCase().trim() : "";
-
-
-  try {
-
-    const userCheck = await sql.query(`
-      SELECT * FROM ${this.schema}.user 
-      WHERE LOWER(TRIM(email)) = $1 AND isactive = true
-      LIMIT 1
-    `, [emailLower]);
-
-    if (!userCheck || userCheck.rows.length === 0) {
-
-      return null;
-    }
-
-    const user = userCheck.rows[0];
+//   const emailLower = email ? email.toLowerCase().trim() : "";
 
 
+//   try {
 
-    const result = await sql.query(`
-      WITH user_info AS (
-        SELECT 
-          id, firstname, lastname, email, phone, country_code, 
-          password, userrole, companyid, isactive
-        FROM ${this.schema}.user
-        WHERE LOWER(TRIM(email)) = $1 AND isactive = true
-        LIMIT 1
-      )
+//     const userCheck = await sql.query(`
+//       SELECT * FROM ${this.schema}.user 
+//       WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+//       LIMIT 1
+//     `, [emailLower]);
 
-      SELECT json_build_object(
-        -- User info
-        'id', u.id,
-        'firstname', u.firstname,
-        'lastname', u.lastname,
-        'email', u.email,
-        'phone', COALESCE(u.phone, ''),  -- Use phone field
-        'country_code', COALESCE(u.country_code, ''),
-        'password', u.password,
-        'userrole', u.userrole,
-        'companyid', u.companyid,
-        'isactive', u.isactive,
+//     if (!userCheck || userCheck.rows.length === 0) {
 
-        -- Company info - using COALESCE to handle null values
-        'time_zone', COALESCE(c.time_zone, 'UTC'),
-        'companyname', COALESCE(c.name, ''),
-        'companystreet', COALESCE(c.street, ''),
-        'companycity', COALESCE(c.city, ''),
-        'companypincode', COALESCE(c.pincode, ''),
-        'companystate', COALESCE(c.state, ''),
-        'companycountry', COALESCE(c.country, ''),
-        'tenantcode', COALESCE(c.tenantcode, ''),
-        'logourl', COALESCE(c.logourl, '')
-      ) AS userinfo
+//       return null;
+//     }
 
-      FROM user_info u
-      LEFT JOIN public.company c ON c.id = u.companyid
-      LIMIT 1;
-    `, [emailLower]);
-
-    if (result.rows.length > 0) {
-      const userData = result.rows[0].userinfo;
-      console.log("User data with company:", {
-        id: userData.id,
-        companyid: userData.companyid,
-        companyname: userData.companyname,
-        tenantcode: userData.tenantcode,
-        time_zone: userData.time_zone
-      });
-      return result.rows[0];
-    }
+//     const user = userCheck.rows[0];
 
 
 
-    return {
-      userinfo: {
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        phone: user.phone || '',
-        country_code: user.country_code || '',
-        password: user.password,
-        userrole: user.userrole,
-        companyid: user.companyid,
-        time_zone: '',
-        companyname: '',
-        companystreet: '',
-        companycity: '',
-        companypincode: '',
-        companystate: '',
-        companycountry: '',
-        tenantcode: '',
-        logourl: ''
-      }
-    };
+//     const result = await sql.query(`
+//       WITH user_info AS (
+//         SELECT 
+//           id, firstname, lastname, email, phone, country_code, 
+//           password, userrole, companyid, isactive
+//         FROM ${this.schema}.user
+//         WHERE LOWER(TRIM(email)) = $1 AND isactive = true
+//         LIMIT 1
+//       )
 
-  } catch (error) {
-    console.error("Error in findByEmail:", error);
-    throw error;
-  }
-}
+//       SELECT json_build_object(
+//         -- User info
+//         'id', u.id,
+//         'firstname', u.firstname,
+//         'lastname', u.lastname,
+//         'email', u.email,
+//         'phone', COALESCE(u.phone, ''),  -- Use phone field
+//         'country_code', COALESCE(u.country_code, ''),
+//         'password', u.password,
+//         'userrole', u.userrole,
+//         'companyid', u.companyid,
+//         'isactive', u.isactive,
+
+//         -- Company info - using COALESCE to handle null values
+//         'time_zone', COALESCE(c.time_zone, 'UTC'),
+//         'companyname', COALESCE(c.name, ''),
+//         'companystreet', COALESCE(c.street, ''),
+//         'companycity', COALESCE(c.city, ''),
+//         'companypincode', COALESCE(c.pincode, ''),
+//         'companystate', COALESCE(c.state, ''),
+//         'companycountry', COALESCE(c.country, ''),
+//         'tenantcode', COALESCE(c.tenantcode, ''),
+//         'logourl', COALESCE(c.logourl, '')
+//       ) AS userinfo
+
+//       FROM user_info u
+//       LEFT JOIN public.company c ON c.id = u.companyid
+//       LIMIT 1;
+//     `, [emailLower]);
+
+//     if (result.rows.length > 0) {
+//       const userData = result.rows[0].userinfo;
+//       console.log("User data with company:", {
+//         id: userData.id,
+//         companyid: userData.companyid,
+//         companyname: userData.companyname,
+//         tenantcode: userData.tenantcode,
+//         time_zone: userData.time_zone
+//       });
+//       return result.rows[0];
+//     }
+
+
+
+//     return {
+//       userinfo: {
+//         id: user.id,
+//         firstname: user.firstname,
+//         lastname: user.lastname,
+//         email: user.email,
+//         phone: user.phone || '',
+//         country_code: user.country_code || '',
+//         password: user.password,
+//         userrole: user.userrole,
+//         companyid: user.companyid,
+//         time_zone: '',
+//         companyname: '',
+//         companystreet: '',
+//         companycity: '',
+//         companypincode: '',
+//         companystate: '',
+//         companycountry: '',
+//         tenantcode: '',
+//         logourl: ''
+//       }
+//     };
+
+//   } catch (error) {
+//     console.error("Error in findByEmail:", error);
+//     throw error;
+//   }
+// }
 
 // async function findByEmail(email) {
 //   if (!this.schema) {
@@ -275,6 +269,7 @@ async function findByEmail(email) {
 //         'country_code', COALESCE(u.country_code, ''),
 //         'password', u.password,
 //         'userrole', u.userrole,
+//          'role_name', ur.role_name,    
 //         'companyid', u.companyid,
 //         'isactive', u.isactive,
 
@@ -291,6 +286,7 @@ async function findByEmail(email) {
 //       ) AS userinfo
 //       FROM user_info u
 //       LEFT JOIN public.company c ON c.id = u.companyid
+//         LEFT JOIN demo.user_role ur ON ur.id = u.userrole   -- ✅ join user_role table
 //       LIMIT 1;
 //     `,
 //       [emailLower]
@@ -349,6 +345,134 @@ async function findByEmail(email) {
 //   }
 // }
 
+
+async function findByEmail(email) {
+  if (!this.schema) {
+    console.error("Error: Schema not initialized in findByEmail");
+    throw new Error(
+      "Schema name is not initialized. Please call Auth.init() first."
+    );
+  }
+
+  const emailLower = email ? email.toLowerCase().trim() : "";
+
+  try {
+    const userCheck = await sql.query(
+      `SELECT * FROM ${this.schema}.user 
+       WHERE LOWER(TRIM(email)) = $1 
+       LIMIT 1`,
+      [emailLower]
+    );
+
+    if (!userCheck || userCheck.rows.length === 0) {
+      return null;
+    }
+
+    const user = userCheck.rows[0];
+
+
+    const result = await sql.query(
+      `
+      WITH user_info AS (
+        SELECT 
+          u.id,
+          u.firstname,
+          u.lastname,
+          u.email,
+          u.phone,
+          u.country_code,
+          u.password,
+          u.userrole,
+          u.companyid,
+          u.isactive
+        FROM ${this.schema}.user u
+        WHERE LOWER(TRIM(u.email)) = $1
+        LIMIT 1
+      )
+      SELECT json_build_object(
+        'id', u.id,
+        'firstname', u.firstname,
+        'lastname', u.lastname,
+        'email', u.email,
+        'phone', COALESCE(u.phone, ''),
+        'country_code', COALESCE(u.country_code, ''),
+        'password', u.password,
+        'userrole', u.userrole,
+        'role_name', ur.role_name,           
+        'companyid', u.companyid,
+        'isactive', u.isactive,
+
+        -- Company info
+        'time_zone', COALESCE(c.time_zone, 'UTC'),
+        'companyname', COALESCE(c.name, ''),
+        'companystreet', COALESCE(c.street, ''),
+        'companycity', COALESCE(c.city, ''),
+        'companypincode', COALESCE(c.pincode, ''),
+        'companystate', COALESCE(c.state, ''),
+        'companycountry', COALESCE(c.country, ''),
+        'tenantcode', COALESCE(c.tenantcode, ''),
+        'logourl', COALESCE(c.logourl, '')
+      ) AS userinfo
+      FROM user_info u
+      LEFT JOIN public.company c ON c.id = u.companyid
+     LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
+      LIMIT 1;
+    `,
+      [emailLower]
+    );
+
+    if (result.rows.length > 0) {
+      const userData = result.rows[0].userinfo;
+
+
+      if (userData.userrole) {
+        const permissions = await findPermissionsByRole(userData.userrole);
+        userData.permissions = permissions || [];
+      } else {
+        userData.permissions = [];
+      }
+
+
+      if (!userData.modules || !Array.isArray(userData.modules)) {
+        userData.modules = [];
+      }
+
+      return { userinfo: userData };
+    }
+
+
+    return {
+      userinfo: {
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        phone: user.phone || "",
+        country_code: user.country_code || "",
+        password: user.password,
+        userrole: user.userrole,
+        role_name: userinfo.role_name,
+        companyid: user.companyid,
+        isactive: user.isactive,
+        plan: null,
+        modules: [],
+        permissions: [],
+        time_zone: "UTC",
+        companyname: "",
+        companystreet: "",
+        companycity: "",
+        companypincode: "",
+        companystate: "",
+        companycountry: "",
+        tenantcode: "",
+        logourl: "",
+      },
+    };
+  } catch (error) {
+    console.error("Error in findByEmail:", error);
+    throw error;
+  }
+}
 
 async function findById(id) {
   try {
@@ -553,6 +677,6 @@ module.exports = {
   checkForDuplicate,
   checkCompanybyTcode,
   getUserCount,
-  // findPermissionsByRole
-  
+  findPermissionsByRole
+
 };

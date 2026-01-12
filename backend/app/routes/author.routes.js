@@ -15,8 +15,10 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Author = require("../models/author.model.js");
+
+const { VIEW_AUTHOR } = require("../constants/permissions");
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -24,15 +26,18 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
-    try {
-      const authors = await Author.findAll();
-      return res.status(200).json(authors);
-    } catch (error) {
-      console.error("Error fetching authors:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+  router.get("/",
+    fetchUser,                 // ✅ token verify here
+    checkPermission(VIEW_AUTHOR),// ✅ permission here
+    async (req, res) => {
+      try {
+        const authors = await Author.findAll();
+        return res.status(200).json(authors);
+      } catch (error) {
+        console.error("Error fetching authors:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
+    });
 
 
   router.get("/:id", fetchUser, async (req, res) => {

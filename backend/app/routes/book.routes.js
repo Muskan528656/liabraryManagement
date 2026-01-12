@@ -15,43 +15,50 @@
  */
 
 const e = require("express");
-const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Book = require("../models/book.model.js");
 
+const { VIEW_BOOK } = require("../constants/permissions");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
 
-
-  router.get("/", fetchUser, async (req, res) => {
-    try {
-      Book.init(req.userinfo.tenantcode);
-      const books = await Book.findAll();
-      return res.status(200).json(books);
-    } catch (error) {
-      console.error("Error fetching books:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-
-
-  router.get("/by-age/:age", fetchUser, async (req, res) => {
-    try {
-      Book.init(req.userinfo.tenantcode);
-      const memberAge = parseInt(req.params.age);
-
-      if (isNaN(memberAge) || memberAge < 0) {
-        return res.status(400).json({ errors: "Invalid age parameter" });
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission(VIEW_BOOK),
+    async (req, res) => {
+      try {
+        Book.init(req.userinfo.tenantcode);
+        const books = await Book.findAll();
+        return res.status(200).json(books);
+      } catch (error) {
+        console.error("Error fetching books:", error);
+        return res.status(500).json({
+          error: "Internal Server Error"
+        });
       }
-
-      const books = await Book.findByAgeRange(memberAge, memberAge);
-      return res.status(200).json(books);
-    } catch (error) {
-      console.error("Error fetching books by age:", error);
-      return res.status(500).json({ errors: "Internal server error" });
     }
-  });
+  );
+
+
+  // router.get("/by-age/:age", fetchUser, async (req, res) => {
+  //   try {
+  //     Book.init(req.userinfo.tenantcode);
+  //     const memberAge = parseInt(req.params.age);
+
+  //     if (isNaN(memberAge) || memberAge < 0) {
+  //       return res.status(400).json({ errors: "Invalid age parameter" });
+  //     }
+
+  //     const books = await Book.findByAgeRange(memberAge, memberAge);
+  //     return res.status(200).json(books);
+  //   } catch (error) {
+  //     console.error("Error fetching books by age:", error);
+  //     return res.status(500).json({ errors: "Internal server error" });
+  //   }
+  // });
 
   router.get("/:id", fetchUser, async (req, res) => {
     try {

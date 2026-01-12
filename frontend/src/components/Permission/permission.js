@@ -20,7 +20,7 @@ const Permission = () => {
             setLoading(true);
             const api = new DataApi("permissions");
             const result = await api.fetchAll();
- 
+
 
             let permissionsData = [];
 
@@ -30,7 +30,7 @@ const Permission = () => {
                 permissionsData = result.data;
             }
 
- 
+
             setPermissions(permissionsData || []);
             setLoading(false);
         } catch (err) {
@@ -44,7 +44,7 @@ const Permission = () => {
         try {
             const api = new DataApi("user-role");
             const res = await api.fetchAll();
- 
+
 
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
             setRoles(rolesArray);
@@ -60,7 +60,7 @@ const Permission = () => {
 
     const handleSavePermission = async (formData) => {
         try {
- 
+
 
             const api = new DataApi("permissions");
             const savedPermissions = [];
@@ -84,11 +84,11 @@ const Permission = () => {
 
                 try {
                     if (existingPerm) {
- 
+
                         await api.update(existingPerm.id, permissionData);
                         savedPermissions.push({ ...permissionData, id: existingPerm.id });
                     } else {
- 
+
                         const response = await api.create(permissionData);
                         savedPermissions.push({ ...permissionData, id: response.data?.id });
                     }
@@ -141,25 +141,9 @@ const Permission = () => {
     const rolePermissions = groupPermissionsByRole();
 
 
-    const handleInlineEdit = (roleId, roleName) => {
-        const rolePerms = permissions.filter(p => p.role_id === roleId);
-        
 
-        const initialData = {};
-        rolePerms.forEach(perm => {
-            initialData[perm.module_id] = {
-                allow_view: perm.allow_view || false,
-                allow_create: perm.allow_create || false,
-                allow_edit: perm.allow_edit || false,
-                allow_delete: perm.allow_delete || false
-            };
-        });
-        
-        setInlineFormData(initialData);
-        setEditingRow(roleId);
-    };
 
-    const handleInlinePermissionChange = (roleId, moduleId, permissionType, value) => {
+    const handleInlineEdit = (roleId, moduleId, permissionType, value) => {
         setInlineFormData(prev => ({
             ...prev,
             [moduleId]: {
@@ -167,8 +151,8 @@ const Permission = () => {
                 [permissionType]: value
             }
         }));
-    };
 
+    }
     const handleInlineSave = async (roleId, roleName) => {
         try {
             const api = new DataApi("permissions");
@@ -179,7 +163,7 @@ const Permission = () => {
             for (const moduleId in inlineFormData) {
                 const moduleData = inlineFormData[moduleId];
                 const existingPerm = rolePerms.find(p => p.module_id === parseInt(moduleId));
-                
+
                 const permissionData = {
                     role_id: roleId,
                     role_name: roleName,
@@ -370,7 +354,7 @@ const Permission = () => {
                                                         {isEditing ? (
                                                             <div
                                                                 className="d-inline-block cursor-pointer"
-                                                                onClick={() => handleInlinePermissionChange(
+                                                                onClick={() => handleInlineEdit(
                                                                     role.role_id,
                                                                     perm.module_id,
                                                                     'allow_view',
@@ -396,7 +380,7 @@ const Permission = () => {
                                                         {isEditing ? (
                                                             <div
                                                                 className="d-inline-block cursor-pointer"
-                                                                onClick={() => handleInlinePermissionChange(
+                                                                onClick={() => handleInlineEdit(
                                                                     role.role_id,
                                                                     perm.module_id,
                                                                     'allow_create',
@@ -422,7 +406,7 @@ const Permission = () => {
                                                         {isEditing ? (
                                                             <div
                                                                 className="d-inline-block cursor-pointer"
-                                                                onClick={() => handleInlinePermissionChange(
+                                                                onClick={() => handleInlineEdit(
                                                                     role.role_id,
                                                                     perm.module_id,
                                                                     'allow_edit',
@@ -448,7 +432,7 @@ const Permission = () => {
                                                         {isEditing ? (
                                                             <div
                                                                 className="d-inline-block cursor-pointer"
-                                                                onClick={() => handleInlinePermissionChange(
+                                                                onClick={() => handleInlineEdit(
                                                                     role.role_id,
                                                                     perm.module_id,
                                                                     'allow_delete',
