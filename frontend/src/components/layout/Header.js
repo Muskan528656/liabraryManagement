@@ -612,9 +612,35 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   };
 
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     if (notification.type === "book_due") {
       navigate("/mybooks");
+    }
+
+    // Mark notification as read
+    if (!notification.is_read) {
+      try {
+        const response = await helper.fetchWithAuth(
+          `${constants.API_BASE_URL}/api/notifications/${notification.id}/read`,
+          "PUT"
+        );
+        const result = await response.json();
+        if (result.success) {
+          setAllNotifications((prev) =>
+            prev.map((n) =>
+              n.id === notification.id ? { ...n, is_read: true } : n
+            )
+          );
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === notification.id ? { ...n, is_read: true } : n
+            )
+          );
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+      }
     }
   };
 

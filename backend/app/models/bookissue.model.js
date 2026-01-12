@@ -423,20 +423,20 @@ try {
   console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
 
   // ✅ Create notification ONLY if due date is tomorrow
-  if (member.member_id && dueDateStr === tomorrowStr) {
+  if (userId && dueDateStr === tomorrowStr) {
     console.log("Creating due reminder notification...");
 
-    // 🛑 Prevent duplicate notification for same book, same member, same day
+    // 🛑 Prevent duplicate notification for same book, same user, same day
     const existsRes = await sql.query(
       `
       SELECT id
       FROM ${schema}.notifications
-      WHERE member_id = $1
+      WHERE user_id = $1
         AND book_id = $2
         AND type = 'due_reminder'
         AND DATE(createddate) = CURRENT_DATE
       `,
-      [member.member_id, newIssue.book_id]
+      [userId, newIssue.book_id]
     );
 
     if (existsRes.rows.length === 0) {
@@ -468,7 +468,7 @@ try {
 
       const notification = insertRes.rows[0];
 
-      console.log("✅ Due reminder notification created");
+      console.log("✅ Due reminder notification created and emitted");
     } else {
       console.log("⚠️ Due reminder already exists for today");
     }

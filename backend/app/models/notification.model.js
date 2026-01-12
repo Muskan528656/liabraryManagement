@@ -57,13 +57,20 @@ async function create(notification) {
     related_type || null
   ]);
 
-  return result.rows[0];
+  const createdNotification = result.rows[0];
+
+  // Emit real-time notification to the user
+  if (global.io) {
+    global.io.to(`user_${user_id}`).emit("new_notification", createdNotification);
+  }
+
+  return createdNotification;
 }
 
 async function markAsRead(notificationId, userId) {
   const query = `
     UPDATE ${schema}.notifications
-    SET is_read = true, read_at = NOW()
+    SET is_read = true
     WHERE id = $1 AND user_id = $2
     RETURNING *
   `;
