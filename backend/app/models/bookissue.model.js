@@ -407,47 +407,80 @@ async function issueBook(req) {
    /* =========================
    CREATE DUE REMINDER NOTIFICATION
 ========================= */
+
+/* =========================
+   CREATE DUE REMINDER NOTIFICATION
+========================= */
 try {
   Notification.init(schema);
 
+  // tomorrow date (YYYY-MM-DD)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
-  const dueDateStr = dueDate.toISOString().split("T")[0];
 
-  console.log("dueDate => ",dueDateStr);
-  
-  console.log("tomorrowStr => ",tomorrowStr);
-  console.log("member => ",member);
-  if (member.user_id && dueDateStr === tomorrowStr) {
-      const existsRes = await sql.query(
-        `SELECT id
-        FROM ${schema}.notifications
-        WHERE user_id = $1
-          AND type = 'due_reminder'
-          AND related_id = $2
-          AND related_type = 'book_issue'
-          AND DATE(created_at) = CURRENT_DATE`,
-        [member.user_id, newIssue.id]
+  // ✅ compare with DUE DATE (not issue date)
+  console.log("neIssue => ",newIssue);
+  const dueDateStr = new Date(req.body.due_date).toISOString().split("T")[0];
+
+  console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
+
+  // ✅ Create notification ONLY if due date is tomorrow
+  console.log("Member ID:", member.member_id);
+  if (member.member_id && dueDateStr === tomorrowStr) {
+    console.log("Creating due reminder notification...");
+    
+    // Prevent duplicate notification for same book on same day
+    const existsRes = await sql.query(
+      `
+      SELECT id
+      FROM ${schema}.notifications
+      WHERE member_id = $1
+        AND book_id = $2
+        AND DATE(createddate) = CURRENT_DATE
+      `,
+      [member.member_id, newIssue.book_id]
+    );
+
+    if (existsRes.rows.length === 0) {
+
+      await sql.query(
+        `
+        INSERT INTO ${schema}.notifications
+        (
+          user_id,
+          member_id,
+          book_id,
+          message,
+          is_read,
+          createddate,
+          lastmodifieddate,
+          createdbyid,
+          lastmodifiedbyid,
+          type
+        )
+        VALUES ($1, $2, $3, $4, false, NOW(), NOW(), $5, $5)
+        `,
+        [
+          member.user_id || null,
+          member.member_id,
+          newIssue.book_id,
+          `Reminder: Your book "${book.title}" is due tomorrow (${tomorrowStr}). Please return it on time to avoid penalties.`,
+          newIssue.createdbyid,
+          type='due_reminder'
+
+        ]
       );
 
-      if (existsRes.rows.length === 0) {
-        await Notification.create({
-          user_id: member.user_id,
-          title: "Book Due Tomorrow",
-          message: `Your book "${book.title}" is due tomorrow (${dueDateStr}). Please return it on time to avoid penalties.`,
-          type: "due_reminder",
-          related_id: newIssue.id,
-          related_type: "book_issue"
-        });
+      console.log("✅ Due reminder notification created");
+    } else {
+      console.log("⚠️ Due reminder already exists for today");
+    }
+  }
 
-        console.log("✅ Due reminder notification created");
-      }
-    }
-    } catch (err) {
-      console.warn("⚠️ Could not create due reminder notification:", err.message);
-    }
+} catch (notifErr) {
+  console.error("❌ Error creating due reminder notification:", notifErr);
+}
 
 
     return {
