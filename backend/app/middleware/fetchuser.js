@@ -8,10 +8,10 @@ const fetchUser = async (req, res, next) => {
   }
   try {
     token = token.includes("Bearer ") ? token.replace("Bearer ", "") : token;
-    console.log("tokentoken", token)
+    // console.log("tokentoken", token)
     const user = jwt.verify(token, process.env.JWT_SECRET);
     if (user) {
-      console.log("useruser", user)
+      // console.log("useruser", user)
       Auth.init(user.tenantcode);
       const userRec = await Auth.findById(user.id);
 

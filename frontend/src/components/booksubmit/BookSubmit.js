@@ -1234,6 +1234,25 @@ const BookSubmit = () => {
                 };
                 setSubmittedBooks(prev => [...prev, newSubmission]);
 
+                // Check if book is submitted before due date and mark notifications as read
+                const submitDate = new Date();
+                const dueDate = new Date(selectedIssue.due_date);
+                const isSubmittedBeforeDue = submitDate < dueDate;
+                console.log("Is submitted before due date:", isSubmittedBeforeDue);
+                console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
+                if (isSubmittedBeforeDue) {
+                    try {
+                        await helper.fetchWithAuth(
+                            `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/due_reminder`,
+                            "PUT"
+                        );
+                        console.log("Notifications marked as read for early submission");
+                    } catch (notificationError) {
+                        console.error("Error marking notifications as read:", notificationError);
+                        // Don't show error toast for notification marking failure as it's not critical
+                    }
+                }
+
                 handleModalClose();
 
                 if (updatedBookIssues.length === 0 && updatedCardIssues.length === 0) {
