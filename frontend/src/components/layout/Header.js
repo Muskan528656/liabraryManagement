@@ -2148,21 +2148,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-2">
-          {/* {getCountryFlag() && (
-            <img
-              src={getCountryFlag()}
-              alt="Country Flag"
-              style={{
-                height: "20px",
-                width: "30px",
-                marginRight: "8px",
-                borderRadius: "2px",
-                objectFit: "cover",
-                border: "1px solid #eee"
-              }}
-            />
-          )} */}
-
+        
           <img
             src="qr-code.png"
             alt="QR Code"

@@ -16,7 +16,7 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const LibrarySettings = require("../models/librarysettings.model.js");
 
 module.exports = (app) => {
@@ -24,8 +24,8 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
-  router.get("/", fetchUser, async (req, res) => {
+
+  router.get("/", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
       const settings = await LibrarySettings.findAll();
@@ -36,8 +36,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  router.get("/all", fetchUser, async (req, res) => {
+
+  router.get("/all", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
       const settings = await LibrarySettings.getAllSettings();
@@ -48,8 +48,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  router.get("/active", fetchUser, async (req, res) => {
+
+  router.get("/active", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
       const setting = await LibrarySettings.getActiveSetting();
@@ -63,8 +63,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  router.get("/:key", fetchUser, async (req, res) => {
+
+  router.get("/:key", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
       const setting = await LibrarySettings.findByKey(req.params.key);
@@ -78,10 +78,11 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
+    checkPermission("Settings", "allow_create"),
     [
       body("setting_key").notEmpty().withMessage("Setting key is required"),
       body("setting_value").notEmpty().withMessage("Setting value is required"),
@@ -104,10 +105,11 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/",
     fetchUser,
+    checkPermission("Settings", "allow_edit"),
     async (req, res) => {
       try {
         LibrarySettings.init(req.userinfo.tenantcode);
@@ -143,6 +145,7 @@ module.exports = (app) => {
   router.put(
     "/bulk",
     fetchUser,
+    checkPermission("Settings", "allow_edit"),
     [
       body("settings").isArray().withMessage("Settings must be an array"),
     ],
@@ -156,7 +159,7 @@ module.exports = (app) => {
         LibrarySettings.init(req.userinfo.tenantcode);
         const userId = req.userinfo?.id || null;
 
- 
+
         const settingData = {};
         req.body.settings.forEach(setting => {
           if (setting.setting_key === 'max_books_per_card') {
@@ -174,7 +177,7 @@ module.exports = (app) => {
           }
         });
 
- 
+
         settingData.name = 'Default';
         settingData.price = 0;
         settingData.reservation_limit = 3;
@@ -194,8 +197,8 @@ module.exports = (app) => {
     }
   );
 
- 
-  router.delete("/:key", fetchUser, async (req, res) => {
+
+  router.delete("/:key", fetchUser, checkPermission("Settings", "allow_delete"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
       const result = await LibrarySettings.deleteByKey(req.params.key);
@@ -209,7 +212,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   app.use(process.env.BASE_API_URL + "/api/librarysettings", router);
 };
 

@@ -9,14 +9,14 @@
 const express = require('express');
 const router = express.Router();
 const Publisher = require('../models/Publisher.model.js');
-const { fetchUser } = require('../middleware/fetchuser.js');
+const { fetchUser, checkPermission } = require('../middleware/fetchuser.js');
 const { body, validationResult } = require('express-validator');
 
 
 module.exports = (app) => {
 
 
-    router.get("/", fetchUser, async (req, res) => {
+    router.get("/", fetchUser, checkPermission("Publisher", "allow_view"), async (req, res) => {
         try {
             Publisher.init(req.userinfo.tenantcode);
             const data = await Publisher.findAllPublisher();
@@ -36,7 +36,7 @@ module.exports = (app) => {
     })
 
 
-    router.get("/:id", fetchUser, async (req, res) => {
+    router.get("/:id", fetchUser, checkPermission("Publisher", "allow_view"), async (req, res) => {
         try {
             const { id } = req.params;
             if (!id) {
@@ -62,7 +62,7 @@ module.exports = (app) => {
     })
 
 
-    router.post("/", fetchUser, [
+    router.post("/", fetchUser, checkPermission("Publisher", "allow_create"), [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
         body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
@@ -119,7 +119,7 @@ module.exports = (app) => {
             .withMessage("Phone is required")
             .isNumeric()
             .withMessage("Phone number must contain only digits")
-    ], fetchUser, async (req, res) => {
+    ], fetchUser, checkPermission("Publisher", "allow_edit"), async (req, res) => {
 
         const errors = validationResult(req);
 
@@ -163,7 +163,7 @@ module.exports = (app) => {
     })
 
 
-    router.delete("/:id", fetchUser, async (req, res) => {
+    router.delete("/:id", fetchUser, checkPermission("Publisher", "allow_delete"), async (req, res) => {
         try {
             const { id } = req.params;
             Publisher.init(req.userinfo.tenantcode);

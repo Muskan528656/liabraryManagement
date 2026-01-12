@@ -23,7 +23,7 @@ module.exports = (app) => {
         }
     });
 
- 
+
     app.get("/api/mail/due-reminder", async (req, res) => {
         try {
             const html = dueTemplate({
@@ -45,7 +45,7 @@ module.exports = (app) => {
         }
     });
 
- 
+
     app.get("/api/mail/overdue", async (req, res) => {
         try {
             const html = overdueTemplate({

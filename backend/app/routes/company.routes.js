@@ -15,7 +15,7 @@
  * @copyright   www.ibirdsservices.com
  */
 
-const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js");
+const { fetchUser, checkModulePermission, checkPermission } = require("../middleware/fetchuser.js");
 const Company = require("../models/company.model.js");
 const fs = require("fs");
 const path = require("path");
@@ -75,7 +75,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const companies = await Company.findAll();
@@ -87,7 +87,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const company = await Company.findById(req.params.id);
@@ -109,7 +109,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/name/:name", fetchUser, async (req, res) => {
+  router.get("/name/:name", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const name = decodeURIComponent(req.params.name);
@@ -127,6 +127,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
+    checkPermission("Company", "allow_create"),
     [
       body("name").notEmpty().withMessage("Company name is required"),
       body("userlicenses").isInt({ min: 0 }).withMessage("User licenses must be a non-negative integer"),
@@ -173,6 +174,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
+    checkPermission("Company", "allow_edit"),
     async (req, res) => {
       try {
         Company.init(req.userinfo.tenantcode);
@@ -293,7 +295,7 @@ module.exports = (app) => {
   );
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Company", "allow_delete"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const result = await Company.deleteById(req.params.id);

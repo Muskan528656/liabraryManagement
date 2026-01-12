@@ -162,6 +162,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     const handleSubmit = () => {
+        console.log("formdata->>>>>>>>>>", formData)
         if (!formData.role_id) {
             alert("Please select a role");
             return;

@@ -15,7 +15,7 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Vendor = require("../models/vendor.model.js");
 
 module.exports = (app) => {
@@ -24,7 +24,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const vendors = await Vendor.findAll();
@@ -36,7 +36,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const vendor = await Vendor.findById(req.params.id);
@@ -52,28 +52,13 @@ module.exports = (app) => {
 
   router.post(
     "/",
-    fetchUser,
-    // [
-    //   body("name").optional().custom((value) => {
-    //     return true;
-    //   }),
-    // ],
+    fetchUser, checkPermission("Vendors", "allow_create"),
+
     async (req, res) => {
       try {
 
-        // console.log("Vendor data-->:", req.body);
-
-        // const errors = validationResult(req);
-
-        // console.log("Validation vendor errors:", errors);
-
-        // if (!errors.isEmpty()) {
-        //   return res.status(400).json({ errors: errors.array() });
-        // }
 
         Vendor.init(req.userinfo.tenantcode);
-
-        // Check for duplicate vendor by email
         if (req.body.email) {
           const existingVendor = await Vendor.findByEmail(req.body.email);
           if (existingVendor) {
@@ -99,7 +84,7 @@ module.exports = (app) => {
 
   router.put(
     "/:id",
-    fetchUser,
+    fetchUser, checkPermission("Vendors", "allow_edit"),
     [
       body("name")
         .trim()
@@ -120,8 +105,7 @@ module.exports = (app) => {
         .withMessage("Phone is required")
         .isNumeric()
         .withMessage("Phone number must contain only digits")
-      // .isLength({ min: 10, max: 10 })
-      // .withMessage("Phone number must be 10 digits"),
+
     ],
     async (req, res) => {
       try {
@@ -178,7 +162,7 @@ module.exports = (app) => {
   );
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Vendors", "allow_delete"), async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode);
       const result = await Vendor.deleteById(req.params.id);

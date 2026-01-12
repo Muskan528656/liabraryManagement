@@ -3,10 +3,10 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 async function findPermissionsByRole(roleId) {
+  console.log("roleid->>",roleId)
   if (!roleId) return [];
 
   try {
-    // 1️⃣ Role se permission_ids fetch karo
     const rolePermsResult = await sql.query(`
       SELECT permission_id
       FROM demo.role_permissions
@@ -18,17 +18,20 @@ async function findPermissionsByRole(roleId) {
 
     const permissionIds = rolePermsResult.rows.map(rp => rp.permission_id);
 
-    // 2️⃣ Permissions table se details fetch karo
+
     const permissionsResult = await sql.query(`
-      SELECT id, name
+      SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
       FROM demo.permissions
       WHERE id = ANY($1::uuid[])
     `, [permissionIds]);
 
-    // 3️⃣ Map into expected format
     const permissions = permissionsResult.rows.map(row => ({
       permissionId: row.id,
-      permissionName: row.name
+      moduleId: row.module_id,
+      allowView: row.allow_view,
+      allowCreate: row.allow_create,
+      allowEdit: row.allow_edit,
+      allowDelete: row.allow_delete,
     }));
 
     console.log("Fetched Permissions for role:", permissions);
@@ -39,6 +42,7 @@ async function findPermissionsByRole(roleId) {
     return [];
   }
 }
+
 
 async function createUser(newUser) {
   const {
@@ -369,8 +373,6 @@ async function findByEmail(email) {
     }
 
     const user = userCheck.rows[0];
-
-
     const result = await sql.query(
       `
       WITH user_info AS (
@@ -423,20 +425,6 @@ async function findByEmail(email) {
 
     if (result.rows.length > 0) {
       const userData = result.rows[0].userinfo;
-
-
-      if (userData.userrole) {
-        const permissions = await findPermissionsByRole(userData.userrole);
-        userData.permissions = permissions || [];
-      } else {
-        userData.permissions = [];
-      }
-
-
-      if (!userData.modules || !Array.isArray(userData.modules)) {
-        userData.modules = [];
-      }
-
       return { userinfo: userData };
     }
 
@@ -454,9 +442,6 @@ async function findByEmail(email) {
         role_name: userinfo.role_name,
         companyid: user.companyid,
         isactive: user.isactive,
-        plan: null,
-        modules: [],
-        permissions: [],
         time_zone: "UTC",
         companyname: "",
         companystreet: "",

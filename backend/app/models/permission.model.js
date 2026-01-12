@@ -11,12 +11,11 @@ function init(schema_name) {
 
 // Get all permissions
 async function findAll() {
-    const query = `SELECT * FROM demo.permissions ORDER BY name`;
+    const query = `SELECT * FROM demo.permissions `;
     const result = await sql.query(query);
     return result.rows;
 }
 
-// Get permissions assigned to a role
 async function findByRole(roleId) {
     const query = `
         SELECT p.* 

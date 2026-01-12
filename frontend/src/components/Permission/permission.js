@@ -57,61 +57,60 @@ const Permission = () => {
         fetchPermissions();
         fetchRoles();
     }, [refreshKey]);
-
     const handleSavePermission = async (formData) => {
         try {
+            const permissionApi = new DataApi("permissions");
+            const rolePermissionApi = new DataApi("role-permissions");
 
-
-            const api = new DataApi("permissions");
-            const savedPermissions = [];
-            const errors = [];
-
-            const existingPermissions = permissions.filter(p => p.role_id === formData.role_id);
+            const existingPermissions = permissions.filter(
+                p => p.role_id === formData.role_id
+            );
 
             for (const permission of formData.permissions) {
-                const permissionData = {
-                    role_id: formData.role_id,
-                    role_name: formData.role_name,
+
+                // 🔹 STEP 1: permissions payload
+                const permissionPayload = {
                     module_id: permission.module_id,
-                    module_name: permission.module_name,
                     allow_view: permission.allow_view,
                     allow_create: permission.allow_create,
                     allow_edit: permission.allow_edit,
-                    allow_delete: permission.allow_delete
+                    allow_delete: permission.allow_delete,
+                    role_id: formData.role_id
                 };
 
-                const existingPerm = existingPermissions.find(p => p.module_id === permission.module_id);
+                let permissionId;
 
-                try {
-                    if (existingPerm) {
+                const existingPerm = existingPermissions.find(
+                    p => p.module_id === permission.module_id
+                );
 
-                        await api.update(existingPerm.id, permissionData);
-                        savedPermissions.push({ ...permissionData, id: existingPerm.id });
-                    } else {
 
-                        const response = await api.create(permissionData);
-                        savedPermissions.push({ ...permissionData, id: response.data?.id });
-                    }
-                } catch (err) {
-                    console.error(`Error saving permission for module ${permission.module_name}:`, err);
-                    errors.push(permission.module_name);
+                if (existingPerm) {
+                    await permissionApi.update(existingPerm.id, permissionPayload);
+                    permissionId = existingPerm.id;
+                } else {
+                    const res = await permissionApi.create(permissionPayload);
+                    permissionId = res.data.data.id;
+                
                 }
+
+                await rolePermissionApi.create({
+                    role_id: formData.role_id,
+                    permission_id: permissionId
+                });
             }
 
-            if (errors.length > 0) {
-                alert(`Permissions saved with some errors. Failed modules: ${errors.join(', ')}`);
-            } else {
-                alert(`${savedPermissions.length} permissions saved successfully!`);
-            }
-
+            alert("Permissions saved successfully");
             setShowAddModal(false);
             setEditingRole(null);
             setRefreshKey(prev => prev + 1);
+
         } catch (err) {
-            console.error("Error saving permission:", err);
-            alert("Error saving permission: " + err.message);
+            console.error("Permission save error", err);
+            alert("Failed to save permissions");
         }
     };
+
 
 
     const groupPermissionsByRole = () => {

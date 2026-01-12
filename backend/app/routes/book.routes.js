@@ -18,7 +18,6 @@ const e = require("express");
 const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Book = require("../models/book.model.js");
 
-const { VIEW_BOOK } = require("../constants/permissions");
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
 
@@ -27,40 +26,20 @@ module.exports = (app) => {
   router.get(
     "/",
     fetchUser,
-    checkPermission(VIEW_BOOK),
+    checkPermission("Books", "allow_view"),
     async (req, res) => {
       try {
         Book.init(req.userinfo.tenantcode);
         const books = await Book.findAll();
-        return res.status(200).json(books);
-      } catch (error) {
-        console.error("Error fetching books:", error);
-        return res.status(500).json({
-          error: "Internal Server Error"
-        });
+        res.json(books);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
       }
     }
   );
 
-
-  // router.get("/by-age/:age", fetchUser, async (req, res) => {
-  //   try {
-  //     Book.init(req.userinfo.tenantcode);
-  //     const memberAge = parseInt(req.params.age);
-
-  //     if (isNaN(memberAge) || memberAge < 0) {
-  //       return res.status(400).json({ errors: "Invalid age parameter" });
-  //     }
-
-  //     const books = await Book.findByAgeRange(memberAge, memberAge);
-  //     return res.status(200).json(books);
-  //   } catch (error) {
-  //     console.error("Error fetching books by age:", error);
-  //     return res.status(500).json({ errors: "Internal server error" });
-  //   }
-  // });
-
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
       const book = await Book.findById(req.params.id);
@@ -75,7 +54,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/isbn/:isbn", fetchUser, async (req, res) => {
+  router.get("/isbn/:isbn", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
       const isbn = decodeURIComponent(req.params.isbn);
@@ -93,7 +72,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-
+    checkPermission("Books", "allow_create"),
     [
       body("title").optional().custom((value) => {
         if (value === null || value === undefined || value === "") {
@@ -172,7 +151,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-
+    checkPermission("Books", "allow_edit"),
     [
       body("title").notEmpty().withMessage("Title is required"),
       body("author_id").notEmpty().withMessage("Author ID is required"),
@@ -237,154 +216,7 @@ module.exports = (app) => {
     }
   );
 
-  // router.post(
-  //   "/",
-  //   fetchUser,
-
-  //   [
-  //     body("title").optional().custom((value) => {
-  //       if (value === null || value === undefined || value === "") {
-  //         return true;
-  //       }
-  //       return value.trim().length > 0;
-  //     }).withMessage("Title is required"),
-  //     body("author_id").optional().custom((value) => {
-
-  //       return true;
-  //     }),
-  //     body("category_id").optional().custom((value) => {
-
-  //       return true;
-  //     }),
-  //     body("publisher_id").optional().custom((value) => {
-
-  //       return true;
-  //     }),
-  //     body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-  //     body("max_age").optional().custom((value) => {
-  //       if (value !== undefined && value !== null && value !== "") {
-  //         const numValue = parseInt(value);
-  //         if (isNaN(numValue) || numValue < 0) {
-  //           throw new Error("Max age must be a non-negative integer");
-  //         }
-  //       }
-  //       return true;
-  //     }).custom((value, { req }) => {
-  //       if (value !== undefined && value !== null && value !== "" &&
-  //         req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
-  //         if (parseInt(value) < parseInt(req.body.min_age)) {
-  //           throw new Error("Max age cannot be less than min age");
-  //         }
-  //       }
-  //       return true;
-  //     }),
-  //     body("isbn").optional().custom((value) => {
-  //       if (value === null || value === undefined || value === "") {
-  //         return true;
-  //       }
-  //       return value.trim().length > 0;
-  //     }).withMessage("ISBN is required"),
-  //   ],
-  //   async (req, res) => {
-  //     try {
-  //       const errors = validationResult(req);
-  //       if (!errors.isEmpty()) {
-  //         return res.status(400).json({ errors: errors.array() });
-  //       }
-
-  //       Book.init(req.userinfo.tenantcode);
-
-
-  //       if (req.body.isbn && req.body.isbn.trim()) {
-  //         const existingBook = await Book.findByISBN(req.body.isbn);
-  //         if (existingBook) {
-  //           return res
-  //             .status(400)
-  //             .json({ errors: "Book with this ISBN already exists" });
-  //         }
-  //       }
-
-  //       const userId = req.userinfo?.id || null;
-  //       const book = await Book.create(req.body, userId);
-  //       if (!book) {
-  //         return res.status(400).json({ errors: "Failed to create book" });
-  //       }
-  //       return res.status(200).json({ success: true, data: book });
-  //     } catch (error) {
-  //       console.error("Error creating book:", error);
-  //       return res.status(500).json({ errors: error.message });
-  //     }
-  //   }
-  // );
-
-  // router.put(
-  //   "/:id",
-  //   fetchUser,
-
-  //   [
-  //     body("title").notEmpty().withMessage("Title is required"),
-  //     body("author_id").notEmpty().withMessage("Author ID is required"),
-  //     body("category_id").notEmpty().withMessage("Category ID is required"),
-  //     body("publisher_id").optional(),
-  //     body("min_age").optional().isInt({ min: 0 }).withMessage("Min age must be a non-negative integer"),
-  //     body("max_age").optional().custom((value) => {
-  //       if (value !== undefined && value !== null && value !== "") {
-  //         const numValue = parseInt(value);
-  //         if (isNaN(numValue) || numValue < 0) {
-  //           throw new Error("Max age must be a non-negative integer");
-  //         }
-  //       }
-  //       return true;
-  //     }).custom((value, { req }) => {
-  //       if (value !== undefined && value !== null && value !== "" &&
-  //         req.body.min_age !== undefined && req.body.min_age !== null && req.body.min_age !== "") {
-  //         if (parseInt(value) < parseInt(req.body.min_age)) {
-  //           throw new Error("Max age cannot be less than min age");
-  //         }
-  //       }
-  //       return true;
-  //     }),
-  //     body("isbn").notEmpty().withMessage("ISBN is required"),
-  //   ],
-  //   async (req, res) => {
-  //     try {
-  //       const errors = validationResult(req);
-  //       if (!errors.isEmpty()) {
-  //         return res.status(400).json({ errors: errors.array() });
-  //       }
-
-  //       Book.init(req.userinfo.tenantcode);
-
-
-  //       const existingBook = await Book.findById(req.params.id);
-  //       if (!existingBook) {
-  //         return res.status(404).json({ errors: "Book not found" });
-  //       }
-
-
-  //       const duplicateBook = await Book.findByISBN(
-  //         req.body.isbn,
-  //         req.params.id
-  //       );
-  //       if (duplicateBook) {
-  //         return res
-  //           .status(400)
-  //           .json({ errors: "Book with this ISBN already exists" });
-  //       }
-
-  //       const userId = req.userinfo?.id || null;
-  //       const book = await Book.updateById(req.params.id, req.body, userId);
-  //       if (!book) {
-  //         return res.status(400).json({ errors: "Failed to update book" });
-  //       }
-  //       return res.status(200).json({ success: true, data: book });
-  //     } catch (error) {
-  //       console.error("Error updating book:", error);
-  //       return res.status(500).json({ errors: error.message });
-  //     }
-  //   }
-  // );
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Books", "allow_delete"), async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
       const result = await Book.deleteById(req.params.id);
