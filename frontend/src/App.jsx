@@ -49,6 +49,7 @@ import SubscriptionDetail from "./components/subscription/SubscriptionDetail";
 import Permission from "./components/Permission/permission";
 import { TimeZoneProvider } from "./contexts/TimeZoneContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
+import { BookSubmissionProvider } from "./contexts/BookSubmissionContext";
 import Plan from "./components/plan/Plan";
 import PlanDetail from "./components/plan/PlanDetail";
 import Publisher from "./components/Publisher/Publisher";
@@ -115,7 +116,8 @@ function AppContent() {
 
   return (
     <TimeZoneProvider>
-      <ToastManager />
+      <BookSubmissionProvider>
+        <ToastManager />
       <Router >
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -162,6 +164,7 @@ function AppContent() {
           </Route>
         </Routes>
       </Router>
+      </BookSubmissionProvider>
     </TimeZoneProvider>
   );
 

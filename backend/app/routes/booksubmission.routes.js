@@ -124,24 +124,35 @@ module.exports = (app) => {
           try {
             Notification.init(req.userinfo.tenantcode);
 
-            const notification = await Notification.create({
+            // Notification for the member
+            const memberNotification = await Notification.create({
               user_id: submission.issued_to,
-              title: "Book Return Submitted",
-              message: `Your book "${submission.book_title}" has been submitted. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ' No fine.'}`,
-              type: "book_returned",
+              title: "Book Submitted",
+              message: `Your book "${submission.book_title}" has been submitted successfully. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ' No fine.'}`,
+              type: "book_submitted",
               related_id: submission.id,
               related_type: "book_submission"
             });
 
+            // Notification for the librarian who submitted the book
+            const librarianNotification = await Notification.create({
+              user_id: req.userinfo.id,
+              title: "Book Submission Completed",
+              message: `Book "${submission.book_title}" has been submitted by member. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ''}`,
+              type: "book_submitted_librarian",
+              related_id: submission.id,
+              related_type: "book_submission"
+            });
 
             if (req.app.get('io')) {
               const io = req.app.get('io');
-              io.to(`user_${submission.issued_to}`).emit("new_notification", notification);
-              io.to(submission.issued_to).emit("new_notification", notification);
+              io.to(`user_${submission.issued_to}`).emit("new_notification", memberNotification);
+              io.to(submission.issued_to).emit("new_notification", memberNotification);
+              io.to(`user_${req.userinfo.id}`).emit("new_notification", librarianNotification);
+              io.to(req.userinfo.id).emit("new_notification", librarianNotification);
             }
           } catch (notifError) {
             console.error("Error creating notification for book submission:", notifError);
-
           }
         }
 
