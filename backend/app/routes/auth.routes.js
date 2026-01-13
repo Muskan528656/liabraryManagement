@@ -272,6 +272,8 @@ module.exports = (app) => {
 
         const permissions = await Auth.findPermissionsByRole(userInfo.userrole);
 
+        global.currentLoggedInUserId = userInfo.id;
+
         return res
           .cookie("refreshToken", refreshToken, {
             httpOnly: true,

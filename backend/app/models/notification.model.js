@@ -241,12 +241,11 @@ async function createDueReminderIfTomorrow(
 
 
 
-// Cron job function to check books due tomorrow and create notifications
 async function checkBooksDueTomorrow() {
   try {
     
-    console.log("🔍 Checking for books due tomorrow...");
-
+    console.log("Checking for books due tomorrow...");
+    
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -277,23 +276,22 @@ async function checkBooksDueTomorrow() {
     const result = await sql.query(query, [tomorrowStr]);
 
     console.log("result=>", result.rows);
-
+    
     if (result.rows.length === 0) {
-      console.log("✅ No books due tomorrow");
+      console.log("No books due tomorrow");
       return;
     }
-
-    console.log(`📚 Found ${result.rows.length} book(s) due tomorrow`);
-
-    // Use the current logged-in user ID instead of fetching all admins
+    
+    console.log(`Found ${result.rows.length} book(s) due tomorrow`);
+    
     const currentUserId = global.currentLoggedInUserId;
     console.log("currentUserId", currentUserId);
     if (!currentUserId) {
-      console.log("⚠️ No logged-in user found to notify");
+      console.log("No logged-in user found to notify");
       return;
     }
 
-    console.log(`👤 Notifying logged-in user (ID: ${currentUserId})`);
+    console.log(`Notifying logged-in user (ID: ${currentUserId})`);
 
     for (const book of result.rows) {
       console.log("book=>", book);
@@ -323,23 +321,22 @@ async function checkBooksDueTomorrow() {
           type: "due_reminder"
         });
 
-        console.log(`✅ Created notification for logged-in user about book "${book.book_title}"`);
+        console.log(`Created notification for logged-in user about book "${book.book_title}"`);
       } else {
-        console.log(`⏭️ Notification already exists for logged-in user about book "${book.book_title}"`);
+        console.log(`Notification already exists for logged-in user about book "${book.book_title}"`);
       }
     }
 
-    console.log("🎉 Completed checking books due tomorrow");
+    console.log("Completed checking books due tomorrow");
 
   } catch (error) {
-    console.error("❌ Error in checkBooksDueTomorrow:", error);
+    console.error("Error in checkBooksDueTomorrow:", error);
   }
 }
 
 cron.schedule('* * * * *', async () => {
-  console.log("⏰ Running daily cron job: Check books due tomorrow");
+  console.log("Running daily cron job: Check books due tomorrow");
    await checkBooksDueTomorrow()
- 
 });
 
 async function deleteNotification(notificationId, userId) {
