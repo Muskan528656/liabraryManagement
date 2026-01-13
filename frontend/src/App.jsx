@@ -54,6 +54,7 @@ import Plan from "./components/plan/Plan";
 import PlanDetail from "./components/plan/PlanDetail";
 import Publisher from "./components/Publisher/Publisher";
 import PublisherDetail from "./components/Publisher/PublisherDetail";
+import { AuthProvider } from "./contexts/authwrapper";
 
 const ENDPOINT = "http://localhost:3003";
 
@@ -117,51 +118,53 @@ function AppContent() {
   return (
     <TimeZoneProvider>
       <BookSubmissionProvider>
-        <ToastManager />
-        <Router >
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Main socket={connectedSocket} />}>
-              <Route index element={<Dashboard />} />
-              <Route path="userroles" element={<UserRole />} />
-              <Route path="user-role/:id" element={<UserRoleDetail />} />
-              <Route path="/publisher" element={<Publisher />} />
-              <Route path="/publisher/:id" element={<PublisherDetail />} />
-              <Route path="author" element={<Author />} />
-              <Route path="author/:id" element={<AuthorDetail />} />
-              <Route path="plans" element={<Plan />} />
-              <Route path="plans/:id" element={<PlanDetail />} />
-              <Route path="book" element={<Books />} />
-              <Route path="book/:id" element={<BookDetail />} />
-              <Route path="category" element={<Category />} />
-              <Route path="category/:id" element={<CategoryDetail />} />
-              <Route path="vendor" element={<Vendor />} />
-              <Route path="vendor/:id" element={<VendorDetail />} />
-              <Route path="purchase" element={<Purchase />} />
-              <Route path="purchase/:id" element={<PurchaseDetail />} />
-              <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
-              <Route path="subscriptions" element={<Subscription />} />
-              <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
-              <Route path="permissions" element={<Permission />} />
-              <Route path="user" element={<User />} />
-              <Route path="user/:id" element={<UserDetail />} />
-              <Route path="librarycard" element={<LibraryCard />} />
-              <Route path="librarycard/:id" element={<LibraryCardDetail />} />
-              <Route path="bookissue" element={<BookIssue />} />
-              <Route path="bookreturn" element={<BookSubmit />} />
-              <Route path="librarysettings" element={<LibrarySettings />} />
+        <AuthProvider>       <ToastManager />
+          <Router >
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Main socket={connectedSocket} />}>
+                <Route index element={<Dashboard />} />
+                <Route path="userroles" element={<UserRole />} />
+                <Route path="user-role/:id" element={<UserRoleDetail />} />
+                <Route path="/publisher" element={<Publisher />} />
+                <Route path="/publisher/:id" element={<PublisherDetail />} />
+                <Route path="author" element={<Author />} />
+                <Route path="author/:id" element={<AuthorDetail />} />
+                <Route path="plans" element={<Plan />} />
+                <Route path="plans/:id" element={<PlanDetail />} />
+                <Route path="book" element={<Books />} />
+                <Route path="book/:id" element={<BookDetail />} />
+                <Route path="category" element={<Category />} />
+                <Route path="category/:id" element={<CategoryDetail />} />
+                <Route path="vendor" element={<Vendor />} />
+                <Route path="vendor/:id" element={<VendorDetail />} />
+                <Route path="purchase" element={<Purchase />} />
+                <Route path="purchase/:id" element={<PurchaseDetail />} />
+                <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
+                <Route path="subscriptions" element={<Subscription />} />
+                <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+                <Route path="permissions" element={<Permission />} />
+                <Route path="user" element={<User />} />
+                <Route path="user/:id" element={<UserDetail />} />
+                <Route path="librarycard" element={<LibraryCard />} />
+                <Route path="librarycard/:id" element={<LibraryCardDetail />} />
+                <Route path="bookissue" element={<BookIssue />} />
+                <Route path="bookreturn" element={<BookSubmit />} />
+                <Route path="librarysettings" element={<LibrarySettings />} />
 
-              <Route path="librarycardtype" element={<LibrarySettings />} />
-              <Route path="booksubmit" element={<BookSubmit />} />
+                <Route path="librarycardtype" element={<LibrarySettings />} />
+                <Route path="booksubmit" element={<BookSubmit />} />
 
-              <Route path="myprofile" element={<EditProfile />} />
-              <Route path="Company" element={<Company />} />
-              <Route path="/company/:id" element={<CompanyDetail />} />
+                <Route path="myprofile" element={<EditProfile />} />
+                <Route path="Company" element={<Company />} />
+                <Route path="/company/:id" element={<CompanyDetail />} />
 
-              <Route path="bulkissued" element={<BulkIssue />} />
-            </Route>
-          </Routes>
-        </Router>
+                <Route path="bulkissued" element={<BulkIssue />} />
+              </Route>
+            </Routes>
+          </Router>
+        </AuthProvider>
+
       </BookSubmissionProvider>
     </TimeZoneProvider>
   );

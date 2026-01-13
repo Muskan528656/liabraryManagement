@@ -326,8 +326,6 @@ module.exports = (app) => {
       let username = userInfo.firstname + " " + userInfo.lastname;
       userInfo.username = username;
       delete userInfo.password;
-
-      // Update the global logged-in user ID on token refresh
       global.currentLoggedInUserId = userInfo.id;
 
       const newAuthToken = jwt.sign(userInfo, process.env.JWT_SECRET, {

@@ -3,13 +3,13 @@ import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
 import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+import { useAuthWrapper } from "../../contexts/authwrapper";
 
 const Books = (props) => {
   const { timeZone } = useTimeZone();
-
-
+  const { user, permissions, } = useAuthWrapper();
   const baseConfig = getBooksConfig();
-
+  console.log("use->>>>>>>>>>>", user)
 
 
   const { data, loading, error } = useDataManager(
