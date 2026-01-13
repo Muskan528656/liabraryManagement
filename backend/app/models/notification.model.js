@@ -138,8 +138,7 @@ async function createBroadcast(userIds, notification) {
   userIds.forEach((userId, i) => {
     const idx = i * 6;
     values.push(
-      `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${
-        idx + 6
+      `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6
       }, false, NOW())`
     );
     params.push(
@@ -277,7 +276,7 @@ async function checkBooksDueTomorrow() {
 
     const result = await sql.query(query, [tomorrowStr]);
 
-    console.log("result=>",result.rows);
+    console.log("result=>", result.rows);
 
     if (result.rows.length === 0) {
       console.log("✅ No books due tomorrow");
@@ -337,7 +336,6 @@ async function checkBooksDueTomorrow() {
   }
 }
 
-// Schedule the cron job to run daily at 9:00 AM
 cron.schedule('* * * * *', async () => {
   console.log("⏰ Running daily cron job: Check books due tomorrow");
    await checkBooksDueTomorrow()

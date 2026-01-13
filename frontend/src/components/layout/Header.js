@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Navbar,
   Nav,
@@ -63,9 +63,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       if (result) {
         setUserProfile(result);
 
-        const fullName = `${result.firstname || ""} ${
-          result.lastname || ""
-        }`.trim();
+        const fullName = `${result.firstname || ""} ${result.lastname || ""
+          }`.trim();
         setUserDisplayName(
           fullName || result.username || result.email || "User"
         );
@@ -275,12 +274,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  
-  useEffect(() => {
-  fetchAllNotifications();
-}, []);
 
- 
+  useEffect(() => {
+    fetchAllNotifications();
+  }, []);
+
+
 
   const fetchModulesFromDB = async () => {
     try {
@@ -335,7 +334,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
- 
+
   useEffect(() => {
     try {
       const token = sessionStorage.getItem("token");
@@ -447,7 +446,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return location.pathname.startsWith(path);
   };
 
-  // Single consolidated useEffect for socket notifications
   useEffect(() => {
     if (!socket || !userInfo || !userInfo.id) {
       console.warn("⚠️ Socket or user info not available for notification setup");
@@ -458,18 +456,15 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
     const handleNewNotification = (notification) => {
       console.log("📨 Received new notification:", notification);
-
-      // Update notifications state
       setNotifications(prev => [notification, ...prev]);
       setAllNotifications(prev => [notification, ...prev]);
 
-      // Publish event to update context unread count
+
       PubSub.publish("NOTIFICATIONS_UPDATED", {
         type: "new_notification",
         notification: notification
       });
 
-      // Show browser notification if permission granted
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title || "Library Notification", {
           body: notification.message,
@@ -478,10 +473,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       }
     };
 
-    // Listen for new notifications
     socket.on("new_notification", handleNewNotification);
 
-    // Cleanup function
     return () => {
       console.log("🔌 Cleaning up socket notification listeners");
       socket.off("new_notification", handleNewNotification);
@@ -604,35 +597,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // const markAsRead = async (notificationId) => {
-  //   try {
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
-  //       "PUT"
-  //     );
-  //     const result = await response.json();
-  //     if (result.success) {
-  //       setAllNotifications((prev) =>
-  //         prev.map((n) =>
-  //           n.id === notificationId ? { ...n, is_read: true } : n
-  //         )
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error marking notification as read:", error);
-  //   }
-  // };
 
-  const markAsRead = (notificationId) => {
-
-  // setAllNotifications((prev) =>
-  //   prev.map((n) =>
-  //     n.id === notificationId
-  //       ? { ...n, is_read: false }
-  //       : n
-  //   )
-  // );
-};
 
 
   const handleNotificationClick = (notification) => {
@@ -645,20 +610,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
 
     console.log(notification.type);
-      navigate("/booksubmit");
+    navigate("/booksubmit");
 
-      // setAllNotifications((prev) =>
-      //   prev.map((n) =>
-      //     n.id === notification.id ? { ...n, is_read: true } : n
-      //   )
-      // );
-      // setNotifications((prev) =>
-      //   prev.map((n) =>
-      //     n.id === notification.id ? { ...n, is_read: true } : n
-      //   )
-      // );
-      // setUnreadCount((prev) => Math.max(0, prev - 1));
-    // }
+
   };
 
   const handleDeleteNotification = async (notificationId) => {
@@ -718,7 +672,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src={Company?.company_logo_url || "/Logo.png"}
+            // src={Company?.logourl || "/Logo.png"}
+            src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />
@@ -726,20 +681,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-2">
-          {/* {getCountryFlag() && (
-            <img
-              src={getCountryFlag()}
-              alt="Country Flag"
-              style={{
-                height: "20px",
-                width: "30px",
-                marginRight: "8px",
-                borderRadius: "2px",
-                objectFit: "cover",
-                border: "1px solid #eee"
-              }}
-            />
-          )} */}
 
           <img
             src="qr-code.png"
@@ -825,17 +766,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   overflow: "hidden",
                 }}
               >
-                {/* HEADER */}
+             
                 <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                   <h6 className="mb-0 fw-bold">Notifications</h6>
                 </div>
 
-                {/* TABS */}
+             
                 <div className="d-flex border-bottom">
                   <button
-                    className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
-                    }`}
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
+                      }`}
                     onClick={() => setActiveTab("UNREAD")}
                     style={{
                       background: activeTab === "UNREAD" ? "var(--primary-color)" : undefined,
@@ -846,10 +786,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   >
                     Unread ({notifications.length})
                   </button>
-                 <button
-                    className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "READ" ? "text-white" : "bg-light text-muted"
-                    }`}
+                  <button
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "READ" ? "text-white" : "bg-light text-muted"
+                      }`}
                     style={{
                       backgroundColor: activeTab === "READ" ? "var(--primary-color)" : undefined,
                       fontSize: "12px",

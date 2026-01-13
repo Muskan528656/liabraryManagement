@@ -15,7 +15,7 @@
  * @copyright   www.ibirdsservices.com
  */
 
-const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js");
+const { fetchUser, checkModulePermission, checkPermission } = require("../middleware/fetchuser.js");
 const Company = require("../models/company.model.js");
 const fs = require("fs");
 const path = require("path");
@@ -75,7 +75,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const companies = await Company.findAll();
@@ -87,7 +87,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const company = await Company.findById(req.params.id);
@@ -109,7 +109,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/name/:name", fetchUser, async (req, res) => {
+  router.get("/name/:name", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const name = decodeURIComponent(req.params.name);
@@ -127,6 +127,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
+    checkPermission("Company", "allow_create"),
     [
       body("name").notEmpty().withMessage("Company name is required"),
       body("userlicenses").isInt({ min: 0 }).withMessage("User licenses must be a non-negative integer"),
@@ -175,17 +176,27 @@ module.exports = (app) => {
     fetchUser,
     async (req, res) => {
       try {
+        console.log("CONTENT-TYPE:", req.headers["content-type"]);
+        console.log("FILES:", req.files);
+
+        console.log("Update Company Request Body:", req.body);
+
         Company.init(req.userinfo.tenantcode);
 
         const existingCompany = await Company.findById(req.params.id);
+        console.log("Existing Company:", existingCompany);
         if (!existingCompany) {
           return res.status(404).json({ errors: "Company not found" });
         }
 
+
+        console.log("req.body.name:", req.body.name);
         const duplicateCompany = await Company.findByName(
           req.body.name,
           req.params.id
         );
+
+        console.log("Duplicate Company Check:", duplicateCompany);
         if (duplicateCompany) {
           return res
             .status(400)
@@ -196,7 +207,7 @@ module.exports = (app) => {
 
         const companyData = { ...req.body };
 
-        // Convert string booleans to actual booleans for multipart form data
+        console.log("companyData before processing:", companyData);
         if (companyData.isactive !== undefined) {
           companyData.isactive = companyData.isactive === 'true' || companyData.isactive === true;
         }
@@ -209,16 +220,19 @@ module.exports = (app) => {
 
         const previousImagePath = existingCompany.logourl;
 
-        // Handle file upload with express-fileupload
-        if (req.files && req.files.image) {
-          const imageFile = req.files.image;
+        if (req.files && req.files.logourl) {
+          const imageFile = req.files.logourl;
 
-          // Validate file type - match frontend validation exactly
+          console.log("imagefile", imageFile);
+
           const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
           const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
 
           const fileExtension = imageFile.name.toLowerCase().substring(imageFile.name.lastIndexOf('.'));
           const mimeType = imageFile.mimetype.toLowerCase();
+
+          console.log("check mimeType:", mimeType);
+          console.log("fileExtension:", fileExtension);
 
           console.log('Backend file validation:', {
             name: imageFile.name,
@@ -233,11 +247,15 @@ module.exports = (app) => {
           // Check if extension is valid
           const isValidExtension = allowedExtensions.includes(fileExtension);
 
+          console.log("isValidMimeType:", isValidMimeType);
+          console.log("isValidExtension:", isValidExtension);
+
           // For JPEG files, accept both .jpg and .jpeg extensions
           const isJpegFile = (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
             (mimeType === 'image/png' && fileExtension === '.png') ||
             (mimeType === 'image/gif' && fileExtension === '.gif');
 
+          console.log("isJpegFile:", isJpegFile);
           if (!isValidMimeType || !isValidExtension || !isJpegFile) {
 
             return res.status(400).json({ errors: "Only JPEG, PNG, and GIF images are allowed" });
@@ -253,9 +271,15 @@ module.exports = (app) => {
           const filename = 'company-' + uniqueSuffix + path.extname(imageFile.name);
           const filepath = path.join(companyUploadDir, filename);
 
+          console.log("Saving file to:", filepath);
+          console.log("filename", filename);
+          console.log("uniqueSuffix", uniqueSuffix);
+
           // Move file to upload directory
           await imageFile.mv(filepath);
           companyData.logourl = `/uploads/companies/${filename}`;
+
+
         }
 
 
@@ -265,7 +289,7 @@ module.exports = (app) => {
         }
 
         // Delete old image if a new one was uploaded
-        if (req.files && req.files.image && previousImagePath && previousImagePath !== companyData.logourl) {
+        if (req.files && req.files.logourl && previousImagePath && previousImagePath !== companyData.logourl) {
           deleteFileIfExists(previousImagePath);
         }
 
@@ -293,7 +317,7 @@ module.exports = (app) => {
   );
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Company", "allow_delete"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const result = await Company.deleteById(req.params.id);

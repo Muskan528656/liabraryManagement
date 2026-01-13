@@ -398,28 +398,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 maxSize: 2 * 1024 * 1024,
                 helperText: "Upload user photo (JPG, PNG, max 2MB)",
                 onChange: (file, formData, setFormData) => {
-                    console.log("🖼️ [FRONTEND] Image field onChange triggered");
-                    console.log("🖼️ [FRONTEND] File parameter:", file);
-                    console.log("🖼️ [FRONTEND] File type:", file instanceof File ? "File object" : typeof file);
-                    if (file instanceof File) {
-                        console.log("🖼️ [FRONTEND] File details:", {
-                            name: file.name,
-                            size: file.size,
-                            type: file.type
-                        });
-                    } else if (file === null) {
-                        console.log("🗑️ [FRONTEND] Image being cleared (null)");
-                    } else {
-                        console.log("🖼️ [FRONTEND] File value:", file);
-                    }
-                    console.log("🖼️ [FRONTEND] Current formData.image before update:", formData.image);
-
                     setFormData({
                         ...formData,
-                        image: file, // File object or null to clear
+                        image: file,
                     });
-
-                
                 },
             },
             {
@@ -432,29 +414,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                 ],
                 colSize: 6,
             },
-            {
-                name: "createddate",
-                label: "Create Date",
-                type: "date",
-                required: false,
-                colSize: 6,
-                readOnlyWhenEditing: true,
-            },
-            {
-                name: "lastmodifieddate",
-                label: "Last Modified Date",
-                type: "date",
-                required: false,
-                colSize: 6,
-                readOnlyWhenEditing: true,
-            },
+
         ],
 
         validationRules: (formData, allCards, editingCard) => {
-
-
             const errors = [];
-
             if (!formData.first_name?.trim()) {
                 errors.push("First name is required")
                 console.log("Validation error: First name is required");
@@ -468,9 +432,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
                     errors.push("Please enter a valid email address");
                 }
             }
-
-
-
             const duplicateEmail = allCards.find(
                 card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
                     card.id !== editingCard?.id

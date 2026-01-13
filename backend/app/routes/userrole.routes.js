@@ -6,7 +6,7 @@
  * @date        DEC, 2025
  */
 
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const UserRole = require("../models/userrole.model.js");
 
 module.exports = (app) => {
@@ -14,7 +14,7 @@ module.exports = (app) => {
     const { body, validationResult } = require("express-validator");
 
 
-    router.get("/", fetchUser, async (req, res) => {
+    router.get("/", fetchUser, checkPermission("User Roles", "allow_view"), async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
             const roles = await UserRole.findAll();
@@ -26,7 +26,7 @@ module.exports = (app) => {
     });
 
 
-    router.get("/:id", fetchUser, async (req, res) => {
+    router.get("/:id", fetchUser, checkPermission("User Roles", "allow_view"), async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
             const role = await UserRole.findById(req.params.id);
@@ -46,6 +46,7 @@ module.exports = (app) => {
     router.post(
         "/",
         fetchUser,
+        checkPermission("User Roles", "allow_create"),
         async (req, res) => {
             const errors = validationResult(req);
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -71,6 +72,7 @@ module.exports = (app) => {
     router.put(
         "/:id",
         fetchUser,
+        checkPermission("User Roles", "allow_edit"),
         [
             body("role_name").notEmpty().withMessage("Role Name is required"),
         ],
@@ -116,7 +118,7 @@ module.exports = (app) => {
     );
 
 
-    router.delete("/:id", fetchUser, async (req, res) => {
+    router.delete("/:id", fetchUser, checkPermission("User Roles", "allow_delete"), async (req, res) => {
         try {
             UserRole.init(req.userinfo.tenantcode);
 

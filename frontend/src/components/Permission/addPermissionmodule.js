@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
-import DataApi from "../../api/dataApi"; // aapka API handler
+import DataApi from "../../api/dataApi";
 
 const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     const [modules, setModules] = useState([]);
@@ -20,7 +20,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         permissions: [],
     });
 
-    // Reset form when modal closes
+
     useEffect(() => {
         if (!show) {
             setFormData({ role_id: "", role_name: "", permissions: [] });
@@ -28,7 +28,6 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }
     }, [show]);
 
-    // Load modules and roles when modal opens
     useEffect(() => {
         if (show) {
             loadModules();
@@ -36,7 +35,6 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }
     }, [show]);
 
-    // Initialize permissions when editing or creating new
     useEffect(() => {
         if (modules.length === 0) return;
 
@@ -162,6 +160,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     const handleSubmit = () => {
+        console.log("formdata->>>>>>>>>>", formData)
         if (!formData.role_id) {
             alert("Please select a role");
             return;
@@ -217,7 +216,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
     return (
         <Modal show={show} onHide={handleClose} size="lg" centered>
-            <Modal.Header closeButton className="bg-light py-2">
+            <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
                 <Modal.Title className="fw-bold fs-6">
                     {editingItem ? `Edit - ${editingItem.role_name}` : "Add Role Permissions"}
                 </Modal.Title>
@@ -299,10 +298,13 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                     Cancel
                 </Button>
                 <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={!formData.role_id || loading}
-                    className="px-3 py-1 fs-6"
+                  onClick={handleSubmit}
+              disabled={loading}
+              className="btn-custom d-flex align-items-center justify-content-center"
+                    // variant="primary"
+                    // onClick={handleSubmit}
+                    // disabled={!formData.role_id || loading}
+                    // className="px-3 py-1 fs-6"
                 >
                     <i className="fa-solid fa-save me-1"></i>
                     {editingItem ? "Update" : "Save"}

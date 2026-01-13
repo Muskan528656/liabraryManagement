@@ -21,7 +21,7 @@ module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
 
- 
+
   router.get("/", fetchUser, async (req, res) => {
     try {
       const records = await ObjectType.getAllRecords();
@@ -39,7 +39,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.get("/:id", fetchUser, async (req, res) => {
     try {
       const record = await ObjectType.getAllRecords();
@@ -64,7 +64,7 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
     fetchUser,
@@ -79,7 +79,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
- 
+
         const isDuplicate = await ObjectType.checkDuplicateRecord(req.body.name);
         if (isDuplicate) {
           return res.status(400).json({
@@ -111,7 +111,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
     fetchUser,
@@ -126,7 +126,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
- 
+
         if (req.body.name) {
           const isDuplicate = await ObjectType.checkDuplicateRecord(req.body.name, req.params.id);
           if (isDuplicate) {
@@ -160,7 +160,7 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
       const result = await ObjectType.deleteRecord(req.params.id);

@@ -396,80 +396,12 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
     } catch (error) {
       console.error("Error fetching latest members:", error);
-      // Keep minimal fallback
+
       setLatestMembers([]);
     }
   };
 
-  // const fetchLatestMembers = async () => {
-  //   try {
-  //     const memberApi = new DataApi("librarycard");
-  //     const response = await memberApi.fetchAll();
-
-  //     let members = [];
-  //     if (response?.data) {
-  //       members = Array.isArray(response.data) ? response.data :
-  //         (response.data.rows || []);
-  //     }
-
-  //     if (members.length === 0) {
-
-  //       members = [
-  //         {
-  //           id: 1,
-  //           firstname: "Alexander",
-  //           lastname: "Perce",
-  //           email: "alex@example.com",
-  //           phone: "+91 98765 43210",
-  //           created_at: new Date().toISOString(),
-  //           updated_at: new Date().toISOString(),
-  //           image: "https://randomuser.me/api/portraits/men/32.jpg",
-  //           card_number: "LIB2024001",
-  //           status: "active"
-  //         }
-  //       ];
-  //     }
-
-  //     const latestMembersSorted = members
-  //       .sort((a, b) => {
-  //         const dateA = new Date(a.updated_at || a.created_at);
-  //         const dateB = new Date(b.updated_at || b.created_at);
-  //         return dateB - dateA;
-  //       })
-  //       .slice(0, 5)
-  //       .map(member => ({
-  //         id: member.id,
-  //         name: `${member.firstname || ''} ${member.lastname || ''}`.trim() || `Member ${member.id}`,
-  //         email: member.email || '',
-  //         phone: member.phone || '',
-  //         created_at: member.created_at,
-  //         updated_at: member.updated_at,
-  //         image: member.image || member.profile_pic || getDefaultPhoto(member.id),
-  //         card_number: member.card_number || `CARD${member.id}`,
-  //         status: member.status || 'active'
-  //       }));
-
-  //     setLatestMembers(latestMembersSorted);
-
-  //   } catch (error) {
-  //     console.error("Error fetching latest members:", error);
-
-  //     const fallbackMembers = [
-  //       {
-  //         id: 1,
-  //         name: "Alexander Perce",
-  //         email: "alex@example.com",
-  //         phone: "+91 98765 43210",
-  //         created_at: new Date().toISOString(),
-  //         updated_at: new Date().toISOString(),
-  //         image: "https://randomuser.me/api/portraits/men/32.jpg",
-  //         card_number: "LIB2024001",
-  //         status: "active"
-  //       }
-  //     ];
-  //     setLatestMembers(fallbackMembers);
-  //   }
-  // };
+  
 
   const fetchDashboardSummary = async () => {
     try {

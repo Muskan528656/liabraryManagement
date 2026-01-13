@@ -151,7 +151,7 @@ async function issueBook(req) {
     } else if (req.auth && req.auth.userId) {
       userId = req.auth.userId;
     } else {
-      console.warn("⚠️ No user ID found. Using default user ID 1");
+      console.warn(" No user ID found. Using default user ID 1");
       userId = 1;
     }
 
