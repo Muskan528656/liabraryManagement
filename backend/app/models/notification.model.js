@@ -11,6 +11,9 @@ const cron = require("node-cron");
 
 let schema = "demo";
 
+// Global variable to store the current logged-in user ID
+global.currentLoggedInUserId = null;
+
 function init(schema_name) {
   schema = schema_name || "demo";
 }
@@ -283,64 +286,47 @@ async function checkBooksDueTomorrow() {
 
     console.log(`📚 Found ${result.rows.length} book(s) due tomorrow`);
 
-    const staffQuery = `
-      SELECT u.id, u.firstname, u.lastname, u.email, ur.role_name
-      FROM ${schema}."user" u
-      INNER JOIN ${schema}.user_role ur ON u.userrole::uuid = ur.id
-      WHERE u.isactive = true AND ur.role_name = 'Admin'
-        
-    `;
-
-    console.log("stafffQuery=>",staffQuery )
-    const staffResult = await sql.query(staffQuery);
-    const staffUsers = staffResult.rows;
-    console.log("staffUsers",staffUsers);
-
-    if (staffUsers.length === 0) {
-      console.log("⚠️ No active staff users found to notify");
+    // Use the current logged-in user ID instead of fetching all admins
+    const currentUserId = global.currentLoggedInUserId;
+    console.log("currentUserId", currentUserId);
+    if (!currentUserId) {
+      console.log("⚠️ No logged-in user found to notify");
       return;
     }
 
-    console.log(`👥 Notifying ${staffUsers.length} staff member(s)`);
+    console.log(`👤 Notifying logged-in user (ID: ${currentUserId})`);
 
     for (const book of result.rows) {
-      console.log("book=>",book);
-      for (const staff of staffUsers) {
-        console.log("staff=>",staff)
-        const existingQuery = `
-          SELECT id
-          FROM ${schema}.notifications
-          WHERE user_id = $1
-          AND member_id = $2
-            AND book_id = $3
-            AND type = 'due_reminder'
-            AND DATE(createddate) = CURRENT_DATE
-        `;
+      console.log("book=>", book);
+      const existingQuery = `
+        SELECT id
+        FROM ${schema}.notifications
+        WHERE user_id = $1
+        AND member_id = $2
+          AND book_id = $3
+          AND type = 'due_reminder'
+          AND DATE(createddate) = CURRENT_DATE
+      `;
 
-        console.log("staffId=>",staff.id);
+      const existingResult = await sql.query(existingQuery, [
+        currentUserId,
+        book.member_id,
+        book.book_id
+      ]);
+      const dueDateStr = new Date(book.due_date).toISOString().split("T")[0];
 
-        
-        const existingResult = await sql.query(existingQuery, [
-          staff.id,
-          book.member_id,
-          book.book_id
-        ]);
-        const dueDateStr = new Date(book.due_date).toISOString().split("T")[0];
-        
-        if (existingResult.rows.length === 0) {
-          const notification = await create({
-            user_id: staff.id,
-            member_id: book.member_id,
-            book_id: book.book_id,
-            message: `Reminder: The book "${book.book_title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-            // message: `Book "${book.book_title}" (ISBN: ${book.book_isbn}) issued to ${book.member_name} is due tomorrow.`,
-            type: "due_reminder"
-          });
+      if (existingResult.rows.length === 0) {
+        const notification = await create({
+          user_id: currentUserId,
+          member_id: book.member_id,
+          book_id: book.book_id,
+          message: `Reminder: The book "${book.book_title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+          type: "due_reminder"
+        });
 
-            console.log(`✅ Created notification for staff ${staff.firstname} ${staff.lastname} about book "${book.book_title}"`);
-        } else {
-          console.log(`⏭️ Notification already exists for staff ${staff.firstname} ${staff.lastname} about book "${book.book_title}"`);
-        }
+        console.log(`✅ Created notification for logged-in user about book "${book.book_title}"`);
+      } else {
+        console.log(`⏭️ Notification already exists for logged-in user about book "${book.book_title}"`);
       }
     }
 

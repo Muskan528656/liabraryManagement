@@ -4,6 +4,8 @@ const Auth = require("../models/auth.model.js");
 const fetchUser = async (req, res, next) => {
   var token = req.headers.authorization;
   if (!token) {
+    // Clear global variable when no token is provided
+    global.currentLoggedInUserId = null;
     return res.status(401).send({ errors: "Please authenticate" });
   }
   try {
@@ -16,15 +18,22 @@ const fetchUser = async (req, res, next) => {
       const userRec = await Auth.findById(user.id);
 
       if (!userRec) {
-
+        // Clear global variable for invalid user
+        global.currentLoggedInUserId = null;
         return res.status(400).json({ errors: "Invalid User" });
       }
+      // Set global variable for authenticated user
+      global.currentLoggedInUserId = user.id;
       req["userinfo"] = user;
       next();
     } else {
+      // Clear global variable for invalid user
+      global.currentLoggedInUserId = null;
       return res.status(400).json({ errors: "Invalid User" });
     }
   } catch (error) {
+    // Clear global variable when token verification fails (expired/invalid)
+    global.currentLoggedInUserId = null;
     return res.status(401).send({ errors: "Please authenticate" });
   }
 };

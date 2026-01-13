@@ -811,10 +811,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 <div className="d-flex border-bottom">
                   <button
                     className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "UNREAD" ? "bg-primary text-white" : "bg-light text-muted"
+                      activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
                     }`}
                     onClick={() => setActiveTab("UNREAD")}
                     style={{
+                      background: activeTab === "UNREAD" ? "var(--primary-color)" : undefined,
                       fontSize: "12px",
                       fontWeight: "500",
                       borderRadius: "0",
@@ -822,18 +823,18 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   >
                     Unread ({notifications.length})
                   </button>
-                  <button
+                 <button
                     className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "READ" ? "bg-primary text-white" : "bg-light text-muted"
+                      activeTab === "READ" ? "text-white" : "bg-light text-muted"
                     }`}
-                    onClick={() => setActiveTab("READ")}
                     style={{
+                      backgroundColor: activeTab === "READ" ? "var(--primary-color)" : undefined,
                       fontSize: "12px",
                       fontWeight: "500",
-               
                     }}
+                    onClick={() => setActiveTab("READ")}
                   >
-                    Read ({allNotifications.filter(n => n.is_read).length})
+                    Read ({allNotifications.filter((n) => n.is_read).length})
                   </button>
                 </div>
 
