@@ -639,8 +639,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
 
     console.log(notification.type);
-    // Mark notification as read (frontend only)
-    // if (!notification.is_read) {
       navigate("/booksubmit");
 
       // setAllNotifications((prev) =>
@@ -791,8 +789,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <Dropdown.Menu
                 align="end"
                 style={{
-                  width: "360px",
-                  borderRadius: "14px",
+                  width: "450px",
+                  borderRadius: "50%",
                   padding: "0",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
                   overflow: "hidden",
@@ -853,7 +851,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                         >
                           <div
                             style={{
-                              width: "40px",
+                              width: "100px",
                               height: "40px",
                               borderRadius: "50%",
                               background: "#e5edff",
@@ -868,7 +866,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           </div>
 
                           <div style={{ flex: 1 }} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
-                            <div style={{ fontWeight: 600 }}>
+                            <div style={{ fontWeight: 400 }}>
                               {n.message} <br/>
                               <p
                               style={{
@@ -895,29 +893,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                               {n.created_at || n.due_date}
                             </small>
                           </div>
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNotification(n.id);
-                            }}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "#dc3545",
-                              cursor: "pointer",
-                              padding: "4px",
-                              borderRadius: "4px",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = "#f8f9fa";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.backgroundColor = "transparent";
-                            }}
-                          >
-                            <i className="fa-solid fa-trash" style={{ fontSize: "12px" }}></i>
-                          </button>
                         </div>
                       ))
                     )

@@ -240,8 +240,13 @@ async function createDueReminderIfTomorrow(
 
 
 // Cron job function to check books due tomorrow and create notifications
-async function checkBooksDueTomorrow() {
+async function checkBooksDueTomorrow(req) {
   try {
+    
+     Notification.init(req.userinfo.tenantcode);
+
+    const loggedInUserId = req.userinfo.id; // ✅ LOGIN USER
+    console.log("🔐 Logged in user:", loggedInUserId);
     console.log("🔍 Checking for books due tomorrow...");
 
     // Get tomorrow's date in YYYY-MM-DD format
@@ -355,7 +360,7 @@ async function checkBooksDueTomorrow() {
 // Schedule the cron job to run daily at 9:00 AM
 cron.schedule('* * * * *', async () => {
   console.log("⏰ Running daily cron job: Check books due tomorrow");
-  await checkBooksDueTomorrow();
+  await checkBooksDueTomorrow(req);
 });
 
 async function deleteNotification(notificationId, userId) {
