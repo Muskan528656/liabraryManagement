@@ -19,7 +19,6 @@ export const BookSubmissionProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
-  // Fetch notifications for books due tomorrow
   const fetchNotifications = useCallback(async () => {
     try {
       setIsLoadingNotifications(true);
@@ -28,7 +27,7 @@ export const BookSubmissionProvider = ({ children }) => {
         "GET"
       );
       const result = await response.json();
-      console.log("result=>",result)
+      console.log("result=>", result)
       if (result.success) {
         console.log("unreadcount");
         setNotifications(result.notifications || []);
@@ -42,24 +41,22 @@ export const BookSubmissionProvider = ({ children }) => {
       setIsLoadingNotifications(false);
     }
   }, []);
-
-  // Update notification count when book is submitted
   const updateNotificationsAfterSubmission = useCallback(async (submissionData) => {
     try {
-      // Check if the submitted book was due tomorrow
+
       const submitDate = new Date();
       const dueDate = new Date(submissionData.due_date);
 
-      // Calculate if due date was tomorrow from submission date
+
       const tomorrow = new Date(submitDate);
       tomorrow.setDate(tomorrow.getDate() + 1);
       const isDueTomorrow = dueDate.toDateString() === tomorrow.toDateString();
 
       if (isDueTomorrow) {
-        // Refresh notifications as the due tomorrow notification should be removed
+
         await fetchNotifications();
 
-        // Publish event to update notification icon
+
         PubSub.publish("NOTIFICATIONS_UPDATED", {
           type: "book_submitted_due_tomorrow",
           submissionData
@@ -70,14 +67,13 @@ export const BookSubmissionProvider = ({ children }) => {
     }
   }, [fetchNotifications]);
 
-  // Update notifications from API response (used after marking as read)
+
   const updateNotificationsFromAPI = useCallback((apiNotifications) => {
     setNotifications(apiNotifications);
     const unread = apiNotifications.filter(n => !n.is_read).length;
     setUnreadCount(unread);
   }, []);
 
-  // Mark notification as read
   const markNotificationAsRead = useCallback((notificationId) => {
     setNotifications(prev =>
       prev.map(n =>
@@ -87,30 +83,24 @@ export const BookSubmissionProvider = ({ children }) => {
     setUnreadCount(prev => Math.max(0, prev - 1));
   }, []);
 
-  // Handle notification click
   const handleNotificationClick = useCallback((notification) => {
     if (notification.type === "due_reminder") {
-      // Mark as read when clicked
       markNotificationAsRead(notification.id);
       return "/booksubmit";
     }
     return null;
   }, [markNotificationAsRead]);
 
-  // Initialize notifications on mount
   useEffect(() => {
     fetchNotifications();
 
-    // Listen for refresh notifications event
     const refreshToken = PubSub.subscribe("REFRESH_NOTIFICATIONS", () => {
       fetchNotifications();
     });
 
-    // Listen for new notification events from socket
     const newNotificationToken = PubSub.subscribe("NOTIFICATIONS_UPDATED", (msg, data) => {
       if (data.type === "new_notification") {
-        console.log("📨 Updating unread count for new notification");
-        // Increment unread count for new notification
+
         setUnreadCount(prev => prev + 1);
       }
     });

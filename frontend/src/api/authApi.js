@@ -32,35 +32,6 @@ const AuthApi = {
       return { success: false, errors: "Network error. Please try again." };
     }
   },
-
-  async fetchMyImage() {
-
-
-    let response = await helper.fetchWithAuth(
-      constants.API_BASE_URL + "/api/auth/myimage",
-      "GET"
-    );
-
-    if (response.status === 200) {
-      const fileBody = await response.blob();
-      return fileBody;
-    } else {
-      return null;
-    }
-  },
-
-  async fetchUserImage(userid) {
-
-
-    let response = await helper.fetchWithAuth(
-      constants.API_BASE_URL + "/api/auth/userimage/" + userid,
-      "GET"
-    );
-
-    const fileBody = await response.blob();
-    return fileBody;
-  },
-
   async refreshToken() {
     const refreshToken = sessionStorage.getItem("r-t");
     if (!refreshToken) {

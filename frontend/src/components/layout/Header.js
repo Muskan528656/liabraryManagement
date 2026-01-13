@@ -743,12 +743,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   overflow: "hidden",
                 }}
               >
-                {/* HEADER */}
+             
                 <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                   <h6 className="mb-0 fw-bold">Notifications</h6>
                 </div>
 
-                {/* TABS */}
+             
                 <div className="d-flex border-bottom">
                   <button
                     className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
