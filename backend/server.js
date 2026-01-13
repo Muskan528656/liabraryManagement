@@ -1,6 +1,3 @@
-
-
-
 const express = require("express");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");

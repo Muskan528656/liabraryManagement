@@ -106,6 +106,7 @@ const Company = () => {
       if (response.data) {
         setCompany(response.data);
         setTempCompany(response.data);
+        setLogoPreview(response.data.logourl);
       }
     } catch (error) {
       console.error("Error fetching company:", error);
