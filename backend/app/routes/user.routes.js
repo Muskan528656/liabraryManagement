@@ -18,7 +18,7 @@
 
 const e = require("express");
 const bcrypt = require("bcryptjs");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const User = require("../models/user.model.js");
 const sql = require("../models/db.js");
 const path = require("path");
@@ -32,7 +32,7 @@ module.exports = (app) => {
 
 
 
-  router.post("/:id/upload-image", fetchUser, async (req, res) => {
+  router.post("/:id/upload-image", fetchUser, checkPermission("Users", "allow_create"), async (req, res) => {
     try {
       if (!req.files?.file) {
         return res.status(400).json({ errors: "No image file provided" });
@@ -40,19 +40,16 @@ module.exports = (app) => {
 
       const userId = String(req.params.id);
 
-      // Authorization check
       if (String(req.userinfo.id) !== userId) {
         return res.status(403).json({ errors: "Unauthorized access" });
       }
 
       const file = req.files.file;
 
-      // Size check only (5MB)
       if (file.size > 5 * 1024 * 1024) {
         return res.status(400).json({ errors: "Image size max 5MB" });
       }
 
-      // Use same path as server.js for consistency
       const uploadPath = path.join(
         __dirname,
         '../../../frontend/public/uploads',
@@ -61,7 +58,6 @@ module.exports = (app) => {
 
 
 
-      // Ensure directory exists
       fs.mkdirSync(uploadPath, { recursive: true });
 
       const fileExt = path.extname(file.name) || ".jpg";
@@ -82,7 +78,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
       const users = await User.findAll();
@@ -93,7 +89,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
       const user = await User.findById(req.params.id);
@@ -107,7 +103,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/email/:email", fetchUser, async (req, res) => {
+  router.get("/email/:email", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
       const user = await User.findByEmail(req.params.email);
@@ -120,10 +116,9 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-
   router.post(
     "/",
-    fetchUser,
+    fetchUser, checkPermission("Users", "allow_create"),
 
     [
       body("firstname").notEmpty().withMessage("First name is required"),
@@ -212,7 +207,7 @@ module.exports = (app) => {
 
   router.put(
     "/:id",
-    fetchUser,
+    fetchUser, checkPermission("Users", "allow_edit"),
 
     [
       body("email").optional().isEmail().withMessage("Email must be a valid email address"),
@@ -238,26 +233,8 @@ module.exports = (app) => {
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
-
-        console.log("userinfo", req.userinfo.id);
-
-        console.log("params id", req.params.id);
-        // Authorization check
-        // if (req.userinfo.id !== req.params.id) {
-        //   return res.status(403).json({ errors: "Unauthorized access" });
-        // }
-
-        const duplicateVendor = await User.findByEmail(
-          req.body.email,
-          req.params.id
-        );
-
-        console.log("Duplicate vendor check:", duplicateVendor);
-
-        if (duplicateVendor) {
-          return res
-            .status(400)
-            .json({ errors: "Publisher with this email already exists" });
+        if (req.userinfo.id !== req.params.id) {
+          return res.status(403).json({ errors: "Unauthorized access" });
         }
 
 
@@ -288,7 +265,7 @@ module.exports = (app) => {
 
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Users", "allow_delete"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
       const result = await User.deleteById(req.params.id);

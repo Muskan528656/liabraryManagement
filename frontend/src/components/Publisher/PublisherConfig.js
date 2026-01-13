@@ -21,7 +21,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
     });
 
     const statusBadge = (value) => (
-        <span className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+        <span style={{ padding: "5px" }} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
             {value ? "Active" : "Inactive"}
         </span >
     );
@@ -190,13 +190,6 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
 
             return errors;
         },
-
-
-    
-
-
-
-
         features: {
             showBulkInsert: false,
             showImportExport: true,

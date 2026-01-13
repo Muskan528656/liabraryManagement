@@ -1261,6 +1261,26 @@ const BookSubmit = () => {
                 };
                 setSubmittedBooks(prev => [...prev, newSubmission]);
 
+                // Check if book is submitted before due date and mark notifications as read
+                const submitDate = new Date();
+                const dueDate = new Date(selectedIssue.due_date);
+                const isSubmittedBeforeDue = submitDate < dueDate;
+                console.log("Is submitted before due date:", isSubmittedBeforeDue);
+                console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
+                console.log("Selected member ID for notification marking:", selectedIssue.issued_to);
+                if (isSubmittedBeforeDue) {
+                    try {
+                        await helper.fetchWithAuth(
+                            `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/${selectedIssue.issued_to}/due_reminder`,
+                            "PUT"
+                        );
+                        console.log("Notifications marked as read for early submission");
+                    } catch (notificationError) {
+                        console.error("Error marking notifications as read:", notificationError);
+                        // Don't show error toast for notification marking failure as it's not critical
+                    }
+                }
+
                 handleModalClose();
 
                 if (updatedBookIssues.length === 0 && updatedCardIssues.length === 0) {
@@ -1323,13 +1343,13 @@ const BookSubmit = () => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge bg="primary">Issued</Badge>;
+                return <Badge className="px-2" bg="primary">Issued</Badge>;
             case 'submitted':
-                return <Badge bg="info">Submitted</Badge>;
+                return <Badge className="px-2" bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge bg="secondary">Cancelled</Badge>;
+                return <Badge className="px-2" bg="secondary">Cancelled</Badge>;
             case 'overdue':
-                return <Badge bg="danger">Overdue</Badge>;
+                return <Badge className="px-2" bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }
@@ -1601,13 +1621,30 @@ const BookSubmit = () => {
             }
         },
         {
-            field: "condition_after",
-            label: "Condition",
-            width: 120,
+            field: "condition_before",
+            label: "Condition Before",
+            width: 80,
             render: (value) => (
-                <Badge bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
+                <Badge className="px-2" bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
                     {value || "Good"}
                 </Badge>
+            )
+        },
+        {
+            field: "condition_after",
+            label: "Condition After",
+            width: 120,
+            render: (value, record) => (
+                // console.log("value=>", value,"record", record.penalty)
+        
+                <div>
+                    <Badge className="px-2 me-1" bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
+                        {value || "Good"}
+                    </Badge>
+                    {value === "Good" && record.penalty > 0 && record.days_overdue > 0 && (
+                        <Badge bg="warning" className="px-2">Due Amount</Badge>
+                    )}
+                </div>
             )
         },
         {
@@ -1945,8 +1982,6 @@ const BookSubmit = () => {
                                             {/* </Card> */}
                                         </Col>
                                     </Row>
-
-
                                     <Row className="mt-1">
                                         <Col xs={12}>
                                             <Card className="shadow-sm " style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>

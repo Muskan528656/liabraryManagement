@@ -55,7 +55,7 @@ async function create(data) {
     ];
 
     const result = await sql.query(query, values);
- 
+
     return result.rows[0];
   } catch (error) {
     console.error("Error in UserRole.create:", error);
@@ -104,6 +104,27 @@ async function remove(id) {
   }
 }
 
+async function findByName(name, excludeId = null) {
+  try {
+
+    console.log("Searching for UserRole with name:", name, "excluding ID:", excludeId);
+
+    let query = `SELECT * FROM ${this.schema}.user_role WHERE role_name = $1`;
+    const params = [name];
+
+    if (excludeId) {
+      query += ` AND id != $2`;
+      params.push(excludeId);
+    }
+
+    const result = await sql.query(query, params);
+    return result.rows.length > 0 ? result.rows[0] : null;
+  } catch (error) {
+    console.error("Error in findByName:", error);
+    throw error;
+  }
+}
+
 
 async function findByName(name, excludeId = null) {
   try {
@@ -134,4 +155,8 @@ module.exports = {
   update,
   remove,
   findByName
+<<<<<<< HEAD
+=======
+  ,
+>>>>>>> origin/main
 };

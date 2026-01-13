@@ -352,7 +352,7 @@ export default class DataApi {
     });
   }
 
-  update(data, id) {
+  update(data,id ) {
     return axios.put(`${this.baseUrl}/${id}`, data, {
       headers: this.getHeaders(true),
     });

@@ -109,10 +109,13 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       return obj;
     });
 
+    console.log('finalData = ', finalData);
+
     if (onDataParsed) {
       setIsProcessing(true);
       try {
         const result = await onDataParsed(finalData);
+        console.log('result = ', result);
         setImportResult(result);
         setStep(3);
       } catch (err) {

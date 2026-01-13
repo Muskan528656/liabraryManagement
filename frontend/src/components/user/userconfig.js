@@ -118,7 +118,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 render: (value) => {
                     const isActive = value === true || value === "active" || value === 1;
                     return (
-                        <Badge bg={isActive ? "success" : "secondary"}>
+                        <Badge className="px-2" bg={isActive ? "success" : "secondary"}>
                             {isActive ? "Active" : "Inactive"}
                         </Badge>
                     );

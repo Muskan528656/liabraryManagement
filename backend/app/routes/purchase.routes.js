@@ -16,7 +16,7 @@
  */
 
 const e = require("express");
-const { fetchUser, checkRole } = require("../middleware/fetchuser.js");
+const { fetchUser, checkRole, checkPermission } = require("../middleware/fetchuser.js");
 const Purchase = require("../models/purchase.model.js");
 
 module.exports = (app) => {
@@ -24,9 +24,9 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
- 
+
       Purchase.init(req.userinfo.tenantcode);
       const purchases = await Purchase.findAll();
       return res.status(200).json(purchases);
@@ -36,8 +36,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  router.get("/stats", fetchUser, async (req, res) => {
+
+  router.get("/stats", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
       const stats = await Purchase.getStatistics();
@@ -48,7 +48,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
       const purchase = await Purchase.findById(req.params.id);
@@ -62,10 +62,10 @@ module.exports = (app) => {
     }
   });
 
- 
+
   router.post(
     "/",
-    fetchUser,
+    fetchUser, checkPermission("Purchases", "allow_create"),
 
     [
       body("vendor_id").notEmpty().isUUID().withMessage("Vendor ID is required and must be a valid UUID"),
@@ -95,10 +95,10 @@ module.exports = (app) => {
     }
   );
 
- 
+
   router.put(
     "/:id",
-    fetchUser,
+    fetchUser, checkPermission("Purchases", "allow_edit"),
     [
       body("vendor_id").optional().isUUID().withMessage("Vendor ID must be a valid UUID"),
       body("book_id").optional().isUUID().withMessage("Book ID must be a valid UUID"),
@@ -137,8 +137,8 @@ module.exports = (app) => {
     }
   );
 
- 
-  router.delete("/:id", fetchUser, async (req, res) => {
+
+  router.delete("/:id", fetchUser, checkPermission("Purchases", "allow_delete"), async (req, res) => {
     try {
       Purchase.init(req.userinfo.tenantcode);
       const result = await Purchase.deleteById(req.params.id);
@@ -152,34 +152,34 @@ module.exports = (app) => {
     }
   });
 
- 
-router.get("/book/:bookId", fetchUser, async (req, res) => {
-  try {
-    const { bookId } = req.params;
 
-    if (!bookId) {
-      return res.status(400).json({ errors: "Book ID is required" });
+  router.get("/book/:bookId", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
+    try {
+      const { bookId } = req.params;
+
+      if (!bookId) {
+        return res.status(400).json({ errors: "Book ID is required" });
+      }
+
+      Purchase.init(req.userinfo.tenantcode);
+
+      const purchase = await Purchase.findByBookId(bookId);
+
+      if (!purchase) {
+        return res.status(404).json({ errors: "Purchase not found for this book" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: purchase,
+      });
+    } catch (error) {
+      console.error("Error fetching purchase by book ID:", error);
+      return res.status(500).json({ errors: "Internal server error" });
     }
+  });
 
-    Purchase.init(req.userinfo.tenantcode);
 
-    const purchase = await Purchase.findByBookId(bookId);
-
-    if (!purchase) {
-      return res.status(404).json({ errors: "Purchase not found for this book" });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: purchase,
-    });
-  } catch (error) {
-    console.error("Error fetching purchase by book ID:", error);
-    return res.status(500).json({ errors: "Internal server error" });
-  }
-});
-
- 
   app.use(process.env.BASE_API_URL + "/api/purchase", router);
 };
 

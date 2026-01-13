@@ -57,6 +57,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
             }
         ],
+
         validationRules: (formData, allCategories, editingCategory) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Category Name is required");
@@ -69,6 +70,18 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
 
             return errors;
         },
+        // validationRules: (formData, allCategories, editingCategory) => {
+        //     const errors = [];
+        //     if (!formData.name?.trim()) errors.push("Category Name is required");
+
+        //     const duplicate = allCategories.find(
+        //         category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
+        //             category.id !== editingCategory?.id
+        //     );
+        //     if (duplicate) errors.push("Category with this name already exists");
+
+        //     return errors;
+        // },
         dataDependencies: {},
         features: {
             showBulkInsert: false,

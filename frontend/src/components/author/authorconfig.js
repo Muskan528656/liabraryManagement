@@ -105,14 +105,27 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 ),
             },
         ],
+        // validationRules: (formData, allAuthors, editingAuthor) => {
+        //     const errors = [];
+        //     if (!formData.name?.trim()) errors.push("Author Name is required");
+
+        //     const duplicate = allAuthors.find(
+        //         author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
+        //             author.id !== editingAuthor?.id
+        //     );
+        //     if (duplicate) errors.push("Author with this name already exists");
+
+        //     return errors;
+        // },
+
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];
             if (!formData.name?.trim()) {
-                errors.push("Author Name is required");  
+                errors.push("Author Name is required");
             }
             else {
 
-                 if (!formData.email?.trim()) {
+                if (!formData.email?.trim()) {
                     errors.push("Author Email is required");
                 } else {
                     const duplicateEmail = allAuthors.find(
@@ -124,24 +137,8 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                     }
                 }
 
-               
+
             }
-
-            //  const duplicate = allAuthors.find(
-            //         author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
-            //             author.id !== editingAuthor?.id
-            //     );
-            //     if (duplicate) errors.push("Author with this name already exists");
-            // if (!formData.email?.trim()) errors.push("Author Email is required");
-
-
-            // const duplicateEmail = allAuthors.find(
-            //     author => author.email?.toLowerCase() === formData.email?.toLowerCase() &&
-            //         author.id !== editingAuthor?.id
-            // );
-            // if (duplicateEmail) {
-            //     errors.push("Author with this email already exists");
-            // }
 
             return errors;
         },

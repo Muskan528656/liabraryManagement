@@ -22,7 +22,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { body, validationResult } = require("express-validator");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 const sql = require("../models/db.js");
 
@@ -61,7 +61,7 @@ module.exports = (app) => {
 
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
-  router.get("/object-types", fetchUser, async (req, res) => {
+  router.get("/object-types", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const records = await LibraryCard.getAllRecords();
@@ -80,7 +80,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/auto-config-card", fetchUser, async (req, res) => {
+  router.get("/auto-config-card", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       const userId = req.userinfo?.id || null;
       const cardNumber = await generateAutoNumberSafe("library_members", userId, 'LIB-', 5);
@@ -92,7 +92,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const cards = await LibraryCard.findAll();
@@ -104,7 +104,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/card/:cardNumber", fetchUser, async (req, res) => {
+  router.get("/card/:cardNumber", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findByCardNumber(req.params.cardNumber);
@@ -117,7 +117,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/student/:studentId", fetchUser, async (req, res) => {
+  router.get("/student/:studentId", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findByStudentId(req.params.studentId);
@@ -130,7 +130,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
       const card = await LibraryCard.findById(req.params.id);
@@ -142,134 +142,9 @@ module.exports = (app) => {
     }
   });
 
-  // router.post(
-  //   "/",
-  //   fetchUser,
-  //   upload.single("image"),
-  //   [
-  //     body("first_name").notEmpty().withMessage("First name is required"),
-  //     body("last_name").notEmpty().withMessage("Last name is required"),
-  //     body("email").optional().isEmail().withMessage("Valid email required"),
-  //     body("phone_number").optional().isString(),
-  //     body("type_id").optional().isString(),
-  //   ],
-  //   async (req, res) => {
-
-
-  //     try {
-  //       const errors = validationResult(req);
-  //       if (!errors.isEmpty()) {
-  //         return res.status(400).json({ errors: errors.array() });
-  //       }
-
-  //       LibraryCard.init(req.userinfo.tenantcode);
-  //       const userId = req.userinfo?.id || null;
-  //       const cardData = { ...req.body };
-  //       const originalPlanId = cardData.plan_id; 
-
-
-  //       if (req.file) {
-  //         cardData.image = `/uploads/librarycards/${req.file.filename}`;
-
-  //       } else if (req.body.image && req.body.image.startsWith("data:image/")) {
-
-  //         try {
-  //           const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
-  //           if (matches) {
-  //             const ext = matches[1];
-  //             const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
-  //             const buffer = Buffer.from(base64Data, "base64");
-
-  //             const uniqueFile = `base64-${Date.now()}-${Math.random().toString().slice(2)}.${ext}`;
-  //             const filePath = path.join(libraryCardUploadDir, uniqueFile);
-
-  //             fs.writeFileSync(filePath, buffer);
-  //             cardData.image = `/uploads/librarycards/${uniqueFile}`;
-  //           }
-  //         } catch (err) {
-  //           console.error("Base64 image error:", err);
-  //           cardData.image = null;
-  //         }
-  //       }
-
-
-  //       if (cardData.status !== undefined) {
-  //         cardData.is_active = cardData.status === 'true' || cardData.status === true;
-  //       }
-
-
-  //       if (cardData.plan_id !== undefined) {
-  //         cardData.subscription_id = cardData.plan_id;
-  //         delete cardData.plan_id;
-  //       }
-
-  //       const card = await LibraryCard.create(cardData, userId);
-
-  //       // Create subscription if plan_id was provided
-  //       if (originalPlanId) {
-  //         try {
-  //           // Fetch plan details
-  //           const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
-  //           const planResult = await sql.query(planQuery, [originalPlanId]);
-  //           if (planResult.rows.length === 0) {
-  //             console.error("Plan not found for subscription creation");
-  //           } else {
-  //             const plan = planResult.rows[0];
-  //             const startDate = new Date().toISOString().split('T')[0];
-  //             const endDate = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  //             const subscriptionData = {
-  //               plan_id: originalPlanId,
-  //               member_id: card.id,
-  //               user_id: userId,
-  //               card_id: card.id,
-  //               plan_name: plan.plan_name,
-  //               duration_days: plan.duration_days,
-  //               allowed_books: plan.allowed_books,
-  //               start_date: startDate,
-  //               end_date: endDate,
-  //               is_active: true,
-  //               createdbyid: userId,
-  //               lastmodifiedbyid: userId,
-  //               createddate: new Date(),
-  //               lastmodifieddate: new Date(),
-  //             };
-
-  //             const columns = Object.keys(subscriptionData);
-  //             const values = Object.values(subscriptionData);
-  //             const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
-  //             const columnNames = columns.join(', ');
-
-  //             const insertQuery = `
-  //               INSERT INTO ${req.userinfo.tenantcode}.subscriptions (${columnNames})
-  //               VALUES (${placeholders})
-  //               RETURNING *
-  //             `;
-
-  //             await sql.query(insertQuery, values);
-  //             console.log("Subscription created successfully for library card");
-  //           }
-  //         } catch (subError) {
-  //           console.error("Error creating subscription:", subError);
-
-  //         }
-  //       }
-
-  //       return res.status(201).json({
-  //         success: true,
-  //         data: card,
-  //         message: "Library card created successfully",
-  //       });
-  //     } catch (error) {
-  //       console.error("❌ Error creating library card:", error);
-  //       return res.status(500).json({ error: error.message });
-  //     }
-  //   }
-  // );
-
   router.post(
     "/",
-    fetchUser,
+    fetchUser, checkPermission("Library Members", "allow_create"),
     upload.single("image"),
     // [
     //   body("first_name").notEmpty().withMessage("First name is required"),
@@ -367,147 +242,7 @@ module.exports = (app) => {
   );
 
 
-  // router.post(
-  //   "/",
-  //   fetchUser,
-  //   upload.single("image"),
-  //   [
-  //     body("first_name").notEmpty().withMessage("First name is required"),
-  //     body("last_name").notEmpty().withMessage("Last name is required"),
-  //     body("email").optional().isEmail().withMessage("Valid email required"),
-  //     body("phone_number").optional().isString(),
-  //     body("type_id").optional().isString(),
-  //   ],
-  //   async (req, res) => {
-  //     console.log("📥 Received request to create library card:", {
-  //       ...req.body,
-  //       image: req.file ? "[FILE DATA]" : req.body.image ? "[BASE64 DATA]" : null
-  //     });
-
-  //     try {
-  //       const errors = validationResult(req);
-  //       if (!errors.isEmpty()) {
-  //         return res.status(400).json({ errors: errors.array() });
-  //       }
-
-  //       LibraryCard.init(req.userinfo.tenantcode);
-  //       const userId = req.userinfo?.id || null;
-  //       const cardData = { ...req.body };
-  //       const originalPlanId = cardData.plan_id; // Store original plan_id for subscription creation
-
-  //       console.log("📥 Creating library card with data:", {
-  //         ...cardData,
-  //         image: cardData.image ? "[IMAGE DATA]" : "null"
-  //       });
-
-
-  //       if (req.file) {
-  //         cardData.image = `/uploads/librarycards/${req.file.filename}`;
-
-  //       } else if (req.body.image && req.body.image.startsWith("data:image/")) {
-
-  //         try {
-  //           const matches = req.body.image.match(/^data:image\/(\w+);base64,/);
-  //           if (matches) {
-  //             const ext = matches[1];
-  //             const base64Data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
-  //             const buffer = Buffer.from(base64Data, "base64");
-
-  //             const uniqueFile = `base64-${Date.now()}-${Math.random().toString().slice(2)}.${ext}`;
-  //             const filePath = path.join(libraryCardUploadDir, uniqueFile);
-
-  //             fs.writeFileSync(filePath, buffer);
-  //             cardData.image = `/uploads/librarycards/${uniqueFile}`;
-  //           }
-  //         } catch (err) {
-  //           console.error("Base64 image error:", err);
-  //           cardData.image = null;
-  //         }
-  //       }
-
-
-  //       if (cardData.status !== undefined) {
-  //         cardData.is_active = cardData.status === 'true' || cardData.status === true;
-  //       }
-
-
-
-  //       if (cardData.plan_id !== undefined) {
-  //         cardData.subscription_id = cardData.plan_id;
-
-  //       }
-
-  //       cardData.plan_id = originalPlanId;
-  //       const card = await LibraryCard.create(cardData, userId);
-
-
-  //       if (originalPlanId) {
-  //         try {
-
-  //           const planQuery = `SELECT plan_name, duration_days, allowed_books FROM ${req.userinfo.tenantcode}.plan WHERE id = $1`;
-  //           const planResult = await sql.query(planQuery, [originalPlanId]);
-  //           if (planResult.rows.length === 0) {
-  //             console.error("Plan not found for subscription creation");
-  //           } else {
-  //             const plan = planResult.rows[0];
-  //             const startDate = new Date().toISOString().split('T')[0];
-  //             const endDate = new Date(Date.now() + plan.duration_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  //             const subscriptionData = {
-  //               plan_id: originalPlanId,
-  //               member_id: card.id,
-  //               user_id: userId,
-  //               card_id: card.id,
-  //               plan_name: plan.plan_name,
-  //               duration_days: plan.duration_days,
-  //               allowed_books: plan.allowed_books,
-  //               start_date: startDate,
-  //               end_date: endDate,
-  //               is_active: true,
-  //               createdbyid: userId,
-  //               lastmodifiedbyid: userId,
-  //               createddate: new Date(),
-  //               lastmodifieddate: new Date(),
-  //             };
-
-  //             const columns = Object.keys(subscriptionData);
-  //             const values = Object.values(subscriptionData);
-  //             const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
-  //             const columnNames = columns.join(', ');
-
-  //             const insertQuery = `
-  //               INSERT INTO ${req.userinfo.tenantcode}.subscriptions (${columnNames})
-  //               VALUES (${placeholders})
-  //               RETURNING *
-  //             `;
-
-  //             await sql.query(insertQuery, values);
-  //             console.log("Subscription created successfully for library card");
-  //           }
-  //         } catch (subError) {
-  //           console.error("Error creating subscription:", subError);
-
-  //         }
-  //       }
-
-
-  //       return res.status(201).json({
-  //         success: true,
-  //         data: card,
-  //         message: "Library card created successfully",
-
-  //       });
-
-  //     } catch (error) {
-
-  //       return res.status(500).json({ error: error.message });
-  //     }
-  //   }
-  // );
-
-  router.put("/:id", fetchUser, 
-    
-    upload.single('image'), async (req, res) => {
+  router.put("/:id", fetchUser, checkPermission("Library Members", "allow_edit"), upload.single('image'), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
 
@@ -612,10 +347,7 @@ module.exports = (app) => {
     }
   });
 
-
-
-
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Library Members", "allow_delete"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
 
@@ -642,9 +374,7 @@ module.exports = (app) => {
     }
   });
 
-
-
-  router.post("/import", fetchUser, async (req, res) => {
+  router.post("/import", fetchUser, checkPermission("Library Members", "allow_create"), async (req, res) => {
     try {
       const { members } = req.body;
       if (!Array.isArray(members)) {
@@ -734,50 +464,6 @@ module.exports = (app) => {
       return res.status(500).json({ error: "Internal server error" });
     }
   });
-
-
-  // router.post("/import", fetchUser, async (req, res) => {
-  //   try {
-  //     const { members } = req.body;
-  //     if (!Array.isArray(members)) {
-  //       return res.status(400).json({ error: "Members should be an array" });
-  //     }
-
-  //     LibraryCard.init(req.userinfo.tenantcode);
-  //     const userId = req.userinfo?.id || null;
-
-  //     const results = [];
-  //     for (const member of members) {
-  //       try {
-
-  //         if (!member.card_number) {
-  //           member.card_number = await generateAutoNumberSafe('library_members', userId, 'LIB-', 5);
-  //         }
-
-  //         const card = await LibraryCard.create(member, userId);
-  //         results.push({ success: true, data: card });
-  //       } catch (error) {
-  //         results.push({
-  //           success: false,
-  //           error: error.message,
-  //           member: { ...member, card_number: member.card_number || 'NOT_GENERATED' }
-  //         });
-  //       }
-  //     }
-
-  //     const successCount = results.filter(r => r.success).length;
-
-  //     return res.status(200).json({
-  //       success: true,
-  //       message: `Imported ${successCount} out of ${members.length} members`,
-  //       results
-  //     });
-  //   } catch (error) {
-  //     console.error("❌ Error importing members:", error);
-  //     return res.status(500).json({ error: "Internal server error" });
-  //   }
-  // });
-
 
   app.use(process.env.BASE_API_URL + "/api/librarycard", router);
 };

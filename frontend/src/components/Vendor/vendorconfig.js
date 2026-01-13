@@ -154,12 +154,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
         formFields: [
             {
                 name: "name",
-                label: "Contact Person Name",
+                label: "Vendor Name",
                 type: "text",
                 required: true,
                 placeholder: "Enter contact person name",
                 colSize: 6,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "company_name",
@@ -167,7 +167,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "text",
                 placeholder: "Enter company name",
                 colSize: 6,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "country_code",
@@ -181,7 +181,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
 
                 defaultValue: defaultCountryCode,
                 colSize: 3,
-                section: "Contact Person Information"
+                section: "Vendor Contact  Information"
             },
             {
                 name: "phone",
@@ -191,7 +191,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
 
                 placeholder: "Enter phone number",
                 colSize: 3,
-                section: "Contact Person Information",
+                section: "Vendor Contact  Information",
                 customValidation: (value) => {
                     if (value && value.trim()) {
                         const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
@@ -209,7 +209,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 required: true,
                 placeholder: "Enter email address",
                 colSize: 6,
-                section: "Contact Person Information",
+                section: "Vendor Contact  Information",
                 customValidation: (value, formData, allVendors, editingVendor) => {
                     if (value && value.trim()) {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -265,13 +265,13 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 colSize: 6,
                 section: "Company Information",
                 options: states,
-                // placeholder: "Select State",
-                // customValidation: (value) => {
-                //     if (!value || !value.trim()) {
-                //         return "State is required";
-                //     }
-                //     return null;
-                // }
+
+                customValidation: (value) => {
+                    if (!value || !value.trim()) {
+                        return "State is required";
+                    }
+                    return null;
+                }
             },
             {
                 // name: "city",
@@ -285,24 +285,23 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 type: "select",
                 colSize: 6,
                 section: "Company Information",
-                options: city,
-                // options: formData => {
-                //     const selectedState = formData?.state;
-                //     if (!selectedState) return [];
-                //     return allCities
-                //         .filter(city => city.state === selectedState)
-                //         .map(city => ({
-                //             value: city.value,
-                //             label: city.label
-                //         }));
-                // },
-                // placeholder: "Select City",
-                // customValidation: (value, formData) => {
-                //     if (formData?.state && (!value || !value.trim())) {
-                //         return "City is required when state is selected";
-                //     }
-                //     return null;
-                // }
+                options: formData => {
+                    const selectedState = formData?.state;
+                    if (!selectedState) return [];
+                    return allCities
+                        .filter(city => city.state === selectedState)
+                        .map(city => ({
+                            value: city.value,
+                            label: city.label
+                        }));
+                },
+
+                customValidation: (value, formData) => {
+                    if (formData?.state && (!value || !value.trim())) {
+                        return "City is required when state is selected";
+                    }
+                    return null;
+                }
             },
             {
                 name: "pincode",
@@ -441,12 +440,12 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
             { name: 'name', label: 'Vendor Name', type: 'text' },
             {
                 name: 'status', label: 'Status', type: 'select',
-                options : [
+                options: [
                     { label: "Active", value: true },
                     { label: "Inactive", value: false }
                 ]
             },
-            { name: 'company_name', label: 'Company Name', type: 'text' } 
+            { name: 'company_name', label: 'Company Name', type: 'text' }
         ],
 
         details: [
@@ -505,7 +504,7 @@ export const getVendorConfig = (externalData = {}, props = {}) => {
                 } else {
                     cleanedData.country_code = defaultCountryCode;
                 }
-   if (!cleanedData.status) {
+                if (!cleanedData.status) {
                     cleanedData.status = "active";
                 }
 

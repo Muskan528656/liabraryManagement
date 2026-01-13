@@ -3,6 +3,7 @@ import { Alert, Col, Container, Row } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import AuthApi from "../api/authApi";
+import Loader from "./common/Loader";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -13,29 +14,46 @@ const Login = () => {
   const [show, setShow] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!credentials.email || !credentials.password || !credentials.tcode) {
+      setShow(true);
+      setErrorMessage("Please fill all required fields");
+      return;
+    }
+
+    if (!emailRegex.test(credentials.email)) {
+      setShow(true);
+      setErrorMessage("Please enter a valid email");
+      return;
+    }
+
     try {
-      if (credentials.email && credentials.password && credentials.tcode) {
-        const result = await AuthApi.login(credentials);
-        if (result.success) {
-          sessionStorage.setItem("token", result.authToken);
-          sessionStorage.setItem("r-t", result.refreshToken);
-          sessionStorage.setItem("myimage", "/abdul-pathan.png");
-          window.location.assign("/");
-        } else {
-          setShow(true);
-          setErrorMessage(result.errors);
-        }
+      setLoading(true);
+      setShow(false);
+
+      const result = await AuthApi.login(credentials);
+
+      if (result.success) {
+        sessionStorage.setItem("token", result.authToken);
+        sessionStorage.setItem("r-t", result.refreshToken);
+        sessionStorage.setItem("myimage", "/abdul-pathan.png");
+        window.location.assign("/");
+      } else {
+        setShow(true);
+        setErrorMessage(result.errors || "Invalid credentials");
       }
     } catch (err) {
       setShow(true);
       setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -83,17 +101,12 @@ const Login = () => {
                       src="Untitled design (7).png"
                       width="600"
                       height="600"
- 
- 
- 
- 
- 
                     />
 
                   </div>
                 </Col>
 
-                {/* Right Section */}
+
                 <Col lg={6} className="p-5">
                   <div className="text-center mb-4">
                     <div
@@ -181,7 +194,7 @@ const Login = () => {
 
                     <Button
                       type="submit"
-                      disabled={!isFormValid}
+                      disabled={!isFormValid || loading}
                       variant="dark"
                       className="w-100"
                       style={{
@@ -192,7 +205,16 @@ const Login = () => {
                         borderRadius: "8px",
                       }}
                     >
-                      Sign In
+                      {loading ? (
+                        <>
+
+                          <Loader />
+
+                          Signing In...
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
                     </Button>
 
                   </Form>

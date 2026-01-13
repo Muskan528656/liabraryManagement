@@ -2,14 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const Publisher = require('../models/Publisher.model.js');
-const { fetchUser } = require('../middleware/fetchuser.js');
+const { fetchUser, checkPermission } = require('../middleware/fetchuser.js');
 const { body, validationResult } = require('express-validator');
 
 
 module.exports = (app) => {
 
 
-    router.get("/", fetchUser, async (req, res) => {
+    router.get("/", fetchUser, checkPermission("Publisher", "allow_view"), async (req, res) => {
         try {
             Publisher.init(req.userinfo.tenantcode);
             const data = await Publisher.findAllPublisher();
@@ -29,7 +29,7 @@ module.exports = (app) => {
     })
 
 
-    router.get("/:id", fetchUser, async (req, res) => {
+    router.get("/:id", fetchUser, checkPermission("Publisher", "allow_view"), async (req, res) => {
         try {
             const { id } = req.params;
             if (!id) {
@@ -55,7 +55,7 @@ module.exports = (app) => {
     })
 
 
-    router.post("/", fetchUser, [
+    router.post("/", fetchUser, checkPermission("Publisher", "allow_create"), [
         body('name', 'Name is required').not().isEmpty(),
         body('email', 'Valid email is required').isEmail(),
         body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
@@ -92,72 +92,71 @@ module.exports = (app) => {
     })
 
 
-    router.put("/:id", fetchUser,
-        [
-            body("name")
-                .trim()
-                .notEmpty()
-                .withMessage("Name is required"),
+    router.put("/:id", [
+        body("name")
+            .trim()
+            .notEmpty()
+            .withMessage("Name is required"),
 
-            body("email")
-                .trim()
-                .toLowerCase()
-                .notEmpty()
-                .withMessage("Email is required")
-                .isEmail()
-                .withMessage("Please enter a valid email address"),
+        body("email")
+            .trim()
+            .toLowerCase()
+            .notEmpty()
+            .withMessage("Email is required")
+            .isEmail()
+            .withMessage("Please enter a valid email address"),
 
-            body("phone")
-                .trim()
-                .notEmpty()
-                .withMessage("Phone is required")
-                .isNumeric()
-                .withMessage("Phone number must contain only digits")
-        ], async (req, res) => {
+        body("phone")
+            .trim()
+            .notEmpty()
+            .withMessage("Phone is required")
+            .isNumeric()
+            .withMessage("Phone number must contain only digits")
+    ], fetchUser, checkPermission("Publisher", "allow_edit"), async (req, res) => {
 
-            const errors = validationResult(req);
+        const errors = validationResult(req);
 
-            if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    errors: errors.array()[0].msg
-                });
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                errors: errors.array()[0].msg
+            });
+        }
+        try {
+
+            const { id } = req.params;
+            const userId = req.userinfo.id;
+            Publisher.init(req.userinfo.tenantcode);
+            const duplicateVendor = await Publisher.findByEmail(
+                req.body.email,
+                req.params.id
+            );
+
+            console.log("Duplicate vendor check:", duplicateVendor);
+
+            if (duplicateVendor) {
+                return res
+                    .status(400)
+                    .json({ errors: "Publisher with this email already exists" });
             }
-            try {
 
-                const { id } = req.params;
-                const userId = req.userinfo.id;
-                Publisher.init(req.userinfo.tenantcode);
+            const data = await Publisher.updatePublisherByid(id, req.body, userId);
+            return res.status(200).json({
+                success: true,
+                data,
+                message: "Publisher updated successfully"
+            });
 
-                const duplicateVendor = await Publisher.findByEmail(
-                    req.body.email,
-                    req.params.id
-                );
-
-                console.log("Duplicate vendor check:", duplicateVendor);
-
-                if (duplicateVendor) {
-                    return res
-                        .status(400)
-                        .json({ errors: "Publisher with this email already exists" });
-                }
-
-                const data = await Publisher.updatePublisherByid(id, req.body, userId);
-                return res.status(200).json({
-                    success: true,
-                    data,
-                    message: "Publisher updated successfully"
-                });
-            } catch (error) {
-                return res.status(500).json({
-                    success: false,
-                    error: "Internal Server Error",
-                    message: error.message
-                })
-            }
-        })
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: "Internal Server Error",
+                message: error.message
+            })
+        }
+    })
 
 
-    router.delete("/:id", fetchUser, async (req, res) => {
+    router.delete("/:id", fetchUser, checkPermission("Publisher", "allow_delete"), async (req, res) => {
         try {
             const { id } = req.params;
             Publisher.init(req.userinfo.tenantcode);
