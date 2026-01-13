@@ -240,21 +240,15 @@ async function createDueReminderIfTomorrow(
 
 
 // Cron job function to check books due tomorrow and create notifications
-async function checkBooksDueTomorrow(req) {
+async function checkBooksDueTomorrow() {
   try {
     
-     Notification.init(req.userinfo.tenantcode);
-
-    const loggedInUserId = req.userinfo.id; // ✅ LOGIN USER
-    console.log("🔐 Logged in user:", loggedInUserId);
     console.log("🔍 Checking for books due tomorrow...");
 
-    // Get tomorrow's date in YYYY-MM-DD format
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-    // Query to find all books due tomorrow that haven't been returned
     const query = `
       SELECT
         bi.id AS issue_id,
@@ -266,7 +260,8 @@ async function checkBooksDueTomorrow(req) {
         b.isbn AS book_isbn,
         lm.first_name || ' ' || lm.last_name AS member_name,
         lm.card_number,
-        lm.email AS member_email
+        lm.email AS member_email,
+        bi.status
         FROM ${schema}.book_issues bi
         INNER JOIN ${schema}.books b ON bi.book_id = b.id
         INNER JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
@@ -288,7 +283,6 @@ async function checkBooksDueTomorrow(req) {
 
     console.log(`📚 Found ${result.rows.length} book(s) due tomorrow`);
 
-    // Get all active library staff/admin users to notify
     const staffQuery = `
       SELECT u.id, u.firstname, u.lastname, u.email, ur.role_name
       FROM ${schema}."user" u
@@ -309,12 +303,10 @@ async function checkBooksDueTomorrow(req) {
 
     console.log(`👥 Notifying ${staffUsers.length} staff member(s)`);
 
-    // Create notifications for each book due tomorrow
     for (const book of result.rows) {
       console.log("book=>",book);
       for (const staff of staffUsers) {
         console.log("staff=>",staff)
-        // Check if notification already exists for this staff-book combination today
         const existingQuery = `
           SELECT id
           FROM ${schema}.notifications
@@ -327,23 +319,25 @@ async function checkBooksDueTomorrow(req) {
 
         console.log("staffId=>",staff.id);
 
+        
         const existingResult = await sql.query(existingQuery, [
           staff.id,
           book.member_id,
           book.book_id
         ]);
-
+        const dueDateStr = new Date(book.due_date).toISOString().split("T")[0];
+        
         if (existingResult.rows.length === 0) {
-          // Create notification
           const notification = await create({
             user_id: staff.id,
             member_id: book.member_id,
             book_id: book.book_id,
-            message: `Book "${book.book_title}" (ISBN: ${book.book_isbn}) issued to ${book.member_name} (Card: ${book.card_number}) is due tomorrow (${book.due_date}). Please follow up with the member.`,
+            message: `Reminder: The book "${book.book_title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+            // message: `Book "${book.book_title}" (ISBN: ${book.book_isbn}) issued to ${book.member_name} is due tomorrow.`,
             type: "due_reminder"
           });
 
-          console.log(`✅ Created notification for staff ${staff.firstname} ${staff.lastname} about book "${book.book_title}"`);
+            console.log(`✅ Created notification for staff ${staff.firstname} ${staff.lastname} about book "${book.book_title}"`);
         } else {
           console.log(`⏭️ Notification already exists for staff ${staff.firstname} ${staff.lastname} about book "${book.book_title}"`);
         }
@@ -360,7 +354,8 @@ async function checkBooksDueTomorrow(req) {
 // Schedule the cron job to run daily at 9:00 AM
 cron.schedule('* * * * *', async () => {
   console.log("⏰ Running daily cron job: Check books due tomorrow");
-  await checkBooksDueTomorrow(req);
+   await checkBooksDueTomorrow()
+ 
 });
 
 async function deleteNotification(notificationId, userId) {

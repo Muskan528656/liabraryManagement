@@ -463,6 +463,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       setNotifications(prev => [notification, ...prev]);
       setAllNotifications(prev => [notification, ...prev]);
 
+      // Publish event to update context unread count
+      PubSub.publish("NOTIFICATIONS_UPDATED", {
+        type: "new_notification",
+        notification: notification
+      });
+
       // Show browser notification if permission granted
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title || "Library Notification", {
@@ -779,7 +785,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
               {unreadCount > 0 && (
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                <span className="badge bg-danger position-absolute start-100 translate-middle mt-2">
                   {unreadCount}
                 </span>
               )}
@@ -831,7 +837,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   </button>
                 </div>
 
-                <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
                   {activeTab === "UNREAD" ? (
                     notifications.length === 0 ? (
                       <div className="text-center text-muted py-4">
@@ -851,9 +857,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                         >
                           <div
                             style={{
-                              width: "100px",
+                              width: "40px",
                               height: "40px",
-                              borderRadius: "50%",
+                              borderRadius: "50px",
                               background: "#e5edff",
                               display: "flex",
                               alignItems: "center",
@@ -865,8 +871,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             <i className="fa-solid fa-bell"></i>
                           </div>
 
-                          <div style={{ flex: 1 }} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
-                            <div style={{ fontWeight: 400 }}>
+                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ fontWeight: 500, fontSize:'14px' }}>
                               {n.message} <br/>
                               <p
                               style={{
@@ -917,7 +923,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             style={{
                               width: "40px",
                               height: "40px",
-                              borderRadius: "50%",
+                              borderRadius: "50px",
                               background: "#e5edff",
                               display: "flex",
                               alignItems: "center",
@@ -929,8 +935,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             <i className="fa-solid fa-bell"></i>
                           </div>
 
-                          <div style={{ flex: 1 }} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
-                            <div style={{ fontWeight: 400 }}>
+                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ fontWeight: 300 }}>
                               {n.message} <br/>
                               <p
                               style={{
