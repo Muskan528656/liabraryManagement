@@ -8,10 +8,8 @@ const e = require("express");
 const Auth = require("../models/auth.model.js");
 const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 
-const sql = require("../models/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
 
 
 

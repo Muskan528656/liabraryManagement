@@ -135,8 +135,7 @@ async function createBroadcast(userIds, notification) {
   userIds.forEach((userId, i) => {
     const idx = i * 6;
     values.push(
-      `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${
-        idx + 6
+      `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6
       }, false, NOW())`
     );
     params.push(
@@ -274,7 +273,7 @@ async function checkBooksDueTomorrow() {
 
     const result = await sql.query(query, [tomorrowStr]);
 
-    console.log("result=>",result.rows);
+    console.log("result=>", result.rows);
 
     if (result.rows.length === 0) {
       console.log("✅ No books due tomorrow");
@@ -292,10 +291,10 @@ async function checkBooksDueTomorrow() {
         
     `;
 
-    console.log("stafffQuery=>",staffQuery )
+    console.log("stafffQuery=>", staffQuery)
     const staffResult = await sql.query(staffQuery);
     const staffUsers = staffResult.rows;
-    console.log("staffUsers",staffUsers);
+    console.log("staffUsers", staffUsers);
 
     if (staffUsers.length === 0) {
       console.log("⚠️ No active staff users found to notify");
@@ -306,9 +305,9 @@ async function checkBooksDueTomorrow() {
 
     // Create notifications for each book due tomorrow
     for (const book of result.rows) {
-      console.log("book=>",book);
+      console.log("book=>", book);
       for (const staff of staffUsers) {
-        console.log("staff=>",staff)
+        console.log("staff=>", staff)
         // Check if notification already exists for this staff-book combination today
         const existingQuery = `
           SELECT id
@@ -320,7 +319,7 @@ async function checkBooksDueTomorrow() {
             AND DATE(createddate) = CURRENT_DATE
         `;
 
-        console.log("staffId=>",staff.id);
+        console.log("staffId=>", staff.id);
 
         const existingResult = await sql.query(existingQuery, [
           staff.id,
@@ -352,7 +351,6 @@ async function checkBooksDueTomorrow() {
   }
 }
 
-// Schedule the cron job to run daily at 9:00 AM
 cron.schedule('* * * * *', async () => {
   console.log("⏰ Running daily cron job: Check books due tomorrow");
   await checkBooksDueTomorrow();

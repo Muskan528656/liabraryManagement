@@ -458,12 +458,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
     const handleNewNotification = (notification) => {
       console.log("📨 Received new notification:", notification);
-
-      // Update notifications state
       setNotifications(prev => [notification, ...prev]);
       setAllNotifications(prev => [notification, ...prev]);
 
-      // Show browser notification if permission granted
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title || "Library Notification", {
           body: notification.message,
@@ -714,7 +711,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src={Company?.company_logo_url || "/Logo.png"}
+            // src={Company?.logourl || "/Logo.png"}
+            src={ "/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />

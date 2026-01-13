@@ -14,6 +14,7 @@ const Permission = () => {
     const [roles, setRoles] = useState([]);
     const [editingRow, setEditingRow] = useState(null);
     const [editingPermissions, setEditingPermissions] = useState({});
+    const [selectAllStates, setSelectAllStates] = useState({});
 
     const fetchPermissions = async () => {
         try {
@@ -27,6 +28,8 @@ const Permission = () => {
                 permissionsData = result.data.data;
             } else if (result && Array.isArray(result.data)) {
                 permissionsData = result.data;
+            } else if (result && Array.isArray(result)) {
+                permissionsData = result;
             }
 
             console.log("Fetched permissions data:", permissionsData);
@@ -57,6 +60,24 @@ const Permission = () => {
         fetchRoles();
     }, [refreshKey]);
 
+    // Update select all states when editing starts or permissions change
+    useEffect(() => {
+        if (editingRow) {
+            const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
+            const newSelectAllStates = {};
+
+            // Check all four permission types
+            ['allow_view', 'allow_create', 'allow_edit', 'allow_delete'].forEach(permissionType => {
+                const allModulesHavePerm = rolePerms.every(perm =>
+                    editingPermissions[perm.module_id]?.[permissionType] || false
+                );
+                newSelectAllStates[permissionType] = allModulesHavePerm && rolePerms.length > 0;
+            });
+
+            setSelectAllStates(newSelectAllStates);
+        }
+    }, [editingPermissions, editingRow, permissions]);
+
     const handleSavePermission = async (formData) => {
         try {
             console.log("Saving permissions for role:", formData.role_id);
@@ -71,11 +92,12 @@ const Permission = () => {
             }));
 
             // Use the bulk update API
-            const api = new DataApi(`permissions/role/${formData.role_id}`);
+            const api = new DataApi("permissions/role");
 
             const response = await api.update({
+                role_id: formData.role_id,
                 permissions: permissionsToSave
-            });
+            }, formData.role_id); // Pass role_id as second parameter
 
             if (response.data.success) {
                 alert("Permissions saved successfully!");
@@ -104,20 +126,63 @@ const Permission = () => {
                 allow_delete: editingPermissions[moduleId].allow_delete || false
             }));
 
-            // Use the bulk update API
-            const api = new DataApi(`permissions/role/${actualRoleId || ''}`);
+            console.log("Saving inline permissions for role:", actualRoleId, permissionsToSave);
 
-            const response = await api.update({
+            // Check if roleId is null or undefined
+            const api = new DataApi("permissions/role");
+
+            const payload = {
+                role_id: actualRoleId,
                 permissions: permissionsToSave
-            });
+            };
 
-            if (response.data.success) {
+            // For null role_id, use a different endpoint or handle specially
+            let response;
+            if (actualRoleId === null || actualRoleId === undefined || actualRoleId === 'null') {
+                // For null role, update each permission individually
+                const nullApi = new DataApi("permissions");
+                const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+
+                for (const moduleId in editingPermissions) {
+                    const moduleData = editingPermissions[moduleId];
+                    const existingPerm = rolePerms.find(p => p.module_id === moduleId);
+
+                    if (existingPerm && existingPerm.id) {
+                        // Update existing permission
+                        await nullApi.update({
+                            allow_view: moduleData.allow_view,
+                            allow_create: moduleData.allow_create,
+                            allow_edit: moduleData.allow_edit,
+                            allow_delete: moduleData.allow_delete
+                        }, existingPerm.id);
+                    } else {
+                        // Create new permission for null role
+                        await nullApi.create({
+                            role_id: null,
+                            module_id: moduleId,
+                            allow_view: moduleData.allow_view,
+                            allow_create: moduleData.allow_create,
+                            allow_edit: moduleData.allow_edit,
+                            allow_delete: moduleData.allow_delete
+                        });
+                    }
+                }
+
+                response = { data: { success: true } };
+            } else {
+                // For regular role_id, use the bulk update endpoint
+                // Note: The update method expects (data, id)
+                response = await api.update(payload, actualRoleId);
+            }
+
+            if (response.data && response.data.success) {
                 alert(`Permissions updated successfully for ${roleName}!`);
                 setEditingRow(null);
                 setEditingPermissions({});
+                setSelectAllStates({});
                 setRefreshKey(prev => prev + 1);
             } else {
-                throw new Error(response.data.error || "Failed to save permissions");
+                throw new Error(response.data?.error || "Failed to save permissions");
             }
 
         } catch (err) {
@@ -125,7 +190,6 @@ const Permission = () => {
             alert("Error saving permissions: " + err.message);
         }
     };
-
 
     const groupPermissionsByRole = () => {
         const grouped = {};
@@ -215,64 +279,46 @@ const Permission = () => {
         });
     };
 
-    // const handleInlineSave = async (roleId, roleName) => {
-    //     try {
-    //         const api = new DataApi("permissions");
-    //         const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
-    //         const savedPermissions = [];
-    //         const errors = [];
+    // Handle select all for a specific permission type
+    const handleSelectAllToggle = (permissionType) => {
+        if (!editingRow) return;
 
-    //         console.log("Saving inline permissions for role:", roleId, editingPermissions);
+        const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
+        const currentState = selectAllStates[permissionType] || false;
+        const newValue = !currentState;
 
-    //         for (const moduleId in editingPermissions) {
-    //             const moduleData = editingPermissions[moduleId];
-    //             const existingPerm = rolePerms.find(p => p.module_id === moduleId);
+        setEditingPermissions(prev => {
+            const updated = { ...prev };
 
-    //             const permissionData = {
-    //                 role_id: roleId === 'null' ? null : roleId,
-    //                 role_name: roleName,
-    //                 module_id: moduleId,
-    //                 module_name: existingPerm?.module_name || `Module ${moduleId}`,
-    //                 allow_view: moduleData.allow_view || false,
-    //                 allow_create: moduleData.allow_create || false,
-    //                 allow_edit: moduleData.allow_edit || false,
-    //                 allow_delete: moduleData.allow_delete || false
-    //             };
+            rolePerms.forEach(perm => {
+                if (perm.module_id) {
+                    const currentData = updated[perm.module_id] || {
+                        allow_view: false,
+                        allow_create: false,
+                        allow_edit: false,
+                        allow_delete: false
+                    };
 
-    //             try {
-    //                 if (existingPerm) {
-    //                     console.log("Updating permission:", existingPerm.id, permissionData);
-    //                     await api.update(existingPerm.id, permissionData);
-    //                     savedPermissions.push({ ...permissionData, id: existingPerm.id });
-    //                 } else {
-    //                     console.log("Creating permission:", permissionData);
-    //                     const response = await api.create(permissionData);
-    //                     savedPermissions.push({ ...permissionData, id: response.data?.id });
-    //                 }
-    //             } catch (err) {
-    //                 console.error(`Error saving permission for module ${moduleId}:`, err);
-    //                 errors.push(moduleId);
-    //             }
-    //         }
+                    updated[perm.module_id] = {
+                        ...currentData,
+                        [permissionType]: newValue
+                    };
+                }
+            });
 
-    //         if (errors.length > 0) {
-    //             alert(`Permissions saved with some errors. Failed modules: ${errors.length}`);
-    //         } else {
-    //             alert(`Permissions updated successfully for ${roleName}!`);
-    //         }
+            return updated;
+        });
 
-    //         setEditingRow(null);
-    //         setEditingPermissions({});
-    //         setRefreshKey(prev => prev + 1);
-    //     } catch (err) {
-    //         console.error("Error saving inline permissions:", err);
-    //         alert("Error saving permissions: " + err.message);
-    //     }
-    // };
+        setSelectAllStates(prev => ({
+            ...prev,
+            [permissionType]: newValue
+        }));
+    };
 
     const handleInlineCancel = () => {
         setEditingRow(null);
         setEditingPermissions({});
+        setSelectAllStates({});
     };
 
     const toggleRoleAccordion = (roleId) => {
@@ -313,7 +359,9 @@ const Permission = () => {
             const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
 
             for (const perm of rolePerms) {
-                await api.delete(perm.id);
+                if (perm.id) {
+                    await api.delete(perm.id);
+                }
             }
 
             alert(`Permissions for ${roleName} deleted successfully!`);
@@ -383,13 +431,45 @@ const Permission = () => {
                 className="d-inline-block cursor-pointer"
                 onClick={handleClick}
                 style={{ pointerEvents: isEditing ? 'auto' : 'none' }}
+                title={checked ? "Enabled" : "Disabled"}
             >
                 {checked ? (
                     <i className="fa-solid fa-check-square text-primary fs-5"></i>
                 ) : (
-                    <i className="fa-solid fa-times-square text-danger fs-5"></i>
+                    <i className="fa-regular fa-square text-secondary fs-5"></i>
                 )}
             </div>
+        );
+    };
+
+    // Component for select all checkbox header
+    const SelectAllHeader = ({ permissionType, label }) => {
+        const isEditing = editingRow !== null;
+        const isChecked = selectAllStates[permissionType] || false;
+
+        return (
+            <th width="17.5%" className="text-center">
+                <div className="d-flex flex-column align-items-center justify-content-center">
+                    <span className="fw-semibold mb-1">{label}</span>
+                    {isEditing ? (
+                        <div
+                            className="cursor-pointer"
+                            onClick={() => handleSelectAllToggle(permissionType)}
+                            title={isChecked ? "Deselect All" : "Select All"}
+                        >
+                            {isChecked ? (
+                                <i className="fa-solid fa-check-square text-primary fs-6"></i>
+                            ) : (
+                                <i className="fa-regular fa-square text-secondary fs-6"></i>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-muted">
+                            <i className="fa-regular fa-square fs-6"></i>
+                        </div>
+                    )}
+                </div>
+            </th>
         );
     };
 
@@ -409,6 +489,7 @@ const Permission = () => {
                         <button
                             className="btn btn-sm btn-outline-secondary me-3"
                             onClick={() => toggleRoleAccordion(role.role_id)}
+                            title={isExpanded ? "Collapse" : "Expand"}
                         >
                             <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
                         </button>
@@ -448,15 +529,9 @@ const Permission = () => {
                                     onClick={() => handleInlineEditStart(role.role_id, role.role_name)}
                                     title="Quick Edit permissions"
                                 >
-                                    <i className="fa-solid fa-edit me-1"></i> Quick Edit
+                                    <i className="fa-solid fa-edit me-1"></i>  Edit
                                 </button>
-                                <button
-                                    className="btn btn-sm btn-outline-info"
-                                    onClick={() => handleEditRole(role)}
-                                    title="Edit in modal"
-                                >
-                                    <i className="fa-solid fa-pen me-1"></i> Edit
-                                </button>
+
                                 <button
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleDeleteRole(role.role_id, role.role_name)}
@@ -476,61 +551,57 @@ const Permission = () => {
                                 <thead className="table-light">
                                     <tr>
                                         <th width="30%" className="ps-4">Module Name</th>
-                                        <th width="17.5%" className="text-center">View</th>
-                                        <th width="17.5%" className="text-center">Create</th>
-                                        <th width="17.5%" className="text-center">Edit</th>
-                                        <th width="17.5%" className="text-center">Delete</th>
+                                        <SelectAllHeader permissionType="allow_view" label="View" />
+                                        <SelectAllHeader permissionType="allow_create" label="Create" />
+                                        <SelectAllHeader permissionType="allow_edit" label="Edit" />
+                                        <SelectAllHeader permissionType="allow_delete" label="Delete" />
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {role.permissions && role.permissions.length > 0 ? (
-                                        role.permissions.map(perm => {
-                                            // Debug each permission
-                                            console.log("Rendering permission:", perm);
-                                            return (
-                                                <tr key={`${role.role_id}-${perm.module_id}`}>
-                                                    <td className="ps-4 py-2">
-                                                        {perm.module_name || `Module ${perm.module_id}`}
-                                                    </td>
-                                                    <td className="text-center align-middle py-2">
-                                                        <PermissionCell
-                                                            isEditing={isEditing}
-                                                            moduleId={perm.module_id}
-                                                            field="allow_view"
-                                                            value={perm.allow_view}
-                                                            onToggle={handleInlineToggle}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center align-middle py-2">
-                                                        <PermissionCell
-                                                            isEditing={isEditing}
-                                                            moduleId={perm.module_id}
-                                                            field="allow_create"
-                                                            value={perm.allow_create}
-                                                            onToggle={handleInlineToggle}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center align-middle py-2">
-                                                        <PermissionCell
-                                                            isEditing={isEditing}
-                                                            moduleId={perm.module_id}
-                                                            field="allow_edit"
-                                                            value={perm.allow_edit}
-                                                            onToggle={handleInlineToggle}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center align-middle py-2">
-                                                        <PermissionCell
-                                                            isEditing={isEditing}
-                                                            moduleId={perm.module_id}
-                                                            field="allow_delete"
-                                                            value={perm.allow_delete}
-                                                            onToggle={handleInlineToggle}
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
+                                        role.permissions.map(perm => (
+                                            <tr key={`${role.role_id}-${perm.module_id}`}>
+                                                <td className="ps-4 py-2">
+                                                    {perm.module_name || `Module ${perm.module_id}`}
+                                                </td>
+                                                <td className="text-center align-middle py-2">
+                                                    <PermissionCell
+                                                        isEditing={isEditing}
+                                                        moduleId={perm.module_id}
+                                                        field="allow_view"
+                                                        value={perm.allow_view}
+                                                        onToggle={handleInlineToggle}
+                                                    />
+                                                </td>
+                                                <td className="text-center align-middle py-2">
+                                                    <PermissionCell
+                                                        isEditing={isEditing}
+                                                        moduleId={perm.module_id}
+                                                        field="allow_create"
+                                                        value={perm.allow_create}
+                                                        onToggle={handleInlineToggle}
+                                                    />
+                                                </td>
+                                                <td className="text-center align-middle py-2">
+                                                    <PermissionCell
+                                                        isEditing={isEditing}
+                                                        moduleId={perm.module_id}
+                                                        field="allow_edit"
+                                                        value={perm.allow_edit}
+                                                        onToggle={handleInlineToggle}
+                                                    />
+                                                </td>
+                                                <td className="text-center align-middle py-2">
+                                                    <PermissionCell
+                                                        isEditing={isEditing}
+                                                        moduleId={perm.module_id}
+                                                        field="allow_delete"
+                                                        value={perm.allow_delete}
+                                                        onToggle={handleInlineToggle}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))
                                     ) : (
                                         <tr>
                                             <td colSpan="5" className="text-center py-3 text-muted">

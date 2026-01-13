@@ -9,7 +9,7 @@ const AuthApi = {
         password: credentials.password || "",
         tcode: credentials.tcode ? credentials.tcode.trim().toLowerCase() : "",
       };
-      console.log("constants.API_BASE_URL",constants.API_BASE_URL)
+      console.log("constants.API_BASE_URL", constants.API_BASE_URL)
 
       let response = await fetch(constants.API_BASE_URL + "/api/auth/login", {
         method: "POST",
