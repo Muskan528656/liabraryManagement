@@ -326,6 +326,10 @@ module.exports = (app) => {
       let username = userInfo.firstname + " " + userInfo.lastname;
       userInfo.username = username;
       delete userInfo.password;
+
+      // Update the global logged-in user ID on token refresh
+      global.currentLoggedInUserId = userInfo.id;
+
       const newAuthToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
         expiresIn: "5h",
       });
@@ -340,6 +344,13 @@ module.exports = (app) => {
         .status(403)
         .json({ success: false, error: "Invalid or expired refresh token." });
     }
+  });
+
+  router.post("/logout", (req, res) => {
+    global.currentLoggedInUserId = null;
+
+    res.clearCookie("refreshToken");
+    return res.status(200).json({ success: true, message: "Logged out successfully" });
   });
 
 

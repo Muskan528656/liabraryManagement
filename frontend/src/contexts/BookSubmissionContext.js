@@ -7,6 +7,7 @@ const BookSubmissionContext = createContext();
 
 export const useBookSubmission = () => {
   const context = useContext(BookSubmissionContext);
+  console.log("context=>", context);
   if (!context) {
     throw new Error("useBookSubmission must be used within a BookSubmissionProvider");
   }
@@ -27,7 +28,9 @@ export const BookSubmissionProvider = ({ children }) => {
         "GET"
       );
       const result = await response.json();
+      console.log("result=>",result)
       if (result.success) {
+        console.log("unreadcount");
         setNotifications(result.notifications || []);
         setUnreadCount(result.unread_count || 0);
       } else {
@@ -67,6 +70,13 @@ export const BookSubmissionProvider = ({ children }) => {
     }
   }, [fetchNotifications]);
 
+  // Update notifications from API response (used after marking as read)
+  const updateNotificationsFromAPI = useCallback((apiNotifications) => {
+    setNotifications(apiNotifications);
+    const unread = apiNotifications.filter(n => !n.is_read).length;
+    setUnreadCount(unread);
+  }, []);
+
   // Mark notification as read
   const markNotificationAsRead = useCallback((notificationId) => {
     setNotifications(prev =>
@@ -96,8 +106,18 @@ export const BookSubmissionProvider = ({ children }) => {
       fetchNotifications();
     });
 
+    // Listen for new notification events from socket
+    const newNotificationToken = PubSub.subscribe("NOTIFICATIONS_UPDATED", (msg, data) => {
+      if (data.type === "new_notification") {
+        console.log("📨 Updating unread count for new notification");
+        // Increment unread count for new notification
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
     return () => {
       PubSub.unsubscribe(refreshToken);
+      PubSub.unsubscribe(newNotificationToken);
     };
   }, [fetchNotifications]);
 
@@ -107,6 +127,7 @@ export const BookSubmissionProvider = ({ children }) => {
     isLoadingNotifications,
     fetchNotifications,
     updateNotificationsAfterSubmission,
+    updateNotificationsFromAPI,
     markNotificationAsRead,
     handleNotificationClick
   };

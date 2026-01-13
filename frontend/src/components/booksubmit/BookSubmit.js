@@ -27,7 +27,7 @@ import { useBookSubmission } from "../../contexts/BookSubmissionContext";
 
 const BookSubmit = () => {
     const navigate = useNavigate();
-    const { updateNotificationsAfterSubmission } = useBookSubmission();
+    const { updateNotificationsAfterSubmission, updateNotificationsFromAPI } = useBookSubmission();
     const [isbn, setIsbn] = useState("");
     const [cardNumber, setCardNumber] = useState("");
     const [searchMode, setSearchMode] = useState("isbn");
@@ -1239,17 +1239,17 @@ const BookSubmit = () => {
                 // Mark notifications as read when book is submitted (regardless of timing)
                 console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
                 console.log("Selected member ID for notification marking:", selectedIssue.issued_to);
-                let unreadNotification;
                 try {
-                   unreadNotification =  await helper.fetchWithAuth(
+                   const unreadNotification = await helper.fetchWithAuth(
                         `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/${selectedIssue.issued_to}/due_reminder`,
                         "PUT"
                     );
-                    let data = await unreadNotification.json();
-                    if(data.success){
-                      await updateNotificationsAfterSubmission(data.notifications)
+                    const data = await unreadNotification.json();
+                    if(data.success && data.notifications){
+                      // Update the context with the new unread notifications from API
+                      updateNotificationsFromAPI(data.notifications);
                     }
-                    console.log("Notifications marked as read for book submission",data);
+                    console.log("Notifications marked as read for book submission", data);
                 } catch (notificationError) {
                     console.error("Error marking notifications as read:", notificationError);
                     // Don't show error toast for notification marking failure as it's not critical

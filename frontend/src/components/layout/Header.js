@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Navbar,
   Nav,
@@ -63,9 +63,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       if (result) {
         setUserProfile(result);
 
-        const fullName = `${result.firstname || ""} ${
-          result.lastname || ""
-        }`.trim();
+        const fullName = `${result.firstname || ""} ${result.lastname || ""
+          }`.trim();
         setUserDisplayName(
           fullName || result.username || result.email || "User"
         );
@@ -275,12 +274,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  
-  useEffect(() => {
-  fetchAllNotifications();
-}, []);
 
- 
+  useEffect(() => {
+    fetchAllNotifications();
+  }, []);
+
+
 
   const fetchModulesFromDB = async () => {
     try {
@@ -335,7 +334,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
- 
+
   useEffect(() => {
     try {
       const token = sessionStorage.getItem("token");
@@ -447,7 +446,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return location.pathname.startsWith(path);
   };
 
-  // Single consolidated useEffect for socket notifications
   useEffect(() => {
     if (!socket || !userInfo || !userInfo.id) {
       console.warn("⚠️ Socket or user info not available for notification setup");
@@ -461,6 +459,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       setNotifications(prev => [notification, ...prev]);
       setAllNotifications(prev => [notification, ...prev]);
 
+
+      PubSub.publish("NOTIFICATIONS_UPDATED", {
+        type: "new_notification",
+        notification: notification
+      });
+
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title || "Library Notification", {
           body: notification.message,
@@ -469,10 +473,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       }
     };
 
-    // Listen for new notifications
     socket.on("new_notification", handleNewNotification);
 
-    // Cleanup function
     return () => {
       console.log("🔌 Cleaning up socket notification listeners");
       socket.off("new_notification", handleNewNotification);
@@ -595,35 +597,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // const markAsRead = async (notificationId) => {
-  //   try {
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
-  //       "PUT"
-  //     );
-  //     const result = await response.json();
-  //     if (result.success) {
-  //       setAllNotifications((prev) =>
-  //         prev.map((n) =>
-  //           n.id === notificationId ? { ...n, is_read: true } : n
-  //         )
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error marking notification as read:", error);
-  //   }
-  // };
 
-  const markAsRead = (notificationId) => {
-
-  // setAllNotifications((prev) =>
-  //   prev.map((n) =>
-  //     n.id === notificationId
-  //       ? { ...n, is_read: false }
-  //       : n
-  //   )
-  // );
-};
 
 
   const handleNotificationClick = (notification) => {
@@ -636,22 +610,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
 
     console.log(notification.type);
-    // Mark notification as read (frontend only)
-    // if (!notification.is_read) {
-      navigate("/booksubmit");
+    navigate("/booksubmit");
 
-      // setAllNotifications((prev) =>
-      //   prev.map((n) =>
-      //     n.id === notification.id ? { ...n, is_read: true } : n
-      //   )
-      // );
-      // setNotifications((prev) =>
-      //   prev.map((n) =>
-      //     n.id === notification.id ? { ...n, is_read: true } : n
-      //   )
-      // );
-      // setUnreadCount((prev) => Math.max(0, prev - 1));
-    // }
+
   };
 
   const handleDeleteNotification = async (notificationId) => {
@@ -712,7 +673,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         >
           <img
             // src={Company?.logourl || "/Logo.png"}
-            src={ "/Logo.png"}
+            src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />
@@ -720,7 +681,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-2">
-        
+
           <img
             src="qr-code.png"
             alt="QR Code"
@@ -765,7 +726,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
             >
               <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
               {unreadCount > 0 && (
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                <span className="badge bg-danger position-absolute start-100 translate-middle mt-2">
                   {unreadCount}
                 </span>
               )}
@@ -775,8 +736,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <Dropdown.Menu
                 align="end"
                 style={{
-                  width: "360px",
-                  borderRadius: "14px",
+                  width: "450px",
+                  borderRadius: "50%",
                   padding: "0",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
                   overflow: "hidden",
@@ -790,11 +751,11 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 {/* TABS */}
                 <div className="d-flex border-bottom">
                   <button
-                    className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "UNREAD" ? "bg-primary text-white" : "bg-light text-muted"
-                    }`}
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
+                      }`}
                     onClick={() => setActiveTab("UNREAD")}
                     style={{
+                      background: activeTab === "UNREAD" ? "var(--primary-color)" : undefined,
                       fontSize: "12px",
                       fontWeight: "500",
                       borderRadius: "0",
@@ -803,21 +764,20 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                     Unread ({notifications.length})
                   </button>
                   <button
-                    className={`flex-fill py-2 px-3 text-center border-0 ${
-                      activeTab === "READ" ? "bg-primary text-white" : "bg-light text-muted"
-                    }`}
-                    onClick={() => setActiveTab("READ")}
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "READ" ? "text-white" : "bg-light text-muted"
+                      }`}
                     style={{
+                      backgroundColor: activeTab === "READ" ? "var(--primary-color)" : undefined,
                       fontSize: "12px",
                       fontWeight: "500",
-               
                     }}
+                    onClick={() => setActiveTab("READ")}
                   >
-                    Read ({allNotifications.filter(n => n.is_read).length})
+                    Read ({allNotifications.filter((n) => n.is_read).length})
                   </button>
                 </div>
 
-                <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
                   {activeTab === "UNREAD" ? (
                     notifications.length === 0 ? (
                       <div className="text-center text-muted py-4">
@@ -839,7 +799,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             style={{
                               width: "40px",
                               height: "40px",
-                              borderRadius: "50%",
+                              borderRadius: "50px",
                               background: "#e5edff",
                               display: "flex",
                               alignItems: "center",
@@ -851,17 +811,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             <i className="fa-solid fa-bell"></i>
                           </div>
 
-                          <div style={{ flex: 1 }} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
-                            <div style={{ fontWeight: 600 }}>
-                              {n.message} <br/>
+                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ fontWeight: 500, fontSize: '14px' }}>
+                              {n.message} <br />
                               <p
-                              style={{
-                                display: "inline-block",
-                                marginRight: "6px",
-                                color: "#374151",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                              }}
+                                style={{
+                                  display: "inline-block",
+                                  marginRight: "6px",
+                                  color: "#374151",
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                }}
                               >Member Name : </p>
                               <span
                                 style={{
@@ -872,36 +832,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                                   fontWeight: "500",
                                 }}
                               >
-                               {n.first_name} {n.last_name}
+                                {n.first_name} {n.last_name}
                               </span>
                             </div>
                             <small className="text-muted">
                               {n.created_at || n.due_date}
                             </small>
                           </div>
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNotification(n.id);
-                            }}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "#dc3545",
-                              cursor: "pointer",
-                              padding: "4px",
-                              borderRadius: "4px",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = "#f8f9fa";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.style.backgroundColor = "transparent";
-                            }}
-                          >
-                            <i className="fa-solid fa-trash" style={{ fontSize: "12px" }}></i>
-                          </button>
                         </div>
                       ))
                     )
@@ -926,7 +863,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             style={{
                               width: "40px",
                               height: "40px",
-                              borderRadius: "50%",
+                              borderRadius: "50px",
                               background: "#e5edff",
                               display: "flex",
                               alignItems: "center",
@@ -938,17 +875,17 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             <i className="fa-solid fa-bell"></i>
                           </div>
 
-                          <div style={{ flex: 1 }} onClick={() => handleNotificationClick(n)} style={{ cursor: "pointer" }}>
-                            <div style={{ fontWeight: 400 }}>
-                              {n.message} <br/>
+                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ fontWeight: 300 }}>
+                              {n.message} <br />
                               <p
-                              style={{
-                                display: "inline-block",
-                                marginRight: "6px",
-                                color: "#374151",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                              }}
+                                style={{
+                                  display: "inline-block",
+                                  marginRight: "6px",
+                                  color: "#374151",
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                }}
                               >Member Name : </p>
                               <span
                                 style={{
@@ -959,7 +896,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                                   fontWeight: "500",
                                 }}
                               >
-                               {n.first_name} {n.last_name}
+                                {n.first_name} {n.last_name}
                               </span>
                             </div>
                             <small className="text-muted">
