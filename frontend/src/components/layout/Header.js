@@ -773,19 +773,42 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }
             }}
           >
-            <Dropdown.Toggle
+          <Dropdown.Toggle
               variant="link"
-              className="position-relative"
+              className="position-relative d-inline-flex align-items-center justify-content-center"
               style={{
-                color: "#6b7280",
                 textDecoration: "none",
                 border: "none",
                 padding: "8px",
+                background: "transparent", 
               }}
             >
-              <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
+            
+              <i 
+                className="fa-solid fa-bell" 
+                style={{ 
+                  fontSize: "24px", 
+                  color: "#736c64"
+                }}
+              ></i>
+
               {unreadCount > 0 && (
-                <span className="badge bg-danger position-absolute start-100 translate-middle mt-2">
+                <span
+                  className="position-absolute rounded-circle d-flex align-items-center justify-content-center"
+                  style={{
+                    top: "8px",           
+                    right: "11px",         
+                    transform: "translate(50%, -50%)",
+                    width: "20px",        
+                    height: "20px",       
+                    backgroundColor: "#ef4444", 
+                    color: "white",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    border: "2px solid white", 
+                    zIndex: 1
+                  }}
+                >
                   {unreadCount}
                 </span>
               )}
@@ -795,7 +818,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <Dropdown.Menu
                 align="end"
                 style={{
-                  width: "450px",
+                  width: "350px",
                   borderRadius: "50%",
                   padding: "0",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
@@ -871,34 +894,32 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           >
                             <i className="fa-solid fa-bell"></i>
                           </div>
-
-                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
-                            <div style={{ fontWeight: 500, fontSize:'14px' }}>
-                              {n.message} <br/>
-                              <p
-                              style={{
-                                display: "inline-block",
-                                marginRight: "6px",
-                                color: "#374151",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                              }}
-                              >Member Name : </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  marginLeft: "2px",
-                                  color: "rgb(37, 99, 235)",
-                                  fontSize: "12px",
-                                  fontWeight: "500",
-                                }}
-                              >
-                               {n.first_name} {n.last_name}
+                            <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                              <span style={{ 
+                                fontSize: "11px", 
+                                fontWeight: "700", 
+                                textTransform: "uppercase", 
+                                color: "#2563eb",
+                                letterSpacing: "0.5px"
+                              }}>
+                                {n.first_name} {n.last_name}
                               </span>
+                              <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
                             </div>
-                            <small className="text-muted">
-                              {n.created_at || n.due_date}
-                            </small>
+                            
+                            <div style={{ 
+                              fontSize: "12px", 
+                              fontWidth:"700",
+                              color: "#4b5563", 
+                              marginTop: "2px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: "3",
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden" 
+                            }}>
+                              {n.message}
+                            </div>
                           </div>
                         </div>
                       ))
@@ -936,34 +957,32 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                             <i className="fa-solid fa-bell"></i>
                           </div>
 
-                          <div style={{ flex: 1, cursor: "pointer" }} onClick={() => handleNotificationClick(n)}>
-                            <div style={{ fontWeight: 300 }}>
-                              {n.message} <br/>
-                              <p
-                              style={{
-                                display: "inline-block",
-                                marginRight: "6px",
-                                color: "#374151",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                              }}
-                              >Member Name : </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  marginLeft: "2px",
-                                  color: "rgb(37, 99, 235)",
-                                  fontSize: "12px",
-                                  fontWeight: "500",
-                                }}
-                              >
-                               {n.first_name} {n.last_name}
-                              </span>
+                          <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                                <span style={{ 
+                                  fontSize: "11px", 
+                                  fontWeight: "700", 
+                                  textTransform: "uppercase", 
+                                  color: "#2563eb",
+                                  letterSpacing: "0.5px"
+                                }}>
+                                  {n.first_name} {n.last_name}
+                                </span>
+                                <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
+                              </div>
+                              
+                              <div style={{ 
+                                fontSize: "13px", 
+                                color: "#4b5563", 
+                                marginTop: "2px",
+                                display: "-webkit-box",
+                                WebkitLineClamp: "2",
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden" 
+                              }}>
+                                {n.message}
+                              </div>
                             </div>
-                            <small className="text-muted">
-                              {n.created_at || n.due_date}
-                            </small>
-                          </div>
 
                           <button
                             onClick={(e) => {
