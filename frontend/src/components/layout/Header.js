@@ -714,21 +714,21 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               }
             }}
           >
-          <Dropdown.Toggle
+            <Dropdown.Toggle
               variant="link"
               className="position-relative d-inline-flex align-items-center justify-content-center"
               style={{
                 textDecoration: "none",
                 border: "none",
                 padding: "8px",
-                background: "transparent", 
+                background: "transparent",
               }}
             >
-            
-              <i 
-                className="fa-solid fa-bell" 
-                style={{ 
-                  fontSize: "24px", 
+
+              <i
+                className="fa-solid fa-bell"
+                style={{
+                  fontSize: "24px",
                   color: "#736c64"
                 }}
               ></i>
@@ -737,16 +737,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 <span
                   className="position-absolute rounded-circle d-flex align-items-center justify-content-center"
                   style={{
-                    top: "8px",           
-                    right: "11px",         
+                    top: "8px",
+                    right: "11px",
                     transform: "translate(50%, -50%)",
-                    width: "20px",        
-                    height: "20px",       
-                    backgroundColor: "#ef4444", 
+                    width: "20px",
+                    height: "20px",
+                    backgroundColor: "#ef4444",
                     color: "white",
                     fontSize: "11px",
                     fontWeight: "bold",
-                    border: "2px solid white", 
+                    border: "2px solid white",
                     zIndex: 1
                   }}
                 >
@@ -766,12 +766,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                   overflow: "hidden",
                 }}
               >
-             
+
                 <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                   <h6 className="mb-0 fw-bold">Notifications</h6>
                 </div>
 
-             
+
                 <div className="d-flex border-bottom">
                   <button
                     className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
@@ -833,12 +833,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           >
                             <i className="fa-solid fa-bell"></i>
                           </div>
-                            <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
+                          <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                              <span style={{ 
-                                fontSize: "11px", 
-                                fontWeight: "700", 
-                                textTransform: "uppercase", 
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
                                 color: "#2563eb",
                                 letterSpacing: "0.5px"
                               }}>
@@ -846,16 +846,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                               </span>
                               <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
                             </div>
-                            
-                            <div style={{ 
-                              fontSize: "12px", 
-                              fontWidth:"700",
-                              color: "#4b5563", 
+
+                            <div style={{
+                              fontSize: "12px",
+                              fontWidth: "700",
+                              color: "#4b5563",
                               marginTop: "2px",
                               display: "-webkit-box",
                               WebkitLineClamp: "3",
                               WebkitBoxOrient: "vertical",
-                              overflow: "hidden" 
+                              overflow: "hidden"
                             }}>
                               {n.message}
                             </div>
@@ -897,31 +897,31 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                           </div>
 
                           <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                                <span style={{ 
-                                  fontSize: "11px", 
-                                  fontWeight: "700", 
-                                  textTransform: "uppercase", 
-                                  color: "#2563eb",
-                                  letterSpacing: "0.5px"
-                                }}>
-                                  {n.first_name} {n.last_name}
-                                </span>
-                                <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
-                              </div>
-                              
-                              <div style={{ 
-                                fontSize: "13px", 
-                                color: "#4b5563", 
-                                marginTop: "2px",
-                                display: "-webkit-box",
-                                WebkitLineClamp: "2",
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden" 
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                color: "#2563eb",
+                                letterSpacing: "0.5px"
                               }}>
-                                {n.message}
-                              </div>
+                                {n.first_name} {n.last_name}
+                              </span>
+                              <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
                             </div>
+
+                            <div style={{
+                              fontSize: "13px",
+                              color: "#4b5563",
+                              marginTop: "2px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: "2",
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden"
+                            }}>
+                              {n.message}
+                            </div>
+                          </div>
 
                           <button
                             onClick={(e) => {
