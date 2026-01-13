@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Card, Form, Alert } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
@@ -102,6 +101,8 @@ const Company = () => {
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
 
+      console.log("fetched company response:", response);
+
       if (response.data) {
         setCompany(response.data);
         setTempCompany(response.data);
@@ -117,14 +118,18 @@ const Company = () => {
 
   const handleCompanySave = async () => {
     try {
+
+      console.log("company to be saved:", tempCompany);
       setIsUploading(true);
       const companyId = getCompanyIdFromToken();
       const token = sessionStorage.getItem("token");
 
-
+      console.log("selectedLogoFile:", selectedLogoFile);
       if (selectedLogoFile) {
         const formData = new FormData();
-        formData.append('image', selectedLogoFile);
+        formData.append('logourl', selectedLogoFile);
+
+        console.log("formData:", formData);
 
         Object.keys(tempCompany).forEach(key => {
           if (key !== 'logourl' && tempCompany[key] !== null && tempCompany[key] !== undefined) {
@@ -140,10 +145,13 @@ const Company = () => {
         if (response.data?.success) {
           const updatedCompany = response.data.data;
           setCompany(updatedCompany);
+       
           setTempCompany(updatedCompany);
+        
+
           setIsEditingCompany(false);
           setSelectedLogoFile(null);
-          setLogoPreview(null);
+          // setLogoPreview(null);
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
 
@@ -161,6 +169,9 @@ const Company = () => {
 
         const companyApi = new DataApi("company");
         const response = await companyApi.update(tempCompany, companyId);
+
+        console.log("update response:", response);
+        console.log("companyApi:", companyApi);
 
         if (response.data) {
           const updatedCompany = response.data.data || response.data;
@@ -210,6 +221,7 @@ const Company = () => {
   };
 
   const handleCompanyChange = (key, value) => {
+    console.log(`Changing company field ${key} to value:`, value);
     setTempCompany((prev) => ({
       ...prev,
       [key]: value,
@@ -322,7 +334,7 @@ const Company = () => {
                       borderRadius: "10px",
                     }}
                   >
-                    Company Information
+                    Company Informationss
                   </h6>
                 </Col>
                 <Row className="px-5">
@@ -501,21 +513,21 @@ const Company = () => {
                           src={
                             logoPreview
                               ? logoPreview
-                              : tempCompany.logourl
-                                ? (tempCompany.logourl.startsWith('http') || tempCompany.logourl.startsWith('blob:')
-                                  ? tempCompany.logourl
-                                  : `${API_BASE_URL}${tempCompany.logourl}`)
-                                : Company?.logourl
-                                  ? `${API_BASE_URL}${Company.logourl}?${new Date().getTime()}`
-                                  : "/default-logo.png"
+                              : Company?.logourl
+                                ? Company.logourl.startsWith("http")
+                                  ? Company.logourl
+                                  : `${API_BASE_URL}${Company.logourl}`
+                                : "/Logo.png"
                           }
                           alt="Company Logo"
                           className="w-100 h-100"
                           style={{ objectFit: "cover" }}
                           onError={(e) => {
-                            e.target.src = "/default-logo.png";
+                            e.currentTarget.src = "/Logo.png";
                           }}
                         />
+
+
 
                         {isEditingCompany && (
                           <div className="position-absolute bottom-0 start-0 w-100 text-center bg-dark bg-opacity-50 text-white small py-1">
@@ -531,6 +543,7 @@ const Company = () => {
                           className="d-none"
                           onChange={(e) => {
                             const file = e.target.files[0];
+                            console.log("Selected file:", file);
                             if (file) {
                               // File type validation - check both MIME type and extension
                               const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -581,6 +594,8 @@ const Company = () => {
 
                               setSelectedLogoFile(file);
                               const previewUrl = URL.createObjectURL(file);
+                              console.log("previewUrl:", previewUrl);
+                              console.log("setselectedLogoFile:", file);
                               setLogoPreview(previewUrl);
                             }
                           }}

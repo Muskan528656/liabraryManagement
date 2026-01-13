@@ -40,7 +40,7 @@ module.exports = (app) => {
     });
 
 
-  
+
 
 
     router.post(
@@ -71,20 +71,44 @@ module.exports = (app) => {
     router.put(
         "/:id",
         fetchUser,
-        [],
+        [
+            body("role_name").notEmpty().withMessage("Role Name is required"),
+        ],
         async (req, res) => {
             const errors = validationResult(req);
-            if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
+            // if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    errors: errors.array()[0].msg
+                });
+            }
             try {
                 UserRole.init(req.userinfo.tenantcode);
+
+                const existingUserRole = await UserRole.findById(req.params.id);
+                if (!existingUserRole) {
+                    return res.status(404).json({ errors: "User Role not found" });
+                }
+
+
+                const duplicateCategory = await UserRole.findByName(
+                    req.body.role_name,
+                    req.params.id
+                );
+                if (duplicateCategory) {
+                    return res
+                        .status(400)
+                        .json({ errors: "User Role with this name already exists" });
+                }
+
+
 
                 const data = {
                     ...req.body,
                     lastmodifiedbyid: req.userinfo.userid,
                 };
-
-                const updated = await UserRole.update(req.params.id, data);
+                // const userId = req.userinfo?.id || null;
+                const updated = await UserRole.update(req.params.id, data,);
                 if (!updated) return res.status(404).json({ success: true, msg: "Role not found" });
 
                 return res.status(200).json(updated);

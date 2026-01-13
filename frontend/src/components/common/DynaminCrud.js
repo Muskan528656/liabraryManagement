@@ -339,6 +339,7 @@ const DynamicCRUD = ({
 
     useEffect(() => {
         setFormData(initialFormData);
+        console.log("recordsPerPage:", recordsPerPage);
     }, []);
 
     useEffect(() => {
@@ -355,12 +356,12 @@ const DynamicCRUD = ({
 
 
 
-
+//fetch all data 
     const filteredData = useMemo(() => {
         let result = data;
 
         console.log('advancedFilters = ', advancedFilters);
-        console.log('result = ', result);
+        console.log('resultData = ', result);
         console.log('searchTerm = ', searchTerm);
         console.log('showSearch = ', showSearch);
 
@@ -369,7 +370,6 @@ const DynamicCRUD = ({
         const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
 
         if (hasActiveFilters) {
-
             result = applyAdvancedFilters(result, advancedFilters);
         }
 
@@ -1026,7 +1026,7 @@ console.log("formDaformDataformDataformData", formData);
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         currentPage={currentPage}
                                         totalRecords={filteredData.length}
-                                        recordsPerPage={recordsPerPage}
+                                        recordsPerPage={recordsPerPage} //this bg-info
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
                                         showActions={showActions}

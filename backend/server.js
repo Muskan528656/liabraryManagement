@@ -53,6 +53,13 @@ const io = require("socket.io")(server, {
 
 app.set('io', io);
 
+//file upload
+app.use(fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 },
+  abortOnLimit: true,
+  createParentPath: true,
+}));
+
 io.on("connection", (socket) => {
 
 
@@ -115,11 +122,7 @@ require('./app/routes/objecttype.routes.js')(app);
 
 
 
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 },
-  abortOnLimit: true,
-  createParentPath: true,
-}));
+
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

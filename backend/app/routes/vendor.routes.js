@@ -157,9 +157,7 @@ module.exports = (app) => {
           return res
             .status(400)
             .json({ errors: "Vendor with this email already exists" });
-        } else {
-
-        }
+        } 
 
         const userId = req.userinfo.id;
         const vendor = await Vendor.updateById(

@@ -75,6 +75,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 name: "email",
                 label: "Email",
                 type: "email",
+                required: true,
                 placeholder: "Enter email address",
                 colSize: 6,
             },
@@ -106,13 +107,41 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
         ],
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];
-            if (!formData.name?.trim()) errors.push("Author Name is required");
+            if (!formData.name?.trim()) {
+                errors.push("Author Name is required");  
+            }
+            else {
 
-            const duplicate = allAuthors.find(
-                author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
-                    author.id !== editingAuthor?.id
-            );
-            if (duplicate) errors.push("Author with this name already exists");
+                 if (!formData.email?.trim()) {
+                    errors.push("Author Email is required");
+                } else {
+                    const duplicateEmail = allAuthors.find(
+                        author => author.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                            author.id !== editingAuthor?.id
+                    );
+                    if (duplicateEmail) {
+                        errors.push("Author with this email already exists");
+                    }
+                }
+
+               
+            }
+
+            //  const duplicate = allAuthors.find(
+            //         author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
+            //             author.id !== editingAuthor?.id
+            //     );
+            //     if (duplicate) errors.push("Author with this name already exists");
+            // if (!formData.email?.trim()) errors.push("Author Email is required");
+
+
+            // const duplicateEmail = allAuthors.find(
+            //     author => author.email?.toLowerCase() === formData.email?.toLowerCase() &&
+            //         author.id !== editingAuthor?.id
+            // );
+            // if (duplicateEmail) {
+            //     errors.push("Author with this email already exists");
+            // }
 
             return errors;
         },

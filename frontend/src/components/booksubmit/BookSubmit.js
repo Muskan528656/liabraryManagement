@@ -1339,7 +1339,8 @@ const BookSubmit = () => {
         {
             field: "book_title",
             label: "Book Title",
-            width: 250,
+            width: 300,
+            height: 0,
             render: (value, record) => {
                 const bookId = record.book_id || record.bookId || record.book?.id;
                 if (!bookId) {
@@ -1684,7 +1685,7 @@ const BookSubmit = () => {
                                             marginBottom: "-1px"
                                         }}
                                     >
-                                        <i className="fa-solid fa-book-return me-2"></i>
+                                        {/* <i className="fa-solid fa-book-return me-2"></i> */}
                                         <span>Submit Book</span>
                                     </Nav.Link>
                                 </Nav.Item>
@@ -1948,7 +1949,7 @@ const BookSubmit = () => {
 
                                     <Row className="mt-1">
                                         <Col xs={12}>
-                                            <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                            <Card className="shadow-sm " style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
 
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}

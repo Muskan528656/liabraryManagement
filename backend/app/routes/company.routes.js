@@ -175,17 +175,27 @@ module.exports = (app) => {
     fetchUser,
     async (req, res) => {
       try {
+        console.log("CONTENT-TYPE:", req.headers["content-type"]);
+        console.log("FILES:", req.files);
+
+        console.log("Update Company Request Body:", req.body);
+
         Company.init(req.userinfo.tenantcode);
 
         const existingCompany = await Company.findById(req.params.id);
+        console.log("Existing Company:", existingCompany);
         if (!existingCompany) {
           return res.status(404).json({ errors: "Company not found" });
         }
 
+
+        console.log("req.body.name:", req.body.name);
         const duplicateCompany = await Company.findByName(
           req.body.name,
           req.params.id
         );
+
+        console.log("Duplicate Company Check:", duplicateCompany);
         if (duplicateCompany) {
           return res
             .status(400)
@@ -196,6 +206,7 @@ module.exports = (app) => {
 
         const companyData = { ...req.body };
 
+        console.log("companyData before processing:", companyData);
         // Convert string booleans to actual booleans for multipart form data
         if (companyData.isactive !== undefined) {
           companyData.isactive = companyData.isactive === 'true' || companyData.isactive === true;
@@ -210,8 +221,10 @@ module.exports = (app) => {
         const previousImagePath = existingCompany.logourl;
 
         // Handle file upload with express-fileupload
-        if (req.files && req.files.image) {
-          const imageFile = req.files.image;
+        if (req.files && req.files.logourl) {
+          const imageFile = req.files.logourl;
+
+          console.log("imagefile", imageFile);
 
           // Validate file type - match frontend validation exactly
           const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -219,6 +232,9 @@ module.exports = (app) => {
 
           const fileExtension = imageFile.name.toLowerCase().substring(imageFile.name.lastIndexOf('.'));
           const mimeType = imageFile.mimetype.toLowerCase();
+
+          console.log("check mimeType:", mimeType);
+          console.log("fileExtension:", fileExtension);
 
           console.log('Backend file validation:', {
             name: imageFile.name,
@@ -233,11 +249,15 @@ module.exports = (app) => {
           // Check if extension is valid
           const isValidExtension = allowedExtensions.includes(fileExtension);
 
+          console.log("isValidMimeType:", isValidMimeType);
+          console.log("isValidExtension:", isValidExtension);
+
           // For JPEG files, accept both .jpg and .jpeg extensions
           const isJpegFile = (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
             (mimeType === 'image/png' && fileExtension === '.png') ||
             (mimeType === 'image/gif' && fileExtension === '.gif');
 
+            console.log("isJpegFile:", isJpegFile);
           if (!isValidMimeType || !isValidExtension || !isJpegFile) {
 
             return res.status(400).json({ errors: "Only JPEG, PNG, and GIF images are allowed" });
@@ -253,9 +273,15 @@ module.exports = (app) => {
           const filename = 'company-' + uniqueSuffix + path.extname(imageFile.name);
           const filepath = path.join(companyUploadDir, filename);
 
+          console.log("Saving file to:", filepath);   
+          console.log("filename",filename); 
+          console.log("uniqueSuffix",uniqueSuffix);
+          
           // Move file to upload directory
           await imageFile.mv(filepath);
           companyData.logourl = `/uploads/companies/${filename}`;
+
+
         }
 
 
@@ -265,7 +291,7 @@ module.exports = (app) => {
         }
 
         // Delete old image if a new one was uploaded
-        if (req.files && req.files.image && previousImagePath && previousImagePath !== companyData.logourl) {
+        if (req.files && req.files.logourl && previousImagePath && previousImagePath !== companyData.logourl) {
           deleteFileIfExists(previousImagePath);
         }
 

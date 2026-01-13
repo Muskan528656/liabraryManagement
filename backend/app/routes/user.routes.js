@@ -30,57 +30,57 @@ module.exports = (app) => {
   var router = require("express").Router();
   const fileUpload = require("express-fileupload");
 
-  
+
 
   router.post("/:id/upload-image", fetchUser, async (req, res) => {
-  try {
-    if (!req.files?.file) {
-      return res.status(400).json({ errors: "No image file provided" });
+    try {
+      if (!req.files?.file) {
+        return res.status(400).json({ errors: "No image file provided" });
+      }
+
+      const userId = String(req.params.id);
+
+      // Authorization check
+      if (String(req.userinfo.id) !== userId) {
+        return res.status(403).json({ errors: "Unauthorized access" });
+      }
+
+      const file = req.files.file;
+
+      // Size check only (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ errors: "Image size max 5MB" });
+      }
+
+      // Use same path as server.js for consistency
+      const uploadPath = path.join(
+        __dirname,
+        '../../../frontend/public/uploads',
+        userId
+      );
+
+
+
+      // Ensure directory exists
+      fs.mkdirSync(uploadPath, { recursive: true });
+
+      const fileExt = path.extname(file.name) || ".jpg";
+      const fileName = `profile_${Date.now()}${fileExt}`;
+      const filePath = path.join(uploadPath, fileName);
+
+      await file.mv(filePath);
+
+      const relativePath = `/uploads/${userId}/${fileName}`;
+
+      return res.status(200).json({
+        success: true,
+        filePath: relativePath,
+      });
+    } catch (error) {
+      console.error("Upload Image Error:", error);
+      return res.status(500).json({ errors: "Internal server error" });
     }
-
-    const userId = String(req.params.id);
-
-    // Authorization check
-    if (String(req.userinfo.id) !== userId) {
-      return res.status(403).json({ errors: "Unauthorized access" });
-    }
-
-    const file = req.files.file;
-
-    // Size check only (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ errors: "Image size max 5MB" });
-    }
-
-    // Use same path as server.js for consistency
-    const uploadPath = path.join(
-      __dirname,
-      '../../../frontend/public/uploads',
-      userId
-    );
-
- 
-
-    // Ensure directory exists
-    fs.mkdirSync(uploadPath, { recursive: true });
-
-    const fileExt = path.extname(file.name) || ".jpg";
-    const fileName = `profile_${Date.now()}${fileExt}`;
-    const filePath = path.join(uploadPath, fileName);
-
-    await file.mv(filePath);
-
-    const relativePath = `/uploads/${userId}/${fileName}`;
-
-    return res.status(200).json({
-      success: true,
-      filePath: relativePath,
-    });
-  } catch (error) {
-    console.error("Upload Image Error:", error);
-    return res.status(500).json({ errors: "Internal server error" });
-  }
-});
+  });
 
   router.get("/", fetchUser, async (req, res) => {
     try {
@@ -141,9 +141,9 @@ module.exports = (app) => {
 
         const tenantcode = req.userinfo?.tenantcode;
         const companyid = req.userinfo?.companyid;
- 
- 
- 
+
+
+
 
         if (!tenantcode) {
           console.error("Error: tenantcode is missing from req.userinfo");
@@ -163,7 +163,7 @@ module.exports = (app) => {
             `, [tenantcode]);
             if (companyCheck.rows.length > 0) {
               finalCompanyId = companyCheck.rows[0].id;
- 
+
             } else {
               console.error("Company not found for tenantcode:", tenantcode);
               return res.status(400).json({
@@ -222,8 +222,14 @@ module.exports = (app) => {
     async (req, res) => {
       try {
         const errors = validationResult(req);
+        // if (!errors.isEmpty()) {
+        //   return res.status(400).json({ errors: errors.array() });
+        // }
+
         if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+          return res.status(400).json({
+            errors: errors.array()[0].msg
+          });
         }
 
         User.init(req.userinfo.tenantcode);
@@ -233,10 +239,27 @@ module.exports = (app) => {
           return res.status(404).json({ errors: "User not found" });
         }
 
+        console.log("userinfo", req.userinfo.id);
+
+        console.log("params id", req.params.id);
         // Authorization check
-        if (req.userinfo.id !== req.params.id) {
-          return res.status(403).json({ errors: "Unauthorized access" });
+        // if (req.userinfo.id !== req.params.id) {
+        //   return res.status(403).json({ errors: "Unauthorized access" });
+        // }
+
+        const duplicateVendor = await User.findByEmail(
+          req.body.email,
+          req.params.id
+        );
+
+        console.log("Duplicate vendor check:", duplicateVendor);
+
+        if (duplicateVendor) {
+          return res
+            .status(400)
+            .json({ errors: "Publisher with this email already exists" });
         }
+
 
 
         const updateData = { ...req.body };

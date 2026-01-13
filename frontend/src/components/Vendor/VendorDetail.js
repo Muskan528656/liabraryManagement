@@ -1,17 +1,41 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
-import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+// import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import City_State from "../../constants/CityState.json";
+
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },
   suspended: { variant: "warning", label: "Suspended" },
 };
+
+
+// dropdown---------------------
 const countryCodeOptions = COUNTRY_CODES.map((country) => ({
   value: country.country_code,
   label: `${country.country_code} - ${country.country}`,
 }));
+
+const countryName = COUNTRY_CODES.map((country) => ({
+  value: country.country,
+  label: `${country.country}`,
+}));
+
+const cityName = City_State.map(item => ({
+  value: item.name,
+  label: `${item.name}`,
+}));
+
+const stateName = City_State.map(item => ({
+  value: item.state,
+  label: `${item.state}`,
+}));
+console.log("countryName Options:", countryName);
+console.log("countryCodeOptions Options:", countryCodeOptions);
 
 const VendorDetail = () => {
   const { timeZone } = useTimeZone();
@@ -37,19 +61,48 @@ const VendorDetail = () => {
         label: "Country Code",
         type: "select", // Changed from "text" to "select"
         options: countryCodeOptions, // Added options
-        render: (value) => {
-          const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
-          const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
-          return country ? `${country.country_code} (${country.country})` : value || 'N/A';
-        },
+        // render: (value) => {
+        //   const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
+        //   const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
+        //   return country ? `${country.country_code} (${country.country})` : value || 'N/A';
+        // },
       },
     ],
     address: [
-      { key: "country", label: "Country", type: "text" },
-      { key: "pincode", label: "Pincode", type: "text" },
-      { key: "state", label: "State", type: "text" },
-      { key: "address", label: "Address", type: "text" },
-      { key: "city", label: "City", type: "text" },
+      {
+        key: "country",
+        label: "Country",
+        type: "select",
+        options: countryName,
+      
+      },
+      {
+        key: "pincode",
+        label: "Pincode",
+        type: "text"
+      },
+      {
+        key: "state",
+        label: "State",
+        type: "select",
+        options: stateName,
+      },
+      {
+        key: "address",
+        label: "Address",
+        type: "text"
+      },
+      {
+      
+         key: "city",
+        label: "City",
+        type: "select",
+        options: cityName,
+        // options: City_State.map(item => ({
+        //   value: item.name,
+        //   label: `${item.name} `
+        // })),
+      },
 
     ],
     other: [
@@ -60,7 +113,7 @@ const VendorDetail = () => {
     ],
   };
 
- 
+
 
   return (
     <ModuleDetail

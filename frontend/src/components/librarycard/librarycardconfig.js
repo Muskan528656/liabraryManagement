@@ -514,8 +514,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
         },
 
         filterFields: [
-
-
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -593,7 +591,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             { key: "type", label: "Type", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
-
             {
                 key: "status",
                 label: "Status",

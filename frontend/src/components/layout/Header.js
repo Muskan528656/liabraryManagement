@@ -722,7 +722,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            src={Company?.company_logo_url || "/Logo.png"}
+            src={Company?.logourl || "/Logo.png"}
             // src="/Logo.png"
 
             height="50"

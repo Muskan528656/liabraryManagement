@@ -505,7 +505,9 @@ module.exports = (app) => {
   //   }
   // );
 
-  router.put("/:id", fetchUser, upload.single('image'), async (req, res) => {
+  router.put("/:id", fetchUser, 
+    
+    upload.single('image'), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
 

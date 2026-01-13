@@ -121,6 +121,43 @@ async function deletePublisherById(id, data) {
     }
 }
 
+async function findByEmail(email, excludeId = null) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    console.log("Finding vendor by email:", email, "Excluding ID:", excludeId);
+    const cleanEmail = email?.trim();
+    console.log("Cleaned email:", cleanEmail);
+
+    // Base query
+    let query = `
+      SELECT *
+      FROM ${this.schema}.publisher
+      WHERE email = $1
+    `;
+    const params = [cleanEmail];
+    // Exclude current ID if provided
+    if (excludeId) {
+      query += ` AND id != $2`;
+      params.push(excludeId);
+      console.log("queryeeeeee",query)
+    }
+
+    console.log("Constructed query:", query);
+    console.log("Parameters for query:", params);
+
+    const result = await sql.query(query, params);
+
+    console.log("Query result:", result.rows);
+    return result.rows.length > 0 ? result.rows[0] : null;
+
+  } catch (error) {
+    console.error("Error in findByName:", error);
+    throw error;
+  }
+}
 
 module.exports = {
     init,
@@ -128,5 +165,6 @@ module.exports = {
     findPublisherById,
     insertPublisher,
     updatePublisherByid,
-    deletePublisherById
+    deletePublisherById,
+    findByEmail
 };

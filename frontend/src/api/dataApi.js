@@ -404,11 +404,19 @@ export default class DataApi {
   }
 
   updateFormData(formData, id) {
+    console.log( "Updating form data for ID:", id );
+    console.log("formData", formData);
     return axios.put(`${this.baseUrl}/${id}`, formData, {
       headers: {
         ...this.getHeaders(),
         "Content-Type": "multipart/form-data",
       },
+    });
+  }
+
+    upsert(data) {
+    return axios.post(this.baseUrl, data, {
+      headers: this.getHeaders(true),
     });
   }
 
@@ -429,11 +437,7 @@ export default class DataApi {
       { headers: this.getHeaders() }
     );
   }
-  upsert(data) {
-    return axios.post(this.baseUrl, data, {
-      headers: this.getHeaders(true),
-    });
-  }
+
 
   createLibraryCard(formData) {
     const data = new FormData();
