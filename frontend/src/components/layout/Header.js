@@ -759,7 +759,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <Dropdown.Menu
                 align="end"
                 style={{
-                  width: "350px",
+                  width: "300px",
                   borderRadius: "50%",
                   padding: "0",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
@@ -767,12 +767,9 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                 }}
               >
 
-                <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
-                  <h6 className="mb-0 fw-bold">Notifications</h6>
-                </div>
 
 
-                <div className="d-flex border-bottom">
+                <div className="d-flex border-bottom px-1 py-1">
                   <button
                     className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
                       }`}

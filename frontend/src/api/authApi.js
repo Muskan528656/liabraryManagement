@@ -1,5 +1,5 @@
 import * as constants from "../constants/CONSTANT";
-import helper from "../components/common/helper";
+
 const AuthApi = {
   async login(credentials) {
     try {
