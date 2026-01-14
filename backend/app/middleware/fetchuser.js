@@ -3,6 +3,12 @@ const Auth = require("../models/auth.model.js");
 const sql = require("../models/db.js");
 
 const fetchUser = async (req, res, next) => {
+  var token = req.headers.authorization;
+  if (!token) {
+ 
+    global.currentLoggedInUserId = null;
+    return res.status(401).send({ errors: "Please authenticate" });
+  }
   try {
     let token = req.headers.authorization;
     if (!token) return res.status(401).json({ errors: "Please authenticate" });

@@ -37,6 +37,27 @@ module.exports = (app) => {
             res.status(500).json({ success: false, error: e.message });
         }
     });
+    router.put("/role/:roleId", fetchUser, async (req, res) => {
+        try {
+            const { roleId } = req.params;
+            const { permissions } = req.body;
+
+            if (!Array.isArray(permissions)) {
+                return res.status(400).json({ success: false, message: "Permissions array required" });
+            }
+
+            const data = await Permission.updateMultiple(roleId, permissions, req.userinfo.id);
+
+            res.json({
+                success: true,
+                message: "Permissions saved successfully",
+                data
+            });
+
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
 
     // Update multiple permissions for a role
     router.put("/role/:roleId", fetchUser, async (req, res) => {

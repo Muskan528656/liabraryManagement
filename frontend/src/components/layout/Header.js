@@ -20,17 +20,19 @@ import DataApi from "../../api/dataApi";
 import Submodule from "./Submodule";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import UniversalBarcodeScanner from "../common/UniversalBarcodeScanner";
+import { useBookSubmission } from "../../contexts/BookSubmissionContext";
 
 export default function Header({ open, handleDrawerOpen, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { unreadCount } = useBookSubmission();
   const [userInfo, setUserInfo] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showBookSubmitModal, setShowBookSubmitModal] = useState(false);
   const [rolePermissions, setRolePermissions] = useState({});
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
-  const [activeTab, setActiveTab] = useState("ALL"); // ALL | UNREAD | READ
+  const [activeTab, setActiveTab] = useState("UNREAD"); // UNREAD | READ
 
   const [formData, setFormData] = useState({
     book_barcode: "",
@@ -47,7 +49,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [showScannerModal, setShowScannerModal] = useState(false); // Scanner modal state
   const [allNotifications, setAllNotifications] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
 
 
   const fetchUserProfile = async () => {
@@ -62,9 +63,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       if (result) {
         setUserProfile(result);
 
-        const fullName = `${result.firstname || ""} ${
-          result.lastname || ""
-        }`.trim();
+        const fullName = `${result.firstname || ""} ${result.lastname || ""
+          }`.trim();
         setUserDisplayName(
           fullName || result.username || result.email || "User"
         );
@@ -233,9 +233,15 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       fetchUserProfile();
     });
 
+    const notificationsUpdateToken = PubSub.subscribe("NOTIFICATIONS_UPDATED", (msg, data) => {
+      console.log("Notifications updated event received:", data);
+      fetchAllNotifications();
+    });
+
     return () => {
       PubSub.unsubscribe(companyUpdateToken);
       PubSub.unsubscribe(userUpdateToken);
+      PubSub.unsubscribe(notificationsUpdateToken);
     };
   }, [userInfo]);
 
@@ -253,13 +259,13 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const fetchAllNotifications = async () => {
     try {
       const response = await helper.fetchWithAuth(
-        `${constants.API_BASE_URL}/api/notifications/due-tomorrow`,
+        `${constants.API_BASE_URL}/api/notifications/all`,
         "GET"
       );
       const result = await response.json();
       if (result.success) {
-        setNotifications(result.notifications || []);
-        setUnreadCount(result.unread_count || 0);
+        setAllNotifications(result.all_notifications || []);
+        setNotifications(result.unread_notifications || []);
       } else {
         console.error("Error fetching notifications:", result.message);
       }
@@ -268,12 +274,12 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  
-  useEffect(() => {
-  fetchAllNotifications();
-}, []);
 
- 
+  useEffect(() => {
+    fetchAllNotifications();
+  }, []);
+
+
 
   const fetchModulesFromDB = async () => {
     try {
@@ -328,7 +334,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
- 
+
   useEffect(() => {
     try {
       const token = sessionStorage.getItem("token");
@@ -440,7 +446,6 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     return location.pathname.startsWith(path);
   };
 
-  // Single consolidated useEffect for socket notifications
   useEffect(() => {
     if (!socket || !userInfo || !userInfo.id) {
       console.warn("⚠️ Socket or user info not available for notification setup");
@@ -451,13 +456,15 @@ export default function Header({ open, handleDrawerOpen, socket }) {
 
     const handleNewNotification = (notification) => {
       console.log("📨 Received new notification:", notification);
-
-      // Update notifications state
       setNotifications(prev => [notification, ...prev]);
       setAllNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
 
-      // Show browser notification if permission granted
+
+      PubSub.publish("NOTIFICATIONS_UPDATED", {
+        type: "new_notification",
+        notification: notification
+      });
+
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title || "Library Notification", {
           body: notification.message,
@@ -466,10 +473,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
       }
     };
 
-    // Listen for new notifications
     socket.on("new_notification", handleNewNotification);
 
-    // Cleanup function
     return () => {
       console.log("🔌 Cleaning up socket notification listeners");
       socket.off("new_notification", handleNewNotification);
@@ -592,55 +597,39 @@ export default function Header({ open, handleDrawerOpen, socket }) {
     }
   };
 
-  // const markAsRead = async (notificationId) => {
-  //   try {
-  //     const response = await helper.fetchWithAuth(
-  //       `${constants.API_BASE_URL}/api/notifications/${notificationId}/read`,
-  //       "PUT"
-  //     );
-  //     const result = await response.json();
-  //     if (result.success) {
-  //       setAllNotifications((prev) =>
-  //         prev.map((n) =>
-  //           n.id === notificationId ? { ...n, is_read: true } : n
-  //         )
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error marking notification as read:", error);
-  //   }
-  // };
 
-  const markAsRead = (notificationId) => {
-
-  // setAllNotifications((prev) =>
-  //   prev.map((n) =>
-  //     n.id === notificationId
-  //       ? { ...n, is_read: false }
-  //       : n
-  //   )
-  // );
-};
 
 
   const handleNotificationClick = (notification) => {
     if (notification.type === "book_due") {
       navigate("/mybooks");
     }
+    if (notification.type === "due_reminder") {
+      navigate("/booksubmit");
+    }
 
-    // Mark notification as read (frontend only)
-    if (!notification.is_read) {
-      setAllNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notification.id ? { ...n, is_read: true } : n
-        )
+
+    console.log(notification.type);
+    navigate("/booksubmit");
+
+
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      const response = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/notifications/${notificationId}`,
+        "DELETE"
       );
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notification.id ? { ...n, is_read: true } : n
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      const result = await response.json();
+      if (result.success) {
+        setAllNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      } else {
+        console.error("Error deleting notification:", result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
     }
   };
 
@@ -684,6 +673,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         >
           <img
             src={Company?.logourl || "/Logo.png"}
+            // src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />
@@ -691,7 +681,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-2">
-        
+
           <img
             src="qr-code.png"
             alt="QR Code"
@@ -726,17 +716,40 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           >
             <Dropdown.Toggle
               variant="link"
-              className="position-relative"
+              className="position-relative d-inline-flex align-items-center justify-content-center"
               style={{
-                color: "#6b7280",
                 textDecoration: "none",
                 border: "none",
                 padding: "8px",
+                background: "transparent",
               }}
             >
-              <i className="fa-solid fa-bell" style={{ fontSize: "20px" }}></i>
+
+              <i
+                className="fa-solid fa-bell"
+                style={{
+                  fontSize: "24px",
+                  color: "#736c64"
+                }}
+              ></i>
+
               {unreadCount > 0 && (
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                <span
+                  className="position-absolute rounded-circle d-flex align-items-center justify-content-center"
+                  style={{
+                    top: "8px",
+                    right: "11px",
+                    transform: "translate(50%, -50%)",
+                    width: "20px",
+                    height: "20px",
+                    backgroundColor: "#ef4444",
+                    color: "white",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    border: "2px solid white",
+                    zIndex: 1
+                  }}
+                >
                   {unreadCount}
                 </span>
               )}
@@ -746,92 +759,194 @@ export default function Header({ open, handleDrawerOpen, socket }) {
               <Dropdown.Menu
                 align="end"
                 style={{
-                  width: "360px",
-                  borderRadius: "14px",
+                  width: "300px",
+                  borderRadius: "50%",
                   padding: "0",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
                   overflow: "hidden",
                 }}
               >
-                {/* HEADER */}
-                <div className="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
-                  <h6 className="mb-0 fw-bold">Notifications</h6>
-                  {/* {totalUnreadCount > 0 && (
-                    <span
-                      style={{ fontSize: "13px", color: "#2563eb", cursor: "pointer" }}
-                      onClick={markAllAsRead}
-                    >
-                      Mark all as read
-                    </span>
-                  )} */}
+
+
+
+                <div className="d-flex border-bottom px-1 py-1">
+                  <button
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "UNREAD" ? "text-white" : "bg-light text-muted"
+                      }`}
+                    onClick={() => setActiveTab("UNREAD")}
+                    style={{
+                      background: activeTab === "UNREAD" ? "var(--primary-color)" : undefined,
+                      fontSize: "12px",
+                      fontWeight: "500",
+                      borderRadius: "0",
+                    }}
+                  >
+                    Unread ({notifications.length})
+                  </button>
+                  <button
+                    className={`flex-fill py-2 px-3 text-center border-0 ${activeTab === "READ" ? "text-white" : "bg-light text-muted"
+                      }`}
+                    style={{
+                      backgroundColor: activeTab === "READ" ? "var(--primary-color)" : undefined,
+                      fontSize: "12px",
+                      fontWeight: "500",
+                    }}
+                    onClick={() => setActiveTab("READ")}
+                  >
+                    Read ({allNotifications.filter((n) => n.is_read).length})
+                  </button>
                 </div>
 
-                <div style={{ maxHeight: "320px", overflowY: "auto" }}>
-                  {notifications.filter(n => !n.is_read).length === 0 ? (
-                    <div className="text-center text-muted py-4">
-                      No unread notifications
-                    </div>
-                  ) : (
-                    notifications.filter(n => !n.is_read).slice(0, 10).map((n) => (
-                      <div
-                        key={n.id}
-                        onClick={() => handleNotificationClick(n)}
-                        style={{
-                          padding: "12px",
-                          cursor: "pointer",
-                          background: n.is_read ? "#fff" : "#f3f6ff",
-                          borderBottom: "1px solid #eee",
-                          display: "flex",
-                          gap: "10px",
-                        }}
-                      >
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  {activeTab === "UNREAD" ? (
+                    notifications.length === 0 ? (
+                      <div className="text-center text-muted py-4">
+                        No unread notifications
+                      </div>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => (
                         <div
+                          key={n.id}
                           style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "50%",
-                            background: "#e5edff",
+                            padding: "12px",
+                            borderBottom: "1px solid #eee",
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            gap: "10px",
+                            position: "relative",
                           }}
                         >
-                          <i className="fa-solid fa-bell"></i>
-                        </div>
-
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: n.is_read ? 400 : 600 }}>
-                            {n.message} <br/>
-                            <p 
+                          <div
                             style={{
-                              display: "inline-block",
-                              marginRight: "6px",
-                              color: "#374151",
-                              fontSize: "12px",
-                              fontWeight: "500",
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "50px",
+                              background: "#e5edff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
                             }}
-                            >Member Name : </p> 
-                            <span
-                              style={{
-                                display: "inline-block",
-                                marginLeft: "2px",
-                                color: "rgb(37, 99, 235)",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                              }}
-                            >
-                             {n.first_name} 
-                            </span>
+                            onClick={() => handleNotificationClick(n)}
+                          >
+                            <i className="fa-solid fa-bell"></i>
                           </div>
-                          <small className="text-muted">
-                            {n.created_at || n.due_date}
-                          </small>
+                          <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                color: "#2563eb",
+                                letterSpacing: "0.5px"
+                              }}>
+                                {n.first_name} {n.last_name}
+                              </span>
+                              <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
+                            </div>
+
+                            <div style={{
+                              fontSize: "12px",
+                              fontWidth: "700",
+                              color: "#4b5563",
+                              marginTop: "2px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: "3",
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden"
+                            }}>
+                              {n.message}
+                            </div>
+                          </div>
                         </div>
+                      ))
+                    )
+                  ) : (
+                    allNotifications.filter(n => n.is_read).length === 0 ? (
+                      <div className="text-center text-muted py-4">
+                        No read notifications
                       </div>
-                    ))
+                    ) : (
+                      allNotifications.filter(n => n.is_read).slice(0, 10).map((n) => (
+                        <div
+                          key={n.id}
+                          style={{
+                            padding: "12px",
+                            borderBottom: "1px solid #eee",
+                            display: "flex",
+                            gap: "10px",
+                            position: "relative",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "50px",
+                              background: "#e5edff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => handleNotificationClick(n)}
+                          >
+                            <i className="fa-solid fa-bell"></i>
+                          </div>
+
+                          <div style={{ flex: 1, cursor: "pointer", overflow: "hidden" }} onClick={() => handleNotificationClick(n)}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                              <span style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                textTransform: "uppercase",
+                                color: "#2563eb",
+                                letterSpacing: "0.5px"
+                              }}>
+                                {n.first_name} {n.last_name}
+                              </span>
+                              <small style={{ fontSize: "10px", color: "#9ca3af" }}>{n.created_at}</small>
+                            </div>
+
+                            <div style={{
+                              fontSize: "13px",
+                              color: "#4b5563",
+                              marginTop: "2px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: "2",
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden"
+                            }}>
+                              {n.message}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotification(n.id);
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "#dc3545",
+                              cursor: "pointer",
+                              padding: "4px",
+                              borderRadius: "4px",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = "#f8f9fa";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = "transparent";
+                            }}
+                          >
+                            <i className="fa-solid fa-trash" style={{ fontSize: "12px" }}></i>
+                          </button>
+                        </div>
+                      ))
+                    )
                   )}
                 </div>
-               
                 {/* FOOTER */}
                 <div
                   className="text-center py-2 border-top"

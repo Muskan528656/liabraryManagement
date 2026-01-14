@@ -214,6 +214,7 @@ async function updateMultiple(roleId, permissions, userId = null) {
     }
 }
 
+
 module.exports = {
     init,
     findAll,

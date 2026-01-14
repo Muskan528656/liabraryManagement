@@ -20,13 +20,13 @@ module.exports = (app) => {
       Library.init(req.userinfo.tenantcode);
       const userRole = req.userinfo.userrole?.toUpperCase();
 
- 
+
       if (userRole === "STUDENT") {
         const stats = await Library.getStudentDashboardStats(req.userinfo.id);
         return res.status(200).json({ success: true, data: stats, role: "student" });
       }
 
- 
+
       const stats = await Library.getDashboardStats();
       return res.status(200).json({ success: true, data: stats, role: "admin" });
     } catch (error) {
@@ -35,7 +35,7 @@ module.exports = (app) => {
     }
   });
 
- 
-  app.use(process.env.BASE_API_URL+"/api/library", router);
+
+  app.use(process.env.BASE_API_URL + "/api/library", router);
 };
 

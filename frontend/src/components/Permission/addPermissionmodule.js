@@ -216,7 +216,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
     return (
         <Modal show={show} onHide={handleClose} size="lg" centered>
-            <Modal.Header closeButton className="bg-light py-2">
+            <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
                 <Modal.Title className="fw-bold fs-6">
                     {editingItem ? `Edit - ${editingItem.role_name}` : "Add Role Permissions"}
                 </Modal.Title>
@@ -298,10 +298,13 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                     Cancel
                 </Button>
                 <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={!formData.role_id || loading}
-                    className="px-3 py-1 fs-6"
+                  onClick={handleSubmit}
+              disabled={loading}
+              className="btn-custom d-flex align-items-center justify-content-center"
+                    // variant="primary"
+                    // onClick={handleSubmit}
+                    // disabled={!formData.role_id || loading}
+                    // className="px-3 py-1 fs-6"
                 >
                     <i className="fa-solid fa-save me-1"></i>
                     {editingItem ? "Update" : "Save"}

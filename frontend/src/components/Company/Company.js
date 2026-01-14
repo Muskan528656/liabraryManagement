@@ -146,9 +146,9 @@ const Company = () => {
         if (response.data?.success) {
           const updatedCompany = response.data.data;
           setCompany(updatedCompany);
-       
+
           setTempCompany(updatedCompany);
-        
+
 
           setIsEditingCompany(false);
           setSelectedLogoFile(null);
@@ -607,7 +607,6 @@ const Company = () => {
                     </div>
                   </Col>
 
-                  
                 </Row>
               </Row>
 

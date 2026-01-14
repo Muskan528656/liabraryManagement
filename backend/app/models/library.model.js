@@ -247,7 +247,6 @@ async function getStudentDashboardStats(userId) {
 
 module.exports = {
   init,
-  
   getDashboardStats,
   getStudentDashboardStats,
 };

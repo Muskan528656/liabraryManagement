@@ -1,9 +1,4 @@
-/**
- * Auto number utility to generate sequential codes based on auto_config table.
- * Author: Muskan Khan
- * Date: NOV, 2025
- * Copyright: www.ibirdsservices.com
- */
+
 
 const AutoConfig = require("../models/autoconfig.model.js");
 
@@ -33,21 +28,21 @@ async function getNextAutoNumber(tableName, defaults = {}, userId = null) {
     return formattedNumber;
 }
 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
 async function generateAutoNumberSafe(tableName, userId, prefix = "GEN-", digitCount = 5) {
-  try {
-    return await getNextAutoNumber(tableName, { prefix: prefix, digit_count: digitCount }, userId);
-  } catch (error) {
-    console.error("Error generating auto number:", error);
-    throw error;
-  }
+    try {
+        return await getNextAutoNumber(tableName, { prefix: prefix, digit_count: digitCount }, userId);
+    } catch (error) {
+        console.error("Error generating auto number:", error);
+        throw error;
+    }
 }
 
 module.exports = {
