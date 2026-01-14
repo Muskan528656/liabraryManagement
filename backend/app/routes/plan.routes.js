@@ -104,15 +104,22 @@ module.exports = (app) => {
         }
     });
 
-    router.put("/:id", fetchUser,
+    router.put(
+        "/:id",
+        fetchUser,
         checkPermission("Plan", "allow_edit"),
         async (req, res) => {
             try {
-
                 const { id } = req.params;
-                const { plan_name, duration_days, allowed_books, max_allowed_books_at_time, is_active } = req.body;
+                const {
+                    plan_name,
+                    duration_days,
+                    allowed_books,
+                    max_allowed_books_at_time,
+                    is_active
+                } = req.body;
 
-
+                // duration validation
                 if (duration_days !== undefined) {
                     if (duration_days === null || duration_days === "" || duration_days <= 0) {
                         return res.status(400).json({
@@ -121,10 +128,14 @@ module.exports = (app) => {
                     }
                 }
 
+                // tenant init
                 Plan.init(req.userinfo.tenantcode);
 
-
-                if (max_allowed_books_at_time !== undefined && allowed_books !== undefined) {
+                // max books validation
+                if (
+                    max_allowed_books_at_time !== undefined &&
+                    allowed_books !== undefined
+                ) {
                     if (max_allowed_books_at_time > allowed_books) {
                         return res.status(400).json({
                             errors:
@@ -137,9 +148,14 @@ module.exports = (app) => {
                 const updateData = { id };
 
                 if (plan_name !== undefined) updateData.plan_name = plan_name;
-                if (duration_days !== undefined) updateData.duration_days = parseInt(duration_days);
-                if (allowed_books !== undefined) updateData.allowed_books = parseInt(allowed_books);
-                if (max_allowed_books_at_time !== undefined) updateData.max_allowed_books_at_time = parseInt(max_allowed_books_at_time);
+                if (duration_days !== undefined)
+                    updateData.duration_days = parseInt(duration_days);
+                if (allowed_books !== undefined)
+                    updateData.allowed_books = parseInt(allowed_books);
+                if (max_allowed_books_at_time !== undefined)
+                    updateData.max_allowed_books_at_time = parseInt(
+                        max_allowed_books_at_time
+                    );
                 if (is_active !== undefined) updateData.is_active = is_active;
 
                 updateData.lastmodifiedbyid = updatedBy;
@@ -169,80 +185,17 @@ module.exports = (app) => {
 
                 if (err.code === "23502") {
                     return res.status(400).json({
-                        errors: "Plan name is required"
+                        errors: "Required field cannot be null"
                     });
                 }
+
                 return res.status(500).json({
                     errors: "Internal Server Error"
                 });
-
             }
-
-            Plan.init(req.userinfo.tenantcode);
-
-            // max_allowed_books_at_time validation
-            if (
-                max_allowed_books_at_time !== undefined &&
-                allowed_books !== undefined
-            ) {
-                if (max_allowed_books_at_time > allowed_books) {
-                    return res.status(400).json({
-                        errors:
-                            "Max books allowed at a time cannot be greater than total allowed books"
-                    });
-                }
-            }
-
-            const updatedBy = req.userinfo.id;
-            const updateData = { id };
-
-            if (plan_name !== undefined) updateData.plan_name = plan_name;
-            if (duration_days !== undefined)
-                updateData.duration_days = parseInt(duration_days);
-            if (allowed_books !== undefined)
-                updateData.allowed_books = parseInt(allowed_books);
-            if (max_allowed_books_at_time !== undefined)
-                updateData.max_allowed_books_at_time = parseInt(
-                    max_allowed_books_at_time
-                );
-            if (is_active !== undefined) updateData.is_active = is_active;
-
-            updateData.lastmodifiedbyid = updatedBy;
-
-            const fieldsToUpdate = Object.keys(updateData);
-            if (fieldsToUpdate.length <= 2) {
-                return res.status(400).json({
-                    errors: "No valid fields to update"
-                });
-            }
-
-            const result = await Plan.updatePlan(updateData);
-
-            if (!result) {
-                return res.status(404).json({
-                    errors: "Plan not found"
-                });
-            }
-
-            return res.status(200).json({
-                success: true,
-                message: "Plan updated successfully",
-                data: result
-            });
-        } catch (err) {
-            console.error(err);
-
-            if (err.code === "23502") {
-                return res.status(400).json({
-                    errors: "Required field cannot be null"
-                });
-            }
-
-            return res.status(500).json({
-                errors: "Internal Server Error"
-            });
         }
-    });
+    );
+
 
     // router.put("/:id", fetchUser,
     //     [

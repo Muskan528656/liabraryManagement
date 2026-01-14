@@ -155,8 +155,5 @@ module.exports = {
   update,
   remove,
   findByName
-<<<<<<< HEAD
-=======
   ,
->>>>>>> origin/main
 };

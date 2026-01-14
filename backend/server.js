@@ -55,11 +55,11 @@ app.set("io", io);
 global.io = io;
 
 //file upload
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 },
-  abortOnLimit: true,
-  createParentPath: true,
-}));
+// app.use(fileUpload({
+//   limits: { fileSize: 5 * 1024 * 1024 },
+//   abortOnLimit: true,
+//   createParentPath: true,
+// }));
 
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);

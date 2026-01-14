@@ -491,6 +491,8 @@ const Company = () => {
                     </Row>
                   </Col>
 
+
+
                   <Col md={3}>
                     <Form.Label className="fw-semibold">
                       Company Logo
@@ -604,6 +606,8 @@ const Company = () => {
                       )}
                     </div>
                   </Col>
+
+                  
                 </Row>
               </Row>
 

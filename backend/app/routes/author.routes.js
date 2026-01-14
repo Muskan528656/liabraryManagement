@@ -118,10 +118,6 @@ module.exports = (app) => {
             errors: errors.array()[0].msg
           });
         }
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
         Author.init(req.userinfo.tenantcode);
         const existingAuthor = await Author.findById(req.params.id);
         if (!existingAuthor) {

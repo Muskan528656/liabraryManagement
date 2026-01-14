@@ -63,26 +63,6 @@ async function findById(id) {
   }
 }
 
-<<<<<<< HEAD
-
-
-
-// async function findByEmail(email) {
-//   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
-
-//   try {
-//     const query = `SELECT * FROM ${this.schema}."user" WHERE email = $1`;
-//     const result = await sql.query(query, [email]);
-//     return result.rows.length ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByEmail:", error);
-//     throw error;
-//   }
-// }
-
-
-=======
->>>>>>> origin/main
 async function findByEmail(email, excludeId = null) {
   try {
     if (!this.schema) {
@@ -93,30 +73,17 @@ async function findByEmail(email, excludeId = null) {
     const cleanEmail = email?.trim();
     console.log("Cleaned email:", cleanEmail);
 
-<<<<<<< HEAD
-    // Base query
-=======
-
->>>>>>> origin/main
     let query = `
       SELECT *
       FROM ${this.schema}.user
       WHERE email = $1
     `;
     const params = [cleanEmail];
-<<<<<<< HEAD
-    // Exclude current ID if provided
-    if (excludeId) {
-      query += ` AND id != $2`;
-      params.push(excludeId);
-      console.log("queryeeeeee",query)
-=======
 
     if (excludeId) {
       query += ` AND id != $2`;
       params.push(excludeId);
       console.log("queryeeeeee", query)
->>>>>>> origin/main
     }
 
     console.log("Constructed query:", query);
@@ -133,13 +100,10 @@ async function findByEmail(email, excludeId = null) {
   }
 }
 
-<<<<<<< HEAD
-=======
 
 
 
 
->>>>>>> origin/main
 async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
