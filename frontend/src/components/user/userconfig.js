@@ -69,8 +69,33 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         importModel: UserModel,
 
         columns: [
-            { field: "firstname", label: "First Name" },
-            { field: "lastname", label: "Last Name" },
+            //  { field: "firstname", label: "First Name" },
+            // { field: "lastname", label: "Last Name" },
+            {
+                field: "name",
+                label: "Name",
+                render: (value, row) => {
+                    const { firstname, lastname } = row;
+                    return (
+                        <div className="d-flex align-items-center">
+                            <div
+                                className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    backgroundColor: "#e0e7ff",
+                                    color: "#4338ca",
+                                    fontWeight: "bold",
+                                    fontSize: "12px"
+                                }}
+                            >
+                                {firstname ? `${firstname[0]}${lastname[0]}`: <i className="fa-solid fa-user"></i>}
+                            </div>
+                            <span className="ms-2">{firstname} {lastname}</span>
+                        </div>
+                    );
+                }
+            },
             { field: "email", label: "Email" },
             {
                 field: "country",
