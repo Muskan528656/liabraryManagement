@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Card, Form, Alert } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
@@ -102,9 +101,12 @@ const Company = () => {
       const companyApi = new DataApi("company");
       const response = await companyApi.fetchById(companyid);
 
+      console.log("fetched company response:", response);
+
       if (response.data) {
         setCompany(response.data);
         setTempCompany(response.data);
+        setLogoPreview(response.data.logourl);
       }
     } catch (error) {
       console.error("Error fetching company:", error);
@@ -206,87 +208,6 @@ const Company = () => {
       setIsUploading(false);
     }
   };
-  // const handleCompanySave = async () => {
-  //   try {
-  //     setIsUploading(true);
-  //     const companyId = getCompanyIdFromToken();
-  //     const token = sessionStorage.getItem("token");
-
-
-  //     if (selectedLogoFile) {
-  //       const formData = new FormData();
-  //       formData.append('image', selectedLogoFile);
-
-  //       Object.keys(tempCompany).forEach(key => {
-  //         if (key !== 'logourl' && tempCompany[key] !== null && tempCompany[key] !== undefined) {
-  //           // Convert boolean values to strings for FormData compatibility
-  //           const value = typeof tempCompany[key] === 'boolean' ? tempCompany[key].toString() : tempCompany[key];
-  //           formData.append(key, value);
-  //         }
-  //       });
-
-  //       const companyApi = new DataApi("company");
-  //       const response = await companyApi.updateFormData(formData, companyId);
-
-  //       if (response.data?.success) {
-  //         const updatedCompany = response.data.data;
-  //         setCompany(updatedCompany);
-  //         setTempCompany(updatedCompany);
-  //         setIsEditingCompany(false);
-  //         setSelectedLogoFile(null);
-  //         setLogoPreview(null);
-  //         setAlertMessage("Company details updated successfully!");
-  //         setShowAlert(true);
-
-
-  //         setCompanyTimeZone(updatedCompany.time_zone);
-
-  //         PubSub.publish("RECORD_SAVED_TOAST", {
-  //           title: "Success",
-  //           message: "Company details updated successfully!",
-  //         });
-
-  //         PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
-  //       }
-  //     } else {
-
-  //       const companyApi = new DataApi("company");
-  //       const response = await companyApi.update(tempCompany, companyId);
-
-  //       if (response.data) {
-  //         const updatedCompany = response.data.data || response.data;
-  //         setCompany(updatedCompany);
-  //         setTempCompany(updatedCompany);
-  //         setIsEditingCompany(false);
-  //         setAlertMessage("Company details updated successfully!");
-  //         setShowAlert(true);
-
-
-
-  //         if (updatedCompany.time_zone) {
-  //           setCompanyTimeZone(updatedCompany.time_zone);
-  //         }
-
-  //         PubSub.publish("RECORD_SAVED_TOAST", {
-  //           title: "Success",
-  //           message: "Company details updated successfully!",
-  //         });
-
-  //         PubSub.publish("COMPANY_UPDATED", { company: updatedCompany });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating company:", error);
-  //     setAlertMessage("Failed to update company details.");
-  //     setShowAlert(true);
-  //     PubSub.publish("RECORD_ERROR_TOAST", {
-  //       title: "Error",
-  //       message: error.response?.data?.errors || "Failed to update company details",
-  //     });
-  //   } finally {
-  //     setIsUploading(false);
-  //   }
-  // };
 
   const handleCompanyEdit = () => {
     setIsEditingCompany(true);
@@ -301,6 +222,7 @@ const Company = () => {
   };
 
   const handleCompanyChange = (key, value) => {
+    console.log(`Changing company field ${key} to value:`, value);
     setTempCompany((prev) => ({
       ...prev,
       [key]: value,
@@ -413,7 +335,7 @@ const Company = () => {
                       borderRadius: "10px",
                     }}
                   >
-                    Company Information
+                    Company Informationss
                   </h6>
                 </Col>
                 <Row className="px-5">
@@ -568,7 +490,10 @@ const Company = () => {
                       </Col>
                     </Row>
                   </Col>
-  <Col md={3}>
+
+
+
+                  <Col md={3}>
                     <Form.Label className="fw-semibold">
                       Company Logo
                     </Form.Label>
@@ -681,116 +606,8 @@ const Company = () => {
                       )}
                     </div>
                   </Col>
-                  {/* <Col md={3}>
-                    <Form.Label className="fw-semibold">
-                      Company Logo
-                    </Form.Label>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <div
-                        className="border border-dashed d-flex align-items-center justify-content-center position-relative overflow-hidden"
-                        style={{
-                          width: "250px",
-                          height: "250px",
-                          cursor: isEditingCompany ? "pointer" : "default",
-                          opacity: isEditingCompany ? 1 : 0.8,
-                        }}
-                        onClick={() => {
-                          if (isEditingCompany) {
-                            document.getElementById("companyLogoInput").click();
-                          }
-                        }}
-                      >
-                        <img
-                          src={
-                            logoPreview
-                              ? logoPreview
-                              : tempCompany.logourl
-                                ? (tempCompany.logourl.startsWith('http') || tempCompany.logourl.startsWith('blob:')
-                                  ? tempCompany.logourl
-                                  : `${API_BASE_URL}${tempCompany.logourl}`)
-                                : Company?.logourl
-                                  ? `${API_BASE_URL}${Company.logourl}?${new Date().getTime()}`
-                                  : "/default-logo.png"
-                          }
-                          alt="Company Logo"
-                          className="w-100 h-100"
-                          style={{ objectFit: "cover" }}
-                          onError={(e) => {
-                            e.target.src = "/default-logo.png";
-                          }}
-                        />
 
-                        {isEditingCompany && (
-                          <div className="position-absolute bottom-0 start-0 w-100 text-center bg-dark bg-opacity-50 text-white small py-1">
-                            {isUploading ? "Uploading..." : "Click to change"}
-                          </div>
-                        )}
-                      </div>
-                      {isEditingCompany && (
-                        <Form.Control
-                          type="file"
-                          accept="image/*"
-                          id="companyLogoInput"
-                          className="d-none"
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              // File type validation - check both MIME type and extension
-                              const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                              const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
 
-                              const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-                              const mimeType = file.type.toLowerCase();
-
-                              console.log('File validation:', {
-                                name: file.name,
-                                mimeType: mimeType,
-                                extension: fileExtension,
-                                size: file.size
-                              });
-
-                              // Check if MIME type is valid
-                              const isValidMimeType = allowedMimeTypes.includes(mimeType);
-
-                              // Check if extension is valid
-                              const isValidExtension = allowedExtensions.includes(fileExtension);
-
-                              // Validate that MIME type and extension match appropriately
-                              const isValidCombination =
-                                (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
-                                (mimeType === 'image/png' && fileExtension === '.png') ||
-                                (mimeType === 'image/gif' && fileExtension === '.gif');
-
-                              if (!isValidMimeType || !isValidExtension || !isValidCombination) {
-
-                                PubSub.publish("RECORD_ERROR_TOAST", {
-                                  title: "Error",
-                                  message: "Only JPEG, PNG, and GIF images are allowed",
-                                });
-                                // Reset file input
-                                e.target.value = '';
-                                return;
-                              }
-
-                              if (file.size > 5 * 1024 * 1024) {
-                                PubSub.publish("RECORD_ERROR_TOAST", {
-                                  title: "Error",
-                                  message: "File size must be less than 5MB",
-                                });
-                                // Reset file input
-                                e.target.value = '';
-                                return;
-                              }
-
-                              setSelectedLogoFile(file);
-                              const previewUrl = URL.createObjectURL(file);
-                              setLogoPreview(previewUrl);
-                            }
-                          }}
-                        />
-                      )}
-                    </div>
-                  </Col> */}
                 </Row>
               </Row>
 
