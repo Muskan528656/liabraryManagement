@@ -353,6 +353,168 @@ module.exports = (app) => {
     return res.status(200).json({ success: true, message: "Logged out successfully" });
   });
 
+  router.post("/forgot-password", [
+    body("email").isEmail(),
+    body("tcode").exists(),
+  ], async (req, res) => {
+    try {
+      const email = req.body.email.trim().toLowerCase();
+      const tcode = req.body.tcode.trim().toLowerCase();
+      
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array().map(e => e.msg).join(", "),
+        });
+      }
+
+      const companyRes = await Auth.checkCompanybyTcode(tcode);
+      if (!companyRes?.length) {
+        return res.status(400).json({
+          success: false,
+          errors: "Invalid company code",
+        });
+      }
+
+      const { tenantcode, id: companyId } = companyRes[0];
+      await Auth.init(tenantcode, companyId);
+
+      const userRec = await Auth.findByEmail(email);
+      if (!userRec?.userinfo) {
+        return res.status(200).json({
+          success: true,
+          message: "If the email exists, a password reset link has been sent.",
+        });
+      }
+
+      const userInfo = userRec.userinfo;
+
+      const resetToken = jwt.sign(
+        { email: userInfo.email, id: userInfo.id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      // Send reset email
+      // const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+      // const baseUrl = ${protocol}://${req.get('host')}${process.env.BASE_API_URL}
+
+      const origin = req.headers.origin;
+      console.log("origin=>",origin)
+
+      console.log("host=>",req.get('origin')); 
+      const resetLink = `${origin}/reset-password?token=${resetToken}`;
+
+      // const resetLink = `${process.env.BASE_API_URL || "localhost:3001"}/reset-password?token=${resetToken}`
+      // console.log("resetLink=>",resetLink);
+      const emailData = {
+        name: userInfo.username || `${userInfo.firstname} ${userInfo.lastname}`,
+        resetLink: resetLink,
+      };
+      // console.log("emailData=>",emailData)
+
+      try {
+        const sendMail = require("../utils/Mailer");
+        await sendMail({
+          to: userInfo.email,
+          subject: "Password Reset Request",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Request</h2>
+              <p>Hello ${emailData.name},</p>
+              <p>You have requested to reset your password for the Library Management System.</p>
+              <p>Please click the link below to reset your password:</p>
+              <p style="margin: 20px 0;">
+                <a href="${emailData.resetLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+              </p>
+              <p>This link will expire in 1 hour for security reasons.</p>
+              <p>If you didn't request this password reset, please ignore this email.</p>
+              <p>Best regards,<br>Library Management System Team</p>
+            </div>
+          `
+        });
+        return res.status(200).json({
+          success: true,
+          message: "If the email exists, a password reset link has been sent.",
+        });
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+        return res.status(500).json({
+          success: false,
+          errors: "Failed to send reset email. Please try again.",
+        });
+      }
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
+
+  router.post("/reset-password", [
+    body("token").exists(),
+    body("newPassword").isLength({ min: 6 }),
+  ], async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array().map(e => e.msg).join(", "),
+        });
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (tokenError) {
+        return res.status(400).json({
+          success: false,
+          errors: "Invalid or expired reset token.",
+        });
+      }
+
+      const { email } = decoded;
+
+      const userRec = await Auth.findByEmail(email);
+      if (!userRec?.userinfo) {
+        return res.status(400).json({
+          success: false,
+          errors: "User not found.",
+        });
+      }
+
+      const userInfo = userRec.userinfo;
+
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassword = bcrypt.hashSync(newPassword, salt);
+
+      const updateResult = await Auth.updateById(userInfo.id, { password: hashedPassword });
+      if (!updateResult) {
+        return res.status(500).json({
+          success: false,
+          errors: "Failed to update password.",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Password updated successfully.",
+      });
+    } catch (err) {
+      console.error("Reset password error:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
 
   app.use(process.env.BASE_API_URL + "/api/auth", router);
 

@@ -16,7 +16,7 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll(req.userinfo.id);
+      const allNotifications = await Notification.findAll();
 
       console.log("All Notifications:", allNotifications);
 

@@ -73,6 +73,52 @@ const AuthApi = {
     window.location.href = "/login";
   },
 
+  async forgotPassword(email, tcode) {
+    try {
+      const forgotData = {
+        email: email ? email.trim().toLowerCase() : "",
+        tcode: tcode ? tcode.trim().toLowerCase() : "",
+      };
+
+      let response = await fetch(constants.API_BASE_URL + "/api/auth/forgot-password", {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(forgotData),
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      return { success: false, errors: "Network error. Please try again." };
+    }
+  },
+
+  async resetPassword(token, newPassword) {
+    try {
+      const resetData = {
+        token: token,
+        newPassword: newPassword,
+      };
+
+      let response = await fetch(constants.API_BASE_URL + "/api/auth/reset-password", {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(resetData),
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Reset password error:", error);
+      return { success: false, errors: "Network error. Please try again." };
+    }
+  },
+
   async bs() {
     return "yes";
   },
