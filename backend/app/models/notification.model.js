@@ -243,9 +243,9 @@ async function createDueReminderIfTomorrow(
 
 async function checkBooksDueTomorrow() {
   try {
-    
-    console.log("Checking for books due tomorrow...");
-    
+
+    console.log("🔍 Checking for books due tomorrow...");
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -278,21 +278,16 @@ async function checkBooksDueTomorrow() {
     console.log("result=>", result.rows);
     
     if (result.rows.length === 0) {
-      console.log("No books due tomorrow");
+
       return;
     }
-    
-    console.log(`Found ${result.rows.length} book(s) due tomorrow`);
-    
+
+
     const currentUserId = global.currentLoggedInUserId;
     console.log("currentUserId", currentUserId);
     if (!currentUserId) {
-      console.log("No logged-in user found to notify");
       return;
     }
-
-    console.log(`Notifying logged-in user (ID: ${currentUserId})`);
-
     for (const book of result.rows) {
       console.log("book=>", book);
       const existingQuery = `
@@ -336,7 +331,8 @@ async function checkBooksDueTomorrow() {
 
 cron.schedule('* * * * *', async () => {
   console.log("Running daily cron job: Check books due tomorrow");
-   await checkBooksDueTomorrow()
+  await checkBooksDueTomorrow()
+
 });
 
 async function deleteNotification(notificationId, userId) {

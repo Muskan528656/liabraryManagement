@@ -672,8 +672,8 @@ export default function Header({ open, handleDrawerOpen, socket }) {
           }}
         >
           <img
-            // src={Company?.logourl || "/Logo.png"}
-            src={"/Logo.png"}
+            src={Company?.logourl || "/Logo.png"}
+            // src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />
