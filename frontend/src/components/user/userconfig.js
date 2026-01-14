@@ -2,6 +2,7 @@
 import { Badge } from "react-bootstrap";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
+import { Link } from "react-router-dom";
 export const getUserConfig = (externalData = {}, props = {}, timeZone, companyInfo, editingItem = null) => {
 
     const extractData = (source) => {
@@ -75,8 +76,9 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                 field: "name",
                 label: "Name",
                 render: (value, row) => {
-                    const { firstname, lastname } = row;
+                    const { firstname, lastname, id } = row;
                     return (
+                        <Link to={`/user/${id}`} className="text-decoration-none text-primary">
                         <div className="d-flex align-items-center">
                             <div
                                 className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
@@ -88,11 +90,12 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
                                     fontWeight: "bold",
                                     fontSize: "12px"
                                 }}
-                            >
+                                >
                                 {firstname ? `${firstname[0]}${lastname[0]}`: <i className="fa-solid fa-user"></i>}
                             </div>
                             <span className="ms-2">{firstname} {lastname}</span>
                         </div>
+                        </Link>
                     );
                 }
             },

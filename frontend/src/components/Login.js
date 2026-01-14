@@ -30,6 +30,8 @@ const Login = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resetMessage, setResetMessage] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -129,27 +131,8 @@ const Login = () => {
     emailRegex.test(credentials.email);
 
   const ModalHeaderStyled = ({ title }) => (
-    <div className="text-center w-100 mt-3 mb-2">
-      <div
-        style={{
-          width: "56px",
-          height: "56px",
-          borderRadius: "12px",
-          background: colors.navy,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#fff",
-          margin: "0 auto 12px",
-          fontSize: "24px",
-        }}
-      >
-        <i className="fa-solid fa-file-lines"></i>
-      </div>
-      <h3 className="fw-bold mb-1" style={{ fontSize: '1.5rem' }}>{title}</h3>
-      <h5 className="fw-bold" style={{ color: colors.navy, fontSize: '1.1rem' }}>
-        Library Management System
-      </h5>
+    <div className="text-center" style={{margin:"-30px"}}>
+         {/* <img src="Untitled design (7).png" width="400" height="200" alt="Logo"/> */}
     </div>
   );
 
@@ -163,7 +146,7 @@ const Login = () => {
         justifyContent: "center",
       }}
     >
-      <Container style={{ padding: '30px' }}>
+      <Container style={{ padding: '10px' }}>
         <Row className="justify-content-center">
           <Col lg={9} xl={8}>
             <div
@@ -236,19 +219,20 @@ const Login = () => {
         show={showForgotModal} 
         onHide={() => setShowForgotModal(false)} 
         centered 
-        contentClassName="border-0 shadow-sm  justify-content-center"
-        style={{ borderRadius: '15px' }}
+        contentClassName="border-0 shadow-lg"
+        size="md"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
+            <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
         </Modal.Header>
          <Modal.Title>
-          <ModalHeaderStyled title="Forgot Password" />
+          <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
           <Alert variant="danger" show={!!forgotError}>{forgotError}</Alert>
           <Alert variant="success" show={!!forgotMessage}>{forgotMessage}</Alert>
           <Form onSubmit={handleForgotPassword}>
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3 ">
               <Form.Label className="fw-medium">Company Name</Form.Label>
               <Form.Control
                 type="text"
@@ -256,7 +240,7 @@ const Login = () => {
                 value={forgotTcode}
                 onChange={(e) => setForgotTcode(e.target.value)}
                 required
-                style={{ padding: '12px' }}
+                style={{ padding: '5px' }}
               />
             </Form.Group>
             <Form.Group className="mb-4">
@@ -267,14 +251,15 @@ const Login = () => {
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 required
-                style={{ padding: '12px' }}
+                style={{ padding: '5px' }}
               />
             </Form.Group>
             <Button
               type="submit"
+              variant=""
               disabled={forgotLoading}
               className="w-100 border-0"
-              style={{ backgroundColor: colors.periwinkle, padding: '12px', fontWeight: '600', borderRadius: '8px' }}
+              style={{ background: "var(--primary-color)",color:"#fff" }}
             >
               {forgotLoading ? <><Loader /> Sending...</> : "Send Reset Link"}
             </Button>
@@ -288,11 +273,13 @@ const Login = () => {
         onHide={() => setShowResetModal(false)} 
         centered 
         contentClassName="border-0 shadow-lg"
+        size="md"
       >
-        <Modal.Header closeButton style={{ borderBottom: 'none', paddingBottom: 0 }}>
+        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
+           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
         </Modal.Header>
         <Modal.Title>
-          <ModalHeaderStyled title="Reset Password" />
+          <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
           <Alert variant="danger" show={!!resetError}>{resetError}</Alert>
@@ -300,33 +287,44 @@ const Login = () => {
           <Form onSubmit={handleResetPassword}>
             <Form.Group className="mb-3">
               <Form.Label className="fw-medium">New Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{ padding: '12px' }}
-              />
+              <div className="position-relative">
+                <Form.Control
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  style={{ padding: '5px' }}
+                />
+                <span onClick={() => setShowNewPassword(!showNewPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+                  <i className={`fa ${showNewPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                </span>
+              </div>
             </Form.Group>
             <Form.Group className="mb-4">
               <Form.Label className="fw-medium">Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{ padding: '12px' }}
-              />
+              <div className="position-relative">
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  style={{ padding: '5px' }}
+                />
+                <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                </span>
+              </div>
             </Form.Group>
             <Button
+              variant=""
               type="submit"
               disabled={resetLoading}
               className="w-100 border-0"
-              style={{ backgroundColor: colors.periwinkle, padding: '12px', fontWeight: '600', borderRadius: '8px' }}
+              style={{ background: "var(--primary-color)",color:"#fff" }}
             >
               {resetLoading ? <><Loader /> Resetting...</> : "Reset Password"}
             </Button>
