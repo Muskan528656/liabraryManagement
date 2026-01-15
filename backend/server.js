@@ -2,18 +2,15 @@
 
 
 const express = require("express");
-// const cron = require("node-cron");
-// const bodyParser = require("body-parser");
 const cors = require("cors");
 const http = require("http");
-require("dotenv").config();
-// const moment = require("moment");
 const fs = require("fs");
 const path = require("path");
-// const fileUpload = require("express-fileupload");
+require("dotenv").config();
+
 const app = express();
 const MODE = process.env.NODE_ENV || "production";
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 9028;
 console.log("PORTPORT", PORT)
 const BASE_PATH =
   MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
@@ -21,7 +18,7 @@ app.set("view engine", "ejs");
 
 app.use(cors({ origin: "*" }));
 // app.use(cors({
-//   origin: ["http://192.168.6.50:3001"],
+//   origin: ["http://192.168.6.50:9027"],
 //   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 //   credentials: true,
 // }));
@@ -48,14 +45,6 @@ if (fs.existsSync(legacyUploadsPath)) {
   app.use("/uploads", express.static(legacyUploadsPath));
 }
 
-// app.use(
-//   fileUpload({
-//     limits: { fileSize: 5 * 1024 * 1024 },
-//     abortOnLimit: true,
-//     createParentPath: true,
-//   })
-// );
-
 
 app.get(BASE_PATH, (req, res) => {
   res.json({
@@ -76,6 +65,7 @@ const io = require("socket.io")(server, {
 });
 
 app.set("io", io);
+global.io = io;
 
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
@@ -135,4 +125,3 @@ server.listen(PORT, '0.0.0.0', () => {
   );
   console.log(`🌐 Base URL: ${BASE_PATH}`);
 });
-

@@ -15,10 +15,63 @@
  * @copyright   www.ibirdsservices.com
  */
 
-const { fetchUser, checkModulePermission } = require("../middleware/fetchuser.js");
+const { fetchUser, checkModulePermission, checkPermission } = require("../middleware/fetchuser.js");
 const Company = require("../models/company.model.js");
 const fs = require("fs");
 const path = require("path");
+
+const multer = require("multer");
+
+// ------------------- COMPANY UPLOAD FOLDER -------------------
+const companyUploadDir = path.join(
+  path.resolve(__dirname, "../../.."),
+  "frontend",
+  "public",
+  "uploads",
+  "companies"
+);
+
+if (!fs.existsSync(companyUploadDir)) {
+  fs.mkdirSync(companyUploadDir, { recursive: true });
+}
+
+// ------------------- MULTER SETUP -------------------
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, companyUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `company-${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  // limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    console.log("UPLOAD FILE:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif"
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPG, JPEG, PNG, and GIF images are allowed"));
+    }
+  }
+});
+
+
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -75,7 +128,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const companies = await Company.findAll();
@@ -87,7 +140,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const company = await Company.findById(req.params.id);
@@ -109,7 +162,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/name/:name", fetchUser, async (req, res) => {
+  router.get("/name/:name", fetchUser, checkPermission("Company", "allow_view"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const name = decodeURIComponent(req.params.name);
@@ -127,6 +180,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
+    checkPermission("Company", "allow_create"),
     [
       body("name").notEmpty().withMessage("Company name is required"),
       body("userlicenses").isInt({ min: 0 }).withMessage("User licenses must be a non-negative integer"),
@@ -173,7 +227,12 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
+    checkPermission("Company", "allow_edit"),
+    upload.single("logourl"),
     async (req, res) => {
+
+      console.log("Updating company ID:", req.params.id, "with data:", req.body);
+
       try {
         Company.init(req.userinfo.tenantcode);
 
@@ -182,118 +241,44 @@ module.exports = (app) => {
           return res.status(404).json({ errors: "Company not found" });
         }
 
-        const duplicateCompany = await Company.findByName(
-          req.body.name,
-          req.params.id
-        );
-        if (duplicateCompany) {
-          return res
-            .status(400)
-            .json({ errors: "Company with this name already exists" });
-        }
-
         const userId = req.userinfo?.id || null;
-
         const companyData = { ...req.body };
 
-        // Convert string booleans to actual booleans for multipart form data
-        if (companyData.isactive !== undefined) {
-          companyData.isactive = companyData.isactive === 'true' || companyData.isactive === true;
-        }
-        if (companyData.is_external !== undefined) {
-          companyData.is_external = companyData.is_external === 'true' || companyData.is_external === true;
-        }
-        if (companyData.has_wallet !== undefined) {
-          companyData.has_wallet = companyData.has_wallet === 'true' || companyData.has_wallet === true;
-        }
+        if (companyData.isactive !== undefined)
+          companyData.isactive = companyData.isactive === "true" || companyData.isactive === true;
+
+        if (companyData.is_external !== undefined)
+          companyData.is_external = companyData.is_external === "true" || companyData.is_external === true;
+
+        if (companyData.has_wallet !== undefined)
+          companyData.has_wallet = companyData.has_wallet === "true" || companyData.has_wallet === true;
 
         const previousImagePath = existingCompany.logourl;
 
-        // Handle file upload with express-fileupload
-        if (req.files && req.files.image) {
-          const imageFile = req.files.image;
-
-          // Validate file type - match frontend validation exactly
-          const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-          const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-
-          const fileExtension = imageFile.name.toLowerCase().substring(imageFile.name.lastIndexOf('.'));
-          const mimeType = imageFile.mimetype.toLowerCase();
-
-          console.log('Backend file validation:', {
-            name: imageFile.name,
-            mimeType: mimeType,
-            extension: fileExtension,
-            size: imageFile.size
-          });
-
-          // Check if MIME type is valid
-          const isValidMimeType = allowedMimeTypes.includes(mimeType);
-
-          // Check if extension is valid
-          const isValidExtension = allowedExtensions.includes(fileExtension);
-
-          // For JPEG files, accept both .jpg and .jpeg extensions
-          const isJpegFile = (mimeType === 'image/jpeg' && (fileExtension === '.jpg' || fileExtension === '.jpeg')) ||
-            (mimeType === 'image/png' && fileExtension === '.png') ||
-            (mimeType === 'image/gif' && fileExtension === '.gif');
-
-          if (!isValidMimeType || !isValidExtension || !isJpegFile) {
-
-            return res.status(400).json({ errors: "Only JPEG, PNG, and GIF images are allowed" });
-          }
-
-          // Validate file size (5MB limit)
-          if (imageFile.size > 5 * 1024 * 1024) {
-            return res.status(400).json({ errors: "File size must be less than 5MB" });
-          }
-
-          // Generate unique filename
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const filename = 'company-' + uniqueSuffix + path.extname(imageFile.name);
-          const filepath = path.join(companyUploadDir, filename);
-
-          // Move file to upload directory
-          await imageFile.mv(filepath);
-          companyData.logourl = `/uploads/companies/${filename}`;
+        if (req.file) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          companyData.logourl = `/uploads/companies/${req.file.filename}`;
+        } else if (companyData.logourl === "null" || companyData.logourl === null) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          companyData.logourl = null;
         }
-
 
         const company = await Company.updateById(req.params.id, companyData, userId);
-        if (!company) {
-          return res.status(400).json({ errors: "Failed to update company" });
-        }
 
-        // Delete old image if a new one was uploaded
-        if (req.files && req.files.image && previousImagePath && previousImagePath !== companyData.logourl) {
-          deleteFileIfExists(previousImagePath);
-        }
-
-        return res.status(200).json({ success: true, data: company });
+        return res.status(200).json({
+          success: true,
+          data: company,
+          message: "Company updated successfully"
+        });
       } catch (error) {
-        console.error("Error updating company:", error);
-
-        // Handle multipart parsing errors specifically
-        if (error.message && error.message.includes('Unexpected end of form')) {
-          return res.status(400).json({
-            errors: "File upload failed. Please ensure the file is not corrupted and try again."
-          });
-        }
-
-        // Handle file size limit exceeded
-        if (error.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({
-            errors: "File size exceeds the 5MB limit."
-          });
-        }
-
+        console.error(" Error updating company:", error);
         return res.status(500).json({ errors: error.message });
       }
     }
   );
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Company", "allow_delete"), async (req, res) => {
     try {
       Company.init(req.userinfo.tenantcode);
       const result = await Company.deleteById(req.params.id);

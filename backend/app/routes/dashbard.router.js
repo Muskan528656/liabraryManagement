@@ -11,17 +11,17 @@
  * @copyright   www.ibirdsservices.com
  */
 
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Dashboard = require("../models/dashboad.model.js");
- 
+
 
 module.exports = (app) => {
     var router = require("express").Router();
-    router.get("/", fetchUser, async (req, res) => {
+    router.get("/", fetchUser, checkPermission("Dashboard", "allow_view"), async (req, res) => {
         try {
 
             const result = await Dashboard.fetchAll();
- 
+
             res.status(200).json({ success: true, data: result });
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -30,12 +30,12 @@ module.exports = (app) => {
 
     });
 
-    router.get("/stats", async (req, res) => {
+    router.get("/stats", checkPermission("Dashboard", "allow_view"), async (req, res) => {
         try {
- 
+
 
             const result = await Dashboard.getDashboardStats();
- 
+
             res.status(200).json({ success: true, data: result });
 
         } catch (error) {
@@ -45,8 +45,8 @@ module.exports = (app) => {
     });
 
 
- 
-    router.get("/other-metrics", fetchUser, async (req, res) => {
+
+    router.get("/other-metrics", checkPermission("Dashboard", "allow_view"), fetchUser, async (req, res) => {
         try {
             const result = await Dashboard.getOtherMetrics();
             res.status(200).json({ success: true, data: result });
@@ -56,6 +56,22 @@ module.exports = (app) => {
             res.status(500).json({ success: false, message: "Internal server error" });
         }
 
+    });
+    router.get("/dashboard", fetchUser, async (req, res) => {
+        try {
+            Library.init(req.userinfo.tenantcode);
+            const userRole = req.userinfo.userrole?.toUpperCase();
+
+            if (userRole === "STUDENT") {
+                const stats = await Library.getStudentDashboardStats(req.userinfo.id);
+                return res.status(200).json({ success: true, data: stats, role: "student" });
+            }
+            const stats = await Library.getDashboardStats();
+            return res.status(200).json({ success: true, data: stats, role: "admin" });
+        } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+            return res.status(500).json({ success: false, errors: "Internal server error" });
+        }
     });
 
 

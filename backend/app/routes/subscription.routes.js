@@ -4,6 +4,8 @@ const { body, validationResult } = require("express-validator");
 const Subscription = require("../models/subscription.mode.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 const sql = require("../models/db.js");
+
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 module.exports = (app) => {
 
     router.get("/", fetchUser, async (req, res) => {
@@ -60,7 +62,7 @@ module.exports = (app) => {
                     is_active = true
                 } = req.body;
 
- 
+
 
                 const planExists = await sql.query(
                     "SELECT id FROM demo.plan WHERE id = $1",
@@ -139,9 +141,9 @@ module.exports = (app) => {
                 }
 
 
- 
- 
- 
+
+
+
 
 
                 const createdById = req.userinfo?.id;
@@ -162,13 +164,13 @@ module.exports = (app) => {
 
                     if (userQuery.rows.length > 0) {
                         createdByIdValue = userQuery.rows[0].id;
- 
+
                     } else {
 
                         createdByIdValue = createdById;
                     }
                 } catch (dbError) {
- 
+
                     createdByIdValue = createdById;
                 }
 
@@ -190,7 +192,7 @@ module.exports = (app) => {
                     lastmodifieddate: new Date(),
                 };
 
- 
+
 
 
                 const columns = Object.keys(subscriptionData);
@@ -204,14 +206,14 @@ module.exports = (app) => {
                 RETURNING *
             `;
 
- 
- 
+
+
 
 
                 const result = await sql.query(insertQuery, values);
                 const newSubscription = result.rows[0];
 
- 
+
 
 
                 await sql.query(
@@ -293,7 +295,7 @@ module.exports = (app) => {
                 return res.status(400).json({ success: false, error: errorMessages });
             }
 
- 
+
 
             try {
                 const subscriptionId = req.params.id;
@@ -349,8 +351,8 @@ module.exports = (app) => {
                 RETURNING *
             `;
 
- 
- 
+
+
 
                 const result = await sql.query(updateQuery, values);
 

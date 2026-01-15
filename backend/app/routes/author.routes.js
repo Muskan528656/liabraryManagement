@@ -15,8 +15,9 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Author = require("../models/author.model.js");
+
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -24,18 +25,21 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
-    try {
-      const authors = await Author.findAll();
-      return res.status(200).json(authors);
-    } catch (error) {
-      console.error("Error fetching authors:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+  router.get("/",
+    fetchUser,
+    checkPermission("Authors", "allow_view"),
+    async (req, res) => {
+      try {
+        const authors = await Author.findAll();
+        return res.status(200).json(authors);
+      } catch (error) {
+        console.error("Error fetching authors:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
+    });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Authors", "allow_view"), async (req, res) => {
     try {
       Author.init(req.userinfo.tenantcode);
       const author = await Author.findById(req.params.id);
@@ -53,11 +57,9 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-
+    checkPermission("Authors", "allow_create"),
     [
-
       body("name").optional().custom((value) => {
-
         return true;
       }),
     ],
@@ -67,8 +69,6 @@ module.exports = (app) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-
-
         if (req.body.email) {
           const existingAuthor = await Author.findByEmail(req.body.email);
           if (existingAuthor) {
@@ -77,7 +77,6 @@ module.exports = (app) => {
               .json({ errors: "Author with this email already exists" });
           }
         }
-
         const userId = req.userinfo?.id || null;
         const author = await Author.create(req.body, userId);
         if (!author) {
@@ -95,7 +94,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-
+    checkPermission("Authors", "allow_edit"),
     [
       body("name").notEmpty().withMessage("Name is required"),
     ],
@@ -139,7 +138,7 @@ module.exports = (app) => {
   );
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Authors", "allow_delete"), async (req, res) => {
     try {
       const result = await Author.deleteById(req.params.id);
       if (!result.success) {

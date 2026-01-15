@@ -7,8 +7,49 @@ const Submodule = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [modulesFromDB, setModulesFromDB] = useState([]);
+  const [userPermissions, setUserPermissions] = useState([]);
   const [visibleModulesCount, setVisibleModulesCount] = useState(5);
 
+  // Fetch user permissions from session/local storage or API
+  const fetchUserPermissions = async () => {
+    try {
+      // Method 1: If permissions are stored in sessionStorage/token
+      const token = sessionStorage.getItem("token");
+      if (token) {
+        // Decode token or fetch permissions from API
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+        // Adjust based on your permission structure
+        let permissions = [];
+
+        // Option A: Permissions are in userData
+        if (userData && userData.permissions) {
+          permissions = userData.permissions;
+        }
+        // Option B: Permissions are in separate storage
+        else if (localStorage.getItem("userPermissions")) {
+          permissions = JSON.parse(localStorage.getItem("userPermissions"));
+        }
+        // Option C: Fetch permissions from API
+        else {
+          const api = new DataApi("permissions");
+          const resp = await api.fetchAll();
+          if (resp?.data?.success) {
+            permissions = resp.data.records || [];
+            localStorage.setItem("userPermissions", JSON.stringify(permissions));
+          }
+        }
+
+        setUserPermissions(permissions);
+        return permissions;
+      }
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+    }
+    return [];
+  };
+
+  // Fetch modules from database
   const fetchModulesFromDB = async () => {
     try {
       const cachedModules = localStorage.getItem("cached_modules");
@@ -62,24 +103,72 @@ const Submodule = () => {
     }
   };
 
-  useEffect(() => {
-    try {
-      const token = sessionStorage.getItem("token");
-      if (token) {
-        fetchModulesFromDB();
-      } else {
-        localStorage.removeItem("cached_modules");
-        localStorage.removeItem("cached_modules_timestamp");
-      }
-    } catch (error) {
-      console.error("Error decoding token:", error);
+  // Check if user has permission for a specific module
+  const hasPermissionForModule = (module) => {
+    // If no permissions are set, show all modules (for testing)
+    if (!userPermissions || userPermissions.length === 0) {
+      return true;
     }
+
+    const moduleName = module.name?.toLowerCase() || "";
+    const moduleUrl = (module.url || module.api_name || "").toLowerCase();
+
+    // Check different permission structures
+    const hasPermission = userPermissions.some(perm => {
+      // Adjust these conditions based on your permission structure
+      if (perm.module_name && moduleName.includes(perm.module_name.toLowerCase())) {
+        return perm.can_view || perm.is_allowed;
+      }
+
+      if (perm.url && moduleUrl.includes(perm.url.toLowerCase())) {
+        return perm.can_view || perm.is_allowed;
+      }
+
+      if (perm.permission_name && moduleName.includes(perm.permission_name.toLowerCase())) {
+        return perm.has_access;
+      }
+
+      return false;
+    });
+
+    return hasPermission;
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        if (token) {
+          // Fetch permissions first
+          await fetchUserPermissions();
+          // Then fetch modules
+          await fetchModulesFromDB();
+        } else {
+          localStorage.removeItem("cached_modules");
+          localStorage.removeItem("cached_modules_timestamp");
+          localStorage.removeItem("userPermissions");
+        }
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
+    };
+
+    initializeData();
   }, []);
 
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "token" && e.newValue) {
+        fetchUserPermissions();
         fetchModulesFromDB();
+      }
+      if (e.key === "userPermissions") {
+        try {
+          const newPerms = JSON.parse(e.newValue || "[]");
+          setUserPermissions(newPerms);
+        } catch (error) {
+          console.error("Error parsing permissions:", error);
+        }
       }
     };
 
@@ -87,12 +176,15 @@ const Submodule = () => {
       if (document.visibilityState === "visible") {
         const token = sessionStorage.getItem("token");
         if (token) {
+          fetchUserPermissions();
           fetchModulesFromDB();
         }
       }
     };
+
     window.addEventListener("storage", handleStorageChange);
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -100,8 +192,17 @@ const Submodule = () => {
   }, []);
 
   const getMenuItems = () => {
+    // Filter modules based on permissions and status
     const moduleItems = (modulesFromDB || [])
-      .filter((m) => m && m.status && m.status.toLowerCase() === "active")
+      .filter((m) => {
+        // Check if module is active
+        const isActive = m && m.status && m.status.toLowerCase() === "active";
+
+        // Check if user has permission
+        const hasPermission = hasPermissionForModule(m);
+
+        return isActive && hasPermission;
+      })
       .sort((a, b) => (a.order_no || 999) - (b.order_no || 999))
       .map((m) => {
         const urlKey = (m.url || m.api_name || m.name || "")
@@ -109,7 +210,7 @@ const Submodule = () => {
           .toLowerCase();
         const path =
           m.url || `/${m.name.toLowerCase().replace(/\s+/g, "")}` || "/";
-        
+
         return {
           id: m.id || urlKey,
           label: m.name || urlKey,
@@ -118,6 +219,7 @@ const Submodule = () => {
           moduleUrl: urlKey,
         };
       });
+
     return moduleItems;
   };
 
@@ -143,25 +245,25 @@ const Submodule = () => {
         setVisibleModulesCount(5);
       }
     };
+
     calculateVisibleModules();
     window.addEventListener("resize", calculateVisibleModules);
     return () => window.removeEventListener("resize", calculateVisibleModules);
-  }, [modulesFromDB]);
+  }, [modulesFromDB, userPermissions]); // Added userPermissions dependency
 
   const isActive = (path, moduleUrl) => {
     if (path === "/") {
       return location.pathname === "/";
     }
- 
+
     if (location.pathname === path) {
       return true;
     }
- 
- 
+
     if (location.pathname.startsWith(path + "/")) {
       return true;
     }
- 
+
     if (moduleUrl) {
       const currentPath = location.pathname.toLowerCase();
       const modulePath = `/${moduleUrl}`;
@@ -169,15 +271,35 @@ const Submodule = () => {
         return true;
       }
     }
+
     return false;
   };
+
+  // If no modules are visible due to permissions, show a message
+  if (menuItems.length === 0) {
+    return (
+      <Navbar
+        expand="lg"
+        style={{
+          padding: "0.56rem 1.3rem",
+          boxShadow: "none",
+        }}
+        className="bg-body-tertiary"
+      >
+        <div className="text-center w-100">
+          <span style={{ color: "var(--text-muted)" }}>
+            No modules available. Please contact administrator for access.
+          </span>
+        </div>
+      </Navbar>
+    );
+  }
 
   return (
     <Navbar
       expand="lg"
       style={{
         padding: "0.56rem 1.3rem",
-
         boxShadow: "none",
       }}
       className="bg-body-tertiary"
@@ -239,7 +361,7 @@ const Submodule = () => {
               <NavDropdown
                 title={
                   <>
-              <i className="fa-solid fa-ellipsis-vertical fs-6"></i>
+                    <i className="fa-solid fa-ellipsis-vertical fs-6"></i>
                     <span className="ms-1">More</span>
                   </>
                 }

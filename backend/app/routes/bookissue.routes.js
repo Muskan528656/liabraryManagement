@@ -19,7 +19,7 @@
  */
 
 const e = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const BookIssue = require("../models/bookissue.model.js");
 const Notification = require("../models/notification.model.js");
 const sql = require("../models/db.js")
@@ -29,7 +29,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issues = await BookIssue.findAll();
@@ -41,7 +41,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/active", fetchUser, async (req, res) => {
+  router.get("/active", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issues = await BookIssue.findActive();
@@ -53,7 +53,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/book/:bookId", fetchUser, async (req, res) => {
+  router.get("/book/:bookId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issues = await BookIssue.findByBookId(req.params.bookId);
@@ -65,7 +65,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/user/:userId", fetchUser, async (req, res) => {
+  router.get("/user/:userId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issues = await BookIssue.findByUserId(req.params.userId);
@@ -77,7 +77,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/card/:cardId", fetchUser, async (req, res) => {
+  router.get("/card/:cardId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issues = await BookIssue.findByCardId(req.params.cardId);
@@ -89,7 +89,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const issue = await BookIssue.findById(req.params.id);
@@ -106,6 +106,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
+    checkPermission("Book Issue", "allow_edit"),
     [
       body("issue_date").optional().isISO8601().withMessage("Issue date must be a valid date"),
       body("due_date").optional().isISO8601().withMessage("Due date must be a valid date"),
@@ -184,7 +185,7 @@ module.exports = (app) => {
 
         const updatedIssue = result.rows[0];
 
-        // If status changed to cancelled, increase book available copies
+
         console.log("Checking cancellation condition:");
         console.log("updateData.status:", updateData.status);
         console.log("existingIssue.status:", existingIssue.status);
@@ -208,7 +209,7 @@ module.exports = (app) => {
 
           } catch (bookUpdateError) {
             console.error("Error updating book inventory on cancellation:", bookUpdateError);
-            // Don't fail the entire operation, just log the error
+
           }
         } else {
           console.log("Cancellation condition not met, skipping inventory update");
@@ -258,7 +259,7 @@ module.exports = (app) => {
     }
   );
 
-  router.post("/issue", fetchUser, async (req, res) => {
+  router.post("/issue", fetchUser, checkPermission("Book Issue", "allow_create"), async (req, res) => {
     try {
 
       BookIssue.init(req.userinfo.tenantcode);
@@ -272,7 +273,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/allowance/:cardId", fetchUser, async (req, res) => {
+  router.get("/allowance/:cardId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const allowance = await BookIssue.getMemberAllowance(req.params.cardId);
@@ -295,7 +296,7 @@ module.exports = (app) => {
   router.post(
     "/return/:id",
     fetchUser,
-
+    checkPermission("Book Issue", "allow_create"),
     [
       body("return_date").optional().isISO8601().withMessage("Return date must be a valid date"),
       body("status").optional().isIn(['issued', 'returned', 'lost', 'damaged']).withMessage("Status must be one of: issued, returned, lost, damaged"),
@@ -318,7 +319,7 @@ module.exports = (app) => {
     }
   );
 
-  router.get("/penalty/:id", fetchUser, async (req, res) => {
+  router.get("/penalty/:id", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const penalty = await BookIssue.calculatePenalty(req.params.id);
@@ -330,7 +331,7 @@ module.exports = (app) => {
   });
 
 
-  router.post("/payment/:id", fetchUser, async (req, res) => {
+  router.post("/payment/:id", checkPermission("Book Issue", "allow_create"), fetchUser, async (req, res) => {
     try {
       const { amount, payment_method, payment_date } = req.body;
 
@@ -435,7 +436,7 @@ module.exports = (app) => {
   });
 
 
-  router.delete("/:id", fetchUser, async (req, res) => {
+  router.delete("/:id", fetchUser, checkPermission("Book Issue", "allow_delete"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.deleteById(req.params.id);
@@ -450,7 +451,7 @@ module.exports = (app) => {
   });
 
 
-  router.get("/:bookId/issued-count", fetchUser, async (req, res) => {
+  router.get("/:bookId/issued-count", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       const bookId = req.params.bookId;
 

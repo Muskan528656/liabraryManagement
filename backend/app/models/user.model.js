@@ -161,83 +161,7 @@ async function create(userData, userId) {
 }
 
 
-
-
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
- 
-
- 
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
- 
- 
-
- 
- 
- 
- 
- 
-
-
 async function updateById(id, userData) {
- 
- 
-
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
  
@@ -254,15 +178,11 @@ async function updateById(id, userData) {
 
  
     const add = (field, value) => {
-      if (value !== undefined && value !== null) { // Only add non-null/undefined fields
+      if (value !== undefined && value !== null) {
         updateFields.push(`${field} = $${i++}`);
         values.push(value);
       }
     };
-
- 
-
- 
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);

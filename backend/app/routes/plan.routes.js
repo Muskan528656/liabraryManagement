@@ -15,14 +15,14 @@
  */
 
 const express = require("express");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Plan = require("../models/plan.model.js");
 const sql = require("../models/db.js");
 
 module.exports = (app) => {
     const router = express.Router();
 
-    router.get("/", fetchUser, async (req, res) => {
+    router.get("/", fetchUser, checkPermission("Plan", "allow_view"), async (req, res) => {
         try {
             Plan.init(req.userinfo.tenantcode);
             const data = await Plan.getAllPlans();
@@ -33,7 +33,7 @@ module.exports = (app) => {
         }
     });
 
-    router.get("/:id", fetchUser, async (req, res) => {
+    router.get("/:id", fetchUser, checkPermission("Plan", "allow_view"), async (req, res) => {
         try {
             const id = req.params.id;
 
@@ -50,11 +50,11 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
-    router.post("/", fetchUser, async (req, res) => {
+    router.post("/", fetchUser, checkPermission("Plan", "allow_create"), async (req, res) => {
         try {
             const { plan_name, duration_days, allowed_books, max_allowed_books_at_time, is_active } = req.body;
 
-            // Validation
+
             if (!plan_name || !plan_name.trim()) {
                 return res.status(400).json({ errors: "Plan name is required" });
             }
@@ -62,7 +62,7 @@ module.exports = (app) => {
                 return res.status(400).json({ errors: "Duration must be a positive number" });
             }
 
-            // Additional validation: max_allowed_books_at_time should not be greater than allowed_books
+
             if (max_allowed_books_at_time && allowed_books && max_allowed_books_at_time > allowed_books) {
                 return res.status(400).json({
                     errors: "Max books allowed at a time cannot be greater than total allowed books"
@@ -101,40 +101,9 @@ module.exports = (app) => {
             res.status(500).json({ errors: "Internal Server Error" });
         }
     });
-    // router.post("/", fetchUser, async (req, res) => {
-    //     try {
-    //         const { plan_name, duration_days, allowed_books, max_allowed_books_at_time } = req.body;
 
-    //         if (!plan_name || !duration_days) {
-    //             return res
-    //                 .status(400)
-    //                 .json({ errors: "plan_name and duration_days are required" });
-    //         }
-
-    //         Plan.init(req.userinfo.tenantcode);
-
-    //         const createdBy = req.userinfo.id;
-
-    //         const result = await Plan.insertPlan({
-    //             plan_name,
-    //             duration_days,
-    //             allowed_books: allowed_books || 0,
-    //             max_allowed_books_at_time: max_allowed_books_at_time || 0,
-    //             createdbyid: createdBy,
-    //         });
-
-    //         return res.status(201).json({
-    //             success: true,
-    //             message: "Plan inserted successfully",
-    //             data: result
-    //         });
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500).json({ errors: "Internal Server Error" });
-    //     }
-    // });
     router.put("/:id", fetchUser,
-
+        checkPermission("Plan", "allow_edit"),
         async (req, res) => {
             try {
 
@@ -215,7 +184,7 @@ module.exports = (app) => {
             }
         });
 
-    router.delete("/:id", fetchUser, async (req, res) => {
+    router.delete("/:id", fetchUser, checkPermission("Plan", "allow_delete"), async (req, res) => {
         try {
             const id = req.params.id;
 

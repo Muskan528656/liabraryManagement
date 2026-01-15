@@ -1,81 +1,129 @@
-/**
- * Role Permission Model
- * Handles CRUD for role permissions
- * 
- * Author: Muskan Khan
- * Date: NOV, 2025
- * Copyright: www.ibirdsservices.com
- */
-
 const sql = require("./db.js");
 
-function init(schema_name) {
-  this.schema = schema_name;
-}
-
- 
+/**
+ * Get all role-permission mappings
+ */
 async function findAll() {
-  const query = `SELECT * FROM demo.role_permissions ORDER BY createddate DESC`;
-  const result = await sql.query(query);
-  return result.rows.length ? result.rows : [];
-}
-
- 
-async function findById(id) {
-  const query = `SELECT * FROM demo.role_permissions WHERE id = $1`;
-  const result = await sql.query(query, [id]);
-  return result.rows.length ? result.rows[0] : null;
-}
-
- 
-async function create(data, userId) {
   const query = `
-        INSERT INTO demo.role_permissions
-        (role_id, createdbyid, lastmodifiedbyid, createddate, lastmodifieddate)
-        VALUES ($1, $2, $2, NOW(), NOW())
-        RETURNING *
-    `;
+    SELECT *
+    FROM demo.role_permissions
+    ORDER BY id DESC
+  `;
+  const result = await sql.query(query);
+  return result.rows || [];
+}
+
+/**
+ * Get mapping by id
+ */
+async function findById(id) {
+  const query = `
+    SELECT *
+    FROM demo.role_permissions
+    WHERE id = $1
+  `;
+  const result = await sql.query(query, [id]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Get mapping by role + permission
+ * (duplicate prevent)
+ */
+async function findByRoleAndPermission(roleId, permissionId) {
+  const query = `
+    SELECT *
+    FROM demo.role_permissions
+    WHERE role_id = $1
+      AND permission_id = $2
+  `;
+  const result = await sql.query(query, [roleId, permissionId]);
+  return result.rows[0] || null;
+}
+
+/**
+ * Create role-permission mapping
+ */
+async function create(data) {
+  if (!data.role_id || !data.permission_id) {
+    throw new Error("role_id and permission_id are required");
+  }
+
+  // 🔹 Prevent duplicate mapping
+  const existing = await findByRoleAndPermission(
+    data.role_id,
+    data.permission_id
+  );
+
+  if (existing) {
+    return existing;
+  }
+
+  const query = `
+    INSERT INTO demo.role_permissions
+    (
+      role_id,
+      permission_id
+    )
+    VALUES ($1, $2)
+    RETURNING *
+  `;
+
   const values = [
-    data.role_id || null,
-    userId || null
+    data.role_id,
+    data.permission_id
   ];
+
   const result = await sql.query(query, values);
   return result.rows[0] || null;
 }
 
- 
-async function updateById(id, data, userId) {
+/**
+ * Update mapping
+ */
+async function updateById(id, data) {
   const current = await findById(id);
-  if (!current) throw new Error("Role permission not found");
+  if (!current) {
+    throw new Error("Role permission not found");
+  }
 
   const query = `
-        UPDATE demo.role_permissions
-        SET role_id = $2,
-            lastmodifiedbyid = $3,
-            lastmodifieddate = NOW()
-        WHERE id = $1
-        RETURNING *
-    `;
+    UPDATE demo.role_permissions
+    SET
+      role_id = $2,
+      permission_id = $3
+    WHERE id = $1
+    RETURNING *
+  `;
+
   const values = [
     id,
     data.role_id ?? current.role_id,
-    userId || null
+    data.permission_id ?? current.permission_id
   ];
+
   const result = await sql.query(query, values);
-  return result.rows.length ? result.rows[0] : null;
+  return result.rows[0] || null;
 }
 
- 
+/**
+ * Delete mapping
+ */
 async function deleteById(id) {
-  const query = `DELETE FROM demo.role_permissions WHERE id = $1 RETURNING *`;
+  const query = `
+    DELETE FROM demo.role_permissions
+    WHERE id = $1
+    RETURNING *
+  `;
+
   const result = await sql.query(query, [id]);
+
   return result.rows.length
     ? { success: true, message: "Role permission deleted successfully" }
     : { success: false, message: "Role permission not found" };
 }
 
 module.exports = {
-  init,
   findAll,
   findById,
   create,

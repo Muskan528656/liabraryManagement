@@ -15,7 +15,7 @@
  */
 
 const e = require("express");
-const { fetchUser, } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission, } = require("../middleware/fetchuser.js");
 const Category = require("../models/category.model.js");
 
 module.exports = (app) => {
@@ -23,8 +23,8 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
- 
-  router.get("/", fetchUser, async (req, res) => {
+
+  router.get("/", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
     try {
       const categories = await Category.findAll();
       return res.status(200).json(categories);
@@ -34,8 +34,8 @@ module.exports = (app) => {
     }
   });
 
- 
-  router.get("/:id", fetchUser, async (req, res) => {
+
+  router.get("/:id", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
     try {
       const category = await Category.findById(req.params.id);
       if (!category) {
@@ -52,7 +52,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-
+    checkPermission("Categories", "allow_create"),
     [
  
       body("name").optional().custom((value) => {
@@ -66,8 +66,6 @@ module.exports = (app) => {
         if (!errors.isEmpty()) {
           return res.status(400).json({ errors: errors.array() });
         }
-
- 
         const existingCategory = await Category.findByName(req.body.name);
         if (existingCategory) {
           return res
@@ -97,7 +95,7 @@ module.exports = (app) => {
   router.put(
     "/:id",
     fetchUser,
-
+    checkPermission("Categories", "allow_edit"),
     [
       body("name").notEmpty().withMessage("Name is required"),
     ],
@@ -138,8 +136,8 @@ module.exports = (app) => {
     }
   );
 
- 
-  router.delete("/:id", fetchUser, async (req, res) => {
+
+  router.delete("/:id", checkPermission("Categories", "allow_delete"), fetchUser, async (req, res) => {
     try {
       const result = await Category.deleteById(req.params.id);
       if (!result.success) {

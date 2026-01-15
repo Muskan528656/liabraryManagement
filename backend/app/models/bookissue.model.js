@@ -1,4 +1,5 @@
 const sql = require("./db.js");
+const Notification = require("./notification.model.js");
 let schema = "";
 
 function init(schema_name) {
@@ -126,13 +127,11 @@ async function findByCardId(cardId) {
 }
 async function issueBook(req) {
  
-
+  console.log("request =>",req.body);
+  
   try {
     const tenantcode = req.headers.tenantcode || 'demo';
     schema = tenantcode;
-
- 
- 
 
     if (!req.body.card_id) {
       return { success: false, message: "Card ID is required" };
@@ -152,16 +151,17 @@ async function issueBook(req) {
     } else if (req.auth && req.auth.userId) {
       userId = req.auth.userId;
     } else {
-      console.warn("⚠️ No user ID found. Using default user ID 1");
+      console.warn(" No user ID found. Using default user ID 1");
       userId = 1;
     }
 
  
     const memberRes = await sql.query(
-      `SELECT 
-        m.id AS member_id, 
-        m.card_number, 
-        m.plan_id, 
+      `SELECT
+        m.id AS member_id,
+        m.user_id,
+        m.card_number,
+        m.plan_id,
         p.duration_days,
         p.allowed_books,
         p.max_allowed_books_at_time,
@@ -180,6 +180,7 @@ async function issueBook(req) {
 
     const member = memberRes.rows[0];
  
+    console.log("membermember", member);
 
     if (!member.plan_id) {
       return { success: false, message: "No plan assigned to this member" };
@@ -200,7 +201,6 @@ async function issueBook(req) {
     }
  
 
- 
     const issuedRes = await sql.query(
       `SELECT COUNT(*) AS total 
        FROM ${schema}.book_issues 
@@ -387,8 +387,8 @@ async function issueBook(req) {
  
     try {
       const updateMemberQuery = `
-        UPDATE ${schema}.library_members 
-        SET 
+        UPDATE ${schema}.library_members
+        SET
           issued_books_count = COALESCE(issued_books_count, 0) + 1,
           last_issued_date = CURRENT_TIMESTAMP,
           lastmodifiedbyid = $2,
@@ -399,17 +399,104 @@ async function issueBook(req) {
         req.body.card_id,
         userId
       ]);
- 
+
     } catch (err) {
       console.warn("Could not update member issued count:", err.message);
     }
 
- 
+/* =========================
+   CREATE DUE REMINDER NOTIFICATION
+========================= */
+try {
+  Notification.init(schema);
+
+  // 📅 Tomorrow date (YYYY-MM-DD)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+  // 📅 Due date from request
+  const dueDateStr = new Date(req.body.due_date)
+    .toISOString()
+    .split("T")[0];
+
+  console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
+
+  // ✅ Create notification ONLY if due date is tomorrow
+  if (userId && dueDateStr === tomorrowStr) {
+    console.log("Creating due reminder notification...");
+
+    // 🛑 Prevent duplicate notification for same book, same user, same day
+    const existsRes = await sql.query(
+      `
+      SELECT id
+      FROM ${schema}.notifications
+      WHERE user_id = $1
+      AND member_id = $2
+        AND book_id = $3
+        AND type = 'due_reminder'
+        AND DATE(createddate) = CURRENT_DATE
+      `,
+      [userId, member.member_id, newIssue.book_id]
+    );
+
+    if (existsRes.rows.length === 0) {
+
+      // // ✅ Insert & RETURN notification
+      // const insertRes = await sql.query(
+      //   `
+      //   INSERT INTO ${schema}.notifications
+      //   (
+      //     user_id,
+      //     member_id,
+      //     book_id,
+      //     message,
+      //     is_read,
+      //     type,
+      //     createddate
+      //   )
+      //   VALUES ($1, $2, $3, $4, false, $5, NOW())
+      //   RETURNING *
+      //   `,
+      //   [
+      //     userId,
+      //     member.member_id,
+      //     newIssue.book_id,
+      //     `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+      //     "due_reminder"
+      //   ]
+      // );
+
+
+     let notification =  {
+         "user_id": userId,
+         "member_id": member.member_id,
+         "book_id": newIssue.book_id,
+         "message" : `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+          "type": "due_reminder"
+        }
+
+        console.log("notification=>",notification);
+      Notification.create(notification);
+    
+      // const notification = insertRes.rows[0];
+
+      // console.log("✅ Due reminder notification created and emitted:", notification.id);
+    } else {
+      console.log("⚠️ Due reminder already exists for today");
+    }
+  }
+
+} catch (notifErr) {
+  console.error("❌ Error creating due reminder notification:", notifErr);
+}
     return {
       success: true,
       message: "Book issued successfully",
       data: {
         ...newIssue,
+        member_id: member.member_id,
+        user_id: userId,
         book_title: book.title,
         member_name: `${member.first_name} ${member.last_name}`,
         card_number: member.card_number,

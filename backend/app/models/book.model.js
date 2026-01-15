@@ -11,6 +11,7 @@ function init(schema_name) {
 }
 async function findAll() {
   try {
+    console.log("schema->>", this.schema)
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }

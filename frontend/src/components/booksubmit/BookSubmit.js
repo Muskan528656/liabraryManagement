@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from "react";
+﻿
+import React, { useState, useEffect, useRef } from "react";
 import {
     Container,
     Row,
@@ -23,9 +23,11 @@ import * as constants from "../../constants/CONSTANT";
 import ResizableTable from "../common/ResizableTable";
 import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
+import { useBookSubmission } from "../../contexts/BookSubmissionContext";
 
 const BookSubmit = () => {
     const navigate = useNavigate();
+    const { updateNotificationsAfterSubmission, updateNotificationsFromAPI } = useBookSubmission();
     const [isbn, setIsbn] = useState("");
     const [cardNumber, setCardNumber] = useState("");
     const [searchMode, setSearchMode] = useState("isbn");
@@ -76,8 +78,8 @@ const BookSubmit = () => {
     const [submittedBooksFilters, setSubmittedBooksFilters] = useState({});
 
     const recordsPerPage = 20;
-    const isbnInputRef = React.useRef(null);
-    const cardInputRef = React.useRef(null);
+    const isbnInputRef = useRef(null);
+    const cardInputRef = useRef(null);
 
 
     const getBookPriceFromPurchaseDetails = (purchaseDetails) => {
@@ -1233,6 +1235,28 @@ const BookSubmit = () => {
                     lost_book_price: conditionAfter === "Lost" ? parseFloat(lostBookPrice) : null
                 };
                 setSubmittedBooks(prev => [...prev, newSubmission]);
+
+                // Mark notifications as read when book is submitted (regardless of timing)
+                console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
+                console.log("Selected member ID for notification marking:", selectedIssue.issued_to);
+                try {
+                   const unreadNotification = await helper.fetchWithAuth(
+                        `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/${selectedIssue.issued_to}/due_reminder`,
+                        "PUT"
+                    );
+                    const data = await unreadNotification.json();
+                    if(data.success && data.notifications){
+                      // Update the context with the new unread notifications from API
+                      updateNotificationsFromAPI(data.notifications);
+                    }
+                    console.log("Notifications marked as read for book submission", data);
+                } catch (notificationError) {
+                    console.error("Error marking notifications as read:", notificationError);
+                    // Don't show error toast for notification marking failure as it's not critical
+                }
+                // Update notifications after submission
+
+
 
                 handleModalClose();
 

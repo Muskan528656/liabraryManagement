@@ -6,12 +6,10 @@
 
 const e = require("express");
 const Auth = require("../models/auth.model.js");
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 
-const sql = require("../models/db.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
 
 
 
@@ -24,7 +22,7 @@ module.exports = (app) => {
 
   router.post(
     "/createuser",
-    fetchUser,
+    fetchUser, checkPermission("Users", "allow_create"),
     [
       body("email", "Please enter email").isEmail(),
       body("password", "Please enter password").isLength({ min: 6 }),
@@ -39,12 +37,12 @@ module.exports = (app) => {
     ],
 
     async (req, res) => {
- 
+
       const tenantcode = req.userinfo?.tenantcode;
       const companyid = req.userinfo?.companyid;
- 
- 
- 
+
+
+
 
       if (!tenantcode) {
         console.error("Error: tenantcode is missing from req.userinfo");
@@ -130,7 +128,7 @@ module.exports = (app) => {
 
 
       const userCompanyId = req.userinfo.companyid || companyid;
- 
+
 
       try {
         const newUser = await Auth.createUser({
@@ -149,7 +147,7 @@ module.exports = (app) => {
           country_code: country_code ? String(country_code).trim() : "+91",
         });
 
- 
+
         if (newUser) {
 
           const tokenPayload = {
@@ -161,7 +159,7 @@ module.exports = (app) => {
 
           const authToken = jwt.sign(tokenPayload, process.env.JWT_SECRET);
 
- 
+
 
 
           if (userrole === "USER") {
@@ -176,7 +174,7 @@ module.exports = (app) => {
             try {
               await Mailer.sendEmail(email, emailData, null, "user_created");
             } catch (error) {
- 
+
             }
           }
 
@@ -197,176 +195,108 @@ module.exports = (app) => {
 
     }
   );
-
-
   router.post(
     "/login",
     [
-      body("email", "Please enter valid email").isEmail(),
-      body("password", "Please enter valid password").isLength({ min: 1 }),
-      body("tcode", "Please enter company code").exists(),
+      body("email").isEmail(),
+      body("password").isLength({ min: 1 }),
+      body("tcode").exists(),
     ],
     async (req, res) => {
-
-
-      let success = false;
       try {
-
-        const email = req.body.email ? req.body.email.trim().toLowerCase() : "";
-
-        const password = req.body.password || "";
-        const tcode = req.body.tcode ? req.body.tcode.trim().toLowerCase() : "";
-
-
- 
+        const email = req.body.email.trim().toLowerCase();
+        const password = req.body.password;
+        const tcode = req.body.tcode.trim().toLowerCase();
 
         const errors = validationResult(req);
-
-
-
-
         if (!errors.isEmpty()) {
-          const errorMessages = errors
-            .array()
-            .map((err) => err.msg)
-            .join(", ");
           return res.status(400).json({
-            success,
-            errors: errorMessages,
-          });
-        }
-
-        const checkForTcode = await Auth.checkCompanybyTcode(tcode);
-        if (!checkForTcode) {
- 
-          return res.status(400).json({
-            success,
-            errors:
-              "The company name you entered is incorrect. Please check and try again.",
+            success: false,
+            errors: errors.array().map(e => e.msg).join(", "),
           });
         }
 
 
-        const companyData = checkForTcode[0];
-        const actualTenantcode = companyData?.tenantcode || tcode;
-        const companyId = companyData?.id || null;
+        const companyRes = await Auth.checkCompanybyTcode(tcode);
+        if (!companyRes?.length) {
+          return res.status(400).json({
+            success: false,
+            errors: "Invalid company code",
+          });
+        }
 
- 
+        const { tenantcode, id: companyId } = companyRes[0];
+        await Auth.init(tenantcode, companyId);
 
-
-        await Auth.init(actualTenantcode, companyId);
 
         const userRec = await Auth.findByEmail(email);
-        if (!userRec) {
- 
- 
-
-
-          try {
-            const inactiveCheck = await sql.query(`
-              SELECT id, email, isactive FROM ${Auth.schema || actualTenantcode}.user 
-              WHERE LOWER(TRIM(email)) = $1
-            `, [email.toLowerCase()]);
-
-            if (inactiveCheck.rows.length > 0) {
-              const user = inactiveCheck.rows[0];
-              if (!user.isactive) {
-                return res.status(400).json({
-                  success,
-                  errors: "Your account is inactive. Please contact administrator."
-                });
-              }
-            }
-          } catch (err) {
- 
-          }
-
-          return res
-            .status(400)
-            .json({ success, errors: "User not found or inactive account" });
+        if (!userRec?.userinfo) {
+          return res.status(400).json({
+            success: false,
+            errors: "User not found or inactive",
+          });
         }
+
         const userInfo = userRec.userinfo;
 
 
-        if (!userInfo || !userInfo.password) {
- 
-          return res
-            .status(400)
-            .json({ success, errors: "User account error. Please contact administrator." });
+        const match = await bcrypt.compare(password, userInfo.password);
+        if (!match) {
+          return res.status(400).json({
+            success: false,
+            errors: "Invalid credentials",
+          });
         }
-
-
-        const passwordCompare = await bcrypt.compare(
-          String(password),
-          String(userInfo.password)
-        );
-        if (!passwordCompare) {
- 
-          return res
-            .status(400)
-            .json({ success, errors: "Try to login with correct credentials" });
-        }
-
 
         delete userInfo.password;
 
 
-
-        let username = userInfo.firstname + " " + userInfo.lastname;
-        let userrole = userInfo.userrole || "USER"; // Ensure userrole exists
-        let tenantcode = userInfo.tenantcode;
-        let companyid = userInfo.companyid;
-        let modules = userInfo.modules || []; // Ensure modules are included
-        let plan = userInfo.plan || null; // Plan information
-
+        userInfo.username = `${userInfo.firstname || ""} ${userInfo.lastname || ""}`.trim();
+        userInfo.companyid = userInfo.companyid;
+        userInfo.tenantcode = tenantcode;
 
         delete userInfo.firstname;
         delete userInfo.lastname;
-        delete userInfo.library_settings; // Remove library settings from token
-        delete userInfo.subscription; // Remove subscription from token
-        delete userInfo.addons; // Remove addons from token
 
-
-        userInfo.username = username;
-        userInfo.userrole = userrole; // Ensure userrole is set
-        userInfo.companyid = companyid; // Include companyid
-        userInfo.tenantcode = tenantcode; // Include tenantcode
-
-
-        if (!userInfo.plan && plan) {
-          userInfo.plan = plan;
-        }
-
-
-        if (!userInfo.modules || userInfo.modules.length === 0) {
-          userInfo.modules = modules;
-        }
-
- 
 
         const authToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
           expiresIn: "5h",
         });
+
         const refreshToken = jwt.sign(
-          { email: userInfo.email, tenantcode: tenantcode },
+          { email: userInfo.email, tenantcode },
           process.env.JWT_REFRESH_SECERT_KEY,
           { expiresIn: "7d" }
         );
-        success = true;
+
+
+        const permissions = await Auth.findPermissionsByRole(userInfo.userrole);
+
+        global.currentLoggedInUserId = userInfo.id;
+
         return res
           .cookie("refreshToken", refreshToken, {
             httpOnly: true,
             sameSite: "strict",
           })
           .status(200)
-          .json({ success, authToken, refreshToken });
+          .json({
+            success: true,
+            authToken,
+            refreshToken,
+            permissions,
+          });
 
-      } catch (error) {
- 
-        res.status(400).json({ success, errors: error });
+      } catch (err) {
+        console.error("Login error:", err);
+        return res.status(500).json({
+          success: false,
+          errors: "Internal server error",
+        });
       }
     }
   );
+
 
   router.post("/refresh", async (req, res) => {
     const { refreshToken } = req.body;
@@ -398,6 +328,8 @@ module.exports = (app) => {
       let username = userInfo.firstname + " " + userInfo.lastname;
       userInfo.username = username;
       delete userInfo.password;
+      global.currentLoggedInUserId = userInfo.id;
+
       const newAuthToken = jwt.sign(userInfo, process.env.JWT_SECRET, {
         expiresIn: "5h",
       });
@@ -414,6 +346,175 @@ module.exports = (app) => {
     }
   });
 
+  router.post("/logout", (req, res) => {
+    global.currentLoggedInUserId = null;
+
+    res.clearCookie("refreshToken");
+    return res.status(200).json({ success: true, message: "Logged out successfully" });
+  });
+
+  router.post("/forgot-password", [
+    body("email").isEmail(),
+    body("tcode").exists(),
+  ], async (req, res) => {
+    try {
+      const email = req.body.email.trim().toLowerCase();
+      const tcode = req.body.tcode.trim().toLowerCase();
+      
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array().map(e => e.msg).join(", "),
+        });
+      }
+
+      const companyRes = await Auth.checkCompanybyTcode(tcode);
+      if (!companyRes?.length) {
+        return res.status(400).json({
+          success: false,
+          errors: "Invalid company code",
+        });
+      }
+
+      const { tenantcode, id: companyId } = companyRes[0];
+      await Auth.init(tenantcode, companyId);
+
+      const userRec = await Auth.findByEmail(email);
+      if (!userRec?.userinfo) {
+        return res.status(200).json({
+          success: true,
+          message: "If the email exists, a password reset link has been sent.",
+        });
+      }
+
+      const userInfo = userRec.userinfo;
+
+      const resetToken = jwt.sign(
+        { email: userInfo.email, id: userInfo.id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      // Send reset email
+      // const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+      // const baseUrl = ${protocol}://${req.get('host')}${process.env.BASE_API_URL}
+
+      const origin = req.headers.origin;
+      console.log("origin=>",origin)
+
+      console.log("host=>",req.get('origin')); 
+      const resetLink = `${origin}/reset-password?token=${resetToken}`;
+
+      // const resetLink = `${process.env.BASE_API_URL || "localhost:3001"}/reset-password?token=${resetToken}`
+      // console.log("resetLink=>",resetLink);
+      const emailData = {
+        name: userInfo.username || `${userInfo.firstname} ${userInfo.lastname}`,
+        resetLink: resetLink,
+      };
+      // console.log("emailData=>",emailData)
+
+      try {
+        const sendMail = require("../utils/Mailer");
+        await sendMail({
+          to: userInfo.email,
+          subject: "Password Reset Request",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Request</h2>
+              <p>Hello ${emailData.name},</p>
+              <p>You have requested to reset your password for the Library Management System.</p>
+              <p>Please click the link below to reset your password:</p>
+              <p style="margin: 20px 0;">
+                <a href="${emailData.resetLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+              </p>
+              <p>This link will expire in 1 hour for security reasons.</p>
+              <p>If you didn't request this password reset, please ignore this email.</p>
+              <p>Best regards,<br>Library Management System Team</p>
+            </div>
+          `
+        });
+        return res.status(200).json({
+          success: true,
+          message: "If the email exists, a password reset link has been sent.",
+        });
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+        return res.status(500).json({
+          success: false,
+          errors: "Failed to send reset email. Please try again.",
+        });
+      }
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
+
+  router.post("/reset-password", [
+    body("token").exists(),
+    body("newPassword").isLength({ min: 6 }),
+  ], async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array().map(e => e.msg).join(", "),
+        });
+      }
+
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (tokenError) {
+        return res.status(400).json({
+          success: false,
+          errors: "Invalid or expired reset token.",
+        });
+      }
+
+      const { email } = decoded;
+
+      const userRec = await Auth.findByEmail(email);
+      if (!userRec?.userinfo) {
+        return res.status(400).json({
+          success: false,
+          errors: "User not found.",
+        });
+      }
+
+      const userInfo = userRec.userinfo;
+
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassword = bcrypt.hashSync(newPassword, salt);
+
+      const updateResult = await Auth.updateById(userInfo.id, { password: hashedPassword });
+      if (!updateResult) {
+        return res.status(500).json({
+          success: false,
+          errors: "Failed to update password.",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Password updated successfully.",
+      });
+    } catch (err) {
+      console.error("Reset password error:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
 
   app.use(process.env.BASE_API_URL + "/api/auth", router);
 

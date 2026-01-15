@@ -15,7 +15,7 @@
  * @copyright   www.ibirdsservices.com
  */
 
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const BookSubmission = require("../models/booksubmission.model.js");
 const Notification = require("../models/notification.model.js");
 
@@ -25,7 +25,7 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, async (req, res) => {
+  router.get("/", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
 
       BookSubmission.init(req.userinfo.tenantcode);
@@ -39,7 +39,7 @@ module.exports = (app) => {
     }
   });
 
-  router.get("/due_notifications", fetchUser, async (req, res) => {
+  router.get("/due_notifications", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
 
     try {
       const notifications = await BookSubmission.checkbeforeDue();
@@ -62,7 +62,7 @@ module.exports = (app) => {
 
 
 
-  router.get("/:id", fetchUser, async (req, res) => {
+  router.get("/:id", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
       const submission = await BookSubmission.findById(req.params.id);
@@ -76,22 +76,10 @@ module.exports = (app) => {
     }
   });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   router.get(
     "/date-range",
     fetchUser,
+    checkPermission("Book Submissions", "allow_view"),
     [
       query("startDate").isISO8601().withMessage("Start date must be a valid date"),
       query("endDate").isISO8601().withMessage("End date must be a valid date"),
@@ -115,7 +103,7 @@ module.exports = (app) => {
   router.post(
     "/",
     fetchUser,
-
+    checkPermission("Book Submissions", "allow_create"),
     async (req, res) => {
       try {
         const errors = validationResult(req);
@@ -136,24 +124,35 @@ module.exports = (app) => {
           try {
             Notification.init(req.userinfo.tenantcode);
 
-            const notification = await Notification.create({
+            // Notification for the member
+            const memberNotification = await Notification.create({
               user_id: submission.issued_to,
-              title: "Book Return Submitted",
-              message: `Your book "${submission.book_title}" has been submitted. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ' No fine.'}`,
-              type: "book_returned",
+              title: "Book Submitted",
+              message: `Your book "${submission.book_title}" has been submitted successfully. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ' No fine.'}`,
+              type: "book_submitted",
               related_id: submission.id,
               related_type: "book_submission"
             });
 
+            // Notification for the librarian who submitted the book
+            const librarianNotification = await Notification.create({
+              user_id: req.userinfo.id,
+              title: "Book Submission Completed",
+              message: `Book "${submission.book_title}" has been submitted by member. Condition: ${submission.condition_after}.${submission.penalty > 0 ? ` Penalty: ₹${submission.penalty}` : ''}`,
+              type: "book_submitted_librarian",
+              related_id: submission.id,
+              related_type: "book_submission"
+            });
 
             if (req.app.get('io')) {
               const io = req.app.get('io');
-              io.to(`user_${submission.issued_to}`).emit("new_notification", notification);
-              io.to(submission.issued_to).emit("new_notification", notification);
+              io.to(`user_${submission.issued_to}`).emit("new_notification", memberNotification);
+              io.to(submission.issued_to).emit("new_notification", memberNotification);
+              io.to(`user_${req.userinfo.id}`).emit("new_notification", librarianNotification);
+              io.to(req.userinfo.id).emit("new_notification", librarianNotification);
             }
           } catch (notifError) {
             console.error("Error creating notification for book submission:", notifError);
-
           }
         }
 
@@ -167,7 +166,7 @@ module.exports = (app) => {
   router.delete(
     "/:id",
     fetchUser,
-
+    checkPermission("Book Submissions", "allow_delete"),
     async (req, res) => {
       try {
         BookSubmission.init(req.userinfo.tenantcode);
@@ -184,7 +183,7 @@ module.exports = (app) => {
       }
     }
   );
-  router.get("/:bookId/submit-count", fetchUser, async (req, res) => {
+  router.get("/:bookId/submit-count", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
       const bookId = req.params.bookId;
 
@@ -203,6 +202,7 @@ module.exports = (app) => {
   router.put(
     "/cancel/:issueId",
     fetchUser,
+    checkPermission("Book Submissions", "allow_edit"),
     [
       body("cancellation_reason").optional().isString().withMessage("Cancellation reason must be a string"),
     ],
@@ -245,7 +245,7 @@ module.exports = (app) => {
 
               const notification = await Notification.create({
                 user_id: issue.issued_to,
-                title: "Book Issue Cancelled",
+                title: "Book Submissions Cancelled",
                 message: `Your issue for book "${issue.title}" has been cancelled.`,
                 type: "issue_cancelled",
                 related_id: req.params.issueId,
