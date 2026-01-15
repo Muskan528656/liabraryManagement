@@ -1,9 +1,8 @@
 
 export const API_BASE_URL =
   window.location.hostname === "localhost"
-    ? "http://localhost:3003"
-    : `http://103.159.182.162:3003`;
-
+    ? "http://localhost:4000"
+    : `http://192.168.6.50:4000`
 
 export const VIEW_LEAD = "VIEW_LEAD";
 export const VIEW_PROPERTY = "VIEW_PROPERTY";

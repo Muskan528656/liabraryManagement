@@ -134,7 +134,7 @@ const Login = () => {
 
                   <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Company xcvgbhjgfdsfghName</Form.Label>
+                      <Form.Label>Company Name</Form.Label>
                       <Form.Control
                         type="text"
                         name="tcode"
@@ -195,7 +195,7 @@ const Login = () => {
                         borderRadius: "8px",
                       }}
                     >
-                      Sign In sandboxxxxxxxxxxxxxxxxx
+                      Sign In Sandbox
                     </Button>
 
                   </Form>
