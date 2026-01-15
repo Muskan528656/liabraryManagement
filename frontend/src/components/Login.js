@@ -19,8 +19,6 @@ const Login = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-
     if (!credentials.email || !credentials.password || !credentials.tcode) {
       setShow(true);
       setErrorMessage("Please fill all required fields");

@@ -1,44 +1,54 @@
 import * as constants from "../constants/CONSTANT";
+import { AuthHelper } from "../utils/authHelper";
 
 const AuthApi = {
   async login(credentials) {
     try {
-
       const loginData = {
-        email: credentials.email ? credentials.email.trim().toLowerCase() : "",
+        email: credentials.email?.trim().toLowerCase() || "",
         password: credentials.password || "",
-        tcode: credentials.tcode ? credentials.tcode.trim().toLowerCase() : "",
+        tcode: credentials.tcode?.trim().toLowerCase() || "",
       };
-      console.log("constants.API_BASE_URL", constants.API_BASE_URL)
 
-      let response = await fetch(constants.API_BASE_URL + "/api/auth/login", {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginData),
-      });
+      const response = await fetch(
+        `${constants.API_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(loginData),
+        }
+      );
+
       const result = await response.json();
 
-
       if (result.success) {
-        sessionStorage.setItem("token", result.authToken);
-        sessionStorage.setItem("r-t", result.refreshToken);
+      
+        AuthHelper.setAuth(
+          result.authToken,
+          result.refreshToken,
+          result.permissions   
+        );
       }
+
       return result;
     } catch (error) {
       console.error("Login error:", error);
-      return { success: false, errors: "Network error. Please try again." };
+      return {
+        success: false,
+        errors: "Network error. Please try again.",
+      };
     }
   },
-  async refreshToken() {
-    const refreshToken = sessionStorage.getItem("r-t");
-    if (!refreshToken) {
 
-      this.logout();
+  async refreshToken() {
+    const refreshToken = AuthHelper.getRefreshToken();
+    if (!refreshToken) {
+      AuthHelper.logout();
       return;
     }
+
     try {
       const response = await fetch(
         `${constants.API_BASE_URL}/api/auth/refresh`,
@@ -54,27 +64,23 @@ const AuthApi = {
       const result = await response.json();
 
       if (result.success) {
-        sessionStorage.setItem("token", result.authToken);
-        sessionStorage.setItem("r-t", result.refreshToken);
+        AuthHelper.setAuth(
+          result.authToken,
+          result.refreshToken,
+          AuthHelper.getPermissions()
+        );
       } else {
-
+        AuthHelper.logout();
       }
+
       return result;
     } catch (error) {
-
-      this.logout();
-      return;
+      AuthHelper.logout();
     }
   },
 
   logout() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("r-t");
-    window.location.href = "/login";
-  },
-
-  async bs() {
-    return "yes";
+    AuthHelper.logout();
   },
 };
 

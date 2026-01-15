@@ -6,8 +6,7 @@ const PermissionDenied = () => {
 
     const styles = {
         container: {
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -30,7 +29,7 @@ const PermissionDenied = () => {
             left: 0,
             width: '100%',
             height: '5px',
-            background: 'linear-gradient(to right, #ff416c, #ff4b2b)'
+            background: 'linear-gradient(to right, var(--primary-color), var(--secondary-color))'
         },
         header: {
             textAlign: 'center',
@@ -68,12 +67,12 @@ const PermissionDenied = () => {
             padding: '20px',
             textAlign: 'center',
             marginBottom: '30px',
-            borderLeft: '5px solid #ff416c'
+            borderLeft: '5px solid var(--primary-color)'
         },
         errorCode: {
             fontSize: '3rem',
             fontWeight: '800',
-            color: '#ff416c',
+            color: 'var(--primary-color)',
             lineHeight: '1'
         },
         errorMessage: {
@@ -226,33 +225,6 @@ const PermissionDenied = () => {
             display: 'inline-block'
         }
     };
-
-    const possibleReasons = [
-        "Your account doesn't have the required permissions",
-        "You're trying to access a restricted area",
-        "Your session may have expired",
-        "This resource requires admin privileges",
-        "Your IP address may be restricted"
-    ];
-
-    const actions = [
-        { icon: '🏠', text: 'Return to Home', path: '/' },
-        { icon: '🔑', text: 'Request Access', path: '/request-access' },
-        { icon: '👤', text: 'Switch Account', path: '/switch-account' },
-        { icon: '📞', text: 'Contact Support', path: '/contact' }
-    ];
-
-    const handleRoleChange = (role) => {
-        setUserRole(role);
-    };
-
-    const simulateLogin = () => {
-        alert('Redirecting to login page...');
-        // In real app: window.location.href = '/login';
-    };
-
-    const [hoveredButton, setHoveredButton] = useState(null);
-
     return (
         <div style={styles.container}>
             <div style={styles.card}>
@@ -274,7 +246,7 @@ const PermissionDenied = () => {
                 </div>
 
                 {/* Possible Reasons */}
-                <div>
+                {/* <div>
                     <h3 style={styles.sectionTitle}>Possible reasons:</h3>
                     <ul style={styles.reasonsList}>
                         {possibleReasons.map((reason, index) => (
@@ -284,10 +256,10 @@ const PermissionDenied = () => {
                             </li>
                         ))}
                     </ul>
-                </div>
+                </div> */}
 
                 {/* Action Buttons */}
-                <div style={{ marginTop: '30px' }}>
+                {/* <div style={{ marginTop: '30px' }}>
                     <h3 style={styles.sectionTitle}>What would you like to do?</h3>
                     <div style={styles.actionButtons}>
                         {actions.map((action, index) => (
@@ -306,10 +278,10 @@ const PermissionDenied = () => {
                             </button>
                         ))}
                     </div>
-                </div>
+                </div> */}
 
                 {/* Demo Section */}
-                <div style={styles.demoSection}>
+                {/* <div style={styles.demoSection}>
                     <div style={styles.demoHeader}>
                         <h4 style={{ margin: 0, color: '#333' }}>Demo: Try different access levels</h4>
                         <button
@@ -349,10 +321,10 @@ const PermissionDenied = () => {
                             </p>
                         </div>
                     )}
-                </div>
+                </div> */}
 
                 {/* Login Section */}
-                <div style={styles.loginSection}>
+                {/* <div style={styles.loginSection}>
                     <p style={{ color: '#666', marginBottom: '10px' }}>
                         Need different access?
                     </p>
@@ -365,10 +337,10 @@ const PermissionDenied = () => {
                         <i className="fas fa-sign-in-alt"></i>
                         Sign in with different account
                     </button>
-                </div>
+                </div> */}
 
                 {/* Footer */}
-                <div style={styles.footer}>
+                {/* <div style={styles.footer}>
                     <p>
                         <i className="fas fa-info-circle" style={{ marginRight: '8px', color: '#0066cc' }}></i>
                         If you believe this is an error, contact your system administrator.
@@ -376,7 +348,7 @@ const PermissionDenied = () => {
                     <div style={styles.supportInfo}>
                         <span>Support: support@example.com | Ext: 1234</span>
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );
