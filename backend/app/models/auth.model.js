@@ -34,7 +34,7 @@ async function findPermissionsByRole(roleId) {
       allowDelete: row.allow_delete,
     }));
 
-    console.log("Fetched Permissions for role:", permissions);
+    // console.log("Fetched Permissions for role:", permissions);
     return permissions;
 
   } catch (err) {

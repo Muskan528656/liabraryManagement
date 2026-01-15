@@ -18,8 +18,8 @@ function init(schema_name) {
   schema = schema_name || "demo";
 }
 
-async function findAll(userId) {
-  console.log("Fetching all notifications for user ID:", userId);
+async function findAll() {
+  // console.log("Fetching all notifications for user ID:", userId);
   const query = `
     SELECT 
     n.*,                         
@@ -27,11 +27,11 @@ async function findAll(userId) {
     FROM ${schema}.notifications n
     LEFT JOIN ${schema}.library_members m 
       ON n.member_id = m.id
-    WHERE n.user_id = $1
+    WHERE n.is_read = false
     ORDER BY n.createddate DESC;
   `;
 
-  const result = await sql.query(query, [userId]);
+  const result = await sql.query(query);
   return result.rows;
 }
 
@@ -241,7 +241,6 @@ async function createDueReminderIfTomorrow(
 
 
 
-// Cron job function to check books due tomorrow and create notifications
 async function checkBooksDueTomorrow() {
   try {
 
@@ -277,7 +276,7 @@ async function checkBooksDueTomorrow() {
     const result = await sql.query(query, [tomorrowStr]);
 
     console.log("result=>", result.rows);
-
+    
     if (result.rows.length === 0) {
 
       return;
@@ -294,15 +293,13 @@ async function checkBooksDueTomorrow() {
       const existingQuery = `
         SELECT id
         FROM ${schema}.notifications
-        WHERE user_id = $1
-        AND member_id = $2
-          AND book_id = $3
+        WHERE  member_id = $1
+          AND book_id = $2
           AND type = 'due_reminder'
           AND DATE(createddate) = CURRENT_DATE
       `;
 
       const existingResult = await sql.query(existingQuery, [
-        currentUserId,
         book.member_id,
         book.book_id
       ]);
@@ -310,28 +307,27 @@ async function checkBooksDueTomorrow() {
 
       if (existingResult.rows.length === 0) {
         const notification = await create({
-          user_id: currentUserId,
           member_id: book.member_id,
           book_id: book.book_id,
           message: `Reminder: The book "${book.book_title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
           type: "due_reminder"
         });
 
-        console.log(`✅ Created notification for logged-in user about book "${book.book_title}"`);
+        console.log(`Created notification for logged-in user about book "${book.book_title}"`);
       } else {
-        console.log(`⏭️ Notification already exists for logged-in user about book "${book.book_title}"`);
+        console.log(`Notification already exists for logged-in user about book "${book.book_title}"`);
       }
     }
 
-    console.log("🎉 Completed checking books due tomorrow");
+    console.log("Completed checking books due tomorrow");
 
   } catch (error) {
-    console.error("❌ Error in checkBooksDueTomorrow:", error);
+    console.error("Error in checkBooksDueTomorrow:", error);
   }
 }
 
 cron.schedule('* * * * *', async () => {
-  console.log("⏰ Running daily cron job: Check books due tomorrow");
+  console.log("Running daily cron job: Check books due tomorrow");
   await checkBooksDueTomorrow()
 
 });
