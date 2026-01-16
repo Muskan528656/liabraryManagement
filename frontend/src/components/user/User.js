@@ -5,6 +5,7 @@ import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { MODULES } from "../../constants/CONSTANT";
 import { AuthHelper } from "../../utils/authHelper";
+import PermissionDenied from "../../utils/permission_denied"; // Add this import
 
 const Users = (props) => {
   const { timeZone, companyInfo } = useTimeZone();
@@ -38,24 +39,49 @@ const Users = (props) => {
     };
   }, []);
 
+  // Get base config even before permissions are loaded (but only for data dependencies)
   const baseConfig = getUserConfig({
     canCreate: permissions.canCreate,
     canEdit: permissions.canEdit,
     canDelete: permissions.canDelete
   });
 
-  const { data, loading, error } = useDataManager(
+  // Call useDataManager hook unconditionally (always at the top level)
+  const { data, loading: dataLoading, error } = useDataManager(
     baseConfig.dataDependencies,
     props
   );
 
-  if (loading) return <div>Loading users data...</div>;
+  // Now check permissions and loading states
+  if (permissions.loading || dataLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!permissions.canView) {
+    return <PermissionDenied />;
+  }
+
   if (error) return <div>Error loading users data: {error.message}</div>;
 
+  const finalConfig = getUserConfig(
+    data, 
+    props, 
+    timeZone, 
+    companyInfo,
+    {
+      canCreate: permissions.canCreate,
+      canEdit: permissions.canEdit,
+      canDelete: permissions.canDelete
+    }
+  );
 
-  const finalConfig = getUserConfig(data, props, timeZone, companyInfo);
-
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-user" />;
+  return (
+    <DynamicCRUD 
+      {...finalConfig} 
+      icon="fa-solid fa-user" 
+      permissions={permissions} // Pass permissions as prop
+    />
+  );
 };
 
 export default Users;

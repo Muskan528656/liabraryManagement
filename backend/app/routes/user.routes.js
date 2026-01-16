@@ -25,10 +25,68 @@ const path = require("path");
 const fs = require("fs");
 
 module.exports = (app) => {
+
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
   const fileUpload = require("express-fileupload");
+
+
+  const multer = require("multer");
+
+  // ------------------- USER  UPLOAD FOLDER -------------------
+  const userUploadDir = path.join(
+    path.resolve(__dirname, "../../.."),
+    "frontend",
+    "public",
+    "uploads",
+    "users"
+  );
+
+  if (!fs.existsSync(userUploadDir)) {
+    fs.mkdirSync(userUploadDir, { recursive: true });
+  }
+
+  // const userUploadDir = "/var/www/html/uploads/users";
+  // if (!fs.existsSync(userUploadDir)) fs.mkdirSync(userUploadDir, { recursive: true });
+
+  // ------------------- MULTER SETUP -------------------
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, userUploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, `user-${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`);
+    }
+  });
+
+  const upload = multer({
+    storage,
+ 
+    limits: { fileSize: 5 * 1024 * 1024 }, 
+    fileFilter: (req, file, cb) => {
+      console.log("UPLOAD FILE:", {
+        originalname: file.originalname,
+        mimetype: file.mimetype
+      });
+
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif"
+      ];
+
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only JPG, JPEG, PNG, and GIF images are allowed"));
+      }
+    }
+  });
+
+
 
 
 
@@ -207,58 +265,57 @@ module.exports = (app) => {
   );
 
 
-  router.put(
+    router.put(
     "/:id",
-    fetchUser, checkPermission("Users", "allow_edit"),
-
-    [
-      body("email").optional().isEmail().withMessage("Email must be a valid email address"),
-      body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
-      body("isactive").optional().isBoolean().withMessage("isactive must be a boolean"),
-    ],
+    fetchUser,
+    checkPermission("Company", "allow_edit"),
+    upload.single("profile_image"),
     async (req, res) => {
-      try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({
-            errors: errors.array()[0].msg
-          });
-        }
 
+      console.log("Updating company ID:", req.params.id, "with data:", req.body);
+
+      try {
         User.init(req.userinfo.tenantcode);
 
         const existingUser = await User.findById(req.params.id);
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
-        if (req.userinfo.id !== req.params.id) {
-          return res.status(403).json({ errors: "Unauthorized access" });
+
+        const userId = req.userinfo?.id || null;
+        const userData = { ...req.body };
+        if (userData.isactive !== undefined)
+          userData.isactive = userData.isactive === "true" || userData.isactive === true;
+
+        if (userData.is_external !== undefined)
+          userData.is_external = userData.is_external === "true" || userData.is_external === true;
+
+        if (userData.has_wallet !== undefined)
+          userData.has_wallet = userData.has_wallet === "true" || userData.has_wallet === true;
+
+          const previousImagePath = existingUser.profile_image;
+
+        if (req.file) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          userData.profile_image = `/uploads/users/${req.file.filename}`;
+        } else if (userData.profile_image === "null" || userData.profile_image === null) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          userData.profile_image = null;
         }
 
+        const user = await User.updateById(req.params.id, userData, userId);
 
-        const updateData = { ...req.body };
-        if (updateData.password) {
-
-          if (!updateData.password.startsWith('$2a$') && !updateData.password.startsWith('$2b$')) {
-            const salt = bcrypt.genSaltSync(10);
-            updateData.password = bcrypt.hashSync(updateData.password, salt);
-          }
-        }
-
-        const userId = req.user?.id || null;
-        const user = await User.updateById(req.params.id, updateData, userId);
-        if (!user) {
-          return res.status(400).json({ errors: "Failed to update user" });
-        }
-        return res.status(200).json({ success: true, data: user });
+        return res.status(200).json({
+          success: true,
+          data: user,
+          message: "User updated successfully"
+        });
       } catch (error) {
-        console.error("Error updating user:", error);
+        console.error(" Error updating user:", error);
         return res.status(500).json({ errors: error.message });
       }
     }
   );
-
-
 
 
 
