@@ -13,7 +13,8 @@ const countryCodeOptions = COUNTRY_CODES.map((country) => ({
   label: `${country.country_code} - ${country.country}`,
 }));
 
-const VendorDetail = () => {
+const VendorDetail = ({ permissions }) => {
+  console.log("VendorDetail permissions:", permissions);
   const { timeZone } = useTimeZone();
   const fields = {
     title: "name",
@@ -34,8 +35,8 @@ const VendorDetail = () => {
       {
         key: "country_code",
         label: "Country Code",
-        type: "select", // Changed from "text" to "select"
-        options: countryCodeOptions, // Added options
+        type: "select",
+        options: countryCodeOptions,
         render: (value) => {
           const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
           const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
@@ -65,6 +66,7 @@ const VendorDetail = () => {
       moduleApi="vendor"
       moduleLabel="Vendor"
       icon="fa-solid fa-store"
+      permissions={permissions}
       fields={fields}
     />
   );

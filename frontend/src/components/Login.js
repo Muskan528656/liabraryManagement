@@ -132,7 +132,7 @@ const Login = () => {
 
   const ModalHeaderStyled = ({ title }) => (
     <div className="text-center" style={{ margin: "-30px" }}>
-      {/* <img src="Untitled design (7).png" width="400" height="200" alt="Logo"/> */}
+
     </div>
   );
 
@@ -167,7 +167,7 @@ const Login = () => {
 
                 <Col lg={6} className="p-5">
                   <div className="text-center mb-4">
-                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: "var(--primary-color)", display: "flex", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
+                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: "var(--primary-color)", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
                       <i className="fa-solid fa-book"></i>
                     </div>
                     <h3 className="fw-bold">Sign In</h3>
@@ -197,7 +197,7 @@ const Login = () => {
                       </div>
                     </Form.Group>
 
-                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{backgroundColor: "var(--primary-color)", color:"#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px"}}>
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
                       {loading ? <><Loader /> Signing In...</> : "Sign In"}
                     </Button>
 

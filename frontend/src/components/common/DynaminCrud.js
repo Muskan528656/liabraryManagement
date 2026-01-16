@@ -27,6 +27,7 @@ const normalizeListResponse = (payload) => {
 };
 
 const DynamicCRUD = ({
+
     moduleName,
     moduleLabel,
     apiEndpoint,
@@ -38,11 +39,11 @@ const DynamicCRUD = ({
     importMapping,
     exportColumns,
     customHandlers = {},
-    permissions = {},
     detailConfig = null,
     customActionButtons = [],
     lookupNavigation = {},
     nameClickHandler = null,
+    permissions = {},
     emptyMessage = null,
     enablePrefetch = true,
     autoFetchRelated = true,
@@ -57,6 +58,13 @@ const DynamicCRUD = ({
     categories = [],
     publishers = [],
 }) => {
+    const {
+        canCreate = true,
+        canEdit = true,
+        canDelete = true,
+        canView = true
+    } = permissions;
+
 
     const navigate = useNavigate();
 
@@ -70,8 +78,8 @@ const DynamicCRUD = ({
         showCheckbox = true,
         showActions = true,
         showAddButton = true,
-        allowEdit = true,
-        allowDelete = true,
+        allowEdit = canEdit,
+        allowDelete = canDelete,
         showAdvancedFilter = false
     } = features;
 
@@ -832,7 +840,22 @@ const DynamicCRUD = ({
     const getActionButtons = useCallback(() => {
         const buttons = [];
 
-        if (showImportButton) {
+        // if (showImportButton) {
+        //     buttons.push({
+        //         variant: "outline-primary",
+        //         size: "sm",
+        //         icon: "fa-solid fa-arrow-down",
+        //         label: `Import ${moduleLabel}`,
+        //         onClick: async () => {
+        //             if (Object.keys(relatedData).length === 0) {
+        //                 await fetchRelatedData();
+        //             }
+        //             setShowImportModal(true);
+        //         },
+        //     });
+        // }
+
+        if (showImportButton && canCreate) {
             buttons.push({
                 variant: "outline-primary",
                 size: "sm",
@@ -865,9 +888,7 @@ const DynamicCRUD = ({
                 label: "Bulk Insert",
                 onClick: handleBulkInsert,
             });
-        }
-
-        if (showAddButton) {
+        } if (showAddButton && canCreate) {
             buttons.push({
                 size: "sm",
                 icon: "fa-solid fa-plus",
@@ -879,6 +900,19 @@ const DynamicCRUD = ({
                 },
             });
         }
+
+        // if (showAddButton) {
+        //     buttons.push({
+        //         size: "sm",
+        //         icon: "fa-solid fa-plus",
+        //         label: `Add ${moduleLabel}`,
+        //         onClick: handleAdd,
+        //         style: {
+        //             background: "var(--primary-color)",
+        //             border: "none",
+        //         },
+        //     });
+        // }
 
         if (customActionButtons.length > 0) {
             buttons.push(...customActionButtons);
@@ -929,6 +963,7 @@ const DynamicCRUD = ({
                     {...finalDetailConfig}
                     setIsEditable={isEditable}
                     isEditablee={isEditable}
+                    permissions={permissions}
 
                 />
             </Container>
@@ -1024,20 +1059,20 @@ const DynamicCRUD = ({
                                         showActions={showActions}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
-                                                {allowEdit && (
+                                                {/* ✅ Edit button permission check */}
+                                                {allowEdit && canEdit && (
                                                     <button
-
                                                         onClick={() => handleNameClick(item, true)}
                                                         title="Edit"
                                                         className="custom-btn-edit"
-
                                                     >
                                                         <i className="fs-7 fa-solid fa-pen-to-square"></i>
                                                     </button>
                                                 )}
-                                                {allowDelete && (
-                                                    <button
 
+                                                {/* ✅ Delete button permission check */}
+                                                {allowDelete && canDelete && (
+                                                    <button
                                                         onClick={() => handleDelete(item.id)}
                                                         title="Delete"
                                                         className="custom-btn-delete"
@@ -1045,11 +1080,11 @@ const DynamicCRUD = ({
                                                         <i className="fs-7 fa-solid fa-trash"></i>
                                                     </button>
                                                 )}
+
+                                                {/* ✅ Custom barcode preview (if needed) */}
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
-
                                                         className="custom-btn-edit"
-
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >
@@ -1058,6 +1093,42 @@ const DynamicCRUD = ({
                                                 )}
                                             </div>
                                         ) : null}
+                                        // actionsRenderer={showActions ? (item) => (
+                                        //     <div className="d-flex gap-2 justify-content-center">
+                                        //         {allowEdit && (
+                                        //             <button
+
+                                        //                 onClick={() => handleNameClick(item, true)}
+                                        //                 title="Edit"
+                                        //                 className="custom-btn-edit"
+
+                                        //             >
+                                        //                 <i className="fs-7 fa-solid fa-pen-to-square"></i>
+                                        //             </button>
+                                        //         )}
+                                        //         {allowDelete && (
+                                        //             <button
+
+                                        //                 onClick={() => handleDelete(item.id)}
+                                        //                 title="Delete"
+                                        //                 className="custom-btn-delete"
+                                        //             >
+                                        //                 <i className="fs-7 fa-solid fa-trash"></i>
+                                        //             </button>
+                                        //         )}
+                                        //         {customHandlers?.handleBarcodePreview && (
+                                        //             <button
+
+                                        //                 className="custom-btn-edit"
+
+                                        //                 onClick={() => customHandlers.handleBarcodePreview(item)}
+                                        //                 title="View Barcode"
+                                        //             >
+                                        //                 <i className="fs-7 fa-solid fa-eye me-1"></i>
+                                        //             </button>
+                                        //         )}
+                                        //     </div>
+                                        // ) : null}
                                         emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
                                     />
                                 </>
@@ -1231,41 +1302,42 @@ const DynamicCRUD = ({
 
 
             )}
-            <Modal
-                show={showImportModal}
-                onHide={() => setShowImportModal(false)}
-                size="lg"
-                centered
-                className=""
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title style={{ color: 'var(--primary-color)' }}> Import {moduleLabel} Data</Modal.Title>
-                </Modal.Header>
+            {showImportModal && canCreate && (
+                <Modal
+                    show={showImportModal}
+                    onHide={() => setShowImportModal(false)}
+                    size="lg"
+                    centered
+                    className=""
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title style={{ color: 'var(--primary-color)' }}> Import {moduleLabel} Data</Modal.Title>
+                    </Modal.Header>
 
-                <Modal.Body className="mb-5">
-                    <UniversalCSVXLSXImporter
-                        model={importModel}
-                        onDataParsed={async (parsedData) => {
-                            await saveImportedData({
-                                data: parsedData,
-                                apiEndpoint,
-                                formFields,
-                                relatedData,
-                                moduleLabel,
-                                existingRecords: data,
-                                importMatchFields,
-                                autoCreateRelated,
-                                customHandlers,
-                                afterSave: () => {
-                                    fetchData();
-                                    setShowImportModal(false);
-                                },
-                            });
-                        }}
-                    />
-                </Modal.Body>
-            </Modal>
-
+                    <Modal.Body className="mb-5">
+                        <UniversalCSVXLSXImporter
+                            model={importModel}
+                            onDataParsed={async (parsedData) => {
+                                await saveImportedData({
+                                    data: parsedData,
+                                    apiEndpoint,
+                                    formFields,
+                                    relatedData,
+                                    moduleLabel,
+                                    existingRecords: data,
+                                    importMatchFields,
+                                    autoCreateRelated,
+                                    customHandlers,
+                                    afterSave: () => {
+                                        fetchData();
+                                        setShowImportModal(false);
+                                    },
+                                });
+                            }}
+                        />
+                    </Modal.Body>
+                </Modal>
+            )}
         </Container>
     );
 };

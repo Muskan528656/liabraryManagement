@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
@@ -5,11 +7,10 @@ import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
+import { MODULES } from "../../constants/CONSTANT";
 
 const Books = (props) => {
   const { timeZone } = useTimeZone();
-
-
 
   const [permissions, setPermissions] = useState({
     canView: false,
@@ -21,10 +22,10 @@ const Books = (props) => {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      const canView = await AuthHelper.hasModulePermission("Books", "view");
-      const canCreate = await AuthHelper.hasModulePermission("Books", "create");
-      const canEdit = await AuthHelper.hasModulePermission("Books", "edit");
-      const canDelete = await AuthHelper.hasModulePermission("Books", "delete");
+      const canView = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_VIEW);
+      const canCreate = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_CREATE);
+      const canEdit = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_EDIT);
+      const canDelete = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_DELETE);
 
       setPermissions({
         canView,
@@ -46,6 +47,7 @@ const Books = (props) => {
     canEdit: permissions.canEdit,
     canDelete: permissions.canDelete
   });
+
   const { data, loading } = useDataManager(baseConfig.dataDependencies, props);
 
   if (permissions.loading || loading) {
@@ -67,7 +69,13 @@ const Books = (props) => {
     }
   );
 
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book" />;
+  return (
+    <DynamicCRUD
+      {...finalConfig}
+      icon="fa-solid fa-book"
+      permissions={permissions}
+    />
+  );
 };
 
 export default Books;

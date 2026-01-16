@@ -95,7 +95,7 @@ export const AuthHelper = {
             return false;
         }
 
-   
+
         const module = moduleList.find(m => m.name === moduleName);
         if (!module) {
             console.warn(`Module "${moduleName}" not found in API response`);
@@ -128,9 +128,9 @@ export const AuthHelper = {
         }
     },
 
-        logout() {
-            this.clearAuth();
-            console.log("AuthHelper.logout -> Redirecting to /login");
-            window.location.href = "/login";
-        }
-    };
+    logout() {
+        this.clearAuth();
+        console.log("AuthHelper.logout -> Redirecting to /login");
+        window.location.href = "/login";
+    }
+};

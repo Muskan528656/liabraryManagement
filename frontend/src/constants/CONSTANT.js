@@ -27,5 +27,11 @@ export const MODULES = {
   PLAN: "Plan",
   SETTINGS: "Settings",
 
-  MY_PROFILE: "My Profile"
+  MY_PROFILE: "My Profile",
+
+
+  CAN_VIEW: "view",
+  CAN_CREATE: "create",
+  CAN_EDIT: "edit",
+  CAN_DELETE: "delete"
 };
