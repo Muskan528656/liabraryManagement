@@ -80,6 +80,7 @@ const upload = multer({
 
 
 module.exports = (app) => {
+
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
@@ -121,6 +122,63 @@ module.exports = (app) => {
         }
       });
     };
+
+
+  const multer = require("multer");
+
+  // ------------------- USER  UPLOAD FOLDER -------------------
+  const userUploadDir = path.join(
+    path.resolve(__dirname, "../../.."),
+    "frontend",
+    "public",
+    "uploads",
+    "users"
+  );
+
+  if (!fs.existsSync(userUploadDir)) {
+    fs.mkdirSync(userUploadDir, { recursive: true });
+  }
+
+  // const userUploadDir = "/var/www/html/uploads/users";
+  // if (!fs.existsSync(userUploadDir)) fs.mkdirSync(userUploadDir, { recursive: true });
+
+  // ------------------- MULTER SETUP -------------------
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, userUploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, `user-${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`);
+    }
+  });
+
+  const upload = multer({
+    storage,
+ 
+    limits: { fileSize: 5 * 1024 * 1024 }, 
+    fileFilter: (req, file, cb) => {
+      console.log("UPLOAD FILE:", {
+        originalname: file.originalname,
+        mimetype: file.mimetype
+      });
+
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif"
+      ];
+
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Only JPG, JPEG, PNG, and GIF images are allowed"));
+      }
+    }
+  });
+
+
 
 
 
@@ -297,65 +355,7 @@ module.exports = (app) => {
   );
 
 
-  // router.put(
-  //   "/:id",
-  //   fetchUser, checkPermission("Users", "allow_edit"),
-
-  //   [
-  //     body("email").optional().isEmail().withMessage("Email must be a valid email address"),
-  //     body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
-  //     body("isactive").optional().isBoolean().withMessage("isactive must be a boolean"),
-  //   ],
-  //   async (req, res) => {
-  //     try {
-  //       const errors = validationResult(req);
-  //       // if (!errors.isEmpty()) {
-  //       //   return res.status(400).json({ errors: errors.array() });
-  //       // }
-
-  //       if (!errors.isEmpty()) {
-  //         return res.status(400).json({
-  //           errors: errors.array()[0].msg
-  //         });
-  //       }
-
-  //       User.init(req.userinfo.tenantcode);
-
-  //       const existingUser = await User.findById(req.params.id);
-  //       if (!existingUser) {
-  //         return res.status(404).json({ errors: "User not found" });
-  //       }
-  //       if (req.userinfo.id !== req.params.id) {
-  //         return res.status(403).json({ errors: "Unauthorized access" });
-  //       }
-
-
-
-  //       const updateData = { ...req.body };
-  //       if (updateData.password) {
-
-  //         if (!updateData.password.startsWith('$2a$') && !updateData.password.startsWith('$2b$')) {
-  //           const salt = bcrypt.genSaltSync(10);
-  //           updateData.password = bcrypt.hashSync(updateData.password, salt);
-  //         }
-  //       }
-
-  //       const userId = req.user?.id || null;
-  //       const user = await User.updateById(req.params.id, updateData, userId);
-  //       if (!user) {
-  //         return res.status(400).json({ errors: "Failed to update user" });
-  //       }
-  //       return res.status(200).json({ success: true, data: user });
-  //     } catch (error) {
-  //       console.error("Error updating user:", error);
-  //       return res.status(500).json({ errors: error.message });
-  //     }
-  //   }
-  // );
-
-
-
-  router.put(
+    router.put(
     "/:id",
     fetchUser,
     checkPermission("Company", "allow_edit"),
@@ -406,12 +406,6 @@ module.exports = (app) => {
       }
     }
   );
-
-
-
-
-
-
 
 
 

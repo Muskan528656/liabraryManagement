@@ -263,6 +263,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         "GET"
       );
       const result = await response.json();
+      console.log("notification reuslt=>",result);
       if (result.success) {
         setAllNotifications(result.all_notifications || []);
         setNotifications(result.unread_notifications || []);

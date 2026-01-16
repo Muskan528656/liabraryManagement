@@ -19,14 +19,14 @@ async function findByEmail(email, excludeId = null) {
     const cleanEmail = email?.trim();
     console.log("Cleaned email:", cleanEmail);
 
-    // Base query
+
     let query = `
       SELECT *
       FROM ${this.schema}.vendors
       WHERE email = $1
     `;
     const params = [cleanEmail];
-    // Exclude current ID if provided
+
     if (excludeId) {
       query += `AND id != $2`;
       params.push(excludeId);

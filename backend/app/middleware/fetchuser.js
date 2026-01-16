@@ -19,6 +19,7 @@ const fetchUser = async (req, res, next) => {
     if (!decoded) return res.status(401).json({ errors: "Invalid token" });
 
     req.userinfo = decoded;
+    global.currentLoggedInUserId = decoded.id;
 
 
     const permissions = await Auth.findPermissionsByRole(decoded.userrole);

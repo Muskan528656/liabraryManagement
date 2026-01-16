@@ -20,24 +20,8 @@ const countryCodeOptions = COUNTRY_CODES.map((country) => ({
   label: `${country.country_code} - ${country.country}`,
 }));
 
-const countryName = COUNTRY_CODES.map((country) => ({
-  value: country.country,
-  label: `${country.country}`,
-}));
-
-const cityName = City_State.map(item => ({
-  value: item.name,
-  label: `${item.name}`,
-}));
-
-const stateName = City_State.map(item => ({
-  value: item.state,
-  label: `${item.state}`,
-}));
-console.log("countryName Options:", countryName);
-console.log("countryCodeOptions Options:", countryCodeOptions);
-
-const VendorDetail = () => {
+const VendorDetail = ({ permissions }) => {
+  console.log("VendorDetail permissions:", permissions);
   const { timeZone } = useTimeZone();
   const fields = {
     title: "name",
@@ -59,13 +43,13 @@ const VendorDetail = () => {
       {
         key: "country_code",
         label: "Country Code",
-        type: "select", // Changed from "text" to "select"
-        options: countryCodeOptions, // Added options
-        // render: (value) => {
-        //   const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
-        //   const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
-        //   return country ? `${country.country_code} (${country.country})` : value || 'N/A';
-        // },
+        type: "select",
+        options: countryCodeOptions,
+        render: (value) => {
+          const cleanValue = value ? String(value).split(/[—\-]/)[0].trim() : value;
+          const country = COUNTRY_CODES.find(c => c.country_code === cleanValue);
+          return country ? `${country.country_code} (${country.country})` : value || 'N/A';
+        },
       },
     ],
     address: [
@@ -121,6 +105,7 @@ const VendorDetail = () => {
       moduleApi="vendor"
       moduleLabel="Vendor"
       icon="fa-solid fa-store"
+      permissions={permissions}
       fields={fields}
     />
   );

@@ -204,7 +204,7 @@ const EditProfile = () => {
                   <img
                     src={
                       // profile.profile_image 
-                       
+
                       imagePreview
                         ? imagePreview            // blob OR full URL
                         : profile.profile_image
@@ -215,7 +215,7 @@ const EditProfile = () => {
                     style={{ width: 150, height: 150, objectFit: "cover" }}
                     onError={() => setImageError(true)}
                   />
-                 )} 
+                )}
 
                 <div
                   className="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2"

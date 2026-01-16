@@ -1,32 +1,81 @@
-import React from "react";
+
+
+import React, { useEffect, useState } from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
 import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import { useAuthWrapper } from "../../contexts/authwrapper";
+import { AuthHelper } from "../../utils/authHelper";
+import PermissionDenied from "../../utils/permission_denied";
+import { MODULES } from "../../constants/CONSTANT";
 
 const Books = (props) => {
   const { timeZone } = useTimeZone();
-  const { user, permissions, } = useAuthWrapper();
-  const baseConfig = getBooksConfig();
-  console.log("use->>>>>>>>>>>", user)
 
+  const [permissions, setPermissions] = useState({
+    canView: false,
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    loading: true
+  });
 
-  const { data, loading, error } = useDataManager(
-    baseConfig.dataDependencies,
-    props
-  );
-  if (loading) {
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const canView = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_VIEW);
+      const canCreate = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_CREATE);
+      const canEdit = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_EDIT);
+      const canDelete = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_DELETE);
 
-    return <div>Loading books data...</div>;
+      setPermissions({
+        canView,
+        canCreate,
+        canEdit,
+        canDelete,
+        loading: false
+      });
+    };
+    fetchPermissions();
+    window.addEventListener("permissionsUpdated", fetchPermissions);
+    return () => {
+      window.removeEventListener("permissionsUpdated", fetchPermissions);
+    };
+  }, []);
+
+  const baseConfig = getBooksConfig({
+    canCreate: permissions.canCreate,
+    canEdit: permissions.canEdit,
+    canDelete: permissions.canDelete
+  });
+
+  const { data, loading } = useDataManager(baseConfig.dataDependencies, props);
+
+  if (permissions.loading || loading) {
+    return <div>Loading...</div>;
   }
 
+  if (!permissions.canView) {
+    return <PermissionDenied />;
+  }
 
-  const finalConfig = getBooksConfig(data, props, timeZone);
+  const finalConfig = getBooksConfig(
+    data,
+    props,
+    timeZone,
+    {
+      canCreate: permissions.canCreate,
+      canEdit: permissions.canEdit,
+      canDelete: permissions.canDelete
+    }
+  );
 
-
-
-  return <DynamicCRUD {...finalConfig} icon="fa-solid fa-book" />;
+  return (
+    <DynamicCRUD
+      {...finalConfig}
+      icon="fa-solid fa-book"
+      permissions={permissions}
+    />
+  );
 };
 
 export default Books;

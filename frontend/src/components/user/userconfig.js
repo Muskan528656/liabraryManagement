@@ -2,8 +2,15 @@
 import { Badge } from "react-bootstrap";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
-export const getUserConfig = (externalData = {}, props = {}, timeZone, companyInfo, editingItem = null) => {
+import { Link } from "react-router-dom";
+export const getUserConfig = (externalData = {}, props = {}, permissions = {}, companyInfo, editingItem = null) => {
 
+
+    const {
+        canCreate = true,
+        canEdit = true,
+        canDelete = false
+    } = permissions || {};
     const extractData = (source) => {
         if (!source) return [];
         if (Array.isArray(source)) return source;
@@ -51,7 +58,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             const exactTz = matchedCountry.timezones.find(t => t.zoneName === companyInfo.time_zone);
 
             defaultTimeZone = exactTz ? exactTz.zoneName : matchedCountry.timezones[0]?.zoneName;
- 
+
         } else {
             defaultCountryName = companyInfo.country || "";
             defaultCountryCode = companyInfo.country_code || "";
@@ -69,8 +76,35 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         importModel: UserModel,
 
         columns: [
-            { field: "firstname", label: "First Name" },
-            { field: "lastname", label: "Last Name" },
+            //  { field: "firstname", label: "First Name" },
+            // { field: "lastname", label: "Last Name" },
+            {
+                field: "name",
+                label: "Name",
+                render: (value, row) => {
+                    const { firstname, lastname, id } = row;
+                    return (
+                        <Link to={`/user/${id}`} className="text-decoration-none text-primary">
+                            <div className="d-flex align-items-center">
+                                <div
+                                    className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                    style={{
+                                        width: "30px",
+                                        height: "30px",
+                                        backgroundColor: "#e0e7ff",
+                                        color: "#4338ca",
+                                        fontWeight: "bold",
+                                        fontSize: "12px"
+                                    }}
+                                >
+                                    {firstname ? `${firstname[0]}${lastname[0]}` : <i className="fa-solid fa-user"></i>}
+                                </div>
+                                <span className="ms-2">{firstname} {lastname}</span>
+                            </div>
+                        </Link>
+                    );
+                }
+            },
             { field: "email", label: "Email" },
             {
                 field: "country",
@@ -230,7 +264,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
 
 
                     const currentCountryName = formData?.country || defaultCountryName;
- 
+
 
                     const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
 
@@ -305,14 +339,16 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
             showDetailView: true,
             showSearch: true,
             showActions: true,
-            showAddButton: true,
+            showAddButton: canCreate,
+            allowEdit: canEdit,
+            allowDelete: canDelete,
             allowEdit: true,
             allowDelete: false,
-            showImportButton: true,
+            showImportButton: canCreate,
         },
 
         initializeFormData: (existingData) => {
- 
+
             if (!existingData) return null;
 
             return {

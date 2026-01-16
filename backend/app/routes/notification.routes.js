@@ -1,6 +1,5 @@
 /**
- * Notification Routes
- * Single API endpoint for due tomorrow notifications
+
  *
  * @author Library Management Team
  * @date Jan, 2025
@@ -16,11 +15,10 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll(req.userinfo.id);
+      const allNotifications = await Notification.findAll();
 
       console.log("All Notifications:", allNotifications);
 
-      // Include all unread notifications, not just due reminders
       const unreadNotifications = allNotifications.filter(notification => !notification.is_read);
 
       const unreadCount = unreadNotifications.length;
@@ -32,7 +30,7 @@ module.exports = (app) => {
         unread_count: unreadCount
       });
     } catch (error) {
-      console.error("❌ Error fetching notifications:", error);
+      console.error(" Error fetching notifications:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to fetch notifications",
@@ -45,9 +43,8 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll(req.userinfo.id);
+      const allNotifications = await Notification.findAll();
 
-      console.log("All Notifications:", allNotifications);
 
       const unreadNotifications = allNotifications.filter(notification => !notification.is_read);
       const readNotifications = allNotifications.filter(notification => notification.is_read);
@@ -61,7 +58,7 @@ module.exports = (app) => {
         read_count: readNotifications.length
       });
     } catch (error) {
-      console.error("❌ Error fetching all notifications:", error);
+      console.error("Error fetching all notifications:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to fetch all notifications",
@@ -92,7 +89,7 @@ module.exports = (app) => {
         });
       }
     } catch (error) {
-      console.error("❌ Error marking notification as read:", error);
+      console.error("Error marking notification as read:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to mark notification as read",
@@ -104,6 +101,8 @@ module.exports = (app) => {
   router.put("/mark-read-by-related/:relatedId/:memberId/:type", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
+
+      console.log("req.params=>",req.params);
 
       const { relatedId, memberId, type } = req.params;
       const userId = req.userinfo.id;
@@ -124,7 +123,7 @@ module.exports = (app) => {
         notifications: unreadNotifications
       });
     } catch (error) {
-      console.error("❌ Error marking notifications as read:", error);
+      console.error("Error marking notifications as read:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to mark notifications as read",
@@ -155,7 +154,7 @@ module.exports = (app) => {
         });
       }
     } catch (error) {
-      console.error("❌ Error deleting notification:", error);
+      console.error("Error deleting notification:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to delete notification",

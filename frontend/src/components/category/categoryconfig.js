@@ -3,7 +3,7 @@ import React from "react";
 
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getCategoryConfig = (externalData = {}, props = {}) => {
+export const getCategoryConfig = (externalData = {}, props = {}, permissions = {}) => {
 
 
     const CategoryModel = createModel({
@@ -70,18 +70,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
 
             return errors;
         },
-        // validationRules: (formData, allCategories, editingCategory) => {
-        //     const errors = [];
-        //     if (!formData.name?.trim()) errors.push("Category Name is required");
 
-        //     const duplicate = allCategories.find(
-        //         category => category.name?.toLowerCase() === formData.name?.toLowerCase() &&
-        //             category.id !== editingCategory?.id
-        //     );
-        //     if (duplicate) errors.push("Category with this name already exists");
-
-        //     return errors;
-        // },
         dataDependencies: {},
         features: {
             showBulkInsert: false,
@@ -92,7 +81,7 @@ export const getCategoryConfig = (externalData = {}, props = {}) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: true,
+            allowEdit: permissions.canEdit || true,
             allowDelete: false,
 
             showImportButton: true,

@@ -166,8 +166,15 @@ const ModuleDetail = ({
   externalData = {},
   setIsEditable,
   timeZone,
+  permissions = {},
   onTempDataChange = null,
 }) => {
+  const {
+    canView = true,
+    canCreate = true,
+    canEdit = true,
+    canDelete = true,
+  } = permissions;
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1110,7 +1117,7 @@ const ModuleDetail = ({
           </Form.Label>
 
           {!isEditing && (
-            <Badge 
+            <Badge
               bg={value ? "success" : "danger"}
               className="px-3 py-2 fs-6"
             >
@@ -1147,7 +1154,7 @@ const ModuleDetail = ({
               />
             </div>
           )}
-      </Form.Group>
+        </Form.Group>
       );
     }
 
@@ -1375,13 +1382,14 @@ const ModuleDetail = ({
                   <div className="d-flex gap-2">
                     {!isEditing ? (
                       <>
-                        <button
-                          className="custom-btn-primary"
-                          onClick={handleEdit}
-                        >
-                          <i className="fa-solid fa-edit me-2"></i>
-                          Edit {moduleLabel}
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="custom-btn-primary"
+                            onClick={handleEdit}
+                          >
+                            <i className="fa-solid fa-edit me-2"></i>
+                            Edit {moduleLabel}
+                          </button>)}
                         {/* <button
                           className="custom-btn-delete-detail"
                           onClick={handleDelete}

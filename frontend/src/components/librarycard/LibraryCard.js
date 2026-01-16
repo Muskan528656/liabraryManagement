@@ -6,12 +6,14 @@ import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
 import JsBarcode from "jsbarcode";
 import DataApi from "../../api/dataApi";
-import { API_BASE_URL } from "../../constants/CONSTANT";
+import { API_BASE_URL, MODULES } from "../../constants/CONSTANT";
 import { handleDownloadBarcode } from './LibraryCardDownload';
 import { handlePrintBarcode } from './LibrarycardPrint';
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import LibraryImportModal from "./LibraryImportModal";
 import { useMemo } from "react";
+import { AuthHelper } from "../../utils/authHelper";
+import PermissionDenied from "../../utils/permission_denied";
 
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -25,7 +27,13 @@ const LibraryCard = (props) => {
   const [configError, setConfigError] = useState(null);
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
   const { timeZone } = useTimeZone();
-
+  const [permissions, setPermissions] = useState({
+    canView: false,
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    loading: true
+  });
   const normalizedApiBaseUrl = useMemo(() => {
     if (typeof API_BASE_URL === "string") {
       return API_BASE_URL.replace(/\/ibs$/, "");
@@ -33,6 +41,28 @@ const LibraryCard = (props) => {
     return "";
   }, []);
 
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
+      const canCreate = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_CREATE);
+      const canEdit = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_EDIT);
+      const canDelete = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_DELETE);
+
+      setPermissions({
+        canView,
+        canCreate,
+        canEdit,
+        canDelete,
+        loading: false
+      });
+    };
+
+    fetchPermissions();
+    window.addEventListener("permissionsUpdated", fetchPermissions);
+    return () => {
+      window.removeEventListener("permissionsUpdated", fetchPermissions);
+    };
+  }, []);
   const fetchSubscriptions = useCallback(async () => {
     try {
 
@@ -98,10 +128,6 @@ const LibraryCard = (props) => {
       try {
         setLoadingConfig(true);
         setConfigError(null);
-
-
-
-
         const [subscriptions, users] = await Promise.all([
           fetchSubscriptions(),
           fetchUsers()
@@ -114,10 +140,15 @@ const LibraryCard = (props) => {
           ...props
         };
 
-
-
-        const config = await getLibraryCardConfig(externalData, timeZone);
-        setBaseConfig(config);
+        const config = await getLibraryCardConfig(
+          externalData,
+          timeZone,
+          {
+            canCreate: permissions.canCreate,
+            canEdit: permissions.canEdit,
+            canDelete: permissions.canDelete
+          }
+        ); setBaseConfig(config);
 
 
 
@@ -511,6 +542,13 @@ const LibraryCard = (props) => {
       return 'Invalid Date';
     }
   };
+  if (permissions.loading || loadingConfig) {
+    return <Loader message="Loading library card configuration..." />;
+  }
+
+  if (!permissions.canView) {
+    return <PermissionDenied />;
+  }
 
   const generateCardNumber = (card) => card.card_number || 'N/A';
 
@@ -550,7 +588,7 @@ const LibraryCard = (props) => {
         icon="fa-solid fa-id-card"
         subscriptionsData={subscriptionsData}
         usersData={usersData}
-
+        permissions={permissions}
         headerActions={[
           {
 

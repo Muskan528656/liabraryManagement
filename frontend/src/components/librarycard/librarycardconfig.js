@@ -35,13 +35,18 @@ const calculateAge = (dob) => {
     return age;
 };
 
-export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
+export const getLibraryCardConfig = async (externalData = {}, timeZone, permissions = {}) => {
     const customHandlers = externalData.customHandlers || {};
     const handleBarcodePreview =
         customHandlers.handleBarcodePreview ||
         ((card) => console.warn("Barcode preview handler not provided", card));
 
 
+    const {
+        canCreate = true,
+        canEdit = true,
+        canDelete = false
+    } = permissions || {};
 
     let defaultCountryCode = "";
     let plansList = [];
@@ -467,10 +472,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone) => {
             showColumnVisibility: true,
             showCheckbox: true,
             showActions: true,
-            showAddButton: true,
-            allowEdit: true,
-            allowDelete: false,
-            showImportButton: false,
+        
+            showAddButton: canCreate,
+            allowEdit: canEdit,
+            allowDelete: canDelete,
+            showImportButton: canCreate,
             showAdvancedFilter: true,
         },
 

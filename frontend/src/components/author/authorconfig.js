@@ -3,7 +3,7 @@ import React from "react";
 
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getAuthorConfig = (externalData = {}, props = {}) => {
+export const getAuthorConfig = (externalData = {}, props = {}, permissions = {}) => {
 
 
     const AuthorModel = createModel({
@@ -105,18 +105,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
                 ),
             },
         ],
-        // validationRules: (formData, allAuthors, editingAuthor) => {
-        //     const errors = [];
-        //     if (!formData.name?.trim()) errors.push("Author Name is required");
 
-        //     const duplicate = allAuthors.find(
-        //         author => author.name?.toLowerCase() === formData.name?.toLowerCase() &&
-        //             author.id !== editingAuthor?.id
-        //     );
-        //     if (duplicate) errors.push("Author with this name already exists");
-
-        //     return errors;
-        // },
 
         validationRules: (formData, allAuthors, editingAuthor) => {
             const errors = [];
@@ -152,9 +141,9 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: true,
+            allowEdit: permissions.canEdit || true,
             allowDelete: false,
-
+            permissions: permissions,
             showImportButton: true,
         },
         details: [
@@ -163,6 +152,7 @@ export const getAuthorConfig = (externalData = {}, props = {}) => {
             { key: "bio", label: "Bio", type: "text" },
             { key: "created_at", label: "Created At", type: "date" },
             { key: "updated_at", label: "Updated At", type: "date" },
+
         ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
