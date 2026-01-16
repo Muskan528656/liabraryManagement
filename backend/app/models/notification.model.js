@@ -8,6 +8,8 @@
 
 const sql = require("./db.js");
 const cron = require("node-cron");
+const sendMail = require("../utils/Mailer.js");
+const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
 let schema = "demo";
 
@@ -340,7 +342,7 @@ async function upsertDueDateScheduler({
   );
 
   if (res.rows.length === 0) {
-   
+
     await sql.query(
       `
       INSERT INTO ${schema}.scheduler
@@ -349,7 +351,7 @@ async function upsertDueDateScheduler({
       `,
       [
         nextRun,
-        JSON.stringify({ due_date, 
+        JSON.stringify({ due_date,
           members: {
             [member_id]: {
               user_id,
@@ -382,6 +384,63 @@ async function upsertDueDateScheduler({
   );
 }
 
+async function sendDueReminderEmail(memberId, books, dueDate) {
+  try {
+
+    const memberRes = await sql.query(
+      `
+      SELECT
+        lm.first_name,
+        lm.last_name,
+        lm.email
+      FROM ${schema}.library_members lm
+      WHERE lm.id = $1 AND lm.is_active = true
+      `,
+      [memberId]
+    );
+
+    // console.log("memberRes", memberRes.rows);
+    if (memberRes.rows.length === 0) {
+      console.error(`Member ${memberId} not found or inactive`);
+      return;
+    }
+
+    const member = memberRes.rows[0];
+    // console.log("member=>",member);
+    const studentName = `${member.first_name} ${member.last_name}`;
+  //  console.log("studentName",studentName)
+ 
+    const booksData = books.map(book => ({
+      name: book.title,
+      dueDate: dueDate
+    }));
+
+    // console.log("bookData", booksData);
+    const html = dueTemplate({
+      studentName,
+      books: booksData
+    });
+
+    // console.log("html",html);
+
+    // Send email
+    const emailResult = await sendMail({
+      to: member.email,
+      subject: "📘 Library Book Submission Reminder",
+      html
+    });
+
+    // console.log("emailResult=>",emailResult);
+
+    // console.log(`Due reminder email sent to ${member.email} for ${books.length} books`);
+    return emailResult;
+
+  } catch (error) {
+    console.error("Error sending due reminder email:", error);
+    throw error;
+  }
+}
+
 
 cron.schedule('0 9 * * *', async () => {
   const jobs = await sql.query(`
@@ -391,54 +450,92 @@ cron.schedule('0 9 * * *', async () => {
     `
   );
 
-  // console.log("jobs=>",jobs);
+  console.log("Processing due reminder jobs:", jobs.rows.length);
 
   for (const job of jobs.rows) {
     const { due_date, members } = job.config;
+    // console.log("Processing job for due_date:", due_date);
+
+
+    const memberBooksMap = {};
 
     for (const memberId of Object.keys(members)) {
-        // console.log("memberId=>",memberId);
       const { user_id, books } = members[memberId];
+      // console.log(`Processing member ${memberId} with ${books.length} books`);
+
+
+      if (!memberBooksMap[memberId]) {
+        memberBooksMap[memberId] = {
+          user_id,
+          books: []
+        };
+      }
 
       for (const bookId of books) {
-        // console.log("bookId=>",bookId);
-
+      
         const exists = await sql.query(
           `
-          SELECT 1  FROM ${schema}.notifications  WHERE member_id = $1
-            AND book_id = $2 AND type = 'due_reminder' AND is_read = false
-            LIMIT 1
+          SELECT 1 FROM ${schema}.notifications
+          WHERE member_id = $1 AND book_id = $2 AND type = 'due_reminder' AND is_read = false
+          LIMIT 1
           `,
           [memberId, bookId]
         );
 
-        // console.log("exists notfi=>",exists);
-        if (exists.rows.length > 0) {   continue; }
+        if (exists.rows.length > 0) {
+          console.log(`Notification already exists for member ${memberId}, book ${bookId}`);
+          continue;
+        }
 
         const bookRes = await sql.query(
           `SELECT title FROM ${schema}.books WHERE id = $1`,
           [bookId]
         );
 
+        if (!bookRes.rows.length) {
+          console.log(`Book ${bookId} not found`);
+          continue;
+        }
 
-        // console.log("bookRes=>",bookRes);
+        const book = bookRes.rows[0];
 
-        if (!bookRes.rows.length) continue;
+        memberBooksMap[memberId].books.push({
+          id: bookId,
+          title: book.title
+        });
 
-         await create({
-           user_id,
-           memberId,
-           book_id: bookId,
-           message: `Reminder: The book "${bookRes.rows[0].title}" is due for return tomorrow (${due_date}). Please return it to avoid penalties.`,
-           type: "due_reminder"
-         });
+        await create({
+          user_id,
+          memberId,
+          book_id: bookId,
+          message: `Reminder: The book "${book.title}" is due for return tomorrow (${due_date}). Please return it to avoid penalties.`,
+          type: "due_reminder"
+        });
+
+        console.log(`Created notification for member ${memberId}, book "${book.title}"`);
+      }
+    }
+
+    for (const memberId of Object.keys(memberBooksMap)) {
+      const { books } = memberBooksMap[memberId];
+
+      if (books.length > 0) {
+        try {
+          console.log(`Sending consolidated email to member ${memberId} for ${books.length} books`);
+          await sendDueReminderEmail(memberId, books, due_date);
+          console.log(`Email sent successfully to member ${memberId}`);
+        } catch (emailError) {
+          console.error(`Failed to send email to member ${memberId}:`, emailError);
+        }
       }
     }
 
     await sql.query(
-      `UPDATE ${schema}.scheduler SET is_active = false,  last_run = NOW() WHERE id = $1`,
+      `UPDATE ${schema}.scheduler SET is_active = false, last_run = NOW() WHERE id = $1`,
       [job.id]
     );
+
+    console.log(`Completed processing job ${job.id}`);
   }
 });
 
@@ -457,5 +554,6 @@ module.exports = {
   getOverDueBooks,
   createDueReminderIfTomorrow,
   upsertDueDateScheduler,
-  createOrUpdateDueScheduler
+  createOrUpdateDueScheduler,
+  sendDueReminderEmail
 };
