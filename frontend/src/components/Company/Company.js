@@ -10,9 +10,6 @@ import { API_BASE_URL } from "../../constants/CONSTANT";
 
 const Company = () => {
   const { timeZone, setCompanyTimeZone } = useTimeZone();
-
-
-
   const [Company, setCompany] = useState({
     name: "",
     tenantcode: "",
@@ -181,8 +178,6 @@ const Company = () => {
           setIsEditingCompany(false);
           setAlertMessage("Company details updated successfully!");
           setShowAlert(true);
-
-
 
           if (updatedCompany.time_zone) {
             setCompanyTimeZone(updatedCompany.time_zone);

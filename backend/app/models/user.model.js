@@ -217,7 +217,10 @@ async function updateById(id, userData) {
     add("time_zone", userData.time_zone);
 
     add("companyid", userData.companyid);
-    add("profile_image", userData.profileImage);
+    // add("profile_image", userData.profileImage);
+    add("profile_image", userData.profile_image);
+
+
 
 
     if (updateFields.length === 0) {
