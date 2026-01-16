@@ -125,7 +125,7 @@ const AuthApi = {
       });
       const result = await response.json();
       return result;
-    } catch (error) {
+    } catch (error) { 
       console.error("Reset password error:", error);
       return { success: false, errors: "Network error. Please try again." };
     }

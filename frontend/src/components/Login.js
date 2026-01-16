@@ -36,8 +36,8 @@ const Login = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const colors = {
-    navy: "#1a4073",    // Dark blue for headings/icons
-    periwinkle: "#6c8dbf", // Lighter blue for buttons
+    navy: "#1a4073",
+    periwinkle: "#6c8dbf",
     bgLight: "#f8f9fa"
   };
 
@@ -131,8 +131,8 @@ const Login = () => {
     emailRegex.test(credentials.email);
 
   const ModalHeaderStyled = ({ title }) => (
-    <div className="text-center" style={{margin:"-30px"}}>
-         {/* <img src="Untitled design (7).png" width="400" height="200" alt="Logo"/> */}
+    <div className="text-center" style={{ margin: "-30px" }}>
+      {/* <img src="Untitled design (7).png" width="400" height="200" alt="Logo"/> */}
     </div>
   );
 
@@ -146,7 +146,7 @@ const Login = () => {
         justifyContent: "center",
       }}
     >
-      <Container style={{ padding: '10px' }}>
+      <Container style={{ padding: '30px' }}>
         <Row className="justify-content-center">
           <Col lg={9} xl={8}>
             <div
@@ -159,45 +159,45 @@ const Login = () => {
             >
               <Row className="g-0">
                 <Col lg={6} className="d-none d-lg-flex align-items-center justify-content-center" style={{
-                    backgroundColor: "var(--primary-background-color)",
-                    minHeight: "100vh",
-                  }}>
-                  <img src="Untitled design (7).png" width="600" height="600" alt="Logo"  />
+                  backgroundColor: "var(--primary-background-color)",
+                  minHeight: "100vh",
+                }}>
+                  <img src="Untitled design (7).png" width="600" height="600" alt="Logo" />
                 </Col>
 
                 <Col lg={6} className="p-5">
                   <div className="text-center mb-4">
-                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: colors.navy, display: "flex", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
+                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: "var(--primary-color)", display: "flex", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
                       <i className="fa-solid fa-book"></i>
                     </div>
                     <h3 className="fw-bold">Sign In</h3>
-                    <h4 className="fw-bold" style={{ color: colors.navy, marginTop: "0px" }}>Library Management System</h4>
+                    <h4 className="fw-bold" style={{ color: "var(--primary-color)", marginTop: "0px" }}>Library Management System</h4>
                   </div>
 
                   <Alert variant="danger" show={show}>{errorMessage}</Alert>
 
                   <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-medium">Company Name</Form.Label>
-                      <Form.Control type="text" name="tcode" placeholder="Enter company name" value={credentials.tcode} onChange={handleChange} style={{ padding: '10px' }} />
+                      <Form.Label className="">Company Name</Form.Label>
+                      <Form.Control type="text" name="tcode" placeholder="Enter company name" value={credentials.tcode} onChange={handleChange} style={{ padding: '5px' }} />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-medium">Email</Form.Label>
-                      <Form.Control type="email" name="email" placeholder="Enter email" value={credentials.email} onChange={handleChange} style={{ padding: '10px' }} />
+                      <Form.Label className="">Email</Form.Label>
+                      <Form.Control type="email" name="email" placeholder="Enter email" value={credentials.email} onChange={handleChange} style={{ padding: '5px' }} />
                     </Form.Group>
 
                     <Form.Group className="mb-4">
-                      <Form.Label className="fw-medium">Password</Form.Label>
+                      <Form.Label className="">Password</Form.Label>
                       <div className="position-relative">
-                        <Form.Control type={showPassword ? "text" : "password"} name="password" placeholder="Enter password" value={credentials.password} onChange={handleChange} style={{ padding: '10px' }} />
+                        <Form.Control type={showPassword ? "text" : "password"} name="password" placeholder="Enter password" value={credentials.password} onChange={handleChange} style={{ padding: '5px' }} />
                         <span onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
                           <i className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
                         </span>
                       </div>
                     </Form.Group>
 
-                    <Button type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: colors.periwinkle, padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{backgroundColor: "var(--primary-color)", color:"#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px"}}>
                       {loading ? <><Loader /> Signing In...</> : "Sign In"}
                     </Button>
 
@@ -214,18 +214,17 @@ const Login = () => {
         </Row>
       </Container>
 
-      {/* Forgot Password Modal */}
-      <Modal 
-        show={showForgotModal} 
-        onHide={() => setShowForgotModal(false)} 
-        centered 
+      <Modal
+        show={showForgotModal}
+        onHide={() => setShowForgotModal(false)}
+        centered
         contentClassName="border-0 shadow-lg"
         size="md"
       >
-        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
-            <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
+        <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+          <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
         </Modal.Header>
-         <Modal.Title>
+        <Modal.Title>
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
@@ -259,7 +258,7 @@ const Login = () => {
               variant=""
               disabled={forgotLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)",color:"#fff" }}
+              style={{ background: "var(--primary-color)", color: "#fff" }}
             >
               {forgotLoading ? <><Loader /> Sending...</> : "Send Reset Link"}
             </Button>
@@ -268,15 +267,15 @@ const Login = () => {
       </Modal>
 
       {/* Reset Password Modal */}
-      <Modal 
-        show={showResetModal} 
-        onHide={() => setShowResetModal(false)} 
-        centered 
+      <Modal
+        show={showResetModal}
+        onHide={() => setShowResetModal(false)}
+        centered
         contentClassName="border-0 shadow-lg"
         size="md"
       >
-        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
-           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
+        <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+          <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
         </Modal.Header>
         <Modal.Title>
           <ModalHeaderStyled />
@@ -324,7 +323,7 @@ const Login = () => {
               type="submit"
               disabled={resetLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)",color:"#fff" }}
+              style={{ background: "var(--primary-color)", color: "#fff" }}
             >
               {resetLoading ? <><Loader /> Resetting...</> : "Reset Password"}
             </Button>
