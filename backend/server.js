@@ -50,9 +50,11 @@ app.get(BASE_PATH, (req, res) => {
 const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
+
   cors: { origin: "*" },
   path: `${BASE_PATH}/socket.io`,
 });
+console.log("Socket.io initialized", io);
 
 app.set("io", io);
 global.io = io;

@@ -34,13 +34,8 @@ const Books = (props) => {
         loading: false
       });
     };
-
-
     fetchPermissions();
-
-
     window.addEventListener("permissionsUpdated", fetchPermissions);
-
     return () => {
       window.removeEventListener("permissionsUpdated", fetchPermissions);
     };
@@ -52,12 +47,10 @@ const Books = (props) => {
     canDelete: permissions.canDelete
   });
   const { data, loading } = useDataManager(baseConfig.dataDependencies, props);
-  console.log("Books Component - Data:", data);
-  console.log("permissionsasddddddddddddddddddddd", permissions);
+
   if (permissions.loading || loading) {
     return <div>Loading...</div>;
   }
-  console.log("permissions.canView", permissions);
 
   if (!permissions.canView) {
     return <PermissionDenied />;
