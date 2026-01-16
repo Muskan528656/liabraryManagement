@@ -27,7 +27,6 @@ async function findAll() {
     FROM ${schema}.notifications n
     LEFT JOIN ${schema}.library_members m 
       ON n.member_id = m.id
-    WHERE n.is_read = false
     ORDER BY n.createddate DESC;
   `;
 
@@ -66,7 +65,7 @@ async function create(notification) {
         `;
   const result = await sql.query(query, [
     notification.user_id,
-    notification.member_id || null,
+    notification.memberId || null,
     notification.book_id || null,
     notification.message,
     notification.type || null,
@@ -109,16 +108,12 @@ async function markAllAsRead(userId) {
 }
 
 async function markAsReadByRelatedId(userId, bookId, memberId, type) {
-  console.log(
-    "Marking notifications as read for user ID:",
-    userId,
-    "book ID:",
-    bookId,
-    "member ID:",
-    memberId,
-    "type:",
-    type
-  );
+  console.log([
+     "Marking notifications as read for user ID:", userId,
+    "book ID:", bookId,
+    "member ID:", memberId,
+    "type:", type
+  ]);
   const query = `
     UPDATE ${schema}.notifications
     SET is_read = true WHERE user_id = $1 AND member_id = $2 AND book_id = $3 AND type = $4 AND is_read = false
@@ -126,6 +121,7 @@ async function markAsReadByRelatedId(userId, bookId, memberId, type) {
   `;
 
   const result = await sql.query(query, [userId, memberId, bookId, type]);
+  console.log("result=>",result.rows);
   return result.rows;
 }
 
@@ -600,7 +596,7 @@ async function upsertDueDateScheduler({
 // });
 
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
   const jobs = await sql.query(
     `
     SELECT *
@@ -611,13 +607,19 @@ cron.schedule('* * * * *', async () => {
     `
   );
 
+  console.log("jobs=>",jobs);
+
   for (const job of jobs.rows) {
     const { due_date, members } = job.config;
 
     for (const memberId of Object.keys(members)) {
+
+        console.log("memberId=>",memberId);
       const { user_id, books } = members[memberId];
 
       for (const bookId of books) {
+
+        console.log("bookId=>",bookId);
 
         // 🔍 Check if notification already exists
         const exists = await sql.query(
@@ -633,36 +635,32 @@ cron.schedule('* * * * *', async () => {
           [memberId, bookId]
         );
 
+        console.log("exists notfi=>",exists);
+
         if (exists.rows.length > 0) {
           continue; // ❌ skip duplicate
         }
 
         // 📘 Get book title
         const bookRes = await sql.query(
-          `
-          SELECT title
-          FROM ${schema}.books
-          WHERE id = $1
-          `,
+          `SELECT title FROM ${schema}.books WHERE id = $1`,
           [bookId]
         );
+
+
+        console.log("bookRes=>",bookRes);
 
         if (!bookRes.rows.length) continue;
 
         // ✅ Create notification PER BOOK
-        await sql.query(
-          `
-          INSERT INTO ${schema}.notifications
-          (user_id, member_id, book_id, type, message)
-          VALUES ($1, $2, $3, 'due_reminder', $4)
-          `,
-          [
-            user_id,
-            memberId,
-            bookId,
-            `Reminder: The book "${bookRes.rows[0].title}" is due for return tomorrow (${due_date}).`
-          ]
-        );
+
+         await create({
+           user_id,
+           memberId,
+           book_id: bookId,
+           message: `Reminder: The book "${bookRes.rows[0].title}" is due for return tomorrow (${due_date}). Please return it to avoid penalties.`,
+           type: "due_reminder"
+         });
       }
     }
 

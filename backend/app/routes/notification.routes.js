@@ -45,7 +45,7 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll(req.userinfo.id);
+      const allNotifications = await Notification.findAll();
 
       console.log("All Notifications:", allNotifications);
 
@@ -104,6 +104,8 @@ module.exports = (app) => {
   router.put("/mark-read-by-related/:relatedId/:memberId/:type", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode);
+
+      console.log("req.params=>",req.params);
 
       const { relatedId, memberId, type } = req.params;
       const userId = req.userinfo.id;
