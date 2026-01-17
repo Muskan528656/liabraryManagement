@@ -66,7 +66,7 @@ export const getUserConfig = (externalData = {}, props = {}, timeZone, companyIn
         moduleLabel: "User",
         apiEndpoint: "user",
 
-        importMatchFields: [],
+        importMatchFields: ["email"],
         importModel: UserModel,
 
         columns: [
