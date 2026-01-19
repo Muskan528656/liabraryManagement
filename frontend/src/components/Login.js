@@ -220,6 +220,7 @@ const Login = () => {
         centered
         contentClassName="border-0 shadow-lg"
         size="md"
+        backdrop="static"
       >
         <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
@@ -273,6 +274,7 @@ const Login = () => {
         centered
         contentClassName="border-0 shadow-lg"
         size="md"
+        backdrop="static"
       >
         <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
