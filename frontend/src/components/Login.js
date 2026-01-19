@@ -4,6 +4,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import AuthApi from "../api/authApi";
 import Loader from "./common/Loader";
+import "../App.css";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -197,10 +198,20 @@ const Login = () => {
                       </div>
                     </Form.Group>
 
-                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
-                      {loading ? <><Loader /> Signing In...</> : "Sign In"}
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0 login-btn" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
+                      {/* {loading ?<> <span className="loader-login"></span> Please Wait...</> : "Sign In"} */}
+                      {loading ? (
+                        <>
+                          <span className="loader-login"></span>
+                          <span>Signing in...</span>
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
                     </Button>
 
+                  
+                 
                     <div className="text-center mt-3">
                       <Button variant="link" onClick={() => setShowForgotModal(true)} style={{ color: colors.periwinkle, textDecoration: "none", fontSize: "14px", fontWeight: '500' }}>
                         Forgot Password?
@@ -261,7 +272,7 @@ const Login = () => {
               className="w-100 border-0"
               style={{ background: "var(--primary-color)",color:"#fff", borderRadius:"30px" }}
             >
-              {forgotLoading ? <><Loader /> Sending...</> : "Send Reset Link"}
+              {forgotLoading ? <> <span className="loader-login"></span> Sending...</> : "Send Reset Link"}
             </Button>
           </Form>
         </Modal.Body>
@@ -328,7 +339,8 @@ const Login = () => {
               className="w-100 border-0"
               style={{ background: "var(--primary-color)",color:"#fff", borderRadius:'30px' }}
             >
-              {resetLoading ? <><Loader /> Resetting...</> : "Reset Password"}
+              {resetLoading ? <> <span className="loader-login"></span> Resetting...</> : "Reset Password"}
+              
             </Button>
           </Form>
         </Modal.Body>

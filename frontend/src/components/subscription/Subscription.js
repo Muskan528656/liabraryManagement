@@ -5,7 +5,7 @@ import { getSubscriptionConfig } from "./subscriptionconfig";
 import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import DataApi from "../../api/dataApi";
-
+import "../../App.css";
 const Subscription = (props) => {
     const [allowedBooks, setAllowedBooks] = useState(10);
     const { timeZone } = useTimeZone();
@@ -35,7 +35,7 @@ const Subscription = (props) => {
     const baseConfig = getSubscriptionConfig({}, allowedBooks);
     const { data, loading, error } = useDataManager(baseConfig.dataDependencies, props);
 
-    if (loading) return <Loader message="Loading subscriptions..." />;
+    if (loading) return <span className="loader"></span>
     if (error) return <div className="alert alert-danger">{error}</div>;
     const finalConfig = getSubscriptionConfig(data, allowedBooks, timeZone);
 

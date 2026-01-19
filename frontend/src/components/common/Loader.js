@@ -1,12 +1,6 @@
 import React from "react";
 
-const Loader = ({ size = "md" }) => {
-    const sizeMap = {
-        sm: "30px",
-        md: "50px",
-        lg: "70px",
-    };
-
+const Loader = () => {
     return (
         <div
             style={{
@@ -14,21 +8,11 @@ const Loader = ({ size = "md" }) => {
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "2rem",
+                height: "100vh",
+                backgroundColor: "rgba(255, 255, 255, 0.8)",
             }}
         >
-            <div
-                className="spinner-border"
-                role="status"
-                style={{
-                    width: sizeMap[size],
-                    height: sizeMap[size],
-                    borderWidth: "4px",
-                    borderColor: "var(--primary-color)",
-                    borderRightColor: "transparent",
-                }}
-            >
-                <span className="visually-hidden">Loading...</span>
-            </div>
+            <div className="loader"></div>
         </div>
     );
 };

@@ -10,7 +10,7 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
-
+import "../../App.css";
 const Vendor = (props) => {
   const baseConfig = getVendorConfig();
   const { data, loading, error } = useDataManager(
@@ -58,7 +58,10 @@ const Vendor = (props) => {
   if (!permissions.canView) {
     return <PermissionDenied />;
   }
-  
+  if (loading) {
+    // return <Loader message="Loading vendors data..." />;
+    return <span className="loader"></span>
+  }
   if (error) {
     return (
       <div className="alert alert-danger">
@@ -83,14 +86,14 @@ const Vendor = (props) => {
 
   const finalConfig = getVendorConfig(
     allData,
-    props, 
-    { 
+    props,
+    {
       canCreate: permissions.canCreate,
       canEdit: permissions.canEdit,
       canDelete: permissions.canDelete
     }
   );
-  
+
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-store" permissions={permissions} />;
 };
 

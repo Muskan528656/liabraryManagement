@@ -5,7 +5,7 @@ import { getAuthorConfig } from "./authorconfig";
 import { useDataManager } from "../common/userdatamanager";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
-
+import "../../App.css";
 const Author = (props) => {
 
   const [permissions, setPermissions] = useState({

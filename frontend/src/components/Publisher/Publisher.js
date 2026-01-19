@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import PermissionDenied from "../../utils/permission_denied.js";
 import Loader from "../common/Loader.js";
 import { MODULES } from "../../constants/CONSTANT.js";
+import "../../App.css";
 
 const Publisher = (props) => {
     const { timeZone } = useTimeZone();
@@ -51,7 +52,8 @@ const Publisher = (props) => {
     }, []);
     // 🔹 Loader
     if (permissions.loading || loading) {
-        return <Loader message="Loading publisher data..." />;
+        // return <Loader message="Loading publisher data..." />;
+        return <span className="loader"></span>
     }
     if (!permissions.canView) {
         return <PermissionDenied />;

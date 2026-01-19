@@ -3,7 +3,7 @@ import DynamicCRUD from "../common/DynaminCrud";
 import { getUserRoleConfig } from "./userroleConfig";
 import { useDataManager } from "../common/userdatamanager";
 import Loader from "../common/Loader";
-
+import "../../App.css";
 const UserRole = (props) => {
   const baseConfig = getUserRoleConfig();
 
@@ -13,7 +13,8 @@ const UserRole = (props) => {
   );
 
   if (loading) {
-    return <Loader message="Loading user roles..." />;
+    // return <Loader message="Loading user roles..." />;
+    return <span className="loader"></span>
   }
 
   if (error) {
