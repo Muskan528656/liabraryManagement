@@ -288,7 +288,6 @@ const ResizableTable = ({
                                             color: "var(--primary-color)",
                                             borderBottom: "2px solid #000000ff",
 
-
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -327,7 +326,7 @@ const ResizableTable = ({
                                             background: "#f3e9fc",
                                             fontWeight: "600",
                                             color: "var(--primary-color)",
-                                            // borderBottom: "2px solid #e9d5ff",
+                                            borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
 
 
@@ -365,6 +364,8 @@ const ResizableTable = ({
                                             key={index}
                                             style={{
                                                 width: columnWidths[colIndex] || column.width || column.minWidth || "150px",
+                                                height: "48px",
+
                                                 position: "relative",
                                                 textAlign: "center",
                                                 userSelect: "none",
@@ -383,6 +384,7 @@ const ResizableTable = ({
                                                 className="resize-handle"
                                                 onMouseDown={(e) => handleMouseDown(e, colIndex)}
                                                 style={{
+
                                                     position: "absolute",
                                                     right: 0,
                                                     top: 0,
@@ -481,11 +483,11 @@ const ResizableTable = ({
                                         {columns.map((column, colIndex) => {
                                             let colIndexForWidth;
                                             if (showCheckbox && showSerialNumber) {
-                                                colIndexForWidth = colIndex + 2; // checkbox(1) + serial(1) + columns
+                                                colIndexForWidth = colIndex + 2;
                                             } else if (showCheckbox || showSerialNumber) {
-                                                colIndexForWidth = colIndex + 1; // checkbox(1) OR serial(1) + columns
+                                                colIndexForWidth = colIndex + 1;
                                             } else {
-                                                colIndexForWidth = colIndex; // only columns
+                                                colIndexForWidth = colIndex;
                                             }
                                             return (
                                                 <td
@@ -495,7 +497,8 @@ const ResizableTable = ({
                                                         width: columnWidths[colIndexForWidth] || column.width || column.minWidth || "150px",
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap"
+                                                        whiteSpace: "nowrap",
+                                                        height: '43px'
                                                     }}
                                                 >
                                                     {column.render

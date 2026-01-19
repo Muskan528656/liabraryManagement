@@ -1,11 +1,10 @@
 import { createModel } from "../common/UniversalCSVXLSXImporter";
-export const getBooksConfig = (externalData = {}, props = {}, ) => {
+export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) => {
     const authors = props.authors || externalData.authors || externalData.author || [];
 
     const categories = props.categories || externalData.categories || externalData.category || [];
 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
-    
 
     const BookModel = createModel({
         modelName: "Book",
@@ -233,10 +232,11 @@ export const getBooksConfig = (externalData = {}, props = {}, ) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: true,
+            allowEdit: permissions.canEdit || true,
             allowDelete: false,
             showImportButton: true,
             showAdvancedFilter: true,
+            permissions: permissions,
         },
         filterFields: [
             { name: 'title', label: 'Title', type: 'text' },

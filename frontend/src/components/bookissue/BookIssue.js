@@ -452,7 +452,7 @@ const BookIssue = () => {
 
             <div style={{ fontWeight: 500 }}>{displayDate}</div>
 
-            <div className="small mt-1">
+            {/* <div className="small mt-1">
               {isOverdue ? (
                 <Badge bg="danger">
                   Overdue by {Math.abs(daysRemaining)} day
@@ -470,7 +470,7 @@ const BookIssue = () => {
                   {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} left
                 </Badge>
               )}
-            </div>
+            </div> */}
           </div>
         );
       },

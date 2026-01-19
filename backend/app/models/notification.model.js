@@ -8,10 +8,11 @@
 
 const sql = require("./db.js");
 const cron = require("node-cron");
+const sendMail = require("../utils/Mailer.js");
+const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
 let schema = "demo";
 
-// Global variable to store the current logged-in user ID
 global.currentLoggedInUserId = null;
 
 function init(schema_name) {
@@ -19,7 +20,6 @@ function init(schema_name) {
 }
 
 async function findAll() {
-  // console.log("Fetching all notifications for user ID:", userId);
   const query = `
     SELECT 
     n.*,                         
@@ -27,7 +27,6 @@ async function findAll() {
     FROM ${schema}.notifications n
     LEFT JOIN ${schema}.library_members m 
       ON n.member_id = m.id
-    WHERE n.is_read = false
     ORDER BY n.createddate DESC;
   `;
 
@@ -66,7 +65,7 @@ async function create(notification) {
         `;
   const result = await sql.query(query, [
     notification.user_id,
-    notification.member_id || null,
+    notification.memberId || null,
     notification.book_id || null,
     notification.message,
     notification.type || null,
@@ -109,16 +108,12 @@ async function markAllAsRead(userId) {
 }
 
 async function markAsReadByRelatedId(userId, bookId, memberId, type) {
-  console.log(
-    "Marking notifications as read for user ID:",
-    userId,
-    "book ID:",
-    bookId,
-    "member ID:",
-    memberId,
-    "type:",
-    type
-  );
+  console.log([
+    "Marking notifications as read for user ID:", userId,
+    "book ID:", bookId,
+    "member ID:", memberId,
+    "type:", type
+  ]);
   const query = `
     UPDATE ${schema}.notifications
     SET is_read = true WHERE user_id = $1 AND member_id = $2 AND book_id = $3 AND type = $4 AND is_read = false
@@ -126,6 +121,7 @@ async function markAsReadByRelatedId(userId, bookId, memberId, type) {
   `;
 
   const result = await sql.query(query, [userId, memberId, bookId, type]);
+  console.log("result=>", result.rows);
   return result.rows;
 }
 
@@ -241,96 +237,6 @@ async function createDueReminderIfTomorrow(
 
 
 
-async function checkBooksDueTomorrow() {
-  try {
-
-    console.log("🔍 Checking for books due tomorrow...");
-
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-    const query = `
-      SELECT
-        bi.id AS issue_id,
-        bi.book_id,
-        bi.issued_to AS member_id,
-        bi.due_date,
-        bi.issue_date,
-        b.title AS book_title,
-        b.isbn AS book_isbn,
-        lm.first_name || ' ' || lm.last_name AS member_name,
-        lm.card_number,
-        lm.email AS member_email,
-        bi.status
-        FROM ${schema}.book_issues bi
-        INNER JOIN ${schema}.books b ON bi.book_id = b.id
-        INNER JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-        WHERE DATE(bi.due_date) = $1
-        AND bi.return_date IS NULL
-        AND bi.status IN ('issued', 'active', NULL)
-        AND lm.is_active = true
-      ORDER BY bi.due_date ASC
-    `;
-
-    const result = await sql.query(query, [tomorrowStr]);
-
-    console.log("result=>", result.rows);
-
-    if (result.rows.length === 0) {
-
-      return;
-    }
-
-
-    const currentUserId = global.currentLoggedInUserId;
-    console.log("currentUserId", currentUserId);
-    if (!currentUserId) {
-      return;
-    }
-    for (const book of result.rows) {
-      console.log("book=>", book);
-      const existingQuery = `
-        SELECT id
-        FROM ${schema}.notifications
-        WHERE  member_id = $1
-          AND book_id = $2
-          AND type = 'due_reminder'
-          AND DATE(createddate) = CURRENT_DATE
-      `;
-
-      const existingResult = await sql.query(existingQuery, [
-        book.member_id,
-        book.book_id
-      ]);
-      const dueDateStr = new Date(book.due_date).toISOString().split("T")[0];
-
-      if (existingResult.rows.length === 0) {
-        const notification = await create({
-          member_id: book.member_id,
-          book_id: book.book_id,
-          message: `Reminder: The book "${book.book_title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-          type: "due_reminder"
-        });
-
-        console.log(`Created notification for logged-in user about book "${book.book_title}"`);
-      } else {
-        console.log(`Notification already exists for logged-in user about book "${book.book_title}"`);
-      }
-    }
-
-    console.log("Completed checking books due tomorrow");
-
-  } catch (error) {
-    console.error("Error in checkBooksDueTomorrow:", error);
-  }
-}
-
-cron.schedule('* * * * *', async () => {
-  console.log("Running daily cron job: Check books due tomorrow");
-  await checkBooksDueTomorrow()
-
-});
 
 async function deleteNotification(notificationId, userId) {
   try {
@@ -348,6 +254,277 @@ async function deleteNotification(notificationId, userId) {
   }
 }
 
+async function createOrUpdateDueScheduler({
+  member_id,
+  user_id,
+  due_date,
+  book_id
+}) {
+  const nextRun = new Date(due_date);
+  console.log("nextRun=>", nextRun);
+  nextRun.setDate(nextRun.getDate() - 1);
+
+  if (nextRun < new Date()) {
+    nextRun.setMinutes(nextRun.getMinutes() + 1);
+  }
+
+  const existing = await sql.query(
+    `
+    SELECT id, config
+    FROM ${schema}.scheduler
+    WHERE action_type = 'BOOK_DUE_REMINDER'
+      AND is_active = true
+      AND config->>'member_id' = $1
+      AND config->>'due_date' = $2
+    `,
+    [member_id, due_date]
+  );
+
+  if (existing.rows.length > 0) {
+
+    const scheduler = existing.rows[0];
+    const config = scheduler.config;
+
+    if (!config.book_ids.includes(book_id)) {
+      config.book_ids.push(book_id);
+    }
+
+    await sql.query(
+      `
+      UPDATE ${schema}.scheduler
+      SET config = $1,
+          lastmodifieddate = NOW()
+      WHERE id = $2
+      `,
+      [config, scheduler.id]
+    );
+
+    return scheduler.id;
+  }
+
+  await sql.query(
+    `
+    INSERT INTO ${schema}.scheduler(
+      action_type, next_run,is_active, config, createddate )
+      VALUES ('BOOK_DUE_REMINDER', $1, true, $2, NOW())
+    `,
+    [
+      nextRun,
+      JSON.stringify({ member_id, user_id, due_date, book_ids: [book_id] })
+    ]
+  );
+}
+
+
+
+async function upsertDueDateScheduler({
+  due_date,
+  member_id,
+  user_id,
+  book_id
+}) {
+  const nextRun = new Date(due_date);
+  nextRun.setDate(nextRun.getDate() - 1);
+
+  const res = await sql.query(
+    `
+    SELECT id, config
+    FROM ${schema}.scheduler
+    WHERE action_type = 'BOOK_DUE_REMINDER'
+      AND is_active = true
+      AND config->>'due_date' = $1
+    `,
+    [due_date]
+  );
+
+  if (res.rows.length === 0) {
+
+    await sql.query(
+      `
+      INSERT INTO ${schema}.scheduler
+      (action_type, next_run, repeat_type, is_active, config)
+      VALUES ('BOOK_DUE_REMINDER', $1, 'once', true, $2)
+      `,
+      [
+        nextRun,
+        JSON.stringify({
+          due_date,
+          members: {
+            [member_id]: {
+              user_id,
+              books: [book_id]
+            }
+          }
+        })
+      ]
+    );
+    return;
+  }
+
+  const scheduler = res.rows[0];
+  const config = scheduler.config;
+
+  if (!config.members[member_id]) {
+    config.members[member_id] = {
+      user_id,
+      books: []
+    };
+  }
+
+  if (!config.members[member_id].books.includes(book_id)) {
+    config.members[member_id].books.push(book_id);
+  }
+
+  await sql.query(
+    ` UPDATE ${schema}.scheduler SET config = $1, lastmodifieddate = NOW() WHERE id = $2 `,
+    [config, scheduler.id]
+  );
+}
+
+async function sendDueReminderEmail(memberId, books, dueDate) {
+  try {
+
+    const memberRes = await sql.query(
+      `
+      SELECT
+        lm.first_name,
+        lm.last_name,
+        lm.email
+      FROM ${schema}.library_members lm
+      WHERE lm.id = $1 AND lm.is_active = true
+      `,
+      [memberId]
+    );
+
+    if (memberRes.rows.length === 0) {
+      console.error(`Member ${memberId} not found or inactive`);
+      return;
+    }
+
+    const member = memberRes.rows[0];
+
+    const studentName = `${member.first_name} ${member.last_name}`;
+
+
+    const booksData = books.map(book => ({
+      name: book.title,
+      dueDate: dueDate
+    }));
+
+
+    const html = dueTemplate({
+      studentName,
+      books: booksData
+    });
+
+
+    const emailResult = await sendMail({
+      to: member.email,
+      subject: "📘 Library Book Submission Reminder",
+      html
+    });
+
+    return emailResult;
+
+  } catch (error) {
+    console.error("Error sending due reminder email:", error);
+    throw error;
+  }
+}
+
+
+cron.schedule('0 9 * * *', async () => {
+  const jobs = await sql.query(`
+    SELECT * FROM ${schema}.scheduler WHERE is_active = true
+      AND next_run <= NOW()
+      AND action_type = 'BOOK_DUE_REMINDER'
+    `
+  );
+  for (const job of jobs.rows) {
+    const { due_date, members } = job.config;
+
+    const memberBooksMap = {};
+    for (const memberId of Object.keys(members)) {
+      const { user_id, books } = members[memberId];
+
+
+      if (!memberBooksMap[memberId]) {
+        memberBooksMap[memberId] = {
+          user_id,
+          books: []
+        };
+      }
+
+      for (const bookId of books) {
+
+        const exists = await sql.query(
+          `
+          SELECT 1 FROM ${schema}.notifications
+          WHERE member_id = $1 AND book_id = $2 AND type = 'due_reminder' AND is_read = false
+          LIMIT 1
+          `,
+          [memberId, bookId]
+        );
+
+        if (exists.rows.length > 0) {
+          console.log(`Notification already exists for member ${memberId}, book ${bookId}`);
+          continue;
+        }
+
+        const bookRes = await sql.query(
+          `SELECT title FROM ${schema}.books WHERE id = $1`,
+          [bookId]
+        );
+
+        if (!bookRes.rows.length) {
+          console.log(`Book ${bookId} not found`);
+          continue;
+        }
+
+        const book = bookRes.rows[0];
+
+        memberBooksMap[memberId].books.push({
+          id: bookId,
+          title: book.title
+        });
+
+        await create({
+          user_id,
+          memberId,
+          book_id: bookId,
+          message: `Reminder: The book "${book.title}" is due for return tomorrow (${due_date}). Please return it to avoid penalties.`,
+          type: "due_reminder"
+        });
+
+        console.log(`Created notification for member ${memberId}, book "${book.title}"`);
+      }
+    }
+
+    for (const memberId of Object.keys(memberBooksMap)) {
+      const { books } = memberBooksMap[memberId];
+
+      if (books.length > 0) {
+        try {
+          console.log(`Sending consolidated email to member ${memberId} for ${books.length} books`);
+          await sendDueReminderEmail(memberId, books, due_date);
+          console.log(`Email sent successfully to member ${memberId}`);
+        } catch (emailError) {
+          console.error(`Failed to send email to member ${memberId}:`, emailError);
+        }
+      }
+    }
+
+    await sql.query(
+      `UPDATE ${schema}.scheduler SET is_active = false, last_run = NOW() WHERE id = $1`,
+      [job.id]
+    );
+
+    console.log(`Completed processing job ${job.id}`);
+  }
+});
+
+
+
 module.exports = {
   init,
   findAll,
@@ -360,5 +537,7 @@ module.exports = {
   createBroadcast,
   getOverDueBooks,
   createDueReminderIfTomorrow,
-  checkBooksDueTomorrow,
+  upsertDueDateScheduler,
+  createOrUpdateDueScheduler,
+  sendDueReminderEmail
 };

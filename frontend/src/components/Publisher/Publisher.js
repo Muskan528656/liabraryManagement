@@ -6,6 +6,7 @@ import { AuthHelper } from "../../utils/authHelper.js";
 import { useEffect, useState } from "react";
 import PermissionDenied from "../../utils/permission_denied.js";
 import Loader from "../common/Loader.js";
+import { MODULES } from "../../constants/CONSTANT.js";
 
 const Publisher = (props) => {
     const { timeZone } = useTimeZone();
@@ -27,10 +28,10 @@ const Publisher = (props) => {
 
     useEffect(() => {
         const fetchPermissions = async () => {
-            const canView = await AuthHelper.hasModulePermission("Publisher", "view");
-            const canCreate = await AuthHelper.hasModulePermission("Publisher", "create");
-            const canEdit = await AuthHelper.hasModulePermission("Publisher", "edit");
-            const canDelete = await AuthHelper.hasModulePermission("Publisher", "delete");
+            const canView = await AuthHelper.hasModulePermission(MODULES.PUBLISHER, MODULES.CAN_VIEW);
+            const canCreate = await AuthHelper.hasModulePermission(MODULES.PUBLISHER, MODULES.CAN_CREATE);
+            const canEdit = await AuthHelper.hasModulePermission(MODULES.PUBLISHER, MODULES.CAN_EDIT);
+            const canDelete = await AuthHelper.hasModulePermission(MODULES.PUBLISHER, MODULES.CAN_DELETE);
 
             setPermissions({
                 canView,
