@@ -11,7 +11,7 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
-
+import "../../App.css";
 const Vendor = (props) => {
   const baseConfig = getVendorConfig();
   const { data, loading, error } = useDataManager(
@@ -60,7 +60,8 @@ const Vendor = (props) => {
     return <PermissionDenied />;
   }
   if (loading) {
-    return <Loader message="Loading vendors data..." />;
+    // return <Loader message="Loading vendors data..." />;
+    return <span className="loader"></span>
   }
   if (error) {
     return (

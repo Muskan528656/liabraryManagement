@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import PurchaseDataImport from "../common/PurchaseDataImport";
 import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
-
+import "../../App.css";
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
 
@@ -886,7 +886,8 @@ const BulkPurchasePage = () => {
     const totalBooks = multiInsertRows.reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
 
     if (loading) {
-        return <Loader />;
+        // return <Loader />;
+         <span className="loader"></span>
     }
 
     const renderTabContent = () => {

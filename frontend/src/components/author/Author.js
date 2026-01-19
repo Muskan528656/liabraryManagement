@@ -5,7 +5,7 @@ import { getAuthorConfig } from "./authorconfig";
 import { useDataManager } from "../common/userdatamanager";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
-
+import "../../App.css";
 const Author = (props) => {
 
   const [permissions, setPermissions] = useState({
@@ -52,7 +52,8 @@ const Author = (props) => {
   );
 
   if (permissions.loading || dataLoading) {
-    return <Loader message="Loading..." />;
+    // return <Loader message="Loading..." />;
+    return <span className="loader"></span>
   }
 
   if (!permissions.canView) {

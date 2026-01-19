@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
 import Loader from '../common/Loader';
-
+import "../../App.css";
 const Permission = () => {
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -657,7 +657,8 @@ const Permission = () => {
     };
 
     if (loading) {
-        return <Loader message="Loading permissions..." />;
+        // return <Loader message="Loading permissions..." />;
+        return <span className="loader"></span>
     }
 
     if (error) {

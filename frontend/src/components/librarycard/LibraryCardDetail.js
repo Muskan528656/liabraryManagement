@@ -142,7 +142,7 @@ const LibraryCardDetail = ({
       };
       fetchPermissions();
     }
-  }, [permissions]);
+  }, []);
   const effectivePermissions = Object.keys(permissions).length > 0
     ? permissions
     : permissionsState;

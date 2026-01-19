@@ -7,7 +7,7 @@ import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
 import Loader from "../common/Loader";
 import { MODULES } from "../../constants/CONSTANT";
-
+import "../../App.css";
 const Purchase = (props) => {
   const { timeZone } = useTimeZone();
 
@@ -55,7 +55,8 @@ const Purchase = (props) => {
   );
 
   if (permissions.loading || dataLoading) {
-    return <Loader message="Loading purchase data..." />;
+    // return <Loader message="Loading purchase data..." />;
+    return <span className="loader"></span>
   }
 
   if (!permissions.canView) {

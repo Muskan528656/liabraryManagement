@@ -15,6 +15,7 @@ import ModuleDetail from "./ModuleDetail";
 import UniversalCSVXLSXImporter from "./UniversalCSVXLSXImporter";
 import { saveImportedData } from "../../utils/importHelpers";
 import AdvancedFilter, { applyAdvancedFilters } from "./AdvancedFilter";
+import '../../App.css';
 const normalizeListResponse = (payload) => {
     if (!payload) return [];
     if (Array.isArray(payload)) return payload;
@@ -999,7 +1000,8 @@ const DynamicCRUD = ({
                         style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
-                                <Loader />
+                                // <Loader />
+                                 <span className="loader"></span>
                             ) : (
                                 <>
                                     <TableHeader
