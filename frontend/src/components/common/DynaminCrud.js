@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, Tooltip, InputGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
@@ -109,6 +109,7 @@ const DynamicCRUD = ({
     const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
     const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
     const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
+    const [passwordVisibility, setPasswordVisibility] = useState({ password: false, confirmPassword: false });
     // console.log("formData", formData)
     // console.log("Data", data)
 
@@ -1423,31 +1424,69 @@ const DynamicCRUD = ({
                         setShowChangePasswordModal(false);
                         setSelectedUserForPassword(null);
                         setPasswordFormData({ password: "", confirmPassword: "" });
+
                     }}
                     centered
+                    backdrop="static"
                 >
-                    <Modal.Header closeButton>
-                        <Modal.Title>Change Password</Modal.Title>
+                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+                        <b style={{ color: "var(--primary-color)", fontSize: '1.5rem' }}>Forgot Password</b>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
                             <Form.Group className="mb-3">
                                 <Form.Label>New Password *</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    value={passwordFormData.password}
-                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })}
-                                    placeholder="Enter new password"
-                                />
+                                <InputGroup>
+                                    <Form.Control
+                                        type={passwordVisibility.password ? "text" : "password"}
+                                        value={passwordFormData.password}
+                                        onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })}
+                                        placeholder="Enter new password"
+                                        style={{ borderRight: "none" }}
+                                    />
+                                    <InputGroup.Text
+                                        onClick={() => setPasswordVisibility(prev => ({ ...prev, password: !prev.password }))}
+                                        style={{
+                                            backgroundColor: "white",
+                                            borderLeft: "none",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span >
+                                            <i className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        </span>
+                                    </InputGroup.Text>
+                                </InputGroup>
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Confirm Password *</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    value={passwordFormData.confirmPassword}
-                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
-                                    placeholder="Confirm new password"
-                                />
+                                <InputGroup>
+                                    <Form.Control
+                                        type={passwordVisibility.confirmPassword ? "text" : "password"}
+                                        value={passwordFormData.confirmPassword}
+                                        onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                                        placeholder="Confirm new password"
+                                        style={{ borderRight: "none" }}
+                                    />
+                                    <InputGroup.Text
+                                        onClick={() => setPasswordVisibility(prev => ({ ...prev, confirmPassword: !prev.confirmPassword }))}
+                                        style={{
+                                            backgroundColor: "white",
+                                            borderLeft: "none",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span >
+                                            <i className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        </span>
+                                    </InputGroup.Text>
+                                </InputGroup>
                             </Form.Group>
                         </Form>
                     </Modal.Body>
@@ -1463,9 +1502,10 @@ const DynamicCRUD = ({
                             Cancel
                         </Button>
                         <Button
-                            variant="primary"
+                            variant=""
                             onClick={handleChangePasswordSubmit}
                             disabled={loading}
+                            style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)" }}
                         >
                             {loading ? "Changing..." : "Change Password"}
                         </Button>
