@@ -504,7 +504,7 @@ const FormModal = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size={size} backdrop="static" centered>
+    <Modal backdrop="static" show={show} onHide={onHide} size={size} centered>
       <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
         <Modal.Title>
           {icon && <i className={`${icon} me-2`}></i>}

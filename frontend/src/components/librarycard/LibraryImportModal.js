@@ -185,7 +185,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
   };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
+    <Modal    backdrop="static"  show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
       <Modal.Header  
       className="py-3 fw-bold"
       style={{

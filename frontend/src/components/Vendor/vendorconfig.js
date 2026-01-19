@@ -143,7 +143,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             }
         ],
         formFields: [
-            // ... formFields (same as your code)
+         
         ],
         validationRules: (formData, allVendors, editingVendor) => {
             const errors = [];

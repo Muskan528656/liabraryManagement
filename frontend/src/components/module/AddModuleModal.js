@@ -95,7 +95,7 @@ const AddModuleModal = (props) => {
 
   return (
     <>
-      <Modal show={props.show} animation={false} size="lg" centered>
+      <Modal    backdrop="static"  show={props.show} animation={false} size="lg" centered>
         <Modal.Header closeButton onClick={props.onHide}>
           <Modal.Title id="contained-modal-title-vcenter">
             {rowRecord?.id ? "Edit Module" : "Add Module"}

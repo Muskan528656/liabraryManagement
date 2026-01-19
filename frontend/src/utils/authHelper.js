@@ -73,7 +73,6 @@ export const AuthHelper = {
     async hasModulePermission(moduleName, action) {
         console.log("Checking permission:", moduleName, action);
 
-        // 1️⃣ Get permissions (from token / localStorage)
         const permissions = this.getPermissions();
         if (!Array.isArray(permissions) || permissions.length === 0) {
             console.warn("No permissions found");
@@ -81,7 +80,7 @@ export const AuthHelper = {
         }
 
         try {
-            // 2️⃣ Fetch modules list
+
             const api = new DataApi("module");
             const response = await api.fetchAll();
 
@@ -92,21 +91,20 @@ export const AuthHelper = {
 
             const moduleList = response.data?.records || [];
 
-            // 3️⃣ Find module by name
+
             const module = moduleList.find(m => m.name === moduleName);
             if (!module) {
                 console.warn(`Module not found: ${moduleName}`);
                 return false;
             }
 
-            // 4️⃣ Find permission for module
+
             const modulePerm = permissions.find(p => p.moduleId === module.id);
             if (!modulePerm) {
                 console.warn(`No permission found for moduleId: ${module.id}`);
                 return false;
             }
 
-            // 5️⃣ Action based permission check
             switch (action) {
                 case "view":
                     return !!modulePerm.allowView;

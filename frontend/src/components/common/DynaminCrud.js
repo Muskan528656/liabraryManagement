@@ -1157,7 +1157,7 @@ const DynamicCRUD = ({
                 editingItem={editingItem}
             />
 
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+            <Modal backdrop="static" show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirm Delete</Modal.Title>
                 </Modal.Header>

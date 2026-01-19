@@ -35,7 +35,7 @@ const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
   externalData = {},
-  permissions = {}, 
+  permissions = {},
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -111,7 +111,7 @@ const LibraryCardDetail = ({
     loading: permissions.loading || false
   });
 
- 
+
   useEffect(() => {
     if (!permissions || Object.keys(permissions).length === 0) {
       const fetchPermissions = async () => {
@@ -142,7 +142,7 @@ const LibraryCardDetail = ({
       };
       fetchPermissions();
     }
-  }, [permissions]);
+  }, []);
   const effectivePermissions = Object.keys(permissions).length > 0
     ? permissions
     : permissionsState;
@@ -1202,34 +1202,34 @@ const LibraryCardDetail = ({
   //     await fetchTypeOptions();
   //   }
   // };
-const handleEdit = async () => {
-  // ✅ Check if user has edit permission
-  if (!canEdit) {
-    PubSub.publish("RECORD_ERROR_TOAST", {
-      title: "Permission Denied",
-      message: "You don't have permission to edit this library card",
-    });
-    return;
-  }
+  const handleEdit = async () => {
+    // ✅ Check if user has edit permission
+    if (!canEdit) {
+      PubSub.publish("RECORD_ERROR_TOAST", {
+        title: "Permission Denied",
+        message: "You don't have permission to edit this library card",
+      });
+      return;
+    }
 
-  if (onEdit) {
-    onEdit(data);
-  } else {
-    resetImageSelection();
-    setIsEditing(true);
+    if (onEdit) {
+      onEdit(data);
+    } else {
+      resetImageSelection();
+      setIsEditing(true);
 
-    const editData = {
-      ...data,
-      country_code: data?.country_code || companyCountryCode || "",
-      father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
-      type_id: data?.type_id || data?.type || ""
-    };
+      const editData = {
+        ...data,
+        country_code: data?.country_code || companyCountryCode || "",
+        father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
+        type_id: data?.type_id || data?.type || ""
+      };
 
-    setTempData(editData);
-    await fetchLookupData();
-    await fetchTypeOptions();
-  }
-};
+      setTempData(editData);
+      await fetchLookupData();
+      await fetchTypeOptions();
+    }
+  };
   const fetchLookupData = async () => {
     try {
       const normalizedFields = {
@@ -1738,8 +1738,8 @@ const handleEdit = async () => {
 
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
-      const hasEditPermission = canEdit;
-  const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField && hasEditPermission;
+    const hasEditPermission = canEdit;
+    const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField && hasEditPermission;
 
 
     if (field.key === "createdbyid" || field.key === "lastmodifiedbyid") {

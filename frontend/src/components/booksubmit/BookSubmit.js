@@ -2044,7 +2044,7 @@ const BookSubmit = () => {
             </Container>
 
             {/* Scan Modal */}
-            <Modal show={showScanModal} onHide={() => setShowScanModal(false)} centered>
+            <Modal show={showScanModal} onHide={() => setShowScanModal(false)}        backdrop="static" centered>
                 <Modal.Header closeButton style={{ backgroundColor: "#1e3a8a", color: "white" }}>
                     <Modal.Title>
                         <i className={`fa-solid ${scanMethod === "isbn" ? "fa-barcode" : "fa-address-card"} me-2`}></i>

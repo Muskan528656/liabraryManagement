@@ -48,25 +48,30 @@ const Permission = () => {
             const api = new DataApi("user-role");
             const res = await api.fetchAll();
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
-            console.log("Fetched roles:", rolesArray);
-            setRoles(rolesArray);
+
+            const filteredRoles = rolesArray.filter(
+                (role) => role.name.toUpperCase() !== "SYSTEM ADMIN"
+            );
+            setRoles(filteredRoles);
+
         } catch (err) {
             console.error("Error loading roles:", err);
         }
     };
+
 
     useEffect(() => {
         fetchPermissions();
         fetchRoles();
     }, [refreshKey]);
 
-    // Update select all states when editing starts or permissions change
+
     useEffect(() => {
         if (editingRow) {
             const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
             const newSelectAllStates = {};
 
-            // Check all four permission types
+
             ['allow_view', 'allow_create', 'allow_edit', 'allow_delete'].forEach(permissionType => {
                 const allModulesHavePerm = rolePerms.every(perm =>
                     editingPermissions[perm.module_id]?.[permissionType] || false
@@ -82,7 +87,7 @@ const Permission = () => {
         try {
             console.log("Saving permissions for role:", formData.role_id);
 
-            // Prepare permissions array
+
             const permissionsToSave = formData.permissions.map(perm => ({
                 module_id: perm.module_id,
                 allow_view: perm.allow_view || false,
@@ -91,22 +96,14 @@ const Permission = () => {
                 allow_delete: perm.allow_delete || false
             }));
 
-            // Use the bulk update API
             const api = new DataApi("permissions/role");
 
             const response = await api.update({
                 role_id: formData.role_id,
                 permissions: permissionsToSave
-            }, formData.role_id); // Pass role_id as second parameter
+            }, formData.role_id);
 
-            // if (response.data.success) {
-            //     alert("Permissions saved successfully!");
-            //     setShowAddModal(false);
-            //     setEditingRole(null);
-            //     setRefreshKey(prev => prev + 1);
-            // } else {
-            //     throw new Error(response.data.error || "Failed to save permissions");
-            // }
+
             if (response.data.success) {
 
                 sessionStorage.setItem(
@@ -228,12 +225,15 @@ const Permission = () => {
             alert("Error saving permissions: " + err.message);
         }
     };
-
     const groupPermissionsByRole = () => {
         const grouped = {};
 
-        permissions.forEach(perm => {
-            // Use null check for role_id
+        const filteredPermissions = permissions.filter(perm => {
+            const roleInfo = roles.find(r => r.id === perm.role_id);
+            const roleName = roleInfo ? (roleInfo.role_name || roleInfo.name) : perm.role_name;
+            return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
+        });
+        filteredPermissions.forEach(perm => {
             const roleId = perm.role_id || 'null';
             const roleInfo = roles.find(r => r.id === perm.role_id);
 
@@ -241,7 +241,6 @@ const Permission = () => {
             if (roleInfo) {
                 roleName = roleInfo.role_name || roleInfo.name || `Role ${roleId}`;
             } else {
-                // If role not found, check if permission has role_name
                 roleName = perm.role_name || `Role ${roleId}`;
             }
 
@@ -254,7 +253,6 @@ const Permission = () => {
                 };
             }
 
-            // Add all permission data to the group
             grouped[roleId].permissions.push({
                 ...perm,
                 module_id: perm.module_id,
@@ -269,7 +267,7 @@ const Permission = () => {
         });
 
         const result = Object.values(grouped);
-        console.log("Grouped permissions:", result);
+        console.log("Grouped permissions (SYSTEM ADMIN removed):", result);
         return result;
     };
 

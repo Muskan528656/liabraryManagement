@@ -4065,7 +4065,7 @@ const UniversalBarcodeScanner = ({ externalShow = false, onClose = null }) => {
                 title="Open Library / Book Scanner"
             /> */}
 
-            <Modal show={showModal} onHide={handleCloseModal} size="lg" centered scrollable>
+            <Modal    backdrop="static"  show={showModal} onHide={handleCloseModal} size="lg" centered scrollable>
                 <Modal.Header
                     closeButton
                     style={{

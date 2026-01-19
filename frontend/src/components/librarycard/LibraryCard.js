@@ -607,7 +607,7 @@ const LibraryCard = (props) => {
       />
 
 
-      <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+      <Modal    backdrop="static"  show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
           style={{
