@@ -99,13 +99,31 @@ const Permission = () => {
                 permissions: permissionsToSave
             }, formData.role_id); // Pass role_id as second parameter
 
+            // if (response.data.success) {
+            //     alert("Permissions saved successfully!");
+            //     setShowAddModal(false);
+            //     setEditingRole(null);
+            //     setRefreshKey(prev => prev + 1);
+            // } else {
+            //     throw new Error(response.data.error || "Failed to save permissions");
+            // }
             if (response.data.success) {
+
+                sessionStorage.setItem(
+                    "permissions",
+                    JSON.stringify(permissionsToSave.map(p => ({
+                        ...p,
+                        role_id: formData.role_id
+                    })))
+                );
+
+
+                window.dispatchEvent(new Event("permissionsUpdated"));
+
                 alert("Permissions saved successfully!");
                 setShowAddModal(false);
                 setEditingRole(null);
                 setRefreshKey(prev => prev + 1);
-            } else {
-                throw new Error(response.data.error || "Failed to save permissions");
             }
 
         } catch (err) {
@@ -175,14 +193,34 @@ const Permission = () => {
                 response = await api.update(payload, actualRoleId);
             }
 
+            // if (response.data && response.data.success) {
+            //     alert(`Permissions updated successfully for ${roleName}!`);
+            //     setEditingRow(null);
+            //     setEditingPermissions({});
+            //     setSelectAllStates({});
+            //     setRefreshKey(prev => prev + 1);
+            // } else {
+            //     throw new Error(response.data?.error || "Failed to save permissions");
+            // }
             if (response.data && response.data.success) {
+
+                // 🔥 sessionStorage sync
+                sessionStorage.setItem(
+                    "permissions",
+                    JSON.stringify(permissionsToSave.map(p => ({
+                        ...p,
+                        role_id: actualRoleId
+                    })))
+                );
+
+                // 🔥 fire global event
+                window.dispatchEvent(new Event("permissionsUpdated"));
+
                 alert(`Permissions updated successfully for ${roleName}!`);
                 setEditingRow(null);
                 setEditingPermissions({});
                 setSelectAllStates({});
                 setRefreshKey(prev => prev + 1);
-            } else {
-                throw new Error(response.data?.error || "Failed to save permissions");
             }
 
         } catch (err) {

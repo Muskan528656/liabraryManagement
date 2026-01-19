@@ -2,8 +2,13 @@ import moment from "moment";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
-    const { vendors = [], books = [], authors = [], categories = [] } = data;
+export const getPurchaseConfig = (data = {}, props = {}, timeZone, permissions = {}) => {
+    const {
+        canCreate = true,
+        canEdit = true,
+        canDelete = false
+    } = permissions || {};
+
     const company = props?.company?.[0] || {};
     const currencySymbol = company.currency || "₹";
 
@@ -148,7 +153,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone) => {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: true,
+            allowEdit: canEdit,
             allowDelete: false,
             showImportButton: true,
             showAdvancedFilter: true,

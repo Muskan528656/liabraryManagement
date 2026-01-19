@@ -13,7 +13,6 @@ const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
 let schema = "demo";
 
-// Global variable to store the current logged-in user ID
 global.currentLoggedInUserId = null;
 
 function init(schema_name) {
@@ -21,7 +20,6 @@ function init(schema_name) {
 }
 
 async function findAll() {
-  // console.log("Fetching all notifications for user ID:", userId);
   const query = `
     SELECT 
     n.*,                         
@@ -111,7 +109,7 @@ async function markAllAsRead(userId) {
 
 async function markAsReadByRelatedId(userId, bookId, memberId, type) {
   console.log([
-     "Marking notifications as read for user ID:", userId,
+    "Marking notifications as read for user ID:", userId,
     "book ID:", bookId,
     "member ID:", memberId,
     "type:", type
@@ -123,7 +121,7 @@ async function markAsReadByRelatedId(userId, bookId, memberId, type) {
   `;
 
   const result = await sql.query(query, [userId, memberId, bookId, type]);
-  console.log("result=>",result.rows);
+  console.log("result=>", result.rows);
   return result.rows;
 }
 
@@ -263,14 +261,13 @@ async function createOrUpdateDueScheduler({
   book_id
 }) {
   const nextRun = new Date(due_date);
-  console.log("nextRun=>",nextRun);
-  nextRun.setDate(nextRun.getDate() - 1); // day before due
+  console.log("nextRun=>", nextRun);
+  nextRun.setDate(nextRun.getDate() - 1);
 
   if (nextRun < new Date()) {
-    nextRun.setMinutes(nextRun.getMinutes() + 1); // run asap
+    nextRun.setMinutes(nextRun.getMinutes() + 1);
   }
 
-  // 🔍 Check existing scheduler for same member + due_date
   const existing = await sql.query(
     `
     SELECT id, config
@@ -284,7 +281,7 @@ async function createOrUpdateDueScheduler({
   );
 
   if (existing.rows.length > 0) {
-    // ✅ Merge book into existing scheduler
+
     const scheduler = existing.rows[0];
     const config = scheduler.config;
 
@@ -305,7 +302,6 @@ async function createOrUpdateDueScheduler({
     return scheduler.id;
   }
 
-  // ✅ Create new scheduler
   await sql.query(
     `
     INSERT INTO ${schema}.scheduler(
@@ -313,8 +309,8 @@ async function createOrUpdateDueScheduler({
       VALUES ('BOOK_DUE_REMINDER', $1, true, $2, NOW())
     `,
     [
-      nextRun, 
-      JSON.stringify({ member_id, user_id, due_date, book_ids: [book_id]})
+      nextRun,
+      JSON.stringify({ member_id, user_id, due_date, book_ids: [book_id] })
     ]
   );
 }
@@ -351,7 +347,8 @@ async function upsertDueDateScheduler({
       `,
       [
         nextRun,
-        JSON.stringify({ due_date,
+        JSON.stringify({
+          due_date,
           members: {
             [member_id]: {
               user_id,
@@ -380,7 +377,7 @@ async function upsertDueDateScheduler({
 
   await sql.query(
     ` UPDATE ${schema}.scheduler SET config = $1, lastmodifieddate = NOW() WHERE id = $2 `,
-     [config, scheduler.id]
+    [config, scheduler.id]
   );
 }
 
@@ -399,40 +396,34 @@ async function sendDueReminderEmail(memberId, books, dueDate) {
       [memberId]
     );
 
-    // console.log("memberRes", memberRes.rows);
     if (memberRes.rows.length === 0) {
       console.error(`Member ${memberId} not found or inactive`);
       return;
     }
 
     const member = memberRes.rows[0];
-    // console.log("member=>",member);
+
     const studentName = `${member.first_name} ${member.last_name}`;
-  //  console.log("studentName",studentName)
- 
+
+
     const booksData = books.map(book => ({
       name: book.title,
       dueDate: dueDate
     }));
 
-    // console.log("bookData", booksData);
+
     const html = dueTemplate({
       studentName,
       books: booksData
     });
 
-    // console.log("html",html);
 
-    // Send email
     const emailResult = await sendMail({
       to: member.email,
       subject: "📘 Library Book Submission Reminder",
       html
     });
 
-    // console.log("emailResult=>",emailResult);
-
-    // console.log(`Due reminder email sent to ${member.email} for ${books.length} books`);
     return emailResult;
 
   } catch (error) {
@@ -449,19 +440,12 @@ cron.schedule('0 9 * * *', async () => {
       AND action_type = 'BOOK_DUE_REMINDER'
     `
   );
-
-  console.log("Processing due reminder jobs:", jobs.rows.length);
-
   for (const job of jobs.rows) {
     const { due_date, members } = job.config;
-    // console.log("Processing job for due_date:", due_date);
-
 
     const memberBooksMap = {};
-
     for (const memberId of Object.keys(members)) {
       const { user_id, books } = members[memberId];
-      // console.log(`Processing member ${memberId} with ${books.length} books`);
 
 
       if (!memberBooksMap[memberId]) {
@@ -472,7 +456,7 @@ cron.schedule('0 9 * * *', async () => {
       }
 
       for (const bookId of books) {
-      
+
         const exists = await sql.query(
           `
           SELECT 1 FROM ${schema}.notifications

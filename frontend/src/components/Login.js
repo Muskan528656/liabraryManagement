@@ -36,8 +36,8 @@ const Login = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const colors = {
-    navy: "#1a4073",    // Dark blue for headings/icons
-    periwinkle: "#6c8dbf", // Lighter blue for buttons
+    navy: "#1a4073",
+    periwinkle: "#6c8dbf",
     bgLight: "#f8f9fa"
   };
 
@@ -131,8 +131,8 @@ const Login = () => {
     emailRegex.test(credentials.email);
 
   const ModalHeaderStyled = ({ title }) => (
-    <div className="text-center" style={{margin:"-30px"}}>
-         {/* <img src="Untitled design (7).png" width="400" height="200" alt="Logo"/> */}
+    <div className="text-center" style={{ margin: "-30px" }}>
+
     </div>
   );
 
@@ -159,15 +159,15 @@ const Login = () => {
             >
               <Row className="g-0">
                 <Col lg={6} className="d-none d-lg-flex align-items-center justify-content-center" style={{
-                    backgroundColor: "var(--primary-background-color)",
-                    minHeight: "100vh",
-                  }}>
-                  <img src="Untitled design (7).png" width="600" height="600" alt="Logo"  />
+                  backgroundColor: "var(--primary-background-color)",
+                  minHeight: "100vh",
+                }}>
+                  <img src="Untitled design (7).png" width="600" height="600" alt="Logo" />
                 </Col>
 
                 <Col lg={6} className="p-5">
                   <div className="text-center mb-4">
-                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: "var(--primary-color)", display: "flex", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
+                    <div style={{ width: "56px", height: "56px", borderRadius: "12px", background: "var(--primary-color)", alignItems: "center", justifyCenter: "center", color: "#fff", margin: "0 auto 12px", fontSize: "26px", justifyContent: 'center' }}>
                       <i className="fa-solid fa-book"></i>
                     </div>
                     <h3 className="fw-bold">Sign In</h3>
@@ -197,7 +197,7 @@ const Login = () => {
                       </div>
                     </Form.Group>
 
-                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{backgroundColor: "var(--primary-color)", color:"#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px"}}>
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
                       {loading ? <><Loader /> Signing In...</> : "Sign In"}
                     </Button>
 
@@ -214,19 +214,18 @@ const Login = () => {
         </Row>
       </Container>
 
-      {/* Forgot Password Modal */}
-      <Modal 
-        show={showForgotModal} 
-        onHide={() => setShowForgotModal(false)} 
-        centered 
+      <Modal
+        show={showForgotModal}
+        onHide={() => setShowForgotModal(false)}
+        centered
         contentClassName="border-0 shadow-lg"
         size="md"
         backdrop="static"
       >
-        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
-            <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
+        <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+          <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
         </Modal.Header>
-         <Modal.Title>
+        <Modal.Title>
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
@@ -269,16 +268,16 @@ const Login = () => {
       </Modal>
 
       {/* Reset Password Modal */}
-      <Modal 
-        show={showResetModal} 
-        onHide={() => setShowResetModal(false)} 
-        centered 
+      <Modal
+        show={showResetModal}
+        onHide={() => setShowResetModal(false)}
+        centered
         contentClassName="border-0 shadow-lg"
         size="md"
         backdrop="static"
       >
-        <Modal.Header closeButton style={{ background:"var(--secondary-color)", padding:'8px'}}>
-           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
+        <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+          <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
         </Modal.Header>
         <Modal.Title>
           <ModalHeaderStyled />

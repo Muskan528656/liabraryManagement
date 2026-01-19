@@ -9,7 +9,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import DataApi from "../../api/dataApi";
 import {
   Card,
-  Row, 
+  Row,
   Col,
   Badge,
   Button,
@@ -24,7 +24,7 @@ import PubSub from "pubsub-js";
 import JsBarcode from "jsbarcode";
 import ScrollToTop from "../common/ScrollToTop";
 import ConfirmationModal from "../common/ConfirmationModal";
-import { API_BASE_URL } from "../../constants/CONSTANT";
+import { API_BASE_URL, MODULES } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
@@ -35,6 +35,7 @@ const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
   externalData = {},
+  permissions = {}, 
 }) => {
   const location = useLocation();
   const { id } = useParams();
@@ -102,6 +103,51 @@ const LibraryCardDetail = ({
     ],
     []
   );
+  const [permissionsState, setPermissionsState] = useState({
+    canView: permissions.canView || true,
+    canCreate: permissions.canCreate || false,
+    canEdit: permissions.canEdit || true,
+    canDelete: permissions.canDelete || false,
+    loading: permissions.loading || false
+  });
+
+ 
+  useEffect(() => {
+    if (!permissions || Object.keys(permissions).length === 0) {
+      const fetchPermissions = async () => {
+        try {
+          const { AuthHelper } = await import("../../utils/authHelper");
+          const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, "view");
+          const canCreate = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, "create");
+          const canEdit = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, "edit");
+          const canDelete = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, "delete");
+
+          setPermissionsState({
+            canView,
+            canCreate,
+            canEdit,
+            canDelete,
+            loading: false
+          });
+        } catch (error) {
+          console.error("Error fetching permissions:", error);
+          setPermissionsState({
+            canView: true,
+            canCreate: false,
+            canEdit: true,
+            canDelete: false,
+            loading: false
+          });
+        }
+      };
+      fetchPermissions();
+    }
+  }, [permissions]);
+  const effectivePermissions = Object.keys(permissions).length > 0
+    ? permissions
+    : permissionsState;
+
+  const { canEdit, canDelete } = effectivePermissions;
   const normalizedFileHost = useMemo(() => {
     if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
       return API_BASE_URL.replace("/ibs", "");
@@ -1137,26 +1183,53 @@ const LibraryCardDetail = ({
     setTempData(location?.state?.rowData);
   }, [location?.state?.isEdit]);
 
-  const handleEdit = async () => {
-    if (onEdit) {
-      onEdit(data);
-    } else {
-      resetImageSelection();
-      setIsEditing(true);
+  // const handleEdit = async () => {
+  //   if (onEdit) {
+  //     onEdit(data);
+  //   } else {
+  //     resetImageSelection();
+  //     setIsEditing(true);
 
-      const editData = {
-        ...data,
-        country_code: data?.country_code || companyCountryCode || "",
-        father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
-        type_id: data?.type_id || data?.type || ""
-      };
+  //     const editData = {
+  //       ...data,
+  //       country_code: data?.country_code || companyCountryCode || "",
+  //       father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
+  //       type_id: data?.type_id || data?.type || ""
+  //     };
 
-      setTempData(editData);
-      await fetchLookupData();
-      await fetchTypeOptions();
-    }
-  };
+  //     setTempData(editData);
+  //     await fetchLookupData();
+  //     await fetchTypeOptions();
+  //   }
+  // };
+const handleEdit = async () => {
+  // ✅ Check if user has edit permission
+  if (!canEdit) {
+    PubSub.publish("RECORD_ERROR_TOAST", {
+      title: "Permission Denied",
+      message: "You don't have permission to edit this library card",
+    });
+    return;
+  }
 
+  if (onEdit) {
+    onEdit(data);
+  } else {
+    resetImageSelection();
+    setIsEditing(true);
+
+    const editData = {
+      ...data,
+      country_code: data?.country_code || companyCountryCode || "",
+      father_guardian_name: data?.father_guardian_name || data?.father_gurdian_name || "",
+      type_id: data?.type_id || data?.type || ""
+    };
+
+    setTempData(editData);
+    await fetchLookupData();
+    await fetchTypeOptions();
+  }
+};
   const fetchLookupData = async () => {
     try {
       const normalizedFields = {
@@ -1665,7 +1738,9 @@ const LibraryCardDetail = ({
 
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
-    const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField;
+      const hasEditPermission = canEdit;
+  const isInputEditable = isEditing && !isDisabledField && !isReadOnlyField && hasEditPermission;
+
 
     if (field.key === "createdbyid" || field.key === "lastmodifiedbyid") {
       const userId = currentData[field.key];
