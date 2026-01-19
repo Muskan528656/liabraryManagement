@@ -201,7 +201,7 @@ const Permission = () => {
             // }
             if (response.data && response.data.success) {
 
-                // 🔥 sessionStorage sync
+               
                 sessionStorage.setItem(
                     "permissions",
                     JSON.stringify(permissionsToSave.map(p => ({
@@ -209,9 +209,7 @@ const Permission = () => {
                         role_id: actualRoleId
                     })))
                 );
-
-                // 🔥 fire global event
-                window.dispatchEvent(new Event("permissionsUpdated"));
+    window.dispatchEvent(new Event("permissionsUpdated"));
 
                 alert(`Permissions updated successfully for ${roleName}!`);
                 setEditingRow(null);

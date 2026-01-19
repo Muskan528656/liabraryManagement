@@ -1240,14 +1240,14 @@ const BookSubmit = () => {
                 console.log("Selected issue ID for notification marking:", selectedIssue.book_id);
                 console.log("Selected member ID for notification marking:", selectedIssue.issued_to);
                 try {
-                   const unreadNotification = await helper.fetchWithAuth(
+                    const unreadNotification = await helper.fetchWithAuth(
                         `${constants.API_BASE_URL}/api/notifications/mark-read-by-related/${selectedIssue.book_id}/${selectedIssue.issued_to}/due_reminder`,
                         "PUT"
                     );
                     const data = await unreadNotification.json();
-                    if(data.success && data.notifications){
-                      // Update the context with the new unread notifications from API
-                      updateNotificationsFromAPI(data.notifications);
+                    if (data.success && data.notifications) {
+                        // Update the context with the new unread notifications from API
+                        updateNotificationsFromAPI(data.notifications);
                     }
                     console.log("Notifications marked as read for book submission", data);
                 } catch (notificationError) {
@@ -1612,7 +1612,7 @@ const BookSubmit = () => {
             width: 120,
             render: (value, record) => (
                 // console.log("value=>", value,"record", record.penalty)
-        
+
                 <div>
                     <Badge className="px-2 me-1" bg={value === "Good" ? "success" : value === "Fair" ? "warning" : "danger"}>
                         {value || "Good"}
@@ -2044,7 +2044,7 @@ const BookSubmit = () => {
             </Container>
 
             {/* Scan Modal */}
-            <Modal show={showScanModal} onHide={() => setShowScanModal(false)}        backdrop="static" centered>
+            <Modal show={showScanModal} onHide={() => setShowScanModal(false)} backdrop="static" centered>
                 <Modal.Header closeButton style={{ backgroundColor: "#1e3a8a", color: "white" }}>
                     <Modal.Title>
                         <i className={`fa-solid ${scanMethod === "isbn" ? "fa-barcode" : "fa-address-card"} me-2`}></i>
