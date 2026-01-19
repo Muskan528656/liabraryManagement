@@ -193,7 +193,7 @@ const Login = () => {
                       <div className="position-relative">
                         <Form.Control type={showPassword ? "text" : "password"} name="password" placeholder="Enter password" value={credentials.password} onChange={handleChange} style={{ padding: '5px' }} />
                         <span onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                          <i className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                          <i className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
                         </span>
                       </div>
                     </Form.Group>
@@ -240,7 +240,7 @@ const Login = () => {
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
-          <b className="text-success" show={!!forgotMessage}>{forgotMessage}</b>
+          {/* <b className="text-success" show={!!forgotMessage}>{forgotMessage}</b> */}
           <Form onSubmit={handleForgotPassword}>
             <Form.Group className="mb-3 ">
               <Form.Label className="fw-medium">Company Name</Form.Label>
@@ -310,7 +310,7 @@ const Login = () => {
                   style={{ padding: '5px' }}
                 />
                 <span onClick={() => setShowNewPassword(!showNewPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                  <i className={`fa ${showNewPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                  <i className={`fa ${showNewPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
                 </span>
               </div>
             </Form.Group>
