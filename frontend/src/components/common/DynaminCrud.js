@@ -1063,8 +1063,8 @@ const DynamicCRUD = ({
                         <Card.Body className="">
                             {loading ? (
                                 // <Loader />
-                                 <span className="loader"></span>
-                           
+                                <span className="loader"></span>
+
                             ) : (
                                 <>
                                     <TableHeader
@@ -1124,7 +1124,7 @@ const DynamicCRUD = ({
                                         showActions={showActions}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
-                                                {/* ✅ Edit button permission check */}
+
                                                 {allowEdit && canEdit && (
                                                     <button
                                                         onClick={() => handleNameClick(item, true)}
@@ -1135,18 +1135,15 @@ const DynamicCRUD = ({
                                                     </button>
                                                 )}
 
-                                                {/* ✅ Change Password button for users */}
                                                 {moduleName === 'user' && canEdit && (
                                                     <button
                                                         onClick={() => handleChangePassword(item)}
                                                         title="Change Password"
                                                         className="custom-btn-edit"
                                                     >
-                                                        <i className="fs-7 fa-solid fa-eye" style={{ color: 'gray' }}></i>
+                                                        <i className="fs-7 fa-solid fa-key" style={{ color: 'gray' }}></i>
                                                     </button>
                                                 )}
-
-                                                {/* ✅ Delete button permission check */}
                                                 {allowDelete && canDelete && (
                                                     <button
                                                         onClick={() => handleDelete(item.id)}
@@ -1157,7 +1154,6 @@ const DynamicCRUD = ({
                                                     </button>
                                                 )}
 
-                                                {/* ✅ Custom barcode preview (if needed) */}
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
                                                         className="custom-btn-edit"
@@ -1165,7 +1161,7 @@ const DynamicCRUD = ({
                                                         title="View Barcode"
                                                     >
                                                         {/* <i className="fs-7 fa-solid fa-eye me-1"></i> */}
-                                                        <i className="fs-7 fa-solid fa-key"></i>
+                                                        <i className="fs-7 fa-solid fa-eye me-1"></i>
                                                     </button>
                                                 )}
                                             </div>

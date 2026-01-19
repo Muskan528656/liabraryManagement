@@ -112,7 +112,7 @@ const Login = () => {
         sessionStorage.setItem("r-t", result.refreshToken);
         window.location.assign("/");
       } else {
-        setShow(true); setErrorMessage(result.errors || "Invalid credentials");
+        setShow(true); setErrorMessage(result.errors || "Invalid credentials  Please check your credentials and try again");
       }
     } catch (err) {
       setShow(true); setErrorMessage("Something went wrong. Please try again.");
@@ -210,13 +210,22 @@ const Login = () => {
                       )}
                     </Button>
 
-                  
-                 
-                    <div className="text-center mt-3">
-                      <Button variant="link" onClick={() => setShowForgotModal(true)} style={{ color: colors.periwinkle, textDecoration: "none", fontSize: "14px", fontWeight: '500' }}>
+
+                    <div className="mt-3 text-end">
+                      <Button
+                        variant="link"
+                        onClick={() => setShowForgotModal(true)}
+                        style={{
+                          color: "#006dcc",
+                          textDecoration: "none",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                        }}
+                      >
                         Forgot Password?
                       </Button>
                     </div>
+
                   </Form>
                 </Col>
               </Row>
@@ -270,7 +279,7 @@ const Login = () => {
               variant=""
               disabled={forgotLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)",color:"#fff", borderRadius:"30px" }}
+              style={{ background: "var(--primary-color)", color: "#fff", borderRadius: "30px" }}
             >
               {forgotLoading ? <> <span className="loader-login"></span> Sending...</> : "Send Reset Link"}
             </Button>
@@ -337,10 +346,10 @@ const Login = () => {
               type="submit"
               disabled={resetLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)",color:"#fff", borderRadius:'30px' }}
+              style={{ background: "var(--primary-color)", color: "#fff", borderRadius: '30px' }}
             >
               {resetLoading ? <> <span className="loader-login"></span> Resetting...</> : "Reset Password"}
-              
+
             </Button>
           </Form>
         </Modal.Body>

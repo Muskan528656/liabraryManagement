@@ -2,7 +2,6 @@ import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getVendorConfig } from "./vendorconfig";
 import { useDataManager } from "../common/userdatamanager";
-import Loader from "../common/Loader";
 import CityState from "../../constants/CityState.json"
 import CityPincode from "../../constants/CityPincode.json";
 import { useState } from "react";
