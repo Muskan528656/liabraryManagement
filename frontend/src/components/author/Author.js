@@ -52,8 +52,7 @@ const Author = (props) => {
   );
 
   if (permissions.loading || dataLoading) {
-    // return <Loader message="Loading..." />;
-    return <span className="loader"></span>
+    return <Loader message="Loading..." />;
   }
 
   if (!permissions.canView) {

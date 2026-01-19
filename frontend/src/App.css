@@ -1472,7 +1472,7 @@ textarea.form-control[required] {
   border: 1px solid black;
 }
 
-.loader-container {
+/* .loader-container {
   position: fixed;
   top: 0;
   left: 0;
@@ -1484,7 +1484,7 @@ textarea.form-control[required] {
   align-items: center;
   backdrop-filter: blur(5px);
   z-index: 9999;
-}
+} */
 
 /* HTML: <div class="loader"></div> */
 /* .loader {
@@ -2791,14 +2791,14 @@ textarea.form-control[required] {
   height: 64px;
   position: relative;
   background-image:
-    linear-gradient(#FFF 16px, transparent 0),
-    linear-gradient(#FF3D00 16px, transparent 0),
-    linear-gradient(#FF3D00 16px, transparent 0),
+    linear-gradient(#FFF 16px, transparent 0) ,
+    linear-gradient(#FF3D00 16px, transparent 0) ,
+    linear-gradient(#FF3D00 16px, transparent 0) ,
     linear-gradient(#FFF 16px, transparent 0);
   background-repeat: no-repeat;
   background-size: 16px 16px;
-  background-position: left top, left bottom, right top, right bottom;
-  animation: rotate 3s linear infinite;
+  background-position: left top , left bottom , right top , right bottom;
+  animation: rotate 1s linear infinite;
 }
 
 @keyframes rotate {
@@ -2820,7 +2820,7 @@ textarea.form-control[required] {
 }
 /* login loader  */
 
-.loader {
+.loader-login {
   width: 20px;                 
   height: 20px;
   border: 3px solid rgba(255,255,255,0.4);

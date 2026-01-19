@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, 
 import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
-import Loader from "./Loader";
+// import Loader from "./Loader";
 import TableHeader from "./TableHeader";
 import FormModal from "./FormModal";
 import DataApi from "../../api/dataApi";
@@ -106,6 +106,9 @@ const DynamicCRUD = ({
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState([]);
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+    const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
+    const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
     // console.log("formData", formData)
     // console.log("Data", data)
 
@@ -516,6 +519,11 @@ const DynamicCRUD = ({
                 processedField.readOnly = true;
             }
 
+            // Make password fields not required when editing
+            if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
+                processedField.required = false;
+            }
+
             if (field.type !== 'select' || !field.options) {
                 return processedField;
             }
@@ -601,6 +609,56 @@ const DynamicCRUD = ({
         setDeleteId(id);
         setShowDeleteModal(true);
     }, [allowDelete]);
+
+    const handleChangePassword = useCallback((user) => {
+        setSelectedUserForPassword(user);
+        setPasswordFormData({ password: "", confirmPassword: "" });
+        setShowChangePasswordModal(true);
+    }, []);
+
+    const handleChangePasswordSubmit = useCallback(async () => {
+        if (!passwordFormData.password || !passwordFormData.confirmPassword) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Please fill in both password fields",
+            });
+            return;
+        }
+
+        if (passwordFormData.password !== passwordFormData.confirmPassword) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Passwords do not match",
+            });
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const api = new DataApi(apiEndpoint);
+            const response = await api.update({ password: passwordFormData.password }, selectedUserForPassword.id);
+
+            if (response.data?.success) {
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Success",
+                    message: "Password changed successfully",
+                });
+                setShowChangePasswordModal(false);
+                setSelectedUserForPassword(null);
+                setPasswordFormData({ password: "", confirmPassword: "" });
+            } else {
+                throw new Error(response.data?.errors || 'Password change failed');
+            }
+        } catch (error) {
+            console.error("Error changing password:", error);
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: `Failed to change password: ${error.message}`,
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [passwordFormData, selectedUserForPassword, apiEndpoint]);
 
     const confirmDelete = useCallback(async () => {
         try {
@@ -704,8 +762,11 @@ const DynamicCRUD = ({
                 });
 
                 if (editingItem) {
-                    delete submitData.password;
-                    delete submitData.confirmPassword;
+                    // Only include password fields if they are provided during edit
+                    if (!submitData.password || submitData.password.trim() === '') {
+                        delete submitData.password;
+                        delete submitData.confirmPassword;
+                    }
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);
@@ -1002,6 +1063,7 @@ const DynamicCRUD = ({
                             {loading ? (
                                 // <Loader />
                                  <span className="loader"></span>
+                           
                             ) : (
                                 <>
                                     <TableHeader
@@ -1072,6 +1134,17 @@ const DynamicCRUD = ({
                                                     </button>
                                                 )}
 
+                                                {/* ✅ Change Password button for users */}
+                                                {moduleName === 'user' && canEdit && (
+                                                    <button
+                                                        onClick={() => handleChangePassword(item)}
+                                                        title="Change Password"
+                                                        className="custom-btn-edit"
+                                                    >
+                                                        <i className="fs-7 fa-solid fa-eye" style={{ color: 'gray' }}></i>
+                                                    </button>
+                                                )}
+
                                                 {/* ✅ Delete button permission check */}
                                                 {allowDelete && canDelete && (
                                                     <button
@@ -1090,7 +1163,8 @@ const DynamicCRUD = ({
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >
-                                                        <i className="fs-7 fa-solid fa-eye me-1"></i>
+                                                        {/* <i className="fs-7 fa-solid fa-eye me-1"></i> */}
+                                                        <i className="fs-7 fa-solid fa-key"></i>
                                                     </button>
                                                 )}
                                             </div>
@@ -1291,7 +1365,8 @@ const DynamicCRUD = ({
                         >
                             {loading ? (
                                 <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    {/* <span className="spinner-border spinner-border-sm me-2" role="status"></span> */}
+                                    <span className="loader"></span>
                                     Inserting...
                                 </>
                             ) : (
@@ -1338,6 +1413,63 @@ const DynamicCRUD = ({
                             }}
                         />
                     </Modal.Body>
+                </Modal>
+            )}
+
+            {showChangePasswordModal && (
+                <Modal
+                    show={showChangePasswordModal}
+                    onHide={() => {
+                        setShowChangePasswordModal(false);
+                        setSelectedUserForPassword(null);
+                        setPasswordFormData({ password: "", confirmPassword: "" });
+                    }}
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Change Password</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>New Password *</Form.Label>
+                                <Form.Control
+                                    type="password"
+                                    value={passwordFormData.password}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })}
+                                    placeholder="Enter new password"
+                                />
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Confirm Password *</Form.Label>
+                                <Form.Control
+                                    type="password"
+                                    value={passwordFormData.confirmPassword}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                                    placeholder="Confirm new password"
+                                />
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            variant="outline-secondary"
+                            onClick={() => {
+                                setShowChangePasswordModal(false);
+                                setSelectedUserForPassword(null);
+                                setPasswordFormData({ password: "", confirmPassword: "" });
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={handleChangePasswordSubmit}
+                            disabled={loading}
+                        >
+                            {loading ? "Changing..." : "Change Password"}
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
             )}
         </Container>

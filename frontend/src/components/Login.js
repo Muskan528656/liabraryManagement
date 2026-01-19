@@ -198,11 +198,11 @@ const Login = () => {
                       </div>
                     </Form.Group>
 
-                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0 login-btn" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
                       {/* {loading ?<> <span className="loader-login"></span> Please Wait...</> : "Sign In"} */}
                       {loading ? (
                         <>
-                          <span className="loader"></span>
+                          <span className="loader-login"></span>
                           <span>Signing in...</span>
                         </>
                       ) : (
