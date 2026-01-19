@@ -229,8 +229,7 @@ const Login = () => {
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
-          <Alert variant="danger" show={!!forgotError}>{forgotError}</Alert>
-          <Alert variant="success" show={!!forgotMessage}>{forgotMessage}</Alert>
+          <b className="text-success" show={!!forgotMessage}>{forgotMessage}</b>
           <Form onSubmit={handleForgotPassword}>
             <Form.Group className="mb-3 ">
               <Form.Label className="fw-medium">Company Name</Form.Label>
@@ -253,13 +252,14 @@ const Login = () => {
                 required
                 style={{ padding: '5px' }}
               />
+              <span className="text-danger">{forgotError}</span>
             </Form.Group>
             <Button
               type="submit"
               variant=""
               disabled={forgotLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)", color: "#fff" }}
+              style={{ background: "var(--primary-color)",color:"#fff", borderRadius:"30px" }}
             >
               {forgotLoading ? <><Loader /> Sending...</> : "Send Reset Link"}
             </Button>
@@ -283,8 +283,8 @@ const Login = () => {
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
-          <Alert variant="danger" show={!!resetError}>{resetError}</Alert>
-          <Alert variant="success" show={!!resetMessage}>{resetMessage}</Alert>
+          {/* <b  className="text-danger" show={!!resetError}>{resetError}</b> */}
+          <b className="text-success" show={!!resetMessage}>{resetMessage}</b>
           <Form onSubmit={handleResetPassword}>
             <Form.Group className="mb-3">
               <Form.Label className="fw-medium">New Password</Form.Label>
@@ -319,13 +319,14 @@ const Login = () => {
                   <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
                 </span>
               </div>
+              <span className="text-danger">{resetError}</span>
             </Form.Group>
             <Button
               variant=""
               type="submit"
               disabled={resetLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)", color: "#fff" }}
+              style={{ background: "var(--primary-color)",color:"#fff", borderRadius:'30px' }}
             >
               {resetLoading ? <><Loader /> Resetting...</> : "Reset Password"}
             </Button>

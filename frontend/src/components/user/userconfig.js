@@ -72,7 +72,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
         moduleLabel: "User",
         apiEndpoint: "user",
 
-        importMatchFields: [],
+        importMatchFields: ["email"],
         importModel: UserModel,
 
         columns: [
