@@ -35,12 +35,6 @@ const Permission = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const navigate = useNavigate();
 
-    const [deleteId, setdeleteId] = useState(null);
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const[setCheck,check] = useState(" ")
-    const navigate = useNavigate();
-    const { id } = useParams();
-
     const fetchPermissions = async () => {
         try {
             setLoading(true);
@@ -422,8 +416,7 @@ const Permission = () => {
         }));
     };
 
-    const handleInlineCancel = (roleId) => {
-        setExpandedRoles("");
+    const handleInlineCancel = () => {
         setEditingRow(null);
         setEditingPermissions({});
         setSelectAllStates({
@@ -597,8 +590,8 @@ const Permission = () => {
                     <div className="d-flex align-items-center">
                         {/* <button
                             className="btn btn-sm btn-outline-secondary me-3"
-                        // onClick={() => toggleRoleAccordion(role.role_id)}
-                        // title={isExpanded ? "Collapse" : "Expand"}
+                            onClick={() => toggleRoleAccordion(role.role_id)}
+                            title={isExpanded ? "Collapse" : "Expand"}
                         >
                             <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
                         </button> */}
@@ -607,12 +600,12 @@ const Permission = () => {
                                 <i className="fa-solid fa-user-tag me-2 text-primary"></i>
                                 {role.role_name}
                             </h6>
-                            {/* <small className="text-muted">
+                            <small className="text-muted">
                                 {role.modules_count} module{role.modules_count !== 1 ? 's' : ''} •
                                 <span className="ms-1">
                                     {viewCount} view, {createCount} create, {editCount} edit, {deleteCount} delete
                                 </span>
-                            </small> */}
+                            </small>
                         </div>
                     </div>
 
@@ -622,21 +615,15 @@ const Permission = () => {
                                 <button
                                     className="btn btn-sm btn-success"
                                     onClick={() => handleInlineSave(role.role_id, role.role_name)}
-                                > */}
-                                <i className="fa-solid fa-check me-1 fs-6 text-success me-3"
-                                    onClick={() => handleInlineSave(role.role_id, role.role_name)}
-                                ></i>
-                                {/* Save
-                                </button> */}
-                                {/* <button
+                                >
+                                    <i className="fa-solid fa-check me-1"></i> Save
+                                </button>
+                                <button
                                     className="btn btn-sm btn-secondary"
-                                    onClick={() => handleInlineCancel(role.role_id)}
-                                > */}
-                                <i className="fa-solid fa-times me-1 fs-6 text-secondary me-4"
-                                    onClick={() => handleInlineCancel(role.role_id)}
-                                ></i>
-                                {/* Cancel
-                                </button> */}
+                                    onClick={handleInlineCancel}
+                                >
+                                    <i className="fa-solid fa-times me-1"></i> Cancel
+                                </button>
                             </>
                         ) : (
                             <>
@@ -653,8 +640,8 @@ const Permission = () => {
                 {isExpanded && (
                     <div className="card-body p-0">
                         <div className="table-responsive">
-                            <table className="table table-hover mb-0 ">
-                                <thead className="table-light bg-primary">
+                            <table className="table table-hover mb-0">
+                                <thead className="table-light">
                                     <tr>
                                         <th width="30%" className="ps-4">Module Name</th>
                                         <SelectAllHeader permissionType="allow_view" label="View" />

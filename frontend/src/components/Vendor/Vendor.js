@@ -9,9 +9,12 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
+
 import "../../App.css";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 const Vendor = (props) => {
-  const { timeZone } = useTimeZone();
+  const { timeZone } = convertToUserTimezone();
   const baseConfig = getVendorConfig();
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
