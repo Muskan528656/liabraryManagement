@@ -50,7 +50,7 @@ const Publisher = (props) => {
             window.removeEventListener("permissionsUpdated", fetchPermissions);
         };
     }, []);
-    // 🔹 Loader
+   
     if (permissions.loading || loading) {
         // return <Loader message="Loading publisher data..." />;
         return <span className="loader"></span>

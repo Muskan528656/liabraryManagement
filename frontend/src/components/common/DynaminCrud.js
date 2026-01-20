@@ -110,9 +110,7 @@ const DynamicCRUD = ({
     const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
     const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
     const [passwordVisibility, setPasswordVisibility] = useState({ password: false, confirmPassword: false });
-    // console.log("formData", formData)
-    // console.log("Data", data)
-
+ 
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -515,12 +513,10 @@ const DynamicCRUD = ({
 
             let processedField = { ...field };
 
-            // Handle readOnlyWhenEditing
             if (field.readOnlyWhenEditing && editingItem) {
                 processedField.readOnly = true;
             }
 
-            // Make password fields not required when editing
             if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
                 processedField.required = false;
             }
