@@ -189,7 +189,7 @@ const EditProfile = () => {
   return (
     <Container fluid className="py-4">
       <Row>
-        {/* ===== IMAGE ===== */}
+       
         <Col lg={4}>
           <Card className="border-0 shadow-sm text-center">
             <Card.Body>
@@ -203,10 +203,10 @@ const EditProfile = () => {
                 ) : (
                   <img
                     src={
-                      // profile.profile_image 
+                   
 
                       imagePreview
-                        ? imagePreview            // blob OR full URL
+                        ? imagePreview           
                         : profile.profile_image
                           ? `${API_BASE_URL}${profile.profile_image}`
                           : ""
