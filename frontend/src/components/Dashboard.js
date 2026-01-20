@@ -1253,15 +1253,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '14px' }}>
                     Books Copies Status
                   </h6>
-                  <Badge className="px-2 py-1" style={{
-                    borderRadius: '30px',
-                    fontSize: '9px',
-                    fontWeight: 600,
-                    background: INFO_COLOR,
-                    color: 'white'
-                  }}>
-                    PIE CHART
-                  </Badge>
+             
                 </div>
                 <Chart
                   options={donutOptions}
@@ -1300,7 +1292,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   }}>
                     {formatNumber(metrics.total_copies)}
                   </h4>
-                  <small className="text-muted" style={{ fontSize: '11px' }}>total copies in library</small>
+                  <small className="text-muted" style={{ fontSize: '11px' }}>Total Copies in library</small>
                 </div>
               </Card.Body>
             </Card>
