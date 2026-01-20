@@ -1267,7 +1267,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   options={donutOptions}
                   series={donutChartSeries}
                   type="pie"
-                  height={180}
+                  height={200}
+                  width={390}
                 />
                 <div className="mt-2">
                   <div className="d-flex justify-content-center align-items-center mb-1">
