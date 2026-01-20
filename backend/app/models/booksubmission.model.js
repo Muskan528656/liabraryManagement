@@ -407,12 +407,13 @@ async function findById(id) {
   }
 }
 
-async function findAll() {
+async function findAll(filters = {}) {
   try {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT 
+
+    let query = `SELECT
                     bs.*,
                     bi.issued_to,
                     bi.issue_date,
@@ -425,9 +426,68 @@ async function findAll() {
                    FROM ${schema}.book_submissions bs
                    LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
                    LEFT JOIN ${schema}.books b ON bs.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-                   ORDER BY bs.createddate DESC`;
-    const result = await sql.query(query);
+                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id`;
+
+    const conditions = [];
+    const values = [];
+    let paramIndex = 1;
+
+    // Filter by condition_after
+    if (filters.condition_after) {
+      conditions.push(`bs.condition_after = $${paramIndex}`);
+      values.push(filters.condition_after);
+      paramIndex++;
+    }
+
+    // Filter by book title (partial match)
+    if (filters.book_title) {
+      conditions.push(`b.title ILIKE $${paramIndex}`);
+      values.push(`%${filters.book_title}%`);
+      paramIndex++;
+    }
+
+    // Filter by student name (partial match)
+    if (filters.student_name) {
+      conditions.push(`(lm.first_name || ' ' || lm.last_name) ILIKE $${paramIndex}`);
+      values.push(`%${filters.student_name}%`);
+      paramIndex++;
+    }
+
+    // Filter by submit date range
+    if (filters.submit_date_from) {
+      conditions.push(`bs.submit_date >= $${paramIndex}`);
+      values.push(filters.submit_date_from);
+      paramIndex++;
+    }
+
+    if (filters.submit_date_to) {
+      conditions.push(`bs.submit_date <= $${paramIndex}`);
+      values.push(filters.submit_date_to);
+      paramIndex++;
+    }
+
+    // Filter by issued_to (member ID)
+    if (filters.issued_to) {
+      conditions.push(`bi.issued_to = $${paramIndex}`);
+      values.push(filters.issued_to);
+      paramIndex++;
+    }
+
+    // Filter by submitted_by (librarian ID)
+    if (filters.submitted_by) {
+      conditions.push(`bs.submitted_by = $${paramIndex}`);
+      values.push(filters.submitted_by);
+      paramIndex++;
+    }
+
+    // Add WHERE clause if there are conditions
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    query += ` ORDER BY bs.createddate DESC`;
+
+    const result = await sql.query(query, values);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);

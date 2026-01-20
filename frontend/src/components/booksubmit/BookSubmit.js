@@ -16,7 +16,7 @@ import {
     Nav,
     Dropdown,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
@@ -27,6 +27,8 @@ import { useBookSubmission } from "../../contexts/BookSubmissionContext";
 
 const BookSubmit = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const filter = searchParams.get('filter');
     const { updateNotificationsAfterSubmission, updateNotificationsFromAPI } = useBookSubmission();
     const [isbn, setIsbn] = useState("");
     const [cardNumber, setCardNumber] = useState("");
@@ -76,6 +78,7 @@ const BookSubmit = () => {
         remarks: ""
     });
     const [submittedBooksFilters, setSubmittedBooksFilters] = useState({});
+    const [overdueMode, setOverdueMode] = useState(false);
 
     const recordsPerPage = 20;
     const isbnInputRef = useRef(null);
@@ -104,6 +107,16 @@ const BookSubmit = () => {
         const storedTimeZone = localStorage.getItem('userTimeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
         setTimeZone(storedTimeZone);
     }, []);
+
+    useEffect(() => {
+        if (filter === 'overdue') {
+            setOverdueMode(true);
+            setActiveTab('submit');
+            fetchOverdueBooks();
+        } else {
+            setOverdueMode(false);
+        }
+    }, [filter]);
 
     const fetchLibrarySettings = async () => {
         try {
@@ -146,6 +159,24 @@ const BookSubmit = () => {
                 lost_percentage: 100
             };
             setLibrarySettings(defaultSettings);
+        }
+    };
+
+    const fetchOverdueBooks = async () => {
+        try {
+            setLoading(true);
+            const resp = await helper.fetchWithAuth(`${constants.API_BASE_URL}/api/bookissue`, "GET");
+            if (resp.ok) {
+                const data = await resp.json();
+                const overdueBooks = data.filter(issue => !issue.return_date && new Date(issue.due_date) < new Date());
+                setDisplayedIssuedBooks(overdueBooks);
+            } else {
+                console.error("Failed to fetch issues");
+            }
+        } catch (error) {
+            console.error("Error fetching issues:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -289,10 +320,30 @@ const BookSubmit = () => {
         try {
             setLoadingSubmitted(true);
 
-            const submissionsResp = await helper.fetchWithAuth(
-                `${constants.API_BASE_URL}/api/book_submissions`,
-                "GET"
-            );
+            // Build query parameters from filters
+            const queryParams = new URLSearchParams();
+
+            if (submittedBooksFilters.condition_after) {
+                queryParams.append('condition_after', submittedBooksFilters.condition_after);
+            }
+            if (submittedBooksFilters.overdue) {
+                queryParams.append('overdue', submittedBooksFilters.overdue);
+            }
+            if (submittedBooksFilters.book_title) {
+                queryParams.append('book_title', submittedBooksFilters.book_title);
+            }
+            if (submittedBooksFilters.issued_to_name) {
+                queryParams.append('student_name', submittedBooksFilters.issued_to_name);
+            }
+            if (submittedBooksFilters.submit_date) {
+                queryParams.append('submit_date_from', submittedBooksFilters.submit_date);
+                queryParams.append('submit_date_to', submittedBooksFilters.submit_date);
+            }
+
+            const queryString = queryParams.toString();
+            const url = `${constants.API_BASE_URL}/api/book_submissions${queryString ? `?${queryString}` : ''}`;
+
+            const submissionsResp = await helper.fetchWithAuth(url, "GET");
 
             if (!submissionsResp.ok) {
                 throw new Error(`HTTP ${submissionsResp.status}`);
@@ -1312,9 +1363,6 @@ const BookSubmit = () => {
             isbn.includes(query) ||
             studentName.includes(query)
         );
-    }).filter(submission => {
-
-        return applyAdvancedFilters([submission], submittedBooksFilters).length > 0;
     });
 
     const getStatusBadge = (status) => {
@@ -1785,6 +1833,7 @@ const BookSubmit = () => {
                                                 borderRadius: "8px"
                                             }}> */}
                                             {/* <Card.Body> */}
+                                            {!overdueMode && (
                                             <Row className="align-items-center">
                                                 {/* Search By Dropdown */}
                                                 <Col md={3}>
@@ -1954,6 +2003,7 @@ const BookSubmit = () => {
                                                     )}
                                                 </Col>
                                             </Row>
+                                            )}
                                             {/* </Card.Body> */}
                                             {/* </Card> */}
                                         </Col>
