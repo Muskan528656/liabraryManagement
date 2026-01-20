@@ -393,7 +393,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             showActions: true,
             showAddButton: canCreate,
             allowEdit: canEdit,
-            allowDelete: canDelete,
+            // allowDelete: canDelete,
             showImportButton: canCreate,
             showAdvancedFilter: true,
             showEditButtonInDetailView: canEdit,

@@ -2853,3 +2853,106 @@ textarea.form-control[required] {
   opacity: 0.85;
   cursor: not-allowed;
 }
+/* Custom scrollbar for menu container */
+.menu-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.menu-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.menu-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 10px;
+  opacity: 0.5;
+}
+
+.menu-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark-color);
+  opacity: 0.8;
+}
+
+/* Hide scrollbar when not hovering */
+.menu-container:not(:hover)::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Scroll arrow styles */
+.scroll-arrow {
+  transition: all 0.3s ease;
+}
+
+.scroll-arrow:hover {
+  background: var(--primary-color) !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+.scroll-arrow i {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.scroll-arrow:hover i {
+  color: white;
+}
+
+/* For Firefox */
+.menu-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) transparent;
+}
+
+/* Navbar collapse animation */
+.navbar-collapse {
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .menu-container {
+    gap: 4px;
+    padding: 0 5px;
+  }
+  
+  .scroll-arrow {
+    width: 25px !important;
+    height: 25px !important;
+  }
+  
+  .scroll-arrow i {
+    font-size: 12px;
+  }
+}
+
+/* Hide scroll arrows on very small screens */
+@media (max-width: 576px) {
+  .scroll-arrow {
+    display: none !important;
+  }
+  
+  .menu-container {
+    margin: 0 !important;
+    padding: 0 2px !important;
+  }
+}
+
+/* Active menu item highlight */
+.active-menu-item {
+  position: relative;
+}
+
+.active-menu-item::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}

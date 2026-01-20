@@ -22,6 +22,8 @@ const Permission = () => {
     const [refreshKey, setRefreshKey] = useState(0);
     const [expandedRoles, setExpandedRoles] = useState({});
     const [roles, setRoles] = useState([]);
+    const [roleId, setRoleId] = useState(null)
+    const [roleName, setRoleName] = useState(null)
     const [editingRow, setEditingRow] = useState(null);
     const [editingPermissions, setEditingPermissions] = useState({});
     const [selectAllStates, setSelectAllStates] = useState({
@@ -34,7 +36,9 @@ const Permission = () => {
     const [deleteId, setDeleteId] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const navigate = useNavigate();
-
+    const confirmDelete = async () => {
+        handleDeleteRole()
+    };
     const fetchPermissions = async () => {
         try {
             setLoading(true);
@@ -76,22 +80,21 @@ const Permission = () => {
         fetchRoles();
     }, [refreshKey]);
 
-    // Update select all states when editing starts or permissions change
+
     useEffect(() => {
         if (editingRow) {
             const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
 
-            // Calculate select all states based on current editingPermissions
             const newSelectAllStates = {};
 
             ['allow_view', 'allow_create', 'allow_edit', 'allow_delete'].forEach(permissionType => {
-                // Check if all modules have this permission set to true
+
                 const allChecked = rolePerms.every(perm => {
                     const modulePerms = editingPermissions[perm.module_id];
                     return modulePerms && modulePerms[permissionType] === true;
                 });
 
-                // Also check if there are any modules at all
+
                 const hasModules = rolePerms.length > 0;
 
                 newSelectAllStates[permissionType] = hasModules && allChecked;
@@ -101,27 +104,27 @@ const Permission = () => {
         }
     }, [editingPermissions, editingRow, permissions]);
 
-    const confirmDelete = async () => {
-        try {
-            const api = new DataApi("permissions");
-            await api.delete(deleteId);
+    // const confirmDelete = async () => {
+    //     try {
+    //         const api = new DataApi("permissions");
+    //         await api.delete(deleteId);
 
-            PubSub.publish("RECORD_SAVED_TOAST", {
-                title: "Success",
-                message: "Deleted successfully",
-            });
+    //         PubSub.publish("RECORD_SAVED_TOAST", {
+    //             title: "Success",
+    //             message: "Deleted successfully",
+    //         });
 
-            setRefreshKey(prev => prev + 1);
-        } catch (error) {
-            PubSub.publish("RECORD_ERROR_TOAST", {
-                title: "Error",
-                message: `Failed to delete: ${error.message}`,
-            });
-        }
+    //         setRefreshKey(prev => prev + 1);
+    //     } catch (error) {
+    //         PubSub.publish("RECORD_ERROR_TOAST", {
+    //             title: "Error",
+    //             message: `Failed to delete: ${error.message}`,
+    //         });
+    //     }
 
-        setShowConfirmModal(false);
-        setDeleteId(null);
-    };
+    //     setShowConfirmModal(false);
+    //     setDeleteId(null);
+    // };
 
     const handleSavePermission = async (formData) => {
         try {
@@ -229,7 +232,12 @@ const Permission = () => {
                         ...p,
                         role_id: actualRoleId
                     })))
+
                 );
+                setExpandedRoles(prev => ({
+                    ...prev,
+                    [roleId]: false
+                }));
 
                 window.dispatchEvent(new Event("permissionsUpdated"));
 
@@ -257,13 +265,16 @@ const Permission = () => {
             });
         }
     };
-
     const groupPermissionsByRole = () => {
         const grouped = {};
 
+        // SYSTEM ADMIN ko completely filter out karo
         const filteredPermissions = permissions.filter(perm => {
             const roleInfo = roles.find(r => r.id === perm.role_id);
-            const roleName = roleInfo ? (roleInfo.role_name || roleInfo.name) : perm.role_name;
+            if (!roleInfo) return true; // Agar role nahi mila to include karo
+
+            const roleName = roleInfo.role_name || roleInfo.name;
+            // SYSTEM ADMIN ko completely skip karo
             return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
         });
 
@@ -271,9 +282,13 @@ const Permission = () => {
             const roleId = perm.role_id || 'null';
             const roleInfo = roles.find(r => r.id === perm.role_id);
 
+            // Dobara check karo SYSTEM ADMIN nahi hai na
             let roleName;
             if (roleInfo) {
                 roleName = roleInfo.role_name || roleInfo.name || `Role ${roleId}`;
+                if (roleName.toUpperCase() === "SYSTEM ADMIN") {
+                    return; // Skip this permission
+                }
             } else {
                 roleName = perm.role_name || `Role ${roleId}`;
             }
@@ -302,6 +317,51 @@ const Permission = () => {
 
         return Object.values(grouped);
     };
+
+    // const groupPermissionsByRole = () => {
+    //     const grouped = {};
+
+    //     const filteredPermissions = permissions.filter(perm => {
+    //         const roleInfo = roles.find(r => r.id === perm.role_id);
+    //         const roleName = roleInfo ? (roleInfo.role_name || roleInfo.name) : perm.role_name;
+    //         return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
+    //     });
+
+    //     filteredPermissions.forEach(perm => {
+    //         const roleId = perm.role_id || 'null';
+    //         const roleInfo = roles.find(r => r.id === perm.role_id);
+
+    //         let roleName;
+    //         if (roleInfo) {
+    //             roleName = roleInfo.role_name || roleInfo.name || `Role ${roleId}`;
+    //         } else {
+    //             roleName = perm.role_name || `Role ${roleId}`;
+    //         }
+
+    //         if (!grouped[roleId]) {
+    //             grouped[roleId] = {
+    //                 role_id: roleId,
+    //                 role_name: roleName,
+    //                 permissions: [],
+    //                 modules_count: 0
+    //             };
+    //         }
+
+    //         grouped[roleId].permissions.push({
+    //             ...perm,
+    //             module_id: perm.module_id,
+    //             module_name: perm.module_name || `Module ${perm.module_id}`,
+    //             allow_view: perm.allow_view || false,
+    //             allow_create: perm.allow_create || false,
+    //             allow_edit: perm.allow_edit || false,
+    //             allow_delete: perm.allow_delete || false
+    //         });
+
+    //         grouped[roleId].modules_count++;
+    //     });
+
+    //     return Object.values(grouped);
+    // };
 
     const rolePermissions = groupPermissionsByRole();
 
@@ -417,6 +477,10 @@ const Permission = () => {
     };
 
     const handleInlineCancel = () => {
+        setExpandedRoles(prev => ({
+            ...prev,
+            [editingRow]: false
+        }));
         setEditingRow(null);
         setEditingPermissions({});
         setSelectAllStates({
@@ -461,9 +525,59 @@ const Permission = () => {
         setShowAddModal(true);
     };
 
-    const handleDeleteRole = async (roleId, roleName) => {
-        setShowConfirmModal(true);
-        setDeleteId(roleId);
+    const handleDeleteRole = async (Id, Name) => {
+
+
+        setRoleId(Id)
+        setRoleName(Name)
+
+
+        console.log("roleId", roleId)
+        console.log("roleName", roleName)
+
+        if (!showConfirmModal) {
+            setShowConfirmModal(true)
+        } else {
+
+            console.log("roleId", roleId);
+            console.log("showmodel", showConfirmModal);
+            console.log("roleName", roleName);
+
+            // if (!window.confirm(Are you sure you want to delete all permissions for "${roleNamee}"?)) {
+            //     return;
+            // }
+
+
+
+            try {
+                const api = new DataApi("permissions");
+                const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+
+                console.log("api", api)
+                console.log("rolePerms", rolePerms)
+
+                for (const perm of rolePerms) {
+                    if (perm.id) {
+                        const response = await api.delete(perm.id);
+                        console.log("response", response)
+                    }
+                }
+                setShowConfirmModal(false)
+                // alert(Permissions for ${roleName} deleted successfully!);
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    message: `Permissions for "${roleName}" deleted successfully!`,
+                });
+                setRefreshKey(prev => prev + 1);
+            } catch (err) {
+                console.error("Error deleting permissions:", err);
+                // alert("Failed to delete permissions");
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    message: err.message || "Failed to delete permissions",
+                });
+
+            }
+        }
+
     };
 
     const CustomHeader = () => (
@@ -588,13 +702,7 @@ const Permission = () => {
             <div className="card mb-3 border shadow-sm mx-3">
                 <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light">
                     <div className="d-flex align-items-center">
-                        {/* <button
-                            className="btn btn-sm btn-outline-secondary me-3"
-                            onClick={() => toggleRoleAccordion(role.role_id)}
-                            title={isExpanded ? "Collapse" : "Expand"}
-                        >
-                            <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-                        </button> */}
+
                         <div>
                             <h6 className="mb-0 fw-bold">
                                 <i className="fa-solid fa-user-tag me-2 text-primary"></i>
@@ -627,11 +735,11 @@ const Permission = () => {
                             </>
                         ) : (
                             <>
-                              
+
                                 <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handleInlineEditStart(role.role_id)}></i>
-                          
-                                <i className="fa-solid fa-trash me-1 text-danger cursor-pointer fs-5" onClick={() => handleDeleteRole(role.role_id, role.role_name)}></i>
-                              
+
+                                {/* <i className="fa-solid fa-trash me-1 text-danger cursor-pointer fs-5" onClick={() => handleDeleteRole(role.role_id, role.role_name)}></i> */}
+
                             </>
                         )}
                     </div>

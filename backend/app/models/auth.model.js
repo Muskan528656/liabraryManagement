@@ -2,39 +2,81 @@ const sql = require("./db.js");
 function init(schema_name) {
   this.schema = schema_name;
 }
+// async function findPermissionsByRole(roleId) {
+//   console.log("roleid->>", roleId)
+//   if (!roleId) return [];
+
+//   try {
+//     const rolePermsResult = await sql.query(`
+//       SELECT permission_id
+//       FROM demo.role_permissions
+//       WHERE role_id = $1
+//       ORDER BY id ASC
+//     `, [roleId]);
+
+//     if (!rolePermsResult.rows.length) return [];
+
+//     const permissionIds = rolePermsResult.rows.map(rp => rp.permission_id);
+
+
+//     const permissionsResult = await sql.query(`
+//       SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
+//       FROM demo.permissions
+//       WHERE id = ANY($1::uuid[])
+//     `, [permissionIds]);
+
+//     const permissions = permissionsResult.rows.map(row => ({
+//       permissionId: row.id,
+//       moduleId: row.module_id,
+//       allowView: row.allow_view,
+//       allowCreate: row.allow_create,
+//       allowEdit: row.allow_edit,
+//       allowDelete: row.allow_delete,
+//     }));
+
+//     // console.log("Fetched Permissions for role:", permissions);
+//     return permissions;
+
+//   } catch (err) {
+//     console.error("Error fetching permissions for role:", err);
+//     return [];
+//   }
+// }
+
 async function findPermissionsByRole(roleId) {
   console.log("roleid->>", roleId)
   if (!roleId) return [];
 
   try {
-    const rolePermsResult = await sql.query(`
-      SELECT permission_id
-      FROM demo.role_permissions
-      WHERE role_id = $1
-      ORDER BY id ASC
+    // Direct join query use karo
+    const permissionsResult = await sql.query(`
+      SELECT 
+        p.id as permission_id,
+        p.module_id,
+        m.name as module_name,
+        p.allow_view,
+        p.allow_create,
+        p.allow_edit,
+        p.allow_delete
+      FROM demo.permissions p
+      LEFT JOIN demo.module m ON p.module_id = m.id
+      WHERE p.role_id = $1
+      ORDER BY m.name ASC
     `, [roleId]);
 
-    if (!rolePermsResult.rows.length) return [];
-
-    const permissionIds = rolePermsResult.rows.map(rp => rp.permission_id);
-
-
-    const permissionsResult = await sql.query(`
-      SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
-      FROM demo.permissions
-      WHERE id = ANY($1::uuid[])
-    `, [permissionIds]);
+    if (!permissionsResult.rows.length) return [];
 
     const permissions = permissionsResult.rows.map(row => ({
-      permissionId: row.id,
+      permissionId: row.permission_id,
       moduleId: row.module_id,
+      moduleName: row.module_name, // IMPORTANT: Module name add karo
       allowView: row.allow_view,
       allowCreate: row.allow_create,
       allowEdit: row.allow_edit,
       allowDelete: row.allow_delete,
     }));
 
-    // console.log("Fetched Permissions for role:", permissions);
+    console.log("Fetched Permissions for role:", permissions.length);
     return permissions;
 
   } catch (err) {
@@ -42,7 +84,6 @@ async function findPermissionsByRole(roleId) {
     return [];
   }
 }
-
 
 async function createUser(newUser) {
   const {
