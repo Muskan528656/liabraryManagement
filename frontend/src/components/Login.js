@@ -4,6 +4,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import AuthApi from "../api/authApi";
 import Loader from "./common/Loader";
+import "../App.css";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -111,7 +112,7 @@ const Login = () => {
         sessionStorage.setItem("r-t", result.refreshToken);
         window.location.assign("/");
       } else {
-        setShow(true); setErrorMessage(result.errors || "Invalid credentials");
+        setShow(true); setErrorMessage(result.errors || "Invalid credentials  Please check your credentials and try again");
       }
     } catch (err) {
       setShow(true); setErrorMessage("Something went wrong. Please try again.");
@@ -192,20 +193,39 @@ const Login = () => {
                       <div className="position-relative">
                         <Form.Control type={showPassword ? "text" : "password"} name="password" placeholder="Enter password" value={credentials.password} onChange={handleChange} style={{ padding: '5px' }} />
                         <span onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                          <i className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                          <i className={`fa ${showPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
                         </span>
                       </div>
                     </Form.Group>
 
-                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
-                      {loading ? <><Loader /> Signing In...</> : "Sign In"}
+                    <Button variant="" type="submit" disabled={!isFormValid || loading} className="w-100 border-0 login-btn" style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)", padding: "12px", fontWeight: "600", borderRadius: "8px" }}>
+                      {/* {loading ?<> <span className="loader-login"></span> Please Wait...</> : "Sign In"} */}
+                      {loading ? (
+                        <>
+                          <span className="loader-login"></span>
+                          <span>Signing in...</span>
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
                     </Button>
 
-                    <div className="text-center mt-3">
-                      <Button variant="link" onClick={() => setShowForgotModal(true)} style={{ color: colors.periwinkle, textDecoration: "none", fontSize: "14px", fontWeight: '500' }}>
+
+                    <div className="mt-3 text-end">
+                      <Button
+                        variant="link"
+                        onClick={() => setShowForgotModal(true)}
+                        style={{
+                          color: "#006dcc",
+                          textDecoration: "none",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                        }}
+                      >
                         Forgot Password?
                       </Button>
                     </div>
+
                   </Form>
                 </Col>
               </Row>
@@ -220,6 +240,7 @@ const Login = () => {
         centered
         contentClassName="border-0 shadow-lg"
         size="md"
+        backdrop="static"
       >
         <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Forgot Password</b>
@@ -228,8 +249,7 @@ const Login = () => {
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
-          <Alert variant="danger" show={!!forgotError}>{forgotError}</Alert>
-          <Alert variant="success" show={!!forgotMessage}>{forgotMessage}</Alert>
+          {/* <b className="text-success" show={!!forgotMessage}>{forgotMessage}</b> */}
           <Form onSubmit={handleForgotPassword}>
             <Form.Group className="mb-3 ">
               <Form.Label className="fw-medium">Company Name</Form.Label>
@@ -252,15 +272,16 @@ const Login = () => {
                 required
                 style={{ padding: '5px' }}
               />
+              <span className="text-danger">{forgotError}</span>
             </Form.Group>
             <Button
               type="submit"
               variant=""
               disabled={forgotLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)", color: "#fff" }}
+              style={{ background: "var(--primary-color)", color: "#fff", borderRadius: "30px" }}
             >
-              {forgotLoading ? <><Loader /> Sending...</> : "Send Reset Link"}
+              {forgotLoading ? <> <span className="loader-login"></span> Sending...</> : "Send Reset Link"}
             </Button>
           </Form>
         </Modal.Body>
@@ -273,6 +294,7 @@ const Login = () => {
         centered
         contentClassName="border-0 shadow-lg"
         size="md"
+        backdrop="static"
       >
         <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
           <b style={{ color: colors.navy, fontSize: '1.5rem' }}>Reset Password</b>
@@ -281,8 +303,8 @@ const Login = () => {
           <ModalHeaderStyled />
         </Modal.Title>
         <Modal.Body className="px-4 pb-5">
-          <Alert variant="danger" show={!!resetError}>{resetError}</Alert>
-          <Alert variant="success" show={!!resetMessage}>{resetMessage}</Alert>
+          {/* <b  className="text-danger" show={!!resetError}>{resetError}</b> */}
+          <b className="text-success" show={!!resetMessage}>{resetMessage}</b>
           <Form onSubmit={handleResetPassword}>
             <Form.Group className="mb-3">
               <Form.Label className="fw-medium">New Password</Form.Label>
@@ -297,7 +319,7 @@ const Login = () => {
                   style={{ padding: '5px' }}
                 />
                 <span onClick={() => setShowNewPassword(!showNewPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                  <i className={`fa ${showNewPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                  <i className={`fa ${showNewPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
                 </span>
               </div>
             </Form.Group>
@@ -317,15 +339,17 @@ const Login = () => {
                   <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
                 </span>
               </div>
+              <span className="text-danger">{resetError}</span>
             </Form.Group>
             <Button
               variant=""
               type="submit"
               disabled={resetLoading}
               className="w-100 border-0"
-              style={{ background: "var(--primary-color)", color: "#fff" }}
+              style={{ background: "var(--primary-color)", color: "#fff", borderRadius: '30px' }}
             >
-              {resetLoading ? <><Loader /> Resetting...</> : "Reset Password"}
+              {resetLoading ? <> <span className="loader-login"></span> Resetting...</> : "Reset Password"}
+
             </Button>
           </Form>
         </Modal.Body>

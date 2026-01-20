@@ -15,7 +15,8 @@ import {
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
-import Loader from "./common/Loader";
+// import Loader from "./common/Loader";
+import '../App.css';
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 import { useNavigate } from "react-router-dom";
@@ -920,7 +921,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-        <Loader />
+        {/* <Loader /> */}
+         <span className="loader"></span>
       </div>
     );
   }

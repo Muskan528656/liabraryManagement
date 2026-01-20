@@ -1,9 +1,7 @@
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getVendorConfig } from "./vendorconfig";
-
 import { useDataManager } from "../common/userdatamanager";
-import Loader from "../common/Loader";
 import CityState from "../../constants/CityState.json"
 import CityPincode from "../../constants/CityPincode.json";
 import { useState } from "react";
@@ -11,7 +9,7 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
-
+import "../../App.css";
 const Vendor = (props) => {
   const baseConfig = getVendorConfig();
   const { data, loading, error } = useDataManager(
@@ -60,7 +58,8 @@ const Vendor = (props) => {
     return <PermissionDenied />;
   }
   if (loading) {
-    return <Loader message="Loading vendors data..." />;
+    // return <Loader message="Loading vendors data..." />;
+    return <span className="loader"></span>
   }
   if (error) {
     return (
@@ -84,15 +83,16 @@ const Vendor = (props) => {
     CityPincode: CityPincode
   };
 
-
   const finalConfig = getVendorConfig(
     allData,
+    props,
     {
       canCreate: permissions.canCreate,
       canEdit: permissions.canEdit,
       canDelete: permissions.canDelete
     }
   );
+
   return <DynamicCRUD {...finalConfig} icon="fa-solid fa-store" permissions={permissions} />;
 };
 

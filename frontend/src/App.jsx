@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import React, { useEffect, useState } from "react";
@@ -55,6 +55,7 @@ import PlanDetail from "./components/plan/PlanDetail";
 import Publisher from "./components/Publisher/Publisher";
 import PublisherDetail from "./components/Publisher/PublisherDetail";
 import { AuthProvider } from "./contexts/authwrapper";
+import Loader from "./components/common/Loader";
 
 const ENDPOINT = "http://localhost:3003";
 

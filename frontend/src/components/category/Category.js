@@ -7,7 +7,7 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
-
+import "../../App.css";
 const Category = (props) => {
   const { timeZone } = useTimeZone();
   const [permissions, setPermissions] = useState({
@@ -57,7 +57,8 @@ const Category = (props) => {
 
 
   if (permissions.loading || dataLoading) {
-    return <Loader message="Loading categories data..." />;
+    // return <Loader message="Loading categories data..." />;
+    return <span class="loader"></span>
   }
 
   if (!permissions.canView) {

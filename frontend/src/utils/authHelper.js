@@ -23,8 +23,8 @@ export const AuthHelper = {
 
     getPermissions() {
         const perms = sessionStorage.getItem("permissions");
-
         const parsed = perms ? JSON.parse(perms) : [];
+        console.log("AuthHelper.getPermissions ->", parsed);
         return parsed;
     },
 
@@ -71,62 +71,118 @@ export const AuthHelper = {
         }
     },
     async hasModulePermission(moduleName, action) {
-        console.log("Checking permission for module:", moduleName, "action:", action);
+        console.log("Checking permission:", moduleName, action);
 
-        let permissions = this.getPermissions();
-        if (!permissions || permissions.length === 0) return false;
-
-        let moduleList = [];
+        const permissions = this.getPermissions();
+        if (!Array.isArray(permissions) || permissions.length === 0) {
+            console.warn("No permissions found");
+            return false;
+        }
 
         try {
+
             const api = new DataApi("module");
             const response = await api.fetchAll();
 
-            console.log("Fetched module list response:", response);
-
             if (!response || response.status !== 200) {
-                throw new Error(`Module API error: ${response?.status}`);
+                console.error("Module API failed:", response);
+                return false;
             }
 
-            moduleList = response.data?.records || [];
-
-        } catch (err) {
-            console.error("AuthHelper.hasModulePermission -> Module fetch error:", err);
-            return false;
-        }
+            const moduleList = response.data?.records || [];
 
 
-        const module = moduleList.find(m => m.name === moduleName);
-        if (!module) {
-            console.warn(`Module "${moduleName}" not found in API response`);
-            return false;
-        }
-
-        const modulePerm = permissions.find(p => p.moduleId === module.id);
-        console.log("AuthHelper.hasModulePermission -> modulePerm:", modulePerm);
-
-        if (!modulePerm) return false;
-
-        const updatedPermissions = permissions.map(p =>
-            p.moduleId === module.id ? modulePerm : p
-        );
-
-        sessionStorage.setItem("permissions", JSON.stringify(updatedPermissions));
-
-        switch (action) {
-            case "view":
-                return Boolean(modulePerm.allowView);
-            case "create":
-                return Boolean(modulePerm.allowCreate);
-            case "edit":
-                return Boolean(modulePerm.allowEdit);
-            case "delete":
-                return Boolean(modulePerm.allowDelete);
-            default:
-                console.warn(`Unknown action "${action}"`);
+            const module = moduleList.find(m => m.name === moduleName);
+            if (!module) {
+                console.warn(`Module not found: ${moduleName}`);
                 return false;
+            }
+
+
+            const modulePerm = permissions.find(p => p.moduleId === module.id);
+            if (!modulePerm) {
+                console.warn(`No permission found for moduleId: ${module.id}`);
+                return false;
+            }
+
+            switch (action) {
+                case "view":
+                    return !!modulePerm.allowView;
+                case "create":
+                    return !!modulePerm.allowCreate;
+                case "edit":
+                    return !!modulePerm.allowEdit;
+                case "delete":
+                    return !!modulePerm.allowDelete;
+                default:
+                    console.warn(`Invalid action: ${action}`);
+                    return false;
+            }
+
+        } catch (error) {
+            console.error("hasModulePermission error:", error);
+            return false;
         }
     },
+
+    // async hasModulePermission(moduleName, action) {
+    //     console.log("Checking permission for module:", moduleName, "action:", action);
+
+    //     let permissions = this.getPermissions();
+    //     if (!permissions || permissions.length === 0) return false;
+
+    //     let moduleList = [];
+
+    //     try {
+    //         const api = new DataApi("module");
+    //         const response = await api.fetchAll();
+
+    //         console.log("Fetched module list response:", response);
+
+    //         if (!response || response.status !== 200) {
+    //             throw new Error(`Module API error: ${response?.status}`);
+    //         }
+
+    //         moduleList = response.data?.records || [];
+
+    //     } catch (err) {
+    //         console.error("AuthHelper.hasModulePermission -> Module fetch error:", err);
+    //         return false;
+    //     }
+
+
+    //     const module = moduleList.find(m => m.name === moduleName);
+    //     if (!module) {
+    //         console.warn(`Module "${moduleName}" not found in API response`);
+    //         return false;
+    //     }
+    //     console.log("-> Found module:", module.id, module.name);
+
+    //     const modulePerm = permissions.find(p => p.moduleId === module.id);
+    //     console.log(" modulePerm:", modulePerm);
+
+    //     if (!modulePerm) return false;
+
+    //     const updatedPermissions = permissions.map(p =>
+    //         p.moduleId === module.id ? modulePerm : p
+    //     );
+
+    //     console.log("updatedPermissions:", updatedPermissions);
+
+    //     switch (action) {
+    //         case "view":
+    //             return Boolean(modulePerm.allowView);
+    //         case "create":
+    //             return Boolean(modulePerm.allowCreate);
+    //         case "edit":
+    //             return Boolean(modulePerm.allowEdit);
+    //         case "delete":
+    //             return Boolean(modulePerm.allowDelete);
+    //         default:
+    //             console.warn(`Unknown action "${action}"`);
+    //             return false;
+    //     }
+    // },
 
     logout() {
         this.clearAuth();

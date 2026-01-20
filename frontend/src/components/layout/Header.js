@@ -22,17 +22,16 @@ import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import UniversalBarcodeScanner from "../common/UniversalBarcodeScanner";
 import { useBookSubmission } from "../../contexts/BookSubmissionContext";
 
-export default function Header({ open, handleDrawerOpen, socket }) {
+export default function Header({ socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useBookSubmission();
   const [userInfo, setUserInfo] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showBookSubmitModal, setShowBookSubmitModal] = useState(false);
-  const [rolePermissions, setRolePermissions] = useState({});
+
   const [showReturnBookModal, setShowReturnBookModal] = useState(false);
   const [modulesFromDB, setModulesFromDB] = useState([]);
-  const [activeTab, setActiveTab] = useState("UNREAD"); // UNREAD | READ
+  const [activeTab, setActiveTab] = useState("UNREAD");
 
   const [formData, setFormData] = useState({
     book_barcode: "",
@@ -46,7 +45,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
   const [userProfile, setUserProfile] = useState(null);
   const [userRoleName, setUserRoleName] = useState("");
   const [userDisplayName, setUserDisplayName] = useState("");
-  const [showScannerModal, setShowScannerModal] = useState(false); // Scanner modal state
+  const [showScannerModal, setShowScannerModal] = useState(false);
   const [allNotifications, setAllNotifications] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
@@ -263,7 +262,7 @@ export default function Header({ open, handleDrawerOpen, socket }) {
         "GET"
       );
       const result = await response.json();
-      console.log("notification reuslt=>",result);
+      console.log("notification reuslt=>", result);
       if (result.success) {
         setAllNotifications(result.all_notifications || []);
         setNotifications(result.unread_notifications || []);
@@ -1037,6 +1036,16 @@ export default function Header({ open, handleDrawerOpen, socket }) {
                         }}
                       >
                         {getUserRoleDisplay()}
+
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: "500",
+                          color: "#374151",
+                        }}
+                      >
+                        {userInfo?.tenantcode}
+
                       </div>
                     </div>
                   </div>
