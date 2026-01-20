@@ -314,7 +314,7 @@ const BookSubmit = () => {
         if (activeTab === "submitted") {
             fetchSubmittedBooks();
         }
-    }, [activeTab]);
+    }, [activeTab, submittedBooksFilters]);
 
     const fetchSubmittedBooks = async () => {
         try {
@@ -335,9 +335,11 @@ const BookSubmit = () => {
             if (submittedBooksFilters.issued_to_name) {
                 queryParams.append('student_name', submittedBooksFilters.issued_to_name);
             }
-            if (submittedBooksFilters.submit_date) {
-                queryParams.append('submit_date_from', submittedBooksFilters.submit_date);
-                queryParams.append('submit_date_to', submittedBooksFilters.submit_date);
+            if (submittedBooksFilters.submit_date_from) {
+                queryParams.append('submit_date_from', submittedBooksFilters.submit_date_from);
+            }
+            if (submittedBooksFilters.submit_date_to) {
+                queryParams.append('submit_date_to', submittedBooksFilters.submit_date_to);
             }
 
             const queryString = queryParams.toString();
