@@ -154,14 +154,9 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     const handleSelectAll = (permissionType, value) => {
-        setFormData((prev) => {
-            const updatedPermissions = prev.permissions.map((perm) => ({
-                ...perm,
-                [permissionType]: value,
-            }));
-            setSelectAll((prev) => ({ ...prev, [permissionType]: value }));
-            return { ...prev, permissions: updatedPermissions };
-        });
+        console.log("permissionType",permissionType)
+        console.log("value",value)
+      
     };
 
     const handleSubmit = () => {
@@ -198,7 +193,10 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     const renderSelectAllCheckbox = (permissionType, label) => {
+        console.log("permissionType",permissionType)
         const isChecked = selectAll[permissionType];
+        console.log("label",label)
+        console.log("ischecked",isChecked)
         return (
             <th width="15%" className="text-center py-2">
                 <div className="d-flex flex-column align-items-center justify-content-center">

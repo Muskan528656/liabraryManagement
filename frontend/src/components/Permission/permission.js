@@ -31,10 +31,11 @@ const Permission = () => {
         allow_delete: false
     });
 
-    const [deleteId, setDeleteId] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const navigate = useNavigate();
-
+    
+    const[roleId,setRoleId]=useState(null)
+    const[roleName,setRoleName]=useState(null) 
     const fetchPermissions = async () => {
         try {
             setLoading(true);
@@ -101,26 +102,34 @@ const Permission = () => {
         }
     }, [editingPermissions, editingRow, permissions]);
 
+    // const confirmDelete = async () => {
+    //     console.log("deleteid",deleteId)
+    //     try {
+    //         const api = new DataApi("permissions");
+    //        const response =  await api.delete(deleteId);
+    //        console.log("response",response);
+    //        console.log("api",api);
+
+    //         PubSub.publish("RECORD_SAVED_TOAST", {
+    //             title: "Success",
+    //             message: "Deleted successfully",
+    //         });
+
+    //         setRefreshKey(prev => prev + 1);
+    //     } catch (error) {
+    //         PubSub.publish("RECORD_ERROR_TOAST", {
+    //             title: "Error",
+    //             message: `Failed to delete: ${error.message}`,
+    //         });
+    //     }
+
+    //     setShowConfirmModal(false);
+    //     setDeleteId(null);
+    // };
     const confirmDelete = async () => {
-        try {
-            const api = new DataApi("permissions");
-            await api.delete(deleteId);
 
-            PubSub.publish("RECORD_SAVED_TOAST", {
-                title: "Success",
-                message: "Deleted successfully",
-            });
-
-            setRefreshKey(prev => prev + 1);
-        } catch (error) {
-            PubSub.publish("RECORD_ERROR_TOAST", {
-                title: "Error",
-                message: `Failed to delete: ${error.message}`,
-            });
-        }
-
-        setShowConfirmModal(false);
-        setDeleteId(null);
+        handleDeleteRole()
+        
     };
 
     const handleSavePermission = async (formData) => {
@@ -461,9 +470,66 @@ const Permission = () => {
         setShowAddModal(true);
     };
 
-    const handleDeleteRole = async (roleId, roleName) => {
-        setShowConfirmModal(true);
-        setDeleteId(roleId);
+    // const handleDeleteRole = async (roleId, roleName) => {
+    //     setShowConfirmModal(true);
+    //     setDeleteId(roleId);
+    // };
+
+    const handleDeleteRole = async (Id, Name) => {
+
+      
+        setRoleId(Id)
+        setRoleName(Name)
+
+
+        console.log("roleId",roleId)
+        console.log("roleName",roleName)
+
+        if(!showConfirmModal){
+            setShowConfirmModal(true)
+        }else{
+             
+        console.log("roleId", roleId);
+        console.log("showmodel", showConfirmModal);
+        console.log("roleName", roleName);
+
+        // if (!window.confirm(`Are you sure you want to delete all permissions for "${roleNamee}"?`)) {
+        //     return;
+        // }
+      
+      
+
+        try {
+            const api = new DataApi("permissions");
+            const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+
+            console.log("api",api)
+            console.log("rolePerms",rolePerms)
+
+            for (const perm of rolePerms) {
+                if (perm.id) {
+                    const response = await api.delete(perm.id);
+                    console.log("response",response)
+                }
+            }
+            setShowConfirmModal(false)
+            // alert(`Permissions for ${roleName} deleted successfully!`);
+            PubSub.publish("RECORD_SAVED_TOAST", {
+                message: `Permissions for "${roleName}" deleted successfully!`,
+            });
+            setRefreshKey(prev => prev + 1);
+        } catch (err) {
+            console.error("Error deleting permissions:", err);
+            // alert("Failed to delete permissions");
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                message: err.message || "Failed to delete permissions",
+            });
+
+        }
+        }
+      
+        
+      
     };
 
     const CustomHeader = () => (
