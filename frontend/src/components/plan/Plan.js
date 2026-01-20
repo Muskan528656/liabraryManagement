@@ -5,7 +5,7 @@ import { getPlanConfig } from "./PlanConfig";
 import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import DataApi from "../../api/dataApi";
-
+import "../../App.css";
 const Plan = (props) => {
     const [allowedBooks, setAllowedBooks] = useState(null);
     const [planConfig, setPlanConfig] = useState(null);
@@ -61,7 +61,7 @@ const Plan = (props) => {
         props
     );
 
-    if (!planConfig || loading) return <Loader message="Loading plans..." />;
+    if (!planConfig || loading) return <span className="loader"></span>;
     if (error) return <div className="alert alert-danger">{error}</div>;
 
     return <DynamicCRUD {...planConfig} icon="fa-solid fa-tags" />;

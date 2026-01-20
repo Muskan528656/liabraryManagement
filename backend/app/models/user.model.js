@@ -237,6 +237,7 @@ async function updateById(id, userData) {
         firstname,
         lastname,
         email,
+        password,
         userrole,
         phone,
         country_code,

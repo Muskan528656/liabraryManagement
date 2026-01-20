@@ -12,7 +12,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
             return;
         }
 
- 
+
         if (["student", "parent", "staff"].includes(type) && !subType) {
             alert("Please select data to import!");
             return;
@@ -23,7 +23,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
             return;
         }
 
- 
+
         onImport({ type, subType, file });
         onClose();
     };
@@ -33,7 +33,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered>
+        <Modal backdrop="static" show={show} onHide={onClose} centered>
             <Modal.Header closeButton>
                 <Modal.Title>Import Data</Modal.Title>
             </Modal.Header>

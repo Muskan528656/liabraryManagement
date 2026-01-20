@@ -13,13 +13,13 @@ const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
 let schema = "demo";
 
-global.currentLoggedInUserId = null;
+// global.currentLoggedInUserId = null;
 
 function init(schema_name) {
   schema = schema_name || "demo";
 }
 
-async function findAll() {
+async function findAll(userId) {
   const query = `
     SELECT 
     n.*,                         
@@ -27,10 +27,11 @@ async function findAll() {
     FROM ${schema}.notifications n
     LEFT JOIN ${schema}.library_members m 
       ON n.member_id = m.id
+    WHERE n.user_id = $1
     ORDER BY n.createddate DESC;
   `;
 
-  const result = await sql.query(query);
+  const result = await sql.query(query,[userId]);
   return result.rows;
 }
 
@@ -460,10 +461,10 @@ cron.schedule('0 9 * * *', async () => {
         const exists = await sql.query(
           `
           SELECT 1 FROM ${schema}.notifications
-          WHERE member_id = $1 AND book_id = $2 AND type = 'due_reminder' AND is_read = false
+          WHERE user_id =$1 AND member_id = $2 AND book_id = $3 AND type = 'due_reminder' AND is_read = false
           LIMIT 1
           `,
-          [memberId, bookId]
+          [user_id, memberId, bookId]
         );
 
         if (exists.rows.length > 0) {

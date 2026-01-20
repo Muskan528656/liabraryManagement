@@ -5,7 +5,7 @@ const sql = require("../models/db.js");
 const fetchUser = async (req, res, next) => {
   var token = req.headers.authorization;
   if (!token) {
- 
+
     global.currentLoggedInUserId = null;
     return res.status(401).send({ errors: "Please authenticate" });
   }
@@ -40,26 +40,29 @@ const checkPermission = (moduleName, action) => {
       if (!user) return res.status(401).json({ message: "Unauthorized" });
 
 
+      if (user.roleName && user.roleName.toUpperCase() === "SYSTEM ADMIN") {
+        return next();
+      }
 
       const permissions = user.permissions || [];
       if (!permissions.length)
         return res.status(403).json({ message: "No permissions assigned to this role" });
+
 
       const moduleResult = await sql.query(
         `SELECT id FROM demo.module WHERE LOWER(name) = $1 LIMIT 1`,
         [moduleName.toLowerCase()]
       );
 
-
       if (!moduleResult.rows.length)
         return res.status(404).json({ message: `Module "${moduleName}" not found` });
 
       const moduleId = moduleResult.rows[0].id;
 
-
       const modulePermission = permissions.find((p) => p.moduleId === moduleId);
       if (!modulePermission)
         return res.status(403).json({ message: "No permission for this module" });
+
 
       const actionMap = {
         allow_view: modulePermission.allowView === true,

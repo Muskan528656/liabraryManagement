@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import PurchaseDataImport from "../common/PurchaseDataImport";
 import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
-
+import "../../App.css";
 const BulkPurchasePage = () => {
     const navigate = useNavigate();
 
@@ -886,7 +886,8 @@ const BulkPurchasePage = () => {
     const totalBooks = multiInsertRows.reduce((sum, row) => sum + (parseInt(row.quantity) || 0), 0);
 
     if (loading) {
-        return <Loader />;
+        // return <Loader />;
+         <span className="loader"></span>
     }
 
     const renderTabContent = () => {
@@ -1783,7 +1784,7 @@ const BulkPurchasePage = () => {
                 </Row>
 
                 {/* Add Vendor Modal */}
-                <Modal show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
+                <Modal    backdrop="static"  show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
                     <Modal.Header closeButton className="border-bottom-0 pb-0" style={{ background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)", color: "white" }}>
                         <Modal.Title className="fw-bold">
                             Add New Vendor

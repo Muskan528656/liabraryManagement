@@ -14,7 +14,7 @@ import LibraryImportModal from "./LibraryImportModal";
 import { useMemo } from "react";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
-
+import "../../App.css";
 const LibraryCard = (props) => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -543,18 +543,20 @@ const LibraryCard = (props) => {
     }
   };
   if (permissions.loading || loadingConfig) {
-    return <Loader message="Loading library card configuration..." />;
+    // return <Loader message="Loading library card configuration..." />;
+    return <span className="loader"></span>
   }
-
+  
   if (!permissions.canView) {
     return <PermissionDenied />;
   }
-
+  
   const generateCardNumber = (card) => card.card_number || 'N/A';
-
-
+  
+  
   if (loadingConfig) {
-    return <Loader message="Loading library card configuration..." />;
+    // return <Loader message="Loading library card configuration..." />;
+    return <span className="loader"></span>
   }
 
   if (configError) {
@@ -570,7 +572,8 @@ const LibraryCard = (props) => {
   }
 
   if (!finalConfig) {
-    return <Loader message="Finalizing configuration..." />;
+    // return <Loader message="Finalizing configuration..." />;
+    return <span className="loader"></span>
   }
 
   const handleLibraryImport = (data) => {
@@ -609,7 +612,7 @@ const LibraryCard = (props) => {
       />
 
 
-      <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+      <Modal    backdrop="static"  show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
           style={{

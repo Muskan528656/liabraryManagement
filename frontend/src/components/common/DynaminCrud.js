@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, Tooltip, InputGroup } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
-import Loader from "./Loader";
+// import Loader from "./Loader";
 import TableHeader from "./TableHeader";
 import FormModal from "./FormModal";
 import DataApi from "../../api/dataApi";
@@ -15,6 +15,7 @@ import ModuleDetail from "./ModuleDetail";
 import UniversalCSVXLSXImporter from "./UniversalCSVXLSXImporter";
 import { saveImportedData } from "../../utils/importHelpers";
 import AdvancedFilter, { applyAdvancedFilters } from "./AdvancedFilter";
+import '../../App.css';
 const normalizeListResponse = (payload) => {
     if (!payload) return [];
     if (Array.isArray(payload)) return payload;
@@ -105,9 +106,11 @@ const DynamicCRUD = ({
 
     const [showImportModal, setShowImportModal] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState([]);
-    // console.log("formData", formData)
-    // console.log("Data", data)
-
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+    const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
+    const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
+    const [passwordVisibility, setPasswordVisibility] = useState({ password: false, confirmPassword: false });
+ 
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -510,9 +513,12 @@ const DynamicCRUD = ({
 
             let processedField = { ...field };
 
-            // Handle readOnlyWhenEditing
             if (field.readOnlyWhenEditing && editingItem) {
                 processedField.readOnly = true;
+            }
+
+            if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
+                processedField.required = false;
             }
 
             if (field.type !== 'select' || !field.options) {
@@ -600,6 +606,56 @@ const DynamicCRUD = ({
         setDeleteId(id);
         setShowDeleteModal(true);
     }, [allowDelete]);
+
+    const handleChangePassword = useCallback((user) => {
+        setSelectedUserForPassword(user);
+        setPasswordFormData({ password: "", confirmPassword: "" });
+        setShowChangePasswordModal(true);
+    }, []);
+
+    const handleChangePasswordSubmit = useCallback(async () => {
+        if (!passwordFormData.password || !passwordFormData.confirmPassword) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Please fill in both password fields",
+            });
+            return;
+        }
+
+        if (passwordFormData.password !== passwordFormData.confirmPassword) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Passwords do not match",
+            });
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const api = new DataApi(apiEndpoint);
+            const response = await api.update({ password: passwordFormData.password }, selectedUserForPassword.id);
+
+            if (response.data?.success) {
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Success",
+                    message: "Password changed successfully",
+                });
+                setShowChangePasswordModal(false);
+                setSelectedUserForPassword(null);
+                setPasswordFormData({ password: "", confirmPassword: "" });
+            } else {
+                throw new Error(response.data?.errors || 'Password change failed');
+            }
+        } catch (error) {
+            console.error("Error changing password:", error);
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: `Failed to change password: ${error.message}`,
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [passwordFormData, selectedUserForPassword, apiEndpoint]);
 
     const confirmDelete = useCallback(async () => {
         try {
@@ -710,8 +766,11 @@ console.log("formDaformDataformDataformData", formData);
                 });
 
                 if (editingItem) {
-                    delete submitData.password;
-                    delete submitData.confirmPassword;
+                    // Only include password fields if they are provided during edit
+                    if (!submitData.password || submitData.password.trim() === '') {
+                        delete submitData.password;
+                        delete submitData.confirmPassword;
+                    }
                     response = await api.update(submitData, editingItem.id);
                 } else {
                     response = await api.create(submitData);
@@ -1007,7 +1066,9 @@ console.log("formDaformDataformDataformData", formData);
                         style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "4px", overflow: "hidden" }}>
                         <Card.Body className="">
                             {loading ? (
-                                <Loader />
+                                // <Loader />
+                                <span className="loader"></span>
+
                             ) : (
                                 <>
                                     <TableHeader
@@ -1067,7 +1128,7 @@ console.log("formDaformDataformDataformData", formData);
                                         showActions={showActions}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
-                                                {/* ✅ Edit button permission check */}
+
                                                 {allowEdit && canEdit && (
                                                     <button
                                                         onClick={() => handleNameClick(item, true)}
@@ -1078,7 +1139,15 @@ console.log("formDaformDataformDataformData", formData);
                                                     </button>
                                                 )}
 
-                                                {/* ✅ Delete button permission check */}
+                                                {moduleName === 'user' && canEdit && (
+                                                    <button
+                                                        onClick={() => handleChangePassword(item)}
+                                                        title="Change Password"
+                                                        className="custom-btn-edit"
+                                                    >
+                                                        <i className="fs-7 fa-solid fa-key" style={{ color: 'gray' }}></i>
+                                                    </button>
+                                                )}
                                                 {allowDelete && canDelete && (
                                                     <button
                                                         onClick={() => handleDelete(item.id)}
@@ -1089,13 +1158,13 @@ console.log("formDaformDataformDataformData", formData);
                                                     </button>
                                                 )}
 
-                                                {/* ✅ Custom barcode preview (if needed) */}
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
                                                         className="custom-btn-edit"
                                                         onClick={() => customHandlers.handleBarcodePreview(item)}
                                                         title="View Barcode"
                                                     >
+                                                        {/* <i className="fs-7 fa-solid fa-eye me-1"></i> */}
                                                         <i className="fs-7 fa-solid fa-eye me-1"></i>
                                                     </button>
                                                 )}
@@ -1165,7 +1234,7 @@ console.log("formDaformDataformDataformData", formData);
                 editingItem={editingItem}
             />
 
-            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+            <Modal backdrop="static" show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Confirm Delete</Modal.Title>
                 </Modal.Header>
@@ -1297,7 +1366,8 @@ console.log("formDaformDataformDataformData", formData);
                         >
                             {loading ? (
                                 <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    {/* <span className="spinner-border spinner-border-sm me-2" role="status"></span> */}
+                                    <span className="loader"></span>
                                     Inserting...
                                 </>
                             ) : (
@@ -1344,6 +1414,102 @@ console.log("formDaformDataformDataformData", formData);
                             }}
                         />
                     </Modal.Body>
+                </Modal>
+            )}
+
+            {showChangePasswordModal && (
+                <Modal
+                    show={showChangePasswordModal}
+                    onHide={() => {
+                        setShowChangePasswordModal(false);
+                        setSelectedUserForPassword(null);
+                        setPasswordFormData({ password: "", confirmPassword: "" });
+
+                    }}
+                    centered
+                    backdrop="static"
+                >
+                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+                        <b style={{ color: "var(--primary-color)", fontSize: '1.5rem' }}>Forgot Password</b>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group className="mb-3">
+                                <Form.Label>New Password *</Form.Label>
+                                <InputGroup>
+                                    <Form.Control
+                                        type={passwordVisibility.password ? "text" : "password"}
+                                        value={passwordFormData.password}
+                                        onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })}
+                                        placeholder="Enter new password"
+                                        style={{ borderRight: "none" }}
+                                    />
+                                    <InputGroup.Text
+                                        onClick={() => setPasswordVisibility(prev => ({ ...prev, password: !prev.password }))}
+                                        style={{
+                                            backgroundColor: "white",
+                                            borderLeft: "none",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span >
+                                            <i className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        </span>
+                                    </InputGroup.Text>
+                                </InputGroup>
+                            </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Confirm Password *</Form.Label>
+                                <InputGroup>
+                                    <Form.Control
+                                        type={passwordVisibility.confirmPassword ? "text" : "password"}
+                                        value={passwordFormData.confirmPassword}
+                                        onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                                        placeholder="Confirm new password"
+                                        style={{ borderRight: "none" }}
+                                    />
+                                    <InputGroup.Text
+                                        onClick={() => setPasswordVisibility(prev => ({ ...prev, confirmPassword: !prev.confirmPassword }))}
+                                        style={{
+                                            backgroundColor: "white",
+                                            borderLeft: "none",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <span >
+                                            <i className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        </span>
+                                    </InputGroup.Text>
+                                </InputGroup>
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            variant="outline-secondary"
+                            onClick={() => {
+                                setShowChangePasswordModal(false);
+                                setSelectedUserForPassword(null);
+                                setPasswordFormData({ password: "", confirmPassword: "" });
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant=""
+                            onClick={handleChangePasswordSubmit}
+                            disabled={loading}
+                            style={{ backgroundColor: "var(--primary-color)", color: "#fff", borderColor: "var(--primary-color)" }}
+                        >
+                            {loading ? "Changing..." : "Change Password"}
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
             )}
         </Container>

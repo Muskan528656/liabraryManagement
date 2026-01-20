@@ -410,7 +410,7 @@ const FormModal = ({
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
-      // case "toggle":
+        // case "toggle":
         return (
           <Form.Group className="mb-3" key={field.name}>
             {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
@@ -451,8 +451,8 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-     
-     case "toggle":
+
+      case "toggle":
         const toggleValue = !!formData[field.name];
 
         return (
@@ -505,7 +505,7 @@ const FormModal = ({
             {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
           </Form.Group>
         );
-        default:
+      default:
         return null;
     }
 
@@ -515,7 +515,7 @@ const FormModal = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size={size} centered>
+    <Modal backdrop="static" show={show} onHide={onHide} size={size} centered>
       <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
         <Modal.Title>
           {icon && <i className={`${icon} me-2`}></i>}

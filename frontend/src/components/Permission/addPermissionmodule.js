@@ -103,13 +103,18 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }
     };
 
-    // Load roles from API
+
     const loadRoles = async () => {
         try {
             const api = new DataApi("user-role");
             const res = await api.fetchAll();
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
-            setRoles(rolesArray);
+
+            const filteredRoles = rolesArray.filter(
+                (role) => (role.role_name || role.name).toUpperCase() !== "SYSTEM ADMIN"
+            );
+
+            setRoles(filteredRoles);
         } catch (err) {
             console.error("Error loading roles:", err);
         }
@@ -215,7 +220,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered>
+        <Modal backdrop="static" show={show} onHide={handleClose} size="lg" centered>
             <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
                 <Modal.Title className="fw-bold fs-6">
                     {editingItem ? `Edit - ${editingItem.role_name}` : "Add Role Permissions"}
@@ -298,13 +303,13 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                     Cancel
                 </Button>
                 <Button
-                  onClick={handleSubmit}
-              disabled={loading}
-              className="btn-custom d-flex align-items-center justify-content-center"
-                    // variant="primary"
-                    // onClick={handleSubmit}
-                    // disabled={!formData.role_id || loading}
-                    // className="px-3 py-1 fs-6"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="btn-custom d-flex align-items-center justify-content-center"
+                // variant="primary"
+                // onClick={handleSubmit}
+                // disabled={!formData.role_id || loading}
+                // className="px-3 py-1 fs-6"
                 >
                     <i className="fa-solid fa-save me-1"></i>
                     {editingItem ? "Update" : "Save"}

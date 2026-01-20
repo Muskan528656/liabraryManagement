@@ -6,6 +6,7 @@ const BookSubmitModal = ({ show, onHide }) => {
     return (
         <>
             <Modal
+               backdrop="static" 
                 show={show}
                 onHide={onHide}
                 fullscreen={true}

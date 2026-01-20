@@ -221,7 +221,7 @@ module.exports = (app) => {
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,
-            errors: "Invalid company code",
+            errors: "Invalid company code. Please verify the company code and try again.",
           });
         }
 
@@ -244,7 +244,7 @@ module.exports = (app) => {
         if (!match) {
           return res.status(400).json({
             success: false,
-            errors: "Invalid credentials",
+            errors: "Invalid credentials  Please check your credentials and try again",
           });
         }
 
@@ -321,7 +321,7 @@ module.exports = (app) => {
       if (!userRec) {
         return res.status(401).json({
           success: false,
-          error: "Invalid credentials, please log in again.",
+          error: "Invalid credentials  Please check your credentials and try again",
         });
       }
       const userInfo = { ...userRec.userinfo };
@@ -374,7 +374,7 @@ module.exports = (app) => {
       if (!companyRes?.length) {
         return res.status(400).json({
           success: false,
-          errors: "Invalid company code",
+          errors: "Invalid company code. Please verify the company code and try again.",
         });
       }
 

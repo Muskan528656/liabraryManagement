@@ -1,4 +1,6 @@
 
+
+
 import { Badge } from "react-bootstrap";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
@@ -197,22 +199,20 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 required: true,
                 colSize: 6,
             },
-            ...(editingItem ? [] : [
-                {
-                    name: "password",
-                    label: "Password",
-                    type: "password",
-                    required: true,
-                    colSize: 6,
-                },
-                {
-                    name: "confirmPassword",
-                    label: "Confirm Password",
-                    type: "password",
-                    required: true,
-                    colSize: 6,
-                }
-            ]),
+            {
+                name: "password",
+                label: "Password",
+                type: "password",
+                required: true,
+                colSize: 6,
+            },
+            {
+                name: "confirmPassword",
+                label: "Confirm Password",
+                type: "password",
+                required: true,
+                colSize: 6,
+            },
             {
                 name: "country",
                 label: "Country",

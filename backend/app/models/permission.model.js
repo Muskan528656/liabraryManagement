@@ -136,6 +136,7 @@ async function updateById(id, data, userId = null) {
 }
 
 async function deleteById(id) {
+    
 
     await sql.query(`DELETE FROM demo.role_permissions WHERE permission_id = $1`, [id]);
 
