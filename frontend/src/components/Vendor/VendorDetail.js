@@ -1,20 +1,13 @@
 import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
-// import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-
-import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
-import City_State from "../../constants/CityState.json";
-
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },
   suspended: { variant: "warning", label: "Suspended" },
 };
-
-
-// dropdown---------------------
 const countryCodeOptions = COUNTRY_CODES.map((country) => ({
   value: country.country_code,
   label: `${country.country_code} - ${country.country}`,
@@ -27,13 +20,12 @@ const VendorDetail = ({ permissions }) => {
     title: "name",
     subtitle: "company_name",
     details: [
-      { key: "name", label: "Vendor Name", type: "text", required: true },
+      { key: "name", label: "Vendor Name", type: "text" },
       { key: "company_name", label: "Company Name", type: "text" },
       { key: "email", label: "Email", type: "email" },
       { key: "phone", label: "Phone", type: "text" },
       { key: "gst_number", label: "GST Number", type: "text" },
       { key: "pan_number", label: "PAN Number", type: "text" },
-      // { key: "is_active", label: "Active", type: "toggle" },
       {
         key: "status",
         label: "Status",
@@ -53,40 +45,11 @@ const VendorDetail = ({ permissions }) => {
       },
     ],
     address: [
-      {
-        key: "country",
-        label: "Country",
-        type: "select",
-        options: countryName,
-      
-      },
-      {
-        key: "pincode",
-        label: "Pincode",
-        type: "text"
-      },
-      {
-        key: "state",
-        label: "State",
-        type: "select",
-        options: stateName,
-      },
-      {
-        key: "address",
-        label: "Address",
-        type: "text"
-      },
-      {
-      
-         key: "city",
-        label: "City",
-        type: "select",
-        options: cityName,
-        // options: City_State.map(item => ({
-        //   value: item.name,
-        //   label: `${item.name} `
-        // })),
-      },
+      { key: "country", label: "Country", type: "text" },
+      { key: "pincode", label: "Pincode", type: "text" },
+      { key: "state", label: "State", type: "text" },
+      { key: "address", label: "Address", type: "text" },
+      { key: "city", label: "City", type: "text" },
 
     ],
     other: [
@@ -96,8 +59,6 @@ const VendorDetail = ({ permissions }) => {
       { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
     ],
   };
-
-
 
   return (
     <ModuleDetail
