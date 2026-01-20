@@ -2,6 +2,25 @@ import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
 import Loader from '../common/Loader';
+import PubSub from "pubsub-js";
+import { Badge, InputGroup, Form, Button, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+import ConfirmationModal from "../common/ConfirmationModal";
+import { useParams, useNavigate } from "react-router-dom";
+
+
+
+//toolpit button
+const TooltipButton = ({ title, children }) => (
+    <OverlayTrigger
+        placement="top"
+        overlay={<Tooltip>{title}</Tooltip>}
+    >
+        <span className="d-inline-block">
+            {children}
+        </span>
+    </OverlayTrigger>
+);
+
 
 const Permission = () => {
     const [permissions, setPermissions] = useState([]);
@@ -15,6 +34,12 @@ const Permission = () => {
     const [editingRow, setEditingRow] = useState(null);
     const [editingPermissions, setEditingPermissions] = useState({});
     const [selectAllStates, setSelectAllStates] = useState({});
+
+    const [deleteId, setdeleteId] = useState(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const[setCheck,check] = useState(" ")
+    const navigate = useNavigate();
+    const { id } = useParams();
 
     const fetchPermissions = async () => {
         try {
@@ -77,6 +102,57 @@ const Permission = () => {
             setSelectAllStates(newSelectAllStates);
         }
     }, [editingPermissions, editingRow, permissions]);
+
+    const confirmDelete = async () => {
+
+        console.log("deletingid", deleteId);
+        check = 1;
+        // try {
+        //     const api = new DataApi("permissions");
+        //     const reponse = await api.delete(deleteId);
+        //     console.log("response", reponse);
+
+        //     PubSub.publish("RECORD_SAVED_TOAST", {
+        //         title: "Success",
+        //         message: ` deleted successfully`,
+        //     });
+        //     navigate(`/permissions`);
+        // } catch (error) {
+        //     PubSub.publish("RECORD_ERROR_TOAST", {
+        //         title: "Error",
+        //         message: `Failed to delete ${error.message}`,
+        //     });
+        // }
+
+        // setShowConfirmModal(false);
+        // if (!window.confirm(`Are you sure you want to delete all permissions for "${roleName}"?`)) {
+        //     return;
+        // }
+
+        // try {
+        //     const api = new DataApi("permissions");
+        //     const rolePerms = permissions.filter(p => (p.deleteId || 'null') === deleteId);
+
+        //     for (const perm of rolePerms) {
+        //         if (perm.id) {
+        //             await api.delete(perm.id);
+        //         }
+        //     }
+
+        //     // alert(`Permissions for ${roleName} deleted successfully!`);
+        //     PubSub.publish("RECORD_SAVED_TOAST", {
+        //         message: `Permissions for "${roleName}" deleted successfully!`,
+        //     });
+        //     setRefreshKey(prev => prev + 1);
+        // } catch (err) {
+        //     console.error("Error deleting permissions:", err);
+        //     // alert("Failed to delete permissions");
+        //     PubSub.publish("RECORD_ERROR_TOAST", {
+        //         message: err.message || "Failed to delete permissions",
+        //     });
+
+        // }
+    };
 
     const handleSavePermission = async (formData) => {
         try {
@@ -216,7 +292,15 @@ const Permission = () => {
                 // 🔥 fire global event
                 window.dispatchEvent(new Event("permissionsUpdated"));
 
-                alert(`Permissions updated successfully for ${roleName}!`);
+                // alert(`Permissions updated successfully for ${roleName}!`);
+
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Success",
+                    message: `Permissions updated for ${roleName}`,
+                });
+
+                setExpandedRoles("");
+
                 setEditingRow(null);
                 setEditingPermissions({});
                 setSelectAllStates({});
@@ -225,7 +309,10 @@ const Permission = () => {
 
         } catch (err) {
             console.error("Error saving inline permissions:", err);
-            alert("Error saving permissions: " + err.message);
+            PubSub.publish("RECORD_SAVED_TOAST", {
+                title: "fasle",
+                message: err.message || "Failed to save permissions",
+            });
         }
     };
 
@@ -277,6 +364,11 @@ const Permission = () => {
 
     const handleInlineEditStart = (roleId, roleName) => {
         setEditingRow(roleId);
+
+        setExpandedRoles(prev => ({
+            ...prev,
+            [roleId]: !prev[roleId]
+        }));
 
         // Initialize editing permissions with current permissions
         const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
@@ -353,7 +445,8 @@ const Permission = () => {
         }));
     };
 
-    const handleInlineCancel = () => {
+    const handleInlineCancel = (roleId) => {
+        setExpandedRoles("");
         setEditingRow(null);
         setEditingPermissions({});
         setSelectAllStates({});
@@ -388,9 +481,22 @@ const Permission = () => {
     };
 
     const handleDeleteRole = async (roleId, roleName) => {
+
+        // setShowConfirmModal(true);
+        // setdeleteId(roleId);
+        if(roleId){
+            setShowConfirmModal(true)
+        }else if(check == 1){
+              console.log("setdelteid", deleteId);
+        console.log("roleId", roleId);
+        console.log("showmodel", showConfirmModal);
+        console.log("roleName", roleName);
+
         if (!window.confirm(`Are you sure you want to delete all permissions for "${roleName}"?`)) {
             return;
         }
+      
+      
 
         try {
             const api = new DataApi("permissions");
@@ -398,20 +504,32 @@ const Permission = () => {
 
             for (const perm of rolePerms) {
                 if (perm.id) {
-                    await api.delete(perm.id);
+                    const response = await api.delete(perm.id);
+                    console.log("response",response)
                 }
             }
 
-            alert(`Permissions for ${roleName} deleted successfully!`);
+            // alert(`Permissions for ${roleName} deleted successfully!`);
+            PubSub.publish("RECORD_SAVED_TOAST", {
+                message: `Permissions for "${roleName}" deleted successfully!`,
+            });
             setRefreshKey(prev => prev + 1);
         } catch (err) {
             console.error("Error deleting permissions:", err);
-            alert("Failed to delete permissions");
+            // alert("Failed to delete permissions");
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                message: err.message || "Failed to delete permissions",
+            });
+
         }
+        }
+      
+        
+      
     };
 
     const CustomHeader = () => (
-        <div className="d-flex justify-content-between align-items-center mb-4 p-2"
+        <div className="d-flex justify-content-between align-items-center  p-2 my-4 mx-3"
             style={{
                 color: "var(--primary-color)",
                 background: "var(--primary-background-color)",
@@ -421,29 +539,39 @@ const Permission = () => {
                 <i className="fa-solid fa-lock me-2 fs-6"></i> Role Permissions ({rolePermissions.length})
             </h5>
             <div>
-                <button
-                    className="btn btn-outline-secondary btn-sm me-2"
-                    onClick={expandAllRoles}
-                    title="Expand All"
-                >
-                    <i className="fa-solid fa-expand me-1"></i> Expand All
-                </button>
-                <button
-                    className="btn btn-outline-secondary btn-sm me-2"
-                    onClick={collapseAllRoles}
-                    title="Collapse All"
-                >
-                    <i className="fa-solid fa-compress me-1"></i> Collapse All
-                </button>
-                <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                        setEditingRole(null);
-                        setShowAddModal(true);
-                    }}
-                >
-                    <i className="fa-solid fa-plus me-1"></i> Add Role Permission
-                </button>
+                <TooltipButton title="Expand All">
+                    <Button
+                        variant="outline-secondary"
+                        className="custom-btn-table-header p-2 me-2"
+                        onClick={expandAllRoles}
+                    >
+                        <i className="fa-solid fa-expand fs-6 my-1"></i>
+                    </Button>
+                </TooltipButton>
+
+
+                <TooltipButton title="Collapse All">
+                    <Button
+                        variant="outline-secondary"
+                        className="custom-btn-table-header p-2 me-2"
+                        onClick={collapseAllRoles}
+                    >
+                        <i className="fa-solid fa-compress fs-6 my-1"></i>
+                    </Button>
+                </TooltipButton>
+
+                <TooltipButton title="Add Role Permission">
+                    <Button
+
+                        className="custom-btn-table-header p-2 me-2"
+                        onClick={() => {
+                            setEditingRole(null);
+                            setShowAddModal(true);
+                        }}
+                    >
+                        <i className="fa-solid fa-plus fs-6 my-1"></i>
+                    </Button>
+                </TooltipButton>
             </div>
         </div>
     );
@@ -472,9 +600,9 @@ const Permission = () => {
                 title={checked ? "Enabled" : "Disabled"}
             >
                 {checked ? (
-                    <i className="fa-solid fa-check-square text-primary fs-5"></i>
+                    <i className="fa-solid fa-check-square text-primary fs-6"></i>
                 ) : (
-                    <i className="fa-regular fa-square text-secondary fs-5"></i>
+                    <i className="fa-regular fa-square text-secondary fs-6"></i>
                 )}
             </div>
         );
@@ -521,62 +649,76 @@ const Permission = () => {
         const deleteCount = role.permissions.filter(p => p.allow_delete).length;
 
         return (
-            <div className="card mb-3 border shadow-sm">
-                <div className="card-header bg-light p-3 d-flex justify-content-between align-items-center">
+            <div className="card mb-3 border shadow-sm mx-3 ">
+                <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light ">
                     <div className="d-flex align-items-center">
-                        <button
+                        {/* <button
                             className="btn btn-sm btn-outline-secondary me-3"
-                            onClick={() => toggleRoleAccordion(role.role_id)}
-                            title={isExpanded ? "Collapse" : "Expand"}
+                        // onClick={() => toggleRoleAccordion(role.role_id)}
+                        // title={isExpanded ? "Collapse" : "Expand"}
                         >
-                            <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-                        </button>
+                            <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}`}></i> */}
+                        {/* <i className="fa-solid fa-chevron-down"></i>
+                        </button> */}
                         <div>
                             <h6 className="mb-0 fw-bold">
                                 <i className="fa-solid fa-user-tag me-2 text-primary"></i>
                                 {role.role_name}
                             </h6>
-                            <small className="text-muted">
+                            {/* <small className="text-muted">
                                 {role.modules_count} module{role.modules_count !== 1 ? 's' : ''} •
                                 <span className="ms-1">
                                     {viewCount} view, {createCount} create, {editCount} edit, {deleteCount} delete
                                 </span>
-                            </small>
+                            </small> */}
                         </div>
                     </div>
-                    <div className="d-flex gap-1">
+                    <div className="d-flex gap-1 ">
                         {isEditing ? (
                             <>
-                                <button
+                                {/* <button
                                     className="btn btn-sm btn-success me-2"
                                     onClick={() => handleInlineSave(role.role_id, role.role_name)}
-                                >
-                                    <i className="fa-solid fa-check me-1"></i> Save
-                                </button>
-                                <button
+                                > */}
+                                <i className="fa-solid fa-check me-1 fs-6 text-success me-3"
+                                    onClick={() => handleInlineSave(role.role_id, role.role_name)}
+                                ></i>
+                                {/* Save
+                                </button> */}
+                                {/* <button
                                     className="btn btn-sm btn-secondary"
-                                    onClick={handleInlineCancel}
-                                >
-                                    <i className="fa-solid fa-times me-1"></i> Cancel
-                                </button>
+                                    onClick={() => handleInlineCancel(role.role_id)}
+                                > */}
+                                <i className="fa-solid fa-times me-1 fs-6 text-secondary me-4"
+                                    onClick={() => handleInlineCancel(role.role_id)}
+                                ></i>
+                                {/* Cancel
+                                </button> */}
                             </>
                         ) : (
                             <>
-                                <button
+                                {/* <button
                                     className="btn btn-sm btn-outline-primary"
-                                    onClick={() => handleInlineEditStart(role.role_id, role.role_name)}
+                                     onClick={() => handleInlineEditStart(role.role_id, role.role_name)}
+                                    //  onClick={() => toggleRoleAccordion(role.role_id)}
                                     title="Quick Edit permissions"
-                                >
-                                    <i className="fa-solid fa-edit me-1"></i>  Edit
-                                </button>
+                                > */}
+                                <i className="fa-solid fa-edit me-1 fs-6 text-primary me-3"
+                                    onClick={() => handleInlineEditStart(role.role_id, role.role_name)}
+                                ></i>
+                                {/* Edit
+                                 } */}
 
-                                <button
+                                {/* <button
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleDeleteRole(role.role_id, role.role_name)}
                                     title="Delete all permissions for this role"
-                                >
-                                    <i className="fa-solid fa-trash me-1"></i> Delete
-                                </button>
+                                > */}
+                                <i className="fa-solid fa-trash me-1 me-4 fs-6 text-danger"
+                                    onClick={() => handleDeleteRole(role.role_id, role.role_name)}
+                                ></i>
+                                {/* Delete
+                                </button> */}
                             </>
                         )}
                     </div>
@@ -585,8 +727,8 @@ const Permission = () => {
                 {isExpanded && (
                     <div className="card-body p-0">
                         <div className="table-responsive">
-                            <table className="table table-hover mb-0">
-                                <thead className="table-light">
+                            <table className="table table-hover mb-0 ">
+                                <thead className="table-light bg-primary">
                                     <tr>
                                         <th width="30%" className="ps-4">Module Name</th>
                                         <SelectAllHeader permissionType="allow_view" label="View" />
@@ -701,6 +843,18 @@ const Permission = () => {
                 editingItem={editingRole}
                 onSave={handleSavePermission}
             />
+            {console.log("showConfirmModal", showConfirmModal)}
+            {showConfirmModal &&
+                <ConfirmationModal
+                    show={showConfirmModal}
+                    onHide={() => setShowConfirmModal(false)}
+                    onConfirm={confirmDelete}
+                    title={`Delete `}
+                    message={`Are you sure you want to delete this ?`}
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                />
+            }
         </div>
     );
 };

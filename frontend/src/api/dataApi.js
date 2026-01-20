@@ -68,6 +68,7 @@ export default class DataApi {
   }
 
   delete(id) {
+    console.log("Deleting ID:", id);
     return axios.delete(`${this.baseUrl}/${id}`, {
       headers: this.getHeaders(),
     });

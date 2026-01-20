@@ -124,8 +124,10 @@ module.exports = (app) => {
 
     // Delete single permission by ID
     router.delete("/:id", fetchUser, async (req, res) => {
+        console.log("Received request to delete permission with ID:", req.params.id);
         try {
             const out = await Permission.deleteById(req.params.id);
+            console.log("deleteById output:", out);
             res.json({ success: true, data: out });
         } catch (e) {
             console.error("Error deleting permission:", e);

@@ -9,8 +9,6 @@ const PlanDetail = () => {
     const fields = {
         validationRules: (formData) => {
             const errors = [];
-
-
             if (!formData.plan_name?.trim()) errors.push("Plan name is required");
             if (!formData.duration_days || formData.duration_days <= 0) errors.push("Duration must be a positive number");
             if (!formData.max_allowed_books_at_time || formData.max_allowed_books_at_time <= 0) errors.push("Max books at a time must be at least 1");

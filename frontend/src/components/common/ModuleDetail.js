@@ -1745,8 +1745,8 @@ const ModuleDetail = ({
           show={showConfirmModal}
           onHide={() => setShowConfirmModal(false)}
           onConfirm={confirmDelete}
-          title={`Delete ${moduleName}`}
-          message={`Are you sure you want to delete this ${moduleName}?`}
+          title={`Delete `}
+          message={`Are you sure you want to delete this?`}
           confirmText="Delete"
           cancelText="Cancel"
         />

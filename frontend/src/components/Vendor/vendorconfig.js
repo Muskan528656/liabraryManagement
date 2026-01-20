@@ -49,26 +49,11 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             }
         }
     }
-    console.log(" cityStateDefault Code:", CityState);
-
-    
 
     const states = [...new Set(CityState.map(item => item.state))].map(state => ({
         value: state,
         label: state
     }));
-
-     const country = [...new Set(CountryCode.map(item => item.country))].map(name => ({
-        value: name,
-        label: name
-    }));
-
-    const city = [...new Set(CityState.map(item => item.name))].map(name => ({
-        value: name,
-        label: name
-    }));
-
-    console.log("States Options:", states);
 
     const allCities = CityState.map(item => ({
         value: item.name,
@@ -161,11 +146,6 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             // ... formFields (same as your code)
         ],
         validationRules: (formData, allVendors, editingVendor) => {
-
-            console.log("Validating formData:", formData);
-            console.log("All vendors:", allVendors);
-            console.log("Editing vendor:", editingVendor);
-
             const errors = [];
             if (!formData.name?.trim()) {
                 errors.push("Name is required");

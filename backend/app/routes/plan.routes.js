@@ -177,7 +177,7 @@ module.exports = (app) => {
 
                 return res.status(200).json({
                     success: true,
-                    message: "Plan updated successfully",
+                    message: "Plan updatedrtrtrt successfully",
                     data: result
                 });
             } catch (err) {

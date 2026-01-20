@@ -11,6 +11,8 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
+import { useTimeZone } from "../../contexts/TimeZoneContext";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 
 const Vendor = (props) => {
   const { timeZone } = useTimeZone();
@@ -87,13 +89,6 @@ const Vendor = (props) => {
     CountryCode: COUNTRY_CODES
   };
 
-<<<<<<< HEAD
-  console.log("All Data in Vendor Component:", allData);
-
- 
-  const finalConfig = getVendorConfig(allData);
-=======
->>>>>>> origin/main
 
   const finalConfig = getVendorConfig(
     allData,
