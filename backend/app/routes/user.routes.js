@@ -278,12 +278,17 @@ module.exports = (app) => {
         User.init(req.userinfo.tenantcode);
 
         const existingUser = await User.findById(req.params.id);
+
+        console.log("Existing User:", existingUser);
+
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
 
         const userId = req.userinfo?.id || null;
         const userData = { ...req.body };
+        console.log("Received user data for update:", userData);
+
         if (userData.isactive !== undefined)
           userData.isactive = userData.isactive === "true" || userData.isactive === true;
 
@@ -292,6 +297,12 @@ module.exports = (app) => {
 
         if (userData.has_wallet !== undefined)
           userData.has_wallet = userData.has_wallet === "true" || userData.has_wallet === true;
+
+        // Hash password if provided
+        if (userData.password) {
+          const salt = bcrypt.genSaltSync(10);
+          userData.password = bcrypt.hashSync(userData.password, salt);
+        }
 
           const previousImagePath = existingUser.profile_image;
 
@@ -304,6 +315,12 @@ module.exports = (app) => {
         }
 
         const user = await User.updateById(req.params.id, userData, userId);
+
+        console.log("Updated User:", user);
+        if (!user) {
+          return res.status(400).json({ errors: "Failed to update user" });
+        }
+
 
         return res.status(200).json({
           success: true,
