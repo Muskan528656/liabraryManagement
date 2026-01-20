@@ -369,7 +369,7 @@ const Login = () => {
                   style={{ padding: '5px' }}
                 />
                 <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}  style={{ color: 'gray' }}></i>
                 </span>
               </div>
               <span className="text-danger">{resetError}</span>

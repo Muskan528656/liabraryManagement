@@ -31,7 +31,7 @@ module.exports = (app) => {
       BookSubmission.init(req.userinfo.tenantcode);
 
 
-      const submissions = await BookSubmission.findAll();
+      const submissions = await BookSubmission.findAll(req.query);
       return res.status(200).json({ success: true, data: submissions });
     } catch (error) {
       console.error("Error fetching book submissions:", error);
