@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
+import PubSub from "pubsub-js";
 
 const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     const [modules, setModules] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    const[checkStatus,setcheckStatus]=useState("")
     const [selectAll, setSelectAll] = useState({
         view: false,
         create: false,
@@ -110,10 +111,14 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             const res = await api.fetchAll();
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
 
+            console.log("res",res)
+            console.log("roleArray",rolesArray[0]);
+             console.log("roleArray",rolesArray);
+            console.log("api",api)
             const filteredRoles = rolesArray.filter(
                 (role) => (role.role_name || role.name).toUpperCase() !== "SYSTEM ADMIN"
             );
-
+            console.log("filteredroles",filteredRoles)
             setRoles(filteredRoles);
         } catch (err) {
             console.error("Error loading roles:", err);
@@ -125,6 +130,10 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         const selectedRole = roles.find((r) => r.id === roleId);
         if (!selectedRole) return;
 
+
+        console.log("selectedRole",selectedRole.is_active)
+        setcheckStatus(selectedRole.is_active)
+        
         const resetPermissions = modules.map((m) => ({
             module_id: m.id,
             module_name: m.name,
@@ -153,20 +162,49 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         });
     };
 
+
     const handleSelectAll = (permissionType, value) => {
-        console.log("permissionType",permissionType)
-        console.log("value",value)
-      
+
+        setFormData((prev) => {
+            const updatedPermissions = prev.permissions.map((perm) => ({
+                ...perm,
+                [`allow_${permissionType}`]: value,
+            }));
+
+            return { ...prev, permissions: updatedPermissions };
+        });
+
+        setSelectAll((prev) => ({
+            ...prev,
+            [permissionType]: value,
+        }));
     };
 
+
     const handleSubmit = () => {
-        console.log("formdata->>>>>>>>>>", formData)
+        console.log("formdata->>>>>>>>>>", formData);
+
+        // Check if a role is selected
         if (!formData.role_id) {
-            alert("Please select a role");
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: "Please select a role!",
+            });
             return;
+        }else{
+            if(!checkStatus){
+                  PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: "The selected role is inactive!",
+            });
+            return;
+            }
         }
+
+        // If role is valid, proceed with saving
         onSave(formData);
     };
+
 
     const getPermissionValue = (moduleId, permissionType) => {
         const perm = formData.permissions.find((p) => p.module_id === moduleId);
@@ -193,17 +231,15 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     };
 
     const renderSelectAllCheckbox = (permissionType, label) => {
-        console.log("permissionType",permissionType)
         const isChecked = selectAll[permissionType];
-        console.log("label",label)
-        console.log("ischecked",isChecked)
+
         return (
             <th width="15%" className="text-center py-2">
                 <div className="d-flex flex-column align-items-center justify-content-center">
                     <span className="fw-semibold mb-1">{label}</span>
                     <div
                         className="cursor-pointer"
-                        onClick={() => handleSelectAll(`allow_${permissionType}`, !isChecked)}
+                        onClick={() => handleSelectAll(permissionType, !isChecked)}
                         title={isChecked ? "Deselect All" : "Select All"}
                     >
                         {isChecked ? (
@@ -216,6 +252,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             </th>
         );
     };
+
 
     return (
         <Modal backdrop="static" show={show} onHide={handleClose} size="lg" centered>

@@ -255,6 +255,7 @@ const Permission = () => {
                     allow_edit: false,
                     allow_delete: false
                 });
+                setExpandedRoles({});
                 setRefreshKey(prev => prev + 1);
             }
 
@@ -434,6 +435,7 @@ const Permission = () => {
             allow_edit: false,
             allow_delete: false
         });
+         setExpandedRoles({});
     };
 
     const toggleRoleAccordion = (roleId) => {
