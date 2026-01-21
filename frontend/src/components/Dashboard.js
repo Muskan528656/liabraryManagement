@@ -767,88 +767,143 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     data: topAvailableBooks.map(b => parseInt(b.available_copies || 0))
   }];
 
+  // const donutOptions = {
+  //   chart: {
+  //     type: "pie",
+  //     height: 220,
+  //     fontFamily: 'inherit',
+  //     toolbar: getChartConfig("Inventory_Status_Report").toolbar,
+  //     animations: {
+  //       enabled: true,
+  //       easing: 'easeinout',
+  //       speed: 800
+  //     }
+  //   },
+  //   colors: [SUCCESS_COLOR, ACCENT_COLOR, DANGER_COLOR],
+  //   labels: ['Total Copies', 'Available Copies', 'Damaged Copies'],
+  //   legend: {
+  //     position: "bottom",
+  //     fontSize: '12px',
+  //     fontFamily: 'inherit',
+  //     markers: {
+  //       radius: 8,
+  //       width: 12,
+  //       height: 12
+  //     },
+  //     itemMargin: {
+  //       horizontal: 8,
+  //       vertical: 4
+  //     },
+  //     onItemClick: {
+  //       toggleDataSeries: true
+  //     },
+  //     onItemHover: {
+  //       highlightDataSeries: true
+  //     }
+  //   },
+  //   dataLabels: {
+  //     enabled: true,
+  //     style: {
+  //       fontSize: '12px',
+  //       fontWeight: 600,
+  //       fontFamily: 'inherit'
+  //     },
+  //     dropShadow: {
+  //       enabled: true,
+  //       top: 1,
+  //       left: 1,
+  //       blur: 1,
+  //       opacity: 0.2
+  //     },
+  //     formatter: function (val, { seriesIndex, w }) {
+  //       return w.config.series[seriesIndex] + '%';
+  //     }
+  //   },
+  //   stroke: {
+  //     width: 2,
+  //     colors: ['#fff']
+  //   },
+  //   tooltip: {
+  //     theme: "light",
+  //     style: {
+  //       fontSize: '12px',
+  //       fontFamily: 'inherit'
+  //     },
+  //     y: {
+  //       formatter: (val) => `${val}% (${formatNumber(Math.round((val / 100) * metrics.total_copies))} copies)`,
+  //       title: {
+  //         formatter: (seriesName) => seriesName
+  //       }
+  //     }
+  //   },
+  //   responsive: [{
+  //     breakpoint: 768,
+  //     options: {
+  //       chart: {
+  //         height: 200
+  //       },
+  //      legend: {
+  //         position: "right",          // move legend to right
+  //         verticalAlign: "center",    // center align vertically
+  //         fontSize: '12px',
+  //         fontFamily: 'inherit',
+  //         markers: {
+  //           radius: 8,
+  //           width: 12,
+  //           height: 12
+  //         },
+  //         itemMargin: {
+  //           vertical: 8               // spacing between rows
+  //         },
+  //         onItemClick: {
+  //           toggleDataSeries: true
+  //         },
+  //         onItemHover: {
+  //           highlightDataSeries: true
+  //         }
+  //       }
+  //     }
+  //   }]
+  // };
+
   const donutOptions = {
-    chart: {
-      type: "pie",
-      height: 220,
-      fontFamily: 'inherit',
-      toolbar: getChartConfig("Inventory_Status_Report").toolbar,
-      animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 800
-      }
-    },
-    colors: [SUCCESS_COLOR, ACCENT_COLOR, DANGER_COLOR],
-    labels: ['Total Copies', 'Available Copies', 'Damaged Copies'],
-    legend: {
-      position: "bottom",
-      fontSize: '12px',
-      fontFamily: 'inherit',
-      markers: {
-        radius: 8,
-        width: 12,
-        height: 12
-      },
-      itemMargin: {
-        horizontal: 8,
-        vertical: 4
-      },
-      onItemClick: {
-        toggleDataSeries: true
-      },
-      onItemHover: {
-        highlightDataSeries: true
-      }
-    },
-    dataLabels: {
+  chart: {
+    type: "pie",
+    height: 220,
+    width: 320, 
+    fontFamily: 'inherit',
+    toolbar: getChartConfig("Inventory_Status_Report").toolbar,
+    animations: {
       enabled: true,
-      style: {
-        fontSize: '12px',
-        fontWeight: 600,
-        fontFamily: 'inherit'
-      },
-      dropShadow: {
-        enabled: true,
-        top: 1,
-        left: 1,
-        blur: 1,
-        opacity: 0.2
-      },
-      formatter: function (val, { seriesIndex, w }) {
-        return w.config.series[seriesIndex] + '%';
-      }
+      easing: 'easeinout',
+      speed: 800
+    }
+  },
+
+  labels: ['Issued', 'Overdue', 'Damaged'],
+  colors: [SUCCESS_COLOR, ACCENT_COLOR, DANGER_COLOR],
+
+  legend: {
+    show: true,
+    position: "right",      
+    horizontalAlign: "left", 
+    verticalAlign: "middle",
+    fontSize: '12px',
+    fontFamily: 'inherit',
+    markers: {
+      width: 12,
+      height: 12,
+      radius: 8
     },
-    stroke: {
-      width: 2,
-      colors: ['#fff']
-    },
-    tooltip: {
-      theme: "light",
-      style: {
-        fontSize: '12px',
-        fontFamily: 'inherit'
-      },
-      y: {
-        formatter: (val) => `${val}% (${formatNumber(Math.round((val / 100) * metrics.total_copies))} copies)`,
-        title: {
-          formatter: (seriesName) => seriesName
-        }
-      }
-    },
-    responsive: [{
-      breakpoint: 768,
-      options: {
-        chart: {
-          height: 200
-        },
-        legend: {
-          position: 'bottom',
-          horizontalAlign: 'center'
-        }
-      }
-    }]
-  };
+    itemMargin: {
+      vertical: 10            
+    }
+  },
+
+  dataLabels: {
+    enabled: true
+  }
+};
 
   const calculateDonutSeries = () => {
     console.log("Calculating donut series with metrics:", metrics);
@@ -1255,14 +1310,9 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   </h6>
              
                 </div>
-                <Chart
-                  options={donutOptions}
-                  series={donutChartSeries}
-                  type="pie"
-                  height={200}
-                  width={390}
-                />
-                <div className="mt-2">
+                
+                  <Chart options={donutOptions} series={donutChartSeries} type="pie" width={360} />
+                {/* <div className="mt-2">
                   <div className="d-flex justify-content-center align-items-center mb-1">
                     <div className="me-1" style={{
                       width: '8px',
@@ -1293,7 +1343,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                     {formatNumber(metrics.total_copies)}
                   </h4>
                   <small className="text-muted" style={{ fontSize: '11px' }}>Total Copies in library</small>
-                </div>
+                </div> */}
               </Card.Body>
             </Card>
           </Col>

@@ -283,10 +283,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 name: "userrole",
                 label: "Role",
                 type: "select",
-                options: userRoles.map(role => ({
-                    value: role.id,
-                    label: role.role_name
-                })),
+                options: "user-role",
                 required: true,
                 colSize: 6,
             },
@@ -345,6 +342,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
             allowEdit: true,
             allowDelete: false,
             showImportButton: canCreate,
+            showAdvancedFilter: true
         },
 
         initializeFormData: (existingData) => {
@@ -359,6 +357,19 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 currency: existingData.currency || defaultCurrency,
                 time_zone: existingData.time_zone || defaultTimeZone
             };
-        }
+        },
+        
+        filterFields: [
+            {
+                name: "isactive",
+                label: "Status",
+                type: "select",
+                options: [
+                    { value: "", label: "All" },
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
+                ]
+            }
+        ]
     };
 };

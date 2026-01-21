@@ -26,7 +26,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
     try {
-      const categories = await Category.findAll();
+      const categories = await Category.findAll(req.query);
       return res.status(200).json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);

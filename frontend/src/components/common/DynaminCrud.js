@@ -433,7 +433,7 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    }, [apiEndpoint, moduleLabel, customHandlers]);
+    }, [apiEndpoint, moduleLabel, customHandlers, advancedFilters]);
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;

@@ -3,7 +3,7 @@ import City_State from "../../constants/CityState.json";
 
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
+export const getPublisherConfig = (externalData = {}, props = {}, timeZone, permissions = {}) => {
 
     const PublisherModel = createModel({
         modelName: "Publisher",
@@ -200,7 +200,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             showAddButton: true,
             allowEdit: true,
             allowDelete: false,
-
+            showAdvancedFilter: true,
             showImportButton: true,
         },
 
@@ -233,5 +233,18 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
             { key: "country", header: "Country", width: 15 },
             { key: "is_active", header: "Status", width: 12 },
         ],
+
+        filterFields: [
+            {
+                name: "email",
+                label: "Email",
+                type: "text"
+            },
+            {
+                name: "name",
+                label: "Name",
+                type: "text"
+            }
+        ]
     };
 };
