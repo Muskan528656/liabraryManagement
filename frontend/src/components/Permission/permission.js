@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';

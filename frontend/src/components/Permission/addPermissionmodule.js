@@ -7,7 +7,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     const [modules, setModules] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
-    const[checkStatus,setcheckStatus]=useState("")
+    const [checkStatus, setcheckStatus] = useState("")
     const [selectAll, setSelectAll] = useState({
         view: false,
         create: false,
@@ -34,6 +34,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             loadModules();
             loadRoles();
         }
+        console.log("all roles is", roles)
     }, [show]);
 
     useEffect(() => {
@@ -111,14 +112,14 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             const res = await api.fetchAll();
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
 
-            console.log("res",res)
-            console.log("roleArray",rolesArray[0]);
-             console.log("roleArray",rolesArray);
-            console.log("api",api)
+            console.log("res", res)
+            console.log("roleArray", rolesArray[0]);
+            console.log("roleArray", rolesArray);
+            console.log("api", api)
             const filteredRoles = rolesArray.filter(
                 (role) => (role.role_name || role.name).toUpperCase() !== "SYSTEM ADMIN"
             );
-            console.log("filteredroles",filteredRoles)
+            console.log("filteredroles", filteredRoles)
             setRoles(filteredRoles);
         } catch (err) {
             console.error("Error loading roles:", err);
@@ -131,9 +132,9 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         if (!selectedRole) return;
 
 
-        console.log("selectedRole",selectedRole.is_active)
+        console.log("selectedRole", selectedRole.is_active)
         setcheckStatus(selectedRole.is_active)
-        
+
         const resetPermissions = modules.map((m) => ({
             module_id: m.id,
             module_name: m.name,
@@ -190,13 +191,13 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                 message: "Please select a role!",
             });
             return;
-        }else{
-            if(!checkStatus){
-                  PubSub.publish("RECORD_ERROR_TOAST", {
-                title: "Error",
-                message: "The selected role is inactive!",
-            });
-            return;
+        } else {
+            if (!checkStatus) {
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: "The selected role is inactive!",
+                });
+                return;
             }
         }
 
@@ -272,11 +273,20 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                         size="sm"
                     >
                         <option value="">Select a role...</option>
-                        {roles.map((r) => (
+
+                        {/* {roles.map((r) => (
+                            <option key={r.id} value={r.id}>
+                                {r.role_name || r.name}
+                            </option>
+                        ))} */}
+                        
+                        {roles.filter(r => r.is_active).map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.role_name || r.name}
                             </option>
                         ))}
+
+
                     </Form.Select>
                 </Form.Group>
 
