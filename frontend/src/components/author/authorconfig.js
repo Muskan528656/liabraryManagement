@@ -145,6 +145,7 @@ export const getAuthorConfig = (externalData = {}, props = {}, permissions = {})
             allowDelete: false,
             permissions: permissions,
             showImportButton: true,
+            showAdvancedFilter: true
         },
         details: [
             { key: "name", label: "Name", type: "text" },
@@ -161,6 +162,15 @@ export const getAuthorConfig = (externalData = {}, props = {}, permissions = {})
             afterSave: (response, editingItem) => {
 
             }
-        }
+        },
+
+
+        filterFields: [
+            {
+                name: "email",
+                label: "Email",
+                type: "text"
+            }
+        ]
     };
 };

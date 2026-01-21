@@ -64,7 +64,7 @@ const Publisher = (props) => {
         return <div className="text-danger">Something went wrong!</div>;
     }
 
-    const finalConfig = getPublisherConfig(data, props, timeZone);
+    const finalConfig = getPublisherConfig(data, props, timeZone, permissions);
 
     return (
         <DynamicCRUD

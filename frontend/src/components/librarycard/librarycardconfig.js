@@ -472,11 +472,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             showColumnVisibility: true,
             showCheckbox: true,
             showActions: true,
-        
+
             showAddButton: canCreate,
             allowEdit: canEdit,
             allowDelete: canDelete,
-            showImportButton: canCreate,
+            // showImportButton: canCreate,
             showAdvancedFilter: true,
         },
 

@@ -6,10 +6,27 @@ function init(schema_name) {
 }
 
 
-async function findAllPublisher() {
+async function findAllPublisher(filters = {}) {
     try {
-        const query = `select * from ${this.schema}.publisher order by createddate desc`;
-        const result = await sql.query(query);
+        let query = `select * from ${this.schema}.publisher where 1=1`;
+        const values = [];
+        let paramIndex = 1;
+
+        if (filters.email) {
+            query += ` AND email ILIKE $${paramIndex}`;
+            values.push(`%${filters.email}%`);
+            paramIndex++;
+        }
+
+        if (filters.name) {
+            query += ` AND name ILIKE $${paramIndex}`;
+            values.push(`%${filters.name}%`);
+            paramIndex++;
+        }
+
+        query += ` order by createddate desc`;
+
+        const result = await sql.query(query, values);
         return result.rows;
     } catch (error) {
         console.error("Error in findAllPublisher:", error);

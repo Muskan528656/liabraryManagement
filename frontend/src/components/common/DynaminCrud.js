@@ -110,7 +110,7 @@ const DynamicCRUD = ({
     const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
     const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
     const [passwordVisibility, setPasswordVisibility] = useState({ password: false, confirmPassword: false });
- 
+
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -367,7 +367,7 @@ const DynamicCRUD = ({
 
 
 
-//fetch all data 
+    //fetch all data 
     const filteredData = useMemo(() => {
         let result = data;
 
@@ -433,7 +433,7 @@ const DynamicCRUD = ({
         } finally {
             setLoading(false);
         }
-    }, [apiEndpoint, moduleLabel, customHandlers]);
+    }, [apiEndpoint, moduleLabel, customHandlers, advancedFilters]);
 
     const fetchRelatedData = useCallback(async () => {
         if (!autoFetchRelated) return;
@@ -693,11 +693,11 @@ const DynamicCRUD = ({
             const customResult = customHandlers.beforeSave(formData, editingItem);
             if (customResult === false) return;
         }
-        
+
         if (validationRules) {
             const errors = validationRules(formData, data, editingItem);
-            console.log("validationRules",validationRules);
-            console.log("errors",errors);
+            console.log("validationRules", validationRules);
+            console.log("errors", errors);
             if (errors.length > 0) {
                 PubSub.publish("RECORD_ERROR_TOAST", {
                     title: "Validation Error",
@@ -712,10 +712,10 @@ const DynamicCRUD = ({
             setLoading(true);
             const api = new DataApi(apiEndpoint);
             console.log("apiEndpoint", apiEndpoint);
-            console.log("api",api);
+            console.log("api", api);
             let response;
             const hasFileUpload = formFields.some(field => field && field.type === 'file');
-console.log("formDaformDataformDataformData", formData);
+            console.log("formDaformDataformDataformData", formData);
             if (hasFileUpload) {
                 const submitData = new FormData();
 
@@ -759,7 +759,7 @@ console.log("formDaformDataformDataformData", formData);
                     console.log("Respinse", response)
                 }
             } else {
-               
+
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
@@ -903,7 +903,6 @@ console.log("formDaformDataformDataformData", formData);
         }));
     }, []);
 
-
     const getActionButtons = useCallback(() => {
         const buttons = [];
 
@@ -998,6 +997,102 @@ console.log("formDaformDataformDataformData", formData);
         customActionButtons,
         setShowImportModal,
     ]);
+
+
+    // const getActionButtons = useCallback(() => {
+    //     const buttons = [];
+
+    //     if (showImportButton) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-arrow-down",
+    //             label: `Import ${moduleLabel}`,
+    //             onClick: async () => {
+    //                 if (Object.keys(relatedData).length === 0) {
+    //                     await fetchRelatedData();
+    //                 }
+    //                 setShowImportModal(true);
+    //             },
+    //         });
+    //     }
+
+    //     // if (showImportButton && canCreate) {
+    //     //     buttons.push({
+    //     //         variant: "outline-primary",
+    //     //         size: "sm",
+    //     //         icon: "fa-solid fa-arrow-down",
+    //     //         label: `Import ${moduleLabel}`,
+    //     //         onClick: async () => {
+    //     //             if (Object.keys(relatedData).length === 0) {
+    //     //                 await fetchRelatedData();
+    //     //             }
+    //     //             setShowImportModal(true);
+    //     //         },
+    //     //     });
+    //     // }
+
+    //     if (showImportExport) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-arrow-up",
+    //             label: "Export",
+    //             onClick: handleExport,
+    //         });
+    //     }
+
+    //     if (showBulkInsert) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-layer-group",
+    //             label: "Bulk Insert",
+    //             onClick: handleBulkInsert,
+    //         });
+    //     } if (showAddButton) {
+    //         buttons.push({
+    //             size: "sm",
+    //             icon: "fa-solid fa-plus",
+    //             label: `Add ${moduleLabel}`,
+    //             onClick: handleAdd,
+    //             style: {
+    //                 background: "var(--primary-color)",
+    //                 border: "none",
+    //             },
+    //         });
+    //     }
+
+    //     // if (showAddButton) {
+    //     //     buttons.push({
+    //     //         size: "sm",
+    //     //         icon: "fa-solid fa-plus",
+    //     //         label: `Add ${moduleLabel}`,
+    //     //         onClick: handleAdd,
+    //     //         style: {
+    //     //             background: "var(--primary-color)",
+    //     //             border: "none",
+    //     //         },
+    //     //     });
+    //     // }
+
+    //     if (customActionButtons.length > 0) {
+    //         buttons.push(...customActionButtons);
+    //     }
+
+    //     return buttons;
+    // }, [
+    //     showImportButton,
+    //     showImportExport,
+    //     showBulkInsert,
+    //     showAddButton,
+    //     moduleLabel,
+    //     handleExport,
+    //     handleBulkInsert,
+    //     handleAdd,
+    //     customActionButtons,
+    //     setShowImportModal,
+    // ]);
 
 
     const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);

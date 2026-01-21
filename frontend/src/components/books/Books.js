@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
-import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
@@ -56,9 +55,7 @@ const Books = (props) => {
     canDelete: permissions.canDelete
   });
 
-  const { data, loading } = useDataManager(baseConfig.dataDependencies, props);
-
-  if (permissions.loading || loading) {
+  if (permissions.loading) {
     return <div>Loading...</div>;
   }
   const isSuperAdmin = AuthHelper.isSuperAdmin?.();
@@ -75,7 +72,7 @@ const Books = (props) => {
   // }
 
   const finalConfig = getBooksConfig(
-    data,
+    props,
     props,
     timeZone,
     {

@@ -11,10 +11,21 @@ function init(schema_name) {
 }
 
 
-async function findAll() {
+async function findAll(filters = {}) {
   try {
-    const query = `SELECT * FROM demo.authors ORDER BY createddate DESC`;
-    const result = await sql.query(query);
+    let query = `SELECT * FROM demo.authors WHERE 1=1`;
+    const values = [];
+    let paramIndex = 1;
+
+    if (filters.email) {
+      query += ` AND email ILIKE $${paramIndex}`;
+      values.push(`%${filters.email}%`);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY createddate DESC`;
+
+    const result = await sql.query(query, values);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);

@@ -117,8 +117,25 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             allowEdit: true,
             allowDelete: false,
             showImportButton: true,
+            showAdvancedFilter: true,
         },
 
+        filterFields: [
+            {
+                name: "role_name",
+                label: "Role Name",
+                type: "text",
+            },
+            {
+                name: "is_active",
+                label: "Status",
+                type: "select",
+                options: [
+                    { value: "true", label: "Active" },
+                    { value: "false", label: "Inactive" }
+                ]
+            }
+        ],
         customHandlers: {
             beforeSave: (formData, editingItem) => {
                 return true;

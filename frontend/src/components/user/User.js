@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getUserConfig } from "./userconfig";
-import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { MODULES } from "../../constants/CONSTANT";
 import { AuthHelper } from "../../utils/authHelper";
-import PermissionDenied from "../../utils/permission_denied"; 
+import PermissionDenied from "../../utils/permission_denied";
 
 const Users = (props) => {
   const { timeZone, companyInfo } = useTimeZone();
@@ -40,19 +39,7 @@ const Users = (props) => {
   }, []);
 
  
-  const baseConfig = getUserConfig({
-    canCreate: permissions.canCreate,
-    canEdit: permissions.canEdit,
-    canDelete: permissions.canDelete
-  });
-
- 
-  const { data, loading: dataLoading, error } = useDataManager(
-    baseConfig.dataDependencies,
-    props
-  );
-
-  if (permissions.loading || dataLoading) {
+  if (permissions.loading) {
     return <div>Loading...</div>;
   }
 
@@ -60,18 +47,16 @@ const Users = (props) => {
     return <PermissionDenied />;
   }
 
-  if (error) return <div>Error loading users data: {error.message}</div>;
-
   const finalConfig = getUserConfig(
-    data, 
-    props, 
-    timeZone, 
-    companyInfo,
+    props,
+    props,
     {
       canCreate: permissions.canCreate,
       canEdit: permissions.canEdit,
       canDelete: permissions.canDelete
-    }
+    },
+    companyInfo,
+    null
   );
 
   return (

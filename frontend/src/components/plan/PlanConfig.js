@@ -149,7 +149,25 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             allowDelete: false,
             allowEdit: true,
             showImportButton: true,
+            showAdvancedFilter: true,
         },
+
+        filterFields: [
+            {
+                name: "plan_name",
+                label: "Plan Name",
+                type: "text",
+            },
+            {
+                name: "is_active",
+                label: "Status",
+                type: "select",
+                options: [
+                    { value: "true", label: "Active" },
+                    { value: "false", label: "Inactive" }
+                ]
+            }
+        ],
 
         details: [
             { key: "plan_name", label: "Plan Name" },
