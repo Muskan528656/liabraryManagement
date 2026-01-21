@@ -1245,8 +1245,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                     Books Copies Status
                   </h6>
              
-                </div>
-                
+                </div>       
                   <Chart options={donutOptions} series={donutChartSeries} type="pie" width={360} />
                 {/* <div className="mt-2 d-flex justify-content-center flex-wrap gap-3">
                   {(() => {
