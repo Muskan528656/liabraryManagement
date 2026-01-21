@@ -34,7 +34,7 @@ const ImportDataModal = ({ show, onClose, onImport }) => {
 
     return (
         <Modal backdrop="static" show={show} onHide={onClose} centered>
-            <Modal.Header closeButton>
+            <Modal.Header closeButton style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                 <Modal.Title>Import Data</Modal.Title>
             </Modal.Header>
 

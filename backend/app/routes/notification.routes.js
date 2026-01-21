@@ -15,13 +15,19 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll();
+      userId = req.userinfo.id;
+
+      const allNotifications = await Notification.findAll(userId);
 
       console.log("All Notifications:", allNotifications);
 
       const unreadNotifications = allNotifications.filter(notification => !notification.is_read);
 
+      console.log("Unread Notifications:", unreadNotifications);
+
       const unreadCount = unreadNotifications.length;
+
+      console.log("Unread Count:", unreadCount);
 
       return res.status(200).json({
         success: true,
@@ -43,7 +49,8 @@ module.exports = (app) => {
     try {
       Notification.init(req.userinfo.tenantcode);
 
-      const allNotifications = await Notification.findAll();
+      userId = req.userinfo.id;
+      const allNotifications = await Notification.findAll(userId);
 
 
       const unreadNotifications = allNotifications.filter(notification => !notification.is_read);

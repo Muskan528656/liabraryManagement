@@ -444,6 +444,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       const resp = await DashboardApi.fetchAll();
       const data = resp?.data?.[0] || {};
 
+      console.log("Alert Metrics Data:", data);
+
       setMetrics(prev => ({
         ...prev,
         dueSoonCount: data.total_due_soon || 0,
@@ -558,10 +560,10 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   const handleCardClick = (type) => {
     switch (type) {
       case 'dueSoon':
-        navigate("/bookissue?filter=due_soon");
+        navigate("/booksubmit?filter=due_soon");
         break;
       case 'overdue':
-        navigate("/bookissue?filter=overdue");
+        navigate("/booksubmit?filter=overdue");
         break;
       default:
         navigate("/book");
@@ -632,11 +634,11 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     plotOptions: {
       bar: {
         borderRadius: 6,
-        horizontal: true,
+        horizontal: false,
         barHeight: '70%',
         distributed: false,
         dataLabels: {
-          position: 'center'
+          position: 'top'
         }
       }
     },
@@ -645,11 +647,10 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       formatter: function (val) {
         return val + " copies";
       },
-      textAnchor: 'start',
-      offsetX: 10,
+      offsetY: -20,
       style: {
         fontSize: '11px',
-        colors: ['#fff'],
+        colors: ['#334155'],
         fontWeight: 600,
         fontFamily: 'inherit'
       }
@@ -663,16 +664,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
           colors: '#64748b',
           fontSize: '11px',
           fontFamily: 'inherit'
-        }
-      },
-      title: {
-        text: 'Available Copies',
-        style: {
-          color: '#64748b',
-          fontSize: '12px',
-          fontFamily: 'inherit',
-          fontWeight: 600
-        }
+        },
+        rotate: -45
       },
       axisBorder: {
         show: true,
@@ -690,6 +683,15 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
           fontWeight: 600,
           fontSize: '12px',
           fontFamily: 'inherit'
+        }
+      },
+      title: {
+        text: 'Available Copies',
+        style: {
+          color: '#64748b',
+          fontSize: '12px',
+          fontFamily: 'inherit',
+          fontWeight: 600
         }
       }
     },
@@ -767,7 +769,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
   const donutOptions = {
     chart: {
-      type: "donut",
+      type: "pie",
       height: 220,
       fontFamily: 'inherit',
       toolbar: getChartConfig("Inventory_Status_Report").toolbar,
@@ -777,7 +779,8 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         speed: 800
       }
     },
-    colors: [SUCCESS_COLOR, PRIMARY_COLOR],
+    colors: [SUCCESS_COLOR, ACCENT_COLOR, DANGER_COLOR],
+    labels: ['Total Copies', 'Available Copies', 'Damaged Copies'],
     legend: {
       position: "bottom",
       fontSize: '12px',
@@ -816,33 +819,6 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         return w.config.series[seriesIndex] + '%';
       }
     },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: "65%",
-          labels: {
-            show: true,
-            total: {
-              show: true,
-              label: 'Total Copies',
-              color: '#334155',
-              fontWeight: 600,
-              fontSize: '12px',
-              fontFamily: 'inherit',
-              formatter: () => formatNumber(metrics.totalBooks)
-            },
-            value: {
-              show: true,
-              fontSize: '20px',
-              fontWeight: 700,
-              color: '#1e293b',
-              fontFamily: 'inherit',
-              formatter: (val) => val + '%'
-            }
-          }
-        }
-      }
-    },
     stroke: {
       width: 2,
       colors: ['#fff']
@@ -854,7 +830,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
         fontFamily: 'inherit'
       },
       y: {
-        formatter: (val) => `${val}% (${formatNumber(Math.round((val / 100) * metrics.totalBooks))} copies)`,
+        formatter: (val) => `${val}% (${formatNumber(Math.round((val / 100) * metrics.total_copies))} copies)`,
         title: {
           formatter: (seriesName) => seriesName
         }
@@ -875,10 +851,13 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
   };
 
   const calculateDonutSeries = () => {
-    if (metrics.totalBooks === 0) return [0, 0];
-    const issuedPercentage = Math.round((metrics.issuedBooks / metrics.totalBooks) * 100);
-    const availablePercentage = 100 - issuedPercentage;
-    return [availablePercentage, issuedPercentage];
+    console.log("Calculating donut series with metrics:", metrics);
+    if (metrics.total_copies === 0) return [0, 0, 0];
+    const issuedCopies = metrics.total_copies - metrics.availableBooks - metrics.damagedCount;
+    const totalCopiesPercentage = Math.round((issuedCopies / metrics.total_copies) * 100);
+    const availablePercentage = Math.round((metrics.availableBooks / metrics.total_copies) * 100);
+    const damagedPercentage = Math.round((metrics.damagedCount / metrics.total_copies) * 100);
+    return [totalCopiesPercentage, availablePercentage, damagedPercentage];
   };
 
   const donutChartSeries = calculateDonutSeries();
@@ -1266,7 +1245,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
             </InteractiveCard>
           </Col>
 
-          {/* Donut Chart */}
+          {/* Pie Chart */}
           <Col lg={4}>
             <Card style={styles.card}>
               <Card.Body className="text-center p-2">
@@ -1274,21 +1253,14 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '14px' }}>
                     Books Copies Status
                   </h6>
-                  <Badge className="px-2 py-1" style={{
-                    borderRadius: '30px',
-                    fontSize: '9px',
-                    fontWeight: 600,
-                    background: INFO_COLOR,
-                    color: 'white'
-                  }}>
-                    DONUT CHART
-                  </Badge>
+             
                 </div>
                 <Chart
                   options={donutOptions}
                   series={donutChartSeries}
-                  type="donut"
-                  height={180}
+                  type="pie"
+                  height={200}
+                  width={390}
                 />
                 <div className="mt-2">
                   <div className="d-flex justify-content-center align-items-center mb-1">
@@ -1298,22 +1270,29 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                       borderRadius: '50%',
                       background: SUCCESS_COLOR
                     }}></div>
-                    <span className="text-muted small me-2" style={{ fontSize: '11px' }}>Available: {donutChartSeries[0]}%</span>
+                    <span className="text-muted small me-2" style={{ fontSize: '11px' }}>Total: {formatNumber(metrics.total_copies - metrics.availableBooks - metrics.damagedCount)}</span>
                     <div className="me-1" style={{
                       width: '8px',
                       height: '8px',
                       borderRadius: '50%',
-                      background: PRIMARY_COLOR
+                      background: ACCENT_COLOR
                     }}></div>
-                    <span className="text-muted small" style={{ fontSize: '11px' }}>Issued: {donutChartSeries[1]}%</span>
+                    <span className="text-muted small me-2" style={{ fontSize: '11px' }}>Available: {formatNumber(metrics.availableBooks)}</span>
+                    <div className="me-1" style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: DANGER_COLOR
+                    }}></div>
+                    <span className="text-muted small" style={{ fontSize: '11px' }}>Damaged: {formatNumber(metrics.damagedCount)}</span>
                   </div>
                   <h4 className="fw-bolder mt-1" style={{
                     color: WARNING_COLOR,
                     fontSize: '18px'
                   }}>
-                    {donutChartSeries[1]}%
+                    {formatNumber(metrics.total_copies)}
                   </h4>
-                  <small className="text-muted" style={{ fontSize: '11px' }}>of total copies currently issued</small>
+                  <small className="text-muted" style={{ fontSize: '11px' }}>Total Copies in library</small>
                 </div>
               </Card.Body>
             </Card>

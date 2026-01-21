@@ -1,4 +1,5 @@
 
+
 /**
  * Handles all incoming request for /api/user endpoint
  * DB table for this demo.user
@@ -6,7 +7,7 @@
  * SUPPORTED API ENDPOINTS
  *              GET     /api/user
  *              GET     /api/user/:id
- *              GET     /api/user/email/:email
+ *              GET     /api/user/email/:emaila
  *              POST    /api/user
  *              PUT     /api/user/:id
  *              DELETE  /api/user/:id
@@ -24,12 +25,104 @@ const sql = require("../models/db.js");
 const path = require("path");
 const fs = require("fs");
 
+const multer = require("multer");
+
+// ------------------- USER  UPLOAD FOLDER -------------------
+const userUploadDir = path.join(
+  path.resolve(__dirname, "../../.."),
+  "frontend",
+  "public",
+  "uploads",
+  "users"
+);
+
+if (!fs.existsSync(userUploadDir)) {
+  fs.mkdirSync(userUploadDir, { recursive: true });
+}
+
+// const userUploadDir = "/var/www/html/uploads/users";
+// if (!fs.existsSync(userUploadDir)) fs.mkdirSync(userUploadDir, { recursive: true });
+
+// ------------------- MULTER SETUP -------------------
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, userUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `user-${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  // limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    console.log("UPLOAD FILE:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif"
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPG, JPEG, PNG, and GIF images are allowed"));
+    }
+  }
+});
+
+
 module.exports = (app) => {
 
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
-  const fileUpload = require("express-fileupload");
+
+  const rootDir = path.resolve(__dirname, "../../..");
+  const frontendPublicDir = path.join(rootDir, "frontend", "public");
+  const frontendUploadsDir = path.join(frontendPublicDir, "uploads");
+  const companyUploadDir = path.join(frontendUploadsDir, "companies");
+
+  const ensureDirectory = (dirPath) => {
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+  };
+  [frontendPublicDir, frontendUploadsDir, companyUploadDir].forEach(ensureDirectory);
+
+
+  //existfiledelete
+  const deleteFileIfExists = (filePath = "") => {
+    if (!filePath || typeof filePath !== "string") return;
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) return;
+
+    let normalized = filePath.replace(/\\/g, "/");
+    if (normalized.startsWith("/")) normalized = normalized.slice(1);
+
+    const candidatePaths = [
+      path.join(frontendPublicDir, normalized),
+      path.join(__dirname, "../../", normalized),
+      path.join(companyUploadDir, path.basename(normalized)),
+    ];
+
+    const visited = new Set();
+    candidatePaths.forEach((absolutePath) => {
+      if (!absolutePath || visited.has(absolutePath)) return;
+      visited.add(absolutePath);
+
+      try {
+        if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+      } catch (err) {
+        console.error("Error removing company image:", absolutePath, err.message);
+      }
+    });
+  };
 
 
   const multer = require("multer");
@@ -63,8 +156,8 @@ module.exports = (app) => {
 
   const upload = multer({
     storage,
- 
-    limits: { fileSize: 5 * 1024 * 1024 }, 
+
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       console.log("UPLOAD FILE:", {
         originalname: file.originalname,
@@ -98,7 +191,6 @@ module.exports = (app) => {
 
       const userId = String(req.params.id);
 
-
       if (String(req.userinfo.id) !== userId) {
         return res.status(403).json({ errors: "Unauthorized access" });
       }
@@ -108,7 +200,6 @@ module.exports = (app) => {
       if (file.size > 5 * 1024 * 1024) {
         return res.status(400).json({ errors: "Image size max 5MB" });
       }
-
 
       const uploadPath = path.join(
         __dirname,
@@ -265,7 +356,7 @@ module.exports = (app) => {
   );
 
 
-    router.put(
+  router.put(
     "/:id",
     fetchUser,
     checkPermission("Company", "allow_edit"),
@@ -278,12 +369,17 @@ module.exports = (app) => {
         User.init(req.userinfo.tenantcode);
 
         const existingUser = await User.findById(req.params.id);
+
+        console.log("Existing User:", existingUser);
+
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
 
         const userId = req.userinfo?.id || null;
         const userData = { ...req.body };
+        console.log("Received user data for update:", userData);
+
         if (userData.isactive !== undefined)
           userData.isactive = userData.isactive === "true" || userData.isactive === true;
 
@@ -293,7 +389,19 @@ module.exports = (app) => {
         if (userData.has_wallet !== undefined)
           userData.has_wallet = userData.has_wallet === "true" || userData.has_wallet === true;
 
-          const previousImagePath = existingUser.profile_image;
+
+        // const previousImagePath = existingUser.profile_image;
+
+        // Hash password if provided
+        if (userData.password) {
+          const salt = bcrypt.genSaltSync(10);
+          userData.password = bcrypt.hashSync(userData.password, salt);
+        }
+
+        const previousImagePath = existingUser.profile_image;
+
+        // const previousImagePath = existingUser.profile_image;
+
 
         if (req.file) {
           if (previousImagePath) deleteFileIfExists(previousImagePath);
@@ -304,6 +412,12 @@ module.exports = (app) => {
         }
 
         const user = await User.updateById(req.params.id, userData, userId);
+
+        console.log("Updated User:", user);
+        if (!user) {
+          return res.status(400).json({ errors: "Failed to update user" });
+        }
+
 
         return res.status(200).json({
           success: true,
@@ -335,3 +449,6 @@ module.exports = (app) => {
 
   app.use(process.env.BASE_API_URL + "/api/user", router);
 };
+
+
+

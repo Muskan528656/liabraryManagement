@@ -33,37 +33,52 @@ const fetchUser = async (req, res, next) => {
     return res.status(401).json({ errors: "Please authenticate" });
   }
 };
+
 const checkPermission = (moduleName, action) => {
+  console.log("Checking permission for module:", moduleName, "action:", action);
   return async (req, res, next) => {
     try {
       const user = req.userinfo;
       if (!user) return res.status(401).json({ message: "Unauthorized" });
+      console.log("user.roleNameuser.roleName", user.role_name)
 
-
-      if (user.roleName && user.roleName.toUpperCase() === "SYSTEM ADMIN") {
+      if (user.role_name &&
+        (user.role_name === "SYSTEM ADMIN")) {
         return next();
       }
 
-      const permissions = user.permissions || [];
-      if (!permissions.length)
-        return res.status(403).json({ message: "No permissions assigned to this role" });
 
+      const permissions = user.permissions || [];
+
+
+      if (!permissions.length) {
+        return res.status(403).json({
+          message: "No permissions assigned to this role"
+        });
+      }
 
       const moduleResult = await sql.query(
         `SELECT id FROM demo.module WHERE LOWER(name) = $1 LIMIT 1`,
         [moduleName.toLowerCase()]
       );
 
-      if (!moduleResult.rows.length)
-        return res.status(404).json({ message: `Module "${moduleName}" not found` });
+      if (!moduleResult.rows.length) {
+        return res.status(404).json({
+          message: `Module "${moduleName}" not found`
+        });
+      }
 
       const moduleId = moduleResult.rows[0].id;
 
+      // FIX 4: Check if user has permission for this specific module
       const modulePermission = permissions.find((p) => p.moduleId === moduleId);
-      if (!modulePermission)
-        return res.status(403).json({ message: "No permission for this module" });
+      if (!modulePermission) {
+        return res.status(403).json({
+          message: `No permission for module "${moduleName}"`
+        });
+      }
 
-
+      // FIX 5: Better action mapping with fallback
       const actionMap = {
         allow_view: modulePermission.allowView === true,
         allow_create: modulePermission.allowCreate === true,
@@ -71,8 +86,11 @@ const checkPermission = (moduleName, action) => {
         allow_delete: modulePermission.allowDelete === true,
       };
 
-      if (!actionMap[action])
-        return res.status(403).json({ message: `Permission denied for ${action}` });
+      if (!actionMap[action]) {
+        return res.status(403).json({
+          message: `Permission denied for ${action.replace('allow_', '')} in ${moduleName}`
+        });
+      }
 
       next();
     } catch (err) {
@@ -81,6 +99,54 @@ const checkPermission = (moduleName, action) => {
     }
   };
 };
+// const checkPermission = (moduleName, action) => {
+//   return async (req, res, next) => {
+//     try {
+//       const user = req.userinfo;
+//       if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+
+//       if (user.roleName && user.roleName.toUpperCase() === "SYSTEM ADMIN") {
+//         return next();
+//       }
+
+//       const permissions = user.permissions || [];
+//       if (!permissions.length)
+//         return res.status(403).json({ message: "No permissions assigned to this role" });
+
+
+//       const moduleResult = await sql.query(
+//         `SELECT id FROM demo.module WHERE LOWER(name) = $1 LIMIT 1`,
+//         [moduleName.toLowerCase()]
+//       );
+
+//       if (!moduleResult.rows.length)
+//         return res.status(404).json({ message: `Module "${moduleName}" not found` });
+
+//       const moduleId = moduleResult.rows[0].id;
+
+//       const modulePermission = permissions.find((p) => p.moduleId === moduleId);
+//       if (!modulePermission)
+//         return res.status(403).json({ message: "No permission for this module" });
+
+
+//       const actionMap = {
+//         allow_view: modulePermission.allowView === true,
+//         allow_create: modulePermission.allowCreate === true,
+//         allow_edit: modulePermission.allowEdit === true,
+//         allow_delete: modulePermission.allowDelete === true,
+//       };
+
+//       if (!actionMap[action])
+//         return res.status(403).json({ message: `Permission denied for ${action}` });
+
+//       next();
+//     } catch (err) {
+//       console.error("Permission error:", err);
+//       return res.status(500).json({ message: "Permission check failed" });
+//     }
+//   };
+// };
 
 module.exports = { fetchUser, checkPermission };
 

@@ -1052,7 +1052,19 @@ const BulkIssue = () => {
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
   };
+const getImageUrl = (image) => {
+  if (!image) return "/default-avatar.png"; 
 
+  if (image.startsWith("http")) {
+    return image;
+  }
+  const baseUrl =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3003"
+      : process.env.REACT_APP_API_URL;
+
+  return `${baseUrl}${image}`;
+};
   const getMemberName = () => {
     if (!selectedCard) return "Unknown";
 
@@ -1212,7 +1224,9 @@ const BulkIssue = () => {
                       {memberInfo?.image ? (
                         <div className="mb-2">
                           <img
-                            src={memberInfo.image}
+                            // src={memberInfo.image}
+                              src={getImageUrl(memberInfo.image)}
+
                             alt={getMemberName()}
                             className="rounded-circle"
                             style={{
