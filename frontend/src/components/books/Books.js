@@ -64,6 +64,7 @@ const Books = (props) => {
   const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
   if (!permissions.loading && !isSuperAdmin && !permissions.canView) {
+
     return <PermissionDenied />;
   }
   // if (!permissions.loading && !permissions.canView) {

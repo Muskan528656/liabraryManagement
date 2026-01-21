@@ -673,7 +673,7 @@ export default function Header({ socket }) {
         >
           <img
             src={Company?.logourl || "/Logo.png"}
-              // src={"/Logo.png"}
+            // src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />
@@ -682,7 +682,7 @@ export default function Header({ socket }) {
 
         <div className="d-flex align-items-center gap-2">
 
-          <img
+          {/* <img
             src="qr-code.png"
             alt="QR Code"
             className="shadow-lg pulse-button"
@@ -702,6 +702,21 @@ export default function Header({ socket }) {
             }}
             onMouseLeave={(e) => {
               e.target.style.transform = "scale(1)";
+            }}
+          /> */}<img
+            src="/qr-code.png"
+            alt="QR Code"
+            onClick={() => setShowScannerModal(true)}
+            className="shadow-lg pulse-button"
+            style={{
+              height: "45px",
+              padding: "6px",
+              backgroundColor: "#fff",
+              border: "2px solid var(--primary-color)",
+              borderRadius: "8px",
+              cursor: "pointer",
+
+              transition: "transform 0.2s ease",
             }}
           />
 

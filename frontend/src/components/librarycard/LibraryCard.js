@@ -392,33 +392,6 @@ const LibraryCard = (props) => {
           },
 
 
-          // validationRules: (formData, allCards, editingCard) => {
-          //   const errors = {};
-
-          //   if (!formData.user_id) {
-          //     errors.user_id = "Please select a user";
-          //   }
-
-          //   if (formData.subscription_id) {
-          //     const subscription = subscriptionsData.find(sub => sub.id === formData.subscription_id);
-          //     if (!subscription) {
-          //       errors.subscription_id = "Selected subscription is invalid";
-          //     }
-          //   }
-
-
-          //   const existingCard = allCards?.find(
-          //     card => card.user_id === formData.user_id &&
-          //       card.is_active &&
-          //       card.id !== editingCard?.id
-          //   );
-
-          //   if (existingCard) {
-          //     errors.user_id = "This user already has an active library card";
-          //   }
-
-          //   return errors;
-          // },
 
 
           beforeSubmit: (formData, isEditing) => {
@@ -546,14 +519,14 @@ const LibraryCard = (props) => {
     // return <Loader message="Loading library card configuration..." />;
     return <span className="loader"></span>
   }
-  
+
   if (!permissions.canView) {
     return <PermissionDenied />;
   }
-  
+
   const generateCardNumber = (card) => card.card_number || 'N/A';
-  
-  
+
+
   if (loadingConfig) {
     // return <Loader message="Loading library card configuration..." />;
     return <span className="loader"></span>
@@ -612,7 +585,7 @@ const LibraryCard = (props) => {
       />
 
 
-      <Modal    backdrop="static"  show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+      <Modal backdrop="static" show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
           style={{
