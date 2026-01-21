@@ -173,7 +173,6 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
             return { ...prev, permissions: updatedPermissions };
         });
-
         setSelectAll((prev) => ({
             ...prev,
             [permissionType]: value,

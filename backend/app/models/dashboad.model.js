@@ -79,8 +79,12 @@ const getDashboardStats = async () => {
     );
     stats.total_copies = parseInt(totalCopiesResult.rows[0].coalesce) || 0;
 
+    const damagedBooksResult = await sql.query(
+      `SELECT COUNT(*) FROM demo.book_issues WHERE status = 'damaged'`
+    );
+    stats.damaged_books = parseInt(damagedBooksResult.rows[0].count) || 0;
 
-    stats.available_copies = Math.max(0, stats.total_copies - stats.issued_books);
+    stats.available_copies = Math.max(0, stats.total_copies - stats.issued_books - stats.damaged_books);
 
 
     if (stats.total_copies > 0) {
@@ -128,12 +132,11 @@ const fetchAll = async () => {
           WHERE DATE_TRUNC('month', bs.submit_date) = DATE_TRUNC('month', CURRENT_DATE)
         ) AS fine_collected_this_month,
 
-        /* Books marked damaged or missing in last 30 days */
+        /* Books marked damaged */
         (
           SELECT COUNT(*)
-          FROM demo.book_submissions bs
-          WHERE bs.condition_after IN ('damaged', 'missing')
-          AND bs.submit_date >= CURRENT_DATE - INTERVAL '30 days'
+          FROM demo.book_issues
+          WHERE status = 'damaged'
         ) AS damaged_missing_books,
 
         /* Total copies in library */
@@ -204,6 +207,7 @@ const getCompleteDashboardData = async () => {
         totalCopies: stats.total_copies,
         availableBooks: stats.available_copies,
         issuedBooks: stats.issued_books,
+        damagedBooks: stats.damaged_books,
         availablePercentage: stats.available_percentage,
         issuedPercentage: stats.issued_percentage,
         booksThisMonth: stats.monthly_activity,

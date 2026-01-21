@@ -108,8 +108,15 @@ const Login = () => {
       setLoading(true); setShow(false);
       const result = await AuthApi.login(credentials);
       if (result.success) {
+        // TOKEN STORE
         sessionStorage.setItem("token", result.authToken);
         sessionStorage.setItem("r-t", result.refreshToken);
+
+        sessionStorage.setItem("permissions", JSON.stringify(result.permissions || []));
+
+        // 🔥 OPTIONAL: AuthHelper bhi call karo agar use karte ho
+        // AuthHelper.setAuth(result.authToken, result.refreshToken, result.permissions);
+
         window.location.assign("/");
       } else {
         setShow(true); setErrorMessage(result.errors || "Invalid credentials  Please check your credentials and try again");
@@ -120,6 +127,32 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!credentials.email || !credentials.password || !credentials.tcode) {
+  //     setShow(true); setErrorMessage("Please fill all required fields"); return;
+  //   }
+  //   if (!emailRegex.test(credentials.email)) {
+  //     setShow(true); setErrorMessage("Please enter a valid email"); return;
+  //   }
+
+  //   try {
+  //     setLoading(true); setShow(false);
+  //     const result = await AuthApi.login(credentials);
+  //     if (result.success) {
+  //       sessionStorage.setItem("token", result.authToken);
+  //       sessionStorage.setItem("r-t", result.refreshToken);
+  //       window.location.assign("/");
+  //     } else {
+  //       setShow(true); setErrorMessage(result.errors || "Invalid credentials  Please check your credentials and try again");
+  //     }
+  //   } catch (err) {
+  //     setShow(true); setErrorMessage("Something went wrong. Please try again.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -336,7 +369,7 @@ const Login = () => {
                   style={{ padding: '5px' }}
                 />
                 <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}  style={{ color: 'gray' }}></i>
                 </span>
               </div>
               <span className="text-danger">{resetError}</span>
