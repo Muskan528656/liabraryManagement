@@ -345,7 +345,21 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
             allowEdit: true,
             allowDelete: false,
             showImportButton: canCreate,
+            showAdvancedFilter: true
+
         },
+        filterFields: [
+            {
+                name: "isactive",
+                label: "Status",
+                type: "select",
+                options: [
+                    { value: true, label: "Active" },
+                    { value: false, label: "Inactive" }
+                ]
+            }
+        ],
+
 
         initializeFormData: (existingData) => {
 
