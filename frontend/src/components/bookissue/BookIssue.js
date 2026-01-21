@@ -516,7 +516,6 @@ const BookIssue = () => {
                     marginBottom: "-1px"
                   }}
                 >
-
                   <span>Issue New Book</span>
                 </Nav.Link>
               </Nav.Item>

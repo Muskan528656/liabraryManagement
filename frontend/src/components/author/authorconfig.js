@@ -75,6 +75,7 @@ export const getAuthorConfig = (externalData = {}, props = {}, permissions = {})
                 name: "email",
                 label: "Email",
                 type: "email",
+                required: true,
                 placeholder: "Enter email address",
                 colSize: 6,
             },

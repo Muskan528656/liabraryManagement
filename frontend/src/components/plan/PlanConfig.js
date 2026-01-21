@@ -113,14 +113,27 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             },
         ],
 
-        validationRules: (formData) => {
+        validationRules: (formData, allPlans, editingPlan) => {
             const errors = [];
+
+            console.log("formData in validationRules:", formData);
+            console.log("allPlans in validationRules:", allPlans);
+            console.log("editingPlan in validationRules:", editingPlan);
             if (!formData.plan_name?.trim()) errors.push("Plan name is required");
             if (!formData.duration_days || formData.duration_days <= 0) errors.push("Duration must be a positive number");
             if (formData.allowed_books < 0) errors.push("Allowed books cannot be negative");
             if (formData.allowed_books < formData.max_allowed_books_at_time) {
                 errors.push("Total allowed books cannot be less than max books allowed at a time");
             }
+
+            const duplicateName = allPlans.find(
+                plan => plan.plan_name?.toLowerCase() === formData.plan_name?.toLowerCase() &&
+                    plan.id !== editingPlan?.id
+            );
+            if (duplicateName) {
+                errors.push("Plan with this name already exists");
+            }
+
             return errors;
         },
 

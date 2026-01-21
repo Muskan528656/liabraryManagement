@@ -1098,6 +1098,8 @@ const BookSubmit = () => {
                 remarks: selectedIssue.remarks
             };
 
+            console.log("cancel data", cancelData)
+
 
             const resp = await helper.fetchWithAuth(
                 `${constants.API_BASE_URL}/api/bookissue/${selectedIssue.id}`,
@@ -1105,6 +1107,7 @@ const BookSubmit = () => {
                 JSON.stringify(cancelData)
             );
 
+                
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
                 PubSub.publish("RECORD_ERROR_TOAST", {
@@ -1138,17 +1141,41 @@ const BookSubmit = () => {
                 setShowCancelModal(false);
                 setSelectedIssue(null);
             } else {
+
+
+
+                const resultErrorMessage = Array.isArray(result.errors)
+                    ? result.errors.map(e => e.msg).join(", ")
+                    : result.errors?.msg || "Failed to cancel issue";
+
                 PubSub.publish("RECORD_ERROR_TOAST", {
                     title: "Error",
-                    message: result.errors || "Failed to cancel issue"
+                    message: resultErrorMessage
                 });
+
+
+
+                // PubSub.publish("RECORD_ERROR_TOAST", {
+                //     title: "Error",
+                //     message: result.errors || "Failed to cancel issue"
+                // });
             }
-        } catch (error) {
-            console.error("Error cancelling issue:", error);
+        } catch (err) {
+
+            const errorMessage = Array.isArray(err.errors)
+                ? err.errors.map(e => e.msg).join(", ")
+                : err.errors?.msg || "Failed to cancel issue";
+
             PubSub.publish("RECORD_ERROR_TOAST", {
                 title: "Error",
-                message: error.message || "Error cancelling issue"
+                message: errorMessage
             });
+
+            // console.error("Error cancelling issue:", error);
+            // PubSub.publish("RECORD_ERROR_TOAST", {
+            //     title: "Error",
+            //     message: error.message || "Error cancelling issue"
+            // });
         } finally {
             setLoading(false);
         }
@@ -1386,7 +1413,8 @@ const BookSubmit = () => {
         {
             field: "book_title",
             label: "Book Title",
-            width: 250,
+            width: 300,
+            height: 0,
             render: (value, record) => {
                 const bookId = record.book_id || record.bookId || record.book?.id;
                 if (!bookId) {
@@ -1748,7 +1776,7 @@ const BookSubmit = () => {
                                             marginBottom: "-1px"
                                         }}
                                     >
-                                        <i className="fa-solid fa-book-return me-2"></i>
+                                        {/* <i className="fa-solid fa-book-return me-2"></i> */}
                                         <span>Submit Book</span>
                                     </Nav.Link>
                                 </Nav.Item>
@@ -2012,7 +2040,7 @@ const BookSubmit = () => {
                                     </Row>
                                     <Row className="mt-1">
                                         <Col xs={12}>
-                                            <Card className="shadow-sm" style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                                            <Card className="shadow-sm " style={{ border: "1px solid #e5e7eb", borderRadius: "8px" }}>
 
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}

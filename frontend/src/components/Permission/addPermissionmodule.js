@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import DataApi from "../../api/dataApi";
+import PubSub from "pubsub-js";
 
 const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
     const [modules, setModules] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    const [checkStatus, setcheckStatus] = useState("")
     const [selectAll, setSelectAll] = useState({
         view: false,
         create: false,
@@ -33,6 +34,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             loadModules();
             loadRoles();
         }
+        console.log("all roles is", roles)
     }, [show]);
 
     useEffect(() => {
@@ -110,10 +112,14 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
             const res = await api.fetchAll();
             const rolesArray = Array.isArray(res?.data) ? res.data : [];
 
+            console.log("res", res)
+            console.log("roleArray", rolesArray[0]);
+            console.log("roleArray", rolesArray);
+            console.log("api", api)
             const filteredRoles = rolesArray.filter(
                 (role) => (role.role_name || role.name).toUpperCase() !== "SYSTEM ADMIN"
             );
-
+            console.log("filteredroles", filteredRoles)
             setRoles(filteredRoles);
         } catch (err) {
             console.error("Error loading roles:", err);
@@ -124,6 +130,10 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         const roleId = e.target.value;
         const selectedRole = roles.find((r) => r.id === roleId);
         if (!selectedRole) return;
+
+
+        console.log("selectedRole", selectedRole.is_active)
+        setcheckStatus(selectedRole.is_active)
 
         const resetPermissions = modules.map((m) => ({
             module_id: m.id,
@@ -155,6 +165,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
 
 
     const handleSelectAll = (permissionType, value) => {
+
         setFormData((prev) => {
             const updatedPermissions = prev.permissions.map((perm) => ({
                 ...perm,
@@ -169,14 +180,31 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         }));
     };
 
+
     const handleSubmit = () => {
-        console.log("formdata->>>>>>>>>>", formData)
+        console.log("formdata->>>>>>>>>>", formData);
+
+        // Check if a role is selected
         if (!formData.role_id) {
-            alert("Please select a role");
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: "Please select a role!",
+            });
             return;
+        } else {
+            if (!checkStatus) {
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    title: "Error",
+                    message: "The selected role is inactive!",
+                });
+                return;
+            }
         }
+
+        // If role is valid, proceed with saving
         onSave(formData);
     };
+
 
     const getPermissionValue = (moduleId, permissionType) => {
         const perm = formData.permissions.find((p) => p.module_id === moduleId);
@@ -225,6 +253,7 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
         );
     };
 
+
     return (
         <Modal backdrop="static" show={show} onHide={handleClose} size="lg" centered>
             <Modal.Header style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", }} closeButton>
@@ -244,11 +273,20 @@ const AddPermissionModal = ({ show, handleClose, onSave, editingItem }) => {
                         size="sm"
                     >
                         <option value="">Select a role...</option>
-                        {roles.map((r) => (
+
+                        {/* {roles.map((r) => (
+                            <option key={r.id} value={r.id}>
+                                {r.role_name || r.name}
+                            </option>
+                        ))} */}
+                        
+                        {roles.filter(r => r.is_active).map((r) => (
                             <option key={r.id} value={r.id}>
                                 {r.role_name || r.name}
                             </option>
                         ))}
+
+
                     </Form.Select>
                 </Form.Group>
 

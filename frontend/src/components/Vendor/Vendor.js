@@ -1,4 +1,4 @@
-import React from "react";
+   import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getVendorConfig } from "./vendorconfig";
 import { useDataManager } from "../common/userdatamanager";
@@ -9,8 +9,12 @@ import { AuthHelper } from "../../utils/authHelper";
 import { useEffect } from "react";
 import PermissionDenied from "../../utils/permission_denied";
 import { MODULES } from "../../constants/CONSTANT";
+
 import "../../App.css";
+import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
+import { convertToUserTimezone } from "../../utils/convertTimeZone";
 const Vendor = (props) => {
+  const { timeZone } = convertToUserTimezone();
   const baseConfig = getVendorConfig();
   const { data, loading, error } = useDataManager(
     baseConfig.dataDependencies,
@@ -79,8 +83,10 @@ const Vendor = (props) => {
   const allData = {
     ...data,
     ...props,
+    ...timeZone,
     CityState: CityState,
-    CityPincode: CityPincode
+    CityPincode: CityPincode,
+    CountryCode: COUNTRY_CODES
   };
 
   const finalConfig = getVendorConfig(

@@ -151,6 +151,7 @@ const ModuleDetail = ({
   moduleApi,
   moduleLabel,
   icon,
+  validationRules,
   fields,
   relatedModules = [],
   customHeader = null,
@@ -717,6 +718,28 @@ const ModuleDetail = ({
   };
 
   const handleSave = async () => {
+
+    console.log("hello check");
+    console.log("tempDataCheck-->", tempData);
+
+    //  if (customHandlers.beforeSave) {
+    //         const customResult = customHandlers.beforeSave(formData, editingItem);
+    //         if (customResult === false) return;
+    //     }
+
+    //  if (validationRules) {
+    //             const errors = validationRules(formData, data, editingItem);
+    //             console.log("validationRules",validationRules);
+    //             console.log("errors",errors);
+    //             if (errors.length > 0) {
+    //                 PubSub.publish("RECORD_ERROR_TOAST", {
+    //                     title: "Validation Error",
+    //                     message: errors.join(", "),
+    //                 });
+    //                 return;
+    //             }
+    //         }
+    
     try {
       setSaving(true);
 
@@ -732,6 +755,9 @@ const ModuleDetail = ({
 
       if (hasFileUpload) {
         const formDataToSend = new FormData();
+
+        console.log("tempData-->", tempData);
+        console.log("formDataToSend before loop-->", formDataToSend);
 
         for (const [key, value] of Object.entries(tempData)) {
           if (key === "image") {
@@ -791,6 +817,9 @@ const ModuleDetail = ({
       }
     } catch (err) {
       let errorMessage = err.message;
+      console.log("Error during save:", err);
+      console.log("Error response data:", errorMessage);
+      
       if (err.response && err.response.data && err.response.data.errors) {
         errorMessage = err.response.data.errors;
       }
@@ -799,6 +828,11 @@ const ModuleDetail = ({
         title: "Update Failed",
         message: ` ${moduleLabel}: ${errorMessage}`,
       });
+
+      //  PubSub.publish("RECORD_ERROR_TOAST", {
+      //   title: "Update Failed",
+      //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
+      // });
     } finally {
       setSaving(false);
     }
@@ -811,6 +845,7 @@ const ModuleDetail = ({
 
 
   const handleFieldChange = (fieldKey, value, field) => {
+    console.log("Field Change:", fieldKey, value);
     if (isEditing && tempData) {
 
       if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
@@ -1636,8 +1671,8 @@ const ModuleDetail = ({
           show={showConfirmModal}
           onHide={() => setShowConfirmModal(false)}
           onConfirm={confirmDelete}
-          title={`Delete ${moduleName}`}
-          message={`Are you sure you want to delete this ${moduleName}?`}
+          title={`Delete `}
+          message={`Are you sure you want to delete this?`}
           confirmText="Delete"
           cancelText="Cancel"
         />

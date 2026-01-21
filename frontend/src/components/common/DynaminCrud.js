@@ -350,6 +350,7 @@ const DynamicCRUD = ({
 
     useEffect(() => {
         setFormData(initialFormData);
+        console.log("recordsPerPage:", recordsPerPage);
     }, []);
 
     useEffect(() => {
@@ -366,12 +367,12 @@ const DynamicCRUD = ({
 
 
 
-
+//fetch all data 
     const filteredData = useMemo(() => {
         let result = data;
 
         console.log('advancedFilters = ', advancedFilters);
-        console.log('result = ', result);
+        console.log('resultData = ', result);
         console.log('searchTerm = ', searchTerm);
         console.log('showSearch = ', showSearch);
 
@@ -380,7 +381,6 @@ const DynamicCRUD = ({
         const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
 
         if (hasActiveFilters) {
-
             result = applyAdvancedFilters(result, advancedFilters);
         }
 
@@ -686,15 +686,18 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
-        console.log("onSubmitonSubmitonSubmitonSubmit,", formData);
+
+        console.log("check it form-->", formData);
 
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
             if (customResult === false) return;
         }
-
+        
         if (validationRules) {
             const errors = validationRules(formData, data, editingItem);
+            console.log("validationRules",validationRules);
+            console.log("errors",errors);
             if (errors.length > 0) {
                 PubSub.publish("RECORD_ERROR_TOAST", {
                     title: "Validation Error",
@@ -704,12 +707,15 @@ const DynamicCRUD = ({
             }
         }
 
+
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
+            console.log("apiEndpoint", apiEndpoint);
+            console.log("api",api);
             let response;
             const hasFileUpload = formFields.some(field => field && field.type === 'file');
-
+console.log("formDaformDataformDataformData", formData);
             if (hasFileUpload) {
                 const submitData = new FormData();
 
@@ -753,6 +759,7 @@ const DynamicCRUD = ({
                     console.log("Respinse", response)
                 }
             } else {
+               
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
@@ -788,6 +795,7 @@ const DynamicCRUD = ({
             }
         } catch (error) {
             console.error(`Error saving ${moduleLabel}:`, error);
+            console.error(`error.messageerror.messageerror.message`, error.message);
             PubSub.publish("RECORD_ERROR_TOAST", {
                 title: "Error",
                 message: `Failed to save ${moduleLabel}: ${error.message}`,
@@ -1114,7 +1122,7 @@ const DynamicCRUD = ({
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         currentPage={currentPage}
                                         totalRecords={filteredData.length}
-                                        recordsPerPage={recordsPerPage}
+                                        recordsPerPage={recordsPerPage} //this bg-info
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
                                         showActions={showActions}

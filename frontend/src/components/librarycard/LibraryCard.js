@@ -253,6 +253,7 @@ const LibraryCard = (props) => {
           onSubmit: async (formData, setFormData) => {
 
 
+            console.log("Submitting form data:", formData);
 
             if (!formData.user_id) {
               alert("Please select a user");
@@ -284,11 +285,12 @@ const LibraryCard = (props) => {
             }
 
             try {
-
+              console.log("Creating library card with data:", formData);
               const response = await DataApi.createLibraryCard(formData);
-
+              console.log("API response for creating library card:", response.data?.message);
               if (!response?.data?.success) {
                 const errorMsg = response?.data?.message || 'Failed to create library card';
+
                 console.error("API Error:", response);
                 alert(errorMsg);
                 return false;

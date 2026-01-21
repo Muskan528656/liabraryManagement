@@ -82,7 +82,6 @@ async function findByEmail(email, excludeId = null) {
     const cleanEmail = email?.trim();
     console.log("Cleaned email:", cleanEmail);
 
-
     let query = `
       SELECT *
       FROM ${this.schema}.user

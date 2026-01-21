@@ -337,10 +337,12 @@ const UserAdd = () => {
                           style={{ height: "38px" }}
                           type="text"
                           name="phone_number"
+                          required="true"
                           placeholder="Phone Number"
                           value={user.phone_number || ""}
                           onChange={handleChange}
                         />
+                        
                       </InputGroup>
                     </Form.Group>
                   </Col>

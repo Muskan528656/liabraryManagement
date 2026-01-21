@@ -659,7 +659,7 @@ export default function Header({ socket }) {
       >
         <Navbar.Brand
           href="#"
-          className="fw-bold"
+          className="fw-bold "
           style={{
             fontSize: "1.7rem",
             fontWeight: "900",
@@ -673,7 +673,7 @@ export default function Header({ socket }) {
         >
           <img
             src={Company?.logourl || "/Logo.png"}
-            // src={"/Logo.png"}
+              // src={"/Logo.png"}
             height="50"
             style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
           />

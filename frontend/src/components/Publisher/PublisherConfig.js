@@ -138,6 +138,7 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone) => {
                 colSize: 6,
             },
         ],
+        
         validationRules: (formData, allBooks, editingBook) => {
             const errors = [];
 
