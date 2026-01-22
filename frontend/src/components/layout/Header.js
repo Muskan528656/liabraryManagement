@@ -108,7 +108,7 @@ export default function Header({ socket }) {
         }
       }
 
-      const cachedRoles = localStorage.getItem("cached_roles");
+      const cachedRoles = sessionStorage.getItem("cached_roles");
       if (cachedRoles) {
         try {
           const roles = JSON.parse(cachedRoles);
@@ -139,7 +139,7 @@ export default function Header({ socket }) {
               role_name: roleName,
               name: roleName,
             });
-            localStorage.setItem("cached_roles", JSON.stringify(existingRoles));
+            sessionStorage.setItem("cached_roles", JSON.stringify(existingRoles));
           }
           return;
         }
@@ -184,7 +184,7 @@ export default function Header({ socket }) {
                 role_name: roleName,
                 name: roleName,
               });
-              localStorage.setItem(
+              sessionStorage.setItem(
                 "cached_roles",
                 JSON.stringify(existingRoles)
               );
@@ -283,7 +283,7 @@ export default function Header({ socket }) {
 
   const fetchModulesFromDB = async () => {
     try {
-      const cachedModules = localStorage.getItem("cached_modules");
+      const cachedModules = sessionStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
           const parsed = JSON.parse(cachedModules);
@@ -310,14 +310,14 @@ export default function Header({ socket }) {
 
       if (modules.length > 0) {
         setModulesFromDB(modules);
-        localStorage.setItem("cached_modules", JSON.stringify(modules));
-        localStorage.setItem("cached_modules_timestamp", Date.now().toString());
+        sessionStorage.setItem("cached_modules", JSON.stringify(modules));
+        sessionStorage.setItem("cached_modules_timestamp", Date.now().toString());
       } else if (!cachedModules) {
         setModulesFromDB([]);
       }
     } catch (error) {
       console.error("Error fetching modules from DB:", error);
-      const cachedModules = localStorage.getItem("cached_modules");
+      const cachedModules = sessionStorage.getItem("cached_modules");
       if (cachedModules) {
         try {
           const parsed = JSON.parse(cachedModules);
@@ -348,8 +348,8 @@ export default function Header({ socket }) {
         }
         fetchModulesFromDB();
       } else {
-        localStorage.removeItem("cached_modules");
-        localStorage.removeItem("cached_modules_timestamp");
+        sessionStorage.removeItem("cached_modules");
+        sessionStorage.removeItem("cached_modules_timestamp");
       }
     } catch (error) {
       console.error("Error decoding token:", error);
@@ -488,11 +488,8 @@ export default function Header({ socket }) {
   }, []);
 
   const handleLogout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("r-t");
-    sessionStorage.removeItem("myimage");
-    sessionStorage.removeItem("lead_status");
-    localStorage.removeItem("cached_roles");
+    sessionStorage.clear();
+    sessionStorage.removeItem("cached_roles");
     window.location.href = "/login";
   };
 

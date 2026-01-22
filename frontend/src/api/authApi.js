@@ -80,8 +80,7 @@ const AuthApi = {
   },
 
   logout() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("r-t");
+    sessionStorage.clear();
     window.location.href = "/login";
   },
 

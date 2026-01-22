@@ -277,9 +277,8 @@ export const AuthHelper = {
     // },
 
     logout() {
-        sessionStorage.removeItem("permissions");
-        sessionStorage.removeItem("userinfo");
-        localStorage.clear(); // if used
+        sessionStorage.clear();
+        sessionStorage.clear(); // if used
         this.clearAuth();
         console.log("AuthHelper.logout -> Redirecting to /login");
         window.location.href = "/login";

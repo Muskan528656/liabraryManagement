@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useRef } from "react";
 import {
     Container,
@@ -104,7 +104,7 @@ const BookSubmit = () => {
     useEffect(() => {
         fetchAllIssuedBooks();
         fetchLibrarySettings();
-        const storedTimeZone = localStorage.getItem('userTimeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const storedTimeZone = sessionStorage.getItem('userTimeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
         setTimeZone(storedTimeZone);
     }, []);
 
@@ -449,7 +449,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Late Return",
                 description: `${daysOverdue} day(s) overdue`,
-                calculation: `${daysOverdue} days × ₹${finePerDay}/day`,
+                calculation: `${daysOverdue} days � ?${finePerDay}/day`,
                 amount: latePenalty,
                 color: "#f59e0b"
             });
@@ -461,7 +461,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Damage",
                 description: `Damage penalty (${damagePercentage}% of book price)`,
-                calculation: `₹${bookPrice} × ${damagePercentage}%`,
+                calculation: `?${bookPrice} � ${damagePercentage}%`,
                 amount: damagePenalty,
                 color: "#ef4444"
             });
@@ -473,7 +473,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Lost",
                 description: `Lost book (${lostPercentage}% of book price)`,
-                calculation: `₹${bookPrice} × ${lostPercentage}%`,
+                calculation: `?${bookPrice} � ${lostPercentage}%`,
                 amount: lostPenalty,
                 color: "#dc2626"
             });
@@ -926,7 +926,7 @@ const BookSubmit = () => {
         }
 
         setIsScanning(true);
-        await handleSearch();   // ✅ single source
+        await handleSearch();   // ? single source
         setIsScanning(false);
     };
 
@@ -1234,7 +1234,7 @@ const BookSubmit = () => {
         try {
             setLoading(true);
 
-            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
             const companyId = userData?.company_id || userData?.companyId || 1;
 
             const manualPrice = conditionAfter === "Lost" ? lostBookPrice : null;
@@ -1427,7 +1427,7 @@ const BookSubmit = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                                localStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
+                                sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
                             } catch (err) { }
                             navigate(`/book/${bookId}`, { state: record });
                         }}
@@ -1435,7 +1435,7 @@ const BookSubmit = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                                localStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
+                                sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
                             } catch (err) { }
                             window.open(`/book/${bookId}`, '_blank');
                         }}
@@ -1516,7 +1516,7 @@ const BookSubmit = () => {
             label: "Due Date",
             width: 120,
             render: (value) => {
-                if (!value) return "—";
+                if (!value) return "�";
                 const displayDate = moment(value).format('DD-MM-YYYY');
                 const isOverdue = new Date(value) < new Date();
 
@@ -1592,7 +1592,7 @@ const BookSubmit = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                                localStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
+                                sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
                             } catch (err) { }
                             navigate(`/book/${bookId}`, { state: record });
                         }}
@@ -1600,7 +1600,7 @@ const BookSubmit = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             try {
-                                localStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
+                                sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
                             } catch (err) { }
                             window.open(`/book/${bookId}`, '_blank');
                         }}
@@ -1707,7 +1707,7 @@ const BookSubmit = () => {
             width: 100,
             render: (value) => (
                 <span className={`fw-bold ${value > 0 ? "text-danger" : "text-success"}`}>
-                    ₹{parseFloat(value || 0).toFixed(2)}
+                    ?{parseFloat(value || 0).toFixed(2)}
                 </span>
             )
         },
@@ -2340,7 +2340,7 @@ const BookSubmit = () => {
                                                                     </>
                                                                 ) : bookPurchaseDetails ? (
                                                                     <>
-                                                                        Auto-filled from purchase records: ₹
+                                                                        Auto-filled from purchase records: ?
                                                                         {getBookPriceFromPurchaseDetails(bookPurchaseDetails).toFixed(2)}
                                                                         {bookPurchaseDetails.purchase_date && (
                                                                             <> (Purchased on: {formatDate(bookPurchaseDetails.purchase_date)})</>
@@ -2410,7 +2410,7 @@ const BookSubmit = () => {
                                                                                 <div style={{ textAlign: "right", minWidth: "80px" }}>
                                                                                     <div style={{ fontSize: "11px", color: "#6b7280" }}>{item.calculation}</div>
                                                                                     <div style={{ fontSize: "13px", fontWeight: "600", color: item.isInfo ? "#10b981" : "#dc2626" }}>
-                                                                                        ₹{item.amount?.toFixed(2)}
+                                                                                        ?{item.amount?.toFixed(2)}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -2431,7 +2431,7 @@ const BookSubmit = () => {
                                                                     fontWeight: "bold",
                                                                     fontSize: "1.3rem"
                                                                 }}>
-                                                                    Total Penalty: ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                                                    Total Penalty: ?{penalty.penalty?.toFixed(2) || "0.00"}
                                                                 </h4>
                                                                 <p style={{
                                                                     fontSize: "12px",
@@ -2450,7 +2450,7 @@ const BookSubmit = () => {
                                                             borderLeft: "3px solid #10b981"
                                                         }}>
                                                             <h4 style={{ color: "#059669", fontWeight: "bold", fontSize: "1.3rem" }}>
-                                                                ₹{penalty.penalty?.toFixed(2) || "0.00"}
+                                                                ?{penalty.penalty?.toFixed(2) || "0.00"}
                                                             </h4>
                                                             <p style={{ fontSize: "12px", color: "#059669", marginBottom: "0" }}>
                                                                 No penalty applicable

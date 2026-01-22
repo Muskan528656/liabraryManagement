@@ -13,8 +13,8 @@ export const AuthProvider = ({ children }) => {
 
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        const storedPermissions = localStorage.getItem("permissions");
+        const storedUser = sessionStorage.getItem("user");
+        const storedPermissions = sessionStorage.getItem("permissions");
 
         if (storedUser) setUser(JSON.parse(storedUser));
         if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
@@ -37,8 +37,8 @@ export const AuthProvider = ({ children }) => {
             });
             setPermissions(normalizedPermissions);
 
-            localStorage.setItem("user", JSON.stringify(userData));
-            localStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+            sessionStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
         } catch (err) {
             console.error("Failed to refresh permissions:", err);
         }
@@ -58,8 +58,8 @@ export const AuthProvider = ({ children }) => {
             });
             setPermissions(normalizedPermissions);
 
-            localStorage.setItem("user", JSON.stringify(userData));
-            localStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+            sessionStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
 
             return result;
         } catch (err) {
@@ -71,10 +71,9 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         setPermissions({});
-        localStorage.removeItem("user");
-        localStorage.removeItem("permissions");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("r-t");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("permissions");
+        sessionStorage.clear();
         window.location.href = "/login";
     };
 

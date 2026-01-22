@@ -40,8 +40,8 @@ const Submodule = () => {
     try {
       setIsLoading(true);
 
-      const cachedModules = localStorage.getItem("cached_modules");
-      const cacheTimestamp = localStorage.getItem("cached_modules_timestamp");
+      const cachedModules = sessionStorage.getItem("cached_modules");
+      const cacheTimestamp = sessionStorage.getItem("cached_modules_timestamp");
       const now = Date.now();
       const cacheDuration = 5 * 60 * 1000;
 
@@ -75,8 +75,8 @@ const Submodule = () => {
 
       if (modules.length > 0) {
         setModulesFromDB(modules);
-        localStorage.setItem("cached_modules", JSON.stringify(modules));
-        localStorage.setItem("cached_modules_timestamp", now.toString());
+        sessionStorage.setItem("cached_modules", JSON.stringify(modules));
+        sessionStorage.setItem("cached_modules_timestamp", now.toString());
         console.log("Modules fetched from API:", modules.length, "modules");
       } else {
         console.error("No modules found");
@@ -120,7 +120,7 @@ const Submodule = () => {
       console.log("No permissions found in sessionStorage");
 
       // Check if permissions API was called and failed
-      const permissionsApiCalled = localStorage.getItem("permissions_api_called");
+      const permissionsApiCalled = sessionStorage.getItem("permissions_api_called");
       if (permissionsApiCalled === "true") {
         console.log("Permissions API was called but returned empty");
         return false;
@@ -306,8 +306,8 @@ const Submodule = () => {
 
         if (!user) {
           console.log("No user found, clearing cache");
-          localStorage.removeItem("cached_modules");
-          localStorage.removeItem("cached_modules_timestamp");
+          sessionStorage.removeItem("cached_modules");
+          sessionStorage.removeItem("cached_modules_timestamp");
           setIsLoading(false);
           return;
         }
@@ -320,7 +320,7 @@ const Submodule = () => {
         console.log("Initial permissions check:", perms.length, "permissions");
 
         if (perms.length > 0) {
-          localStorage.setItem("permissions_api_called", "true");
+          sessionStorage.setItem("permissions_api_called", "true");
         }
 
       } catch (error) {

@@ -37,8 +37,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("r-t");
+    sessionStorage.clear();
     setUserInfo(false);
     setIsLoading(false);
   };
