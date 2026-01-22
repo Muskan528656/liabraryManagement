@@ -1290,7 +1290,7 @@ const BulkPurchasePage = () => {
                                                             variant="link"
                                                             size="sm"
                                                             onClick={() => setShowAddVendorModal(true)}
-                                                            title="Add New Vendor"
+                                                            title="Add New Vendor33"
                                                             className="p-0 text-primary"
                                                         >
                                                             <i className="fs-4 fa-solid fa-plus-square"></i>

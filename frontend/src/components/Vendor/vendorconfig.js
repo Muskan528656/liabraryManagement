@@ -420,7 +420,6 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             { name: 'company_name', label: 'Company Name', type: 'text' }
         ],
 
-        // ✅ detailConfig में permissions pass करें
         detailConfig: {
             moduleLabel: "Vendor",
             fields: {
@@ -454,10 +453,9 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     { key: "updated_at", label: "Updated At", type: "date" },
                 ]
             },
-            permissions: permissions // ✅ Permissions pass करें
+            permissions: permissions 
         },
 
-        // ✅ Root level पर permissions pass करें
         permissions: permissions,
 
         customHandlers: {

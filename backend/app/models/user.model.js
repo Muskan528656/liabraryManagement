@@ -16,12 +16,11 @@ function init(schema_name) {
 
 
 
-
-async function findAll() {
+async function findAll(filters = {}) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    const query = `
+    let query = `
       SELECT
         id,
         firstname,
@@ -36,17 +35,27 @@ async function findAll() {
         isactive,
         companyid
       FROM ${this.schema}."user"
-      ORDER BY firstname ASC, lastname ASC
+      WHERE 1=1
     `;
 
-    const result = await sql.query(query);
+    const values = [];
+    let paramIndex = 1;
+
+    if (filters.isactive !== undefined && filters.isactive !== '') {
+      query += ` AND isactive = $${paramIndex}`;
+      values.push(filters.isactive === 'true' || filters.isactive === true);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY firstname ASC, lastname ASC`;
+
+    const result = await sql.query(query, values);
     return result.rows.length ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);
     throw error;
   }
 }
-
 
 
 
@@ -72,7 +81,6 @@ async function findByEmail(email, excludeId = null) {
     console.log("Finding vendor by email:", email, "Excluding ID:", excludeId);
     const cleanEmail = email?.trim();
     console.log("Cleaned email:", cleanEmail);
-
 
     let query = `
       SELECT *

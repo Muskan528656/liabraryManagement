@@ -21,18 +21,26 @@ const Books = (props) => {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      const canView = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_VIEW);
-      const canCreate = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_CREATE);
-      const canEdit = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_EDIT);
-      const canDelete = await AuthHelper.hasModulePermission(MODULES.BOOKS, MODULES.CAN_DELETE);
+      if (AuthHelper.isSuperAdmin()) {
+        setPermissions({
+          canView: true,
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
+          loading: false
+        });
+        return;
+      }
 
-      setPermissions({
-        canView,
-        canCreate,
-        canEdit,
-        canDelete,
+      const perms = {
+        canView: await AuthHelper.hasModulePermission(MODULES.BOOKS, "view"),
+        canCreate: await AuthHelper.hasModulePermission(MODULES.BOOKS, "create"),
+        canEdit: await AuthHelper.hasModulePermission(MODULES.BOOKS, "edit"),
+        canDelete: await AuthHelper.hasModulePermission(MODULES.BOOKS, "delete"),
         loading: false
-      });
+      };
+
+      setPermissions(perms);
     };
     fetchPermissions();
     window.addEventListener("permissionsUpdated", fetchPermissions);
@@ -50,10 +58,18 @@ const Books = (props) => {
   if (permissions.loading) {
     return <div>Loading...</div>;
   }
+  const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
-  if (!permissions.canView) {
+  if (!permissions.loading && !isSuperAdmin && !permissions.canView) {
+
     return <PermissionDenied />;
   }
+  // if (!permissions.loading && !permissions.canView) {
+  //   return <PermissionDenied />;
+  // }
+  // if (!permissions.canView) {
+  //   return <PermissionDenied />;
+  // }
 
   const finalConfig = getBooksConfig(
     props,

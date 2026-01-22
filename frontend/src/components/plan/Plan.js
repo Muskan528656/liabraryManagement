@@ -5,15 +5,54 @@ import { getPlanConfig } from "./PlanConfig";
 import { useDataManager } from "../common/userdatamanager";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import DataApi from "../../api/dataApi";
+import { AuthHelper } from "../../utils/authHelper";
+import PermissionDenied from "../../utils/permission_denied";
+import { MODULES } from "../../constants/CONSTANT";
 import "../../App.css";
+
 const Plan = (props) => {
     const [allowedBooks, setAllowedBooks] = useState(null);
     const [planConfig, setPlanConfig] = useState(null);
-
     const { timeZone } = useTimeZone();
 
+    const [permissions, setPermissions] = useState({
+        canView: false,
+        canCreate: false,
+        canEdit: false,
+        canDelete: false,
+        loading: true
+    });
 
+    // Permission fetching logic
+    useEffect(() => {
+        const fetchPermissions = async () => {
+            if (AuthHelper.isSuperAdmin()) {
+                setPermissions({
+                    canView: true,
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    loading: false
+                });
+                return;
+            }
 
+            const perms = {
+                canView: await AuthHelper.hasModulePermission(MODULES.PLAN, "view"),
+                canCreate: await AuthHelper.hasModulePermission(MODULES.PLAN, "create"),
+                canEdit: await AuthHelper.hasModulePermission(MODULES.PLAN, "edit"),
+                canDelete: await AuthHelper.hasModulePermission(MODULES.PLAN, "delete"),
+                loading: false
+            };
+
+            setPermissions(perms);
+        };
+        fetchPermissions();
+        window.addEventListener("permissionsUpdated", fetchPermissions);
+        return () => {
+            window.removeEventListener("permissionsUpdated", fetchPermissions);
+        };
+    }, []);
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -34,37 +73,56 @@ const Plan = (props) => {
         loadSettings();
     }, []);
 
-
-
-
-
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const config = await getPlanConfig({}, allowedBooks, timeZone);
+                const config = await getPlanConfig(
+                    {},
+                    allowedBooks,
+                    timeZone,
+                    {
+                        canCreate: permissions.canCreate,
+                        canEdit: permissions.canEdit,
+                        canDelete: permissions.canDelete
+                    }
+                );
                 setPlanConfig(config);
             } catch (err) {
                 console.error("Error loading plan config:", err);
             }
         };
 
-        if (allowedBooks && timeZone) {
+        if (allowedBooks && timeZone && !permissions.loading) {
             loadConfig();
         }
-    }, [allowedBooks, timeZone]);
-
-
-
+    }, [allowedBooks, timeZone, permissions.loading, permissions.canCreate, permissions.canEdit, permissions.canDelete]);
 
     const { data, loading, error } = useDataManager(
         planConfig?.dataDependencies,
         props
     );
 
-    if (!planConfig || loading) return <span className="loader"></span>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
+    if (permissions.loading || !planConfig || loading) {
+        return <span className="loader"></span>;
+    }
 
-    return <DynamicCRUD {...planConfig} icon="fa-solid fa-tags" />;
+    if (error) {
+        return <div className="alert alert-danger">{error}</div>;
+    }
+
+
+    const isSuperAdmin = AuthHelper.isSuperAdmin?.();
+    if (!permissions.loading && !isSuperAdmin && !permissions.canView) {
+        return <PermissionDenied />;
+    }
+
+    return (
+        <DynamicCRUD
+            {...planConfig}
+            icon="fa-solid fa-tags"
+            permissions={permissions}
+        />
+    );
 };
 
 export default Plan;

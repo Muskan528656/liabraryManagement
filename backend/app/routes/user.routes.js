@@ -232,7 +232,7 @@ module.exports = (app) => {
   router.get("/", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode);
-      const users = await User.findAll();
+      const users = await User.findAll(req.query);
       return res.status(200).json(users);
     } catch (error) {
       console.error("Error fetching users:", error);

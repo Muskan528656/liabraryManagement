@@ -55,6 +55,8 @@ const deleteFileIfExists = (filePath) => {
   if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
 };
 module.exports = (app) => {
+
+
   const { body, validationResult } = require("express-validator");
   var router = require("express").Router();
   router.get("/object-types", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
@@ -142,15 +144,21 @@ module.exports = (app) => {
     "/",
     fetchUser, checkPermission("Library Members", "allow_create"),
     upload.single("image"),
-    [
-      body("first_name").notEmpty().withMessage("First name is required"),
-      body("last_name").notEmpty().withMessage("Last name is required"),
-      body("email").optional().isEmail().withMessage("Valid email required"),
-      body("phone_number").optional().isString(),
-      body("type_id").optional().isString(),
-    ],
+    // [
+    //   body("first_name").notEmpty().withMessage("First name is required"),
+    //   body("last_name").notEmpty().withMessage("Last name is required"),
+    //   body("email").optional().isEmail().withMessage("Valid email required"),
+    //   body("phone_number").optional().isString(),
+    //   body("type_id").optional().isString(),
+    // ],
+    // [
+    //   body("email").optional().custom((value) => {
+    //     return true;
+    //   }),
+    // ],
     async (req, res) => {
       try {
+        console.log("Library card creation request body:", req.body);
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 

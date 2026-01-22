@@ -74,11 +74,11 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
       const api = new DataApi("librarycard");
       const res = await api.get("/object-types");
 
- 
+
 
       if (res.data?.success) {
         setObjectTypes(res.data.data || []);
- 
+
       } else {
         console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
         setObjectTypes([]);
@@ -185,16 +185,16 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
   };
 
   return (
-    <Modal    backdrop="static"  show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
-      <Modal.Header  
-      className="py-3 fw-bold"
-      style={{
+    <Modal backdrop="static" show={show} onHide={onClose} size="lg" centered dialogClassName="rounded-modal">
+      <Modal.Header
+        className="py-3 fw-bold"
+        style={{
           color: "var(--primary-color)",
           background: "var(--primary-background-color)",
           borderRadius: "5px",
-          fontSize:"20px"
+          fontSize: "20px"
 
-      }}>
+        }}>
         Import Library Members
 
         <button type="button" className="btn-close" onClick={onClose}></button>
@@ -237,7 +237,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   <LayoutTextWindow size={32} style={{ color: 'var(--primary-color)' }} />
                 </div>
                 <p className="text-muted mt-3">Select the library category for this import.</p>
-                <Form.Group className="mb-2 mx-auto" style={{ maxWidth: '400px'}}>
+                <Form.Group className="mb-2 mx-auto" style={{ maxWidth: '400px' }}>
                   <Form.Select
                     size="md"
                     className="modern-dropdown py-1"
@@ -257,12 +257,12 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     size="sm"
                     variant=""
                     className="fw-bold shadow-sm py-2"
-                     style={{
-                        color: "var(--primary-color)",
-                        background: "var(--primary-background-color)",
-                        borderRadius: "5px",
-                        border:'var(--primary-color) solid 1px'
-                      }}
+                    style={{
+                      color: "var(--primary-color)",
+                      background: "var(--primary-background-color)",
+                      borderRadius: "5px",
+                      border: 'var(--primary-color) solid 1px'
+                    }}
                     disabled={!selectedCategory}
                     onClick={() => setStep(2)}
                   >
@@ -283,13 +283,13 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     Group: {selectedCategory?.type || ''}
                   </Badge>
                 </div>
-                <Button variant="link" className="mt-4 text-decoration-none " 
-                 style={{
+                <Button variant="link" className="mt-4 text-decoration-none "
+                  style={{
                     color: "var(--primary-color)",
                     background: "var(--primary-background-color)",
                     borderRadius: "5px",
-                    border:'var(--primary-color) solid 1px'
-                    }}  
+                    border: 'var(--primary-color) solid 1px'
+                  }}
                   onClick={downloadTemplate}><Download className="me-2" /> Download Template</Button>
               </div>
             )}
@@ -322,9 +322,9 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
             {step === 4 && (
               <div className="fade-in">
                 <div className="preview-container shadow-sm overflow-auto">
-                  <Table responsive hover className="mb-0 custom-table"  style={{
+                  <Table responsive hover className="mb-0 custom-table" style={{
                     background: "var(--primary-background-color)",
-                  
+
                   }} >
                     <thead>
                       <tr>{Object.keys(DB_FIELDS).map(k => <th key={k}>{DB_FIELDS[k]}</th>)}</tr>
@@ -376,7 +376,7 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     color: "var(--primary-color)",
                     background: "var(--primary-background-color)",
                     borderRadius: "5px",
-                    border:'var(--primary-color) solid 1px'
+                    border: 'var(--primary-color) solid 1px'
                   }}
                   onClick={() => setStep(step - 1)}
                 >
@@ -386,13 +386,13 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                   {step === 3 && (
                     <Button
                       size="sm"
- 
+
                       variant=""
                       style={{
                         color: "var(--primary-color)",
                         background: "var(--primary-background-color)",
                         borderRadius: "5px",
-                        border:'var(--primary-color) solid 1px'
+                        border: 'var(--primary-color) solid 1px'
                       }}
                       onClick={() => setStep(4)}
                     >
@@ -403,12 +403,12 @@ const LibraryImportModal = ({ show, onClose, onSuccess }) => {
                     <Button
                       size="sm"
                       variant="var(--primary-color)"
- 
+
                       style={{
                         color: "var(--primary-color)",
                         background: "var(--primary-background-color)",
                         borderRadius: "5px",
-                        border:'var(--primary-color) solid 1px'
+                        border: 'var(--primary-color) solid 1px'
                       }}
                       onClick={handleImport}
                       disabled={loading}

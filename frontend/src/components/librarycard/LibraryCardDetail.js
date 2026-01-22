@@ -498,6 +498,10 @@ const LibraryCardDetail = ({
     fetchSubscriptionProgress();
   }, [data?.subscription_id]);
 
+  useEffect(() => {
+    fetchCardData()
+    console.log("book", fetchBookCounts)
+  }, [])
   const fetchCardData = async () => {
 
     try {
@@ -843,7 +847,6 @@ const LibraryCardDetail = ({
               </div>
             )}
           </div>
-
           <div style={{ textAlign: "center", marginBottom: "15px" }}>
             <h5
               style={{
@@ -855,38 +858,29 @@ const LibraryCardDetail = ({
             >
               {data?.first_name || "N/A"} {data?.last_name || ""}
             </h5>
-            <p
-              style={{
-                margin: "5px 0",
-                color: "#6c757d",
-                fontSize: "14px",
-              }}
-            >
-              <i className="fa-solid fa-envelope me-2"></i>
-              {data?.email || "N/A"}
-            </p>
-            <p
-              style={{
-                margin: "5px 0",
-                color: "#6c757d",
-                fontSize: "13px",
-                fontFamily: "monospace",
-              }}
-            >
-              <i className="fa-solid fa-id-card me-2"></i>
-              Card: {data?.card_number || "N/A"}
-            </p>
-            <p
-              style={{
-                margin: "5px 0",
-                color: "#6c757d",
-                fontSize: "13px",
-              }}
-            >
-              <i className="fa-solid fa-calendar me-2"></i>
-              Registered: {formatDate(data?.registration_date)}
-            </p>
+
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ textAlign: "left" }}>
+
+                <div style={{ display: "flex", alignItems: "center", margin: "5px 0", color: "#6c757d", fontSize: "14px" }}>
+                  <i className="fa-solid fa-envelope" style={{ width: "18px", marginRight: "8px" }}></i>
+                  <span>{data?.email || "N/A"}</span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", margin: "5px 0", color: "#6c757d", fontSize: "13px", fontFamily: "monospace" }}>
+                  <i className="fa-solid fa-id-card" style={{ width: "18px", marginRight: "8px" }}></i>
+                  <span>Card: {data?.card_number || "N/A"}</span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", margin: "5px 0", color: "#6c757d", fontSize: "13px" }}>
+                  <i className="fa-solid fa-calendar" style={{ width: "18px", marginRight: "8px" }}></i>
+                  <span>Registered: {formatDate(data?.registration_date)}</span>
+                </div>
+
+              </div>
+            </div>
           </div>
+
 
           <div
             style={{
@@ -1372,6 +1366,8 @@ const LibraryCardDetail = ({
 
   const handleSave = async () => {
 
+    console.log("Temp Data on Save:", tempData);
+
     if (!hasDataChanged()) {
       setIsEditing(false);
       setTempData(null);
@@ -1547,6 +1543,7 @@ const LibraryCardDetail = ({
   };
 
   const handleFieldChange = (fieldKey, value) => {
+    console.log(`Field Changed: ${fieldKey} =`, value);
     if (isEditing) {
       setTempData((prev) => ({
         ...(prev || {}),

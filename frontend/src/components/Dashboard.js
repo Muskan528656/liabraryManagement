@@ -15,7 +15,6 @@ import {
 import Chart from "react-apexcharts";
 import ScrollToTop from "./common/ScrollToTop";
 import DataApi from "../api/dataApi";
-// import Loader from "./common/Loader";
 import '../App.css';
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
@@ -402,7 +401,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     }
   };
 
-  
+
 
   const fetchDashboardSummary = async () => {
     try {
@@ -779,54 +778,54 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
 
   const donutOptions = {
-  chart: {
-    type: "pie",
-    height: 220,
-    width: 320, 
-    fontFamily: 'inherit',
-    toolbar: getChartConfig("Inventory_Status_Report").toolbar,
-    animations: {
-      enabled: true,
-      easing: 'easeinout',
-      speed: 800
-    }
-  },
-
-  labels: ['Issued', 'Available', 'Overdue', 'Damaged'],
-  colors: [SUCCESS_COLOR, ACCENT_COLOR, WARNING_COLOR, DANGER_COLOR],
-
-  legend: {
-    show: true,
-    position: "right",      
-    horizontalAlign: "left", 
-    verticalAlign: "middle",
-    fontSize: '12px',
-    fontFamily: 'inherit',
-    markers: {
-      width: 12,
-      height: 12,
-      radius: 8
-    },
-    itemMargin: {
-      vertical: 10            
-    }
-  },
-
-  tooltip: {
-    theme: 'light',
-    y: {
-      formatter: (val) => {
-        const total = Number(metrics.total_copies) || (Number(metrics.issuedBooks || 0) + Number(metrics.availableBooks || 0) + Number(metrics.damagedCount || 0));
-        const pct = total ? Math.round((Number(val) / total) * 100) : 0;
-        return `${formatNumber(val)} copies (${pct}%)`;
+    chart: {
+      type: "pie",
+      height: 220,
+      width: 320,
+      fontFamily: 'inherit',
+      toolbar: getChartConfig("Inventory_Status_Report").toolbar,
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800
       }
-    }
-  },
+    },
 
-  dataLabels: {
-    enabled: true
-  }
-};
+    labels: ['Issued', 'Available', 'Overdue', 'Damaged'],
+    colors: [SUCCESS_COLOR, ACCENT_COLOR, WARNING_COLOR, DANGER_COLOR],
+
+    legend: {
+      show: true,
+      position: "right",
+      horizontalAlign: "left",
+      verticalAlign: "middle",
+      fontSize: '12px',
+      fontFamily: 'inherit',
+      markers: {
+        width: 12,
+        height: 12,
+        radius: 8
+      },
+      itemMargin: {
+        vertical: 10
+      }
+    },
+
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (val) => {
+          const total = Number(metrics.total_copies) || (Number(metrics.issuedBooks || 0) + Number(metrics.availableBooks || 0) + Number(metrics.damagedCount || 0));
+          const pct = total ? Math.round((Number(val) / total) * 100) : 0;
+          return `${formatNumber(val)} copies (${pct}%)`;
+        }
+      }
+    },
+
+    dataLabels: {
+      enabled: true
+    }
+  };
 
   const calculateDonutSeries = () => {
     // Return raw counts in order: Issued, Available, Overdue, Damaged
@@ -892,7 +891,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
         {/* <Loader /> */}
-         <span className="loader"></span>
+        <span className="loader"></span>
       </div>
     );
   }
@@ -1244,9 +1243,9 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
                   <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '14px' }}>
                     Books Copies Status
                   </h6>
-             
-                </div>       
-                  <Chart options={donutOptions} series={donutChartSeries} type="pie" width={360} />
+
+                </div>
+                <Chart options={donutOptions} series={donutChartSeries} type="pie" width={360} />
                 {/* <div className="mt-2 d-flex justify-content-center flex-wrap gap-3">
                   {(() => {
                     const series = donutChartSeries || [];

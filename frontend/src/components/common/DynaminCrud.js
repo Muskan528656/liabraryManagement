@@ -110,7 +110,7 @@ const DynamicCRUD = ({
     const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
     const [passwordFormData, setPasswordFormData] = useState({ password: "", confirmPassword: "" });
     const [passwordVisibility, setPasswordVisibility] = useState({ password: false, confirmPassword: false });
- 
+
     const handleAddMultiRow = useCallback(() => {
         setMultiInsertRows(prev => [...prev, { ...initialFormData }]);
     }, [initialFormData]);
@@ -350,6 +350,7 @@ const DynamicCRUD = ({
 
     useEffect(() => {
         setFormData(initialFormData);
+        console.log("recordsPerPage:", recordsPerPage);
     }, []);
 
     useEffect(() => {
@@ -366,12 +367,12 @@ const DynamicCRUD = ({
 
 
 
-
+    //fetch all data 
     const filteredData = useMemo(() => {
         let result = data;
 
         console.log('advancedFilters = ', advancedFilters);
-        console.log('result = ', result);
+        console.log('resultData = ', result);
         console.log('searchTerm = ', searchTerm);
         console.log('showSearch = ', showSearch);
 
@@ -380,7 +381,6 @@ const DynamicCRUD = ({
         const hasActiveFilters = advancedFilters && Object.values(advancedFilters).some(v => v !== "" && v !== null);
 
         if (hasActiveFilters) {
-
             result = applyAdvancedFilters(result, advancedFilters);
         }
 
@@ -686,7 +686,8 @@ const DynamicCRUD = ({
     }, [apiEndpoint, deleteId, moduleLabel, fetchData]);
 
     const handleSave = useCallback(async () => {
-        console.log("onSubmitonSubmitonSubmitonSubmit,", formData);
+
+        console.log("check it form-->", formData);
 
         if (customHandlers.beforeSave) {
             const customResult = customHandlers.beforeSave(formData, editingItem);
@@ -695,6 +696,8 @@ const DynamicCRUD = ({
 
         if (validationRules) {
             const errors = validationRules(formData, data, editingItem);
+            console.log("validationRules", validationRules);
+            console.log("errors", errors);
             if (errors.length > 0) {
                 PubSub.publish("RECORD_ERROR_TOAST", {
                     title: "Validation Error",
@@ -704,12 +707,15 @@ const DynamicCRUD = ({
             }
         }
 
+
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
+            console.log("apiEndpoint", apiEndpoint);
+            console.log("api", api);
             let response;
             const hasFileUpload = formFields.some(field => field && field.type === 'file');
-
+            console.log("formDaformDataformDataformData", formData);
             if (hasFileUpload) {
                 const submitData = new FormData();
 
@@ -753,6 +759,7 @@ const DynamicCRUD = ({
                     console.log("Respinse", response)
                 }
             } else {
+
                 const submitData = { ...formData };
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
@@ -788,6 +795,7 @@ const DynamicCRUD = ({
             }
         } catch (error) {
             console.error(`Error saving ${moduleLabel}:`, error);
+            console.error(`error.messageerror.messageerror.message`, error.message);
             PubSub.publish("RECORD_ERROR_TOAST", {
                 title: "Error",
                 message: `Failed to save ${moduleLabel}: ${error.message}`,
@@ -895,7 +903,6 @@ const DynamicCRUD = ({
         }));
     }, []);
 
-
     const getActionButtons = useCallback(() => {
         const buttons = [];
 
@@ -990,6 +997,102 @@ const DynamicCRUD = ({
         customActionButtons,
         setShowImportModal,
     ]);
+
+
+    // const getActionButtons = useCallback(() => {
+    //     const buttons = [];
+
+    //     if (showImportButton) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-arrow-down",
+    //             label: `Import ${moduleLabel}`,
+    //             onClick: async () => {
+    //                 if (Object.keys(relatedData).length === 0) {
+    //                     await fetchRelatedData();
+    //                 }
+    //                 setShowImportModal(true);
+    //             },
+    //         });
+    //     }
+
+    //     // if (showImportButton && canCreate) {
+    //     //     buttons.push({
+    //     //         variant: "outline-primary",
+    //     //         size: "sm",
+    //     //         icon: "fa-solid fa-arrow-down",
+    //     //         label: `Import ${moduleLabel}`,
+    //     //         onClick: async () => {
+    //     //             if (Object.keys(relatedData).length === 0) {
+    //     //                 await fetchRelatedData();
+    //     //             }
+    //     //             setShowImportModal(true);
+    //     //         },
+    //     //     });
+    //     // }
+
+    //     if (showImportExport) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-arrow-up",
+    //             label: "Export",
+    //             onClick: handleExport,
+    //         });
+    //     }
+
+    //     if (showBulkInsert) {
+    //         buttons.push({
+    //             variant: "outline-primary",
+    //             size: "sm",
+    //             icon: "fa-solid fa-layer-group",
+    //             label: "Bulk Insert",
+    //             onClick: handleBulkInsert,
+    //         });
+    //     } if (showAddButton) {
+    //         buttons.push({
+    //             size: "sm",
+    //             icon: "fa-solid fa-plus",
+    //             label: `Add ${moduleLabel}`,
+    //             onClick: handleAdd,
+    //             style: {
+    //                 background: "var(--primary-color)",
+    //                 border: "none",
+    //             },
+    //         });
+    //     }
+
+    //     // if (showAddButton) {
+    //     //     buttons.push({
+    //     //         size: "sm",
+    //     //         icon: "fa-solid fa-plus",
+    //     //         label: `Add ${moduleLabel}`,
+    //     //         onClick: handleAdd,
+    //     //         style: {
+    //     //             background: "var(--primary-color)",
+    //     //             border: "none",
+    //     //         },
+    //     //     });
+    //     // }
+
+    //     if (customActionButtons.length > 0) {
+    //         buttons.push(...customActionButtons);
+    //     }
+
+    //     return buttons;
+    // }, [
+    //     showImportButton,
+    //     showImportExport,
+    //     showBulkInsert,
+    //     showAddButton,
+    //     moduleLabel,
+    //     handleExport,
+    //     handleBulkInsert,
+    //     handleAdd,
+    //     customActionButtons,
+    //     setShowImportModal,
+    // ]);
 
 
     const processedFormFields = useMemo(() => getProcessedFormFields(), [getProcessedFormFields]);
@@ -1114,7 +1217,7 @@ const DynamicCRUD = ({
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         currentPage={currentPage}
                                         totalRecords={filteredData.length}
-                                        recordsPerPage={recordsPerPage}
+                                        recordsPerPage={recordsPerPage} //this bg-info
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
                                         showActions={showActions}
