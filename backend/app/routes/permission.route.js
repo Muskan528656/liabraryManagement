@@ -26,7 +26,7 @@ module.exports = (app) => {
         try {
             const { roleId } = req.params;
 
-            if (!roleId || !roleId.match(/[0-9a-fA-F-]{36}/)) {
+            if (!roleId || !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(roleId)) {
                 return res.status(400).json({ success: false, message: "Invalid roleId" });
             }
 

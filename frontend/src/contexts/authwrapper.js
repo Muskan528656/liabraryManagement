@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthApi from "../api/authApi";
+import DataApi from "../api/dataApi";
 import { AuthHelper } from "../utils/authHelper";
 
 const AuthContext = createContext();
@@ -17,28 +18,57 @@ export const AuthProvider = ({ children }) => {
         const storedPermissions = sessionStorage.getItem("permissions");
 
         if (storedUser) setUser(JSON.parse(storedUser));
-        if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
+        if (storedPermissions) {
+            const perms = JSON.parse(storedPermissions);
+            if (Array.isArray(perms)) {
+                const normalized = {};
+                perms.forEach(p => {
+                    const key = p.moduleName || p.module_id || p.moduleId;
+                    if (key) normalized[key.toLowerCase()] = p;
+                });
+                setPermissions(normalized);
+            } else {
+                setPermissions(perms);
+            }
+        }
 
         setLoading(false);
+
+        // Listen for permission updates
+        const handlePermissionsUpdated = () => {
+            refreshPermissions();
+        };
+
+        window.addEventListener("permissionsUpdated", handlePermissionsUpdated);
+
+        return () => {
+            window.removeEventListener("permissionsUpdated", handlePermissionsUpdated);
+        };
     }, []);
 
 
     const refreshPermissions = async () => {
         try {
-            const userData = await AuthHelper.getUser();
-            if (!userData) return;
-            console.log("Refreshing permissions for user:", userData);
+            const userData = AuthHelper.getUser();
+            if (!userData || !userData.userrole) return;
 
-            setUser(userData);
+            console.log("Refreshing permissions for user role:", userData.userrole);
 
-            const normalizedPermissions = {};
-            (userData.permissions || []).forEach((perm) => {
-                normalizedPermissions[perm.module_name] = perm;
-            });
-            setPermissions(normalizedPermissions);
+            const api = new DataApi("permissions");
+            const result = await api.fetchById(`role/${userData.userrole}`);
 
-            sessionStorage.setItem("user", JSON.stringify(userData));
-            sessionStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+            if (result && result.data && result.data.success && result.data.data) {
+                const permissions = result.data.data;
+
+                const normalizedPermissions = {};
+                permissions.forEach((perm) => {
+                    const key = perm.moduleName || perm.module_id || perm.moduleId;
+                    if (key) normalizedPermissions[key.toLowerCase()] = perm;
+                });
+
+                setPermissions(normalizedPermissions);
+                sessionStorage.setItem("permissions", JSON.stringify(permissions));
+            }
         } catch (err) {
             console.error("Failed to refresh permissions:", err);
         }
@@ -54,12 +84,13 @@ export const AuthProvider = ({ children }) => {
 
             const normalizedPermissions = {};
             (userData.permissions || []).forEach((perm) => {
-                normalizedPermissions[perm.module_name] = perm;
+                const key = perm.module_name || perm.module_id || perm.moduleId;
+                if (key) normalizedPermissions[key.toLowerCase()] = perm;
             });
             setPermissions(normalizedPermissions);
 
             sessionStorage.setItem("user", JSON.stringify(userData));
-            sessionStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+            sessionStorage.setItem("permissions", JSON.stringify(userData.permissions || []));
 
             return result;
         } catch (err) {

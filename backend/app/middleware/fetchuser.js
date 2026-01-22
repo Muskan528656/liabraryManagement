@@ -42,8 +42,8 @@ const checkPermission = (moduleName, action) => {
       if (!user) return res.status(401).json({ message: "Unauthorized" });
       console.log("user.roleNameuser.roleName", user.role_name)
 
-      if (user.role_name &&
-        (user.role_name === "SYSTEM ADMIN")) {
+      if (user.userrole &&
+        (user.userrole === "SYSTEM ADMIN")) {
         return next();
       }
 

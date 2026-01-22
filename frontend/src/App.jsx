@@ -169,8 +169,6 @@ function AppContent() {
       </BookSubmissionProvider>
     </TimeZoneProvider>
   );
-
-
 }
 
 function App() {
