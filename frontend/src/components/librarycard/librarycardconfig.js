@@ -207,17 +207,17 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         { field: "email", label: "Email", sortable: true },
 
         { field: "phone_number", label: "Phone Number", sortable: true },
-        {
-            field: "type_id",
-            label: "Type",
-            sortable: true,
-            render: (value) => {
-                const typeObj = objectTypesList.find(
-                    (t) => t.value === value
-                );
-                return typeObj ? typeObj.label : "-";
-            }
-        }
+        // {
+        //     field: "type_id",
+        //     label: "Type",
+        //     sortable: true,
+        //     render: (value) => {
+        //         const typeObj = objectTypesList.find(
+        //             (t) => t.value === value
+        //         );
+        //         return typeObj ? typeObj.label : "-";
+        //     }
+        // }
         ,
         {
             field: "dob",
@@ -472,17 +472,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             showColumnVisibility: true,
             showCheckbox: true,
             showActions: true,
-        
+
             showAddButton: canCreate,
             allowEdit: canEdit,
             allowDelete: canDelete,
-            showImportButton: canCreate,
+            // showImportButton: canCreate,
             showAdvancedFilter: true,
         },
 
         filterFields: [
-
-
             {
                 name: "plan_id",
                 field: "plan_id",
@@ -560,7 +558,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             { key: "type", label: "Type", type: "text" },
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
-
             {
                 key: "status",
                 label: "Status",

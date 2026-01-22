@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
@@ -33,7 +32,6 @@ const Permission = () => {
         allow_delete: false
     });
 
-    const [deleteId, setDeleteId] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const navigate = useNavigate();
     const confirmDelete = async () => {
@@ -254,6 +252,7 @@ const Permission = () => {
                     allow_edit: false,
                     allow_delete: false
                 });
+                setExpandedRoles({});
                 setRefreshKey(prev => prev + 1);
             }
 
@@ -489,6 +488,7 @@ const Permission = () => {
             allow_edit: false,
             allow_delete: false
         });
+         setExpandedRoles({});
     };
 
     const toggleRoleAccordion = (roleId) => {

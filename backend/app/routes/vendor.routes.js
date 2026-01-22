@@ -19,6 +19,7 @@ const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Vendor = require("../models/vendor.model.js");
 
 module.exports = (app) => {
+
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
@@ -137,9 +138,7 @@ module.exports = (app) => {
           return res
             .status(400)
             .json({ errors: "Vendor with this email already exists" });
-        } else {
-
-        }
+        } 
 
         const userId = req.userinfo.id;
         const vendor = await Vendor.updateById(

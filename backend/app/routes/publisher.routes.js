@@ -1,10 +1,3 @@
- 
- 
- 
- 
- 
- 
-
 
 const express = require('express');
 const router = express.Router();
@@ -19,7 +12,7 @@ module.exports = (app) => {
     router.get("/", fetchUser, checkPermission("Publisher", "allow_view"), async (req, res) => {
         try {
             Publisher.init(req.userinfo.tenantcode);
-            const data = await Publisher.findAllPublisher();
+            const data = await Publisher.findAllPublisher(req.query);
             return res.status(200).json({
                 success: true,
                 data,

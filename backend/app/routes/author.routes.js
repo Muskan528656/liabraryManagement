@@ -30,7 +30,7 @@ module.exports = (app) => {
     checkPermission("Authors", "allow_view"),
     async (req, res) => {
       try {
-        const authors = await Author.findAll();
+        const authors = await Author.findAll(req.query);
         return res.status(200).json(authors);
       } catch (error) {
         console.error("Error fetching authors:", error);

@@ -78,8 +78,11 @@ module.exports = (app) => {
         ],
         async (req, res) => {
             const errors = validationResult(req);
-            if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    errors: errors.array()[0].msg
+                });
+            }
             try {
                 UserRole.init(req.userinfo.tenantcode);
 
@@ -87,8 +90,8 @@ module.exports = (app) => {
                     ...req.body,
                     lastmodifiedbyid: req.userinfo.userid,
                 };
-
-                const updated = await UserRole.update(req.params.id, data);
+                // const userId = req.userinfo?.id || null;
+                const updated = await UserRole.update(req.params.id, data,);
                 if (!updated) return res.status(404).json({ success: true, msg: "Role not found" });
 
                 return res.status(200).json(updated);

@@ -244,7 +244,7 @@ const ResizableTable = ({
 
             )}
             <div
-                className="mt-2 table-responsive resizable-table-container"
+                className="mt-2 table-responsive resizable-table-container "
                 style={{
                     border: "1px solid #e2e8f0",
                     borderRadius: "8px",
@@ -557,7 +557,7 @@ const ResizableTable = ({
                 </div>
             </div>
             {totalPages > 1 && (
-                <div className="d-flex justify-content-end">
+                <div className="d-flex justify-content-end ">
                     <Pagination className="mb-0">
 
                         <Pagination.Prev

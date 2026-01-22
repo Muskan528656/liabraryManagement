@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Loader from "../common/Loader";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getAuthorConfig } from "./authorconfig";
-import { useDataManager } from "../common/userdatamanager";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
 import "../../App.css";
@@ -46,41 +45,16 @@ const Author = (props) => {
     canDelete: permissions.canDelete
   });
 
-  const { data, loading: dataLoading, error } = useDataManager(
-    baseConfig.dataDependencies,
-    props
-  );
-
-  if (permissions.loading || dataLoading) {
+  if (permissions.loading) {
     return <Loader message="Loading..." />;
   }
 
   if (!permissions.canView) {
     return <PermissionDenied />;
   }
-  if (error) {
-    return (
-      <div className="alert alert-danger">
-        <h4>Error Loading Authors</h4>
-        <p>{error.message}</p>
-        <button
-          className="btn btn-primary"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-
-  const allData = {
-    ...data,
-    ...props
-  };
 
   const finalConfig = getAuthorConfig(
-    allData,
+    props,
     {
       canCreate: permissions.canCreate,
       canEdit: permissions.canEdit,

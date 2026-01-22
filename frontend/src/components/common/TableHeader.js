@@ -147,7 +147,7 @@ const TableHeader = ({
                   color: "var(--primary-color)",
                   background: "var(--primary-background-color)",
                   borderRadius: "5px",
-                  border: 'var(--primary-color) solid 1px'
+                  border: ''
                 }}
                 className="fw-bold py-2"
                 key={action.key}
@@ -169,7 +169,7 @@ const TableHeader = ({
               size={btn.size}
               onClick={btn.onClick}
               style={btn.style}
-              className="custom-btn-table-header"
+              className="custom-btn-table-header "
             >
               <i className={btn.icon}></i>
             </Button>

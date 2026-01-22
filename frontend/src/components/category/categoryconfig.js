@@ -83,7 +83,7 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
             showAddButton: true,
             allowEdit: permissions.canEdit || true,
             allowDelete: false,
-
+            showAdvancedFilter: true,
             showImportButton: true,
         },
         details: [
@@ -99,6 +99,14 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
             afterSave: (response, editingItem) => {
 
             }
-        }
+        },
+
+        filterFields: [
+            {
+                name: "name",
+                label: "Name",
+                type: "text"
+            }
+        ]
     };
 };

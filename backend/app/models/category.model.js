@@ -11,10 +11,21 @@ function init(schema_name) {
 }
 
  
-async function findAll() {
+async function findAll(filters = {}) {
   try {
-    const query = `SELECT * FROM demo.categories ORDER BY createddate DESC`;
-    const result = await sql.query(query);
+    let query = `SELECT * FROM demo.categories WHERE 1=1`;
+    const values = [];
+    let paramIndex = 1;
+
+    if (filters.name) {
+      query += ` AND name ILIKE $${paramIndex}`;
+      values.push(`%${filters.name}%`);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY createddate DESC`;
+
+    const result = await sql.query(query, values);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);
