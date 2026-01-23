@@ -6,8 +6,9 @@ import { Card, Col, Row } from "react-bootstrap";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
-const BookDetail = () => {
+const BookDetail = ({ permissions}) => {
 
+  console.log("BookDetail permission prop:", permissions);
   const { id } = useParams();
   const [externalData, setExternalData] = useState({ authors: [], categories: [] });
   const [book, setBook] = useState(null);
@@ -172,6 +173,7 @@ const BookDetail = () => {
     }
   ];
 
+  console.log("BookDetail permissions:", permissions);
 
   return (
     <>
@@ -189,6 +191,7 @@ const BookDetail = () => {
               externalData={externalData}
               data={book}
               fetchBookData={fetchBookData}
+              permissions={permissions || {}}
             />
           )}
         </Col>

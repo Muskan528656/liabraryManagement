@@ -170,10 +170,10 @@ const ModuleDetail = ({
   onTempDataChange = null,
 }) => {
   const {
-    canView = true,
-    canCreate = true,
-    canEdit = true,
-    canDelete = true,
+    allowView = true,
+    allowCreate = true,
+    allowEdit = true,
+    allowDelete = true,
   } = permissions;
   const location = useLocation();
   const { id } = useParams();
@@ -1308,7 +1308,7 @@ const ModuleDetail = ({
                   <div className="d-flex gap-2">
                     {!isEditing ? (
                       <>
-                        {canEdit && (
+                        {allowEdit && (
                           <button
                             className="custom-btn-primary"
                             onClick={handleEdit}

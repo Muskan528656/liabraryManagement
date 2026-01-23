@@ -13,7 +13,7 @@ import {
 import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 
-const Settings = () => {
+const Settings = ({permissions}) => {
   const [librarySettings, setLibrarySettings] = useState({
     max_books_per_card: 1,
     duration_days: 15,
@@ -61,6 +61,13 @@ const Settings = () => {
     setTwoFactorAuth(method);
   };
 
+  console.log("permissions in LibrarySettings:", permissions);
+
+  const canEditSettings = permissions?.allowEdit === true;
+
+
+  console.log("canEditSettings", canEditSettings) ;
+  console.log("isEditionSettings", isEditingSettings) ;
 
   useEffect(() => {
     fetchSettings();
@@ -187,28 +194,31 @@ const Settings = () => {
                   <i className="fa-solid fa-id-card me-2 fs-6"></i>
                   Setting Management
                 </h5>
-                {!isEditingSettings ? (
+                {!isEditingSettings && (
                   <button
                     onClick={handleSettingsEdit}
                     className="custom-btn-table-header "
+                    disabled={!canEditSettings}
+                    title={!canEditSettings ? "You do not have permission to edit settings" : "Edit Settings"}
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Settings
                   </button>
-                ) : (
-                  <div className="d-flex gap-2">
+                )}
+                {isEditingSettings && (
+                  <div>
                     <button
-                      className="custom-btn-primary"
                       onClick={handleSettingsSave}
+                      className="custom-btn-table-header me-2"
                     >
                       <i className="fa-solid fa-check me-2"></i>
                       Save
                     </button>
                     <button
-                      className="custom-btn-secondary"
                       onClick={handleSettingsCancel}
+                      className="custom-btn-table-header btn-secondary"
                     >
-                      <i className="fa-solid fa-times me-2"></i>
+                      <i className="fa-solid fa-xmark me-2"></i>
                       Cancel
                     </button>
                   </div>

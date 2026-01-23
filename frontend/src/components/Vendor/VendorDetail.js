@@ -60,13 +60,18 @@ const VendorDetail = ({ permissions }) => {
     ],
   };
 
+
+  console.log("Rendering VendorDetail with permissions:", permissions.allowCreate, permissions.allowEdit, permissions.allowDelete);
+
+
+
   return (
     <ModuleDetail
       moduleName="vendor"
       moduleApi="vendor"
       moduleLabel="Vendor"
       icon="fa-solid fa-store"
-      permissions={permissions}
+      permissions={permissions || {}}
       fields={fields}
     />
   );

@@ -5,6 +5,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
+
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import React, { useEffect, useState } from "react";
@@ -59,8 +60,20 @@ import Loader from "./components/common/Loader";
 
 const ENDPOINT = "http://localhost:3003";
 
+
+
+
+
 function AppContent() {
-  const { userInfo, isLoading } = useUser();
+  const { userInfo, isLoading, permissions } = useUser();
+
+  console.log("App permissions:", permissions);
+
+  const getPermissionForModule = (moduleName) => {
+    console.log("Getting permissions for module:", moduleName);
+    return permissions ? permissions.find(p => p && p.moduleName === moduleName) || {} : {};
+  };
+
   const [connectedSocket, setConnectedSocket] = useState();
   const [deviceId] = useState(() => {
     let existingId = sessionStorage.getItem("deviceId");
@@ -133,39 +146,38 @@ function AppContent() {
               <Route path="/" element={<Main socket={connectedSocket} />}>
                 <Route index element={<Dashboard />} />
                 <Route path="userroles" element={<UserRole />} />
-                <Route path="user-role/:id" element={<UserRoleDetail />} />
+                <Route path="user-role/:id" element={<UserRoleDetail permissions={getPermissionForModule("User Roles")} />} />
                 <Route path="/publisher" element={<Publisher />} />
-                <Route path="/publisher/:id" element={<PublisherDetail />} />
+                <Route path="/publisher/:id" element={<PublisherDetail permissions={getPermissionForModule("Publisher")} />} />
                 <Route path="author" element={<Author />} />
-                <Route path="author/:id" element={<AuthorDetail />} />
+                <Route path="author/:id" element={<AuthorDetail permissions={getPermissionForModule("Authors")} />} />
                 <Route path="plans" element={<Plan />} />
-                <Route path="plans/:id" element={<PlanDetail />} />
+                <Route path="plans/:id" element={<PlanDetail permissions={getPermissionForModule("Plan")} />} />
                 <Route path="book" element={<Books />} />
-                <Route path="book/:id" element={<BookDetail />} />
+                <Route path="book/:id" element={<BookDetail permissions={getPermissionForModule("Books")} />} />
                 <Route path="category" element={<Category />} />
-                <Route path="category/:id" element={<CategoryDetail />} />
+                <Route path="category/:id" element={<CategoryDetail permissions={getPermissionForModule("Categories")} />} />
                 <Route path="vendor" element={<Vendor />} />
-                <Route path="vendor/:id" element={<VendorDetail />} />
+                <Route path="vendor/:id" element={<VendorDetail permissions={getPermissionForModule("Vendors")} />} />
                 <Route path="purchase" element={<Purchase />} />
-                <Route path="purchase/:id" element={<PurchaseDetail />} />
+                <Route path="purchase/:id" element={<PurchaseDetail permissions={getPermissionForModule("Purchases")} />} />
                 <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
                 <Route path="subscriptions" element={<Subscription />} />
-                <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+                <Route path="subscriptions/:id" element={<SubscriptionDetail permissions={getPermissionForModule("Plan")} />} />
                 <Route path="permissions" element={<Permission />} />
                 <Route path="user" element={<User />} />
-                <Route path="user/:id" element={<UserDetail />} />
+                <Route path="user/:id" element={<UserDetail permissions={getPermissionForModule("Users")} />} />
                 <Route path="librarycard" element={<LibraryCard />} />
-                <Route path="librarycard/:id" element={<LibraryCardDetail />} />
+                <Route path="librarycard/:id" element={<LibraryCardDetail permissions={getPermissionForModule("Library Members")} />} />
                 <Route path="bookissue" element={<BookIssue />} />
                 <Route path="bookreturn" element={<BookSubmit />} />
-                <Route path="librarysettings" element={<LibrarySettings />} />
 
-                <Route path="librarycardtype" element={<LibrarySettings />} />
+                <Route path="librarycardtype" element={<LibrarySettings permissions={getPermissionForModule("Settings")} />} />
                 <Route path="booksubmit" element={<BookSubmit />} />
 
                 <Route path="myprofile" element={<EditProfile />} />
                 <Route path="Company" element={<Company />} />
-                <Route path="/company/:id" element={<CompanyDetail />} />
+                <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
 
                 <Route path="bulkissued" element={<BulkIssue />} />
               </Route>

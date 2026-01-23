@@ -11,7 +11,7 @@ import City_State from "../../constants/CityState.json";
 
 
 
-const PublisherDetail = () => {
+const PublisherDetail = ({permissions}) => {
 
     const { id } = useParams();
 
@@ -139,6 +139,7 @@ const PublisherDetail = () => {
                             moduleLabel="Publisher"
                             icon="fa fa-address-card"
                             fields={fields}
+                            permissions={permissions || {}}
                         />
                     )}
                 </Col>

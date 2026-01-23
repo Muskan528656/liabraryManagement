@@ -5,7 +5,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
-const PurchaseDetail = () => {
+const PurchaseDetail = ({permissions}) => {
   const [externalData, setExternalData] = useState({ vendors: [], books: [] });
   const [timeZone, setTimeZone] = useState(null);
   const [currencySymbol, setCurrencySymbol] = useState("₹"); 
@@ -149,6 +149,7 @@ const PurchaseDetail = () => {
       icon="fa-solid fa-shopping-cart"
       fields={fields}
       lookupNavigation={lookupNavigation}
+      permissions={permissions || {}}
       externalData={externalData}
     />
   );
