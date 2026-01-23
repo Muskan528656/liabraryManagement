@@ -130,6 +130,32 @@ const AuthApi = {
     }
   },
 
+  async getPermissions() {
+    try {
+      const token = AuthHelper.getToken();
+      if (!token) {
+        return { success: false, errors: "No token found" };
+      }
+
+      const response = await fetch(
+        `${constants.API_BASE_URL}/api/auth/permissions`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Get permissions error:", error);
+      return { success: false, errors: "Network error. Please try again." };
+    }
+  },
+
   async bs() {
     return "yes";
   },

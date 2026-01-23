@@ -87,6 +87,13 @@ function AppContent() {
         setConnectedSocket(socket);
       });
 
+      // Listen for permissions update from server
+      socket.on("permissions_updated", (data) => {
+        console.log("Permissions updated notification received:", data);
+        // Dispatch the custom event to trigger permission refresh
+        window.dispatchEvent(new Event("permissionsUpdated"));
+      });
+
       return () => {
         if (connectedSocket) {
           connectedSocket.disconnect();

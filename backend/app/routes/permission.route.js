@@ -7,6 +7,7 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const Permission = require("../models/permission.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
+const sql = require("../models/db.js");
 
 module.exports = (app) => {
 
@@ -73,6 +74,28 @@ module.exports = (app) => {
             }
 
             const result = await Permission.updateMultiple(roleId, permissions, req.userinfo.id);
+
+            // Find all users with this role and notify them to refresh permissions
+            try {
+                const User = require("../models/user.model.js");
+                User.init("demo");
+                const usersWithRole = await sql.query(
+                    `SELECT id FROM demo."user" WHERE userrole = $1 AND isactive = true`,
+                    [roleId]
+                );
+
+                // Emit socket event to all users with this role
+                const io = req.app.get("io");
+                usersWithRole.rows.forEach(user => {
+                    io.to(user.id).emit("permissions_updated", {
+                        roleId: roleId,
+                        message: "Your permissions have been updated. Please refresh if needed."
+                    });
+                });
+            } catch (socketError) {
+                console.error("Error emitting permissions update:", socketError);
+                // Don't fail the request if socket emission fails
+            }
 
             res.json({
                 success: true,

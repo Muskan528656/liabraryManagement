@@ -516,6 +516,22 @@ module.exports = (app) => {
     }
   });
 
+  router.get("/permissions", fetchUser, async (req, res) => {
+    try {
+      const permissions = await Auth.findPermissionsByRole(req.userinfo.userrole);
+      return res.status(200).json({
+        success: true,
+        permissions,
+      });
+    } catch (err) {
+      console.error("Error fetching permissions:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
+
   app.use(process.env.BASE_API_URL + "/api/auth", router);
 
 };

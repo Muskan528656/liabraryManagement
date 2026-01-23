@@ -49,16 +49,12 @@ export const AuthProvider = ({ children }) => {
 
     const refreshPermissions = async () => {
         try {
-            const userData = AuthHelper.getUser();
-            if (!userData || !userData.userrole) return;
+            console.log("Refreshing permissions...");
 
-            console.log("Refreshing permissions for user role:", userData.userrole);
+            const result = await AuthApi.getPermissions();
 
-            const api = new DataApi("permissions");
-            const result = await api.fetchById(`role/${userData.userrole}`);
-
-            if (result && result.data && result.data.success && result.data.data) {
-                const permissions = result.data.data;
+            if (result && result.success && result.permissions) {
+                const permissions = result.permissions;
 
                 const normalizedPermissions = {};
                 permissions.forEach((perm) => {
@@ -68,6 +64,9 @@ export const AuthProvider = ({ children }) => {
 
                 setPermissions(normalizedPermissions);
                 sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                console.log("Permissions refreshed successfully");
+            } else {
+                console.error("Failed to refresh permissions:", result?.errors);
             }
         } catch (err) {
             console.error("Failed to refresh permissions:", err);

@@ -418,6 +418,19 @@ module.exports = (app) => {
           return res.status(400).json({ errors: "Failed to update user" });
         }
 
+        // If user role was changed, notify the user to refresh permissions
+        if (userData.userrole && userData.userrole !== existingUser.userrole) {
+          try {
+            const io = req.app.get("io");
+            io.to(req.params.id).emit("permissions_updated", {
+              roleId: userData.userrole,
+              message: "Your role has been changed. Please refresh to update permissions."
+            });
+          } catch (socketError) {
+            console.error("Error emitting role change notification:", socketError);
+            // Don't fail the request if socket emission fails
+          }
+        }
 
         return res.status(200).json({
           success: true,

@@ -23,6 +23,7 @@ const fetchUser = async (req, res, next) => {
 
 
     const permissions = await Auth.findPermissionsByRole(decoded.userrole);
+    console.log("Fetched permissions for user:", decoded.id, permissions);
 
     req.userinfo.permissions = permissions || [];
 
