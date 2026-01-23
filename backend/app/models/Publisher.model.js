@@ -33,7 +33,7 @@ async function findAllPublisher(filters = {}) {
         throw error
     }
 }
- 
+
 async function findPublisherById(id, schema = null) {
     try {
         const query = `select * from ${this.schema || schema
@@ -45,7 +45,7 @@ async function findPublisherById(id, schema = null) {
         throw error;
     }
 }
- 
+
 async function insertPublisher(data, userId) {
     const query = `insert into ${this.schema}.publisher
     ( salutation,name,email,phone,city,state,country,is_active,createddate,lastmodifieddate,createdbyid,lastmodifiedbyid)
@@ -67,11 +67,11 @@ async function insertPublisher(data, userId) {
     return result.rows[0];
 }
 
- 
+
 async function updatePublisherByid(id, data, userId) {
     try {
         const current = await findPublisherById(id, this.schema);
- 
+
         if (!current) {
             throw new Error("Publisher not found");
         }
@@ -99,19 +99,19 @@ async function updatePublisherByid(id, data, userId) {
             data.country,
             data.is_active !== undefined ? data.is_active : current.is_active,
             userId
- 
- 
- 
+
+
+
         ];
         const result = await sql.query(query, values);
- 
+
         return result.rows[0];
     } catch (error) {
         console.error("Error in updatePublisherByid:", error);
         throw error;
     }
 }
- 
+
 async function deletePublisherById(id, data) {
     try {
         const current = await findPublisherById(id, this.schema);
