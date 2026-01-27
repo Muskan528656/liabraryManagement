@@ -2,8 +2,7 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-
-const SubscriptionDetail = () => {
+const SubscriptionDetail = ({ permissions }) => {
  
     const { timeZone } = useTimeZone();
 
@@ -42,6 +41,7 @@ const SubscriptionDetail = () => {
             moduleLabel="Subscription"
             icon="fa-solid fa-id-card"
             fields={fields}
+            permissions={permissions}
         />
     );
 };

@@ -39,6 +39,19 @@ module.exports = (app) => {
     }
   );
 
+  router.get("/inventory-report",
+     fetchUser, checkPermission("Books", "allow_view"), 
+     async (req, res) => {   
+       try {  
+            Book.init(req.userinfo.tenantcode); 
+            const report = await Book.generateInventoryReport();      
+            res.json(report);   
+          } catch (error) {
+            console.error("Error generating inventory report:", error);      
+            res.status(500).json({ errors: "Internal server error" });    
+          }  
+    });  
+
   router.get("/:id", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
@@ -260,5 +273,7 @@ module.exports = (app) => {
     }
   });
 
-  app.use(process.env.BASE_API_URL + "/api/book", router);
+  
+        
+    app.use(process.env.BASE_API_URL + "/api/book", router);
 };

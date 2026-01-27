@@ -115,9 +115,14 @@ export default class DataApi {
     if (!bookId) throw new Error("Book ID required");
 
     return axios.get(
-      `${this.baseUrl}/${bookId}/issued-count`,
+      // `${this.baseUrl}/${bookId}/issued-count`,
+      `${this.baseUrl}/${bookId}/submit-count`,
       { headers: this.getHeaders() }
     );
+  }
+
+  fetchInventoryReport() {
+    return axios.get(`${this.baseUrl}/inventory-report`, { headers: this.getHeaders() });
   }
 
   fetchSubmitCountByBookId(bookId) {
@@ -164,3 +169,4 @@ export default class DataApi {
     });
   }
 }
+
