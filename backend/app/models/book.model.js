@@ -286,6 +286,7 @@ async function generateInventoryReport() {
         b.isbn,
         b.total_copies,
         b.available_copies,
+        c.name AS category_name,
         (b.total_copies - b.available_copies) AS issued_copies,
         (b.total_copies - b.available_copies - b.available_copies) AS lost_damaged_copies,
         CASE
