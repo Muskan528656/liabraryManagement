@@ -59,8 +59,8 @@ const BookInventoryReport = () => {
   useEffect(() => { fetchInventoryReport(); }, []);
 
   //Handler for Checkboxes
-  const handleSelectionChange = (rows) => {
-    setSelectedRows(rows);
+  const handleSelectionChange = (selectedIds) => {
+    setSelectedRows(selectedIds);
   }
 
   // 2. DYNAMIC FILTERING LOGIC
@@ -79,8 +79,12 @@ const BookInventoryReport = () => {
       alert("Please select at least one record to export.");
       return;
     }
+    
+    // Get the full row objects for selected IDs
+    const selectedRowObjects = filteredData.filter(row => selectedRows.includes(row.id));
+    
     const headers = columns.map(col => col.label);
-    const exportData = filteredData.map(row => columns.map(col => row[col.field] || "N/A"));
+    const exportData = selectedRowObjects.map(row => columns.map(col => row[col.field] || "N/A"));
 
     if (type === "csv") {
       const csvContent = [headers, ...exportData].map(e => e.join(",")).join("\n");
@@ -91,9 +95,8 @@ const BookInventoryReport = () => {
       link.click();
     } 
     else if (type === "excel") {
-      const cleanData = selectedRows.map(({id, ...rest}) => rest); // Remove 'id' field
+      const cleanData = selectedRowObjects.map(({id, ...rest}) => rest); // Remove 'id' field
       const worksheet = XLSX.utils.json_to_sheet(cleanData);
-    //   const worksheet = XLSX.utils.json_to_sheet(filteredData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
       XLSX.writeFile(workbook, "Inventory_Report.xlsx");
@@ -175,8 +178,7 @@ const BookInventoryReport = () => {
             showSerialNumber={true}
             showActions={false}
             showCheckbox={true}
-            rowKey="id"
-            selectedRows={selectedRows}
+            selectedItems={selectedRows}
             onSelectionChange={handleSelectionChange}
           />
         </div>
