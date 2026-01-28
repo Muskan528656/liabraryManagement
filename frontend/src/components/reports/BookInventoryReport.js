@@ -273,17 +273,20 @@ const BookInventoryReport = () => {
       return acc;
     }, {});
 
-    return Object.values(aggregation).sort((a, b) => b.total - a.total).slice(0, 10); // Show top 10
+    return Object.values(aggregation).sort((a, b) => b.total - a.total).slice(0, 10); 
   }, [filteredData, chartGroupBy]);
 
+  //Dynamic Export Logic
+
   const exportFile = (type) => {
-    if (selectedRows.length === 0) {
-      alert("Please select at least one record to export.");
-      return;
-    }
-    const selectedRowObjects = filteredData.filter(row => selectedRows.includes(row.id));
+    // if (selectedRows.length === 0) {
+    //   alert("Please select at least one record to export.");
+    //   return;
+    // }
+    // const selectedRowObjects = filteredData.filter(row => selectedRows.includes(row.id));
+    const dataToExport = selectedRows.length > 0 ? filteredData.filter(row => selectedRows.includes(row.id)) : filteredData;
     const headers = columns.map(col => col.label);
-    const exportData = selectedRowObjects.map(row => columns.map(col => row[col.field] || "N/A"));
+    const exportData = dataToExport.map(row => columns.map(col => row[col.field] || "N/A"));
 
     if (type === "csv") {
         const csvContent = [headers, ...exportData].map(e => e.join(",")).join("\n");
@@ -293,14 +296,27 @@ const BookInventoryReport = () => {
         link.download = "Inventory_Report.csv";
         link.click();
     } else if (type === "excel") {
-        const worksheet = XLSX.utils.json_to_sheet(selectedRowObjects);
+
+        const excelData  = dataToExport.map(row =>{
+            const rowData = {};
+            columns.forEach(col => {
+                rowData[col.label] = row[col.field] || "N/A";
+            });
+            return rowData;
+        }) 
+
+
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
         XLSX.writeFile(workbook, "Inventory_Report.xlsx");
     } else if (type === "pdf") {
         const doc = new jsPDF("landscape");
         doc.text("Inventory Report", 14, 15);
-        doc.autoTable({ head: [headers], body: exportData, startY: 20 });
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+        doc.autoTable({ head: [headers], body: exportData, startY: 30  });
+        doc.setFontSize(10);
+        doc.setFontSize(16);
         doc.save("Inventory_Report.pdf");
     }
   };
@@ -314,6 +330,14 @@ const BookInventoryReport = () => {
           <Col md={4}>
             <h5 className="mb-0 fw-bold" style={{color: "var(--primary-color)"}}>Book Inventory</h5>
             {/* <small className="text-muted">Analyze your collection stock</small> */}
+             {selectedRows.length > 0 ? (
+                <small className="text-primary fw-bold">
+                  <i className="fa fa-check-circle me-1" />
+                  Exporting {selectedRows.length} selected items
+                </small>
+            ) : (
+                <small className="text-muted italic">Exporting all {filteredData.length} records</small>
+            )}
           </Col>
           <Col md={8} className="d-flex justify-content-md-end gap-2">
             {/* View Toggle */}
@@ -332,7 +356,7 @@ const BookInventoryReport = () => {
               </Button>
             </ButtonGroup>
 
-            <Button variant="outline-secondary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button>
+            {/* <Button variant="outline-secondary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button> */}
 
             <Dropdown align="end">
                 <Dropdown.Toggle variant="outline-dark" size="sm" style={{onhover: "cursor-pointer",color:'black'}}>Actions</Dropdown.Toggle>
@@ -340,7 +364,7 @@ const BookInventoryReport = () => {
                     <Dropdown.Header>Export Selected</Dropdown.Header>
                     <Dropdown.Item onClick={() => exportFile("excel")}><i className="fa-solid fa-file-excel me-2 text-success" />Excel</Dropdown.Item>
                     <Dropdown.Item onClick={() => exportFile("csv")}><i className="fa-solid fa-file-csv me-2 text-info" />CSV</Dropdown.Item>
-                    <Dropdown.Item onClick={() => exportFile("pdf")}><i className="fa-solid fa-file-pdf me-2 text-danger" />PDF</Dropdown.Item>
+                    <Dropdown.Item onClick={() => exportFile("pdf")}><i className="fa-solid fa-f  ile-pdf me-2 text-danger" />PDF</Dropdown.Item>
                 </Dropdown.Menu>
             </Dropdown>
           </Col>
@@ -392,7 +416,7 @@ const BookInventoryReport = () => {
                             <option value="category_name">Category</option>
                             <option value="publisher_name">Publisher</option>
                             <option value="author_name">Author</option>
-                            <option value="vendor_name">Vendor</option>
+                            {/* <option value="vendor_name">Vendor</option> */}
                             {/* Add vendor_name here if it exists in your API data */}
                         </Form.Select>
                     </Form.Group>

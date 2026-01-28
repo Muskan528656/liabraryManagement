@@ -57,7 +57,7 @@ import Publisher from "./components/Publisher/Publisher";
 import PublisherDetail from "./components/Publisher/PublisherDetail";
 import { AuthProvider } from "./contexts/authwrapper";
 import Loader from "./components/common/Loader";
-import BookInventoryReport from "./components/books/BookInventoryReport";
+import BookInventoryReport from "./components/reports/BookInventoryReport";
 
 const ENDPOINT = "http://localhost:3003";
 
