@@ -206,11 +206,13 @@ const BookInventoryReport = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
+  const [vendors, setVendors] = useState([]);
   
   const [columnFilters, setColumnFilters] = useState({});
   
   const [viewMode, setViewMode] = useState("table");
   const [chartGroupBy, setChartGroupBy] = useState("category_name");
+  const [vendorFilter, setVendorFilter] = useState("All Vendors");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -248,7 +250,24 @@ const BookInventoryReport = () => {
     }
   };
 
-  useEffect(() => { fetchInventoryReport(); }, []);
+  const fetchVendors = async () => {
+    try {
+      const vendorApi = new DataApi("vendor");
+      console.log("Fetching vendors...", vendorApi);
+      const response = await vendorApi.fetchAll();
+      console.log("Vendors fetched:", response.data);
+      const vendorList = (response.data || []).map((vendor) => vendor.vendor_name || vendor.name).filter(Boolean);
+      console.log("Processed vendor list:", vendorList);
+      setVendors(vendorList);
+    } catch (err) {
+      console.error("Failed to load vendors.", err);
+    }
+  };
+
+  useEffect(() => { 
+    fetchInventoryReport();
+    fetchVendors();
+  }, []);
 
   const handleSelectionChange = (selectedIds) => setSelectedRows(selectedIds);
 
@@ -332,6 +351,16 @@ const BookInventoryReport = () => {
            
           </Col>
           <Col md={8} className="d-flex justify-content-md-end gap-2">
+               <Form.Select
+              size="sm"
+              value={vendorFilter}
+              onChange={(e) => setVendorFilter(e.target.value)}
+              style={{ maxWidth: '150px' }}
+            >
+              <option value="All Vendors">All Vendors</option>
+            {vendors.map((vendor, index) => ( <option key={index} value={vendor}> {vendor} </option> ))}
+            </Form.Select>
+
             {/* View Toggle */}
             <ButtonGroup size="sm" className="me-2">
               <Button 
@@ -358,7 +387,7 @@ const BookInventoryReport = () => {
               </Button>
             </ButtonGroup>
 
-            {/* <Button variant="outline-secondary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button> */}
+            {/* <Button variant="outline-primary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button> */}
 
             <Dropdown align="end">
                 <Dropdown.Toggle variant="outline-dark" size="sm" style={{onhover: "cursor-pointer",color:'black'}}> <i className="fa fa-download" /> Actions</Dropdown.Toggle>
@@ -443,7 +472,7 @@ const BookInventoryReport = () => {
                   <YAxis />
                   <Tooltip cursor={{fill: '#f8f9fa'}} />
                   <Legend verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
-                  <Bar dataKey="total" name="Total Stock" fill="#8884d8" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Bar dataKey="total" name="Total Stock" fill="#11439b" radius={[4, 4, 0, 0]} barSize={40} />
                   <Bar dataKey="available" name="Available" fill="#82ca9d" radius={[4, 4, 0, 0]} barSize={40} />
                 </BarChart>
               </ResponsiveContainer>
