@@ -256,7 +256,15 @@ const BookInventoryReport = () => {
       console.log("Fetching vendors...", vendorApi);
       const response = await vendorApi.fetchAll();
       console.log("Vendors fetched:", response.data);
-      const vendorList = (response.data || []).map((vendor) => vendor.vendor_name || vendor.name).filter(Boolean);
+      //in filter give only active vendors names  
+
+    
+
+     const vendorList = (response.data || [])
+      .filter(vendor => vendor.status === true)   // keep only active
+      .map(vendor => vendor.vendor_name || vendor.name) // pick correct field
+      .filter(Boolean); // remove null/empty
+
       console.log("Processed vendor list:", vendorList);
       setVendors(vendorList);
     } catch (err) {
@@ -286,7 +294,7 @@ const BookInventoryReport = () => {
   }, [searchTerm, reportData, vendorFilter]);
   // --- CHART LOGIC ---
   const chartData = useMemo(() => {
-    const aggregation = filteredData.reduce((acc, item) => {
+    const aggregation = reportData.reduce((acc, item) => {
       const key = item[chartGroupBy] || "Unknown";
       if (!acc[key]) {
         acc[key] = { name: key, total: 0, available: 0, issued: 0 };
@@ -298,7 +306,7 @@ const BookInventoryReport = () => {
     }, {});
 
     return Object.values(aggregation).sort((a, b) => b.total - a.total).slice(0, 10); 
-  }, [filteredData, chartGroupBy]);
+  }, [reportData, chartGroupBy]);
 
   //Dynamic Export Logic
 
@@ -357,14 +365,16 @@ const BookInventoryReport = () => {
            
           </Col>
           <Col md={8} className="d-flex justify-content-md-end gap-2">
-            <Form.Select  size="sm"
-                value={vendorFilter}
-                onChange={(e) => setVendorFilter(e.target.value)}
-                style={{ maxWidth: '150px' }}
-            >
-              <option value="All Vendors">All Vendors</option>
-            {vendors.map((vendor, index) => ( <option key={index} value={vendor}> {vendor} </option> ))}
-            </Form.Select>
+            {viewMode === 'table' && (
+              <Form.Select  size="sm"
+                  value={vendorFilter}
+                  onChange={(e) => setVendorFilter(e.target.value)}
+                  style={{ maxWidth: '150px' }}
+              >
+                <option value="All Vendors">All Vendors</option>
+              {vendors.map((vendor, index) => ( <option key={index} value={vendor}> {vendor} </option> ))}
+              </Form.Select>
+            )}
 
             {/* View Toggle */}
             <ButtonGroup size="sm" className="me-2">
@@ -457,31 +467,31 @@ const BookInventoryReport = () => {
                         </Form.Select>
                     </Form.Group>
                 </Col>
-                <Col md={8} className="text-end">
+                {/* <Col md={4} className="text-end float-end">
                     <div className="small text-muted italic">Showing top 10 items by total volume</div>
-                </Col>
+                </Col> */}
             </Row>
-            
-            <div style={{ width: '100%', height: 400 }}>
-              <ResponsiveContainer>
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    angle={-45} 
-                    textAnchor="end" 
-                    interval={0} 
-                    height={80}
-                    tick={{fontSize: 12}}
-                  />
-                  <YAxis />
-                  <Tooltip cursor={{fill: '#f8f9fa'}} />
-                  <Legend verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
-                  <Bar dataKey="total" name="Total Stock" fill="#11439b" radius={[4, 4, 0, 0]} barSize={40} />
-                  <Bar dataKey="available" name="Available" fill="#82ca9d" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+              <div style={{ width: '100%', height: 400 }}>
+                <ResponsiveContainer>
+                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-45} 
+                      textAnchor="end" 
+                      interval={0} 
+                      height={80}
+                      tick={{fontSize: 12}}
+                      />
+                    <YAxis />
+                    <Tooltip cursor={{fill: '#f8f9fa'}} />
+                    <Legend verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
+                    <Bar dataKey="total" name="Total Stock" fill="#11439b" radius={[4, 4, 0, 0]} barSize={40} />
+                    <Bar dataKey="available" name="Available" fill="#82ca9d" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
           </div>
         )}
       </Card.Body>
