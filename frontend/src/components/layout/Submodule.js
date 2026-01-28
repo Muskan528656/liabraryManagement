@@ -11,6 +11,7 @@ const Submodule = () => {
   const [userData, setUserData] = useState(null);
   const [visibleModulesCount, setVisibleModulesCount] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
 
   const getUserData = () => {
     try {
@@ -608,43 +609,189 @@ const Submodule = () => {
                     </NavDropdown.Item>
                   ))}
                 </div>
+                {/* report section dropdown */}
+                <NavDropdown.Divider />
+                <NavDropdown.Item
+                  onClick={() => navigate('/reports/book-inventory')}
+                  style={{
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    borderRadius: "4px",
+                    transition: "all 0.2s",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--primary-background-color)";
+                    e.currentTarget.style.color = "var(--primary-color)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "var(--header-list-item-color)";
+                  }}
+                >
+                  <i
+                    className={`fs-7 fa-solid fa-chart-bar me-2`}
+                    style={{
+                      color: "var(--header-list-item-color)"
+                    }}
+                  ></i>
+                  Reports
+                </NavDropdown.Item>
+                {/* <NavDropdown.Item
+                  onClick={() => navigate('/reports/book-inventory')}
+                  style={{
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    borderRadius: "4px",
+                    transition: "all 0.2s",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--primary-background-color)";
+                    e.currentTarget.style.color = "var(--primary-color)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "var(--header-list-item-color)";
+                  }}
+                >
+                  <i
+                    className={`fs-7 fa-solid fa-chart-bar me-2`}
+                    style={{
+                      color: "var(--header-list-item-color)"
+                    }}
+                  ></i>
+                  Book Inventory Report
+                </NavDropdown.Item> */}
+                
               </NavDropdown>
             )}
 
             {/* Custom scrollbar styling */}
             <style jsx="true">{`
-    .more-dropdown-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .more-dropdown-scroll::-webkit-scrollbar-track {
-      background: white;
-      border-radius: 10px;
-    }
-    
-    .more-dropdown-scroll::-webkit-scrollbar-thumb {
-      background: 
-      var(--secondary-color);
-      border-radius: 10px;
-    }
-    
-    .more-dropdown-scroll::-webkit-scrollbar-thumb:hover {
-      background: #6c757d;
-    }
-    
-    /* Bootstrap dropdown के लिए custom style */
-    .dropdown-menu.show {
-      padding: 0 !important;
-      overflow: hidden !important;
-    }
-    
-    /* Bootstrap NavDropdown.Item के लिए custom style */
-    .dropdown-item {
-      border-radius: 4px !important;
-      margin: 2px 4px !important;
-      width: auto !important;
-    }
-  `}</style>
+            .more-dropdown-scroll::-webkit-scrollbar {
+              width: 6px;
+            }
+
+            .more-dropdown-scroll::-webkit-scrollbar-track {
+              background: white;
+              border-radius: 10px;
+            }
+
+            .more-dropdown-scroll::-webkit-scrollbar-thumb {
+              background:
+              var(--secondary-color);
+              border-radius: 10px;
+            }
+
+            .more-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+              background: #6c757d;
+            }
+
+            /* Bootstrap dropdown के लिए custom style */
+            .dropdown-menu.show {
+              padding: 0 !important;
+              overflow: hidden !important;
+            }
+
+            /* Bootstrap NavDropdown.Item के लिए custom style */
+            .dropdown-item {
+              border-radius: 4px !important;
+              margin: 2px 4px !important;
+              width: auto !important;
+            }
+
+            /* Container for the Reports Section */
+            .reports-custom-section {
+              background-color: #3c4b64; /* Dark slate background from image */
+            }
+
+       .custom-main-nav-link {
+                color: var(--header-list-item-color) !important;
+                padding: 10px 16px !important;
+                font-weight: 600;
+                font-size: 15px;
+                border-radius: 6px;
+              }
+              .custom-main-nav-link:hover {
+                background: var(--primary-background-color);
+                color: var(--primary-color) !important;
+              }
+
+              /* Dropdown Container */
+              .dropdown-menu.show {
+                padding: 0 !important;
+                border: none;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                overflow: hidden;
+                min-width: 260px !important; /* Fixed width to prevent wrapping */
+              }
+
+              .dropdown-scroll-container {
+                max-height: 450px;
+                overflow-y: auto;
+              }
+
+              .more-item {
+                padding: 12px 20px !important;
+                font-size: 14px;
+                font-weight: 500;
+                color: #444;
+              }
+
+              /* --- DARK REPORTS SECTION STYLING --- */
+              .reports-dark-sidebar {
+                background-color: #3c4b64 !important; /* Dark Slate Color */
+                margin-top: 5px;
+              }
+
+              .reports-sidebar-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 20px;
+                cursor: pointer;
+                color: #ffffff !important; /* Force white text */
+                transition: background 0.2s;
+              }
+
+              .reports-sidebar-header:hover {
+                background-color: #303c54;
+              }
+
+              .sidebar-icon-main { font-size: 18px; color: #ffffff; }
+              .sidebar-text-main { font-size: 16px; font-weight: 400; color: #ffffff; }
+              .sidebar-chevron { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+              .reports-sub-container {
+                background-color: #3c4b64;
+                padding-bottom: 10px;
+              }
+
+              .report-sub-item {
+                padding: 12px 20px 12px 55px; /* Indent sub-items */
+                color: #d1d4d7 !important; /* Dimmed white sub-text */
+                font-size: 14px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                white-space: nowrap; /* PREVENTS WRAPPING */
+                transition: all 0.2s;
+              }
+
+              .report-sub-item:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+                color: #ffffff !important;
+              }
+
+              .report-sub-item i {
+                font-size: 14px;
+                width: 20px;
+                text-align: center;
+              }
+          `}</style>
           </div>
         </Nav>
       </Navbar.Collapse>
