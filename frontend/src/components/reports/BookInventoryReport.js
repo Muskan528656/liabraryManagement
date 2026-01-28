@@ -272,12 +272,18 @@ const BookInventoryReport = () => {
   const handleSelectionChange = (selectedIds) => setSelectedRows(selectedIds);
 
   const filteredData = useMemo(() => {
-    return reportData.filter((row) =>
-      columns.some((col) => 
+    return reportData.filter((row) => {
+      // Filter by search term
+      const matchesSearch = columns.some((col) => 
         col.searchable && String(row[col.field] || "").toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm, reportData]);
+      );
+      
+      // Filter by vendor
+      const matchesVendor = vendorFilter === "All Vendors" || row.vendor_name === vendorFilter;
+      
+      return matchesSearch && matchesVendor;
+    });
+  }, [searchTerm, reportData, vendorFilter]);
   // --- CHART LOGIC ---
   const chartData = useMemo(() => {
     const aggregation = filteredData.reduce((acc, item) => {
@@ -351,11 +357,10 @@ const BookInventoryReport = () => {
            
           </Col>
           <Col md={8} className="d-flex justify-content-md-end gap-2">
-               <Form.Select
-              size="sm"
-              value={vendorFilter}
-              onChange={(e) => setVendorFilter(e.target.value)}
-              style={{ maxWidth: '150px' }}
+            <Form.Select  size="sm"
+                value={vendorFilter}
+                onChange={(e) => setVendorFilter(e.target.value)}
+                style={{ maxWidth: '150px' }}
             >
               <option value="All Vendors">All Vendors</option>
             {vendors.map((vendor, index) => ( <option key={index} value={vendor}> {vendor} </option> ))}
@@ -435,7 +440,7 @@ const BookInventoryReport = () => {
         ) : (
           <div className="p-2">
             <Row className="mb-4 align-items-center">
-                <Col md={4}>
+                <Col md={2}>
                     <Form.Group>
                         <Form.Label className="small fw-bold text-uppercase text-muted">Group Data By:</Form.Label>
                         <Form.Select 
