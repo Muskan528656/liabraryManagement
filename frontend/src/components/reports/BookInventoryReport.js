@@ -223,7 +223,6 @@ const BookInventoryReport = () => {
     { field: "total_copies", label: "Total", align: "center" },
     { field: "available_copies", label: "Available", align: "center", className: "text-success fw-bold" },
     { field: "issued_copies", label: "Issued", align: "center", className: "text-primary" },
-    { field: "lost_damaged_copies", label: "Lost", align: "center", className: "text-danger" },
     { 
       field: "status", 
       label: "Status",
@@ -328,28 +327,31 @@ const BookInventoryReport = () => {
       <Card.Header className="bg-white py-3 border-bottom-0">
         <Row className="g-3 align-items-center">
           <Col md={4}>
-            <h5 className="mb-0 fw-bold" style={{color: "var(--primary-color)"}}>Book Inventory</h5>
+            <h5 className="mb-0 fw-bold text-uppercase" style={{color: "var(--primary-color)"}}>Book Inventory</h5>
             {/* <small className="text-muted">Analyze your collection stock</small> */}
-             {selectedRows.length > 0 ? (
-                <small className="text-primary fw-bold">
-                  <i className="fa fa-check-circle me-1" />
-                  Exporting {selectedRows.length} selected items
-                </small>
-            ) : (
-                <small className="text-muted italic">Exporting all {filteredData.length} records</small>
-            )}
+           
           </Col>
           <Col md={8} className="d-flex justify-content-md-end gap-2">
             {/* View Toggle */}
             <ButtonGroup size="sm" className="me-2">
               <Button 
-                variant={viewMode === 'table' ? 'primary' : 'outline-primary'} 
+                variant={viewMode === 'table' ? '' : 'outline-primary'} 
+                style={
+                  viewMode === 'table'
+                    ? { backgroundColor: 'var(--primary-color)', color:'#fff', borderColor: 'var(--primary-color)' }
+                    : {}
+                }
                 onClick={() => setViewMode('table')}
-              >
+                >
                 <i className="fa fa-table me-1" /> Table
               </Button>
               <Button 
-                variant={viewMode === 'chart' ? 'primary' : 'outline-primary'} 
+                variant={viewMode === 'chart' ? '' : 'outline-primary'} 
+                style={
+                  viewMode === 'chart'
+                    ? { backgroundColor: 'var(--primary-color)', color:'#fff', borderColor: 'var(--primary-color)' }
+                    : {}
+                }
                 onClick={() => setViewMode('chart')}
               >
                 <i className="fa fa-chart-bar me-1" /> Chart
@@ -359,7 +361,7 @@ const BookInventoryReport = () => {
             {/* <Button variant="outline-secondary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button> */}
 
             <Dropdown align="end">
-                <Dropdown.Toggle variant="outline-dark" size="sm" style={{onhover: "cursor-pointer",color:'black'}}>Actions</Dropdown.Toggle>
+                <Dropdown.Toggle variant="outline-dark" size="sm" style={{onhover: "cursor-pointer",color:'black'}}> <i className="fa fa-download" /> Actions</Dropdown.Toggle>
                 <Dropdown.Menu className="shadow-sm border-0">
                     <Dropdown.Header>Export Selected</Dropdown.Header>
                     <Dropdown.Item onClick={() => exportFile("excel")}><i className="fa-solid fa-file-excel me-2 text-success" />Excel</Dropdown.Item>
@@ -416,7 +418,7 @@ const BookInventoryReport = () => {
                             <option value="category_name">Category</option>
                             <option value="publisher_name">Publisher</option>
                             <option value="author_name">Author</option>
-                            {/* <option value="vendor_name">Vendor</option> */}
+                            <option value="vendor_name">Vendor</option>
                             {/* Add vendor_name here if it exists in your API data */}
                         </Form.Select>
                     </Form.Group>
