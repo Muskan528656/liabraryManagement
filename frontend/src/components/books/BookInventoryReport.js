@@ -207,14 +207,11 @@ const BookInventoryReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
   
-  // Column filters state
   const [columnFilters, setColumnFilters] = useState({});
   
-  // View State: 'table' or 'chart'
   const [viewMode, setViewMode] = useState("table");
   const [chartGroupBy, setChartGroupBy] = useState("category_name");
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
