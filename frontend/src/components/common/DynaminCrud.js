@@ -1172,7 +1172,6 @@ const DynamicCRUD = ({
                                         totalCount={filteredData.length}
                                         totalLabel={moduleLabel}
                                         searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
-
                                         searchValue={searchTerm}
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         showColumnVisibility={showColumnVisibility}

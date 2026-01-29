@@ -7,7 +7,8 @@ require("dotenv").config();
 
 const app = express();
 const MODE = process.env.NODE_ENV || "production";
-const PORT = process.env.PORT || 9028;
+// const PORT = process.env.PORT || 9028;
+const PORT = process.env.PORT || 3003;
 console.log("PORTPORT", PORT)
 const BASE_PATH =
   MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";

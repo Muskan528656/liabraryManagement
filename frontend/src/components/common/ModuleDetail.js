@@ -739,7 +739,7 @@ const ModuleDetail = ({
     //                 return;
     //             }
     //         }
-    
+
     try {
       setSaving(true);
 
@@ -790,6 +790,7 @@ const ModuleDetail = ({
 
         response = await api.updateFormData(formDataToSend, id);
       } else {
+        console.log("check")
         const cleanData = { ...tempData };
         Object.keys(cleanData).forEach((key) => {
           if (cleanData[key] === "" || cleanData[key] === "null") {
@@ -797,9 +798,11 @@ const ModuleDetail = ({
           }
         });
 
-
+        console.log("cleandata", cleanData)
+        console.log("ide",id)
 
         response = await api.update(cleanData, id);
+        console.log("response", response)
       }
 
 
@@ -819,7 +822,7 @@ const ModuleDetail = ({
       let errorMessage = err.message;
       console.log("Error during save:", err);
       console.log("Error response data:", errorMessage);
-      
+
       if (err.response && err.response.data && err.response.data.errors) {
         errorMessage = err.response.data.errors;
       }

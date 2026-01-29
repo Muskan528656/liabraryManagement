@@ -203,6 +203,7 @@ module.exports = (app) => {
       body("tcode").exists(),
     ],
     async (req, res) => {
+      console.log("response----->",res)
       try {
         const email = req.body.email.trim().toLowerCase();
         const password = req.body.password;
