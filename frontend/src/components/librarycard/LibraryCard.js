@@ -29,7 +29,7 @@ const LibraryCard = (props) => {
   const { timeZone } = useTimeZone();
   const [permissions, setPermissions] = useState({
     canView: false,
-    canCreate:true,
+    canCreate: true,
     canEdit: false,
     canDelete: false,
     loading: true

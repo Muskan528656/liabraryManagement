@@ -26,8 +26,7 @@ export const AuthHelper = {
     getPermissions() {
         const perms = sessionStorage.getItem("permissions");
         const parsed = perms ? JSON.parse(perms) : [];
-        console.log("AuthHelper.getPermissions ->", parsed);
-        return parsed;
+        return Array.isArray(parsed) ? parsed : [];
     },
 
 
@@ -75,11 +74,11 @@ export const AuthHelper = {
     isSuperAdmin() {
         console.log(" Checking super admin status");
         const user = this.getUser();
-        if (!user || !user.roleName) return false;
+        if (!user || !user.userrole) return false;
 
         const superAdminRoles = ["SYSTEM ADMIN"];
 
-        return superAdminRoles.includes(user.roleName);
+        return superAdminRoles.includes(user.userrole);
     },
 
 
@@ -95,11 +94,10 @@ export const AuthHelper = {
         const permissions = this.getPermissions();
         console.log("User permissions:", permissions);
 
-        if (!Array.isArray(permissions) || permissions.length === 0) {
+        if (!permissions || typeof permissions !== 'object') {
             console.warn("No permissions found in session storage");
             return false;
         }
-
 
         const modulePerm = permissions.find(p =>
             p.moduleName && p.moduleName.toLowerCase() === moduleName.toLowerCase()
@@ -277,9 +275,8 @@ export const AuthHelper = {
     // },
 
     logout() {
-        sessionStorage.removeItem("permissions");
-        sessionStorage.removeItem("userinfo");
-        localStorage.clear(); // if used
+        sessionStorage.clear();
+        sessionStorage.clear(); // if used
         this.clearAuth();
         console.log("AuthHelper.logout -> Redirecting to /login");
         window.location.href = "/login";

@@ -3,7 +3,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import moment from "moment";
-const AuthorDetail = () => {
+const AuthorDetail = ({permissions}) => {
   const { timeZone } = useTimeZone();
   const fields = {
     title: "name",
@@ -64,6 +64,7 @@ const AuthorDetail = () => {
       moduleLabel="Author"
       icon="fa-solid fa-user-pen"
       fields={fields}
+      permissions={ permissions || {}}
     />
   );
 };

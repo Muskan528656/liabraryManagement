@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import jwt_decode from "jwt-decode";
+import AuthApi from "../api/authApi";
 
 const UserContext = createContext();
 
@@ -12,8 +13,9 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [userInfo, setUserInfo] = useState(null); 
+  const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [permissions, setPermissions] = useState([]);
 
   const decodeToken = (token) => {
     try {
@@ -30,22 +32,38 @@ export const UserProvider = ({ children }) => {
     return decodeToken(token);
   };
 
-  const refreshUserInfo = () => {
+  const refreshUserInfo = async () => {
     const user = getUserFromToken();
     setUserInfo(user);
+    if (user) {
+      await fetchPermissions();
+    }
     setIsLoading(false);
   };
 
+  const fetchPermissions = async () => {
+    try {
+      const result = await AuthApi.getPermissions();
+      if (result && result.success && result.permissions) {
+        setPermissions(result.permissions);
+        sessionStorage.setItem("permissions", JSON.stringify(result.permissions));
+      } else {
+        console.error("Failed to fetch permissions:", result?.errors);
+      }
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+    }
+  };
+
   const logout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("r-t");
-    setUserInfo(false);
+    sessionStorage.clear();
+    setUserInfo(null);
+    setPermissions([]);
     setIsLoading(false);
   };
 
   useEffect(() => {
     refreshUserInfo();
-
 
     const handleStorageChange = (e) => {
       if (e.key === "token") {
@@ -53,13 +71,22 @@ export const UserProvider = ({ children }) => {
       }
     };
 
+    const handlePermissionsUpdated = () => {
+      fetchPermissions();
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("permissionsUpdated", handlePermissionsUpdated);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("permissionsUpdated", handlePermissionsUpdated);
+    };
   }, []);
 
   const value = {
     userInfo,
     isLoading,
+    permissions,
     isLoggedIn: !!userInfo,
     refreshUserInfo,
     logout,

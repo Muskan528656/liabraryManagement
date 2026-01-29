@@ -26,18 +26,28 @@ async function findAll() {
 async function findByRole(roleId) {
     const query = `
         SELECT 
-            p.*,
+            p.id as permission_id,
+            p.module_id,
             m.name as module_name,
-            r.role_name
+            p.allow_view,
+            p.allow_create,
+            p.allow_edit,
+            p.allow_delete
         FROM demo.permissions p
-        JOIN demo.role_permissions rp ON rp.permission_id = p.id
-        JOIN demo.roles r ON rp.role_id = r.id
-        LEFT JOIN demo.modules m ON p.module_id = m.id
-        WHERE rp.role_id = $1
-        ORDER BY m.name
+        LEFT JOIN demo.module m ON p.module_id = m.id
+        WHERE p.role_id = $1
+        ORDER BY m.name ASC
     `;
     const result = await sql.query(query, [roleId]);
-    return result.rows;
+    return result.rows.map(row => ({
+        permissionId: row.permission_id,
+        moduleId: row.module_id,
+        moduleName: row.module_name,
+        allowView: row.allow_view,
+        allowCreate: row.allow_create,
+        allowEdit: row.allow_edit,
+        allowDelete: row.allow_delete,
+    }));
 }
 
 // Create a new permission

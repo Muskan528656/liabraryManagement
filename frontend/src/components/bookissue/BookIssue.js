@@ -277,7 +277,7 @@ const BookIssue = () => {
                 isbn: record.book_isbn,
                 author_name: record.author_name,
               };
-              localStorage.setItem(
+              sessionStorage.setItem(
                 `prefetch:book:${record.book_id}`,
                 JSON.stringify(bookPrefetch)
               );
@@ -364,7 +364,7 @@ const BookIssue = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 try {
-                  localStorage.setItem(
+                  sessionStorage.setItem(
                     `prefetch:user:${userId}`,
                     JSON.stringify(record)
                   );
@@ -375,7 +375,7 @@ const BookIssue = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 try {
-                  localStorage.setItem(
+                  sessionStorage.setItem(
                     `prefetch:user:${userId}`,
                     JSON.stringify(record)
                   );

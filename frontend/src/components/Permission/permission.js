@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
+import { AuthHelper } from '../../utils/authHelper';
 import PubSub from "pubsub-js";
 import { Button, OverlayTrigger, Tooltip, Form } from "react-bootstrap";
 import ConfirmationModal from "../common/ConfirmationModal";
@@ -159,20 +160,27 @@ const Permission = () => {
             }, formData.role_id);
 
             if (response.data.success) {
-                sessionStorage.setItem(
-                    "permissions",
-                    JSON.stringify(permissionsToSave.map(p => ({
-                        ...p,
-                        role_id: formData.role_id
-                    })))
-                );
-
                 window.dispatchEvent(new Event("permissionsUpdated"));
 
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
                     message: "Permissions saved successfully!",
                 });
+
+                // Refresh current user's permissions
+                const userData = AuthHelper.getUser();
+                if (userData && userData.userrole) {
+                    try {
+                        const api = new DataApi("permissions");
+                        const result = await api.fetchById(`role/${userData.userrole}`);
+                        if (result && result.data && result.data.success && result.data.data) {
+                            const permissions = result.data.data;
+                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                        }
+                    } catch (err) {
+                        console.error("Failed to refresh permissions after save:", err);
+                    }
+                }
 
                 setShowAddModal(false);
                 setEditingRole(null);
@@ -242,14 +250,6 @@ const Permission = () => {
             }
 
             if (response.data && response.data.success) {
-                sessionStorage.setItem(
-                    "permissions",
-                    JSON.stringify(permissionsToSave.map(p => ({
-                        ...p,
-                        role_id: actualRoleId
-                    })))
-
-                );
                 setExpandedRoles(prev => ({
                     ...prev,
                     [roleId]: false
@@ -261,7 +261,22 @@ const Permission = () => {
                     title: "Success",
                     message: `Permissions updated for ${roleName}`,
                 });
-                setOpenRowId("")
+
+                // Refresh current user's permissions
+                const userData = AuthHelper.getUser();
+                if (userData && userData.userrole) {
+                    try {
+                        const api = new DataApi("permissions");
+                        const result = await api.fetchById(`role/${userData.userrole}`);
+                        if (result && result.data && result.data.success && result.data.data) {
+                            const permissions = result.data.data;
+                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                        }
+                    } catch (err) {
+                        console.error("Failed to refresh permissions after save:", err);
+                    }
+                }
+
                 setEditingRow(null);
                 setEditingPermissions({});
                 setSelectAllStates({

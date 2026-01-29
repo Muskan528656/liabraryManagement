@@ -110,7 +110,7 @@ const Login = () => {
       if (result.success) {
         // TOKEN STORE
         sessionStorage.setItem("token", result.authToken);
-        sessionStorage.setItem("r-t", result.refreshToken);
+        sessionStorage.setItem("Refresh Token", result.refreshToken);
 
         sessionStorage.setItem("permissions", JSON.stringify(result.permissions || []));
 

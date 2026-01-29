@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthApi from "../api/authApi";
+import DataApi from "../api/dataApi";
 import { AuthHelper } from "../utils/authHelper";
 
 const AuthContext = createContext();
@@ -13,32 +14,60 @@ export const AuthProvider = ({ children }) => {
 
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        const storedPermissions = localStorage.getItem("permissions");
+        const storedUser = sessionStorage.getItem("user");
+        const storedPermissions = sessionStorage.getItem("permissions");
 
         if (storedUser) setUser(JSON.parse(storedUser));
-        if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
+        if (storedPermissions) {
+            const perms = JSON.parse(storedPermissions);
+            if (Array.isArray(perms)) {
+                const normalized = {};
+                perms.forEach(p => {
+                    const key = p.moduleName || p.module_id || p.moduleId;
+                    if (key) normalized[key.toLowerCase()] = p;
+                });
+                setPermissions(normalized);
+            } else {
+                setPermissions(perms);
+            }
+        }
 
         setLoading(false);
+
+        // Listen for permission updates
+        const handlePermissionsUpdated = () => {
+            refreshPermissions();
+        };
+
+        window.addEventListener("permissionsUpdated", handlePermissionsUpdated);
+
+        return () => {
+            window.removeEventListener("permissionsUpdated", handlePermissionsUpdated);
+        };
     }, []);
 
 
     const refreshPermissions = async () => {
         try {
-            const userData = await AuthHelper.getUser();
-            if (!userData) return;
-            console.log("Refreshing permissions for user:", userData);
+            console.log("Refreshing permissions...");
 
-            setUser(userData);
+            const result = await AuthApi.getPermissions();
 
-            const normalizedPermissions = {};
-            (userData.permissions || []).forEach((perm) => {
-                normalizedPermissions[perm.module_name] = perm;
-            });
-            setPermissions(normalizedPermissions);
+            if (result && result.success && result.permissions) {
+                const permissions = result.permissions;
 
-            localStorage.setItem("user", JSON.stringify(userData));
-            localStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+                const normalizedPermissions = {};
+                permissions.forEach((perm) => {
+                    const key = perm.moduleName || perm.module_id || perm.moduleId;
+                    if (key) normalizedPermissions[key.toLowerCase()] = perm;
+                });
+
+                setPermissions(normalizedPermissions);
+                sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                console.log("Permissions refreshed successfully");
+            } else {
+                console.error("Failed to refresh permissions:", result?.errors);
+            }
         } catch (err) {
             console.error("Failed to refresh permissions:", err);
         }
@@ -54,12 +83,13 @@ export const AuthProvider = ({ children }) => {
 
             const normalizedPermissions = {};
             (userData.permissions || []).forEach((perm) => {
-                normalizedPermissions[perm.module_name] = perm;
+                const key = perm.module_name || perm.module_id || perm.moduleId;
+                if (key) normalizedPermissions[key.toLowerCase()] = perm;
             });
             setPermissions(normalizedPermissions);
 
-            localStorage.setItem("user", JSON.stringify(userData));
-            localStorage.setItem("permissions", JSON.stringify(normalizedPermissions));
+            sessionStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("permissions", JSON.stringify(userData.permissions || []));
 
             return result;
         } catch (err) {
@@ -71,10 +101,9 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         setPermissions({});
-        localStorage.removeItem("user");
-        localStorage.removeItem("permissions");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("r-t");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("permissions");
+        sessionStorage.clear();
         window.location.href = "/login";
     };
 
