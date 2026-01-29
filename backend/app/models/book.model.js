@@ -277,59 +277,118 @@ async function generateInventoryReport() {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
+    // const query = `
+    //   SELECT
+    //     b.id,
+    //     b.title AS book_title,
+    //     a.name AS author_name,
+    //     pub.name AS publisher_name,
+    //     b.isbn,
+    //     b.total_copies,
+    //     b.available_copies,
+    //     c.name AS category_name,
+    //     (b.total_copies - b.available_copies) AS issued_copies,
+    //     (b.total_copies - b.available_copies - b.available_copies) AS lost_damaged_copies,
+    //     CASE
+    //       WHEN b.available_copies > 0 THEN 'Available'
+    //       WHEN b.available_copies = 0 AND (b.total_copies - b.available_copies) > 0 THEN 'Issued'
+    //       ELSE 'Unavailable'
+    //     END AS status,
+    //     bi.issue_date,
+    //     bi.due_date,
+    //     lm.card_number,
+    //     lm.first_name || ' ' || lm.last_name AS issued_to,
+    //     p.purchase_date,
+    //     v.name AS vendor_name,
+    //     p.purchase_serial_no AS bill_number,
+    //     p.unit_price AS book_price
+    //   FROM ${this.schema}.books b
+    //   LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
+    //   LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+    //   LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+    //   LEFT JOIN (
+    //     SELECT DISTINCT ON (book_id)
+    //       book_id,
+    //       issue_date,
+    //       due_date,
+    //       issued_to,
+    //       status
+    //     FROM ${this.schema}.book_issues
+    //     WHERE return_date IS NULL AND status = 'issued'
+    //     ORDER BY book_id, issue_date DESC
+    //   ) bi ON b.id = bi.book_id
+    //   LEFT JOIN ${this.schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
+    //   LEFT JOIN (
+    //     SELECT DISTINCT ON (book_id)
+    //       book_id,
+    //       purchase_date,
+    //       vendor_id,
+    //       purchase_serial_no,
+    //       unit_price
+    //     FROM ${this.schema}.purchases
+    //     ORDER BY book_id, purchase_date DESC, createddate DESC
+    //   ) p ON b.id = p.book_id
+    //   LEFT JOIN ${this.schema}.vendors v ON p.vendor_id = v.id
+    //   ORDER BY b.title ASC
+    // `;
+    
     const query = `
-      SELECT
-        b.id,
-        b.title AS book_title,
-        a.name AS author_name,
-        pub.name AS publisher_name,
-        b.isbn,
-        b.total_copies,
-        b.available_copies,
-        c.name AS category_name,
-        (b.total_copies - b.available_copies) AS issued_copies,
-        (b.total_copies - b.available_copies - b.available_copies) AS lost_damaged_copies,
-        CASE
-          WHEN b.available_copies > 0 THEN 'Available'
-          WHEN b.available_copies = 0 AND (b.total_copies - b.available_copies) > 0 THEN 'Issued'
-          ELSE 'Unavailable'
-        END AS status,
-        bi.issue_date,
-        bi.due_date,
-        lm.card_number,
-        lm.first_name || ' ' || lm.last_name AS issued_to,
-        p.purchase_date,
-        v.name AS vendor_name,
-        p.purchase_serial_no AS bill_number,
-        p.unit_price AS book_price
-      FROM ${this.schema}.books b
-      LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
-      LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-      LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
-      LEFT JOIN (
-        SELECT DISTINCT ON (book_id)
-          book_id,
-          issue_date,
-          due_date,
-          issued_to,
-          status
-        FROM ${this.schema}.book_issues
-        WHERE return_date IS NULL AND status = 'issued'
-        ORDER BY book_id, issue_date DESC
-      ) bi ON b.id = bi.book_id
-      LEFT JOIN ${this.schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-      LEFT JOIN (
-        SELECT DISTINCT ON (book_id)
-          book_id,
-          purchase_date,
-          vendor_id,
-          purchase_serial_no,
-          unit_price
-        FROM ${this.schema}.purchases
-        ORDER BY book_id, purchase_date DESC, createddate DESC
-      ) p ON b.id = p.book_id
-      LEFT JOIN ${this.schema}.vendors v ON p.vendor_id = v.id
-      ORDER BY b.title ASC
+            SELECT
+            b.id,
+            b.title AS book_title,
+            a.name AS author_name,
+            pub.name AS publisher_name,
+            c.name AS category_name,
+            v.name AS vendor_name,
+
+            b.isbn,
+            b.total_copies,
+            b.available_copies,
+            (b.total_copies - b.available_copies) AS issued_copies,
+
+            0 AS lost_damaged_copies,  -- (Proper tracking ho to alag table se aayega)
+
+            CASE
+                WHEN b.available_copies > 0 THEN 'Available'
+                WHEN b.available_copies = 0 AND (b.total_copies - b.available_copies) > 0 THEN 'Issued'
+                ELSE 'Unavailable'
+            END AS status,
+
+            bi.issue_date,
+            bi.due_date,
+            lm.card_number,
+            lm.first_name || ' ' || lm.last_name AS issued_to,
+
+            p.purchase_date,
+            p.purchase_serial_no AS bill_number,
+            p.unit_price AS book_price
+
+        FROM ${this.schema}.books b
+        LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
+        LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+        LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+
+        LEFT JOIN (
+            SELECT DISTINCT ON (book_id)
+                book_id, issue_date, due_date, issued_to
+            FROM ${this.schema}.book_issues
+            WHERE return_date IS NULL AND status = 'issued'
+            ORDER BY book_id, issue_date DESC
+        ) bi ON b.id = bi.book_id
+
+        LEFT JOIN ${this.schema}.library_members lm 
+              ON bi.issued_to = lm.id AND lm.is_active = true
+
+        LEFT JOIN (
+            SELECT DISTINCT ON (book_id)
+                book_id, purchase_date, vendor_id, purchase_serial_no, unit_price
+            FROM ${this.schema}.purchases
+            ORDER BY book_id, purchase_date DESC, createddate DESC
+        ) p ON b.id = p.book_id
+
+        LEFT JOIN ${this.schema}.vendors v ON p.vendor_id = v.id
+
+        ORDER BY b.title ASC;
     `;
 
     const result = await sql.query(query);
