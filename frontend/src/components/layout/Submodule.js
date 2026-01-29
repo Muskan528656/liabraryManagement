@@ -612,7 +612,7 @@ const Submodule = () => {
                 {/* report section dropdown */}
                 <NavDropdown.Divider />
                 <NavDropdown.Item
-                  onClick={() => navigate('/reports/book-inventory')}
+                  onClick={() => navigate('/reports')}
                   style={{
                     padding: "10px 16px",
                     fontSize: "14px",
@@ -637,35 +637,7 @@ const Submodule = () => {
                     }}
                   ></i>
                   Reports
-                </NavDropdown.Item>
-                {/* <NavDropdown.Item
-                  onClick={() => navigate('/reports/book-inventory')}
-                  style={{
-                    padding: "10px 16px",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    borderRadius: "4px",
-                    transition: "all 0.2s",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--primary-background-color)";
-                    e.currentTarget.style.color = "var(--primary-color)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "var(--header-list-item-color)";
-                  }}
-                >
-                  <i
-                    className={`fs-7 fa-solid fa-chart-bar me-2`}
-                    style={{
-                      color: "var(--header-list-item-color)"
-                    }}
-                  ></i>
-                  Book Inventory Report
-                </NavDropdown.Item> */}
-                
+                </NavDropdown.Item>    
               </NavDropdown>
             )}
 

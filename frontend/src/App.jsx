@@ -58,6 +58,7 @@ import PublisherDetail from "./components/Publisher/PublisherDetail";
 import { AuthProvider } from "./contexts/authwrapper";
 import Loader from "./components/common/Loader";
 import BookInventoryReport from "./components/reports/BookInventoryReport";
+import ReportsList from "./components/reports/ReportList";
 
 const ENDPOINT = "http://localhost:3003";
 
@@ -181,7 +182,8 @@ function AppContent() {
                 <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
 
                 <Route path="bulkissued" element={<BulkIssue />} />
-                <Route path="reports/book-inventory" element={<BookInventoryReport />} />
+                <Route path="reports/bookinventoryreport" element={<BookInventoryReport />} />
+                <Route path="reports" element={<ReportsList />} />
               </Route>
             </Routes>
           </Router>
