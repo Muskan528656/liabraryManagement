@@ -59,6 +59,7 @@ import { AuthProvider } from "./contexts/authwrapper";
 import Loader from "./components/common/Loader";
 import BookInventoryReport from "./components/reports/BookInventoryReport";
 import ReportsList from "./components/reports/ReportList";
+import PermissionDenied from "./components/common/PermissionDenied";
 
 const ENDPOINT = "http://localhost:3003";
 
@@ -71,10 +72,23 @@ function AppContent() {
 
   console.log("App permissions:", permissions);
 
+
+
   const getPermissionForModule = (moduleName) => {
     console.log("Getting permissions for module:", moduleName);
     return permissions ? permissions.find(p => p && p.moduleName === moduleName) || {} : {};
   };
+
+  // Check if user has view permission for any module
+  const hasAnyViewPermission = () => {
+
+    if (!permissions || permissions.length === 0) return false;
+    return permissions.some(p =>
+      p && (p.allowView === true || p.can_view === true || p.view === true || p.has_access === true)
+    );
+  };
+
+  console.log("Has any view permission:", hasAnyViewPermission());
 
   const [connectedSocket, setConnectedSocket] = useState();
   const [deviceId] = useState(() => {
@@ -146,7 +160,25 @@ function AppContent() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Main socket={connectedSocket} />}>
-                <Route index element={<Dashboard />} />
+                {/* <Route index element={<Dashboard disabled={!hasAnyViewPermission()} />} /> */}
+                <Route 
+                  index 
+                  element={
+                    hasAnyViewPermission() ? (
+                      <Dashboard />
+                    ) : (
+                      <>
+                        {/* Render Dashboard with a 'disabled' class so it shows in background */}
+                        <div style={{ opacity: 0.5, pointerEvents: 'none', filter: 'grayscale(50%)' }}>
+                          <Dashboard disabled={true} />
+                        </div>
+                        
+                        {/* Overlay the beautiful Permission Modal */}
+                        <PermissionDenied />
+                      </>
+                    )
+                  } 
+                />
                 <Route path="userroles" element={<UserRole />} />
                 <Route path="user-role/:id" element={<UserRoleDetail permissions={getPermissionForModule("User Roles")} />} />
                 <Route path="/publisher" element={<Publisher />} />

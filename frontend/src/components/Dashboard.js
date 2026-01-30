@@ -88,7 +88,7 @@ const InteractiveCard = ({ children, style, onClick, ...props }) => {
   );
 };
 
-const Dashboard = ({ userInfo: propUserInfo }) => {
+const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
