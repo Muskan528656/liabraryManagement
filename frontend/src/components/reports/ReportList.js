@@ -97,9 +97,9 @@ const ReportsList = () => {
           <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4>
           <p className="text-muted small mb-0">Manage library reports</p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3" onClick={() => setShowCreateModal(true)}>
+        {/* <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3" onClick={() => setShowCreateModal(true)}>
           <PlusLg /> <span>Create Report</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Main Content Card */}
