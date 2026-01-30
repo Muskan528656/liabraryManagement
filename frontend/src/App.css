@@ -326,6 +326,12 @@ a {
 .badge.bg-info {
   background-color: var(--secondary-color) !important;
   color: var(--primary-color) !important;
+  padding: 5px 35px 5px 35px;
+  border-radius: 15px;
+}
+.badge.bg-danger {
+  background-color: var(--danger-color) !important;
+  color: var(--ui-white) !important;
   padding: 5px 30px 5px 30px;
   border-radius: 15px;
 }
