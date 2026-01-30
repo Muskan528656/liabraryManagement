@@ -375,6 +375,7 @@ module.exports = (app) => {
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
+        
 
         const userId = req.userinfo?.id || null;
         const userData = { ...req.body };

@@ -478,10 +478,15 @@ const BookIssue = () => {
     {
       field: "status",
       label: "Status",
-      width: 120,
+      
       render: (value) => (
-        <Badge bg={value === "submitted" ? "secondary" : "primary"}>
-          {value === "submitted" ? "Submitted" : "Issued"}
+        <Badge
+          style={{
+            borderRadius: "10px",
+            padding: "5px 30px 5px 25px",
+          }}
+          bg={value === "submitted" ? "secondary" : "primary"}>
+          {value === "submitted" ? "Submitted" : "Issued"}  
         </Badge>
       ),
     },

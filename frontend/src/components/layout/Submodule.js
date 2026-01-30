@@ -297,6 +297,8 @@ const Submodule = () => {
 
   const menuItems = getMenuItems();
 
+  console.log("menuItems=>",menuItems);
+
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -610,7 +612,7 @@ const Submodule = () => {
                   ))}
                 </div>
                 {/* report section dropdown */}
-                <NavDropdown.Divider />
+                {/* <NavDropdown.Divider />
                 <NavDropdown.Item
                   onClick={() => navigate('/reports')}
                   style={{
@@ -637,7 +639,7 @@ const Submodule = () => {
                     }}
                   ></i>
                   Reports
-                </NavDropdown.Item>    
+                </NavDropdown.Item>     */}
               </NavDropdown>
             )}
 
