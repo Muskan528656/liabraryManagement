@@ -267,6 +267,8 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
+
+
   router.post(
     "/",
     fetchUser, checkPermission("Users", "allow_create"),
@@ -280,10 +282,12 @@ module.exports = (app) => {
     ],
     async (req, res) => {
       try {
+        console.log("Creating user with data:", req.body);
         const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
+        // if (!errors.isEmpty()) {
+        //   console.log("error",errors)
+        //   return res.status(400).json({ errors: errors.array() });
+        // }
 
         const tenantcode = req.userinfo?.tenantcode;
         const companyid = req.userinfo?.companyid;
@@ -329,9 +333,14 @@ module.exports = (app) => {
 
 
         let hashedPassword = req.body.password;
+        console.log("Hashed before password:", hashedPassword);
         if (req.body.password) {
           const salt = bcrypt.genSaltSync(10);
-          hashedPassword = bcrypt.hashSync(req.body.password, salt);
+          console.log("Salt for hashing:", salt);
+          // hashedPassword = bcrypt.hashSync(req.body.password, salt);
+          hashedPassword = bcrypt.hashSync(String(req.body.password), 10);
+          console.log("Hashed password:", hashedPassword);
+
         }
 
 
@@ -375,6 +384,19 @@ module.exports = (app) => {
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
+
+        if (req.body.email) {
+          const duplicateAuthor = await User.findByEmail(
+            req.body.email,
+            req.params.id
+          );
+          if (duplicateAuthor) {
+            return res
+              .status(400)
+              .json({ errors: "Author with this email already exists" });
+          }
+        }
+
 
         const userId = req.userinfo?.id || null;
         const userData = { ...req.body };
@@ -462,6 +484,3 @@ module.exports = (app) => {
 
   app.use(process.env.BASE_API_URL + "/api/user", router);
 };
-
-
-

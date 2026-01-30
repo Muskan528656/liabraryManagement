@@ -301,14 +301,31 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
 
         validationRules: (formData, allUsers, editingUser) => {
             const errors = [];
+
             if (!formData.firstname?.trim()) errors.push("First name is required");
             if (!formData.lastname?.trim()) errors.push("Last name is required");
             if (!formData.email?.trim()) errors.push("Email is required");
+
             if (!editingUser) {
-                if (!formData.password?.trim()) errors.push("Password is required");
-                if (!formData.confirmPassword?.trim()) errors.push("Confirm password is required");
-                if (formData.password !== formData.confirmPassword) errors.push("Passwords do not match");
+                if (!formData.password?.trim()) {
+                    errors.push("Password is required");
+                } else if (formData.password.length < 6) {
+                    errors.push("Password must be at least 6 characters long");
+                }
+
+                if (!formData.confirmPassword?.trim()) {
+                    errors.push("Confirm password is required");
+                }
+
+                if (
+                    formData.password &&
+                    formData.confirmPassword &&
+                    formData.password !== formData.confirmPassword
+                ) {
+                    errors.push("Passwords do not match");
+                }
             }
+
             if (!formData.country) errors.push("Country is required");
             if (!formData.userrole) errors.push("Role is required");
 
@@ -324,6 +341,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
 
             return errors;
         },
+
 
         dataDependencies: {
             userRoles: "user-role",
@@ -370,7 +388,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 time_zone: existingData.time_zone || defaultTimeZone
             };
         },
-        
+
         filterFields: [
             {
                 name: "isactive",
