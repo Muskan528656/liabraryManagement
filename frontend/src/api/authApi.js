@@ -24,11 +24,11 @@ const AuthApi = {
       const result = await response.json();
 
       if (result.success) {
-      
+
         AuthHelper.setAuth(
           result.authToken,
           result.refreshToken,
-          result.permissions   
+          result.permissions
         );
       }
 

@@ -142,24 +142,25 @@ const TableHeader = ({
           headerActions
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((action) => (
-              <Button
-                style={{
-                  color: "var(--primary-color)",
-                  background: "var(--primary-background-color)",
-                  borderRadius: "5px",
-                  border: ''
-                }}
-                className="fw-bold py-2"
-                key={action.key}
-                size="sm"
-                variant={""}
-                onClick={action.onClick}
-              >
-                {action.icon && (
-                  <i className={`${action.icon} me-1`}></i>
-                )}
-                {action.label}
-              </Button>
+              // <Button
+              //   style={{
+              //     color: "var(--primary-color)",
+              //     background: "var(--primary-background-color)",
+              //     borderRadius: "5px",
+              //     border: ''
+              //   }}
+              //   className="fw-bold py-2"
+              //   key={action.key}
+              //   size="sm"
+              //   variant={""}
+              //   onClick={action.onClick}
+              // >
+              //   {action.icon && (
+              //     <i className={`${action.icon} me-1`}></i>
+              //   )}
+              //   {action.label}
+              // </Button>
+              <></>
             ))}
 
         {actionButtons.map((btn, index) => (

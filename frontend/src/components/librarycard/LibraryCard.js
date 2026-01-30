@@ -42,6 +42,12 @@ const LibraryCard = (props) => {
   }, []);
 
   useEffect(() => {
+
+    console.log("useeffect1")
+    // console.log("header",headerActions)
+    console.log("permission", permissions)
+    console.log("userdata", usersData)
+    console.log("subscriptiondata", subscriptionsData)
     const fetchPermissions = async () => {
       const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
       const canCreate = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_CREATE);
@@ -124,6 +130,7 @@ const LibraryCard = (props) => {
 
 
   useEffect(() => {
+    console.log("useeffect2")
     const initializeConfig = async () => {
       try {
         setLoadingConfig(true);
@@ -139,6 +146,9 @@ const LibraryCard = (props) => {
           users: users,
           ...props
         };
+
+        console.log("externalData", externalData)
+        console.log("props", props)
 
         const config = await getLibraryCardConfig(
           externalData,
@@ -165,17 +175,13 @@ const LibraryCard = (props) => {
 
 
   useEffect(() => {
+    console.log("useeffect3")
     if (!baseConfig || loadingConfig) return;
 
     const buildFinalConfig = () => {
       try {
-
-
-
         const final = {
           ...baseConfig,
-
-
           formFields: baseConfig.formFields?.map(field => {
 
             if (field.name === "subscription_id") {
@@ -435,6 +441,7 @@ const LibraryCard = (props) => {
 
 
   useEffect(() => {
+    console.log("useefect4")
     if (showBarcodeModal && selectedCard) {
       const timer = setTimeout(() => initializeModalBarcode(), 500);
       return () => clearTimeout(timer);

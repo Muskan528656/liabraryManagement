@@ -33,12 +33,12 @@ async function findAll(filters = {}) {
   }
 }
 
-
+ 
 async function findById(id) {
   try {
     const query = `SELECT * FROM demo.authors WHERE id = $1`;
     const result = await sql.query(query, [id]);
-
+ 
     if (result.rows.length > 0) {
       return result.rows[0];
     }
@@ -57,7 +57,7 @@ async function create(authorData, userId) {
                    RETURNING *`;
 
     const values = [
-      authorData.name,
+      authorData.name ,
       authorData.email || null,
       authorData.bio || null,
       userId || null,
@@ -74,7 +74,7 @@ async function create(authorData, userId) {
 }
 
 
-
+ 
 async function updateById(id, authorData, userId) {
   try {
     const query = `UPDATE demo.authors 
@@ -100,7 +100,7 @@ async function updateById(id, authorData, userId) {
   }
 }
 
-
+ 
 async function deleteById(id) {
   try {
     const query = `DELETE FROM demo.authors WHERE id = $1 RETURNING *`;
@@ -115,7 +115,7 @@ async function deleteById(id) {
   }
 }
 
-
+ 
 async function findByEmail(email, excludeId = null) {
   try {
     let query = `SELECT * FROM demo.authors WHERE email = $1`;

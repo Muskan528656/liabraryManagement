@@ -48,15 +48,15 @@ module.exports = (app) => {
     }
   });
 
-
+ 
   router.post(
     "/",
     fetchUser,
     checkPermission("Categories", "allow_create"),
     [
-
+ 
       body("name").optional().custom((value) => {
-
+ 
         return true;
       }),
     ],
@@ -64,9 +64,7 @@ module.exports = (app) => {
       try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          return res.status(400).json({
-            errors: errors.array()[0].msg
-          });
+          return res.status(400).json({ errors: errors.array() });
         }
         const existingCategory = await Category.findByName(req.body.name);
         if (existingCategory) {
@@ -93,7 +91,7 @@ module.exports = (app) => {
     }
   );
 
-
+ 
   router.put(
     "/:id",
     fetchUser,
@@ -105,17 +103,16 @@ module.exports = (app) => {
       try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          return res.status(400).json({
-            errors: errors.array()[0].msg
-          });
+          return res.status(400).json({ errors: errors.array() });
         }
 
+    
         const existingCategory = await Category.findById(req.params.id);
         if (!existingCategory) {
           return res.status(404).json({ errors: "Category not found" });
         }
 
-
+ 
         const duplicateCategory = await Category.findByName(
           req.body.name,
           req.params.id
@@ -153,7 +150,7 @@ module.exports = (app) => {
     }
   });
 
-
-  app.use(process.env.BASE_API_URL + "/api/category", router);
+ 
+  app.use(process.env.BASE_API_URL+"/api/category", router);
 };
 

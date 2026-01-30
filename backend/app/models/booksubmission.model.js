@@ -9,7 +9,6 @@ const sql = require("./db.js");
 const cron = require("node-cron");
 const sendMail = require("../utils/Mailer.js");
 const { dueTemplate, overdueTemplate } = require("../../app/utils/ReminderTemplate");
-const Notification = require("./notification.model.js");
 
 let schema = "";
 const emailTracker = {
@@ -18,7 +17,6 @@ const emailTracker = {
 };
 
 function init(schema_name) {
-  console.log("schema_name", schema_name);
   schema = schema_name;
 }
 
@@ -26,7 +24,9 @@ function init(schema_name) {
 //   console.log("submissionData", submissionData);
 //   if (!schema) throw new Error("Schema not initialized");
 //   if (!submissionData.issue_id) throw new Error("Issue ID required");
+
 //   try {
+
 //     const issueRes = await sql.query(
 //       `SELECT bi.*, b.title, b.isbn, b.available_copies
 //        FROM demo.book_issues bi
@@ -741,20 +741,17 @@ async function deleteById(id) {
 
 async function getAllBooks() {
   try {
-    if (!schema) throw new Error("Schema not initialized");
-    const query = `SELECT
+    const query = `SELECT 
                     bi.*,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
                     lm.first_name || ' ' || lm.last_name AS student_name,
                     lm.email AS student_email,
                     lm.card_number
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
+                   FROM demo.book_issues bi
+                   LEFT JOIN demo.books b ON bi.book_id = b.id
+                   LEFT JOIN demo.library_members lm ON bi.issued_to = lm.id
                    WHERE lm.is_active = true
-                   AND bi.return_date IS NULL
-                   AND bi.status = 'issued'
                    ORDER BY bi.createddate DESC`;
     const result = await sql.query(query);
 
@@ -772,11 +769,7 @@ async function getAllBooks() {
 async function checkbeforeDue() {
   let notifications = [];
   try {
-
     const response = await getAllBooks();
-
-    console.log("getAllBook", response);
-
     const submittedBooks = response.data;
 
     const today = new Date();
@@ -785,11 +778,8 @@ async function checkbeforeDue() {
 
     notifications = [];
 
-
-
     submittedBooks.forEach(book => {
       const dueDate = new Date(book.due_date);
-      console.log("Due Date:", dueDate, "Tomorrow:", tomorrow);
 
       if (
         dueDate.getFullYear() === tomorrow.getFullYear() &&
@@ -805,12 +795,9 @@ async function checkbeforeDue() {
           type: 'due_date',
           quantity: 1,
         });
-
-
       }
     });
 
-    console.log("Notification data:", notifications);
     return notifications;
 
   } catch (error) {
@@ -884,14 +871,21 @@ function cleanupEmailTracker() {
 
 async function sendDueReminder() {
   try {
-    const today = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
 
+
+    cleanupEmailTracker();
+
+
+    const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayDateStr = today.toISOString().split('T')[0];
+
+
+
 
     const query = `
       SELECT 
@@ -906,163 +900,323 @@ async function sendDueReminder() {
       FROM demo.book_issues bi
       INNER JOIN demo.books b ON bi.book_id = b.id
       INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
-      WHERE DATE(bi.due_date) = $1
+      WHERE DATE(bi.due_date) = $1 
         AND bi.return_date IS NULL
         AND bi.status IN ('issued', 'active', NULL)
         AND lm.is_active = true
       ORDER BY lm.email, bi.due_date
     `;
 
+
     const result = await sql.query(query, [tomorrowStr]);
-    if (result.rows.length === 0) return;
+
+
+    if (result.rows.length === 0) {
+
+      return;
+    }
 
     const groupedByMember = {};
 
-    for (const row of result.rows) {
-      if (!groupedByMember[row.issued_to]) {
-        groupedByMember[row.issued_to] = {
-          email: row.student_email,
-          name: row.student_name,
-          card_number: row.card_number,
+    for (const book of result.rows) {
+      const memberId = book.issued_to;
+
+      if (!groupedByMember[memberId]) {
+        groupedByMember[memberId] = {
+          email: book.student_email,
+          name: book.student_name,
+          card_number: book.card_number,
           books: []
         };
       }
 
-      groupedByMember[row.issued_to].books.push({
-        name: row.book_title,
-        dueDate: row.due_date
+      groupedByMember[memberId].books.push({
+        name: book.book_title,
+        dueDate: book.due_date
       });
     }
+
+
+
+
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    let emailsSkipped = 0;
 
     for (const memberId in groupedByMember) {
-      if (hasEmailBeenSent("due", memberId)) continue;
-
       const member = groupedByMember[memberId];
-      if (!member.email) continue;
 
-      const html = dueTemplate({
-        studentName: member.name,
-        books: member.books,
-        dueDate: tomorrowStr,
-        cardNumber: member.card_number
-      });
+      if (hasEmailBeenSent('due', memberId)) {
 
-      await sendMail({
-        to: member.email,
-        subject: `📚 Library Reminder: ${member.books.length} Book(s) Due Tomorrow`,
-        html
-      });
+        emailsSkipped++;
+        continue;
+      }
 
-      markEmailAsSent("due", memberId);
-      await new Promise(r => setTimeout(r, 500));
+      if (!member.email) {
+        console.warn(` No email found for library member ID: ${memberId} (${member.name})`);
+        emailsFailed++;
+        continue;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(member.email)) {
+        console.warn(` Invalid email format for ${member.name}: ${member.email}`);
+        emailsFailed++;
+        continue;
+      }
+
+      try {
+
+
+
+
+
+        const html = dueTemplate({
+          studentName: member.name,
+          books: member.books,
+          dueDate: tomorrowStr,
+          cardNumber: member.card_number
+        });
+
+        await sendMail({
+          to: member.email,
+          subject: `📚 Library Reminder: ${member.books.length} Book(s) Due Tomorrow`,
+          html: html,
+          text: `Dear ${member.name},\n\nYou have ${member.books.length} book(s) due tomorrow:\n\n${member.books.map(book => `• ${book.name}`).join('\n')
+            }\n\nDue Date: ${tomorrowStr}\nCard Number: ${member.card_number || 'N/A'}\n\nPlease return or renew them on time.\n\nLibrary Management System`
+        });
+
+
+        emailsSent++;
+
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+      } catch (error) {
+        console.error(` Failed to send email to ${member.email}:`, error.message);
+        emailsFailed++;
+      }
     }
 
-  } catch (err) {
-    console.error("sendDueReminder error:", err);
+
+
+
+
+
+
+
+
+
+  } catch (error) {
+    console.error(" CRITICAL ERROR in sendDueReminder:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack?.split('\n')[0],
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
 async function sendOverdueReminder() {
   try {
-    const today = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
-    );
+
+
+
+    cleanupEmailTracker();
+
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+
 
     let penaltyPerDay = 0;
     try {
-      const penaltyResult = await sql.query(`
-        SELECT per_day_amount
-        FROM demo.penalty_master
-        WHERE penalty_type = 'late'
+      const penaltyQuery = `
+        SELECT per_day_amount 
+        FROM demo.penalty_master 
+        WHERE penalty_type = 'late' 
           AND is_active = true
         LIMIT 1
-      `);
+      `;
+      const penaltyResult = await sql.query(penaltyQuery);
 
-      if (penaltyResult.rows.length) {
-        penaltyPerDay = Number(penaltyResult.rows[0].per_day_amount) || 0;
+      if (penaltyResult.rows.length > 0) {
+        penaltyPerDay = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
       }
-    } catch (_) { }
+
+    } catch (penaltyError) {
+      console.warn(" Could not fetch penalty settings, using 0");
+    }
+
+
+    // const query = `
+    //   SELECT 
+    //     bi.id,
+    //     bi.book_id,
+    //     bi.issued_to,
+    //     bi.due_date,
+    //     bi.issue_date,
+    //     b.title AS book_title,
+    //     lm.email AS student_email,
+    //     CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
+    //     lm.card_number
+    //   FROM demo.book_issues bi
+    //   INNER JOIN demo.books b ON bi.book_id = b.id
+    //   INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+    //   WHERE DATE(bi.due_date) < $1 
+    //     AND bi.return_date IS NULL
+    //     AND bi.status IN ('issued', 'active', NULL)
+    //     AND lm.is_active = true
+    //   ORDER BY bi.due_date, lm.email
+    // `;
+
+    const query = ` SELECT
+    bi.id,
+      bi.book_id,
+      bi.issued_to,
+      bi.due_date,
+      bi.issue_date,
+      b.title AS book_title,
+        lm.email AS student_email,
+          CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
+            lm.card_number
+FROM demo.book_issues bi
+INNER JOIN demo.books b ON bi.book_id = b.id
+INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+WHERE DATE(bi.due_date) = $1
+  AND bi.return_date IS NULL
+  AND bi.status IN('issued', 'active', NULL)
+  AND lm.is_active = true
+ORDER BY lm.email`;
+
 
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-    const query = `
-      SELECT
-        bi.id,
-        bi.book_id,
-        bi.issued_to,
-        bi.due_date,
-        bi.issue_date,
-        b.title AS book_title,
-        lm.email AS student_email,
-        CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
-        lm.card_number
-      FROM demo.book_issues bi
-      INNER JOIN demo.books b ON bi.book_id = b.id
-      INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
-      WHERE DATE(bi.due_date) = $1
-        AND bi.return_date IS NULL
-        AND bi.status IN ('issued', 'active', NULL)
-        AND lm.is_active = true
-      ORDER BY lm.email
-    `;
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     const result = await sql.query(query, [yesterdayStr]);
-    if (result.rows.length === 0) return;
 
-    for (const book of result.rows) {
-      const trackerKey = `${book.issued_to}_${book.id}`;
-      if (hasEmailBeenSent("overdue", trackerKey)) continue;
-      if (!book.student_email) continue;
 
-      const dueDate = new Date(book.due_date);
-      const overdueDays = Math.max(
-        0,
-        Math.floor((today - dueDate) / (1000 * 60 * 60 * 24))
-      );
+    if (result.rows.length === 0) {
 
-      const penaltyAmount = overdueDays * penaltyPerDay;
-
-      const html = overdueTemplate({
-        studentName: book.student_name,
-        bookName: book.book_title,
-        dueDate: book.due_date,
-        issueDate: book.issue_date,
-        overdueDays,
-        penaltyAmount,
-        perDayAmount: penaltyPerDay,
-        cardNumber: book.card_number
-      });
-
-      await sendMail({
-        to: book.student_email,
-        subject: `⏰ URGENT: Overdue Book "${book.book_title}"`,
-        html
-      });
-
-      markEmailAsSent("overdue", trackerKey);
-      await new Promise(r => setTimeout(r, 500));
+      return;
     }
 
-  } catch (err) {
-    console.error("sendOverdueReminder error:", err);
+
+    let emailsSent = 0;
+    let emailsFailed = 0;
+    let emailsSkipped = 0;
+
+    for (const book of result.rows) {
+      if (!book.student_email) {
+        console.warn(` No email for library member ID ${book.issued_to}: ${book.student_name}`);
+        emailsFailed++;
+        continue;
+      }
+
+
+      const trackerKey = `${book.issued_to}_${book.id}`;
+      if (hasEmailBeenSent('overdue', trackerKey)) {
+
+        emailsSkipped++;
+        continue;
+      }
+
+
+      const dueDate = new Date(book.due_date);
+      const timeDiff = today.getTime() - dueDate.getTime();
+      const overdueDays = Math.max(0, Math.floor(timeDiff / (1000 * 3600 * 24)));
+      const penaltyAmount = penaltyPerDay * overdueDays;
+
+
+
+
+
+
+
+
+      try {
+
+        const html = overdueTemplate({
+          studentName: book.student_name,
+          bookName: book.book_title,
+          dueDate: book.due_date,
+          issueDate: book.issue_date,
+          overdueDays: overdueDays,
+          penaltyAmount: penaltyAmount,
+          perDayAmount: penaltyPerDay,
+          cardNumber: book.card_number
+        });
+
+
+        await sendMail({
+          to: book.student_email,
+          subject: `⏰ URGENT: Overdue Book "${book.book_title}"`,
+          html: html,
+          text: `Dear ${book.student_name},\n\nIMPORTANT: Your book "${book.book_title}" is overdue!\n\n` +
+            `Card Number: ${book.card_number || 'N/A'}\n` +
+            `Due Date: ${book.due_date}\n` +
+            `Days Overdue: ${overdueDays}\n` +
+            `Penalty Amount: ₹${penaltyAmount}\n\n` +
+            `Please return the book immediately to avoid additional charges.\n\n` +
+            `Library Management System`
+        });
+
+
+        emailsSent++;
+
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+      } catch (error) {
+        console.error(` Failed to send overdue email to ${book.student_email}:`, error.message);
+        emailsFailed++;
+      }
+    }
+
+
+
+
+
+
+
+
+
+  } catch (error) {
+    console.error(" CRITICAL ERROR in sendOverdueReminder:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack?.split('\n')[0],
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
 async function sendAllReminders() {
-  const start = Date.now();
+
+
+  const startTime = Date.now();
+
   try {
+
     await sendDueReminder();
+
+
+
+
     await sendOverdueReminder();
-  } catch (err) {
-    console.error("sendAllReminders error:", err);
+
+  } catch (error) {
+    console.error(" ERROR in sendAllReminders:", error);
   } finally {
-    const duration = ((Date.now() - start) / 1000).toFixed(2);
-    console.log(`📨 Reminder job completed in ${duration}s`);
+    const endTime = Date.now();
+    const duration = (endTime - startTime) / 1000;
+
+
+
   }
 }
-
 
 async function getPenaltyMasters() {
   try {
@@ -1195,10 +1349,9 @@ async function checkOverdueStatus(issueId) {
   }
 }
 
-cron.schedule('0 9 * * *', async () => {
-  await sendDueReminder();
-  await sendOverdueReminder();
-});
+
+cron.schedule('*/5 * * * * *', sendDueReminder);
+cron.schedule('*/5 * * * * *', sendOverdueReminder);
 // cron.schedule("0 0 9 * * *", sendDueReminder);
 // cron.schedule("0 0 9 * * *", sendOverdueReminder);
 

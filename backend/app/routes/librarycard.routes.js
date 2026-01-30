@@ -27,9 +27,16 @@ const LibraryCard = require("../models/librarycard.model.js");
 const sql = require("../models/db.js");
 
 require("dotenv").config();
+const uploadDir = path.join(
+  __dirname,
+  "../../uploads/librarycards"
+);
 
-const uploadDir = "/var/www/html/uploads/librarycards";
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+// const uploadDir = "/var/www/html/uploads/librarycards";
+// if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),

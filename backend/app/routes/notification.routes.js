@@ -125,7 +125,7 @@ module.exports = (app) => {
       console.log("unread", unreadNotifications);
 
       return res.status(200).json({
-         success: true,
+        success: true,
         message: "Notifications marked as read",
         notifications: unreadNotifications
       });

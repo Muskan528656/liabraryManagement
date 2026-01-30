@@ -123,7 +123,10 @@ module.exports = (app) => {
                 if (duration_days !== undefined) {
                     if (duration_days === null || duration_days === "" || duration_days <= 0) {
                         return res.status(400).json({
-                            errors: "Duration must be a positive number"
+                            errors: [{
+                                msg: "Duration must be a positive number",
+                                param: "duration_days"
+                            }]
                         });
                     }
                 }
@@ -138,8 +141,10 @@ module.exports = (app) => {
                 ) {
                     if (max_allowed_books_at_time > allowed_books) {
                         return res.status(400).json({
-                            errors:
-                                "Max books allowed at a time cannot be greater than total allowed books"
+                            errors: [{
+                                msg: "Max books allowed at a time cannot be greater than total allowed books",
+                                param: "max_allowed_books_at_time"
+                            }]
                         });
                     }
                 }
@@ -163,16 +168,17 @@ module.exports = (app) => {
                 const fieldsToUpdate = Object.keys(updateData);
                 if (fieldsToUpdate.length <= 2) {
                     return res.status(400).json({
-                        errors: "No valid fields to update"
+                        errors: [{
+                            msg: "No valid fields to update",
+                            param: "general"
+                        }]
                     });
                 }
 
                 const result = await Plan.updatePlan(updateData);
 
                 if (!result) {
-                    return res.status(404).json({
-                        errors: "Plan not found"
-                    });
+                    return res.status(404).json({ errors: "Plan not found" });
                 }
 
                 return res.status(200).json({
@@ -183,7 +189,7 @@ module.exports = (app) => {
             } catch (err) {
                 console.error(err);
 
-                if (err.code === "23502") {
+                if (err.code === '23502') {
                     return res.status(400).json({
                         errors: "Required field cannot be null"
                     });

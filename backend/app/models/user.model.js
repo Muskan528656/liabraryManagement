@@ -72,7 +72,12 @@ async function findById(id) {
   }
 }
 
-async function findByEmail(email, excludeId = null) {
+
+
+
+async function findByEmail(email) {
+  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -104,11 +109,10 @@ async function findByEmail(email, excludeId = null) {
     return result.rows.length > 0 ? result.rows[0] : null;
 
   } catch (error) {
-    console.error("Error in findByName:", error);
+    console.error("Error in findByEmail:", error);
     throw error;
   }
 }
-
 
 
 
@@ -125,7 +129,7 @@ async function create(userData, userId) {
     if (!userData.companyid) {
       throw new Error("Company ID is required for user creation.");
     }
-
+ 
 
     const query = `
       INSERT INTO ${this.schema}."user"
@@ -195,7 +199,7 @@ async function create(userData, userId) {
 async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
-
+ 
     if (userData.email) {
       const existing = await this.findByEmail(userData.email);
       if (existing && existing.id !== id) {
@@ -207,7 +211,7 @@ async function updateById(id, userData) {
     const values = [];
     let i = 1;
 
-
+ 
     const add = (field, value) => {
       if (value !== undefined && value !== null) {
         updateFields.push(`${field} = $${i++}`);
@@ -224,19 +228,19 @@ async function updateById(id, userData) {
     add("country", userData.country);
     add("currency", userData.currency);
     add("time_zone", userData.time_zone);
-
+ 
     add("companyid", userData.companyid);
     add("profile_image", userData.profile_image);
 
-
+ 
     if (updateFields.length === 0) {
       throw new Error("No fields to update");
     }
 
-
+ 
     values.push(id);
 
-
+ 
     const query = `
       UPDATE ${this.schema}."user"
       SET ${updateFields.join(", ")}
@@ -257,10 +261,10 @@ async function updateById(id, userData) {
         companyid
     `;
 
-
+ 
     const result = await sql.query(query, values);
 
-
+ 
     return result.rows.length ? result.rows[0] : null;
 
   } catch (error) {
