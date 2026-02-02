@@ -203,7 +203,7 @@ function AppContent() {
                 <Route path="permissions" element={<Permission />} />
                 <Route path="user" element={<User />} />
                 <Route path="user/:id" element={<UserDetail permissions={getPermissionForModule("Users")} />} />
-                <Route path="librarycard" element={<LibraryCard />} />
+                <Route path="librarycard" element={<LibraryCard permissions={getPermissionForModule("Library Members")} />} />
                 <Route path="librarycard/:id" element={<LibraryCardDetail permissions={getPermissionForModule("Library Members")} />} />
                 <Route path="bookissue" element={<BookIssue permissions={getPermissionForModule("Book Issue")} />} />
                 <Route path="bookreturn" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")}  />} />

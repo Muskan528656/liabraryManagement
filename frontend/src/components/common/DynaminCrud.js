@@ -30,7 +30,7 @@ const normalizeListResponse = (payload) => {
 const DynamicCRUD = ({
 
     moduleName,
-    moduleLabel,
+    moduleLabel = "Item",
     apiEndpoint,
     columns = [],
     formFields = [],
@@ -384,7 +384,7 @@ const DynamicCRUD = ({
 
 
         if (searchTerm && showSearch) {
-            const searchTermLower = searchTerm.toLowerCase();
+            const searchTermLower = (searchTerm || "").toLowerCase();
             result = result.filter(item =>
                 columns.some(col => {
                     if (!col || !col.field) return false;
@@ -1165,11 +1165,11 @@ const DynamicCRUD = ({
                             ) : (
                                 <>
                                     <TableHeader
-                                        title={`${moduleLabel}`}
+                                        title={`${moduleLabel || "Item"}`}
                                         icon={icon}
                                         totalCount={filteredData.length}
-                                        totalLabel={moduleLabel}
-                                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                                        totalLabel={moduleLabel || "Item"}
+                                        searchPlaceholder={`Search ${(moduleLabel || "Item").toLowerCase()}...`}
                                         searchValue={searchTerm}
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         showColumnVisibility={showColumnVisibility}
@@ -1298,7 +1298,7 @@ const DynamicCRUD = ({
                                         //         )}
                                         //     </div>
                                         // ) : null}
-                                        emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
+                                        emptyMessage={emptyMessage || `No ${(moduleLabel || "Item").toLowerCase()} found`}
                                     />
                                 </>
 
