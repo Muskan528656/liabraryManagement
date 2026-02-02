@@ -16,7 +16,7 @@ const Submodule = () => {
   const getUserData = () => {
     try {
       const user = AuthHelper.getUser();
-      console.log("User from AuthHelper:", user);
+      // console.log("User from AuthHelper:", user);
       setUserData(user);
       return user;
     } catch (error) {
@@ -28,7 +28,7 @@ const Submodule = () => {
   const getPermissionsFromAuthHelper = () => {
     try {
       const permissions = AuthHelper.getPermissions();
-      console.log("Permissions from AuthHelper:", permissions);
+      // console.log("Permissions from AuthHelper:", permissions);
       return permissions || [];
     } catch (error) {
       console.error("Error getting permissions:", error);
@@ -51,7 +51,7 @@ const Submodule = () => {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setModulesFromDB(parsed);
             setIsLoading(false);
-            console.log("Modules loaded from cache");
+            // console.log("Modules loaded from cache");
             return;
           }
         } catch (e) {
@@ -61,7 +61,7 @@ const Submodule = () => {
 
       const api = new DataApi("module");
       const resp = await api.fetchAll();
-      console.log("Modules API Response:", resp);
+      // console.log("Modules API Response:", resp);
 
       let modules = [];
 
@@ -93,36 +93,36 @@ const Submodule = () => {
     if (!userData) return false;
 
     const roleName = (userData.role_name || "").toUpperCase();
-    console.log("User Role:", roleName);
+    // console.log("User Role:", roleName);
     return roleName === "SYSTEM ADMIN" || roleName === "ADMIN";
   };
 
 
   const hasPermissionForModule = (module) => {
-    console.log("\n=== Checking permission for module ===");
-    console.log("Module:", {
-      id: module.id,
-      name: module.name,
-      api_name: module.api_name
-    });
+    // console.log("\n=== Checking permission for module ===");
+    // console.log("Module:", {
+    //   id: module.id,
+    //   name: module.name,
+    //   api_name: module.api_name
+    // });
 
     if (isSystemAdmin()) {
-      console.log("✓ User is System Admin - full access");
+      // console.log("✓ User is System Admin - full access");
       return true;
     }
 
 
     const permissions = getPermissionsFromAuthHelper();
-    console.log("Total permissions available:", permissions.length);
+    // console.log("Total permissions available:", permissions.length);
 
     // If no permissions found in storage, check if permissions API was called
     if (!permissions || permissions.length === 0) {
-      console.log("No permissions found in sessionStorage");
+      // console.log("No permissions found in sessionStorage");
 
       // Check if permissions API was called and failed
       const permissionsApiCalled = sessionStorage.getItem("permissions_api_called");
       if (permissionsApiCalled === "true") {
-        console.log("Permissions API was called but returned empty");
+        // console.log("Permissions API was called but returned empty");
         return false;
       }
 
@@ -135,29 +135,29 @@ const Submodule = () => {
     const moduleName = (module.name || "").toLowerCase().trim();
     const moduleApiName = (module.api_name || "").toLowerCase().trim();
 
-    console.log("Looking for module ID:", moduleId);
-    console.log("Looking for module name:", moduleName);
-    console.log("Looking for module api name:", moduleApiName);
+    // console.log("Looking for module ID:", moduleId);
+    // console.log("Looking for module name:", moduleName);
+    // console.log("Looking for module api name:", moduleApiName);
 
     const matchingPermission = permissions.find(perm => {
-      console.log("Checking permission object:", perm);
+      // console.log("Checking permission object:", perm);
 
 
       if (perm.moduleId && moduleId && perm.moduleId.toString() === moduleId.toString()) {
-        console.log("✓ Match by moduleId");
+        // console.log("✓ Match by moduleId");
         return true;
       }
 
 
       const permModuleName = (perm.moduleName || perm.name || "").toLowerCase().trim();
       if (permModuleName && moduleName && permModuleName === moduleName) {
-        console.log("✓ Match by moduleName");
+        // console.log("✓ Match by moduleName");
         return true;
       }
 
 
       if (perm.api_name && moduleApiName && perm.api_name.toLowerCase() === moduleApiName) {
-        console.log("✓ Match by api_name");
+        // console.log("✓ Match by api_name");
         return true;
       }
 
@@ -165,7 +165,7 @@ const Submodule = () => {
       const moduleUrl = (module.url || "").toLowerCase().trim();
       const permUrl = (perm.url || "").toLowerCase().trim();
       if (permUrl && moduleUrl && moduleUrl.includes(permUrl)) {
-        console.log("✓ Match by URL");
+        // console.log("✓ Match by URL");
         return true;
       }
 
@@ -173,7 +173,7 @@ const Submodule = () => {
         moduleName.includes(permModuleName) ||
         permModuleName.includes(moduleName)
       )) {
-        console.log("✓ Match by partial name");
+        // console.log("✓ Match by partial name");
         return true;
       }
 
@@ -181,11 +181,11 @@ const Submodule = () => {
     });
 
     if (!matchingPermission) {
-      console.log("✗ No matching permission found");
+      // console.log("✗ No matching permission found");
       return false;
     }
 
-    console.log("Matching permission found:", matchingPermission);
+    // console.log("Matching permission found:", matchingPermission);
 
 
     const hasAccess =
@@ -210,14 +210,14 @@ const Submodule = () => {
       matchingPermission.has_access === 1 ||
       matchingPermission.is_allowed === 1;
 
-    console.log("Final access result:", hasAccess);
-    console.log("Permission details:", {
-      allowView: matchingPermission.allowView,
-      can_view: matchingPermission.can_view,
-      view: matchingPermission.view,
-      has_access: matchingPermission.has_access,
-      is_allowed: matchingPermission.is_allowed
-    });
+    // console.log("Final access result:", hasAccess);
+    // console.log("Permission details:", {
+    //   allowView: matchingPermission.allowView,
+    //   can_view: matchingPermission.can_view,
+    //   view: matchingPermission.view,
+    //   has_access: matchingPermission.has_access,
+    //   is_allowed: matchingPermission.is_allowed
+    // });
 
     return hasAccess;
   };
@@ -225,12 +225,12 @@ const Submodule = () => {
 
   const getMenuItems = () => {
     if (!modulesFromDB || modulesFromDB.length === 0) {
-      console.log("No modules available");
+      // console.log("No modules available");
       return [];
     }
 
-    console.log("\n=== FILTERING MODULES ===");
-    console.log("Total modules from DB:", modulesFromDB.length);
+    // console.log("\n=== FILTERING MODULES ===");
+    // console.log("Total modules from DB:", modulesFromDB.length);
 
     const moduleItems = modulesFromDB
       .filter((m) => {
@@ -238,7 +238,8 @@ const Submodule = () => {
         const isActive = m && m.status && m.status.toLowerCase() === "active";
 
         if (!isActive) {
-          console.log(`Module "${m.name}" is not active`);
+       
+          // console.log(`Module "${m.name}" is not active`);
           return false;
         }
 
@@ -254,20 +255,20 @@ const Submodule = () => {
           moduleName.includes("user") ||
           moduleApiName.includes("user");
 
-        console.log(`\nModule: ${m.name} (ID: ${m.id})`);
-        console.log("Is permission module:", isPermissionModule);
+        // console.log(`\nModule: ${m.name} (ID: ${m.id})`);
+        // console.log("Is permission module:", isPermissionModule);
 
         if (isPermissionModule) {
           const systemAdmin = isSystemAdmin();
-          console.log("Is system admin:", systemAdmin);
+          // console.log("Is system admin:", systemAdmin);
           if (!systemAdmin) {
-            console.log("Hiding permission/role/user module from non-admin user");
+            // console.log("Hiding permission/role/user module from non-admin user");
             return false;
           }
         }
 
         const hasPermission = hasPermissionForModule(m);
-        console.log("Has permission:", hasPermission);
+        // console.log("Has permission:", hasPermission);
 
         return hasPermission;
       })
@@ -290,14 +291,14 @@ const Submodule = () => {
         };
       });
 
-    console.log("Final menu items:", moduleItems.length);
-    console.log("Menu item names:", moduleItems.map(item => item.label));
+    // console.log("Final menu items:", moduleItems.length);
+    // console.log("Menu item names:", moduleItems.map(item => item.label));
     return moduleItems;
   };
 
   const menuItems = getMenuItems();
 
-  console.log("menuItems=>",menuItems);
+  // console.log("menuItems=>",menuItems);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -307,7 +308,7 @@ const Submodule = () => {
         const user = getUserData();
 
         if (!user) {
-          console.log("No user found, clearing cache");
+          // console.log("No user found, clearing cache");
           sessionStorage.removeItem("cached_modules");
           sessionStorage.removeItem("cached_modules_timestamp");
           setIsLoading(false);
@@ -319,7 +320,7 @@ const Submodule = () => {
 
 
         const perms = getPermissionsFromAuthHelper();
-        console.log("Initial permissions check:", perms.length, "permissions");
+        // console.log("Initial permissions check:", perms.length, "permissions");
 
         if (perms.length > 0) {
           sessionStorage.setItem("permissions_api_called", "true");
@@ -337,7 +338,7 @@ const Submodule = () => {
 
     const handleStorageChange = (e) => {
       if (e.key === "permissions" || e.key === "token" || e.key === "userData") {
-        console.log("Storage changed, reinitializing data");
+        // console.log("Storage changed, reinitializing data");
         getUserData();
         fetchModulesFromDB();
       }
@@ -347,7 +348,7 @@ const Submodule = () => {
       if (document.visibilityState === "visible") {
         const token = sessionStorage.getItem("token");
         if (token) {
-          console.log("Page visible, refreshing data");
+          // console.log("Page visible, refreshing data");
           initializeData();
         }
       }

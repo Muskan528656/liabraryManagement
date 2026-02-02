@@ -6,7 +6,7 @@ export const AuthHelper = {
 
     getToken() {
         const token = sessionStorage.getItem("token");
-        console.log("AuthHelper.getToken ->", token);
+        // console.log("AuthHelper.getToken ->", token);
         return token;
     },
 
@@ -58,13 +58,13 @@ export const AuthHelper = {
     getUser() {
         const token = this.getToken();
         if (!token) {
-            console.log("AuthHelper.getUser -> No token found");
+            // console.log("AuthHelper.getUser -> No token found");
             return null;
         }
 
         try {
             const user = JSON.parse(atob(token.split(".")[1]));
-            console.log("AuthHelper.getUser ->", user);
+            // console.log("AuthHelper.getUser ->", user);
             return user;
         } catch (err) {
             console.error("AuthHelper.getUser -> Token parse error:", err);
@@ -72,7 +72,7 @@ export const AuthHelper = {
         }
     },
     isSuperAdmin() {
-        console.log(" Checking super admin status");
+        // console.log(" Checking super admin status");
         const user = this.getUser();
         if (!user || !user.userrole) return false;
 
@@ -83,19 +83,19 @@ export const AuthHelper = {
 
 
     async hasModulePermission(moduleName, action) {
-        console.log("Checking permission for:", moduleName, action);
+        // console.log("Checking permission for:", moduleName, action);
 
-        console.log("Is Super Admin?", this.isSuperAdmin());
+        // console.log("Is Super Admin?", this.isSuperAdmin());
         if (this.isSuperAdmin()) {
-            console.log("Super admin - granting all permissions");
+            // console.log("Super admin - granting all permissions");
             return true;
         }
 
         const permissions = this.getPermissions();
-        console.log("User permissions:", permissions);
+        // console.log("User permissions:", permissions);
 
         if (!permissions || typeof permissions !== 'object') {
-            console.warn("No permissions found in session storage");
+            // console.warn("No permissions found in session storage");
             return false;
         }
 
@@ -104,7 +104,7 @@ export const AuthHelper = {
         );
 
         if (modulePerm) {
-            console.log("Found permission by moduleName:", modulePerm);
+            // console.log("Found permission by moduleName:", modulePerm);
             switch (action) {
                 case "view": return !!modulePerm.allowView;
                 case "create": return !!modulePerm.allowCreate;
@@ -119,12 +119,12 @@ export const AuthHelper = {
             const response = await api.fetchAll();
 
             if (!response || response.status !== 200) {
-                console.error("Module API failed");
+                // console.error("Module API failed");
                 return false;
             }
 
             const moduleList = response.data?.records || [];
-            console.log("Module list from API:", moduleList);
+            // console.log("Module list from API:", moduleList);
 
 
             const module = moduleList.find(m =>
@@ -132,13 +132,13 @@ export const AuthHelper = {
             );
 
             if (!module) {
-                console.warn(`Module "${moduleName}" not found in API`);
+                // console.warn(`Module "${moduleName}" not found in API`);
                 return false;
             }
 
 
             const permByModuleId = permissions.find(p => p.moduleId === module.id);
-            console.log("Permission by moduleId:", permByModuleId);
+            // console.log("Permission by moduleId:", permByModuleId);
 
             if (!permByModuleId) return false;
 

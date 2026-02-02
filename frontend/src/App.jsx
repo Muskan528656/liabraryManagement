@@ -79,6 +79,8 @@ function AppContent() {
     return permissions ? permissions.find(p => p && p.moduleName === moduleName) || {} : {};
   };
 
+
+  // console.log("Permission for 'Books' module:", getPermissionForModule("Book Submissions"));
   // Check if user has view permission for any module
   const hasAnyViewPermission = () => {
 
@@ -179,21 +181,21 @@ function AppContent() {
                     )
                   } 
                 />
-                <Route path="userroles" element={<UserRole />} />
+                <Route path="userroles" element={<UserRole permissions={getPermissionForModule("User Roles")} />} />
                 <Route path="user-role/:id" element={<UserRoleDetail permissions={getPermissionForModule("User Roles")} />} />
-                <Route path="/publisher" element={<Publisher />} />
+                <Route path="/publisher" element={<Publisher permissions={getPermissionForModule("Publisher")} />} />
                 <Route path="/publisher/:id" element={<PublisherDetail permissions={getPermissionForModule("Publisher")} />} />
-                <Route path="author" element={<Author />} />
+                <Route path="author" element={<Author permissions={getPermissionForModule("Authors")} />} />
                 <Route path="author/:id" element={<AuthorDetail permissions={getPermissionForModule("Authors")} />} />
-                <Route path="plans" element={<Plan />} />
+                <Route path="plans" element={<Plan  permissions={getPermissionForModule("Plan")} />} />
                 <Route path="plans/:id" element={<PlanDetail permissions={getPermissionForModule("Plan")} />} />
-                <Route path="book" element={<Books />} />
+                <Route path="book" element={<Books permissions={getPermissionForModule("Books")}  />} />
                 <Route path="book/:id" element={<BookDetail permissions={getPermissionForModule("Books")} />} />
-                <Route path="category" element={<Category />} />
+                <Route path="category" element={<Category permissions={getPermissionForModule("Categories")} />} />
                 <Route path="category/:id" element={<CategoryDetail permissions={getPermissionForModule("Categories")} />} />
-                <Route path="vendor" element={<Vendor />} />
+                <Route path="vendor" element={<Vendor permissions={getPermissionForModule("Vendors")} />} />
                 <Route path="vendor/:id" element={<VendorDetail permissions={getPermissionForModule("Vendors")} />} />
-                <Route path="purchase" element={<Purchase />} />
+                <Route path="purchase" element={<Purchase permissions={getPermissionForModule("Purchases")} />} />
                 <Route path="purchase/:id" element={<PurchaseDetail permissions={getPermissionForModule("Purchases")} />} />
                 <Route path="/purchase/bulk" element={<BulkPurchasePage />} />
                 <Route path="subscriptions" element={<Subscription />} />
@@ -203,11 +205,11 @@ function AppContent() {
                 <Route path="user/:id" element={<UserDetail permissions={getPermissionForModule("Users")} />} />
                 <Route path="librarycard" element={<LibraryCard />} />
                 <Route path="librarycard/:id" element={<LibraryCardDetail permissions={getPermissionForModule("Library Members")} />} />
-                <Route path="bookissue" element={<BookIssue />} />
-                <Route path="bookreturn" element={<BookSubmit />} />
+                <Route path="bookissue" element={<BookIssue permissions={getPermissionForModule("Book Issue")} />} />
+                <Route path="bookreturn" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")}  />} />
 
                 <Route path="librarycardtype" element={<LibrarySettings permissions={getPermissionForModule("Settings")} />} />
-                <Route path="booksubmit" element={<BookSubmit />} />
+                <Route path="booksubmit" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
 
                 <Route path="myprofile" element={<EditProfile />} />
                 <Route path="Company" element={<Company />} />

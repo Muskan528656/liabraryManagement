@@ -81,7 +81,7 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: permissions.canEdit || true,
+            allowEdit: permissions?.allowEdit,
             allowDelete: false,
             showAdvancedFilter: true,
             showImportButton: true,

@@ -10,14 +10,18 @@ const ResizableTable = ({
     recordsPerPage = 10,
     onPageChange = () => { },
     showSerialNumber = true,
-    showActions = true,
+    showActions={},
     showCheckbox = true,
     actionsRenderer = null,
     onRowClick = null,
     emptyMessage = "No records found",
-    selectedItems = [],
+    selectedItems = [],  
     onSelectionChange = () => { },
 }) => {
+
+
+    console.log("ResizableTable Rendered");
+    console.log("showActions:", showActions);
 
     const safeData = Array.isArray(data) ? data : [];
     const [columnWidths, setColumnWidths] = useState({});
@@ -33,6 +37,7 @@ const ResizableTable = ({
     const totalPages = Math.ceil(safeData.length / recordsPerPage);
     const startRecord = (currentPage - 1) * recordsPerPage;
     const endRecord = startRecord + recordsPerPage;
+
 
     const paginatedData = useMemo(() => {
         if (currentPage === 1) {
@@ -431,7 +436,7 @@ const ResizableTable = ({
                                             }}
                                         />
                                     </th>
-                                )}
+                                )}                         
                             </tr>
                         </thead>
                         <tbody className="detail-h4">
@@ -507,7 +512,7 @@ const ResizableTable = ({
                                                 </td>
                                             );
                                         })}
-                                        {showActions && (
+                                     {showActions && (
                                             <td
                                                 style={{
                                                     textAlign: "center",
@@ -519,31 +524,17 @@ const ResizableTable = ({
                                                     : (
                                                         <div className="d-flex gap-2 justify-content-center">
                                                             <button
-
-
                                                                 className="custom-btn-edit"
-
-
-
-
-
                                                                 title="Edit"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-edit"></i>
                                                             </button>
-                                                            <button
-
-
+                                                            {/* <button
                                                                 className="custom-btn-delete"
-
-
-
-
-
                                                                 title="Delete"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-trash"></i>
-                                                            </button>
+                                                            </button> */}
                                                         </div>
                                                     )}
                                             </td>

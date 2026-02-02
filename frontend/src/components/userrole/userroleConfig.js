@@ -5,7 +5,7 @@ import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getUserRoleConfig = (externalData = {}, props = {}) => {
+export const getUserRoleConfig = (externalData = {}, props = {}, permissions) => {
 
     const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0
         ? externalData.countryCodeList.map(item => ({
@@ -25,6 +25,9 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         },
         required: ["role_name"],
     });
+
+
+    const allowEdit = permissions?.allowEdit ?? false;
 
     return {
         moduleName: "user_roles",
@@ -112,10 +115,9 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             showSearch: true,
             showColumnVisibility: true,
             showCheckbox: true,
-            showActions: true,
+            showActions: allowEdit,
             showAddButton: true,
-            allowEdit: true,
-            allowDelete: false,
+            allowEdit: allowEdit,
             showImportButton: true,
             showAdvancedFilter: true,
         },
