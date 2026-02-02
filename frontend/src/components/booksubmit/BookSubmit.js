@@ -449,7 +449,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Late Return",
                 description: `${daysOverdue} day(s) overdue`,
-                calculation: `${daysOverdue} days × ?${finePerDay}/day`,
+                calculation: `${daysOverdue} days ï¿½ ?${finePerDay}/day`,
                 amount: latePenalty,
                 color: "#f59e0b"
             });
@@ -461,7 +461,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Damage",
                 description: `Damage penalty (${damagePercentage}% of book price)`,
-                calculation: `?${bookPrice} × ${damagePercentage}%`,
+                calculation: `?${bookPrice} ï¿½ ${damagePercentage}%`,
                 amount: damagePenalty,
                 color: "#ef4444"
             });
@@ -473,7 +473,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Lost",
                 description: `Lost book (${lostPercentage}% of book price)`,
-                calculation: `?${bookPrice} × ${lostPercentage}%`,
+                calculation: `?${bookPrice} ï¿½ ${lostPercentage}%`,
                 amount: lostPenalty,
                 color: "#dc2626"
             });
@@ -1397,13 +1397,13 @@ const BookSubmit = () => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge className="px-2" bg="primary">Issued</Badge>;
+                return <Badge  bg="success">Issued</Badge>;
             case 'submitted':
-                return <Badge className="px-2" bg="info">Submitted</Badge>;
+                return <Badge  bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge className="px-2" bg="secondary">Cancelled</Badge>;
+                return <Badge  bg="danger">Cancelled</Badge>;
             case 'overdue':
-                return <Badge className="px-2" bg="danger">Overdue</Badge>;
+                return <Badge  bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }
@@ -1516,7 +1516,7 @@ const BookSubmit = () => {
             label: "Due Date",
             width: 120,
             render: (value) => {
-                if (!value) return "—";
+                if (!value) return "ï¿½";
                 const displayDate = moment(value).format('DD-MM-YYYY');
                 const isOverdue = new Date(value) < new Date();
 
@@ -1540,13 +1540,14 @@ const BookSubmit = () => {
         },
         {
             field: "actions",
-            label: "Actions",
+            label: "Acti4ons",
             width: 200,
             render: (value, record) => {
                 const isIssued = record.status?.toLowerCase() === 'issued';
 
                 if (!isIssued) {
-                    return <Badge bg="secondary">No Actions</Badge>;
+                    return <Badge className="px-4 rounded-pill"  bg="secondary">No Actions</Badge>;
+                //    return <Badge className="px-2" bg="danger">Overdue</Badge>;
                 }
 
                 return (

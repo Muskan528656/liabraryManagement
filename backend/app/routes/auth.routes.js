@@ -219,6 +219,7 @@ module.exports = (app) => {
 
 
         const companyRes = await Auth.checkCompanybyTcode(tcode);
+        console.log("company000",companyRes)
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,
@@ -239,9 +240,11 @@ module.exports = (app) => {
         }
 
         const userInfo = userRec.userinfo;
-
-
+        console.log("uer info",userInfo)
+        console.log("password",password)
+        console.log("userInfo.password",userInfo.password)
         const match = await bcrypt.compare(password, userInfo.password);
+        console.log("match",match)
         if (!match) {
           return res.status(400).json({
             success: false,

@@ -276,7 +276,7 @@ const Permission = () => {
                         console.error("Failed to refresh permissions after save:", err);
                     }
                 }
-
+                setOpenRowId("")
                 setEditingRow(null);
                 setEditingPermissions({});
                 setSelectAllStates({

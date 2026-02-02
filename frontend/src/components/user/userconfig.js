@@ -154,7 +154,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 render: (value) => {
                     const isActive = value === true || value === "active" || value === 1;
                     return (
-                        <Badge className="px-2" bg={isActive ? "success" : "secondary"}>
+                        <Badge bg={isActive ? "success" : "danger"}>
                             {isActive ? "Active" : "Inactive"}
                         </Badge>
                     );
@@ -395,7 +395,6 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 label: "Status",
                 type: "select",
                 options: [
-                    { value: "", label: "All" },
                     { value: true, label: "Active" },
                     { value: false, label: "Inactive" }
                 ]

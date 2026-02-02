@@ -53,9 +53,10 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                         value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
 
                     return (
-                        <Badge className="px-2" bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                        <Badge  bg={statusValue === "active" || statusValue === true ? "success" : "danger"}>
                             {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
                         </Badge>
+                      
                     );
                 }
             },
