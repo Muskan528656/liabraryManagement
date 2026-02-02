@@ -203,7 +203,7 @@ module.exports = (app) => {
       body("tcode").exists(),
     ],
     async (req, res) => {
-      console.log("response----->",res)
+      console.log("response----->", res)
       try {
         const email = req.body.email.trim().toLowerCase();
         const password = req.body.password;
@@ -361,7 +361,7 @@ module.exports = (app) => {
     try {
       const email = req.body.email.trim().toLowerCase();
       const tcode = req.body.tcode.trim().toLowerCase();
-      
+
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -395,7 +395,7 @@ module.exports = (app) => {
       const resetToken = jwt.sign(
         { email: userInfo.email, id: userInfo.id },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "7h" }
       );
 
       // Send reset email
@@ -403,9 +403,9 @@ module.exports = (app) => {
       // const baseUrl = ${protocol}://${req.get('host')}${process.env.BASE_API_URL}
 
       const origin = req.headers.origin;
-      console.log("origin=>",origin)
+      console.log("origin=>", origin)
 
-      console.log("host=>",req.get('origin')); 
+      console.log("host=>", req.get('origin'));
       const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
       // const resetLink = `${process.env.BASE_API_URL || "localhost:3001"}/reset-password?token=${resetToken}`
