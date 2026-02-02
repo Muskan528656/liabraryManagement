@@ -1060,7 +1060,7 @@ const getImageUrl = (image) => {
   }
   const baseUrl =
     process.env.NODE_ENV === "development"
-      ? "http://localhost:3003"
+      ? "http://localhost:9028"
       : process.env.REACT_APP_API_URL;
 
   return `${baseUrl}${image}`;

@@ -394,7 +394,7 @@ module.exports = (app) => {
       const resetToken = jwt.sign(
         { email: userInfo.email, id: userInfo.id },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "7h" }
       );
 
       // Send reset email

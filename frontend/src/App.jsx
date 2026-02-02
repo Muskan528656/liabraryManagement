@@ -57,7 +57,7 @@ import PublisherDetail from "./components/Publisher/PublisherDetail";
 import { AuthProvider } from "./contexts/authwrapper";
 import Loader from "./components/common/Loader";
 
-const ENDPOINT = "http://localhost:3003";
+const ENDPOINT = "http://localhost:9028";
 
 function AppContent() {
   const { userInfo, isLoading } = useUser();
