@@ -81,7 +81,7 @@ function AppContent() {
 
   // Check if user has view permission for any module
   const hasAnyViewPermission = () => {
-
+console.log("Checking view permissions in:", permissions);
     if (!permissions || permissions.length === 0) return false;
     return permissions.some(p =>
       p && (p.allowView === true || p.can_view === true || p.view === true || p.has_access === true)
