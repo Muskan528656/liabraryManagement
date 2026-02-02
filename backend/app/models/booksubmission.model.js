@@ -999,14 +999,6 @@ async function sendDueReminder() {
     }
 
 
-
-
-
-
-
-
-
-
   } catch (error) {
     console.error(" CRITICAL ERROR in sendDueReminder:", error);
     console.error("Error details:", {
@@ -1130,12 +1122,6 @@ ORDER BY lm.email`;
       const penaltyAmount = penaltyPerDay * overdueDays;
 
 
-
-
-
-
-
-
       try {
 
         const html = overdueTemplate({
@@ -1174,11 +1160,6 @@ ORDER BY lm.email`;
         emailsFailed++;
       }
     }
-
-
-
-
-
 
 
 
