@@ -243,29 +243,7 @@ const Submodule = () => {
           return false;
         }
 
-        const moduleName = (m.name || "").toLowerCase();
-        const moduleApiName = (m.api_name || "").toLowerCase();
-
-
-        const isPermissionModule =
-          moduleName.includes("permission") ||
-          moduleApiName.includes("permission") ||
-          moduleName.includes("role") ||
-          moduleApiName.includes("role") ||
-          moduleName.includes("user") ||
-          moduleApiName.includes("user");
-
         // console.log(`\nModule: ${m.name} (ID: ${m.id})`);
-        // console.log("Is permission module:", isPermissionModule);
-
-        if (isPermissionModule) {
-          const systemAdmin = isSystemAdmin();
-          // console.log("Is system admin:", systemAdmin);
-          if (!systemAdmin) {
-            // console.log("Hiding permission/role/user module from non-admin user");
-            return false;
-          }
-        }
 
         const hasPermission = hasPermissionForModule(m);
         // console.log("Has permission:", hasPermission);
