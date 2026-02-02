@@ -4,8 +4,13 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE"; 
+import { useUser } from "../../contexts/UserContext";
 
 const CompanyDetail = () => { 
+
+  let { permissions } = useUser();
+
+  console.log("CompanyDetail permissions:", permissions);
   
   const currencySymbolOptions = COUNTRY_TIMEZONE.map((item) => ({
     id: item.currency.symbol, 
@@ -116,6 +121,7 @@ const CompanyDetail = () => {
       moduleApi="company"
       moduleLabel="Company"
       fields={fields}
+      permissions={permissions || {}}
       relatedModules={[
         {
           label: "Users",

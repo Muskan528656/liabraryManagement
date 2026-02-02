@@ -3,7 +3,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
-const PlanDetail = () => {
+const PlanDetail = ({ permissions }) => {
     const { timeZone } = useTimeZone();
 
     const fields = {
@@ -55,6 +55,7 @@ const PlanDetail = () => {
             moduleLabel="Plan"
             icon="fa-solid fa-bars-progress"
             fields={fields}
+            permissions={permissions || {}}
         />
     );
 };

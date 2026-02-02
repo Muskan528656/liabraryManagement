@@ -203,6 +203,7 @@ module.exports = (app) => {
       body("tcode").exists(),
     ],
     async (req, res) => {
+      console.log("response----->", res)
       try {
         const email = req.body.email.trim().toLowerCase();
         const password = req.body.password;
@@ -360,7 +361,7 @@ module.exports = (app) => {
     try {
       const email = req.body.email.trim().toLowerCase();
       const tcode = req.body.tcode.trim().toLowerCase();
-      
+
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -402,9 +403,9 @@ module.exports = (app) => {
       // const baseUrl = ${protocol}://${req.get('host')}${process.env.BASE_API_URL}
 
       const origin = req.headers.origin;
-      console.log("origin=>",origin)
+      console.log("origin=>", origin)
 
-      console.log("host=>",req.get('origin')); 
+      console.log("host=>", req.get('origin'));
       const resetLink = `${origin}/reset-password?token=${resetToken}`;
 
       // const resetLink = `${process.env.BASE_API_URL || "localhost:3001"}/reset-password?token=${resetToken}`
@@ -509,6 +510,22 @@ module.exports = (app) => {
       });
     } catch (err) {
       console.error("Reset password error:", err);
+      return res.status(500).json({
+        success: false,
+        errors: "Internal server error",
+      });
+    }
+  });
+
+  router.get("/permissions", fetchUser, async (req, res) => {
+    try {
+      const permissions = await Auth.findPermissionsByRole(req.userinfo.userrole);
+      return res.status(200).json({
+        success: true,
+        permissions,
+      });
+    } catch (err) {
+      console.error("Error fetching permissions:", err);
       return res.status(500).json({
         success: false,
         errors: "Internal server error",

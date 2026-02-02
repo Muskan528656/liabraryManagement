@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AddPermissionModal from './addPermissionmodule';
 import DataApi from '../../api/dataApi';
+import { AuthHelper } from '../../utils/authHelper';
 import PubSub from "pubsub-js";
-import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Button, OverlayTrigger, Tooltip, Form } from "react-bootstrap";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 
@@ -31,6 +32,23 @@ const Permission = () => {
         allow_edit: false,
         allow_delete: false
     });
+
+    //accordion
+    const [open, setOpen] = useState(false);
+    const [openRowId, setOpenRowId] = useState(null);
+    const [check, setCheck] = useState(1);
+
+    //toggle
+    const [isExpanded, setIsExpanded] = useState(false);
+    const handleToggleRoles = () => {
+        if (isExpanded) {
+            collapseAllRoles();
+        } else {
+            expandAllRoles();
+        }
+        setIsExpanded(!isExpanded);
+    };
+
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const navigate = useNavigate();
@@ -142,20 +160,27 @@ const Permission = () => {
             }, formData.role_id);
 
             if (response.data.success) {
-                sessionStorage.setItem(
-                    "permissions",
-                    JSON.stringify(permissionsToSave.map(p => ({
-                        ...p,
-                        role_id: formData.role_id
-                    })))
-                );
-
                 window.dispatchEvent(new Event("permissionsUpdated"));
 
                 PubSub.publish("RECORD_SAVED_TOAST", {
                     title: "Success",
                     message: "Permissions saved successfully!",
                 });
+
+                // Refresh current user's permissions
+                const userData = AuthHelper.getUser();
+                if (userData && userData.userrole) {
+                    try {
+                        const api = new DataApi("permissions");
+                        const result = await api.fetchById(`role/${userData.userrole}`);
+                        if (result && result.data && result.data.success && result.data.data) {
+                            const permissions = result.data.data;
+                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                        }
+                    } catch (err) {
+                        console.error("Failed to refresh permissions after save:", err);
+                    }
+                }
 
                 setShowAddModal(false);
                 setEditingRole(null);
@@ -173,6 +198,7 @@ const Permission = () => {
 
     const handleInlineSave = async (roleId, roleName) => {
         try {
+            setIsExpanded(false)
             const actualRoleId = roleId === 'null' ? null : roleId;
 
             const permissionsToSave = Object.keys(editingPermissions).map(moduleId => ({
@@ -224,14 +250,6 @@ const Permission = () => {
             }
 
             if (response.data && response.data.success) {
-                sessionStorage.setItem(
-                    "permissions",
-                    JSON.stringify(permissionsToSave.map(p => ({
-                        ...p,
-                        role_id: actualRoleId
-                    })))
-
-                );
                 setExpandedRoles(prev => ({
                     ...prev,
                     [roleId]: false
@@ -243,6 +261,21 @@ const Permission = () => {
                     title: "Success",
                     message: `Permissions updated for ${roleName}`,
                 });
+
+                // Refresh current user's permissions
+                const userData = AuthHelper.getUser();
+                if (userData && userData.userrole) {
+                    try {
+                        const api = new DataApi("permissions");
+                        const result = await api.fetchById(`role/${userData.userrole}`);
+                        if (result && result.data && result.data.success && result.data.data) {
+                            const permissions = result.data.data;
+                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
+                        }
+                    } catch (err) {
+                        console.error("Failed to refresh permissions after save:", err);
+                    }
+                }
 
                 setEditingRow(null);
                 setEditingPermissions({});
@@ -364,9 +397,33 @@ const Permission = () => {
 
     const rolePermissions = groupPermissionsByRole();
 
-    const handleInlineEditStart = (roleId) => {
-        setEditingRow(roleId);
+    const handle = (roleId) => {
+        console.log("role id", roleId);
+        console.log("check", check)
+        const newCheck = 2;
+        setCheck(newCheck)
+        console.log("check", check)
 
+        handleInlineEditStart(roleId, newCheck)
+    }
+    const handleInlineEditStart = (roleId, checkValue) => {
+        //toggle open and close
+        // important (text click se bachata hai)
+        //    console.log("editing",isEditing)
+        if (checkValue == 2) {
+            setOpen(false)
+            console.log("check is work", check)
+            setCheck(1)
+        }
+        else {
+
+            setOpen(true);
+            // setCheck(1)
+
+        }
+        console.log("open", open)
+        setEditingRow(roleId);
+        setOpenRowId(roleId)
         // Expand the role
         setExpandedRoles(prev => ({
             ...prev,
@@ -476,6 +533,8 @@ const Permission = () => {
     };
 
     const handleInlineCancel = () => {
+        setOpenRowId("")
+        setIsExpanded(false)
         setExpandedRoles(prev => ({
             ...prev,
             [editingRow]: false
@@ -488,7 +547,7 @@ const Permission = () => {
             allow_edit: false,
             allow_delete: false
         });
-         setExpandedRoles({});
+        setExpandedRoles({});
     };
 
     const toggleRoleAccordion = (roleId) => {
@@ -588,26 +647,49 @@ const Permission = () => {
                 borderRadius: "10px",
             }}>
             <h5 className="fw-bold mb-1">
-                <i className="fa-solid fa-lock me-2 fs-6"></i> Role Permissions ({rolePermissions.length})
+                <i className="fa-solid fa-user-shield me-2 fs-6"></i> Role Permissions ({rolePermissions.length})
             </h5>
-            <div>
-                <TooltipButton title="Expand All">
-                    <Button
-                        variant="outline-secondary"
-                        className="custom-btn-table-header p-2 me-2"
-                        onClick={expandAllRoles}
-                    >
-                        <i className="fa-solid fa-expand fs-6 my-1"></i>
-                    </Button>
+            <div className="d-flex align-items-center gap-3">
+                <TooltipButton title={isExpanded ? "Collapse All" : "Expand All"}>
+                    <Form.Check
+                        type="switch"
+                         id="expand-collapse-toggle"
+                        checked={isExpanded}
+                        onChange={handleToggleRoles}
+                        style={{
+                            transform: "scale(1.8)",
+                            transformOrigin: "left center",
+                            cursor: "pointer",
+                            marginRight:"10px",
+                            accentColor: isExpanded ? "#198754" : "#6c757d" // green ON, gray OFF
+                        }}
+                    />
                 </TooltipButton>
 
-                <TooltipButton title="Collapse All">
+
+                <TooltipButton title="Add Role Permission">
+                    <Button
+                        className="custom-btn-table-header p-2"
+                        onClick={() => {
+                            setEditingRole(null);
+                            setShowAddModal(true);
+                        }}
+                    >
+                        <i className="fa-solid fa-plus fs-6 my-1"></i>
+                    </Button>
+                </TooltipButton>
+            </div>
+            {/* <div>
+                <TooltipButton title={isExpanded ? "Collapse All" : "Expand All"}>
                     <Button
                         variant="outline-secondary"
                         className="custom-btn-table-header p-2 me-2"
-                        onClick={collapseAllRoles}
+                        onClick={handleToggleRoles}
                     >
-                        <i className="fa-solid fa-compress fs-6 my-1"></i>
+                        <i
+                            className={`fa-solid ${isExpanded ? "fa-compress" : "fa-expand"
+                                } fs-6 my-1`}
+                        ></i>
                     </Button>
                 </TooltipButton>
 
@@ -622,7 +704,10 @@ const Permission = () => {
                         <i className="fa-solid fa-plus fs-6 my-1"></i>
                     </Button>
                 </TooltipButton>
-            </div>
+            </div> */}
+
+
+
         </div>
     );
 
@@ -665,7 +750,7 @@ const Permission = () => {
         return (
             <th width="17.5%" className="text-center">
                 <div className="d-flex flex-column align-items-center justify-content-center">
-                    <span className="fw-semibold mb-1">{label}</span>
+
                     {isEditing ? (
                         <div
                             className="cursor-pointer"
@@ -684,6 +769,7 @@ const Permission = () => {
                             <i className="fa-regular fa-square fs-6"></i>
                         </div>
                     )}
+                    <span className="fw-semibold mb-1">{label}</span>
                 </div>
             </th>
         );
@@ -703,40 +789,132 @@ const Permission = () => {
                 <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light">
                     <div className="d-flex align-items-center">
 
+                        {/* ICON — only this is clickable */}
+                        {/* <i
+                            className={`fa-solid ${open ? "fa-minus" : "fa-plus"
+                                } me-2 text-primary`}
+                            style={{ cursor: "pointer" }}
+                            onClick={handleToggle}
+                        ></i> */}
+                        {/* <i
+                            className={`fa-solid ${open ? "fa-chevron-down" : "fa-chevron-up"
+                                } me-2`}
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                                if (!open) {
+                                    // accordion open hoga
+                                    handleInlineEditStart(role.role_id);
+                                } else {
+                                    // accordion close hoga
+                                    handleInlineCancel();
+                                }
+                                setOpen(!open); // toggle accordion
+                            }}
+                        ></i> */}
+
+
+
+                        {/* <i
+                            className={`fa-solid ${openRowId === role.role_id
+                                ? "fa-chevron-down"
+                                : "fa-chevron-up"
+                                } me-2`}
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                                if (openRowId === role.role_id) {
+                                    // close same row
+                                    handleInlineCancel();
+                                    setOpenRowId(null);
+                                } else {
+                                    // open selected row only
+                                    handleInlineEditStart(role.role_id);
+                                    // setOpenRowId(role.role_id);
+                                }
+                            }}
+                        ></i> */}
+
+
+
+
+
+
+                        {/* <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handleInlineEditStart(role.role_id)}></i> */}
+
                         <div>
                             <h6 className="mb-0 fw-bold">
                                 <i className="fa-solid fa-user-tag me-2 text-primary"></i>
                                 {role.role_name}
                             </h6>
-                            <small className="text-muted">
+                            {/* <small className="text-muted">
                                 {role.modules_count} module{role.modules_count !== 1 ? 's' : ''} •
                                 <span className="ms-1">
                                     {viewCount} view, {createCount} create, {editCount} edit, {deleteCount} delete
                                 </span>
-                            </small>
+                            </small> */}
                         </div>
                     </div>
 
                     <div className="d-flex gap-2">
-                        {isEditing ? (
+
+
+                        <i
+                            className={`fa-solid ${openRowId === role.role_id
+                                ? ""
+                                : "fa-chevron-up"
+                                } me-2`}
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                                if (openRowId === role.role_id) {
+                                    // close same row
+                                    handleInlineCancel();
+                                    setOpenRowId(null);
+                                } else {
+                                    // open selected row only
+                                    handleInlineEditStart(role.role_id);
+                                    // setOpenRowId(role.role_id);
+                                }
+                            }}
+                        ></i>
+
+
+                        {isEditing && open ? (
                             <>
-                                <button
-                                    className="btn btn-sm btn-success"
+
+                                <Button
+                                    size="sm"
+                                    variant=""
                                     onClick={() => handleInlineSave(role.role_id, role.role_name)}
+                                    className="btn-paper btn-paper-clear d-flex align-items-center gap-1 h-75 px-2"
+                                    style={{
+                                        color: 'var(--primary-color)',
+                                        border: '1px solid var(--primary-color)',
+                                    }}
                                 >
-                                    <i className="fa-solid fa-check me-1"></i> Save
-                                </button>
-                                <button
-                                    className="btn btn-sm btn-secondary"
+                                    {/* <i className="fa-solid fa-check me-1"></i>  */}
+                                    Save
+                                </Button>
+
+
+
+
+                                <Button
+                                    size="sm"
+                                    variant=""
+                                    // className="btn btn-sm btn-secondary"
                                     onClick={handleInlineCancel}
+                                    style={{
+                                        background: 'var(--primary-color)',
+                                        color: '#fff',
+                                    }}
                                 >
-                                    <i className="fa-solid fa-times me-1"></i> Cancel
-                                </button>
+                                    {/* <i className="fa-solid fa-times me-1"></i>  */}
+                                    Cancel
+                                </Button>
                             </>
                         ) : (
                             <>
 
-                                <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handleInlineEditStart(role.role_id)}></i>
+                                {/* <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handle(role.role_id)}></i> */}
 
                                 {/* <i className="fa-solid fa-trash me-1 text-danger cursor-pointer fs-5" onClick={() => handleDeleteRole(role.role_id, role.role_name)}></i> */}
 
@@ -749,15 +927,18 @@ const Permission = () => {
                     <div className="card-body p-0">
                         <div className="table-responsive">
                             <table className="table table-hover mb-0">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th width="30%" className="ps-4">Module Name</th>
-                                        <SelectAllHeader permissionType="allow_view" label="View" />
-                                        <SelectAllHeader permissionType="allow_create" label="Create" />
-                                        <SelectAllHeader permissionType="allow_edit" label="Edit" />
-                                        <SelectAllHeader permissionType="allow_delete" label="Delete" />
-                                    </tr>
-                                </thead>
+                             
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th width="30%" className="ps-4  pb-3">Module Name</th>
+                                            <SelectAllHeader permissionType="allow_view" label="View" />
+                                            <SelectAllHeader permissionType="allow_create" label="Create" />
+                                            <SelectAllHeader permissionType="allow_edit" label="Edit" />
+                                            {/* <SelectAllHeader permissionType="allow_delete" label="Delete" /> */}
+                                        </tr>
+                                    </thead>
+                                   
+
                                 <tbody>
                                     {role.permissions && role.permissions.length > 0 ? (
                                         role.permissions.map(perm => (
@@ -781,6 +962,7 @@ const Permission = () => {
                                                         field="allow_create"
                                                         value={perm.allow_create}
                                                         onToggle={handleInlineToggle}
+
                                                     />
                                                 </td>
                                                 <td className="text-center align-middle py-2">
@@ -792,7 +974,7 @@ const Permission = () => {
                                                         onToggle={handleInlineToggle}
                                                     />
                                                 </td>
-                                                <td className="text-center align-middle py-2">
+                                                {/* <td className="text-center align-middle py-2">
                                                     <PermissionCell
                                                         isEditing={isEditing}
                                                         moduleId={perm.module_id}
@@ -800,7 +982,7 @@ const Permission = () => {
                                                         value={perm.allow_delete}
                                                         onToggle={handleInlineToggle}
                                                     />
-                                                </td>
+                                                </td> */}
                                             </tr>
                                         ))
                                     ) : (

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
@@ -19,6 +17,7 @@ import '../App.css';
 import jwt_decode from "jwt-decode";
 import DashboardApi from "../api/dashboardApi";
 import { useNavigate } from "react-router-dom";
+// import PlanDropdownCard from "./common/PlanDropdownCard";
 
 const PRIMARY_COLOR = "#4338ca";
 const ACCENT_COLOR = "#6366f1";
@@ -89,7 +88,7 @@ const InteractiveCard = ({ children, style, onClick, ...props }) => {
   );
 };
 
-const Dashboard = ({ userInfo: propUserInfo }) => {
+const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
@@ -791,7 +790,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       }
     },
 
-    labels: ['Issued', 'Available', 'Overdue', 'Damaged'],
+    labels: ['Issuedddd', 'Available', 'Overdue', 'Damaged'],
     colors: [SUCCESS_COLOR, ACCENT_COLOR, WARNING_COLOR, DANGER_COLOR],
 
     legend: {
@@ -870,7 +869,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
       type: "copiesStatus"
     },
     {
-      title: "Due Soon",
+      title: "Due ssSoon",
       value: formatNumber(metrics.dueSoonCount),
       icon: "fa-clock",
       color: WARNING_COLOR,
@@ -955,65 +954,73 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
         {/* 1. Core Library Inventory - Clickable Cards */}
         <Row className="mb-3 g-2">
-          {summaryCards.map((card, index) => (
-            <Col xl={3} lg={6} md={6} sm={12} key={index}>
-              <InteractiveCard
-                onClick={() => handleCardClick(card.type)}
-                style={card.type === "dueSoon" || card.type === "overdue" ? {
-                  borderLeft: `4px solid ${card.color} `
-                } : {}}
-              >
-                <Card.Body className="p-3">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div>
-                      <p className="mb-1 text-uppercase" style={{
-                        fontSize: "10px",
-                        fontWeight: "700",
-                        color: "#64748b"
-                      }}>
-                        {card.title}
-                      </p>
-
-                      {card.subtitle ? (
+          {/* LEFT COLUMN – Summary Cards */}
+          {/* <Col xl={6} lg={6} md={12}>
+            <Row className="g-2 h-75"> */}
+              {summaryCards.map((card, index) => (
+                <Col xl={3} lg={6} md={6} sm={12} key={index}>
+                  <InteractiveCard
+                    onClick={() => handleCardClick(card.type)}
+                    style={
+                      card.type === "dueSoon" || card.type === "overdue"
+                        ? { borderLeft: `4px solid ${card.color}` }
+                        : {}
+                    }
+                  >
+                    <Card.Body className="p-3">
+                      <div className="d-flex align-items-center justify-content-between">
                         <div>
-                          <h2 className="mb-0" style={{
-                            color: card.color,
-                            fontSize: "20px",
-                            fontWeight: "800"
-                          }}>
+                          <p
+                            className="mb-1 text-uppercase"
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: "700",
+                              color: "#64748b",
+                            }}
+                          >
+                            {card.title}
+                          </p>
+
+                          <h2
+                            className="mb-0"
+                            style={{
+                              color: card.color,
+                              fontSize: "20px",
+                              fontWeight: "800",
+                            }}
+                          >
                             {card.value}
                           </h2>
                         </div>
-                      ) : (
-                        <h2 className="mb-0" style={{
-                          color: card.color,
-                          fontSize: "20px",
-                          fontWeight: "800"
-                        }}>
-                          {card.value}
-                        </h2>
-                      )}
-                    </div>
-                    <div style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "10px",
-                      backgroundColor: card.bgColor,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      minWidth: "40px"
-                    }}>
-                      <i className={`fa - solid ${card.icon} `} style={{
-                        fontSize: "18px",
-                        color: card.color
-                      }}></i>
-                    </div>
-                  </div>
-                </Card.Body>
-              </InteractiveCard>
-            </Col>
-          ))}
+
+                        <div
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "10px",
+                            backgroundColor: card.bgColor,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <i
+                            className={`fa-solid ${card.icon}`}
+                            style={{ fontSize: "18px", color: card.color }}
+                          ></i>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </InteractiveCard>
+                </Col>
+              ))}
+            {/* </Row>
+          </Col> */}
+        
+          {/* RIGHT COLUMN – Dropdown / Other Content */}
+          {/* <Col xl={6} lg={6} md={12} className="h-25">
+            <PlanDropdownCard />
+          </Col> */}
         </Row>
 
         {/* 2. Urgent Actions */}
@@ -1237,6 +1244,7 @@ const Dashboard = ({ userInfo: propUserInfo }) => {
 
           {/* Pie Chart */}
           <Col lg={4}>
+          
             <Card style={styles.card}>
               <Card.Body className="text-center p-2">
                 <div className="d-flex justify-content-between align-items-center mb-2">

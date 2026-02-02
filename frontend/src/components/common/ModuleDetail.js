@@ -9,6 +9,8 @@ import {
   Form,
   Modal,
   InputGroup,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import DataApi from "../../api/dataApi";
@@ -170,10 +172,10 @@ const ModuleDetail = ({
   onTempDataChange = null,
 }) => {
   const {
-    canView = true,
-    canCreate = true,
-    canEdit = true,
-    canDelete = true,
+    allowView = true,
+    allowCreate = true,
+    allowEdit = true,
+    allowDelete = true,
   } = permissions;
   const location = useLocation();
   const { id } = useParams();
@@ -680,10 +682,9 @@ const ModuleDetail = ({
     }
     if (field.type === "badge") {
       const badgeConfig = field.badgeConfig || {};
-      const bgColor = badgeConfig[value] || (value ? "success" : "secondary");
-      const label =
-        badgeConfig[`${value}_label`] || (value ? "Active" : "Inactive");
-      return <Badge bg={bgColor}>{label}</Badge>;
+      const bgColor = badgeConfig[value] || (value ? "primary" : "danger");
+      const label = badgeConfig[`${value}_label`] || (value ? "Active" : "Inactive");
+      return <Badge style={{borderRadius:"5px", padding:"2px"}}  bg={bgColor}>{label}</Badge>;
     }
     if (field.type === "currency") {
       return `₹${parseFloat(value).toLocaleString("en-IN", {
@@ -739,7 +740,7 @@ const ModuleDetail = ({
     //                 return;
     //             }
     //         }
-    
+
     try {
       setSaving(true);
 
@@ -790,6 +791,7 @@ const ModuleDetail = ({
 
         response = await api.updateFormData(formDataToSend, id);
       } else {
+        console.log("check")
         const cleanData = { ...tempData };
         Object.keys(cleanData).forEach((key) => {
           if (cleanData[key] === "" || cleanData[key] === "null") {
@@ -797,9 +799,11 @@ const ModuleDetail = ({
           }
         });
 
-
+        console.log("cleandata", cleanData)
+        console.log("ide",id)
 
         response = await api.update(cleanData, id);
+        console.log("response", response)
       }
 
 
@@ -819,7 +823,7 @@ const ModuleDetail = ({
       let errorMessage = err.message;
       console.log("Error during save:", err);
       console.log("Error response data:", errorMessage);
-      
+
       if (err.response && err.response.data && err.response.data.errors) {
         errorMessage = err.response.data.errors;
       }
@@ -1043,12 +1047,19 @@ const ModuleDetail = ({
           </Form.Label>
 
           {!isEditing && (
-            <Badge
-              bg={value ? "success" : "danger"}
+            <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>{data?.status ? "Active" : "Inactive"}</Tooltip>}
+            >
+            <Badge 
+              bg={value ? "primary" : "danger"}
+              toolTip={value ? "Active" : "Inactive"}
               className="px-3 py-2 fs-6"
+              style={{marginTop:"32px"}}
             >
               {value ? "Active" : "Inactive"}
             </Badge>
+              </OverlayTrigger>
           )}
 
           {isEditing && !isNonEditableField && (
@@ -1308,7 +1319,7 @@ const ModuleDetail = ({
                   <div className="d-flex gap-2">
                     {!isEditing ? (
                       <>
-                        {canEdit && (
+                        {allowEdit && (
                           <button
                             className="custom-btn-primary"
                             onClick={handleEdit}
@@ -1351,7 +1362,7 @@ const ModuleDetail = ({
                 <Row className="mt-4">
                   <Col md={12} className="mb-4">
                     <h6
-                      className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
+                      className="fw-bold mb-0 d-flex align-items-center p-3 border rounded"
                       style={{
                         color: "var(--primary-color)",
                         background: "vae(--primary-background-color)",
@@ -1360,6 +1371,9 @@ const ModuleDetail = ({
                       }}
                     >
                       {moduleLabel} Information
+                        <Badge bg={data?.status || data?.is_active? "success" : "danger"} className="mx-2 float-end">
+                          {data?.status || data?.is_active ? "Active" : "Inactive" }
+                        </Badge>
                     </h6>
                   </Col>
                   <Row className="px-5">

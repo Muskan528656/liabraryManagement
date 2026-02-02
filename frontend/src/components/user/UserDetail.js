@@ -5,7 +5,7 @@ import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
-const UserDetail = () => {
+const UserDetail = ({ permissions }) => {
 
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
@@ -236,6 +236,7 @@ const UserDetail = () => {
       fields={fields}
       externalData={externalData}
       timeZone={timeZone}
+      permissions={permissions || {}}
       onTempDataChange={(tempData) => {
         if (tempData?.country) {
           setCurrentCountry(tempData.country);

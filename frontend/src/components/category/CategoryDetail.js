@@ -2,7 +2,7 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
-const CategoryDetail = (timeZone) => {
+const CategoryDetail = ({ timeZone, permissions}) => {
   const fields = {
     title: "name",
 
@@ -35,6 +35,7 @@ const CategoryDetail = (timeZone) => {
       icon="fa-solid fa-tags"
       fields={fields}
       initialIsEditable={false}
+      permissions={permissions}
     />
   );
 };

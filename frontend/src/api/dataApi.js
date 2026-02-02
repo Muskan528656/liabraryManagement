@@ -43,10 +43,12 @@ export default class DataApi {
   }
 
   update(data,id ) {
+    console.log("data",data)
+    console.log("id",id)
     return axios.put(`${this.baseUrl}/${id}`, data, {
       headers: this.getHeaders(true),
     });
-  }
+  } 
 
   post(url, data) {
     return axios.post(this.baseUrl + url, data, {
@@ -115,9 +117,14 @@ export default class DataApi {
     if (!bookId) throw new Error("Book ID required");
 
     return axios.get(
-      `${this.baseUrl}/${bookId}/issued-count`,
+      // `${this.baseUrl}/${bookId}/issued-count`,
+      `${this.baseUrl}/${bookId}/submit-count`,
       { headers: this.getHeaders() }
     );
+  }
+
+  fetchInventoryReport() {
+    return axios.get(`${this.baseUrl}/inventory-report`, { headers: this.getHeaders() });
   }
 
   fetchSubmitCountByBookId(bookId) {
@@ -164,3 +171,4 @@ export default class DataApi {
     });
   }
 }
+

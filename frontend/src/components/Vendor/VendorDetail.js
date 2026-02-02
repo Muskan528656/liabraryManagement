@@ -3,6 +3,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
+import { Tooltip } from "react-bootstrap";
 const statusBadges = {
   active: { variant: "success", label: "Active" },
   inactive: { variant: "secondary", label: "Inactive" },
@@ -27,12 +28,6 @@ const VendorDetail = ({ permissions }) => {
       { key: "gst_number", label: "GST Number", type: "text" },
       { key: "pan_number", label: "PAN Number", type: "text" },
       {
-        key: "status",
-        label: "Status",
-        type: "toggle",
-      },
-
-      {
         key: "country_code",
         label: "Country Code",
         type: "select",
@@ -43,6 +38,29 @@ const VendorDetail = ({ permissions }) => {
           return country ? `${country.country_code} (${country.country})` : value || 'N/A';
         },
       },
+      // {
+      //   key: "status",
+      //   label: "Status",
+      //   type: "select",
+      //   options: Object.entries(statusBadges).map(([value, { label }]) => ({ value, label })),
+      //   render: (value) => {
+      //     const badge = statusBadges[value.toLowerCase()] || { variant: "light", label: value };
+      //     return (
+      //       <span className={`badge bg-${badge.variant}`}>
+      //         {badge.label}
+      //       </span>
+      //     );
+      //   },
+      // }
+
+      
+
+      {
+        key: "status",
+        label: "Status",
+        type: "toggle",
+      }
+
     ],
     address: [
       { key: "country", label: "Country", type: "text" },
@@ -60,13 +78,18 @@ const VendorDetail = ({ permissions }) => {
     ],
   };
 
+
+  console.log("Rendering VendorDetail with permissions:", permissions.allowCreate, permissions.allowEdit, permissions.allowDelete);
+
+
+
   return (
     <ModuleDetail
       moduleName="vendor"
       moduleApi="vendor"
       moduleLabel="Vendor"
       icon="fa-solid fa-store"
-      permissions={permissions}
+      permissions={permissions || {}}
       fields={fields}
     />
   );
