@@ -190,6 +190,7 @@ const Permission = () => {
         } catch (err) {
             console.error("Permission save error", err);
             PubSub.publish("RECORD_ERROR_TOAST", {
+                
                 title: "Error",
                 message: "Failed to save permissions: " + err.message,
             });
@@ -276,7 +277,7 @@ const Permission = () => {
                         console.error("Failed to refresh permissions after save:", err);
                     }
                 }
-
+                setOpenRowId("")
                 setEditingRow(null);
                 setEditingPermissions({});
                 setSelectAllStates({

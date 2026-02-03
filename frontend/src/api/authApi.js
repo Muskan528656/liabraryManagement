@@ -85,6 +85,8 @@ const AuthApi = {
   },
 
   async forgotPassword(email, tcode) {
+
+    console.log("Forgot Password called with:", email, tcode);
     try {
       const forgotData = {
         email: email ? email.trim().toLowerCase() : "",

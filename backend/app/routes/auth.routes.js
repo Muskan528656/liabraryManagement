@@ -219,6 +219,7 @@ module.exports = (app) => {
 
 
         const companyRes = await Auth.checkCompanybyTcode(tcode);
+        console.log("company000",companyRes)
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,
@@ -239,9 +240,11 @@ module.exports = (app) => {
         }
 
         const userInfo = userRec.userinfo;
-
-
+        console.log("uer info",userInfo)
+        console.log("password",password)
+        console.log("userInfo.password",userInfo.password)
         const match = await bcrypt.compare(password, userInfo.password);
+        console.log("match",match)
         if (!match) {
           return res.status(400).json({
             success: false,
@@ -379,11 +382,15 @@ module.exports = (app) => {
         });
       }
 
+        console.log("companyRes:", companyRes);
       const { tenantcode, id: companyId } = companyRes[0];
       await Auth.init(tenantcode, companyId);
 
+      console.log("Forgot password for email:", email, "in tenantcode:", tenantcode);
       const userRec = await Auth.findByEmail(email);
+      console.log("userRec:", userRec);
       if (!userRec?.userinfo) {
+        console.log("User not found for email:", email);
         return res.status(200).json({
           success: true,
           message: "If the email exists, a password reset link has been sent.",

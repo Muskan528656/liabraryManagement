@@ -9,9 +9,13 @@ export const planDataDependencies = {
 };
 
 const statusBadge = (value) => (
-    <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+    // <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+    //     {value ? "Active" : "Inactive"}
+    // </span>
+     <span  className={`badge ${value ? "bg-success" : "bg-danger"}`}>
         {value ? "Active" : "Inactive"}
     </span>
+
 );
 
 export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone, permissions) => {

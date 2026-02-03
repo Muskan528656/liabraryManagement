@@ -5,6 +5,7 @@ import Form from "react-bootstrap/Form";
 import AuthApi from "../api/authApi";
 import Loader from "./common/Loader";
 import "../App.css";
+import PubSub from "pubsub-js";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -33,6 +34,7 @@ const Login = () => {
   const [resetMessage, setResetMessage] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [forgetEmail, setForgetEmail] = useState("")
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,19 +51,69 @@ const Login = () => {
       setResetToken(token);
       setShowResetModal(true);
     }
+
+
+
+
   }, []);
 
+  // const handleForgotPassword = async (e) => {
+
+
+  //   e.preventDefault();
+  //   const emailValue = forgetEmail;
+  //   setForgotEmail(emailValue)
+  //   if (!forgotEmail || !forgotTcode) { setForgotError("Please fill all required fields"); return; }
+  //   if (!emailRegex.test(forgotEmail)) { setForgotError("Please enter a valid email"); return; }
+
+  //   try {
+  //     setForgotLoading(true); setForgotError(""); setForgotMessage("");
+  //     const result = await AuthApi.forgotPassword(forgotEmail, forgotTcode);
+  //     if (result.success) {
+  //       setForgotMessage("If the email exists, a password reset link has been sent.");
+  //       setForgotEmail(""); setForgotTcode("");
+  //     } else {
+  //       setForgotError(result.errors || "Failed to send reset email. Please try again.");
+  //     }
+  //   } catch (err) {
+  //     setForgotError("Something went wrong. Please try again.");
+  //   } finally {
+  //     setForgotLoading(false);
+  //   }
+  // };
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    if (!forgotEmail || !forgotTcode) { setForgotError("Please fill all required fields"); return; }
-    if (!emailRegex.test(forgotEmail)) { setForgotError("Please enter a valid email"); return; }
+
+    const emailValue = forgetEmail;
+    if (!emailValue || !forgotTcode) {
+      setForgotError("Please fill all required fields");
+      return;
+    }
+
+    if (!emailRegex.test(emailValue)) {
+      setForgotError("Please enter a valid email");
+      return;
+    }
+
+    setForgotEmail(emailValue);
 
     try {
-      setForgotLoading(true); setForgotError(""); setForgotMessage("");
-      const result = await AuthApi.forgotPassword(forgotEmail, forgotTcode);
+      setForgotLoading(true);
+      setForgotError("");
+      setForgotMessage("");
+
+      const result = await AuthApi.forgotPassword(emailValue, forgotTcode);
+
       if (result.success) {
         setForgotMessage("If the email exists, a password reset link has been sent.");
-        setForgotEmail(""); setForgotTcode("");
+        PubSub.publish("RECORD_SAVED_TOAST", {
+          title: "Success",
+          message: `If the email exists, a password reset link has been sent to ${emailValue}`,
+        });
+        
+        setForgotEmail("");
+        setForgotTcode("");
+        setShowForgotModal(false);
       } else {
         setForgotError(result.errors || "Failed to send reset email. Please try again.");
       }
@@ -71,6 +123,7 @@ const Login = () => {
       setForgotLoading(false);
     }
   };
+
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -154,8 +207,22 @@ const Login = () => {
   //   }
   // };
 
+  // const handleChange = (e) => {
+  //   setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  // };
+
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    console.log("Credentials updated:", { ...credentials, [e.target.name]: e.target.value });
+
+
+    if (e.target.name === "email") {
+      setForgetEmail(e.target.value);
+
+    }
+
+
+    console.log("Forget Email updated:", forgetEmail);
   };
 
   const isFormValid =
@@ -300,7 +367,10 @@ const Login = () => {
               <Form.Control
                 type="email"
                 placeholder="Enter your email"
-                value={forgotEmail}
+                value={forgetEmail ? forgetEmail : forgotEmail}
+                disabled={forgetEmail}
+
+                // value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 required
                 style={{ padding: '5px' }}
@@ -369,7 +439,7 @@ const Login = () => {
                   style={{ padding: '5px' }}
                 />
                 <span onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`}  style={{ color: 'gray' }}></i>
+                  <i className={`fa ${showConfirmPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
                 </span>
               </div>
               <span className="text-danger">{resetError}</span>

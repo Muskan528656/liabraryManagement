@@ -1521,13 +1521,13 @@ const DynamicCRUD = ({
                     centered
                     backdrop="static"
                 >
-                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", paddingRight: '30px' }}>
                         <b style={{ color: "var(--primary-color)", fontSize: '1.5rem' }}>Forgot Password</b>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
                             <Form.Group className="mb-3">
-                                <Form.Label>New Password *</Form.Label>
+                                <Form.Label>New Password <span className="text-danger">*</span></Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         type={passwordVisibility.password ? "text" : "password"}
@@ -1547,14 +1547,19 @@ const DynamicCRUD = ({
                                             justifyContent: "center",
                                         }}
                                     >
-                                        <span >
-                                            <i className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        <span>
+                                            <i
+                                                className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`}
+                                                style={{
+                                                    color: passwordVisibility.password ? "black" : "grey"
+                                                }}
+                                            ></i>
                                         </span>
                                     </InputGroup.Text>
                                 </InputGroup>
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Confirm Password *</Form.Label>
+                                <Form.Label>Confirm Password <span className="text-danger">*</span></Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         type={passwordVisibility.confirmPassword ? "text" : "password"}
@@ -1575,8 +1580,14 @@ const DynamicCRUD = ({
                                         }}
                                     >
                                         <span >
-                                            <i className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                            <i
+                                                className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`}
+                                                style={{
+                                                    color: passwordVisibility.confirmPassword ? "black" : "grey"
+                                                }}
+                                            ></i>
                                         </span>
+
                                     </InputGroup.Text>
                                 </InputGroup>
                             </Form.Group>
