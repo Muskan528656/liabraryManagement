@@ -6,7 +6,7 @@ const PermissionDenied = () => {
     <div className="permission-overlay">
       <div className="permission-modal-card">
         {/* Close Button Icon */}
-        <button className="close-btn-x">&times;</button>
+        {/* <button className="close-btn-x">&times;</button> */}
 
         <div className="permission-modal-body">
           {/* Badge Icon (Approximating the star badge in your image) */}

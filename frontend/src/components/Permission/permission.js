@@ -13,7 +13,7 @@ const TooltipButton = ({ title, children }) => (
     </OverlayTrigger>
 );
 
-const Permission = () => {
+const Permission = ({ permissions }) => {
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
