@@ -2,8 +2,7 @@
 import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import DataApi from "../../api/dataApi";
-import { createModel } from "../common/UniversalCSVXLSXImporter"; // Import createModel
-import { Badge } from "react-bootstrap";
+import { createModel } from "../common/UniversalCSVXLSXImporter"; 
 
 export const planDataDependencies = {
     company: "company",
