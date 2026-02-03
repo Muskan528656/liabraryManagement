@@ -1,6 +1,6 @@
 // components/common/PermissionDenied.js
 import React, { useState } from 'react';
-import NotificationApi from '../../api/notificationApi';
+import DataApi from '../../api/dataApi';
 
 const PermissionDenied = () => {
   const [isRequesting, setIsRequesting] = useState(false);
@@ -8,7 +8,8 @@ const PermissionDenied = () => {
   const handleExitClick = async () => {
     setIsRequesting(true);
     try {
-      const result = await NotificationApi.requestAccess();
+      const notificationApi = new DataApi('notifications');
+      const result = await notificationApi.requestAccess();
       if (result.success) {
         alert("Access request sent to system admin. You will be redirected to login.");
       } else {
