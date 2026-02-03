@@ -879,12 +879,25 @@ const Permission = () => {
 
 
                         {isEditing && open ? (
-                            <>
+                            <>  
+                                 <Button
+                                    size="sm"
+                                    variant=""
+                                    // className="btn btn-sm btn-secondary"
+                                    onClick={() => handleInlineSave(role.role_id, role.role_name)}
+                                    style={{
+                                        background: 'var(--primary-color)',
+                                        color: '#fff',
+                                    }}
+                                >
+                                    {/* <i className="fa-solid fa-times me-1"></i>  */}
+                                    Save
+                                </Button>
 
                                 <Button
                                     size="sm"
                                     variant=""
-                                    onClick={() => handleInlineSave(role.role_id, role.role_name)}
+                                    onClick={handleInlineCancel}
                                     className="btn-paper btn-paper-clear d-flex align-items-center gap-1 h-75 px-2"
                                     style={{
                                         color: 'var(--primary-color)',
@@ -892,23 +905,6 @@ const Permission = () => {
                                     }}
                                 >
                                     {/* <i className="fa-solid fa-check me-1"></i>  */}
-                                    Save
-                                </Button>
-
-
-
-
-                                <Button
-                                    size="sm"
-                                    variant=""
-                                    // className="btn btn-sm btn-secondary"
-                                    onClick={handleInlineCancel}
-                                    style={{
-                                        background: 'var(--primary-color)',
-                                        color: '#fff',
-                                    }}
-                                >
-                                    {/* <i className="fa-solid fa-times me-1"></i>  */}
                                     Cancel
                                 </Button>
                             </>

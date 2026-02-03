@@ -90,7 +90,6 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 placeholder: "Enter book title",
                 colSize: 6,
             },
-
             {
                 name: "author_id",
                 label: "Author",

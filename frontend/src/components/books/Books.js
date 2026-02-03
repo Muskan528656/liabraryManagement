@@ -107,7 +107,7 @@ const Books = ({ permissions, ...props }) => {
   const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
   console.log("Books Component Permissions:", permissions);
-  // ⛔ If not allowed to view
+  //  If not allowed to view
   if (!isSuperAdmin && !permissions?.allowView) {
     return <PermissionDenied />;
   }
