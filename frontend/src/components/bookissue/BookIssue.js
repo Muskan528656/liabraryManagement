@@ -19,7 +19,8 @@ import BulkIssue from "./BulkIssue";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import moment from "moment";
-const BookIssue = () => {
+import { all } from "axios";
+const BookIssue = ({ permissions }) => {
   const navigate = useNavigate();
   const { timeZone } = useTimeZone();
   const [selectedBook, setSelectedBook] = useState(null);
@@ -46,6 +47,11 @@ const BookIssue = () => {
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
+
+
+  const allowEdit = permissions?.allowEdit;
+
+  console.log("Book Issue Permissions:", permissions, allowEdit);
 
   useEffect(() => {
     fetchIssuedBooks();
@@ -290,21 +296,6 @@ const BookIssue = () => {
         </a>
       ),
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     {
       field: "issued_to_name",
@@ -622,7 +613,7 @@ const BookIssue = () => {
                     loading={loadingIssuedBooks}
                     showCheckbox={false}
                     showSerialNumber={true}
-                    showActions={false}
+                    showActions= {allowEdit}
                     searchTerm={searchTerm}
                     currentPage={currentPage}
                     recordsPerPage={recordsPerPage}

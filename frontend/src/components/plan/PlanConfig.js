@@ -15,7 +15,7 @@ const statusBadge = (value) => (
     </span>
 );
 
-export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) => {
+export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone, permissions) => {
     const PlanModel = createModel({
         modelName: "Plan",
         fields: {
@@ -26,6 +26,10 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
         },
         required: ["plan_name", "duration_days"],
     });
+
+
+    console.log("Plan permissions in config:", permissions);
+    const allowEdit = permissions?.canEdit;
 
     const SettingApi = new DataApi("librarysettings");
     let maxBooksDefault = 0;
@@ -146,8 +150,7 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowDelete: false,
-            allowEdit: true,
+            allowEdit: allowEdit,
             showImportButton: true,
             showAdvancedFilter: true,
         },

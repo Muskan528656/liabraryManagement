@@ -152,7 +152,7 @@ const FormModal = ({
     const fieldId = `field-${field.name}`;
     const isReadOnly = field.readOnly || (field.readOnlyWhenEditing && editingItem);
 
-    console.log("Rendering field:", field.name, "of type:", field.type, "with value:", value);
+    // console.log("Rendering field:", field.name, "of type:", field.type, "with value:", value);
 
     switch (field.type) {
       case "file":

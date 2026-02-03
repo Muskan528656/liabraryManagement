@@ -54,8 +54,8 @@ export const applyAdvancedFilters = (data = [], filterValues = {}) => {
 
 const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }) => {
 
-  console.log("onFilterChange:", onFilterChange);
-  console.log("AdvancedFilter fields:", fields);
+  // console.log("onFilterChange:", onFilterChange);
+  // console.log("AdvancedFilter fields:", fields);
 
 
   const [localFilters, setLocalFilters] = useState({});
@@ -63,7 +63,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
   const handleChange = (name, value) => {
     
-    console.log("name",name,"value",value);
+    // console.log("name",name,"value",value);
     
     setLocalFilters(prev => ({ ...prev, [name]: value }));
   };

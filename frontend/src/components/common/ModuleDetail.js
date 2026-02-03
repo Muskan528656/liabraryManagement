@@ -1316,46 +1316,47 @@ const ModuleDetail = ({
                   </div>
 
                   {/* Right Side - Action Buttons */}
-                  <div className="d-flex gap-2">
-                    {!isEditing ? (
-                      <>
-                        {allowEdit && (
+                 
+                    <div className="d-flex gap-2">
+                      {!isEditing ? (
+                        <>
+                          {allowEdit && (
+                            <button
+                              className="custom-btn-primary"
+                              onClick={handleEdit}
+                            >
+                              <i className="fa-solid fa-edit me-2"></i>
+                              Edit {moduleLabel}
+                            </button>)}
+                          {/* <button
+                            className="custom-btn-delete-detail"
+                            onClick={handleDelete}
+                          >
+                            <i className="fa-solid fa-trash me-2"></i>
+                            Delete
+                          </button> */}
+                        </>
+                      ) : (
+                        <div className="d-flex gap-2">
                           <button
                             className="custom-btn-primary"
-                            onClick={handleEdit}
+                            onClick={handleSave}
+                            disabled={saving}
                           >
-                            <i className="fa-solid fa-edit me-2"></i>
-                            Edit {moduleLabel}
-                          </button>)}
-                        {/* <button
-                          className="custom-btn-delete-detail"
-                          onClick={handleDelete}
-                        >
-                          <i className="fa-solid fa-trash me-2"></i>
-                          Delete
-                        </button> */}
-                      </>
-                    ) : (
-                      <div className="d-flex gap-2">
-                        <button
-                          className="custom-btn-primary"
-                          onClick={handleSave}
-                          disabled={saving}
-                        >
-                          <i className="fa-solid fa-check me-2"></i>
-                          {saving ? "Saving..." : "Save"}
-                        </button>
-                        <button
-                          className="custom-btn-secondary"
-                          onClick={handleCancel}
-                          disabled={saving}
-                        >
-                          <i className="fa-solid fa-times me-2"></i>
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                            <i className="fa-solid fa-check me-2"></i>
+                            {saving ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            className="custom-btn-secondary"
+                            onClick={handleCancel}
+                            disabled={saving}
+                          >
+                            <i className="fa-solid fa-times me-2"></i>
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                 </div>
 
                 {/* Details Section */}

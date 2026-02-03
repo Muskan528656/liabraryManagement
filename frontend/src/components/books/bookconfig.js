@@ -229,7 +229,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowEdit: permissions.canEdit || true,
+            allowEdit: permissions.allowEdit || true,
             allowDelete: false,
             showImportButton: true,
             showAdvancedFilter: true,

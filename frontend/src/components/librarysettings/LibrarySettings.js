@@ -63,7 +63,7 @@ const Settings = ({permissions}) => {
 
   console.log("permissions in LibrarySettings:", permissions);
 
-  const canEditSettings = permissions?.allowEdit === true;
+  const canEditSettings = permissions?.allowEdit;
 
 
   console.log("canEditSettings", canEditSettings) ;
