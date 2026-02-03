@@ -382,11 +382,15 @@ module.exports = (app) => {
         });
       }
 
+        console.log("companyRes:", companyRes);
       const { tenantcode, id: companyId } = companyRes[0];
       await Auth.init(tenantcode, companyId);
 
+      console.log("Forgot password for email:", email, "in tenantcode:", tenantcode);
       const userRec = await Auth.findByEmail(email);
+      console.log("userRec:", userRec);
       if (!userRec?.userinfo) {
+        console.log("User not found for email:", email);
         return res.status(200).json({
           success: true,
           message: "If the email exists, a password reset link has been sent.",

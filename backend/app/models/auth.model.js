@@ -163,6 +163,8 @@ async function createUser(newUser) {
 
 
 async function findByEmail(email) {
+
+  console.log("Finding user by email:", email);
   if (!this.schema) {
     console.error("Error: Schema not initialized in findByEmail");
     throw new Error(
