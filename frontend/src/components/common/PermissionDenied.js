@@ -1,7 +1,28 @@
 // components/common/PermissionDenied.js
-import React from 'react';
+import React, { useState } from 'react';
+import NotificationApi from '../../api/notificationApi';
 
 const PermissionDenied = () => {
+  const [isRequesting, setIsRequesting] = useState(false);
+
+  const handleExitClick = async () => {
+    setIsRequesting(true);
+    try {
+      const result = await NotificationApi.requestAccess();
+      if (result.success) {
+        alert("Access request sent to system admin. You will be redirected to login.");
+      } else {
+        alert("Failed to send access request. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error requesting access:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsRequesting(false);
+      window.location.href = '/login';
+    }
+  };
+
   return (
     <div className="permission-overlay">
       <div className="permission-modal-card">
@@ -27,8 +48,12 @@ const PermissionDenied = () => {
           </p>
 
           <div className="mt-4">
-            <button className="permission-exit-btn" onClick={() => window.location.href = '/login'}>
-              Exit
+            <button
+              className="permission-exit-btn"
+              onClick={handleExitClick}
+              disabled={isRequesting}
+            >
+              {isRequesting ? 'Sending Request...' : 'Exit'}
             </button>
           </div>
         </div>
