@@ -196,10 +196,11 @@ const Settings = ({permissions}) => {
                 </h5>
                 {!isEditingSettings && (
                   <button
+                    variant="primary"
                     onClick={handleSettingsEdit}
-                    className="custom-btn-table-header "
+                    className={canEditSettings ? "custom-btn-table-header" : "disabled"}
                     disabled={!canEditSettings}
-                    title={!canEditSettings ? "You do not have permission to edit settings" : "Edit Settings"}
+                    title={!canEditSettings ? "You don’t have permission to edit this. Please contact your administrator." : "Edit Settings"}
                   >
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit Settings

@@ -489,7 +489,7 @@ const BookIssue = ({ permissions }) => {
     return <div className="loading"></div>;
   }
 
-  if (!permissions.allowCreate) {
+  if (!permissions.allowCreate || !permissions.allowView) {
      return <PermissionDenied />;
   }
 

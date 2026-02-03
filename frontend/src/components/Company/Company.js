@@ -7,8 +7,9 @@ import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import axios from "axios";
 import { API_BASE_URL } from "../../constants/CONSTANT";
+import PermissionDenied from "../../utils/permission_denied";
 
-const Company = () => {
+const Company = ({permissions}) => {
   const { timeZone, setCompanyTimeZone } = useTimeZone();
   const [Company, setCompany] = useState({
     name: "",
@@ -262,6 +263,12 @@ const Company = () => {
       }));
     }
   };
+
+  if(!permissions || !permissions.allowView){
+
+    return  <PermissionDenied />;
+   }
+
 
   return (
     <Container fluid className="py-4">

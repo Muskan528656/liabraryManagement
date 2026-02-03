@@ -208,7 +208,7 @@ function AppContent() {
                 <Route path="librarycardtype" element={<LibrarySettings permissions={getPermissionForModule("Settings")} />} />
                 <Route path="booksubmit" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
                 <Route path="myprofile" element={<EditProfile />} />
-                <Route path="Company" element={<Company />} />
+                <Route path="Company" element={<Company  permissions={getPermissionForModule("Company")} />} />
                 <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
                 <Route path="reports/bookinventoryreport" element={<BookInventoryReport />} />
                 <Route path="reports" element={<ReportsList />} />
