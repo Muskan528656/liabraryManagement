@@ -194,7 +194,7 @@ function AppContent() {
                 <Route path="purchase" element={<Purchase permissions={getPermissionForModule("Purchases")} />} />
                 <Route path="purchase/:id" element={<PurchaseDetail permissions={getPermissionForModule("Purchases")} />} />
                 <Route path="/purchase/bulk" element={<BulkPurchasePage  permissions={getPermissionForModule("Purchases")}  />} />
-                <Route path="subscriptions" element={<Subscription />} />
+                {/* <Route path="subscriptions" element={<Subscription />} /> */}
                 <Route path="subscriptions/:id" element={<SubscriptionDetail permissions={getPermissionForModule("Plan")} />} />
                 <Route path="permissions" element={<Permission permissions={getPermissionForModule("Permission")} />} />
                 <Route path="user" element={<User permissions={getPermissionForModule("Users")} />} />

@@ -9,7 +9,8 @@ import {
   ChevronRight,
   Calendar3,
   Person,
-  CodeSlash
+  CodeSlash,
+  DeviceSsd
 } from "react-bootstrap-icons";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import PubSub from "pubsub-js";
@@ -22,10 +23,20 @@ const ReportsList = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const navigate = useNavigate();
+  const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
     fetchReports();
   }, []);
+
+
+  const toggleExpand = (index, e) => {
+    e.stopPropagation(); // Prevent row click navigation
+    setExpandedRows(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   const fetchReports = async () => {
     try {
@@ -127,9 +138,10 @@ const ReportsList = () => {
               <tr>
                 <th  style={{ background: "var(--primary-background-color)" }} className="border-1 ps-4 py-3 text-uppercase small fw-bold text-muted">Report Name</th>
                 <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">API Name</th>
-                <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">Created Date</th>
-                <th  style={{ background: "var(--primary-background-color)" }} className="py-3 text-uppercase small fw-bold text-muted">Created By</th>
-                {/* <th className="pe-4 py-3"></th> */}
+                <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">Description</th>
+                <th  style={{ background: "var(--primary-background-color)" }} className=" py-3 text-uppercase small fw-bold text-muted">Created Date</th>
+                {/* <th  style={{ background: "var(--primary-background-color)" }} className="py-3 text-uppercase small fw-bold text-muted">Created By</th> */}
+                <th style={{ background: "var(--primary-background-color)" }} className="pe-4 py-3 text-uppercase small fw-bold text-muted"></th>
               </tr>
             </thead>
             <tbody>
@@ -159,23 +171,42 @@ const ReportsList = () => {
                       <span className="badge bg-light text-secondary border px-2 py-1 fw-medium">
                         <CodeSlash size={12} className="me-1" /> {r.api_name}
                       </span>
-                    </td>
-                   <td className="border-1">
+                    </td>      
+                    <td>
+                    <div className={`resizable-container ${expandedRows[i] ? 'expanded' : ''}`}>
+                      <p className="description-text mb-0">
+                        {r.description || "No description provided."}
+                      </p>
+                      {r.description?.length > 100 && (
+                        <button 
+                          className="btn btn-link btn-sm p-0 text-decoration-none mt-1"
+                          onClick={(e) => toggleExpand(i, e)}
+                        >
+                          {expandedRows[i] ? "Show Less" : "Read More"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                   <td className="">
                     <div className="d-flex flex-column gap-1">
                       <small className="text-muted d-flex align-items-center gap-1">
                         <Calendar3 size={12} /> {r.created_date.slice(0, 10)}
                       </small>
                     </div>
                   </td>
-                  <td className="border-1">
+                  {/* <td className="">
                     <div className="d-flex flex-column gap-1">
                       <small className="text-muted d-flex align-items-center gap-1">
                         <Person size={12} /> {r.created_by_name  || "N/A"}
                       </small>
                     </div>
-                 </td>
-                  
+                 </td> */}
                 
+                  <td className="pe-4">
+                    <div className="d-flex justify-content-end">
+                      <ChevronRight size={16} className="text-muted" />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -255,6 +286,40 @@ const ReportsList = () => {
         .btn-primary:hover {
           background-color: #163e61;
           border-color: #163e61;
+        }
+
+         .resizable-container {
+          resize: horizontal; /* Allows user to pull the bottom-right corner horizontally */
+          overflow: hidden;   /* Required for 'resize' to work */
+          min-width: 200px;
+          max-width: 600px;   /* Prevents it from breaking the layout */
+          padding-right: 15px;
+          position: relative;
+        }
+
+        /* Default state: Clamp to 2 lines */
+        .description-text {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          font-size: 0.875rem;
+          color: #64748b;
+          line-height: 1.5;
+        }
+
+        /* When 'Read More' is clicked, show everything */
+        .expanded .description-text {
+          display: block;
+          overflow: visible;
+          -webkit-line-clamp: unset;
+        }
+
+        /* Style for the resize handle (bottom right corner) */
+        .resizable-container::-webkit-resizer {
+          background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><path d="M10 0 L0 10 L10 10 Z" fill="%23cbd5e1"/></svg>');
+          background-repeat: no-repeat;
+          background-position: bottom right;
         }
       `}</style>
     </div>
