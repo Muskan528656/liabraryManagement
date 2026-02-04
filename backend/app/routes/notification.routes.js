@@ -8,6 +8,7 @@
 const express = require("express");
 const router = express.Router();
 const Notification = require("../models/notification.model.js");
+const User = require("../models/user.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
 
 module.exports = (app) => {
@@ -165,6 +166,61 @@ module.exports = (app) => {
       return res.status(500).json({
         success: false,
         message: "Failed to delete notification",
+        error: error.message
+      });
+    }
+  });
+
+  router.post("/request-access", fetchUser, async (req, res) => {
+    try {
+      Notification.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode);
+
+      const currentUserId = req.userinfo.id;
+      const currentUser = await User.findById(currentUserId);
+
+      if (!currentUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Current user not found"
+        });
+      }
+
+      // Find admin users
+      const adminUsers = await User.findAll({ userrole: 'ADMIN' });
+
+      if (adminUsers.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No admin users found"
+        });
+      }
+
+      const username = `${currentUser.firstname} ${currentUser.lastname}`;
+      const email = currentUser.email;
+
+      // Create notification for each admin
+      const notifications = [];
+      for (const admin of adminUsers) {
+        const notification = await Notification.create({
+          user_id: admin.id,
+          // message: `User ${username} (${email}) is requesting access to the system.`,
+          message:`User ${username} (${email}) Permission request raised. Pending for your approval.`,
+          type: "access_request"
+        });
+        notifications.push(notification);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Access request sent to system admin",
+        notifications: notifications
+      });
+    } catch (error) {
+      console.error("Error sending access request:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send access request",
         error: error.message
       });
     }

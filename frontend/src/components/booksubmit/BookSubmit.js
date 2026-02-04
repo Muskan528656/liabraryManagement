@@ -24,8 +24,11 @@ import ResizableTable from "../common/ResizableTable";
 import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
 import { useBookSubmission } from "../../contexts/BookSubmissionContext";
+import PermissionDenied from "../../utils/permission_denied";
 
 const BookSubmit = ({ permissions }) => {
+
+
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const filter = searchParams.get('filter');
@@ -1755,6 +1758,10 @@ const BookSubmit = ({ permissions }) => {
             type: "date"
         }
     ];
+
+    if(!permissions?.allowView){
+        return <PermissionDenied/>
+    }
 
     return (
         <>

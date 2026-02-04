@@ -6,6 +6,7 @@ import PubSub from "pubsub-js";
 import { Button, OverlayTrigger, Tooltip, Form } from "react-bootstrap";
 import ConfirmationModal from "../common/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
+import PermissionDenied from '../../utils/permission_denied';
 
 const TooltipButton = ({ title, children }) => (
     <OverlayTrigger placement="top" overlay={<Tooltip>{title}</Tooltip>}>
@@ -13,7 +14,7 @@ const TooltipButton = ({ title, children }) => (
     </OverlayTrigger>
 );
 
-const Permission = () => {
+const Permission = ({permissions :propPermissions}) => {
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -1018,6 +1019,10 @@ const Permission = () => {
         );
     }
 
+
+    if(!propPermissions || !propPermissions.allowView){
+        return <PermissionDenied />; 
+    }
     return (
         <div className="container-fluid permission-page">
             <CustomHeader />

@@ -170,5 +170,15 @@ export default class DataApi {
       },
     });
   }
+
+  async requestAccess() {
+    try {
+      const response = await this.post('/request-access', {});
+      return response.data;
+    } catch (error) {
+      console.error("Request access error:", error);
+      return { success: false, errors: "Network error. Please try again." };
+    }
+  }
 }
 
