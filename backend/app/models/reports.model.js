@@ -19,6 +19,7 @@ async function findAll() {
             r.report_name,
             r.api_name,
             r.created_date,
+            r.description,
             r.created_by,
             u.firstname AS created_by_name
         FROM ${this.schema}.reports r

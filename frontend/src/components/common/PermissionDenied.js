@@ -1,7 +1,7 @@
 // components/common/PermissionDenied.js
 import React, { useState } from 'react';
 import DataApi from '../../api/dataApi';
-
+import {toast, ToastContainer} from 'react-toastify';
 const PermissionDenied = () => {
   const [isRequesting, setIsRequesting] = useState(false);
 
@@ -11,9 +11,9 @@ const PermissionDenied = () => {
       const notificationApi = new DataApi('notifications');
       const result = await notificationApi.requestAccess();
       if (result.success) {
-        alert("Access request sent to system admin. You will be redirected to login.");
+        toast.success("Access request sent to system admin. You will be redirected to login.");
       } else {
-        alert("Failed to send access request. Please try again.");
+        toast.error("Failed to send access request. Please try again.");
       }
     } catch (error) {
       console.error("Error requesting access:", error);
@@ -26,6 +26,7 @@ const PermissionDenied = () => {
 
   return (
     <div className="permission-overlay">
+      <ToastContainer  position='top-left' />
       <div className="permission-modal-card">
         {/* Close Button Icon */}
         {/* <button className="close-btn-x">&times;</button> */}
@@ -34,7 +35,7 @@ const PermissionDenied = () => {
           {/* Badge Icon (Approximating the star badge in your image) */}
           <div className="badge-container">
             <div className="badge-icon-wrapper">
-                <i className="fas fa-shield-alt main-icon"></i>
+                <i className="fas fa-shield-alt main-icon"></i> 
                 <i className="fas fa-star star-overlay"></i>
             </div>
           </div>
@@ -54,7 +55,7 @@ const PermissionDenied = () => {
               onClick={handleExitClick}
               disabled={isRequesting}
             >
-              {isRequesting ? 'Sending Request...' : 'Exit'}
+              {isRequesting ? 'Sending Request...' : 'Request Access & Exit'}
             </button>
           </div>
         </div>
@@ -120,7 +121,7 @@ const PermissionDenied = () => {
 
         .permission-title {
           font-weight: 700;
-          color: #4a4a4a;
+          color: #11439b;
           margin-bottom: 10px;
           font-size: 1.5rem;
         }
@@ -137,7 +138,7 @@ const PermissionDenied = () => {
         }
 
         .permission-exit-btn {
-          background-color: #00bcd4;
+          background-color: #11439b;
           color: white;
           border: none;
           padding: 10px 45px;
@@ -156,3 +157,5 @@ const PermissionDenied = () => {
 };
 
 export default PermissionDenied;
+
+
