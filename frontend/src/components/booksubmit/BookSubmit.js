@@ -1550,7 +1550,7 @@ const BookSubmit = ({ permissions }) => {
             render: (value) => getStatusBadge(value)
         },
         
-        (false  && {
+        (allowEdit  && {
             field: "actions",
             label: "Actions",
             width: 200,
