@@ -1423,6 +1423,7 @@ const BookSubmit = ({ permissions }) => {
         {
             field: "book_title",
             label: "Book Title",
+            
             width: 300,
             height: 0,
             render: (value, record) => {
@@ -1548,41 +1549,42 @@ const BookSubmit = ({ permissions }) => {
             width: 100,
             render: (value) => getStatusBadge(value)
         },
-        // {
-        //     field: "actions",
-        //     label: "Actions",
-        //     width: 200,
-        //     render: (value, record) => {
-        //         const isIssued = record.status?.toLowerCase() === 'issued';
+        
+        (false  && {
+            field: "actions",
+            label: "Actions",
+            width: 200,
+            render: (value, record) => {
+                const isIssued = record.status?.toLowerCase() === 'issued';
 
-        //         if (!isIssued) {
-        //             return <Badge bg="secondary">No Actions</Badge>;
-        //         }
+                if (!isIssued) {
+                    return <Badge bg="secondary">No Actions</Badge>;
+                }
 
-        //         return (
-        //             <div>
-        //                 <Button
-        //                     className="btn-custom"
-        //                     size="sm"
-        //                     onClick={() => handleSubmitClick(record)}
-        //                     title="Submitted Issue"
-        //                 >
-        //                     <i className="fa-solid fa-check-circle"></i> Submit
-        //                 </Button>
+                return (
+                    <div>
+                        <Button
+                            className="btn-custom"
+                            size="sm"
+                            onClick={() => handleSubmitClick(record)}
+                            title="Submitted Issue"
+                        >
+                            <i className="fa-solid fa-check-circle"></i> Submit
+                        </Button>
 
-        //                 <Button
-        //                     className="m-1"
-        //                     variant="outline-danger"
-        //                     size="sm"
-        //                     onClick={() => handleCancelClick(record)}
-        //                     title="Cancelled Issue"
-        //                 >
-        //                     <i className="fa-solid fa-times"></i>
-        //                 </Button>
-        //             </div>
-        //         );
-        //     }
-        // }
+                        <Button
+                            className="m-1"
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => handleCancelClick(record)}
+                            title="Cancelled Issue"
+                        >
+                            <i className="fa-solid fa-times"></i>
+                        </Button>
+                    </div>
+                );
+            }
+        } )
     ];
 
     const submittedBooksColumns = [
@@ -2058,11 +2060,12 @@ const BookSubmit = ({ permissions }) => {
 
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
+                                                    // columns={allowEdit ? issueColumns : issueColumns.filter(col => col.field !== 'actions')}
                                                     columns={issueColumns}
                                                     loading={loading}
                                                     showCheckbox={false}
                                                     showSerialNumber={true}
-                                                    showActions={allowEdit}
+                                                    showActions={false}
                                                     searchTerm={searchTerm}
                                                     currentPage={currentPage}
                                                     recordsPerPage={recordsPerPage}

@@ -345,7 +345,6 @@ async function generateInventoryReport() {
             b.total_copies,
             b.available_copies,
             (b.total_copies - b.available_copies) AS issued_copies,
-
             0 AS lost_damaged_copies,  -- (Proper tracking ho to alag table se aayega)
 
             CASE
