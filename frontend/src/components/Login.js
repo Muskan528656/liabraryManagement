@@ -264,7 +264,7 @@ const Login = () => {
                   minHeight: "100vh",
                 }}>
                   {/* <img src="Untitled design (7).png" width="600" height="600" alt="Logo" /> */}
-                  <img src="Ibirds.png" width="200" height="200" alt="Logo" />
+                  <img src="ibirds.png" width="600" height="600" alt="Logo" />
                 </Col>
 
                 <Col lg={6} className="p-5">
