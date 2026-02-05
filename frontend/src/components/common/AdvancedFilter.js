@@ -321,8 +321,8 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
 
   return (
 
-    <div className={`advanced-filter-wrapper p-3 ${className}`}>
-      <Row className="align-items-end border p-2 rounded-3 bg-light">
+    <div className={`advanced-filter-wrapper px-3 mb-0 ${className}`}>
+      <Row className="align-items-end border p-2 rounded-4" style={{background:"var(--primary-background-color)"}}>
         {fields.map((field, idx) => {
           const fName = field.name || field.field;
 

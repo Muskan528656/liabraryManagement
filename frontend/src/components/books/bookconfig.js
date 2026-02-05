@@ -112,7 +112,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
             {
                 name: "publisher_id",
                 label: "Publisher",
-                type: "text",
+                type: "select",
                 options: "publishers",
                 required: false,
 
