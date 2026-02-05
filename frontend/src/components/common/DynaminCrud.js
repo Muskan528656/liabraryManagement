@@ -28,7 +28,6 @@ const normalizeListResponse = (payload) => {
 };
 
 const DynamicCRUD = ({
-
     moduleName,
     moduleLabel = "Item",
     apiEndpoint,
@@ -349,7 +348,7 @@ const DynamicCRUD = ({
     useEffect(() => {
         setFormData(initialFormData);
         console.log("recordsPerPage:", recordsPerPage);
-    }, []);
+    }, [initialFormData]);
 
     useEffect(() => {
         const token = sessionStorage.getItem("token");

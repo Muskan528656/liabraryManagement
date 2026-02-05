@@ -1,10 +1,37 @@
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) => {
-    const authors = props.authors || externalData.authors || externalData.author || [];
 
+    console.log("externalData in getBooksConfig check:", externalData);
+    const authors = props.authors || externalData.authors || externalData.author || [];
+    console.log("getBooksConfig - authors:", authors);
     const categories = props.categories || externalData.categories || externalData.category || [];
+    console.log("getBooksConfig - categories:", categories);
 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
+
+    console.log("getBooksConfig - publishers:", publishers);
+
+    //changes
+    const authorOptions = authors.map(a => ({
+        
+        // value: String(a.id),
+        value: a.id,
+        name: a.name
+    }));
+    const categoryOptions = categories.map(c => ({
+        // value: String(c.id),
+        value: c.id,
+        name : c.name
+    }));
+
+    const publisherOptions = publishers.map(p => ({
+        value: String(p.id),
+        // value: p.id,
+        name: p.name
+    }));
+
+
+    // console.log("authorOptions:", authorOptions);
 
     const BookModel = createModel({
         modelName: "Book",
@@ -30,6 +57,11 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
         { value: "spiral", label: "Spiral" },
     ];
     return {
+        authors: authorOptions,
+        categories: categoryOptions,
+        publishers: publisherOptions,
+
+        // console.log("changes author",authors)
         moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
@@ -96,7 +128,6 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 type: "select",
                 options: "authors",
                 required: true,
-
                 colSize: 6,
             },
             {
@@ -105,7 +136,6 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 type: "select",
                 options: "categories",
                 required: true,
-
                 colSize: 6,
             },
             {
@@ -114,7 +144,6 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 type: "select",
                 options: "publishers",
                 required: false,
-
                 colSize: 6,
             },
             {
