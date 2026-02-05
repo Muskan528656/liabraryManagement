@@ -7,7 +7,7 @@ const ResizableTable = ({
     loading = false,
     searchTerm = "",
     currentPage = 1,
-    recordsPerPage = 10,
+    recordsPerPage = 5,
     onPageChange = () => { },
     showSerialNumber = true,
     showActions={},
@@ -27,16 +27,18 @@ const ResizableTable = ({
     const [columnWidths, setColumnWidths] = useState({});
     const [isResizing, setIsResizing] = useState(false);
     const [resizeColumn, setResizeColumn] = useState(null);
-    const [visibleRows, setVisibleRows] = useState(20);
+    const [visibleRows, setVisibleRows] = useState(10);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const tableRef = useRef(null);
     const isResizingRef = useRef(false);
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
+ 
     const totalPages = Math.ceil(safeData.length / recordsPerPage);
-    const startRecord = (currentPage - 1) * recordsPerPage;
+    const startRecord = (currentPage - 1) * recordsPerPage; 
     const endRecord = startRecord + recordsPerPage;
+ 
 
 
     const paginatedData = useMemo(() => {
@@ -58,7 +60,7 @@ const ResizableTable = ({
         if (currentPage !== 1 || loading) return;
 
 
-        setVisibleRows(20);
+        setVisibleRows(10);
 
 
         if (observerRef.current) {

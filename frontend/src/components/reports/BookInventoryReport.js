@@ -541,6 +541,28 @@ const BookInventoryReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+
+    const labelStyle = {
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    color: '#495057',
+    marginBottom: '0.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  };
+
+  const inputBaseStyle = {
+    height: '44px',
+    borderRadius: '8px',
+    border: '1.5px solid #dee2e6',
+    padding: '0.625rem 1rem',
+    fontSize: '0.9375rem',
+    transition: 'all 0.2s ease',
+    backgroundColor: '#fff',
+    width: '100%'
+  };
+
   const columns = [
     { 
       field: "book_title", 
@@ -614,7 +636,7 @@ const BookInventoryReport = () => {
           icon = "fa-times-circle";
         } else if (availablePercent < 30) {
           variant = "warning";
-          icon = "fa-exclamation-circle";
+          icon = "fa-exclamation-circle color-black";
         }
         
         return (
@@ -840,16 +862,16 @@ const BookInventoryReport = () => {
   return (
     <>
       <Card className="border-0 shadow-sm">
-        <Card.Header className="py-2 bg-light border-0">
+        <Card.Header className="py-2 bg-light mt-1 border-0">
           <Row className="align-items-center">
             <Col md={6}>
               <div className="d-flex align-items-center">
                 <div className="p-2 me-3" >
-                  <i className="fa fa-book text-primary" style={{ fontSize: '24px' }} />
+                  <i className="fa fa-book" style={{ fontSize: '24px', color: "var(--primary-color)" }} />
                 </div>
                 <div>
-                  <h4 className="mb-0 fw-bold" style={{color:"11439b"}}>Book Inventory </h4>
-                 
+                  <h4 className="mb-0 fw-bold" style={{color:"var(--primary-color)", backgroundColor:"var(--light-bg-color)"}}>Book Inventory </h4>
+                  {/* <small className="text-muted">Manage and analyze your book stock</small> */}
                 </div>
               </div>
             </Col>
@@ -982,89 +1004,123 @@ const BookInventoryReport = () => {
               <Card className="border-0 bg-light mb-3">
                 <Card.Body>
                   <Row className="g-3 align-items-end">
-                    <Col md={3}>
-                      <Form.Group>
-                        <Form.Label className="small fw-semibold text-muted">Search</Form.Label>
-                        <InputGroup size="sm">
-                          <InputGroup.Text className="bg-white border-end-0">
-                            <i className="fa fa-search text-muted" />
-                          </InputGroup.Text>
-                          <Form.Control 
-                            placeholder="Search books, authors..." 
+                   
+                     <Col xs={12} md={2}>
+                        <div style={labelStyle}>
+                            <i className={ "fa-solid fa-magnifying-glass"}></i>
+                            <span>Search</span>
+                          </div>
+                          <Form.Control
+                            type="text"
+                            className="filter-input"
+                            style={inputBaseStyle}
+                            placeholder={`Search by book, author...`}
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="border-start-0"
+                            onChange={(e) => setSearchTerm( e.target.value)}
                           />
-                          {searchTerm && (
-                            <Button 
-                              variant="outline-secondary" 
-                              size="sm"
-                              onClick={() => setSearchTerm("")}
-                            >
-                              <i className="fa fa-times" />
-                            </Button>
-                          )}
-                        </InputGroup>
-                      </Form.Group>
                     </Col>
-                    
-                    <Col md={2}>
-                      <Form.Group>
-                        <Form.Label className="small fw-semibold text-muted">Vendor</Form.Label>
-                        <Form.Select 
-                          size="sm"
-                          value={vendorFilter}
-                          onChange={(e) => setVendorFilter(e.target.value)}
-                        >
-                          <option value="All Vendors">All Vendors</option>
-                          {vendors.map((vendor, index) => (
-                            <option key={index} value={vendor}>{vendor}</option>
-                          ))}
-                        </Form.Select>
-                      </Form.Group>
+                    <Col xs={12} md={2}>
+                      <div style={labelStyle}>
+                        <i className={ "fa-solid fa-filter"}></i>
+                        <span>Vendor</span>
+                      </div>
+                      <Form.Select
+                        className="small text-muted"
+                        style={{
+                          ...inputBaseStyle,
+                          color: vendorFilter ? '#212529' : '#6c757d',
+                          cursor: 'pointer',
+                          paddingRight: '2.5rem',
+                          appearance: 'none',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '16px 12px'
+                        }}
+                        value={vendorFilter}
+                        onChange={(e) => setVendorFilter(e.target.value)}
+                      >
+                        <option value="">All Vendors</option>
+                        {vendors.map((opt, i) => (
+                          <option className="color-dark" key={i} value={opt.vendor}>{opt}</option>
+                        ))}
+                      </Form.Select>
                     </Col>
-                    
-                    <Col md={2}>
-                      <Form.Group>
-                        <Form.Label className="small fw-semibold text-muted">Category</Form.Label>
-                        <Form.Select 
-                          size="sm"
-                          value={categoryFilter}
-                          onChange={(e) => setCategoryFilter(e.target.value)}
-                        >
-                          <option value="All Categories">All Categories</option>
-                          {categories.map((category, index) => (
-                            <option key={index} value={category}>{category}</option>
-                          ))}
-                        </Form.Select>
-                      </Form.Group>
+
+                    <Col xs={12} md={2}>
+                      <div style={labelStyle}>
+                        <i className={ "fa-solid fa-filter"}></i>
+                        <span>Category</span>
+                      </div>
+                      <Form.Select
+                        className="small text-muted"
+                        style={{
+                          ...inputBaseStyle,
+                          color: categoryFilter ? '#212529' : '#6c757d',
+                          cursor: 'pointer',
+                          paddingRight: '2.5rem',
+                          appearance: 'none',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '16px 12px'
+                        }}
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                      >
+                        <option value="">All Categories</option>
+                        {categories.map((opt, i) => (
+                          <option className="color-dark" key={i} value={opt.vendor}>{opt}</option>
+                        ))}
+                      </Form.Select>
                     </Col>
-                    
-                    <Col md={2}>
-                      <Form.Group>
-                        <Form.Label className="small fw-semibold text-muted">Status</Form.Label>
-                        <Form.Select 
-                          size="sm"
-                          value={statusFilter}
-                          onChange={(e) => setStatusFilter(e.target.value)}
-                        >
+                  
+                    <Col xs={12} md={2}>
+                     <div style={labelStyle}>
+                        <i className={ "fa-solid fa-filter"}></i>
+                        <span>Status</span>
+                      </div>
+                      <Form.Select
+                        className="small text-muted"
+                        style={{
+                          ...inputBaseStyle,
+                          color: categoryFilter ? '#212529' : '#6c757d',
+                          cursor: 'pointer',
+                          paddingRight: '2.5rem',
+                          appearance: 'none',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '16px 12px'
+                        }}
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
                           <option value="All Status">All Status</option>
                           <option value="Available">Available</option>
                           <option value="Low Stock">Low Stock</option>
                           <option value="Out of Stock">Out of Stock</option>
-                        </Form.Select>
-                      </Form.Group>
+                      </Form.Select>
+                      
                     </Col>
                     
-                    <Col md={3} className="text-end">
-                      <Button 
-                        variant="outline-secondary" 
-                        size="sm"
+                     <Button
+                        variant="light"
                         onClick={resetFilters}
+                        tooltip="Clear all filters"
+                        className="filter-clear-btn d-flex align-items-center justify-content-center"
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #dee2e6',
+                          padding: 0,
+                          backgroundColor: '#fff',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer'
+                        }}
                       >
-                        <i className="fa fa-undo me-1" /> Reset Filters
-                      </Button>
-                    </Col>
+                        {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
+                        <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
+                    </Button>
+                   
                   </Row>
                 </Card.Body>
               </Card>
