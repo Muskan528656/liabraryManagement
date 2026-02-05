@@ -14,6 +14,7 @@ import {
 } from "react-bootstrap-icons";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import PubSub from "pubsub-js";
+import TableHeader from "../common/TableHeader";
 
 const ReportsList = () => {
   const [reports, setReports] = useState([]);
@@ -101,12 +102,18 @@ const ReportsList = () => {
   );
 
   return (
+    <>
     <div className="container-fluid p-4 bg-light" style={{ minHeight: "100vh" }}>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      {/* <div className="d-flex justify-content-between align-items-center mb-4 border"> */}
+      <div >
         <div>
-          <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4>
-          <p className="text-muted small mb-0">Manage library reports</p>
+          <TableHeader  
+          icon='fa fa-book'
+          title={'Reports Librar'}
+          />
+          {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
+          {/* <p className="text-muted small mb-0">Manage library reports</p> */}
         </div>
         {/* <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3" onClick={() => setShowCreateModal(true)}>
           <PlusLg /> <span>Create Report</span>
@@ -323,6 +330,7 @@ const ReportsList = () => {
         }
       `}</style>
     </div>
+    </>
   );
 };
 
