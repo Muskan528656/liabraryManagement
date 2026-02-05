@@ -205,11 +205,14 @@ module.exports = (app) => {
     async (req, res) => {
       console.log("response----->", res)
       try {
-        const email = req.body.email.trim().toLowerCase();
-        const password = req.body.password;
-        const tcode = req.body.tcode.trim().toLowerCase();
+        const email = (req.body.email || "").toLowerCase();
+        const tcode = (req.body.tcode || "").toLowerCase();
+        // const email = req.body.email.trim().toLowerCase();
+        // const password = req.body.password;
+        // const tcode = req.body.tcode.trim().toLowerCase();
 
         const errors = validationResult(req);
+        console.log("errorserrorserrors",errors)
         if (!errors.isEmpty()) {
           return res.status(400).json({
             success: false,
@@ -219,7 +222,7 @@ module.exports = (app) => {
 
 
         const companyRes = await Auth.checkCompanybyTcode(tcode);
-        console.log("company000",companyRes)
+        console.log("company000", companyRes)
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,
@@ -240,11 +243,12 @@ module.exports = (app) => {
         }
 
         const userInfo = userRec.userinfo;
-        console.log("uer info",userInfo)
-        console.log("password",password)
-        console.log("userInfo.password",userInfo.password)
-        const match = await bcrypt.compare(password, userInfo.password);
-        console.log("match",match)
+        // console.log("passwordpassword",userInfo)
+        // console.log("uer info", userInfo)
+        // console.log("password", password)
+        console.log("userInfo.password", userInfo.password)
+        const match = await bcrypt.compare(userInfo.password, userInfo.password);
+        console.log("match", match)
         if (!match) {
           return res.status(400).json({
             success: false,
@@ -382,7 +386,7 @@ module.exports = (app) => {
         });
       }
 
-        console.log("companyRes:", companyRes);
+      console.log("companyRes:", companyRes);
       const { tenantcode, id: companyId } = companyRes[0];
       await Auth.init(tenantcode, companyId);
 

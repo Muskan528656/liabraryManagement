@@ -103,66 +103,66 @@ const ReportsList = () => {
 
   return (
     <>
-    <div className="container-fluid p-4 bg-light" style={{ minHeight: "100vh" }}>
-      {/* Page Header */}
-      {/* <div className="d-flex justify-content-between align-items-center mb-4 border"> */}
-      <div >
-        <div>
-          <TableHeader  
-          icon='fa fa-book'
-          title={'Reports Librar'}
-          />
-          {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
-          {/* <p className="text-muted small mb-0">Manage library reports</p> */}
-        </div>
-        {/* <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3" onClick={() => setShowCreateModal(true)}>
+      <div className="container-fluid p-4 bg-light" style={{ minHeight: "100vh" }}>
+        {/* Page Header */}
+        {/* <div className="d-flex justify-content-between align-items-center mb-4 border"> */}
+        <div >
+          <div>
+            <TableHeader
+              icon='fa fa-book'
+              title={'Reports Librar'}
+            />
+            {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
+            {/* <p className="text-muted small mb-0">Manage library reports</p> */}
+          </div>
+          {/* <button className="btn btn-primary d-flex align-items-center gap-2 shadow-sm px-3" onClick={() => setShowCreateModal(true)}>
           <PlusLg /> <span>Create Report</span>
         </button> */}
-      </div>
-
-      {/* Main Content Card */}
-      <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
-        {/* Search Header */}
-        <div className="card-header bg-white border-bottom py-3 px-4">
-          <div className="input-group" style={{ maxWidth: "350px" }}>
-            <span className="input-group-text bg-light border-end-0 text-muted">
-              <Search size={14} />
-            </span>
-            <input
-              type="text"
-              className="form-control bg-light border-start-0 ps-0 small"
-              placeholder="Search by report name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
         </div>
 
-        {/* Table Section */}
-        <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0 border-1">
-            <thead>
-              <tr>
-                <th  style={{ background: "var(--primary-background-color)" }} className="border-1 ps-4 py-3 text-uppercase small fw-bold text-muted">Report Name</th>
-                {/* <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">API Name</th> */}
-                <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">Description</th>
-                {/* <th  style={{ background: "var(--primary-background-color)" }} className=" py-3 text-uppercase small fw-bold text-muted">Created Date</th> */}
-                {/* <th  style={{ background: "var(--primary-background-color)" }} className="py-3 text-uppercase small fw-bold text-muted">Created By</th> */}
-                <th style={{ background: "var(--primary-background-color)" }} className="pe-4 py-3 text-uppercase small fw-bold text-muted"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Dynamic Mapping */}
-              {filteredReports.map((r, i) => (
-                <tr 
-                  key={i} 
-                  style={{ cursor: "pointer"}}
-                  onClick={() => navigate(`/reports/${r.api_name}`)}
-                >
-                  <td className="ps-4 py-0">
+        {/* Main Content Card */}
+        <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
+          {/* Search Header */}
+          <div className="card-header bg-white border-bottom py-3 px-4">
+            <div className="input-group" style={{ maxWidth: "350px" }}>
+              <span className="input-group-text bg-light border-end-0 text-muted">
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                className="form-control bg-light border-start-0 ps-0 small"
+                placeholder="Search by report name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Table Section */}
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0 border-1">
+              <thead>
+                <tr>
+                  <th style={{ background: "var(--primary-background-color)" }} className="border-1 ps-4 py-3 text-uppercase small fw-bold text-muted">Report Name</th>
+                  {/* <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">API Name</th> */}
+                  <th style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">Description</th>
+                  {/* <th  style={{ background: "var(--primary-background-color)" }} className=" py-3 text-uppercase small fw-bold text-muted">Created Date</th> */}
+                  {/* <th  style={{ background: "var(--primary-background-color)" }} className="py-3 text-uppercase small fw-bold text-muted">Created By</th> */}
+                  <th style={{ background: "var(--primary-background-color)" }} className="pe-4 py-3 text-uppercase small fw-bold text-muted"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Dynamic Mapping */}
+                {filteredReports.map((r, i) => (
+                  <tr
+                    key={i}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/reports/${r.api_name}`)}
+                  >
+                    <td className="ps-4 py-0">
                       <div className=" d-flex align-items-center">
-                        <div 
-                          className="rounded-3 d-flex align-items-center justify-content-center me-3" 
+                        <div
+                          className="rounded-3 d-flex align-items-center justify-content-center me-3"
                           style={{ width: "30px", height: "30px", background: "#eef2ff", color: "#4338ca" }}
                         >
                           <FileEarmarkText size={20} />
@@ -172,113 +172,113 @@ const ReportsList = () => {
                           {/* <div className="text-muted extra-small" style={{ fontSize: "0.75rem" }}>System Generated</div> */}
                         </div>
                       </div>
-                  </td>
-                  
+                    </td>
+
                     {/* <td className="border-1">
                       <span className="badge bg-light text-secondary border px-2 py-1 fw-medium">
                         <CodeSlash size={12} className="me-1" /> {r.api_name}
                       </span>
                     </td>       */}
                     <td>
-                    <div className={`resizable-container ${expandedRows[i] ? 'expanded' : ''}`}>
-                      <p className="description-text mb-0">
-                        {r.description || "No description provided."}
-                      </p>
-                      {r.description?.length > 100 && (
-                        <button 
-                          className="btn btn-link btn-sm p-0 text-decoration-none mt-1"
-                          onClick={(e) => toggleExpand(i, e)}
-                        >
-                          {expandedRows[i] ? "Show Less" : "Read More"}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                   {/* <td className="">
+                      <div className={`resizable-container ${expandedRows[i] ? 'expanded' : ''}`}>
+                        <p className="description-text mb-0">
+                          {r.description || "No description provided."}
+                        </p>
+                        {r.description?.length > 100 && (
+                          <button
+                            className="btn btn-link btn-sm p-0 text-decoration-none mt-1"
+                            onClick={(e) => toggleExpand(i, e)}
+                          >
+                            {expandedRows[i] ? "Show Less" : "Read More"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    {/* <td className="">
                     <div className="d-flex flex-column gap-1">
                       <small className="text-muted d-flex align-items-center gap-1">
                         <Calendar3 size={12} /> {r.created_date.slice(0, 10)}
                       </small>
                     </div>
                   </td> */}
-                  {/* <td className="">
+                    {/* <td className="">
                     <div className="d-flex flex-column gap-1">
                       <small className="text-muted d-flex align-items-center gap-1">
                         <Person size={12} /> {r.created_by_name  || "N/A"}
                       </small>
                     </div>
                  </td> */}
-                
-                  <td className="pe-4">
-                    <div className="d-flex justify-content-end">
-                      <ChevronRight size={16} className="text-muted" />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Footer */}
-        {filteredReports.length === 0 && reports.length > 0 && (
-          <div className="p-5 text-center bg-white">
-            <p className="text-muted">No reports found matching your search.</p>
+                    <td className="pe-4">
+                      <div className="d-flex justify-content-end">
+                        <ChevronRight size={16} className="text-muted" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-        <div className="card-footer bg-white py-3 px-4">
-          <small className="text-muted">
-            Total Reports: {reports.length > 0 ? reports.length : 1}
-          </small>
+
+          {/* Footer */}
+          {filteredReports.length === 0 && reports.length > 0 && (
+            <div className="p-5 text-center bg-white">
+              <p className="text-muted">No reports found matching your search.</p>
+            </div>
+          )}
+          <div className="card-footer bg-white py-3 px-4">
+            <small className="text-muted">
+              Total Reports: {reports.length > 0 ? reports.length : 1}
+            </small>
+          </div>
         </div>
-      </div>
 
-      {/* Create Report Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Create New Report</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {createError && <Alert variant="danger">{createError}</Alert>}
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Report Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter report name"
-                value={createForm.report_name}
-                onChange={(e) => setCreateForm({ ...createForm, report_name: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>API Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter API name (e.g., bookinventoryreport)"
-                value={createForm.api_name}
-                onChange={(e) => setCreateForm({ ...createForm, api_name: e.target.value })}
-              />
-              <Form.Text className="text-muted">
-                This will be used as the URL slug for the report.
-              </Form.Text>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleCreateReport}
-            disabled={createLoading}
-          >
-            {createLoading ? "Creating..." : "Create Report"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        {/* Create Report Modal */}
+        <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Create New Report</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {createError && <Alert variant="danger">{createError}</Alert>}
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Report Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter report name"
+                  value={createForm.report_name}
+                  onChange={(e) => setCreateForm({ ...createForm, report_name: e.target.value })}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>API Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter API name (e.g., bookinventoryreport)"
+                  value={createForm.api_name}
+                  onChange={(e) => setCreateForm({ ...createForm, api_name: e.target.value })}
+                />
+                <Form.Text className="text-muted">
+                  This will be used as the URL slug for the report.
+                </Form.Text>
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateReport}
+              disabled={createLoading}
+            >
+              {createLoading ? "Creating..." : "Create Report"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
-      <style>{`
+        <style>{`
         .table-hover tbody tr:hover {
           background-color: #f1f5f9 !important;
           transition: 0.2s ease;
@@ -329,7 +329,7 @@ const ReportsList = () => {
           background-position: bottom right;
         }
       `}</style>
-    </div>
+      </div>
     </>
   );
 };
