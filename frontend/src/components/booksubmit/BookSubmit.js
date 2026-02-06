@@ -1407,13 +1407,13 @@ const BookSubmit = ({ permissions }) => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge className="px-2" bg="primary">Issued</Badge>;
+                return <Badge  bg="success">Issued</Badge>;
             case 'submitted':
-                return <Badge className="px-2" bg="info">Submitted</Badge>;
+                return <Badge  bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge className="px-2" bg="secondary">Cancelled</Badge>;
+                return <Badge  bg="danger">Cancelled</Badge>;
             case 'overdue':
-                return <Badge className="px-2" bg="danger">Overdue</Badge>;
+                return <Badge  bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }

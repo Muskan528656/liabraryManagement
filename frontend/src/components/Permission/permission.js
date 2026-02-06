@@ -21,41 +21,24 @@ const Permission = ({permissions :propPermissions}) => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
+    
+    // State to track which accordions are open
     const [expandedRoles, setExpandedRoles] = useState({});
+    
+    // State to track the global "Expand All" toggle switch visually
+    const [isExpanded, setIsExpanded] = useState(false);
+
     const [roles, setRoles] = useState([]);
+    
+    // For delete
     const [roleId, setRoleId] = useState(null)
     const [roleName, setRoleName] = useState(null)
-    const [editingRow, setEditingRow] = useState(null);
-    const [editingPermissions, setEditingPermissions] = useState({});
-    const [selectAllStates, setSelectAllStates] = useState({
-        allow_view: false,
-        allow_create: false,
-        allow_edit: false,
-        allow_delete: false
-    });
-
-    //accordion
-    const [open, setOpen] = useState(false);
-    const [openRowId, setOpenRowId] = useState(null);
-    const [check, setCheck] = useState(1);
-
-    //toggle
-    const [isExpanded, setIsExpanded] = useState(false);
-    const handleToggleRoles = () => {
-        if (isExpanded) {
-            collapseAllRoles();
-        } else {
-            expandAllRoles();
-        }
-        setIsExpanded(!isExpanded);
-    };
-
-
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const navigate = useNavigate();
-    const confirmDelete = async () => {
-        handleDeleteRole()
-    };
+
+    // State for Permissions Editing (The "Dirty" State)
+    // Structure: { [roleId]: { [moduleId]: { allow_view: bool, ... } } }
+    const [editingPermissions, setEditingPermissions] = useState({});
+
     const fetchPermissions = async () => {
         try {
             setLoading(true);
@@ -63,7 +46,6 @@ const Permission = ({permissions :propPermissions}) => {
             const result = await api.fetchAll();
 
             let permissionsData = [];
-
             if (result && result.data && result.data.data) {
                 permissionsData = result.data.data;
             } else if (result && Array.isArray(result.data)) {
@@ -98,216 +80,13 @@ const Permission = ({permissions :propPermissions}) => {
     }, [refreshKey]);
 
 
-    useEffect(() => {
-        if (editingRow) {
-            const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
-
-            const newSelectAllStates = {};
-
-            ['allow_view', 'allow_create', 'allow_edit', 'allow_delete'].forEach(permissionType => {
-
-                const allChecked = rolePerms.every(perm => {
-                    const modulePerms = editingPermissions[perm.module_id];
-                    return modulePerms && modulePerms[permissionType] === true;
-                });
-
-
-                const hasModules = rolePerms.length > 0;
-
-                newSelectAllStates[permissionType] = hasModules && allChecked;
-            });
-
-            setSelectAllStates(newSelectAllStates);
-        }
-    }, [editingPermissions, editingRow, permissions]);
-
-    // const confirmDelete = async () => {
-    //     try {
-    //         const api = new DataApi("permissions");
-    //         await api.delete(deleteId);
-
-    //         PubSub.publish("RECORD_SAVED_TOAST", {
-    //             title: "Success",
-    //             message: "Deleted successfully",
-    //         });
-
-    //         setRefreshKey(prev => prev + 1);
-    //     } catch (error) {
-    //         PubSub.publish("RECORD_ERROR_TOAST", {
-    //             title: "Error",
-    //             message: `Failed to delete: ${error.message}`,
-    //         });
-    //     }
-
-    //     setShowConfirmModal(false);
-    //     setDeleteId(null);
-    // };
-
-    const handleSavePermission = async (formData) => {
-        try {
-            const permissionsToSave = formData.permissions.map(perm => ({
-                module_id: perm.module_id,
-                allow_view: perm.allow_view || false,
-                allow_create: perm.allow_create || false,
-                allow_edit: perm.allow_edit || false,
-                allow_delete: perm.allow_delete || false
-            }));
-
-            const api = new DataApi("permissions/role");
-
-            const response = await api.update({
-                role_id: formData.role_id,
-                permissions: permissionsToSave
-            }, formData.role_id);
-
-            if (response.data.success) {
-                window.dispatchEvent(new Event("permissionsUpdated"));
-
-                PubSub.publish("RECORD_SAVED_TOAST", {
-                    title: "Success",
-                    message: "Permissions saved successfully!",
-                });
-
-                // Refresh current user's permissions
-                const userData = AuthHelper.getUser();
-                if (userData && userData.userrole) {
-                    try {
-                        const api = new DataApi("permissions");
-                        const result = await api.fetchById(`role/${userData.userrole}`);
-                        if (result && result.data && result.data.success && result.data.data) {
-                            const permissions = result.data.data;
-                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
-                        }
-                    } catch (err) {
-                        console.error("Failed to refresh permissions after save:", err);
-                    }
-                }
-
-                setShowAddModal(false);
-                setEditingRole(null);
-                setRefreshKey(prev => prev + 1);
-            }
-
-        } catch (err) {
-            console.error("Permission save error", err);
-            PubSub.publish("RECORD_ERROR_TOAST", {
-                title: "Error",
-                message: "Failed to save permissions: " + err.message,
-            });
-        }
-    };
-
-    const handleInlineSave = async (roleId, roleName) => {
-        try {
-            setIsExpanded(false)
-            const actualRoleId = roleId === 'null' ? null : roleId;
-
-            const permissionsToSave = Object.keys(editingPermissions).map(moduleId => ({
-                module_id: moduleId,
-                allow_view: editingPermissions[moduleId].allow_view || false,
-                allow_create: editingPermissions[moduleId].allow_create || false,
-                allow_edit: editingPermissions[moduleId].allow_edit || false,
-                allow_delete: editingPermissions[moduleId].allow_delete || false
-            }));
-
-            const api = new DataApi("permissions/role");
-
-            const payload = {
-                role_id: actualRoleId,
-                permissions: permissionsToSave
-            };
-
-            let response;
-            if (actualRoleId === null || actualRoleId === undefined || actualRoleId === 'null') {
-                const nullApi = new DataApi("permissions");
-                const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
-
-                for (const moduleId in editingPermissions) {
-                    const moduleData = editingPermissions[moduleId];
-                    const existingPerm = rolePerms.find(p => p.module_id === moduleId);
-
-                    if (existingPerm && existingPerm.id) {
-                        await nullApi.update({
-                            allow_view: moduleData.allow_view,
-                            allow_create: moduleData.allow_create,
-                            allow_edit: moduleData.allow_edit,
-                            allow_delete: moduleData.allow_delete
-                        }, existingPerm.id);
-                    } else {
-                        await nullApi.create({
-                            role_id: null,
-                            module_id: moduleId,
-                            allow_view: moduleData.allow_view,
-                            allow_create: moduleData.allow_create,
-                            allow_edit: moduleData.allow_edit,
-                            allow_delete: moduleData.allow_delete
-                        });
-                    }
-                }
-
-                response = { data: { success: true } };
-            } else {
-                response = await api.update(payload, actualRoleId);
-            }
-
-            if (response.data && response.data.success) {
-                setExpandedRoles(prev => ({
-                    ...prev,
-                    [roleId]: false
-                }));
-
-                window.dispatchEvent(new Event("permissionsUpdated"));
-
-                PubSub.publish("RECORD_SAVED_TOAST", {
-                    title: "Success",
-                    message: `Permissions updated for ${roleName}`,
-                });
-
-                // Refresh current user's permissions
-                const userData = AuthHelper.getUser();
-                if (userData && userData.userrole) {
-                    try {
-                        const api = new DataApi("permissions");
-                        const result = await api.fetchById(`role/${userData.userrole}`);
-                        if (result && result.data && result.data.success && result.data.data) {
-                            const permissions = result.data.data;
-                            sessionStorage.setItem("permissions", JSON.stringify(permissions));
-                        }
-                    } catch (err) {
-                        console.error("Failed to refresh permissions after save:", err);
-                    }
-                }
-
-                setEditingRow(null);
-                setEditingPermissions({});
-                setSelectAllStates({
-                    allow_view: false,
-                    allow_create: false,
-                    allow_edit: false,
-                    allow_delete: false
-                });
-                setExpandedRoles({});
-                setRefreshKey(prev => prev + 1);
-            }
-
-        } catch (err) {
-            console.error("Error saving inline permissions:", err);
-            PubSub.publish("RECORD_ERROR_TOAST", {
-                title: "Error",
-                message: err.message || "Failed to save permissions",
-            });
-        }
-    };
+    // --- DATA GROUPING ---
     const groupPermissionsByRole = () => {
         const grouped = {};
-
-        // SYSTEM ADMIN ko completely filter out karo
         const filteredPermissions = permissions.filter(perm => {
             const roleInfo = roles.find(r => r.id === perm.role_id);
-            if (!roleInfo) return true; // Agar role nahi mila to include karo
-
+            if (!roleInfo) return true; 
             const roleName = roleInfo.role_name || roleInfo.name;
-            // SYSTEM ADMIN ko completely skip karo
             return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
         });
 
@@ -315,13 +94,10 @@ const Permission = ({permissions :propPermissions}) => {
             const roleId = perm.role_id || 'null';
             const roleInfo = roles.find(r => r.id === perm.role_id);
 
-            // Dobara check karo SYSTEM ADMIN nahi hai na
             let roleName;
             if (roleInfo) {
                 roleName = roleInfo.role_name || roleInfo.name || `Role ${roleId}`;
-                if (roleName.toUpperCase() === "SYSTEM ADMIN") {
-                    return; // Skip this permission
-                }
+                if (roleName.toUpperCase() === "SYSTEM ADMIN") return;
             } else {
                 roleName = perm.role_name || `Role ${roleId}`;
             }
@@ -351,91 +127,15 @@ const Permission = ({permissions :propPermissions}) => {
         return Object.values(grouped);
     };
 
-    // const groupPermissionsByRole = () => {
-    //     const grouped = {};
-
-    //     const filteredPermissions = permissions.filter(perm => {
-    //         const roleInfo = roles.find(r => r.id === perm.role_id);
-    //         const roleName = roleInfo ? (roleInfo.role_name || roleInfo.name) : perm.role_name;
-    //         return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
-    //     });
-
-    //     filteredPermissions.forEach(perm => {
-    //         const roleId = perm.role_id || 'null';
-    //         const roleInfo = roles.find(r => r.id === perm.role_id);
-
-    //         let roleName;
-    //         if (roleInfo) {
-    //             roleName = roleInfo.role_name || roleInfo.name || `Role ${roleId}`;
-    //         } else {
-    //             roleName = perm.role_name || `Role ${roleId}`;
-    //         }
-
-    //         if (!grouped[roleId]) {
-    //             grouped[roleId] = {
-    //                 role_id: roleId,
-    //                 role_name: roleName,
-    //                 permissions: [],
-    //                 modules_count: 0
-    //             };
-    //         }
-
-    //         grouped[roleId].permissions.push({
-    //             ...perm,
-    //             module_id: perm.module_id,
-    //             module_name: perm.module_name || `Module ${perm.module_id}`,
-    //             allow_view: perm.allow_view || false,
-    //             allow_create: perm.allow_create || false,
-    //             allow_edit: perm.allow_edit || false,
-    //             allow_delete: perm.allow_delete || false
-    //         });
-
-    //         grouped[roleId].modules_count++;
-    //     });
-
-    //     return Object.values(grouped);
-    // };
-
     const rolePermissions = groupPermissionsByRole();
 
-    const handle = (roleId) => {
-        console.log("role id", roleId);
-        console.log("check", check)
-        const newCheck = 2;
-        setCheck(newCheck)
-        console.log("check", check)
-
-        handleInlineEditStart(roleId, newCheck)
-    }
-    const handleInlineEditStart = (roleId, checkValue) => {
-        //toggle open and close
-        // important (text click se bachata hai)
-        //    console.log("editing",isEditing)
-        if (checkValue == 2) {
-            setOpen(false)
-            console.log("check is work", check)
-            setCheck(1)
-        }
-        else {
-
-            setOpen(true);
-            // setCheck(1)
-
-        }
-        console.log("open", open)
-        setEditingRow(roleId);
-        setOpenRowId(roleId)
-        // Expand the role
-        setExpandedRoles(prev => ({
-            ...prev,
-            [roleId]: true
-        }));
-
-        // Initialize editing permissions with current permissions
-        const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+    // --- HELPER: Initialize Edit State for a specific role ---
+    // We populate 'editingPermissions' with DB data so checkboxes appear correctly
+    const initializeEditStateForRole = (roleId, currentEditState) => {
+        const rolePermsList = permissions.filter(p => (p.role_id || 'null') === roleId);
         const editingData = {};
 
-        rolePerms.forEach(perm => {
+        rolePermsList.forEach(perm => {
             editingData[perm.module_id] = {
                 allow_view: perm.allow_view || false,
                 allow_create: perm.allow_create || false,
@@ -443,202 +143,234 @@ const Permission = ({permissions :propPermissions}) => {
                 allow_delete: perm.allow_delete || false
             };
         });
-
-        // Initialize select all states
-        const newSelectAllStates = {};
-        ['allow_view', 'allow_create', 'allow_edit', 'allow_delete'].forEach(permissionType => {
-            const allChecked = rolePerms.every(perm => editingData[perm.module_id]?.[permissionType] === true);
-            const hasModules = rolePerms.length > 0;
-            newSelectAllStates[permissionType] = hasModules && allChecked;
-        });
-
-        setSelectAllStates(newSelectAllStates);
-        setEditingPermissions(editingData);
+        
+        // Return updated state object
+        return {
+            ...currentEditState,
+            [roleId]: editingData
+        };
     };
 
-    const handleInlineToggle = (moduleId, field) => {
-        setEditingPermissions(prev => {
-            const currentData = prev[moduleId] || {
-                allow_view: false,
-                allow_create: false,
-                allow_edit: false,
-                allow_delete: false
-            };
+    // --- TOGGLE LOGIC (GLOBAL) ---
+    const handleGlobalToggle = () => {
+        if (isExpanded) {
+            // Turning OFF: Collapse all
+            setExpandedRoles({});
+            setIsExpanded(false);
+            // Note: We don't clear editingPermissions here so that if user collapses 
+            // but forgets to save, the "Save All" button still has the data.
+        } else {
+            // Turning ON: Expand all & Initialize data
+            const newExpanded = {};
+            let newEditingState = { ...editingPermissions };
 
-            const newValue = !currentData[field];
-
-            const updated = {
-                ...prev,
-                [moduleId]: {
-                    ...currentData,
-                    [field]: newValue
-                }
-            };
-
-            // Update select all states after toggling
-            if (editingRow) {
-                const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
-
-                // Check if all modules have this permission true after the toggle
-                const allChecked = rolePerms.every(perm => {
-                    const modulePerms = updated[perm.module_id];
-                    return modulePerms && modulePerms[field] === true;
-                });
-
-                const hasModules = rolePerms.length > 0;
-
-                setSelectAllStates(prevStates => ({
-                    ...prevStates,
-                    [field]: hasModules && allChecked
-                }));
-            }
-
-            return updated;
-        });
-    };
-
-    // Handle select all for a specific permission type
-    const handleSelectAllToggle = (permissionType) => {
-        if (!editingRow) return;
-
-        const rolePerms = permissions.filter(p => (p.role_id || 'null') === editingRow);
-        const currentState = selectAllStates[permissionType] || false;
-        const newValue = !currentState;
-
-        setEditingPermissions(prev => {
-            const updated = { ...prev };
-
-            rolePerms.forEach(perm => {
-                if (perm.module_id) {
-                    const currentData = updated[perm.module_id] || {
-                        allow_view: false,
-                        allow_create: false,
-                        allow_edit: false,
-                        allow_delete: false
-                    };
-
-                    updated[perm.module_id] = {
-                        ...currentData,
-                        [permissionType]: newValue
-                    };
+            rolePermissions.forEach(role => {
+                newExpanded[role.role_id] = true;
+                // Only initialize if not already modified/loaded
+                if(!newEditingState[role.role_id]) {
+                    newEditingState = initializeEditStateForRole(role.role_id, newEditingState);
                 }
             });
 
-            return updated;
-        });
-
-        setSelectAllStates(prev => ({
-            ...prev,
-            [permissionType]: newValue
-        }));
-    };
-
-    const handleInlineCancel = () => {
-        setOpenRowId("")
-        setIsExpanded(false)
-        setExpandedRoles(prev => ({
-            ...prev,
-            [editingRow]: false
-        }));
-        setEditingRow(null);
-        setEditingPermissions({});
-        setSelectAllStates({
-            allow_view: false,
-            allow_create: false,
-            allow_edit: false,
-            allow_delete: false
-        });
-        setExpandedRoles({});
-    };
-
-    const toggleRoleAccordion = (roleId) => {
-        setExpandedRoles(prev => ({
-            ...prev,
-            [roleId]: !prev[roleId]
-        }));
-
-        // If we're collapsing a role that's being edited, cancel edit
-        if (editingRow === roleId && expandedRoles[roleId]) {
-            handleInlineCancel();
+            setExpandedRoles(newExpanded);
+            setEditingPermissions(newEditingState);
+            setIsExpanded(true);
         }
     };
 
-    const expandAllRoles = () => {
-        const expanded = {};
-        rolePermissions.forEach(role => {
-            expanded[role.role_id] = true;
+    // --- TOGGLE LOGIC (INDIVIDUAL ROW) ---
+    const handleRowToggle = (roleId) => {
+        setExpandedRoles(prev => {
+            const isCurrentlyOpen = !!prev[roleId];
+            const newExpandedState = { ...prev, [roleId]: !isCurrentlyOpen };
+
+            // 1. Sync the Visual Switch
+            const totalRolesCount = rolePermissions.length;
+            const openRolesCount = Object.values(newExpandedState).filter(isOpen => isOpen).length;
+
+            if (openRolesCount === totalRolesCount && totalRolesCount > 0) {
+                setIsExpanded(true);
+            } else if (openRolesCount === 0) {
+                setIsExpanded(false);
+            } else {
+                // Mixed state (some open, some closed) -> usually switch is OFF until all are open
+                setIsExpanded(false);
+            }
+
+            // 2. Initialize Data if opening
+            if (!isCurrentlyOpen) {
+                // If we are opening it, ensure data is loaded into editingPermissions
+                setEditingPermissions(current => {
+                    if (current[roleId]) return current; // Already loaded/edited
+                    return initializeEditStateForRole(roleId, current);
+                });
+            }
+
+            return newExpandedState;
         });
-        setExpandedRoles(expanded);
     };
 
-    const collapseAllRoles = () => {
-        setExpandedRoles({});
-        handleInlineCancel();
-    };
+    // --- CHECKBOX / EDIT HANDLERS ---
+    
+    const handleInlineToggle = (roleId, moduleId, field) => {
+        setEditingPermissions(prev => {
+            const roleData = prev[roleId] || {};
+            const moduleData = roleData[moduleId] || {
+                allow_view: false, allow_create: false, allow_edit: false, allow_delete: false
+            };
 
-    const handleEditRole = (role) => {
-        setEditingRole({
-            role_id: role.role_id === 'null' ? null : role.role_id,
-            role_name: role.role_name,
-            permissions: role.permissions
-        });
-        setShowAddModal(true);
-    };
+            const newValue = !moduleData[field];
 
-    const handleDeleteRole = async (Id, Name) => {
-
-
-        setRoleId(Id)
-        setRoleName(Name)
-
-
-        console.log("roleId", roleId)
-        console.log("roleName", roleName)
-
-        if (!showConfirmModal) {
-            setShowConfirmModal(true)
-        } else {
-
-            console.log("roleId", roleId);
-            console.log("showmodel", showConfirmModal);
-            console.log("roleName", roleName);
-
-            // if (!window.confirm(Are you sure you want to delete all permissions for "${roleNamee}"?)) {
-            //     return;
-            // }
-
-
-
-            try {
-                const api = new DataApi("permissions");
-                const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
-
-                console.log("api", api)
-                console.log("rolePerms", rolePerms)
-
-                for (const perm of rolePerms) {
-                    if (perm.id) {
-                        const response = await api.delete(perm.id);
-                        console.log("response", response)
+            return {
+                ...prev,
+                [roleId]: {
+                    ...roleData,
+                    [moduleId]: {
+                        ...moduleData,
+                        [field]: newValue
                     }
                 }
-                setShowConfirmModal(false)
-                // alert(Permissions for ${roleName} deleted successfully!);
-                PubSub.publish("RECORD_SAVED_TOAST", {
-                    message: `Permissions for "${roleName}" deleted successfully!`,
-                });
-                setRefreshKey(prev => prev + 1);
-            } catch (err) {
-                console.error("Error deleting permissions:", err);
-                // alert("Failed to delete permissions");
-                PubSub.publish("RECORD_ERROR_TOAST", {
-                    message: err.message || "Failed to delete permissions",
-                });
+            };
+        });
+    };
 
+    // Select All for a specific column within a specific role
+    const handleSelectAllToggle = (roleId, permissionType) => {
+        const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+        
+        // Check current state in editingPermissions
+        const currentRoleEditState = editingPermissions[roleId] || {};
+        
+        // Logic: If ALL are checked, we uncheck all. Otherwise, we check all.
+        const allCurrentlyChecked = rolePerms.length > 0 && rolePerms.every(perm => {
+            return currentRoleEditState[perm.module_id]?.[permissionType] === true;
+        });
+        
+        const newValue = !allCurrentlyChecked;
+
+        setEditingPermissions(prev => {
+            const roleData = prev[roleId] ? { ...prev[roleId] } : {};
+            
+            rolePerms.forEach(perm => {
+                 const currentModule = roleData[perm.module_id] || { ...perm }; 
+                 roleData[perm.module_id] = {
+                     ...currentModule,
+                     [permissionType]: newValue
+                 };
+            });
+
+            return {
+                ...prev,
+                [roleId]: roleData
+            };
+        });
+    };
+
+
+    // --- GLOBAL SAVE LOGIC ---
+    const handleGlobalSave = async () => {
+        try {
+            setLoading(true);
+            // We only save roles that exist in editingPermissions
+            const roleIdsToUpdate = Object.keys(editingPermissions);
+            
+            if (roleIdsToUpdate.length === 0) {
+                 PubSub.publish("RECORD_ERROR_TOAST", { title: "Info", message: "No data loaded to save." });
+                 setLoading(false);
+                 return;
+            }
+
+            // Create promises for parallel saving
+            const savePromises = roleIdsToUpdate.map(async (roleId) => {
+                return saveRolePermissions(roleId, true); // true = silent mode (no individual toasts)
+            });
+
+            await Promise.all(savePromises);
+
+            PubSub.publish("RECORD_SAVED_TOAST", {
+                title: "Success",
+                message: "All changes saved successfully!",
+            });
+            
+            // Refresh User Context & UI
+            refreshUserPermissions();
+            setEditingPermissions({}); // Clear dirty state
+            setExpandedRoles({}); // Collapse all after save (optional, cleaner UI)
+            setIsExpanded(false);
+            setRefreshKey(prev => prev + 1);
+
+        } catch (err) {
+            console.error("Global Save Error", err);
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: "One or more roles failed to update.",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Helper to save a single role logic
+    const saveRolePermissions = async (roleId, silent = false) => {
+        const roleData = editingPermissions[roleId];
+        if (!roleData) return;
+
+        const actualRoleId = roleId === 'null' ? null : roleId;
+        const permissionsToSave = Object.keys(roleData).map(moduleId => ({
+            module_id: moduleId,
+            allow_view: roleData[moduleId].allow_view || false,
+            allow_create: roleData[moduleId].allow_create || false,
+            allow_edit: roleData[moduleId].allow_edit || false,
+            allow_delete: roleData[moduleId].allow_delete || false
+        }));
+
+        try {
+            if (actualRoleId === null) {
+                // Handle NULL role
+                const nullApi = new DataApi("permissions");
+                const existingRolePerms = permissions.filter(p => (p.role_id || 'null') === 'null');
+
+                for (const moduleId in roleData) {
+                    const moduleData = roleData[moduleId];
+                    const existingPerm = existingRolePerms.find(p => p.module_id === moduleId);
+
+                    if (existingPerm && existingPerm.id) {
+                        await nullApi.update(moduleData, existingPerm.id);
+                    } else {
+                        await nullApi.create({ role_id: null, module_id: moduleId, ...moduleData });
+                    }
+                }
+            } else {
+                // Standard Role Update
+                const api = new DataApi("permissions/role");
+                await api.update({
+                    role_id: actualRoleId,
+                    permissions: permissionsToSave
+                }, actualRoleId);
+            }
+            return true;
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    const refreshUserPermissions = async () => {
+        const userData = AuthHelper.getUser();
+        if (userData && userData.userrole) {
+            try {
+                const api = new DataApi("permissions");
+                const result = await api.fetchById(`role/${userData.userrole}`);
+                if (result?.data?.success && result.data.data) {
+                    sessionStorage.setItem("permissions", JSON.stringify(result.data.data));
+                    window.dispatchEvent(new Event("permissionsUpdated"));
+                }
+            } catch (err) {
+                console.error("Failed to refresh user permissions:", err);
             }
         }
-
     };
+
+    // --- RENDER HELPERS ---
 
     const CustomHeader = () => (
         <div className="d-flex justify-content-between align-items-center p-2 my-4 mx-3"
@@ -651,24 +383,26 @@ const Permission = ({permissions :propPermissions}) => {
                 <i className="fa-solid fa-user-shield me-2 fs-6"></i> Role Permissions ({rolePermissions.length})
             </h5>
             <div className="d-flex align-items-center gap-3">
-                <TooltipButton title={isExpanded ? "Collapse All" : "Expand All"}>
+                {/* <span className='fw-bold' style={{fontSize: '0.9rem'}}>
+                    {isExpanded ? "Collapse All" : "Expand All"}
+                </span> */}
+                <TooltipButton title={isExpanded ? "Collapse All" : "Expand All to Edit"}>
                     <Form.Check
                         type="switch"
-                         id="expand-collapse-toggle"
+                        id="expand-collapse-toggle"
                         checked={isExpanded}
-                        onChange={handleToggleRoles}
+                        onChange={handleGlobalToggle}
                         style={{
                             transform: "scale(1.8)",
                             transformOrigin: "left center",
                             cursor: "pointer",
-                            marginRight:"10px",
-                            accentColor: isExpanded ? "#198754" : "#6c757d" // green ON, gray OFF
+                            marginRight: "10px",
+                            accentColor: isExpanded ? "#198754" : "#6c757d"
                         }}
                     />
                 </TooltipButton>
 
-
-                <TooltipButton title="Add Role Permission">
+                <TooltipButton title="Add New Role">
                     <Button
                         className="custom-btn-table-header p-2"
                         onClick={() => {
@@ -680,59 +414,23 @@ const Permission = ({permissions :propPermissions}) => {
                     </Button>
                 </TooltipButton>
             </div>
-            {/* <div>
-                <TooltipButton title={isExpanded ? "Collapse All" : "Expand All"}>
-                    <Button
-                        variant="outline-secondary"
-                        className="custom-btn-table-header p-2 me-2"
-                        onClick={handleToggleRoles}
-                    >
-                        <i
-                            className={`fa-solid ${isExpanded ? "fa-compress" : "fa-expand"
-                                } fs-6 my-1`}
-                        ></i>
-                    </Button>
-                </TooltipButton>
-
-                <TooltipButton title="Add Role Permission">
-                    <Button
-                        className="custom-btn-table-header p-2 me-2"
-                        onClick={() => {
-                            setEditingRole(null);
-                            setShowAddModal(true);
-                        }}
-                    >
-                        <i className="fa-solid fa-plus fs-6 my-1"></i>
-                    </Button>
-                </TooltipButton>
-            </div> */}
-
-
-
         </div>
     );
 
-    const PermissionCell = ({ isEditing, moduleId, field, value, onToggle }) => {
-        let checked;
+    const PermissionCell = ({ roleId, moduleId, field, value }) => {
+        // If editingPermissions has data, use it (Editable). 
+        // If not, use 'value' from DB (Read-only, though we initialize on expand so it should be editable).
+        let checked = value || false;
+        const isEditable = true; // Always clickable if visible
 
-        if (isEditing) {
-            const editingData = editingPermissions[moduleId];
-            checked = editingData ? editingData[field] : false;
-        } else {
-            checked = value || false;
+        if (editingPermissions[roleId] && editingPermissions[roleId][moduleId]) {
+            checked = editingPermissions[roleId][moduleId][field];
         }
-
-        const handleClick = () => {
-            if (isEditing && onToggle) {
-                onToggle(moduleId, field);
-            }
-        };
 
         return (
             <div
                 className="d-inline-block cursor-pointer"
-                onClick={handleClick}
-                style={{ pointerEvents: isEditing ? 'auto' : 'none' }}
+                onClick={() => handleInlineToggle(roleId, moduleId, field)}
                 title={checked ? "Enabled" : "Disabled"}
             >
                 {checked ? (
@@ -744,32 +442,32 @@ const Permission = ({permissions :propPermissions}) => {
         );
     };
 
-    const SelectAllHeader = ({ permissionType, label }) => {
-        const isEditing = editingRow !== null;
-        const isChecked = selectAllStates[permissionType] || false;
+    const SelectAllHeader = ({ roleId, permissionType, label }) => {
+        let isChecked = false;
+        
+        // Calculate state from editingPermissions
+        if(editingPermissions[roleId]) {
+             const roleData = editingPermissions[roleId];
+             const roleModules = permissions.filter(p => (p.role_id || 'null') === roleId);
+             if(roleModules.length > 0) {
+                 isChecked = roleModules.every(m => roleData[m.module_id]?.[permissionType] === true);
+             }
+        }
 
         return (
             <th width="17.5%" className="text-center">
                 <div className="d-flex flex-column align-items-center justify-content-center">
-
-                    {isEditing ? (
-                        <div
-                            className="cursor-pointer"
-                            onClick={() => handleSelectAllToggle(permissionType)}
-                            title={isChecked ? "Deselect All" : "Select All"}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {isChecked ? (
-                                <i className="fa-solid fa-check-square text-primary fs-6"></i>
-                            ) : (
-                                <i className="fa-regular fa-square text-secondary fs-6"></i>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="text-muted">
-                            <i className="fa-regular fa-square fs-6"></i>
-                        </div>
-                    )}
+                    <div
+                        className="cursor-pointer"
+                        onClick={() => handleSelectAllToggle(roleId, permissionType)}
+                        title={isChecked ? "Deselect All" : "Select All"}
+                    >
+                        {isChecked ? (
+                            <i className="fa-solid fa-check-square text-primary fs-6"></i>
+                        ) : (
+                            <i className="fa-regular fa-square text-secondary fs-6"></i>
+                        )}
+                    </div>
                     <span className="fw-semibold mb-1">{label}</span>
                 </div>
             </th>
@@ -777,169 +475,48 @@ const Permission = ({permissions :propPermissions}) => {
     };
 
     const RoleAccordion = ({ role }) => {
-        const isExpanded = expandedRoles[role.role_id] || false;
-        const isEditing = editingRow === role.role_id;
-
-        const viewCount = role.permissions.filter(p => p.allow_view).length;
-        const createCount = role.permissions.filter(p => p.allow_create).length;
-        const editCount = role.permissions.filter(p => p.allow_edit).length;
-        const deleteCount = role.permissions.filter(p => p.allow_delete).length;
+        const isOpen = expandedRoles[role.role_id] || false;
 
         return (
             <div className="card mb-3 border shadow-sm mx-3">
+                {/* Header is Clickable to Toggle */}
                 <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light">
-                    <div className="d-flex align-items-center">
-
-                        {/* ICON — only this is clickable */}
-                        {/* <i
-                            className={`fa-solid ${open ? "fa-minus" : "fa-plus"
-                                } me-2 text-primary`}
-                            style={{ cursor: "pointer" }}
-                            onClick={handleToggle}
-                        ></i> */}
-                        {/* <i
-                            className={`fa-solid ${open ? "fa-chevron-down" : "fa-chevron-up"
-                                } me-2`}
-                            style={{ cursor: "pointer" }}
-                            onClick={() => {
-                                if (!open) {
-                                    // accordion open hoga
-                                    handleInlineEditStart(role.role_id);
-                                } else {
-                                    // accordion close hoga
-                                    handleInlineCancel();
-                                }
-                                setOpen(!open); // toggle accordion
-                            }}
-                        ></i> */}
-
-
-
-                        {/* <i
-                            className={`fa-solid ${openRowId === role.role_id
-                                ? "fa-chevron-down"
-                                : "fa-chevron-up"
-                                } me-2`}
-                            style={{ cursor: "pointer" }}
-                            onClick={() => {
-                                if (openRowId === role.role_id) {
-                                    // close same row
-                                    handleInlineCancel();
-                                    setOpenRowId(null);
-                                } else {
-                                    // open selected row only
-                                    handleInlineEditStart(role.role_id);
-                                    // setOpenRowId(role.role_id);
-                                }
-                            }}
-                        ></i> */}
-
-
-
-
-
-
-                        {/* <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handleInlineEditStart(role.role_id)}></i> */}
-
-                        <div>
-                            <h6 className="mb-0 fw-bold">
-                                <i className="fa-solid fa-user-tag me-2 text-primary"></i>
-                                {role.role_name}
-                            </h6>
-                            {/* <small className="text-muted">
-                                {role.modules_count} module{role.modules_count !== 1 ? 's' : ''} •
-                                <span className="ms-1">
-                                    {viewCount} view, {createCount} create, {editCount} edit, {deleteCount} delete
-                                </span>
-                            </small> */}
-                        </div>
+                    <div className="d-flex align-items-center cursor-pointer w-100" onClick={() => handleRowToggle(role.role_id)}>
+                        <h6 className="mb-0 fw-bold">
+                            <i className="fa-solid fa-user-tag me-2 text-primary"></i>
+                            {role.role_name}
+                        </h6>
                     </div>
 
-                    <div className="d-flex gap-2">
-
-
+                    <div className="d-flex gap-2 align-items-center">
+                        {/* Chevron Trigger */}
                         <i
-                            className={`fa-solid ${openRowId === role.role_id
-                                ? ""
-                                : "fa-chevron-up"
-                                } me-2`}
+                            className={`fa-solid ${isOpen ? "fa-chevron-down" : "fa-chevron-up"} me-2`}
                             style={{ cursor: "pointer" }}
-                            onClick={() => {
-                                if (openRowId === role.role_id) {
-                                    // close same row
-                                    handleInlineCancel();
-                                    setOpenRowId(null);
-                                } else {
-                                    // open selected row only
-                                    handleInlineEditStart(role.role_id);
-                                    // setOpenRowId(role.role_id);
-                                }
-                            }}
+                            onClick={() => handleRowToggle(role.role_id)}
                         ></i>
 
-
-                        {isEditing && open ? (
-                            <>
-
-                                <Button
-                                    size="sm"
-                                    variant=""
-                                    onClick={() => handleInlineSave(role.role_id, role.role_name)}
-                                    className="btn-paper btn-paper-clear d-flex align-items-center gap-1 h-75 px-2"
-                                    style={{
-                                        color: 'var(--primary-color)',
-                                        border: '1px solid var(--primary-color)',
-                                    }}
-                                >
-                                    {/* <i className="fa-solid fa-check me-1"></i>  */}
-                                    Save
-                                </Button>
-
-
-
-
-                                <Button
-                                    size="sm"
-                                    variant=""
-                                    // className="btn btn-sm btn-secondary"
-                                    onClick={handleInlineCancel}
-                                    style={{
-                                        background: 'var(--primary-color)',
-                                        color: '#fff',
-                                    }}
-                                >
-                                    {/* <i className="fa-solid fa-times me-1"></i>  */}
-                                    Cancel
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-
-                                {/* <i className="fa-solid fa-edit me-1 text-primary cursor-pointer fs-5" onClick={() => handle(role.role_id)}></i> */}
-
-                                {/* <i className="fa-solid fa-trash me-1 text-danger cursor-pointer fs-5" onClick={() => handleDeleteRole(role.role_id, role.role_name)}></i> */}
-
-                            </>
-                        )}
+                        {/* Delete Button */}
+                        {/* <i className="fa-solid fa-trash ms-2 text-danger cursor-pointer fs-5" onClick={(e) => {
+                            e.stopPropagation(); // Prevent toggling accordion
+                            handleDeleteRole(role.role_id, role.role_name);
+                        }}></i> */}
                     </div>
                 </div>
 
-                {isExpanded && (
+                {isOpen && (
                     <div className="card-body p-0">
                         <div className="table-responsive">
                             <table className="table table-hover mb-0">
-                             
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th width="30%" className="ps-4  pb-3">Module Name</th>
-                                            <SelectAllHeader permissionType="allow_view" label="View" />
-                                            <SelectAllHeader permissionType="allow_create" label="Create" />
-                                            <SelectAllHeader permissionType="allow_edit" label="Edit" />
-                                            {/* <SelectAllHeader permissionType="allow_delete" label="Delete" /> */}
-                                        </tr>
-                                    </thead>
-                                   
-
+                                <thead className="table-light">
+                                    <tr>
+                                        <th width="30%" className="ps-4 pb-3">Module Name</th>
+                                        <SelectAllHeader roleId={role.role_id} permissionType="allow_view" label="View" />
+                                        <SelectAllHeader roleId={role.role_id} permissionType="allow_create" label="Create" />
+                                        <SelectAllHeader roleId={role.role_id} permissionType="allow_edit" label="Edit" />
+                                        {/* <SelectAllHeader roleId={role.role_id} permissionType="allow_delete" label="Delete" /> */}
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {role.permissions && role.permissions.length > 0 ? (
                                         role.permissions.map(perm => (
@@ -948,42 +525,14 @@ const Permission = ({permissions :propPermissions}) => {
                                                     {perm.module_name || `Module ${perm.module_id}`}
                                                 </td>
                                                 <td className="text-center align-middle py-2">
-                                                    <PermissionCell
-                                                        isEditing={isEditing}
-                                                        moduleId={perm.module_id}
-                                                        field="allow_view"
-                                                        value={perm.allow_view}
-                                                        onToggle={handleInlineToggle}
-                                                    />
+                                                    <PermissionCell roleId={role.role_id} moduleId={perm.module_id} field="allow_view" value={perm.allow_view} />
                                                 </td>
                                                 <td className="text-center align-middle py-2">
-                                                    <PermissionCell
-                                                        isEditing={isEditing}
-                                                        moduleId={perm.module_id}
-                                                        field="allow_create"
-                                                        value={perm.allow_create}
-                                                        onToggle={handleInlineToggle}
-
-                                                    />
+                                                    <PermissionCell roleId={role.role_id} moduleId={perm.module_id} field="allow_create" value={perm.allow_create} />
                                                 </td>
                                                 <td className="text-center align-middle py-2">
-                                                    <PermissionCell
-                                                        isEditing={isEditing}
-                                                        moduleId={perm.module_id}
-                                                        field="allow_edit"
-                                                        value={perm.allow_edit}
-                                                        onToggle={handleInlineToggle}
-                                                    />
+                                                    <PermissionCell roleId={role.role_id} moduleId={perm.module_id} field="allow_edit" value={perm.allow_edit} />
                                                 </td>
-                                                {/* <td className="text-center align-middle py-2">
-                                                    <PermissionCell
-                                                        isEditing={isEditing}
-                                                        moduleId={perm.module_id}
-                                                        field="allow_delete"
-                                                        value={perm.allow_delete}
-                                                        onToggle={handleInlineToggle}
-                                                    />
-                                                </td> */}
                                             </tr>
                                         ))
                                     ) : (
@@ -1002,7 +551,73 @@ const Permission = ({permissions :propPermissions}) => {
         );
     };
 
-    if (loading) {
+    const handleDeleteRole = async (Id, Name) => {
+        setRoleId(Id)
+        setRoleName(Name)
+        if (!showConfirmModal) {
+            setShowConfirmModal(true)
+        } else {
+            try {
+                const api = new DataApi("permissions");
+                const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
+                for (const perm of rolePerms) {
+                    if (perm.id) {
+                        await api.delete(perm.id);
+                    }
+                }
+                setShowConfirmModal(false)
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    message: `Permissions for "${roleName}" deleted successfully!`,
+                });
+                setRefreshKey(prev => prev + 1);
+            } catch (err) {
+                console.error("Error deleting permissions:", err);
+                PubSub.publish("RECORD_ERROR_TOAST", {
+                    message: err.message || "Failed to delete permissions",
+                });
+            }
+        }
+    };
+    const confirmDelete = async () => {
+        handleDeleteRole()
+    };
+    
+    // Handler for Add Modal (New Role)
+    const handleSavePermission = async (formData) => {
+         try {
+            const permissionsToSave = formData.permissions.map(perm => ({
+                module_id: perm.module_id,
+                allow_view: perm.allow_view || false,
+                allow_create: perm.allow_create || false,
+                allow_edit: perm.allow_edit || false,
+                allow_delete: perm.allow_delete || false
+            }));
+
+            const api = new DataApi("permissions/role");
+            const response = await api.update({
+                role_id: formData.role_id,
+                permissions: permissionsToSave
+            }, formData.role_id);
+
+            if (response.data.success) {
+                PubSub.publish("RECORD_SAVED_TOAST", {
+                    title: "Success",
+                    message: "Permissions saved successfully!",
+                });
+                refreshUserPermissions();
+                setShowAddModal(false);
+                setEditingRole(null);
+                setRefreshKey(prev => prev + 1);
+            }
+        } catch (err) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Error",
+                message: "Failed to save permissions: " + err.message,
+            });
+        }
+    }
+
+    if (loading && !permissions.length) {
         return <div className="text-center py-5"><span className="loader"></span></div>;
     }
 
@@ -1011,9 +626,7 @@ const Permission = ({permissions :propPermissions}) => {
             <div className="alert alert-danger m-3">
                 <h4>Failed to load permissions</h4>
                 <p>{error}</p>
-                <button className="btn btn-secondary mt-2" onClick={fetchPermissions}>
-                    Retry
-                </button>
+                <button className="btn btn-secondary mt-2" onClick={fetchPermissions}>Retry</button>
             </div>
         );
     }
@@ -1026,13 +639,27 @@ const Permission = ({permissions :propPermissions}) => {
         <div className="container-fluid permission-page">
             <CustomHeader />
 
+            {/* Top Bar for Global Save */}
+            <div className=" mx-3 mb-4 " style={{zIndex: 900}}>
+                <div className='d-flex align-items-center justify-content-end p-2  rounded'>
+                    <Button 
+                        onClick={handleGlobalSave} 
+                        className="btn-success"
+                        style={{background: "var(--primary-color)", border: "none"}}
+                    >
+                        {/* <i className="fa-solid fa-save me-2"></i> */}
+                        Save All Changes
+                    </Button>
+                </div>
+            </div>
+
             {rolePermissions.length === 0 ? (
                 <div className="alert alert-info text-center">
                     <i className="fa-solid fa-info-circle me-2"></i>
-                    No role permissions available. Click "Add Role Permission" to create one.
+                    No role permissions available. Click "Add New Role" to create one.
                 </div>
             ) : (
-                <div>
+                <div style={{paddingBottom: "80px"}}>
                     {rolePermissions.map(role => (
                         <RoleAccordion key={role.role_id} role={role} />
                     ))}

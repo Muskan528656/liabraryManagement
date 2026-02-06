@@ -2,17 +2,20 @@
 import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import DataApi from "../../api/dataApi";
-import { createModel } from "../common/UniversalCSVXLSXImporter"; // Import createModel
-import { Badge } from "react-bootstrap";
+import { createModel } from "../common/UniversalCSVXLSXImporter"; 
 
 export const planDataDependencies = {
     company: "company",
 };
 
 const statusBadge = (value) => (
-    <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+    // <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+    //     {value ? "Active" : "Inactive"}
+    // </span>
+     <span  className={`badge ${value ? "bg-success" : "bg-danger"}`}>
         {value ? "Active" : "Inactive"}
     </span>
+
 );
 
 export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone, permissions) => {

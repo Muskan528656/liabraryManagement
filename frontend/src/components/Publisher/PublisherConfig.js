@@ -21,231 +21,234 @@ export const getPublisherConfig = (externalData = {}, props = {}, timeZone, perm
     });
 
     const statusBadge = (value) => (
-        <span style={{ padding: "5px" }} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
-            {value ? "Active" : "Inactive"}
-        </span >
+    //     <span style={{ padding: "5px" }} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+    //         {value ? "Active" : "Inactive"}
+    //     </span >
+    <span className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+        {value ? "Active" : "Inactive"}
+    </span>
     );
 
 
 
-    return {
-        moduleName: "publisher",
-        moduleLabel: "Publisher",
-        apiEndpoint: "publisher",
-        importMatchFields: [],
-        initialFormData: {
-            salutation: "",
-            name: "",
-            email: "",
-            phone: "",
-            city: "",
-            state: "",
-            country: "",
-            is_active: true
+return {
+    moduleName: "publisher",
+    moduleLabel: "Publisher",
+    apiEndpoint: "publisher",
+    importMatchFields: [],
+    initialFormData: {
+        salutation: "",
+        name: "",
+        email: "",
+        phone: "",
+        city: "",
+        state: "",
+        country: "",
+        is_active: true
+    },
+    columns: [
+
+        {
+            field: "name",
+            label: "Name",
         },
-        columns: [
-
-            {
-                field: "name",
-                label: "Name",
-            },
-            {
-                field: "email",
-                label: "Email",
-            },
-            {
-                field: "phone",
-                label: "Phone",
-            },
-            {
-                field: "city",
-                label: "City",
-            },
-            {
-                field: "state",
-                label: "State",
-            },
-            {
-                field: "country",
-                label: "Country",
-            },
-            { field: "is_active", label: "Status", render: (value) => statusBadge(value === true) },
-
-        ],
-        formFields: [
-            {
-                name: "salutation",
-                label: "Salutation",
-                type: "text",
-                required: false,
-                placeholder: "Enter salutation",
-                colSize: 6,
-            },
-            {
-                name: "name",
-                label: "Name",
-                type: "text",
-                required: true,
-                placeholder: "Enter The Name",
-                colSize: 6,
-            },
-            {
-                name: "email",
-                label: "Email",
-                type: "email",
-                required: true,
-                placeholder: "ibirds@gmail.com",
-                colSize: 6,
-            },
-            {
-                name: "phone",
-                label: "Phone",
-                type: "tel",
-                required: true,
-                placeholder: "1234567890",
-                colSize: 6,
-            },
-            {
-                name: "city",
-                label: "City",
-                type: "text",
-                placeholder: "Enter The City",
-                colSize: 6,
-            },
-            {
-                name: "state",
-                label: "State",
-                type: "text",
-                placeholder: "Enter The State",
-                colSize: 6,
-            },
-            {
-                name: "country",
-                label: "Country",
-                type: "text",
-                required: false,
-                placeholder: "Select a country",
-                colSize: 6
-            },
-            {
-                name: "is_active",
-                label: "Active",
-                type: "toggle",
-                options: [
-                    { value: true, label: "true" },
-                    { value: false, label: "false" },
-                ],
-                colSize: 6,
-            },
-        ],
-        
-        validationRules: (formData, allBooks, editingBook) => {
-            const errors = [];
-
-
-            // if (!formData.name?.trim()) errors.push("name is required");
-            // if (!formData.email?.trim()) errors.push("email is required");
-            // // if (!formData.city?.trim()) errors.push("city is required");
-            // // if (!formData.country?.trim()) errors.push("country is required");
-            // if (!formData.phone) errors.push("phone is required");
-
-            if (!formData.name?.trim()) {
-                errors.push("Name is required");
-            }
-
-            if (!formData.email?.trim()) {
-                errors.push("Email is required");
-            } else {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(formData.email)) {
-                    errors.push("Please enter a valid email address");
-                }
-            }
-
-            if (!formData.phone?.trim()) {
-                errors.push("Phone is required");
-            } else {
-                const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
-                if (!phoneRegex.test(formData.phone)) {
-                    errors.push("Please enter a valid phone number");
-                }
-            }
-
-            const duplicateName = allBooks.find(
-                book => book.name?.toLowerCase() === formData.name?.toLowerCase() &&
-                    book.id !== editingBook?.id
-            );
-            if (duplicateName) {
-                errors.push("Book with this name already exists");
-            }
-
-            const duplicateEmail = allBooks.find(
-                book => book.email?.toLowerCase() === formData.email?.toLowerCase() &&
-                    book.id !== editingBook?.id
-            );
-            if (duplicateEmail) {
-                errors.push("Book with this email already exists");
-            }
-
-
-            return errors;
+        {
+            field: "email",
+            label: "Email",
         },
-        features: {
-            showBulkInsert: false,
-            showImportExport: true,
-            showDetailView: true,
-            showSearch: true,
-            showColumnVisibility: true,
-            showCheckbox: true,
-            showActions: true,
-            showAddButton: true,
-            allowEdit: true,
-            allowDelete: false,
-            showAdvancedFilter: true,
-            showImportButton: true,
+        {
+            field: "phone",
+            label: "Phone",
         },
+        {
+            field: "city",
+            label: "City",
+        },
+        {
+            field: "state",
+            label: "State",
+        },
+        {
+            field: "country",
+            label: "Country",
+        },
+        { field: "is_active", label: "Status", render: (value) => statusBadge(value === true) },
 
-        customHandlers: {
+    ],
+    formFields: [
+        {
+            name: "salutation",
+            label: "Salutation",
+            type: "text",
+            required: false,
+            placeholder: "Enter salutation",
+            colSize: 6,
+        },
+        {
+            name: "name",
+            label: "Name",
+            type: "text",
+            required: true,
+            placeholder: "Enter The Name",
+            colSize: 6,
+        },
+        {
+            name: "email",
+            label: "Email",
+            type: "email",
+            required: true,
+            placeholder: "ibirds@gmail.com",
+            colSize: 6,
+        },
+        {
+            name: "phone",
+            label: "Phone",
+            type: "tel",
+            required: true,
+            placeholder: "1234567890",
+            colSize: 6,
+        },
+        {
+            name: "city",
+            label: "City",
+            type: "text",
+            placeholder: "Enter The City",
+            colSize: 6,
+        },
+        {
+            name: "state",
+            label: "State",
+            type: "text",
+            placeholder: "Enter The State",
+            colSize: 6,
+        },
+        {
+            name: "country",
+            label: "Country",
+            type: "text",
+            required: false,
+            placeholder: "Select a country",
+            colSize: 6
+        },
+        {
+            name: "is_active",
+            label: "Active",
+            type: "toggle",
+            options: [
+                { value: true, label: "true" },
+                { value: false, label: "false" },
+            ],
+            colSize: 6,
+        },
+    ],
 
-            onDataLoad: (data) => {
-                if (Array.isArray(data)) {
-                    return data.map(item => ({
-                        ...item,
-                        is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true
-                    }));
-                }
-                return data;
-            },
-            onImportDataTransform: (data) => {
+    validationRules: (formData, allBooks, editingBook) => {
+        const errors = [];
+
+
+        // if (!formData.name?.trim()) errors.push("name is required");
+        // if (!formData.email?.trim()) errors.push("email is required");
+        // // if (!formData.city?.trim()) errors.push("city is required");
+        // // if (!formData.country?.trim()) errors.push("country is required");
+        // if (!formData.phone) errors.push("phone is required");
+
+        if (!formData.name?.trim()) {
+            errors.push("Name is required");
+        }
+
+        if (!formData.email?.trim()) {
+            errors.push("Email is required");
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                errors.push("Please enter a valid email address");
+            }
+        }
+
+        if (!formData.phone?.trim()) {
+            errors.push("Phone is required");
+        } else {
+            const phoneRegex = /^[0-9+\-\s()]{10,15}$/;
+            if (!phoneRegex.test(formData.phone)) {
+                errors.push("Please enter a valid phone number");
+            }
+        }
+
+        const duplicateName = allBooks.find(
+            book => book.name?.toLowerCase() === formData.name?.toLowerCase() &&
+                book.id !== editingBook?.id
+        );
+        if (duplicateName) {
+            errors.push("Book with this name already exists");
+        }
+
+        const duplicateEmail = allBooks.find(
+            book => book.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                book.id !== editingBook?.id
+        );
+        if (duplicateEmail) {
+            errors.push("Book with this email already exists");
+        }
+
+
+        return errors;
+    },
+    features: {
+        showBulkInsert: false,
+        showImportExport: true,
+        showDetailView: true,
+        showSearch: true,
+        showColumnVisibility: true,
+        showCheckbox: true,
+        showActions: true,
+        showAddButton: true,
+        allowEdit: true,
+        allowDelete: false,
+        showAdvancedFilter: true,
+        showImportButton: true,
+    },
+
+    customHandlers: {
+
+        onDataLoad: (data) => {
+            if (Array.isArray(data)) {
                 return data.map(item => ({
                     ...item,
-                    is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true || item.Status === "Active" || item.Status === "true" || item.Status === true
+                    is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true
                 }));
             }
+            return data;
         },
-        importModel: PublisherModel,
-        exportColumns: [
-            { key: "salutation", header: "Salutation", width: 12 },
-            { key: "name", header: "Name", width: 20 },
-            { key: "email", header: "Email", width: 20 },
-            { key: "phone", header: "Phone", width: 15 },
-            { key: "city", header: "City", width: 15 },
-            { key: "state", header: "State", width: 15 },
-            { key: "country", header: "Country", width: 15 },
-            { key: "is_active", header: "Status", width: 12 },
-        ],
+        onImportDataTransform: (data) => {
+            return data.map(item => ({
+                ...item,
+                is_active: item.is_active === "Active" || item.is_active === "true" || item.is_active === true || item.Status === "Active" || item.Status === "true" || item.Status === true
+            }));
+        }
+    },
+    importModel: PublisherModel,
+    exportColumns: [
+        { key: "salutation", header: "Salutation", width: 12 },
+        { key: "name", header: "Name", width: 20 },
+        { key: "email", header: "Email", width: 20 },
+        { key: "phone", header: "Phone", width: 15 },
+        { key: "city", header: "City", width: 15 },
+        { key: "state", header: "State", width: 15 },
+        { key: "country", header: "Country", width: 15 },
+        { key: "is_active", header: "Status", width: 12 },
+    ],
 
-        filterFields: [
-            {
-                name: "email",
-                label: "Email",
-                type: "text"
-            },
-            {
-                name: "name",
-                label: "Name",
-                type: "text"
-            }
-        ]
-    };
+    filterFields: [
+        {
+            name: "email",
+            label: "Email",
+            type: "text"
+        },
+        {
+            name: "name",
+            label: "Name",
+            type: "text"
+        }
+    ]
+};
 };
