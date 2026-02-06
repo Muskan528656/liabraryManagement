@@ -44,6 +44,8 @@ export const UserProvider = ({ children }) => {
   const fetchPermissions = async () => {
     try {
       const result = await AuthApi.getPermissions();
+      console.log("result=>", result.permissions);
+
       if (result && result.success && result.permissions) {
         setPermissions(result.permissions);
         sessionStorage.setItem("permissions", JSON.stringify(result.permissions));
@@ -82,6 +84,8 @@ export const UserProvider = ({ children }) => {
       window.removeEventListener("permissionsUpdated", handlePermissionsUpdated);
     };
   }, []);
+
+
 
   const value = {
     userInfo,

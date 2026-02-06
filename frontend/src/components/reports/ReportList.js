@@ -110,7 +110,7 @@ const ReportsList = () => {
           <div>
             <TableHeader
               icon='fa fa-book'
-              title={'Reports Librar'}
+              title={'Reports Library'}
             />
             {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
             {/* <p className="text-muted small mb-0">Manage library reports</p> */}
@@ -143,6 +143,7 @@ const ReportsList = () => {
             <table className="table table-hover align-middle mb-0 border-1">
               <thead>
                 <tr>
+                  <th style={{ background: "var(--primary-background-color)" }} className="border-1 ps-4 py-3 text-uppercase small fw-bold text-muted">Sr No</th>
                   <th style={{ background: "var(--primary-background-color)" }} className="border-1 ps-4 py-3 text-uppercase small fw-bold text-muted">Report Name</th>
                   {/* <th  style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">API Name</th> */}
                   <th style={{ background: "var(--primary-background-color)" }} className="border-1 py-3 text-uppercase small fw-bold text-muted">Description</th>
@@ -159,16 +160,20 @@ const ReportsList = () => {
                     style={{ cursor: "pointer" }}
                     onClick={() => navigate(`/reports/${r.api_name}`)}
                   >
+                    <td className="text-muted text-center align-middle border"
+                      style={{ width: "80px" }}>
+                         {i + 1}
+                    </td>
                     <td className="ps-4 py-0">
                       <div className=" d-flex align-items-center">
-                        <div
+                        {/* <div
                           className="rounded-3 d-flex align-items-center justify-content-center me-3"
                           style={{ width: "30px", height: "30px", background: "#eef2ff", color: "#4338ca" }}
                         >
                           <FileEarmarkText size={20} />
-                        </div>
+                        </div> */}
                         <div>
-                          <div className="fw-semibold text-dark">{r.report_name}</div>
+                          <div className="fw-semibold text-primary">{r.report_name}</div>
                           {/* <div className="text-muted extra-small" style={{ fontSize: "0.75rem" }}>System Generated</div> */}
                         </div>
                       </div>
