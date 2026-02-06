@@ -634,8 +634,8 @@ const BookPopularityReport = () => {
                 <h3 className="mb-0 fw-bold text-success">{reportData?.keyMetrics?.currentMonthIssues || 0}</h3>
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
-                {/* <i className="fa fa-book text-primary" style={{ fontSize: '24px' }} /> */}
-                         <GraphUp />
+                <i className="fa fa-line-chart text-danger" style={{ fontSize: '24px' }} />
+                         {/* <GraphUp /> */}
               </div>
             </div>
             <small className="text-muted">Current month issues</small>
@@ -649,8 +649,8 @@ const BookPopularityReport = () => {
                 <h5 className="mb-0 mt-1 text-muted " style={{fontSize:'14px'}}>{reportData?.keyMetrics?.mostPopularBook?.book_name}</h5>
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
-                {/* <i className="fa fa-book text-primary" style={{ fontSize: '24px' }} /> */}
-                    <Award />
+                <i className="fa fa-award text-danger" style={{ fontSize: '24px' }} />
+                    {/* <Award /> */}
               </div>
             </div>
             <small className="text-muted">{reportData?.keyMetrics?.mostPopularBook?.total_issues || 0}{" "}
@@ -665,8 +665,8 @@ const BookPopularityReport = () => {
                 <h5 className="mb-0 fw-bold text-danger ">{reportData?.keyMetrics?.neverIssuedBooks || 0}</h5>
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
-                {/* <i className="fa fa-book text-primary" style={{ fontSize: '24px' }} /> */}
-                   <Clock />
+                <i className="fa fa-clock text-primary" style={{ fontSize: '24px' }} />
+                   {/* <Clock /> */}
               </div>
             </div>
             <small className="text-muted">Books not borrowed</small>
