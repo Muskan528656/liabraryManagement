@@ -615,11 +615,11 @@ const BookInventoryReport = () => {
       label: "Issued",
       align: "center"
     },
-    // {
-    //   field: "lost_damaged_copies",
-    //   label: "Lost/Damaged",
-    //   align: "center"
-    // },
+    {
+      field: "lost_damaged_copies",
+      label: "Lost/Damaged",
+      align: "center"
+    },
     {
       field: "status",
       label: "Status",
@@ -1087,7 +1087,7 @@ const BookInventoryReport = () => {
                       </Form.Select>
                     </Col>
                   
-                    <Col xs={12} md={2}>
+                    {/* <Col xs={12} md={2}>
                      <div style={labelStyle}>
                         <i className={ "fa-solid fa-filter"}></i>
                         <span>Status</span>
@@ -1113,7 +1113,7 @@ const BookInventoryReport = () => {
                           <option value="Out of Stock">Out of Stock</option>
                       </Form.Select>
                       
-                    </Col>
+                    </Col> */}
                     
                      <Button
                         variant="light"
