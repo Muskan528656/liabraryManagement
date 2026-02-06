@@ -32,7 +32,7 @@ const GradeSection = ({ permissions, ...props }) => {
         fetchData();
     }, []);
 
-    if (!isSuperAdmin && !permissions?.allowView) {
+    if (permissions?.allowView) {
         return <PermissionDenied />;
     }
 
