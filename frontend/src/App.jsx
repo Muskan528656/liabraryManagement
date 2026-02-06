@@ -60,6 +60,7 @@ import Loader from "./components/common/Loader";
 import BookInventoryReport from "./components/reports/BookInventoryReport";
 import ReportsList from "./components/reports/ReportList";
 import PermissionDenied from "./components/common/PermissionDenied";
+import BookPopularityReport from "./components/reports/BookPopularityReport";
 
 const ENDPOINT = "http://localhost:3003";
 
@@ -212,6 +213,7 @@ function AppContent() {
                 <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
                 <Route path="reports/bookinventoryreport" element={<BookInventoryReport />} />
                 <Route path="reports" element={<ReportsList />} />
+                <Route path="reports/bookpopularityreport" element={<BookPopularityReport/>} />
               </Route>
             </Routes>
           </Router>
