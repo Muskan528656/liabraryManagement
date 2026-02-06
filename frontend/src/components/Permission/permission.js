@@ -20,15 +20,15 @@ const Permission = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
-    
+
     // State to track which accordions are open
     const [expandedRoles, setExpandedRoles] = useState({});
-    
+
     // State to track the global "Expand All" toggle switch visually
     const [isExpanded, setIsExpanded] = useState(false);
 
     const [roles, setRoles] = useState([]);
-    
+
     // For delete
     const [roleId, setRoleId] = useState(null)
     const [roleName, setRoleName] = useState(null)
@@ -84,7 +84,7 @@ const Permission = () => {
         const grouped = {};
         const filteredPermissions = permissions.filter(perm => {
             const roleInfo = roles.find(r => r.id === perm.role_id);
-            if (!roleInfo) return true; 
+            if (!roleInfo) return true;
             const roleName = roleInfo.role_name || roleInfo.name;
             return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
         });
@@ -142,7 +142,7 @@ const Permission = () => {
                 allow_delete: perm.allow_delete || false
             };
         });
-        
+
         // Return updated state object
         return {
             ...currentEditState,
@@ -166,7 +166,7 @@ const Permission = () => {
             rolePermissions.forEach(role => {
                 newExpanded[role.role_id] = true;
                 // Only initialize if not already modified/loaded
-                if(!newEditingState[role.role_id]) {
+                if (!newEditingState[role.role_id]) {
                     newEditingState = initializeEditStateForRole(role.role_id, newEditingState);
                 }
             });
@@ -210,7 +210,7 @@ const Permission = () => {
     };
 
     // --- CHECKBOX / EDIT HANDLERS ---
-    
+
     const handleInlineToggle = (roleId, moduleId, field) => {
         setEditingPermissions(prev => {
             const roleData = prev[roleId] || {};
@@ -236,26 +236,26 @@ const Permission = () => {
     // Select All for a specific column within a specific role
     const handleSelectAllToggle = (roleId, permissionType) => {
         const rolePerms = permissions.filter(p => (p.role_id || 'null') === roleId);
-        
+
         // Check current state in editingPermissions
         const currentRoleEditState = editingPermissions[roleId] || {};
-        
+
         // Logic: If ALL are checked, we uncheck all. Otherwise, we check all.
         const allCurrentlyChecked = rolePerms.length > 0 && rolePerms.every(perm => {
             return currentRoleEditState[perm.module_id]?.[permissionType] === true;
         });
-        
+
         const newValue = !allCurrentlyChecked;
 
         setEditingPermissions(prev => {
             const roleData = prev[roleId] ? { ...prev[roleId] } : {};
-            
+
             rolePerms.forEach(perm => {
-                 const currentModule = roleData[perm.module_id] || { ...perm }; 
-                 roleData[perm.module_id] = {
-                     ...currentModule,
-                     [permissionType]: newValue
-                 };
+                const currentModule = roleData[perm.module_id] || { ...perm };
+                roleData[perm.module_id] = {
+                    ...currentModule,
+                    [permissionType]: newValue
+                };
             });
 
             return {
@@ -272,11 +272,11 @@ const Permission = () => {
             setLoading(true);
             // We only save roles that exist in editingPermissions
             const roleIdsToUpdate = Object.keys(editingPermissions);
-            
+
             if (roleIdsToUpdate.length === 0) {
-                 PubSub.publish("RECORD_ERROR_TOAST", { title: "Info", message: "No data loaded to save." });
-                 setLoading(false);
-                 return;
+                PubSub.publish("RECORD_ERROR_TOAST", { title: "Info", message: "No data loaded to save." });
+                setLoading(false);
+                return;
             }
 
             // Create promises for parallel saving
@@ -290,7 +290,7 @@ const Permission = () => {
                 title: "Success",
                 message: "All changes saved successfully!",
             });
-            
+
             // Refresh User Context & UI
             refreshUserPermissions();
             setEditingPermissions({}); // Clear dirty state
@@ -443,14 +443,14 @@ const Permission = () => {
 
     const SelectAllHeader = ({ roleId, permissionType, label }) => {
         let isChecked = false;
-        
+
         // Calculate state from editingPermissions
-        if(editingPermissions[roleId]) {
-             const roleData = editingPermissions[roleId];
-             const roleModules = permissions.filter(p => (p.role_id || 'null') === roleId);
-             if(roleModules.length > 0) {
-                 isChecked = roleModules.every(m => roleData[m.module_id]?.[permissionType] === true);
-             }
+        if (editingPermissions[roleId]) {
+            const roleData = editingPermissions[roleId];
+            const roleModules = permissions.filter(p => (p.role_id || 'null') === roleId);
+            if (roleModules.length > 0) {
+                isChecked = roleModules.every(m => roleData[m.module_id]?.[permissionType] === true);
+            }
         }
 
         return (
@@ -477,6 +477,7 @@ const Permission = () => {
         const isOpen = expandedRoles[role.role_id] || false;
 
         return (
+            
             <div className="card mb-3 border shadow-sm mx-3">
                 {/* Header is Clickable to Toggle */}
                 <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light">
@@ -580,10 +581,10 @@ const Permission = () => {
     const confirmDelete = async () => {
         handleDeleteRole()
     };
-    
+
     // Handler for Add Modal (New Role)
     const handleSavePermission = async (formData) => {
-         try {
+        try {
             const permissionsToSave = formData.permissions.map(perm => ({
                 module_id: perm.module_id,
                 allow_view: perm.allow_view || false,
@@ -635,26 +636,33 @@ const Permission = () => {
             <CustomHeader />
 
             {/* Top Bar for Global Save */}
-            <div className=" mx-3 mb-4 " style={{zIndex: 900}}>
+            <div className="mx-3 my-2 mt-0" >
                 <div className='d-flex align-items-center justify-content-end p-2  rounded'>
-                    <Button 
-                        onClick={handleGlobalSave} 
-                        className="btn-success"
-                        style={{background: "var(--primary-color)", border: "none"}}
-                    >
-                        {/* <i className="fa-solid fa-save me-2"></i> */}
-                        Save All Changes
+                    <Button
+                        size="sm"
+                        variant=""
+                        onClick={handleGlobalSave}
+                        className="btn-paper btn-paper-apply d-flex align-items-center gap-1 h-75 px-2"
+                        style={{
+                            background: 'var(--primary-color)',
+                            color: '#fff',
+                        }}
+                    > 
+                    <i className="fa-solid fa-paper-plane"></i>
+                       Save
                     </Button>
                 </div>
             </div>
 
+            
+
             {rolePermissions.length === 0 ? (
-                <div className="alert alert-info text-center">
-                    <i className="fa-solid fa-info-circle me-2"></i>
+                <div className="alert alert-info text-center bg-info">
+                    <i className="fa-solid fa-info-circle me-2 bg-info"></i>
                     No role permissions available. Click "Add New Role" to create one.
                 </div>
             ) : (
-                <div style={{paddingBottom: "80px"}}>
+                <div >
                     {rolePermissions.map(role => (
                         <RoleAccordion key={role.role_id} role={role} />
                     ))}
@@ -680,6 +688,27 @@ const Permission = () => {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
+
+            <div className="mx-3 mt-0" >
+                <div className='d-flex align-items-center justify-content-end p-2  rounded'>
+                    <Button
+                        size="sm"
+                        variant=""
+                        onClick={handleGlobalSave}
+                        className="btn-paper btn-paper-apply d-flex align-items-center gap-1 h-75 px-2"
+                        style={{
+                            background: 'var(--primary-color)',
+                            color: '#fff',
+                        }}
+                    > 
+                    <i className="fa-solid fa-paper-plane"></i>
+                       Save 
+                    </Button>
+                </div>
+            </div>
+
+
+
         </div>
     );
 };
