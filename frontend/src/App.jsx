@@ -63,12 +63,9 @@ import PermissionDenied from "./components/common/PermissionDenied";
 import BookPopularityReport from "./components/reports/BookPopularityReport";
 import Shelf from "./components/shelf/shelf";
 import ShelfDetail from "./components/shelf/shelfDetail";
-
+import GradeSectionDetail from "./components/GradeSection/gradesectionDetail";
+import GradeSection from "./components/GradeSection/gradesection";
 const ENDPOINT = "http://localhost:3003";
-
-
-
-
 
 function AppContent() {
   const { userInfo, isLoading, permissions } = useUser();
@@ -218,6 +215,8 @@ function AppContent() {
                 <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
                 <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
+                <Route path="/gradeSection" element={<GradeSection permissions={getPermissionForModule("gradeSection")} />} />
+                <Route path="/gradeSection/:id" element={<GradeSectionDetail permissions={getPermissionForModule("gradeSection")} />} />
 
               </Route>
             </Routes>

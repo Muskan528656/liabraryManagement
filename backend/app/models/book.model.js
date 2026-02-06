@@ -331,7 +331,7 @@ async function generateInventoryReport() {
     //   LEFT JOIN ${this.schema}.vendors v ON p.vendor_id = v.id
     //   ORDER BY b.title ASC
     // `;
-    
+
     const query = `
             SELECT
             b.id,
@@ -522,7 +522,7 @@ async function generateBookPopularityReport(params) {
 
     const result = await sql.query(query, queryParams);
 
-    console.log("BookPopularityResult=>",result.rows)
+    console.log("BookPopularityResult=>", result.rows)
 
     // Process the data to match the expected format
     const rows = result.rows;
@@ -542,50 +542,50 @@ async function generateBookPopularityReport(params) {
     }));
 
     // Key metrics
-  const keyMetrics = {
-  currentMonthIssues: rows.length > 0 ? rows[0].total_issues_this_month : 0,
+    const keyMetrics = {
+      currentMonthIssues: rows.length > 0 ? rows[0].total_issues_this_month : 0,
 
-  mostPopularBook: rows.find(row => row.is_most_popular)
-    ? {
-        book_name: rows.find(row => row.is_most_popular).book_name,
-        total_issues: rows.find(row => row.is_most_popular).total_issues
-      }
-    : null,
+      mostPopularBook: rows.find(row => row.is_most_popular)
+        ? {
+          book_name: rows.find(row => row.is_most_popular).book_name,
+          total_issues: rows.find(row => row.is_most_popular).total_issues
+        }
+        : null,
 
-  leastBorrowedBook: rows.find(row => row.is_least_borrowed)
-    ? {
-        book_name: rows.find(row => row.is_least_borrowed).book_name,
-        total_issues: rows.find(row => row.is_least_borrowed).total_issues
-      }
-    : null,
+      leastBorrowedBook: rows.find(row => row.is_least_borrowed)
+        ? {
+          book_name: rows.find(row => row.is_least_borrowed).book_name,
+          total_issues: rows.find(row => row.is_least_borrowed).total_issues
+        }
+        : null,
 
-  neverIssuedBooks: rows.filter(row => row.never_issued).length,
+      neverIssuedBooks: rows.filter(row => row.never_issued).length,
 
-  mostActiveCategory:
-    rows.length > 0
-      ? (() => {
-          const categoryMap = {};
+      mostActiveCategory:
+        rows.length > 0
+          ? (() => {
+            const categoryMap = {};
 
-          rows.forEach(row => {
-            if (row.category) {
-              categoryMap[row.category] =
-                (categoryMap[row.category] || 0) + (row.total_issues || 0);
-            }
-          });
+            rows.forEach(row => {
+              if (row.category) {
+                categoryMap[row.category] =
+                  (categoryMap[row.category] || 0) + (row.total_issues || 0);
+              }
+            });
 
-          if (Object.keys(categoryMap).length === 0) return null;
+            if (Object.keys(categoryMap).length === 0) return null;
 
-          const maxCategory = Object.keys(categoryMap).reduce((a, b) =>
-            categoryMap[a] > categoryMap[b] ? a : b
-          );
+            const maxCategory = Object.keys(categoryMap).reduce((a, b) =>
+              categoryMap[a] > categoryMap[b] ? a : b
+            );
 
-          return {
-            category_name: maxCategory,
-            total_issues: categoryMap[maxCategory]
-          };
-        })()
-      : null   // 🔥 THIS WAS MISSING
-};
+            return {
+              category_name: maxCategory,
+              total_issues: categoryMap[maxCategory]
+            };
+          })()
+          : null   // 🔥 THIS WAS MISSING
+    };
 
 
     // Popular books (top 10)
