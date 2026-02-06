@@ -306,81 +306,54 @@ const BookPopularityReport = () => {
       width: "150px",
       render: (value) => value || "N/A",
     },
-    {
-      field: "publisher",
-      label: "Publisher",
-      width: "150px",
-      render: (value) => value || "N/A",
-    },
+    // {
+    //   field: "publisher",
+    //   label: "Publisher",
+    //   width: "150px",
+    //   render: (value) => value || "N/A",
+    // },
     {
       field: "category",
       label: "Category",
       width: "120px",
-      render: (value) => (
-        <Badge bg="primary" className="library-badge-category">
-          {value || "N/A"}
-        </Badge>
-      ),
+      render: (value) => value || "N/A",
     },
-    {
-      field: "vendor",
-      label: "Vendor",
-      width: "120px",
-      render: () => "N/A",
-    },
-    {
-      field: "copies",
-      label: "Total",
-      width: "80px",
-      render: (value) => (
-        <Badge bg="secondary" className="library-badge-count">
-          {value || 0}
-        </Badge>
-      ),
-    },
+    // {
+    //   field: "vendor",
+    //   label: "Vendor",
+    //   width: "120px",
+    //   render: () => "N/A",
+    // },
+    // {
+    //   field: "copies",
+    //   label: "Total",
+    //   width: "80px",
+    //   render: (value) => value || 0,
+    // },
     {
       field: "available",
       label: "Available",
       width: "100px",
-      render: (value, record) => (
-        <Badge bg="info" className="library-badge-count">
-          {(record.copies || 0) - (record.total_issues || 0)}
-        </Badge>
-      ),
+      render: (value, record) => (record.copies || 0) - (record.total_issues || 0),
     },
     {
       field: "total_issues",
       label: "Issued",
       width: "80px",
-      render: (value) => (
-        <Badge bg="primary" className="library-badge-count">
-          {value || 0}
-        </Badge>
-      ),
+      render: (value) => value || 0,
     },
     {
       field: "unique_borrowers",
       label: "Unique Borrowers",
       width: "120px",
-      render: (value) => (
-        <Badge bg="dark" className="library-badge-count">
-          {value || 0}
-        </Badge>
-      ),
+      render: (value) => value || 0,
     },
-    {
-      field: "popularity_level",
-      label: "Status",
-      width: "100px",
-      render: (value) => (
-        <Badge
-          bg={getPopularityBadgeVariant(value)}
-          className="library-badge-status"
-        >
-          {value || "N/A"}
-        </Badge>
-      ),
-    },
+    // {
+    //   field: "popularity_level",
+    //   label: "Status",
+    //   width: "100px",
+    //   render: (value) => value || "N/A",
+    // },
   ];
 
   // Handle page change
@@ -609,7 +582,7 @@ const BookPopularityReport = () => {
             </div>
           </div>
         </div> */}
-       <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #007bff' }}>
+       {/* <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #007bff' }}>
           <Card.Body>
             <div className="d-flex justify-content-between align-items-center">
               <div>
@@ -635,7 +608,7 @@ const BookPopularityReport = () => {
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
                 <i className="fa fa-line-chart text-danger" style={{ fontSize: '24px' }} />
-                         {/* <GraphUp /> */}
+              
               </div>
             </div>
             <small className="text-muted">Current month issues</small>
@@ -650,7 +623,7 @@ const BookPopularityReport = () => {
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
                 <i className="fa fa-award text-danger" style={{ fontSize: '24px' }} />
-                    {/* <Award /> */}
+               
               </div>
             </div>
             <small className="text-muted">{reportData?.keyMetrics?.mostPopularBook?.total_issues || 0}{" "}
@@ -666,12 +639,12 @@ const BookPopularityReport = () => {
               </div>
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
                 <i className="fa fa-clock text-primary" style={{ fontSize: '24px' }} />
-                   {/* <Clock /> */}
+            
               </div>
             </div>
             <small className="text-muted">Books not borrowed</small>
           </Card.Body>
-        </Card>
+        </Card> */}
 
         {/* <div className="library-stat-card green">
           <div className="stat-icon">
@@ -788,7 +761,7 @@ const BookPopularityReport = () => {
                             </Form.Select>
                           </Col>
 
-                          <Col xs={12} md={2}>
+                          {/* <Col xs={12} md={2}>
                            <div style={labelStyle}>
                               <i className="fa-solid fa-filter"></i>
                               <span>Status</span>
@@ -814,7 +787,7 @@ const BookPopularityReport = () => {
                                 <option value="Low">Low</option>
                             </Form.Select>
 
-                          </Col>
+                          </Col> */}
                           
                            <Button
                               variant="light"
@@ -861,6 +834,7 @@ const BookPopularityReport = () => {
               onPageChange={handlePageChange}
               showSerialNumber={true}
               showCheckbox={true}
+              showActions={false}
               selectedItems={selectedItems}
               onSelectionChange={handleSelectionChange}
               emptyMessage="No book popularity data available"
@@ -919,9 +893,7 @@ const BookPopularityReport = () => {
                               {book.avg_issues_per_month?.toFixed(2)}/month
                             </div>
                           </div>
-                          <Badge bg="success" className="analytics-badge">
-                            {book.total_issues}
-                          </Badge>
+                          {book.total_issues}
                         </div>
                       ))}
                   </div>
@@ -997,18 +969,14 @@ const BookPopularityReport = () => {
                   <div className="analytics-list">
                     {reportData?.copyUsage?.slice(0, 10).map((copy, index) => (
                       <div key={index} className="analytics-item">
-                        <Badge bg="secondary" className="copy-badge">
-                          {copy.copy_id}
-                        </Badge>
+                        {copy.copy_id}
                         <div className="analytics-info">
                           <div className="analytics-name">{copy.book_name}</div>
                           <div className="analytics-meta">
                             {copy.total_issues} times issued
                           </div>
                         </div>
-                        <Badge bg="dark" className="analytics-badge">
-                          {copy.total_issues}
-                        </Badge>
+                        {copy.total_issues}
                       </div>
                     ))}
                   </div>
