@@ -669,10 +669,11 @@ export default function Header({ socket }) {
             gap: "0.5rem",
           }}
         >
-          <img src={Company?.logourl || "/Logo.png"}
-              // src={"/Logo.png"}
-              height="50"
-              style={{ height: "50px", marginLeft: "20px", objectFit: "contain" }}
+          <img
+            // src={Company?.logourl || "/Logo.png"}
+            src={"/ibirds.png"}
+            height="50"
+            style={{ height: "70px", marginLeft: "20px", objectFit: "contain" }}
           />
           <span>{Company?.name}</span>
         </Navbar.Brand>

@@ -1,3 +1,4 @@
+import { name } from "pubsub-js";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) => {
 
@@ -10,10 +11,78 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
 
     console.log("getBooksConfig - publishers:", publishers);
+    // const shelf = props.shelf || externalData.shelf || [];
+    const shelves = props.shelf || externalData.shelf || [];
+    const uniqueShelves = Object.values(
+        shelves.reduce((acc, shelf) => {
+            if (!acc[shelf.shelf_name]) {
+                acc[shelf.shelf_name] = shelf; // first occurrence
+            }
+            return acc;
+        }, {})
+    );
 
+    const shelfOptions = uniqueShelves.map(s => ({
+        value: s.shelf_name,
+        name: s.shelf_name
+    }));
+
+
+    console.log("shelfOptionsshelfOptions", shelfOptions)
+
+    const subShelfOptions = (selectedShelfName) => {
+
+        const matchedShelves = shelves.filter(
+            s => s.shelf_name === selectedShelfName
+        );
+        console.log("matchedShelvesmatchedShelves", matchedShelves)
+        let allSubs = [];
+
+        matchedShelves.forEach(shelf => {
+            let subs = shelf.sub_shelf || [];
+
+            if (typeof subs === "string") {
+                try {
+                    subs = JSON.parse(subs);
+                } catch {
+                    subs = [];
+                }
+            }
+
+            allSubs.push(...subs);
+        });
+
+        const uniqueSubs = [...new Set(allSubs)];
+        console.log("uniqueSubsuniqueSubs", uniqueSubs)
+
+        return uniqueSubs.map(ss => ({
+            value: ss,
+            name: ss
+        }));
+
+    };
+
+
+    // console.log("uniqueSubsuniqueSubs", uniqueSubs)
+    // console.log("shelvesshelves", shelf)
+    // const shelfOptions = shelf.map(s => ({
+    //     value: s.id,
+    //     name: s.shelf_name
+    // }));
+
+    // Dependent sub-shelf options
+    // const subShelfOptions = (selectedShelfId) => {
+    //     const shelf = shelves.find(s => s.id == selectedShelfId);
+    //     if (!shelf || !shelf.sub_shelves) return [];
+
+    //     return shelf.sub_shelves.map(ss => ({
+    //         value: ss,
+    //         name: ss
+    //     }));
+    // };
     //changes
     const authorOptions = authors.map(a => ({
-        
+
         // value: String(a.id),
         value: a.id,
         name: a.name
@@ -21,7 +90,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
     const categoryOptions = categories.map(c => ({
         // value: String(c.id),
         value: c.id,
-        name : c.name
+        name: c.name
     }));
 
     const publisherOptions = publishers.map(p => ({
@@ -60,6 +129,11 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
         authors: authorOptions,
         categories: categoryOptions,
         publishers: publisherOptions,
+        // shelf: shelf,
+        shelf: shelfOptions,
+        subShelfOptions: subShelfOptions,
+        // subShelfOptions: subShelfOptions,
+
 
         // console.log("changes author",authors)
         moduleName: "book",
@@ -146,6 +220,24 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 required: false,
                 colSize: 6,
             },
+            {
+                name: "shelf_id",
+                label: "Shelf",
+                type: "select",
+                options: "shelf",
+                required: false,
+                colSize: 6,
+            },
+
+            {
+                name: "sub_shelf",
+                label: "Sub Shelf",
+                type: "select",
+                options: "subShelfOptions",
+                required: false,
+                colSize: 6,
+            },
+
             {
                 name: "isbn",
                 label: "ISBN",

@@ -39,6 +39,29 @@ module.exports = (app) => {
     }
   );
 
+     router.get(
+      "/book-popularity-analytics",
+      fetchUser,
+      // checkPermission("Reports", "allow_view"),
+      async (req, res) => {
+        try {
+          Book.init(req.userinfo.tenantcode);
+
+          const filters = {
+            days: req.query.days,
+            startDate: req.query.startDate,
+            endDate: req.query.endDate
+          };
+
+          const reportData = await Book.generateBookPopularityReport(filters);
+          res.json(reportData);
+        } catch (err) {
+          console.error("Error generating book popularity report:", err);
+          res.status(500).json({ error: "Internal server error" });
+        }
+      }
+    );
+
   router.get("/inventory-report",
      fetchUser, checkPermission("Books", "allow_view"), 
      async (req, res) => {   
@@ -81,6 +104,8 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
+
+
 
   router.post(
     "/",

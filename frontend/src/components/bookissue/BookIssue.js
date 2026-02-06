@@ -20,6 +20,7 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import moment from "moment";
 import { all } from "axios";
+import PermissionDenied from "../../utils/permission_denied";
 const BookIssue = ({ permissions }) => {
   const navigate = useNavigate();
   const { timeZone } = useTimeZone();
@@ -485,6 +486,15 @@ const BookIssue = ({ permissions }) => {
       ),
     },
   ];
+
+
+  if (permissions.loading) {
+    return <div className="loading"></div>;
+  }
+
+  if (!permissions.allowCreate || !permissions.allowView) {
+     return <PermissionDenied />;
+  }
 
   return (
 
