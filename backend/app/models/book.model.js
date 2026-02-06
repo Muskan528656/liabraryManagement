@@ -333,7 +333,7 @@ async function generateInventoryReport() {
     // `;
 
     const query = `
-            SELECT
+           SELECT
             b.id,
             b.title AS book_title,
             a.name AS author_name,
@@ -345,11 +345,15 @@ async function generateInventoryReport() {
             b.total_copies,
             b.available_copies,
             (b.total_copies - b.available_copies) AS issued_copies,
-            0 AS lost_damaged_copies,  -- (Proper tracking ho to alag table se aayega)
 
+            -- Lost + Damaged Count Added
+            COALESCE(bd.lost_count, 0) + COALESCE(bd.damaged_count, 0) AS lost_damaged_copies,
+
+            -- Improved Book Status Logic
             CASE
-                WHEN b.available_copies > 0 THEN 'Available'
-                WHEN b.available_copies = 0 AND (b.total_copies - b.available_copies) > 0 THEN 'Issued'
+                WHEN COALESCE(b.available_copies, 0) > 0 THEN 'Available'
+                WHEN COALESCE(bd.lost_count, 0) + COALESCE(bd.damaged_count, 0) >= b.total_copies THEN 'Unavailable'
+                WHEN (b.total_copies - b.available_copies) > 0 THEN 'Issued'
                 ELSE 'Unavailable'
             END AS status,
 
@@ -363,10 +367,17 @@ async function generateInventoryReport() {
             p.unit_price AS book_price
 
         FROM ${this.schema}.books b
-        LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
-        LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-        LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
 
+        LEFT JOIN ${this.schema}.authors a 
+              ON b.author_id = a.id
+
+        LEFT JOIN ${this.schema}.categories c 
+              ON b.category_id = c.id
+
+        LEFT JOIN ${this.schema}.publisher pub 
+              ON b.publisher_id = pub.id
+
+        -- Latest Active Issue
         LEFT JOIN (
             SELECT DISTINCT ON (book_id)
                 book_id, issue_date, due_date, issued_to
@@ -376,8 +387,10 @@ async function generateInventoryReport() {
         ) bi ON b.id = bi.book_id
 
         LEFT JOIN ${this.schema}.library_members lm 
-              ON bi.issued_to = lm.id AND lm.is_active = true
+              ON bi.issued_to = lm.id 
+              AND lm.is_active = true
 
+        -- Latest Purchase Info
         LEFT JOIN (
             SELECT DISTINCT ON (book_id)
                 book_id, purchase_date, vendor_id, purchase_serial_no, unit_price
@@ -385,8 +398,18 @@ async function generateInventoryReport() {
             ORDER BY book_id, purchase_date DESC, createddate DESC
         ) p ON b.id = p.book_id
 
-        LEFT JOIN ${this.schema}.vendors v ON p.vendor_id = v.id
+        LEFT JOIN ${this.schema}.vendors v 
+              ON p.vendor_id = v.id
 
+        -- Lost & Damaged Books Subquery
+        LEFT JOIN (
+            SELECT 
+                book_id,
+                COUNT(*) FILTER (WHERE status = 'lost') AS lost_count,
+                COUNT(*) FILTER (WHERE status = 'damaged') AS damaged_count
+            FROM ${this.schema}.book_issues
+            GROUP BY book_id
+        ) bd ON b.id = bd.book_id
         ORDER BY b.title ASC;
     `;
 
@@ -408,6 +431,8 @@ async function generateBookPopularityReport(params) {
     }
 
     let dateFilter = '';
+    let categoryFilter = '';
+    let searchFilter = '';
     const queryParams = [];
 
     if (params.days) {
@@ -416,108 +441,229 @@ async function generateBookPopularityReport(params) {
         dateFilter = `AND bi.issue_date >= CURRENT_DATE - INTERVAL '${days} days'`;
       }
     } else if (params.startDate && params.endDate) {
-      dateFilter = `AND bi.issue_date BETWEEN $1 AND $2`;
+      dateFilter = `AND bi.issue_date BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`;
       queryParams.push(params.startDate, params.endDate);
     }
 
+    if (params.category) {
+      categoryFilter = `AND b.category_id = $${queryParams.length + 1}`;
+      queryParams.push(params.category);
+    }
+
+    if (params.searchTerm) {
+      searchFilter = `AND (b.title ILIKE $${queryParams.length + 1} OR a.name ILIKE $${queryParams.length + 1})`;
+      queryParams.push(`%${params.searchTerm}%`);
+    }
+
+    // const query = `
+    //         WITH issue_base AS (
+    //         SELECT
+    //             bi.book_id,
+    //             bi.issued_to,
+    //             bi.issue_date,
+    //             DATE_TRUNC('month', bi.issue_date) AS issue_month
+    //         FROM ${this.schema}.book_issues bi
+    //         WHERE bi.status = 'issued' ${dateFilter}
+    //     ),
+
+    //     issue_summary AS (
+    //         SELECT
+    //             book_id,
+    //             COUNT(*) AS total_issues,
+    //             COUNT(DISTINCT issued_to) AS unique_borrowers,
+    //             MAX(issue_date) AS last_issue_date,
+    //             COUNT(DISTINCT issue_month) AS active_months
+    //         FROM issue_base
+    //         GROUP BY book_id
+    //     ),
+
+    //     category_summary AS (
+    //         SELECT
+    //             b.category_id,
+    //             COUNT(ib.book_id) AS category_total_issues
+    //         FROM ${this.schema}.books b
+    //         LEFT JOIN issue_base ib ON ib.book_id = b.id
+    //         GROUP BY b.category_id
+    //     ),
+
+    //     dashboard_stats AS (
+    //         SELECT
+    //             COUNT(*) FILTER (WHERE bi.status='issued'
+    //                 AND DATE_TRUNC('month', bi.issue_date)=DATE_TRUNC('month', CURRENT_DATE)
+    //             ) AS total_issues_this_month
+    //         FROM ${this.schema}.book_issues bi
+    //     )
+
+    //     SELECT
+    //         b.id,
+    //         b.title AS book_name,
+    //         a.name AS author,
+    //         c.name AS category,
+    //         b.total_copies AS copies,
+
+    //         -- Book Metrics
+    //         COALESCE(isum.total_issues,0) AS total_issues,
+    //         COALESCE(isum.unique_borrowers,0) AS unique_borrowers,
+    //         ROUND(COALESCE(isum.total_issues,0) / NULLIF(isum.active_months,0),2) AS avg_issues_per_month,
+
+    //         -- Popularity Level
+    //         CASE
+    //             WHEN COALESCE(isum.total_issues,0) >= 50 THEN 'High'
+    //             WHEN COALESCE(isum.total_issues,0) BETWEEN 20 AND 49 THEN 'Medium'
+    //             ELSE 'Low'
+    //         END AS popularity_level,
+
+    //         -- Days Since Last Issue
+    //         CASE
+    //             WHEN isum.last_issue_date IS NULL THEN NULL
+    //             ELSE CURRENT_DATE - isum.last_issue_date
+    //         END AS days_since_last_issue,
+
+    //         -- Ranking (Top Books)
+    //         RANK() OVER (ORDER BY COALESCE(isum.total_issues,0) DESC) AS popularity_rank,
+
+    //         -- Category Popularity
+    //         cs.category_total_issues,
+
+    //         -- Dashboard Metrics (same value repeated per row for UI use)
+    //         ds.total_issues_this_month,
+
+    //         -- Flags
+    //         CASE WHEN isum.total_issues IS NULL THEN TRUE ELSE FALSE END AS never_issued,
+
+    //         -- Most Popular Book Flag
+    //         CASE
+    //             WHEN COALESCE(isum.total_issues,0) =
+    //                 MAX(COALESCE(isum.total_issues,0)) OVER ()
+    //             THEN TRUE ELSE FALSE
+    //         END AS is_most_popular,
+
+    //         -- Least Borrowed Book Flag
+    //         CASE
+    //             WHEN COALESCE(isum.total_issues,0) =
+    //                 MIN(COALESCE(isum.total_issues,0)) OVER ()
+    //             THEN TRUE ELSE FALSE
+    //         END AS is_least_borrowed
+
+    //     FROM ${this.schema}.books b
+    //     LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
+    //     LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+    //     LEFT JOIN issue_summary isum ON b.id = isum.book_id
+    //     LEFT JOIN category_summary cs ON cs.category_id = b.category_id
+    //     CROSS JOIN dashboard_stats ds
+
+    //     ORDER BY total_issues DESC
+    // `;
+
+
     const query = `
-            WITH issue_base AS (
-            SELECT
-                bi.book_id,
-                bi.issued_to,
-                bi.issue_date,
-                DATE_TRUNC('month', bi.issue_date) AS issue_month
-            FROM ${this.schema}.book_issues bi
-            WHERE bi.status = 'issued' ${dateFilter}
-        ),
+      WITH issue_base AS (
+    SELECT
+        bi.book_id,
+        bi.issued_to,
+        bi.issue_date,
+        DATE_TRUNC('month', bi.issue_date) AS issue_month
+    FROM ${this.schema}.book_issues bi
+    WHERE bi.status = 'issued'
+),
 
-        issue_summary AS (
-            SELECT
-                book_id,
-                COUNT(*) AS total_issues,
-                COUNT(DISTINCT issued_to) AS unique_borrowers,
-                MAX(issue_date) AS last_issue_date,
-                COUNT(DISTINCT issue_month) AS active_months
-            FROM issue_base
-            GROUP BY book_id
-        ),
+issue_summary AS (
+    SELECT
+        book_id,
+        COUNT(*) AS total_issues,
+        COUNT(DISTINCT issued_to) AS unique_borrowers,
+        MAX(issue_date) AS last_issue_date,
+        COUNT(DISTINCT issue_month) AS active_months
+    FROM issue_base
+    GROUP BY book_id
+),
 
-        category_summary AS (
-            SELECT
-                b.category_id,
-                COUNT(ib.book_id) AS category_total_issues
-            FROM ${this.schema}.books b
-            LEFT JOIN issue_base ib ON ib.book_id = b.id
-            GROUP BY b.category_id
-        ),
+category_summary AS (
+    SELECT
+        b.category_id,
+        COUNT(ib.book_id) AS category_total_issues
+    FROM ${this.schema}.books b
+    LEFT JOIN issue_base ib ON ib.book_id = b.id
+    GROUP BY b.category_id
+),
 
-        dashboard_stats AS (
-            SELECT
-                COUNT(*) FILTER (WHERE bi.status='issued'
-                    AND DATE_TRUNC('month', bi.issue_date)=DATE_TRUNC('month', CURRENT_DATE)
-                ) AS total_issues_this_month
-            FROM ${this.schema}.book_issues bi
-        )
+dashboard_stats AS (
+    SELECT
+        COUNT(*) FILTER (
+            WHERE status = 'issued'
+            AND DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)
+        ) AS total_issues_this_month
+    FROM ${this.schema}.book_issues
+)
 
-        SELECT
-            b.id,
-            b.title AS book_name,
-            a.name AS author,
-            c.name AS category,
-            b.total_copies AS copies,
+SELECT
+    b.id,
+    b.title AS book_name,
+    a.name AS author,
+    c.name AS category,
+    b.total_copies AS copies,
 
-            -- Book Metrics
-            COALESCE(isum.total_issues,0) AS total_issues,
-            COALESCE(isum.unique_borrowers,0) AS unique_borrowers,
-            ROUND(COALESCE(isum.total_issues,0) / NULLIF(isum.active_months,0),2) AS avg_issues_per_month,
+    -- Book Metrics
+    COALESCE(isum.total_issues,0) AS total_issues,
+    COALESCE(isum.unique_borrowers,0) AS unique_borrowers,
+    ROUND(
+        COALESCE(isum.total_issues,0) / NULLIF(isum.active_months,0),
+        2
+    ) AS avg_issues_per_month,
 
-            -- Popularity Level
-            CASE
-                WHEN COALESCE(isum.total_issues,0) >= 50 THEN 'High'
-                WHEN COALESCE(isum.total_issues,0) BETWEEN 20 AND 49 THEN 'Medium'
-                ELSE 'Low'
-            END AS popularity_level,
+    -- Popularity Level
+    CASE
+        WHEN COALESCE(isum.total_issues,0) >= 50 THEN 'High'
+        WHEN COALESCE(isum.total_issues,0) BETWEEN 20 AND 49 THEN 'Medium'
+        ELSE 'Low'
+    END AS popularity_level,
 
-            -- Days Since Last Issue
-            CASE
-                WHEN isum.last_issue_date IS NULL THEN NULL
-                ELSE CURRENT_DATE - isum.last_issue_date
-            END AS days_since_last_issue,
+    -- Days Since Last Issue
+    CASE
+        WHEN isum.last_issue_date IS NULL THEN NULL
+        ELSE CURRENT_DATE - isum.last_issue_date
+    END AS days_since_last_issue,
 
-            -- Ranking (Top Books)
-            RANK() OVER (ORDER BY COALESCE(isum.total_issues,0) DESC) AS popularity_rank,
+    -- Ranking (Top Books)
+    RANK() OVER (ORDER BY COALESCE(isum.total_issues,0) DESC) AS popularity_rank,
 
-            -- Category Popularity
-            cs.category_total_issues,
+    -- Category Popularity
+    cs.category_total_issues,
 
-            -- Dashboard Metrics (same value repeated per row for UI use)
-            ds.total_issues_this_month,
+    -- Dashboard Metric
+    ds.total_issues_this_month,
 
-            -- Flags
-            CASE WHEN isum.total_issues IS NULL THEN TRUE ELSE FALSE END AS never_issued,
+    -- Never Issued Flag (FIXED)
+    CASE
+        WHEN COALESCE(isum.total_issues,0) = 0 THEN TRUE
+        ELSE FALSE
+    END AS never_issued,
 
-            -- Most Popular Book Flag
-            CASE
-                WHEN COALESCE(isum.total_issues,0) =
-                    MAX(COALESCE(isum.total_issues,0)) OVER ()
-                THEN TRUE ELSE FALSE
-            END AS is_most_popular,
+    -- Most Popular Book Flag
+    CASE
+        WHEN COALESCE(isum.total_issues,0) =
+            MAX(COALESCE(isum.total_issues,0)) OVER ()
+        THEN TRUE ELSE FALSE
+    END AS is_most_popular,
 
-            -- Least Borrowed Book Flag
-            CASE
-                WHEN COALESCE(isum.total_issues,0) =
-                    MIN(COALESCE(isum.total_issues,0)) OVER ()
-                THEN TRUE ELSE FALSE
-            END AS is_least_borrowed
+    -- Least Borrowed Book (excluding never issued) — FIXED
+    CASE
+        WHEN COALESCE(isum.total_issues,0) > 0
+         AND COALESCE(isum.total_issues,0) =
+             MIN(NULLIF(isum.total_issues,0)) OVER ()
+        THEN TRUE ELSE FALSE
+    END AS is_least_borrowed
 
-        FROM ${this.schema}.books b
-        LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
-        LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
-        LEFT JOIN issue_summary isum ON b.id = isum.book_id
-        LEFT JOIN category_summary cs ON cs.category_id = b.category_id
-        CROSS JOIN dashboard_stats ds
+FROM ${this.schema}.books b
+LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
+LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
+LEFT JOIN issue_summary isum ON b.id = isum.book_id
+LEFT JOIN category_summary cs ON cs.category_id = b.category_id
+CROSS JOIN dashboard_stats ds
+WHERE 1=1 ${categoryFilter} ${searchFilter}
 
-        ORDER BY total_issues DESC
+ORDER BY total_issues DESC;
+
     `;
 
     const result = await sql.query(query, queryParams);
@@ -627,6 +773,275 @@ async function generateBookPopularityReport(params) {
   }
 }
 
+
+async function exportBookPopularityReportExcel(params) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    // Get the report data
+    const reportData = await this.generateBookPopularityReport(params);
+
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Library Management System';
+    workbook.lastModifiedBy = 'System';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    // Main Table Sheet
+    const mainTableSheet = workbook.addWorksheet('Book Popularity Report');
+
+    // Add title
+    mainTableSheet.mergeCells('A1:H1');
+    mainTableSheet.getCell('A1').value = 'Book Popularity Analytics Report';
+    mainTableSheet.getCell('A1').font = { size: 16, bold: true };
+    mainTableSheet.getCell('A1').alignment = { horizontal: 'center' };
+
+    // Add filters info
+    mainTableSheet.getCell('A3').value = 'Filters Applied:';
+    mainTableSheet.getCell('A3').font = { bold: true };
+
+    let filterRow = 4;
+    if (params.days) {
+      mainTableSheet.getCell(`A${filterRow}`).value = `Time Period: Last ${params.days} days`;
+      filterRow++;
+    }
+    if (params.category) {
+      mainTableSheet.getCell(`A${filterRow}`).value = `Category: ${params.category}`;
+      filterRow++;
+    }
+    if (params.searchTerm) {
+      mainTableSheet.getCell(`A${filterRow}`).value = `Search: ${params.searchTerm}`;
+      filterRow++;
+    }
+
+    // Add headers
+    const headers = ['Book Title', 'Author', 'Category', 'Total Copies', 'Total Issues', 'Unique Borrowers', 'Avg Issues/Month', 'Popularity Level'];
+    headers.forEach((header, index) => {
+      const cell = mainTableSheet.getCell(6, index + 1);
+      cell.value = header;
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE6E6FA' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Add data
+    reportData.mainTable.forEach((row, index) => {
+      const rowIndex = index + 7;
+      mainTableSheet.getCell(rowIndex, 1).value = row.book_name;
+      mainTableSheet.getCell(rowIndex, 2).value = row.author || 'N/A';
+      mainTableSheet.getCell(rowIndex, 3).value = row.category || 'N/A';
+      mainTableSheet.getCell(rowIndex, 4).value = row.copies;
+      mainTableSheet.getCell(rowIndex, 5).value = row.total_issues;
+      mainTableSheet.getCell(rowIndex, 6).value = row.unique_borrowers;
+      mainTableSheet.getCell(rowIndex, 7).value = row.avg_issues_per_month;
+      mainTableSheet.getCell(rowIndex, 8).value = row.popularity_level;
+
+      // Add borders
+      for (let col = 1; col <= 8; col++) {
+        mainTableSheet.getCell(rowIndex, col).border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    });
+
+    // Auto-fit columns
+    mainTableSheet.columns.forEach(column => {
+      column.width = 15;
+    });
+
+    // Popular Books Sheet
+    if (reportData.popularBooks && reportData.popularBooks.length > 0) {
+      const popularSheet = workbook.addWorksheet('Top Popular Books');
+      popularSheet.getCell('A1').value = 'Top 10 Popular Books';
+      popularSheet.getCell('A1').font = { size: 14, bold: true };
+
+      const popularHeaders = ['Rank', 'Book Title', 'Total Issues', 'Avg Issues/Month'];
+      popularHeaders.forEach((header, index) => {
+        const cell = popularSheet.getCell(3, index + 1);
+        cell.value = header;
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE6E6FA' }
+        };
+      });
+
+      reportData.popularBooks.forEach((book, index) => {
+        const rowIndex = index + 4;
+        popularSheet.getCell(rowIndex, 1).value = book.ranking;
+        popularSheet.getCell(rowIndex, 2).value = book.book_name;
+        popularSheet.getCell(rowIndex, 3).value = book.total_issues;
+        popularSheet.getCell(rowIndex, 4).value = book.avg_issues_per_month;
+      });
+
+      popularSheet.columns.forEach(column => {
+        column.width = 20;
+      });
+    }
+
+    // Category Popularity Sheet
+    if (reportData.categoryPopularity && reportData.categoryPopularity.length > 0) {
+      const categorySheet = workbook.addWorksheet('Category Popularity');
+      categorySheet.getCell('A1').value = 'Category-wise Book Issues';
+      categorySheet.getCell('A1').font = { size: 14, bold: true };
+
+      const categoryHeaders = ['Category', 'Total Issues'];
+      categoryHeaders.forEach((header, index) => {
+        const cell = categorySheet.getCell(3, index + 1);
+        cell.value = header;
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE6E6FA' }
+        };
+      });
+
+      reportData.categoryPopularity.forEach((category, index) => {
+        const rowIndex = index + 4;
+        categorySheet.getCell(rowIndex, 1).value = category.category_name;
+        categorySheet.getCell(rowIndex, 2).value = category.total_issues;
+      });
+
+      categorySheet.columns.forEach(column => {
+        column.width = 20;
+      });
+    }
+
+    return workbook;
+
+  } catch (error) {
+    console.error("Error in exportBookPopularityReportExcel:", error);
+    throw error;
+  }
+}
+
+async function exportBookPopularityReportPDF(params) {
+  try {
+    if (!this.schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    // Get the report data
+    const reportData = await this.generateBookPopularityReport(params);
+
+    // Create PDF document
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    // Title
+    doc.fontSize(20).text('Book Popularity Analytics Report', { align: 'center' });
+    doc.moveDown();
+
+    // Filters
+    doc.fontSize(12).text('Filters Applied:', { underline: true });
+    if (params.days) {
+      doc.text(`Time Period: Last ${params.days} days`);
+    }
+    if (params.category) {
+      doc.text(`Category: ${params.category}`);
+    }
+    if (params.searchTerm) {
+      doc.text(`Search: ${params.searchTerm}`);
+    }
+    doc.moveDown();
+
+    // Summary Statistics
+    doc.fontSize(14).text('Summary Statistics:', { underline: true });
+    doc.fontSize(10);
+    doc.text(`Total Books: ${reportData.mainTable.length}`);
+    doc.text(`Current Month Issues: ${reportData.keyMetrics.currentMonthIssues}`);
+    if (reportData.keyMetrics.mostPopularBook) {
+      doc.text(`Most Popular Book: ${reportData.keyMetrics.mostPopularBook.book_name} (${reportData.keyMetrics.mostPopularBook.total_issues} issues)`);
+    }
+    doc.text(`Never Issued Books: ${reportData.keyMetrics.neverIssuedBooks}`);
+    doc.moveDown();
+
+    // Table Headers
+    const tableTop = doc.y;
+    const headers = ['Book Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level'];
+
+    doc.fontSize(10);
+    headers.forEach((header, i) => {
+      const x = 50 + (i * 80);
+      doc.text(header, x, tableTop, { width: 70, align: 'left' });
+    });
+
+    doc.moveDown();
+
+    // Table Data
+    reportData.mainTable.slice(0, 30).forEach((row, index) => { // Limit to 30 rows for PDF
+      if (doc.y > 700) { // Check if near page bottom
+        doc.addPage();
+      }
+
+      const y = doc.y;
+      doc.text(row.book_name.substring(0, 25), 50, y, { width: 70 });
+      doc.text((row.author || 'N/A').substring(0, 15), 130, y, { width: 70 });
+      doc.text((row.category || 'N/A').substring(0, 15), 210, y, { width: 70 });
+      doc.text(row.total_issues.toString(), 290, y, { width: 70 });
+      doc.text(row.unique_borrowers.toString(), 370, y, { width: 70 });
+      doc.text(row.popularity_level, 450, y, { width: 70 });
+
+      doc.moveDown(0.5);
+    });
+
+    // Top Books Section
+    if (reportData.popularBooks && reportData.popularBooks.length > 0) {
+      doc.addPage();
+      doc.fontSize(14).text('Top 10 Popular Books', { underline: true });
+      doc.moveDown();
+
+      reportData.popularBooks.forEach((book, index) => {
+        doc.fontSize(10).text(`${book.ranking}. ${book.book_name} - ${book.total_issues} issues`);
+      });
+    }
+
+    // Category Popularity Section
+    if (reportData.categoryPopularity && reportData.categoryPopularity.length > 0) {
+      doc.addPage();
+      doc.fontSize(14).text('Category-wise Statistics', { underline: true });
+      doc.moveDown();
+
+      reportData.categoryPopularity.forEach((category) => {
+        doc.fontSize(10).text(`${category.category_name}: ${category.total_issues} issues`);
+      });
+    }
+
+    // Footer
+    const pageCount = doc.bufferedPageRange().count;
+    for (let i = 0; i < pageCount; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(8).text(
+        `Generated on ${new Date().toLocaleDateString()} - Page ${i + 1} of ${pageCount}`,
+        50,
+        doc.page.height - 50,
+        { align: 'center' }
+      );
+    }
+
+    return doc;
+
+  } catch (error) {
+    console.error("Error in exportBookPopularityReportPDF:", error);
+    throw error;
+  }
+}
 
 module.exports = {
   init,
