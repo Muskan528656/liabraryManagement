@@ -20,7 +20,7 @@ const Books = ({ permissions, ...props }) => {
   const fetchExternalData = async () => {
     try {
       setLoading(true);
-      const [authorsRes, categoriesRes, publishersRes ] = await Promise.all([
+      const [authorsRes, categoriesRes, publishersRes] = await Promise.all([
         new DataApi("author").fetchAll(),
         new DataApi("category").fetchAll(),
         new DataApi("publisher").fetchAll()

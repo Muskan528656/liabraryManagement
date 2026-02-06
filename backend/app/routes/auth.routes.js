@@ -212,7 +212,7 @@ module.exports = (app) => {
         // const tcode = req.body.tcode.trim().toLowerCase();
 
         const errors = validationResult(req);
-        console.log("errorserrorserrors",errors)
+        console.log("errorserrorserrors", errors)
         if (!errors.isEmpty()) {
           return res.status(400).json({
             success: false,
@@ -243,19 +243,16 @@ module.exports = (app) => {
         }
 
         const userInfo = userRec.userinfo;
-        // console.log("passwordpassword",userInfo)
-        // console.log("uer info", userInfo)
-        // console.log("password", password)
+
         console.log("userInfo.password", userInfo.password)
-        const match = await bcrypt.compare(userInfo.password, userInfo.password);
-        console.log("match", match)
+
+        const match = await bcrypt.compare(req.body.password, userInfo.password);
         if (!match) {
           return res.status(400).json({
             success: false,
-            errors: "Invalid credentials  Please check your credentials and try again",
+            errors: "Invalid credentials. Please check your credentials and try again",
           });
         }
-
         delete userInfo.password;
 
 
