@@ -14,7 +14,12 @@ import PurchaseDataImport from "../common/PurchaseDataImport";
 import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
 import "../../App.css";
-const BulkPurchasePage = () => {
+import PermissionDenied from '../../utils/permission_denied';
+const BulkPurchasePage = ({permissions}) => {
+
+
+  
+
     const navigate = useNavigate();
 
     const [multiInsertRows, setMultiInsertRows] = useState([{
@@ -888,6 +893,10 @@ const BulkPurchasePage = () => {
     if (loading) {
         // return <Loader />;
          <span className="loader"></span>
+    }
+
+      if(!permissions?.allowCreate){
+        return <PermissionDenied />;
     }
 
     const renderTabContent = () => {

@@ -19,7 +19,9 @@ import BulkIssue from "./BulkIssue";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import moment from "moment";
-const BookIssue = () => {
+import { all } from "axios";
+import PermissionDenied from "../../utils/permission_denied";
+const BookIssue = ({ permissions }) => {
   const navigate = useNavigate();
   const { timeZone } = useTimeZone();
   const [selectedBook, setSelectedBook] = useState(null);
@@ -46,6 +48,11 @@ const BookIssue = () => {
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
+
+
+  const allowEdit = permissions?.allowEdit;
+
+  console.log("Book Issue Permissions:", permissions, allowEdit);
 
   useEffect(() => {
     fetchIssuedBooks();
@@ -265,7 +272,8 @@ const BookIssue = () => {
             navigate(`/book/${record.book_id}`);
           }}
           style={{
-            color: "#6f42c1",
+            color: "var(--primary-color)",
+            // color: "#6f42c1",
             textDecoration: "none",
             fontWeight: "600",
           }}
@@ -290,21 +298,6 @@ const BookIssue = () => {
         </a>
       ),
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     {
       field: "issued_to_name",
@@ -333,7 +326,8 @@ const BookIssue = () => {
                 navigate(`/librarycard/${userId}`, { state: record });
               }}
               style={{
-                color: "#6f42c1",
+                color: "var(--primary-color)",
+                // color: "#6f42c1",
                 textDecoration: "none",
                 fontWeight: 500,
               }}
@@ -383,7 +377,8 @@ const BookIssue = () => {
                 window.open(`/user/${userId}`, "_blank");
               }}
               style={{
-                color: "#6f42c1",
+                color: "var(--primary-color)",
+                // color: "#6f42c1",
                 textDecoration: "none",
                 fontWeight: 500,
                 cursor: "pointer",
@@ -491,6 +486,15 @@ const BookIssue = () => {
       ),
     },
   ];
+
+
+  if (permissions.loading) {
+    return <div className="loading"></div>;
+  }
+
+  if (!permissions.allowCreate || !permissions.allowView) {
+     return <PermissionDenied />;
+  }
 
   return (
 
@@ -622,7 +626,7 @@ const BookIssue = () => {
                     loading={loadingIssuedBooks}
                     showCheckbox={false}
                     showSerialNumber={true}
-                    showActions={false}
+                    showActions= {allowEdit}
                     searchTerm={searchTerm}
                     currentPage={currentPage}
                     recordsPerPage={recordsPerPage}

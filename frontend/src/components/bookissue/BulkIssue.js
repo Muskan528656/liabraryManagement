@@ -19,6 +19,7 @@ import DataApi from "../../api/dataApi";
 import helper from "../common/helper";
 import PubSub from "pubsub-js";
 import * as constants from "../../constants/CONSTANT";
+import PermissionDenied from "../../utils/permission_denied";
 
 
 const styles = `
@@ -52,7 +53,11 @@ const styles = `
   }
   .detail-row:last-child { border-bottom: none; }
 `;
-const BulkIssue = () => {
+const BulkIssue = ({ permissions }) => {
+
+
+ 
+
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
   const [issuedBooks, setIssuedBooks] = useState([]);
@@ -88,6 +93,7 @@ const BulkIssue = () => {
   const [memberAge, setMemberAge] = useState(null);
   const [filteredBooksByAge, setFilteredBooksByAge] = useState([]);
   const [showIssuedBooks, setShowIssuedBooks] = useState(false);
+
 
   const extractErrorMessage = (result) => {
     if (!result) return "Unknown error";
@@ -1080,6 +1086,9 @@ const getImageUrl = (image) => {
       (selectedCard.data.user_name || selectedCard.data.student_name || "Unknown User");
   };
 
+
+  
+
   const limitsTooltip = (props) => (
     <Tooltip id="limits-tooltip" {...props}>
       <div className="text-start">
@@ -1134,6 +1143,11 @@ const getImageUrl = (image) => {
       </div>
     </Tooltip>
   );
+
+
+  // if(!permissions?.allowCreate) {
+  //   return  <PermissionDenied />;
+  // }
 
   return (
     <Container

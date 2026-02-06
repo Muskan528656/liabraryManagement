@@ -2,20 +2,23 @@
 import React from "react";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import DataApi from "../../api/dataApi";
-import { createModel } from "../common/UniversalCSVXLSXImporter"; // Import createModel
-import { Badge } from "react-bootstrap";
+import { createModel } from "../common/UniversalCSVXLSXImporter"; 
 
 export const planDataDependencies = {
     company: "company",
 };
 
 const statusBadge = (value) => (
-    <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-secondary"}`}>
+    // <span style={{padding:"5px"}} className={`badge ${value ? "bg-success" : "bg-danger"}`}>
+    //     {value ? "Active" : "Inactive"}
+    // </span>
+     <span  className={`badge ${value ? "bg-success" : "bg-danger"}`}>
         {value ? "Active" : "Inactive"}
     </span>
+
 );
 
-export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) => {
+export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone, permissions) => {
     const PlanModel = createModel({
         modelName: "Plan",
         fields: {
@@ -26,6 +29,10 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
         },
         required: ["plan_name", "duration_days"],
     });
+
+
+    console.log("Plan permissions in config:", permissions);
+    const allowEdit = permissions?.canEdit;
 
     const SettingApi = new DataApi("librarysettings");
     let maxBooksDefault = 0;
@@ -146,8 +153,7 @@ export const getPlanConfig = async (externalData = {}, allowedBooks, timeZone) =
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-            allowDelete: false,
-            allowEdit: true,
+            allowEdit: allowEdit,
             showImportButton: true,
             showAdvancedFilter: true,
         },

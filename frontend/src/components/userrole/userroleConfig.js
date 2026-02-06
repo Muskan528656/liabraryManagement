@@ -5,7 +5,7 @@ import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
-export const getUserRoleConfig = (externalData = {}, props = {}) => {
+export const getUserRoleConfig = (externalData = {}, props = {}, permissions) => {
 
     const countryCodeOptions = externalData.countryCodeList && externalData.countryCodeList.length > 0
         ? externalData.countryCodeList.map(item => ({
@@ -25,6 +25,9 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
         },
         required: ["role_name"],
     });
+
+
+    const allowEdit = permissions?.allowEdit ?? false;
 
     return {
         moduleName: "user_roles",
@@ -53,9 +56,10 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
                         value || (typeof value === "boolean" ? (value ? "active" : "inactive") : "inactive");
 
                     return (
-                        <Badge className="px-2" bg={statusValue === "active" || statusValue === true ? "success" : "secondary"}>
+                        <Badge  bg={statusValue === "active" || statusValue === true ? "success" : "danger"}>
                             {statusValue === "active" || statusValue === true ? "Active" : "Inactive"}
                         </Badge>
+                      
                     );
                 }
             },
@@ -112,10 +116,9 @@ export const getUserRoleConfig = (externalData = {}, props = {}) => {
             showSearch: true,
             showColumnVisibility: true,
             showCheckbox: true,
-            showActions: true,
+            showActions: allowEdit,
             showAddButton: true,
-            allowEdit: true,
-            allowDelete: false,
+            allowEdit: allowEdit,
             showImportButton: true,
             showAdvancedFilter: true,
         },

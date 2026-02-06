@@ -57,6 +57,7 @@ const BookDetail = ({ permissions}) => {
   };
 
   const fetchExternalData = async () => {
+    console.log("Fetching external data for BookDetail");
     try {
       const authorApi = new DataApi("author");
       const authorsResponse = await authorApi.fetchAll();
@@ -65,6 +66,9 @@ const BookDetail = ({ permissions}) => {
       const categoryApi = new DataApi("category");
       const categoriesResponse = await categoryApi.fetchAll();
       const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
+
+      console.log("Fetched authors:", authors);
+      console.log("Fetched categories:", categories);
 
       setExternalData({
         authors: Array.isArray(authors) ? authors : [],
@@ -76,6 +80,7 @@ const BookDetail = ({ permissions}) => {
   };
 
   useEffect(() => {
+    console.log("BookDetail useEffect triggered");
     fetchExternalData();
     if (id) {
       fetchBookData(id);

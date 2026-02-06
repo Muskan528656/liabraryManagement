@@ -35,11 +35,14 @@ const LibraryCardDetail = ({
   onEdit = null,
   onDelete = null,
   externalData = {},
-  permissions = {},
+  permissions,
 }) => {
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
+
+
+  console.log("permissions", permissions)
 
   const { timeZone } = useTimeZone();
   const [cardData, setCardData] = useState(null);
@@ -104,10 +107,10 @@ const LibraryCardDetail = ({
     []
   );
   const [permissionsState, setPermissionsState] = useState({
-    canView: permissions.canView || true,
-    canCreate: permissions.canCreate || false,
-    canEdit: permissions.canEdit || true,
-    canDelete: permissions.canDelete || false,
+    canView: permissions.allowView || true,
+    canCreate: permissions.allowCreate || false,
+    canEdit: permissions.allowEdit || true,
+    canDelete: permissions.allowDelete || false,
     loading: permissions.loading || false
   });
 
@@ -147,7 +150,8 @@ const LibraryCardDetail = ({
     ? permissions
     : permissionsState;
 
-  const { canEdit, canDelete } = effectivePermissions;
+  const canEdit = effectivePermissions?.canEdit || effectivePermissions?.allowEdit || effectivePermissions?.edit;
+  const canDelete = effectivePermissions?.canDelete || effectivePermissions?.allowDelete || effectivePermissions?.delete || false;
   const normalizedFileHost = useMemo(() => {
     if (typeof API_BASE_URL === "string" && API_BASE_URL.length > 0) {
       return API_BASE_URL.replace("/ibs", "");
@@ -691,26 +695,6 @@ const LibraryCardDetail = ({
         colSize: 3,
       },
     ],
-    other: [
-      { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      {
-        key: "createddate",
-        label: "Created Date",
-        type: "date",
-        render: (value) => {
-          return convertToUserTimezone(value, timeZone)
-        },
-      },
-      {
-        key: "lastmodifieddate",
-        label: "Last Modified Date",
-        type: "date",
-        render: (value) => {
-          return convertToUserTimezone(value, timeZone)
-        },
-      },
-    ],
   };
 
   const formatDate = (dateString) => {
@@ -1197,15 +1181,6 @@ const LibraryCardDetail = ({
   //   }
   // };
   const handleEdit = async () => {
-    // ✅ Check if user has edit permission
-    if (!canEdit) {
-      PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Permission Denied",
-        message: "You don't have permission to edit this library card",
-      });
-      return;
-    }
-
     if (onEdit) {
       onEdit(data);
     } else {
@@ -1502,11 +1477,8 @@ const LibraryCardDetail = ({
       }
 
       PubSub.publish("RECORD_SAVED_TOAST", {
-
         title: "Success",
-
-        message: `${moduleLabel} updated successfully`,
-
+        message: "Record saved successfully",
       });
 
       resetImageSelection();
@@ -2018,12 +1990,12 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {!isEditing ? (
+                  {canEdit && !isEditing ? (
                     <button onClick={handleEdit} className="custom-btn-primary">
                       <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
                     </button>
-                  ) : (
+                  ) : !isEditing ? null : (
                     <div className="d-flex gap-2">
                       <button
                         className="custom-btn-primary"
@@ -2193,33 +2165,7 @@ const LibraryCardDetail = ({
                                 </Col>
                               </Row>
 
-                              <Col className="pt-4">
-                                <h6
-                                  className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
-                                  style={{
-                                    color: "var(--primary-color)",
-                                    borderRadius: "10px",
-                                  }}
-                                >
-                                  Others
-                                </h6>
-                                <Row className="px-5">
-                                  <Col md={6}>
-                                    {normalizedFields.other
-                                      ?.slice(0, 2)
-                                      .map((field, index) =>
-                                        renderFieldGroup(field, index)
-                                      )}
-                                  </Col>
-                                  <Col md={6}>
-                                    {normalizedFields.other
-                                      ?.slice(2)
-                                      .map((field, index) =>
-                                        renderFieldGroup(field, index + 2)
-                                      )}
-                                  </Col>
-                                </Row>
-                              </Col>
+
 
                               {bookStatistics.length > 0 &&
                                 bookStatistics.map((section, idx) => (

@@ -24,8 +24,11 @@ import ResizableTable from "../common/ResizableTable";
 import AdvancedFilter, { applyAdvancedFilters } from "../common/AdvancedFilter";
 import moment from "moment";
 import { useBookSubmission } from "../../contexts/BookSubmissionContext";
+import PermissionDenied from "../../utils/permission_denied";
 
-const BookSubmit = () => {
+const BookSubmit = ({ permissions }) => {
+
+
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const filter = searchParams.get('filter');
@@ -83,6 +86,13 @@ const BookSubmit = () => {
     const recordsPerPage = 20;
     const isbnInputRef = useRef(null);
     const cardInputRef = useRef(null);
+
+
+    console.log("Permissions for Submissions", permissions);
+
+    const allowEdit = permissions?.allowEdit;
+
+    console.log("Book Submit Permissions:", permissions, allowEdit);
 
 
     const getBookPriceFromPurchaseDetails = (purchaseDetails) => {
@@ -449,7 +459,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Late Return",
                 description: `${daysOverdue} day(s) overdue`,
-                calculation: `${daysOverdue} days × ?${finePerDay}/day`,
+                calculation: `${daysOverdue} days ï¿½ ?${finePerDay}/day`,
                 amount: latePenalty,
                 color: "#f59e0b"
             });
@@ -461,7 +471,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Damage",
                 description: `Damage penalty (${damagePercentage}% of book price)`,
-                calculation: `?${bookPrice} × ${damagePercentage}%`,
+                calculation: `?${bookPrice} ï¿½ ${damagePercentage}%`,
                 amount: damagePenalty,
                 color: "#ef4444"
             });
@@ -473,7 +483,7 @@ const BookSubmit = () => {
             breakdown.push({
                 type: "Book Lost",
                 description: `Lost book (${lostPercentage}% of book price)`,
-                calculation: `?${bookPrice} × ${lostPercentage}%`,
+                calculation: `?${bookPrice} ï¿½ ${lostPercentage}%`,
                 amount: lostPenalty,
                 color: "#dc2626"
             });
@@ -1397,13 +1407,13 @@ const BookSubmit = () => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge className="px-2" bg="primary">Issued</Badge>;
+                return <Badge  bg="success">Issued</Badge>;
             case 'submitted':
-                return <Badge className="px-2" bg="info">Submitted</Badge>;
+                return <Badge  bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge className="px-2" bg="secondary">Cancelled</Badge>;
+                return <Badge  bg="danger">Cancelled</Badge>;
             case 'overdue':
-                return <Badge className="px-2" bg="danger">Overdue</Badge>;
+                return <Badge  bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }
@@ -1413,6 +1423,7 @@ const BookSubmit = () => {
         {
             field: "book_title",
             label: "Book Title",
+            
             width: 300,
             height: 0,
             render: (value, record) => {
@@ -1516,7 +1527,7 @@ const BookSubmit = () => {
             label: "Due Date",
             width: 120,
             render: (value) => {
-                if (!value) return "—";
+                if (!value) return "ï¿½";
                 const displayDate = moment(value).format('DD-MM-YYYY');
                 const isOverdue = new Date(value) < new Date();
 
@@ -1538,7 +1549,8 @@ const BookSubmit = () => {
             width: 100,
             render: (value) => getStatusBadge(value)
         },
-        {
+        
+        (allowEdit  && {
             field: "actions",
             label: "Actions",
             width: 200,
@@ -1572,7 +1584,7 @@ const BookSubmit = () => {
                     </div>
                 );
             }
-        }
+        } )
     ];
 
     const submittedBooksColumns = [
@@ -1748,6 +1760,10 @@ const BookSubmit = () => {
             type: "date"
         }
     ];
+
+    if(!permissions?.allowView){
+        return <PermissionDenied/>
+    }
 
     return (
         <>
@@ -2044,6 +2060,7 @@ const BookSubmit = () => {
 
                                                 <ResizableTable
                                                     data={filteredIssuedBooks}
+                                                    // columns={allowEdit ? issueColumns : issueColumns.filter(col => col.field !== 'actions')}
                                                     columns={issueColumns}
                                                     loading={loading}
                                                     showCheckbox={false}
@@ -2098,7 +2115,7 @@ const BookSubmit = () => {
                                                         loading={loadingSubmitted}
                                                         showCheckbox={false}
                                                         showSerialNumber={true}
-                                                        showActions={false}
+                                                        showActions={allowEdit}
                                                         searchTerm={searchTerm}
                                                         currentPage={currentPage}
                                                         recordsPerPage={recordsPerPage}

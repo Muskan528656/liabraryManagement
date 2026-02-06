@@ -75,7 +75,7 @@ async function findById(id) {
 
 
 
-async function findByEmail(email) {
+async function findByEmail(email, excludeId = null) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
@@ -121,10 +121,10 @@ async function create(userData, userId) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    if (userData.email) {
-      const existing = await this.findByEmail(userData.email);
-      if (existing) throw new Error("User with this email already exists");
-    }
+    // if (userData.email) {
+    //   const existing = await this.findByEmail(userData.email);
+    //   if (existing) throw new Error("User with this email already exists");
+    // }
 
     if (!userData.companyid) {
       throw new Error("Company ID is required for user creation.");
@@ -200,12 +200,13 @@ async function updateById(id, userData) {
   if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
  
-    if (userData.email) {
-      const existing = await this.findByEmail(userData.email);
-      if (existing && existing.id !== id) {
-        throw new Error("User with this email already exists");
-      }
-    }
+    // if (userData.email) {
+    //   console.log("Checking for existing email:", userData.email);
+    //   const existing = await this.findByEmail(userData.email);
+    //   if (existing && existing.id !== id) {
+    //     throw new Error("User with this email already exists");
+    //   }
+    // }
 
     const updateFields = [];
     const values = [];

@@ -7,32 +7,39 @@ const ResizableTable = ({
     loading = false,
     searchTerm = "",
     currentPage = 1,
-    recordsPerPage = 10,
+    recordsPerPage = 5,
     onPageChange = () => { },
     showSerialNumber = true,
-    showActions = true,
+    showActions={},
     showCheckbox = true,
     actionsRenderer = null,
     onRowClick = null,
     emptyMessage = "No records found",
-    selectedItems = [],
+    selectedItems = [],  
     onSelectionChange = () => { },
 }) => {
+
+
+    console.log("ResizableTable Rendered");
+    console.log("showActions:", showActions);
 
     const safeData = Array.isArray(data) ? data : [];
     const [columnWidths, setColumnWidths] = useState({});
     const [isResizing, setIsResizing] = useState(false);
     const [resizeColumn, setResizeColumn] = useState(null);
-    const [visibleRows, setVisibleRows] = useState(20);
+    const [visibleRows, setVisibleRows] = useState(10);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const tableRef = useRef(null);
     const isResizingRef = useRef(false);
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
+ 
     const totalPages = Math.ceil(safeData.length / recordsPerPage);
-    const startRecord = (currentPage - 1) * recordsPerPage;
+    const startRecord = (currentPage - 1) * recordsPerPage; 
     const endRecord = startRecord + recordsPerPage;
+ 
+
 
     const paginatedData = useMemo(() => {
         if (currentPage === 1) {
@@ -53,7 +60,7 @@ const ResizableTable = ({
         if (currentPage !== 1 || loading) return;
 
 
-        setVisibleRows(20);
+        setVisibleRows(10);
 
 
         if (observerRef.current) {
@@ -431,7 +438,7 @@ const ResizableTable = ({
                                             }}
                                         />
                                     </th>
-                                )}
+                                )}                         
                             </tr>
                         </thead>
                         <tbody className="detail-h4">
@@ -507,7 +514,7 @@ const ResizableTable = ({
                                                 </td>
                                             );
                                         })}
-                                        {showActions && (
+                                     {showActions && (
                                             <td
                                                 style={{
                                                     textAlign: "center",
@@ -519,31 +526,17 @@ const ResizableTable = ({
                                                     : (
                                                         <div className="d-flex gap-2 justify-content-center">
                                                             <button
-
-
                                                                 className="custom-btn-edit"
-
-
-
-
-
                                                                 title="Edit"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-edit"></i>
                                                             </button>
-                                                            <button
-
-
+                                                            {/* <button
                                                                 className="custom-btn-delete"
-
-
-
-
-
                                                                 title="Delete"
                                                             >
                                                                 <i className="fs-7 fa-solid fa-trash"></i>
-                                                            </button>
+                                                            </button> */}
                                                         </div>
                                                     )}
                                             </td>

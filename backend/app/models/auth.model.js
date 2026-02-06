@@ -163,6 +163,8 @@ async function createUser(newUser) {
 
 
 async function findByEmail(email) {
+
+  console.log("Finding user by email:", email);
   if (!this.schema) {
     console.error("Error: Schema not initialized in findByEmail");
     throw new Error(
@@ -446,11 +448,12 @@ async function getUserCount(companyId) {
 }
 
 async function checkCompanybyTcode(tcode) {
+  console.log("tcode->>>", tcode)
   let query = `SELECT * FROM public.company WHERE LOWER(tenantcode) =  LOWER($1)`;
 
   try {
     const result = await sql.query(query, [tcode]);
-
+    console.log("REsult->>>>>", result)
     if (result.rows.length > 0) {
       return result.rows;
     }

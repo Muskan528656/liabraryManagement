@@ -28,9 +28,8 @@ const normalizeListResponse = (payload) => {
 };
 
 const DynamicCRUD = ({
-
     moduleName,
-    moduleLabel,
+    moduleLabel = "Item",
     apiEndpoint,
     columns = [],
     formFields = [],
@@ -60,10 +59,9 @@ const DynamicCRUD = ({
     publishers = [],
 }) => {
     const {
-        canCreate = true,
-        canEdit = true,
-        canDelete = true,
-        canView = true
+        allowCreate = true,
+        allowEdit = true,
+        allowView = true
     } = permissions;
 
 
@@ -79,8 +77,7 @@ const DynamicCRUD = ({
         showCheckbox = true,
         showActions = true,
         showAddButton = true,
-        allowEdit = canEdit,
-        allowDelete = canDelete,
+        canEdit = permissions?.allowEdit,
         showAdvancedFilter = false
     } = features;
 
@@ -351,7 +348,7 @@ const DynamicCRUD = ({
     useEffect(() => {
         setFormData(initialFormData);
         console.log("recordsPerPage:", recordsPerPage);
-    }, []);
+    }, [initialFormData]);
 
     useEffect(() => {
         const token = sessionStorage.getItem("token");
@@ -371,10 +368,10 @@ const DynamicCRUD = ({
     const filteredData = useMemo(() => {
         let result = data;
 
-        console.log('advancedFilters = ', advancedFilters);
-        console.log('resultData = ', result);
-        console.log('searchTerm = ', searchTerm);
-        console.log('showSearch = ', showSearch);
+        // console.log('advancedFilters = ', advancedFilters);
+        // console.log('resultData = ', result);
+        // console.log('searchTerm = ', searchTerm);
+        // console.log('showSearch = ', showSearch);
 
 
 
@@ -386,7 +383,7 @@ const DynamicCRUD = ({
 
 
         if (searchTerm && showSearch) {
-            const searchTermLower = searchTerm.toLowerCase();
+            const searchTermLower = (searchTerm || "").toLowerCase();
             result = result.filter(item =>
                 columns.some(col => {
                     if (!col || !col.field) return false;
@@ -414,7 +411,7 @@ const DynamicCRUD = ({
         try {
             setLoading(true);
             const api = new DataApi(apiEndpoint);
-            console.log("Fetching data from API endpoint:", apiEndpoint);
+            // console.log("Fetching data from API endpoint:", apiEndpoint);
             const response = await api.fetchAll();
             if (response.data !== undefined) {
                 const normalizedData = normalizeListResponse(response.data);
@@ -425,7 +422,7 @@ const DynamicCRUD = ({
                 }
             }
         } catch (error) {
-            console.error(`Error fetching ${moduleLabel}:`, error);
+            // console.error(`Error fetching ${moduleLabel}:`, error);
             PubSub.publish("RECORD_ERROR_TOAST", {
                 title: "Error",
                 message: `Failed to fetch ${moduleLabel}`,
@@ -601,11 +598,11 @@ const DynamicCRUD = ({
         });
     }, [allowEdit, apiEndpoint, navigate]);
 
-    const handleDelete = useCallback((id) => {
-        if (!allowDelete) return;
-        setDeleteId(id);
-        setShowDeleteModal(true);
-    }, [allowDelete]);
+    // const handleDelete = useCallback((id) => {
+    //     if (!allowDelete) return;
+    //     setDeleteId(id);
+    //     setShowDeleteModal(true);
+    // }, [allowDelete]);
 
     const handleChangePassword = useCallback((user) => {
         setSelectedUserForPassword(user);
@@ -921,7 +918,7 @@ const DynamicCRUD = ({
         //     });
         // }
 
-        if (showImportButton && canCreate) {
+        if (showImportButton && allowCreate) {
             buttons.push({
                 variant: "outline-primary",
                 size: "sm",
@@ -954,7 +951,7 @@ const DynamicCRUD = ({
                 label: "Bulk Insert",
                 onClick: handleBulkInsert,
             });
-        } if (showAddButton && canCreate) {
+        } if (showAddButton && allowCreate) {
             buttons.push({
                 size: "sm",
                 icon: "fa-solid fa-plus",
@@ -1167,11 +1164,11 @@ const DynamicCRUD = ({
                             ) : (
                                 <>
                                     <TableHeader
-                                        title={`${moduleLabel}`}
+                                        title={`${moduleLabel || "Item"}`}
                                         icon={icon}
                                         totalCount={filteredData.length}
-                                        totalLabel={moduleLabel}
-                                        searchPlaceholder={`Search ${moduleLabel.toLowerCase()}...`}
+                                        totalLabel={moduleLabel || "Item"}
+                                        searchPlaceholder={`Search ${(moduleLabel || "Item").toLowerCase()}...`}
                                         searchValue={searchTerm}
                                         onSearchChange={showSearch ? setSearchTerm : null}
                                         showColumnVisibility={showColumnVisibility}
@@ -1219,7 +1216,7 @@ const DynamicCRUD = ({
                                         recordsPerPage={recordsPerPage} //this bg-info
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
-                                        showActions={showActions}
+                                        showActions={allowEdit}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
 
@@ -1242,7 +1239,7 @@ const DynamicCRUD = ({
                                                         <i className="fs-7 fa-solid fa-key" style={{ color: 'gray' }}></i>
                                                     </button>
                                                 )}
-                                                {allowDelete && canDelete && (
+                                                {/* {allowDelete && canDelete && (
                                                     <button
                                                         onClick={() => handleDelete(item.id)}
                                                         title="Delete"
@@ -1250,7 +1247,7 @@ const DynamicCRUD = ({
                                                     >
                                                         <i className="fs-7 fa-solid fa-trash"></i>
                                                     </button>
-                                                )}
+                                                )} */}
 
                                                 {customHandlers?.handleBarcodePreview && (
                                                     <button
@@ -1300,7 +1297,7 @@ const DynamicCRUD = ({
                                         //         )}
                                         //     </div>
                                         // ) : null}
-                                        emptyMessage={emptyMessage || `No ${moduleLabel.toLowerCase()} found`}
+                                        emptyMessage={emptyMessage || `No ${(moduleLabel || "Item").toLowerCase()} found`}
                                     />
                                 </>
 
@@ -1474,7 +1471,7 @@ const DynamicCRUD = ({
 
 
             )}
-            {showImportModal && canCreate && (
+            {showImportModal && allowCreate && (
                 <Modal
                     show={showImportModal}
                     onHide={() => setShowImportModal(false)}
@@ -1523,13 +1520,13 @@ const DynamicCRUD = ({
                     centered
                     backdrop="static"
                 >
-                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", padding: '8px' }}>
+                    <Modal.Header closeButton style={{ background: "var(--secondary-color)", paddingRight: '30px' }}>
                         <b style={{ color: "var(--primary-color)", fontSize: '1.5rem' }}>Forgot Password</b>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
                             <Form.Group className="mb-3">
-                                <Form.Label>New Password *</Form.Label>
+                                <Form.Label>New Password <span className="text-danger">*</span></Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         type={passwordVisibility.password ? "text" : "password"}
@@ -1549,14 +1546,19 @@ const DynamicCRUD = ({
                                             justifyContent: "center",
                                         }}
                                     >
-                                        <span >
-                                            <i className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                        <span>
+                                            <i
+                                                className={`fa ${passwordVisibility.password ? "fa-eye" : "fa-eye-slash"}`}
+                                                style={{
+                                                    color: passwordVisibility.password ? "black" : "grey"
+                                                }}
+                                            ></i>
                                         </span>
                                     </InputGroup.Text>
                                 </InputGroup>
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Confirm Password *</Form.Label>
+                                <Form.Label>Confirm Password <span className="text-danger">*</span></Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         type={passwordVisibility.confirmPassword ? "text" : "password"}
@@ -1577,8 +1579,14 @@ const DynamicCRUD = ({
                                         }}
                                     >
                                         <span >
-                                            <i className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`} style={{ color: 'gray' }}></i>
+                                            <i
+                                                className={`fa ${passwordVisibility.confirmPassword ? "fa-eye" : "fa-eye-slash"}`}
+                                                style={{
+                                                    color: passwordVisibility.confirmPassword ? "black" : "grey"
+                                                }}
+                                            ></i>
                                         </span>
+
                                     </InputGroup.Text>
                                 </InputGroup>
                             </Form.Group>

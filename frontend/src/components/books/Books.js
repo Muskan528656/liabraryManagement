@@ -1,92 +1,78 @@
 
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getBooksConfig } from "./bookconfig";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
-import { MODULES } from "../../constants/CONSTANT";
+import { AuthHelper } from "../../utils/authHelper";
+import DataApi from "../../api/dataApi";
 
-const Books = (props) => {
+const Books = ({ permissions, ...props }) => {
   const { timeZone } = useTimeZone();
+  const [externalData, setExternalData] = useState({ authors: [], categories: [], publishers: [] });
+  const [loading, setLoading] = useState(true);
 
-  const [permissions, setPermissions] = useState({
-    canView: false,
-    canCreate: false,
-    canEdit: false,
-    canDelete: false,
-    loading: true
-  });
-
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      if (AuthHelper.isSuperAdmin()) {
-        setPermissions({
-          canView: true,
-          canCreate: true,
-          canEdit: true,
-          canDelete: true,
-          loading: false
-        });
-        return;
-      }
-
-      const perms = {
-        canView: await AuthHelper.hasModulePermission(MODULES.BOOKS, "view"),
-        canCreate: await AuthHelper.hasModulePermission(MODULES.BOOKS, "create"),
-        canEdit: await AuthHelper.hasModulePermission(MODULES.BOOKS, "edit"),
-        canDelete: await AuthHelper.hasModulePermission(MODULES.BOOKS, "delete"),
-        loading: false
-      };
-
-      setPermissions(perms);
-    };
-    fetchPermissions();
-    window.addEventListener("permissionsUpdated", fetchPermissions);
-    return () => {
-      window.removeEventListener("permissionsUpdated", fetchPermissions);
-    };
-  }, []);
-
-  const baseConfig = getBooksConfig({
-    canCreate: permissions.canCreate,
-    canEdit: permissions.canEdit,
-    canDelete: permissions.canDelete
-  });
-
-  if (permissions.loading) {
-    return <div>Loading...</div>;
-  }
   const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
-  if (!permissions.loading && !isSuperAdmin && !permissions.canView) {
+  console.log("Books Component Permissions:", permissions);
 
+  const fetchExternalData = async () => {
+    try {
+      setLoading(true);
+      const [authorsRes, categoriesRes, publishersRes] = await Promise.all([
+        new DataApi("author").fetchAll(),
+        new DataApi("category").fetchAll(),
+        new DataApi("publisher").fetchAll()
+      ]);
+
+      const authors = authorsRes?.data?.data || authorsRes?.data || [];
+      const categories = categoriesRes?.data?.data || categoriesRes?.data || [];
+      const publishers = publishersRes?.data?.data || publishersRes?.data || [];
+
+      setExternalData({
+        authors: Array.isArray(authors) ? authors : [],
+        categories: Array.isArray(categories) ? categories : [],
+        publishers: Array.isArray(publishers) ? publishers : []
+      });
+    } catch (error) {
+      console.error("Error fetching external data:", error);
+      setExternalData({ authors: [], categories: [], publishers: [] });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExternalData();
+  }, []);
+
+  if (!isSuperAdmin && !permissions?.allowView) {
     return <PermissionDenied />;
   }
-  // if (!permissions.loading && !permissions.canView) {
-  //   return <PermissionDenied />;
-  // }
-  // if (!permissions.canView) {
-  //   return <PermissionDenied />;
-  // }
 
   const finalConfig = getBooksConfig(
-    props,
-    props,
+    externalData,
     timeZone,
     {
-      canCreate: permissions.canCreate,
-      canEdit: permissions.canEdit,
-      canDelete: permissions.canDelete
+      canCreate: permissions?.allowCreate,
+      canEdit: permissions?.allowEdit,
+      canDelete: permissions?.allowDelete
     }
   );
+
+  if (loading) {
+    return <div className="text-center p-4">Loading...</div>;
+  }
 
   return (
     <DynamicCRUD
       {...finalConfig}
       icon="fa-solid fa-book"
       permissions={permissions}
+      authors={externalData.authors}
+      categories={externalData.categories}
+      publishers={externalData.publishers}
     />
   );
 };
