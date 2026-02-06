@@ -505,13 +505,14 @@
 
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card, Button, Spinner, Row, Col, Form, InputGroup,
   ButtonGroup, Badge, OverlayTrigger, Tooltip, Alert, Modal, Dropdown
 } from "react-bootstrap";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import DataApi from "../../api/dataApi";
 import * as XLSX from "xlsx";
@@ -519,7 +520,9 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import ResizableTable from "../common/ResizableTable";
 import  "../../App.css";
+import TableHeader from "../common/TableHeader";
 const BookInventoryReport = () => {
+  const navigate = useNavigate();
 
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -586,11 +589,10 @@ const BookInventoryReport = () => {
       label: "Publisher", 
       searchable: true 
     },
-    { 
-      field: "category_name", 
-      label: "Category", 
-      searchable: true,
-      render: (val) => <Badge bg="info" className="px-2 py-1">{val}</Badge>
+    {
+      field: "category_name",
+      label: "Category",
+      searchable: true
     },
     { 
       field: "vendor_name", 
@@ -598,59 +600,30 @@ const BookInventoryReport = () => {
       searchable: true,
       render: (val) => val || <span className="text-muted">N/A</span>
     },
-    { 
-      field: "total_copies", 
-      label: "Total", 
-      align: "center",
-      render: (val) => <Badge bg="secondary" pill>{val}</Badge>
+    {
+      field: "total_copies",
+      label: "Total",
+      align: "center"
     },
-    { 
-      field: "available_copies", 
-      label: "Available", 
-      align: "center",
-      render: (val) => <Badge bg="success" pill className="px-3">{val}</Badge>
+    {
+      field: "available_copies",
+      label: "Available",
+      align: "center"
     },
-    { 
-      field: "issued_copies", 
-      label: "Issued", 
-      align: "center",
-      render: (val) => <Badge bg="primary" pill className="px-3">{val}</Badge>
+    {
+      field: "issued_copies",
+      label: "Issued",
+      align: "center"
     },
-    { 
-      field: "lost_damaged_copies", 
-      label: "Lost/Damaged", 
-      align: "center",
-      render: (val) => val > 0 ? <Badge bg="danger" pill>{val}</Badge> : <span className="text-muted">0</span>
-    },
-    { 
-      field: "status", 
+    // {
+    //   field: "lost_damaged_copies",
+    //   label: "Lost/Damaged",
+    //   align: "center"
+    // },
+    {
+      field: "status",
       label: "Status",
-      align: "center",
-      render: (val, row) => {
-        const availablePercent = (row.available_copies / row.total_copies) * 100;
-        let variant = "success";
-        let icon = "fa-check-circle";
-        
-        if (availablePercent === 0) {
-          variant = "danger";
-          icon = "fa-times-circle";
-        } else if (availablePercent < 30) {
-          variant = "warning";
-          icon = "fa-exclamation-circle color-black";
-        }
-        
-        return (
-          <OverlayTrigger
-            placement="top"
-            overlay={<Tooltip>{availablePercent.toFixed(0)}% available</Tooltip>}
-          >
-            <Badge bg={variant} className="px-2 py-1">
-              <i className={`fa ${icon} me-1`} />
-              {val || "Available"}
-            </Badge>
-          </OverlayTrigger>
-        );
-      }
+      align: "center"
     },
   ];
 
@@ -861,64 +834,105 @@ const BookInventoryReport = () => {
 
   return (
     <>
-      <Card className="border-0 shadow-sm">
-        <Card.Header className="py-2 bg-light mt-1 border-0">
-          <Row className="align-items-center">
-            <Col md={6}>
-              <div className="d-flex align-items-center">
-                <div className="p-2 me-3" >
-                  <i className="fa fa-book" style={{ fontSize: '24px', color: "var(--primary-color)" }} />
-                </div>
-                <div>
-                  <h4 className="mb-0 fw-bold" style={{color:"var(--primary-color)", backgroundColor:"var(--light-bg-color)"}}>Book Inventory </h4>
-                  {/* <small className="text-muted">Manage and analyze your book stock</small> */}
-                </div>
-              </div>
-            </Col>
-            <Col md={6} className="text-end">
-              <Dropdown align="end">
-                <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
-                  <i className="fa fa-bars me-1" />  Options
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="shadow-sm border-0 mt-2">
-                  <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
-                  <Dropdown.Item
-                    className="text-dark"
-                    active={viewMode === 'table'}
-                    onClick={() => setViewMode('table')}
-                  >
-                    <i className="fa fa-table me-2 color-black" /> Table
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    className="text-dark"
-                    active={viewMode === 'dashboard'}
-                    onClick={() => setViewMode('dashboard')}
-                  >
-                    <i className="fa fa-chart-pie me-2" /> Dashboard
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    className="text-dark"
-                    active={viewMode === 'chart'}
-                    onClick={() => setViewMode('chart')}
-                  >
-                    <i className="fa fa-chart-bar me-2" /> Analytics
-                  </Dropdown.Item>
-                  <Dropdown.Divider />
-                  <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
-                  <Dropdown.Item onClick={() => exportFile("excel")}>
-                    <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => exportFile("csv")}>
-                    <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => exportFile("pdf")}>
-                    <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
-                  </Dropdown.Item>    
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
-          </Row>
-        </Card.Header>
+      <Card className="border-0 shadow-sm ">
+   
+<Card.Header className="py-2 bg-light mt-3 border-0 px-4">
+  <Row className="align-items-center px-3">
+
+    {/* LEFT SECTION */}
+    <Col md={6} className="d-flex align-items-center gap-3">
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/reports')}
+        className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
+      >
+        <i className="fa-solid fa-arrow-left"></i>
+      </button>
+
+      {/* Icon */}
+      {/* <div
+        className="d-flex align-items-center justify-content-center"
+        style={{
+          width: "42px",
+          height: "42px",
+          borderRadius: "10px",
+          background: "var(--primary-background-color)"
+        }}
+      >
+        <i
+          className="fa fa-book"
+          style={{ fontSize: '20px', color: "var(--primary-color)" }}
+        />
+      </div> */}
+
+      {/* Title */}
+      <div>
+        <h4 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
+          Book Inventory
+        </h4>
+        {/* <small className="text-muted">Manage and analyze your book stock</small> */}
+      </div>
+
+    </Col>
+
+    {/* RIGHT SECTION */}
+    <Col md={6} className="text-end">
+      <Dropdown align="end">
+        <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
+          <i className="fa fa-bars me-1" /> Options
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu className="shadow-sm border-0 mt-2">
+          <Dropdown.Header className="small text-uppercase fw-bold text-muted">
+            View Mode
+          </Dropdown.Header>
+
+          <Dropdown.Item
+            active={viewMode === 'table'}
+            onClick={() => setViewMode('table')}
+          >
+            <i className="fa fa-table me-2" /> Table
+          </Dropdown.Item>
+
+          <Dropdown.Item
+            active={viewMode === 'dashboard'}
+            onClick={() => setViewMode('dashboard')}
+          >
+            <i className="fa fa-chart-pie me-2" /> Dashboard
+          </Dropdown.Item>
+
+          <Dropdown.Item
+            active={viewMode === 'chart'}
+            onClick={() => setViewMode('chart')}
+          >
+            <i className="fa fa-chart-bar me-2" /> Analytics
+          </Dropdown.Item>
+
+          <Dropdown.Divider />
+
+          <Dropdown.Header className="small text-uppercase fw-bold text-muted">
+            Export Options
+          </Dropdown.Header>
+
+          <Dropdown.Item onClick={() => exportFile("excel")}>
+            <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
+          </Dropdown.Item>
+
+          <Dropdown.Item onClick={() => exportFile("csv")}>
+            <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
+          </Dropdown.Item>
+
+          <Dropdown.Item onClick={() => exportFile("pdf")}>
+            <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    </Col>
+
+  </Row>
+</Card.Header>
+
 
         <Card.Body className="p-4">
           {error && (
@@ -927,7 +941,7 @@ const BookInventoryReport = () => {
               {error}
             </Alert>
           )}
-          <Row className="g-3 mb-4">
+          {/* <Row className="g-3 mb-4">
             <Col md={3} sm={6}>
               <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #007bff' }}>
                 <Card.Body>
@@ -997,7 +1011,7 @@ const BookInventoryReport = () => {
                 </Card.Body>
               </Card>
             </Col>
-          </Row>
+          </Row> */}
 
           {viewMode === "table" && (
             <>

@@ -522,6 +522,8 @@ async function generateBookPopularityReport(params) {
 
     const result = await sql.query(query, queryParams);
 
+    console.log("BookPopularityResult=>",result.rows)
+
     // Process the data to match the expected format
     const rows = result.rows;
 
