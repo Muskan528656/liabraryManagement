@@ -125,6 +125,7 @@ require("./app/routes/mail.routes.js")(app);
 require("./app/routes/dashbard.router.js")(app);
 require("./app/routes/objecttype.routes.js")(app);
 require("./app/routes/reports.routes.js")(app);
+require("./app/routes/shelf.routes.js")(app);
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(
