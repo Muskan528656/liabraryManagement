@@ -56,7 +56,7 @@ const styles = `
 const BulkIssue = ({ permissions }) => {
 
 
- 
+
 
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
@@ -1058,19 +1058,19 @@ const BulkIssue = ({ permissions }) => {
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
   };
-const getImageUrl = (image) => {
-  if (!image) return "/default-avatar.png"; 
+  const getImageUrl = (image) => {
+    if (!image) return "/default-avatar.png";
 
-  if (image.startsWith("http")) {
-    return image;
-  }
-  const baseUrl =
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3003"
-      : process.env.REACT_APP_API_URL;
+    if (image.startsWith("http")) {
+      return image;
+    }
+    const baseUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3003"
+        : process.env.REACT_APP_API_URL;
 
-  return `${baseUrl}${image}`;
-};
+    return `${baseUrl}${image}`;
+  };
   const getMemberName = () => {
     if (!selectedCard) return "Unknown";
 
@@ -1087,7 +1087,7 @@ const getImageUrl = (image) => {
   };
 
 
-  
+
 
   const limitsTooltip = (props) => (
     <Tooltip id="limits-tooltip" {...props}>
@@ -1239,9 +1239,12 @@ const getImageUrl = (image) => {
                         <div className="mb-2">
                           <img
                             // src={memberInfo.image}
-                              src={getImageUrl(memberInfo.image)}
 
-                            alt={getMemberName()}
+                            // src={getImageUrl(memberInfo.image)}
+                            src={memberInfo?.image ? getImageUrl(memberInfo.image) : "/Logo.png"}
+
+
+                            // alt={getMemberName()}
                             className="rounded-circle"
                             style={{
                               width: "80px",

@@ -58,24 +58,7 @@ export const getGradeSectionConfig = (
                     );
                 }
             },
-            {
-                field: "createddate",
-                label: "Created Date",
-                sortable: true,
-                render: (value) => {
-                    if (!value) return "";
-                    return new Date(value).toLocaleDateString();
-                }
-            },
-            {
-                field: "lastmodifieddate",
-                label: "Last Modified",
-                sortable: true,
-                render: (value) => {
-                    if (!value) return "";
-                    return new Date(value).toLocaleDateString();
-                }
-            }
+           
         ],
 
         // ================= FORM =================
@@ -121,11 +104,9 @@ export const getGradeSectionConfig = (
 
         // ================= TRANSFORMS =================
         transformBeforeSave: (data) => {
-            // Trim whitespace from inputs
             if (data.grade_name) data.grade_name = data.grade_name.trim();
             if (data.section_name) data.section_name = data.section_name.trim();
             
-            // Convert status to boolean if needed
             if (typeof data.status === 'string') {
                 data.status = data.status === 'true' || data.status === 'active';
             }
@@ -134,7 +115,6 @@ export const getGradeSectionConfig = (
         },
 
         transformAfterFetch: (data) => {
-            // No transformation needed for display
             return data;
         },
 
@@ -159,7 +139,7 @@ export const getGradeSectionConfig = (
 
         // ================= FEATURES =================
         features: {
-            showBulkInsert: true,
+            showBulkInsert: false,
             showImportExport: true,
             showDetailView: true,
             showSearch: true,
@@ -230,70 +210,8 @@ export const getGradeSectionConfig = (
             }
         },
 
-        // ================= BULK OPERATIONS =================
-        bulkOperations: [
-            {
-                label: "Activate Selected",
-                action: "activate",
-                endpoint: "grade-sections/bulk-activate",
-                confirmMessage: "Are you sure you want to activate selected grade sections?"
-            },
-            {
-                label: "Deactivate Selected",
-                action: "deactivate",
-                endpoint: "grade-sections/bulk-deactivate",
-                confirmMessage: "Are you sure you want to deactivate selected grade sections?"
-            },
-            {
-                label: "Delete Selected",
-                action: "delete",
-                endpoint: "grade-sections/bulk-delete",
-                confirmMessage: "Are you sure you want to delete selected grade sections?",
-                danger: true
-            }
-        ],
+        
 
-        // ================= SEARCH CONFIG =================
-        searchConfig: {
-            placeholder: "Search by grade name or section name...",
-            fields: ["grade_name", "section_name"]
-        },
-
-        // ================= IMPORT MODEL =================
-        importModel: GradeSectionModel,
-
-        // ================= ADDITIONAL CONFIG =================
-        tableConfig: {
-            defaultPageSize: 10,
-            pageSizeOptions: [10, 25, 50, 100],
-            showPagination: true,
-            showPageSizeChanger: true,
-            showTotal: true,
-            striped: true,
-            hover: true
-        },
-
-        // ================= CUSTOM MESSAGES =================
-        messages: {
-            createSuccess: "Grade section created successfully",
-            updateSuccess: "Grade section updated successfully",
-            deleteSuccess: "Grade section deleted successfully",
-            deleteConfirm: "Are you sure you want to delete this grade section?",
-            bulkDeleteConfirm: "Are you sure you want to delete {count} selected grade sections?",
-            importSuccess: "Grade sections imported successfully",
-            duplicateError: "A grade section with this grade name and section name already exists"
-        },
-
-        // ================= PRE-FILLED OPTIONS =================
-        predefinedOptions: {
-            gradeNames: [
-                "Nursery", "LKG", "UKG",
-                "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
-                "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10",
-                "Grade 11", "Grade 12"
-            ],
-            sectionNames: ["A", "B", "C", "D", "E", "Science", "Commerce", "Arts"]
-        }
     };
 };
 

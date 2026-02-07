@@ -9,7 +9,7 @@ async function findAll() {
     const q = `
         SELECT id, grade_name, section_name, status,
                createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
-        FROM ${this.schema}.grade_sections
+        FROM ${this.schema}.grade
         ORDER BY createddate DESC
     `;
     const r = await sql.query(q);
@@ -21,7 +21,7 @@ async function findById(id) {
     const q = `
         SELECT id, grade_name, section_name, status,
                createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
-        FROM ${this.schema}.grade_sections
+        FROM ${this.schema}.grade
         WHERE id=$1
     `;
     const r = await sql.query(q, [id]);
@@ -33,7 +33,7 @@ async function findByGradeName(grade_name) {
     const q = `
         SELECT id, grade_name, section_name, status,
                createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
-        FROM ${this.schema}.grade_sections
+        FROM ${this.schema}.grade
         WHERE grade_name=$1
         ORDER BY section_name ASC
     `;
@@ -46,7 +46,7 @@ async function findByGradeAndSection(grade_name, section_name) {
     const q = `
         SELECT id, grade_name, section_name, status,
                createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
-        FROM ${this.schema}.grade_sections
+        FROM ${this.schema}.grade
         WHERE grade_name=$1 AND section_name=$2
     `;
     const r = await sql.query(q, [grade_name, section_name]);
@@ -55,9 +55,8 @@ async function findByGradeAndSection(grade_name, section_name) {
 
 // ================= CREATE =================
 async function create(data, userid = null) {
-    // 🔍 CHECK FOR DUPLICATE GRADE AND SECTION COMBINATION
     const duplicateCheck = `
-        SELECT id FROM ${this.schema}.grade_sections
+        SELECT id FROM ${this.schema}.grade
         WHERE grade_name=$1 AND section_name=$2
         LIMIT 1
     `;
@@ -71,9 +70,9 @@ async function create(data, userid = null) {
         throw new Error("Grade and section combination already exists");
     }
 
-    // ✅ INSERT
+    // INSERT
     const query = `
-        INSERT INTO ${this.schema}.grade_sections
+        INSERT INTO ${this.schema}.grade
         (grade_name, section_name, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
         VALUES ($1, $2, $3, NOW(), NOW(), $4, $5)
         RETURNING *
@@ -93,9 +92,8 @@ async function create(data, userid = null) {
 
 // ================= UPDATE =================
 async function updateById(id, data, userid = null) {
-    // 🔍 CHECK FOR DUPLICATE GRADE AND SECTION COMBINATION (exclude current id)
     const duplicateCheck = `
-        SELECT id FROM ${this.schema}.grade_sections
+        SELECT id FROM ${this.schema}.grade
         WHERE id <> $3
         AND grade_name=$1 AND section_name=$2
         LIMIT 1
@@ -112,7 +110,7 @@ async function updateById(id, data, userid = null) {
     }
 
     const q = `
-        UPDATE ${this.schema}.grade_sections
+        UPDATE ${this.schema}.grade
         SET grade_name=$2,
             section_name=$3,
             status=$4,
@@ -126,7 +124,7 @@ async function updateById(id, data, userid = null) {
         id,
         data.grade_name || null,
         data.section_name || null,
-        data.status === true || data.status === "true",
+        data.status === true || data.status === "true" || data.status === "1",
         userid
     ]);
 
@@ -136,7 +134,7 @@ async function updateById(id, data, userid = null) {
 // ================= DELETE =================
 async function deleteById(id) {
     await sql.query(
-        `DELETE FROM ${this.schema}.grade_sections WHERE id=$1`,
+        `DELETE FROM ${this.schema}.grade WHERE id=$1`,
         [id]
     );
 }
@@ -149,13 +147,13 @@ async function bulkCreateSections(grade_name, sections, userid = null) {
         try {
             // Check if section already exists
             const existing = await sql.query(
-                `SELECT id FROM ${this.schema}.grade_sections WHERE grade_name=$1 AND section_name=$2`,
+                `SELECT id FROM ${this.schema}.grade WHERE grade_name=$1 AND section_name=$2`,
                 [grade_name, section]
             );
 
             if (existing.rows.length === 0) {
                 const query = `
-                    INSERT INTO ${this.schema}.grade_sections
+                    INSERT INTO ${this.schema}.grade
                     (grade_name, section_name, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
                     VALUES ($1, $2, true, NOW(), NOW(), $3, $4)
                     RETURNING *
@@ -174,6 +172,36 @@ async function bulkCreateSections(grade_name, sections, userid = null) {
     return results;
 }
 
+// ================= SEARCH =================
+async function search(filters = {}) {
+    let query = `SELECT * FROM ${this.schema}.grade WHERE 1=1`;
+    const params = [];
+    let paramCount = 1;
+
+    if (filters.grade_name) {
+        query += ` AND grade_name ILIKE $${paramCount}`;
+        params.push(`%${filters.grade_name}%`);
+        paramCount++;
+    }
+
+    if (filters.section_name) {
+        query += ` AND section_name ILIKE $${paramCount}`;
+        params.push(`%${filters.section_name}%`);
+        paramCount++;
+    }
+
+    if (filters.status !== undefined) {
+        query += ` AND status = $${paramCount}`;
+        params.push(filters.status === true || filters.status === "true");
+        paramCount++;
+    }
+
+    query += ` ORDER BY grade_name, section_name ASC`;
+
+    const result = await sql.query(query, params);
+    return result.rows;
+}
+
 module.exports = {
     init,
     findAll,
@@ -183,5 +211,6 @@ module.exports = {
     create,
     updateById,
     deleteById,
-    bulkCreateSections
+    bulkCreateSections,
+    search
 };

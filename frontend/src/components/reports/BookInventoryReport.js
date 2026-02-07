@@ -1,507 +1,3 @@
-// // import React, { useState, useEffect, useMemo } from "react";
-// // import { Card, Button, Spinner, Row, Col, Form, InputGroup, Dropdown } from "react-bootstrap";
-// // import DataApi from "../../api/dataApi";
-// // import * as XLSX from "xlsx";
-// // import jsPDF from "jspdf";
-// // import "jspdf-autotable";
-// // import ResizableTable from "../common/ResizableTable";
-
-// // const BookInventoryReport = () => {
-// //   const [reportData, setReportData] = useState([]);
-// //   const [loading, setLoading] = useState(true);
-// //   const [error, setError] = useState(null);
-// //   const [searchTerm, setSearchTerm] = useState("");
-
-// //    const [selectedRows, setSelectedRows] = useState([]);
-  
-// //   // Pagination State
-// //   const [currentPage, setCurrentPage] = useState(1);
-// //   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-// //   // 1. DYNAMIC COLUMN CONFIGURATION
-// //   const columns = [
-// //     //checkbox and serial number will be handled by ResizableTable component
-// //     { field: "book_title", label: "Book Title", searchable: true },
-// //     { field: "author_name", label: "Author", searchable: true },
-// //     { field: "publisher_name", label: "Publisher", searchable: true },
-// //     { field: "category_name", label: "Category", searchable: true },
-// //     { field: "total_copies", label: "Total", align: "center" },
-// //     { field: "available_copies", label: "Available", align: "center", className: "text-success fw-bold" },
-// //     { field: "issued_copies", label: "Issued", align: "center", className: "text-primary" },
-// //     { field: "lost_damaged_copies", label: "Lost", align: "center", className: "text-danger" },
-// //     { 
-// //       field: "status", 
-// //       label: "Status",
-// //       render: (val) => (
-// //         <span className={`badge rounded-pill ${val === "Available" ? "bg-success" : "bg-warning text-dark"}`}>
-// //           {val || "N/A"}
-// //         </span>
-// //       )
-// //     },
-// //     { field: "issued_to", label: "Issued To" },
-// //   ];
-
-// //   const fetchInventoryReport = async () => {
-// //     try {
-// //       setLoading(true);
-// //       const bookApi = new DataApi("book");
-// //       const response = await bookApi.fetchInventoryReport();
-// //       //   setReportData(Array.isArray(response?.data) ? response.data : []);
-// //       const dataWithIds = (response.data || []).map((item, index) => ({ ...item,id:item.id || index })); // Ensure each item has a unique 'id' field
-// //       setReportData(dataWithIds);
-// //     } catch (err) {
-// //       setError("Failed to load inventory report.");
-// //     } finally {
-// //       setLoading(false);
-// //     }
-// //   };
-
-// //   useEffect(() => { fetchInventoryReport(); }, []);
-
-// //   //Handler for Checkboxes
-// //   const handleSelectionChange = (selectedIds) => {
-// //     setSelectedRows(selectedIds);
-// //   }
-
-// //   // 2. DYNAMIC FILTERING LOGIC
-// //   const filteredData = useMemo(() => {
-// //     return reportData.filter((row) =>
-// //       columns.some((col) => 
-// //         col.searchable && String(row[col.field] || "").toLowerCase().includes(searchTerm.toLowerCase())
-// //       )
-// //     );
-// //   }, [searchTerm, reportData]);
-
-// //   // 3. EXPORT LOGIC (Always exports all FILTERED data, not just current page)
-// //   const exportFile = (type) => {
-
-// //      if (selectedRows.length === 0) {
-// //       alert("Please select at least one record to export.");
-// //       return;
-// //     }
-    
-// //     // Get the full row objects for selected IDs
-// //     const selectedRowObjects = filteredData.filter(row => selectedRows.includes(row.id));
-    
-// //     const headers = columns.map(col => col.label);
-// //     const exportData = selectedRowObjects.map(row => columns.map(col => row[col.field] || "N/A"));
-
-// //     if (type === "csv") {
-// //       const csvContent = [headers, ...exportData].map(e => e.join(",")).join("\n");
-// //       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-// //       const link = document.createElement("a");
-// //       link.href = URL.createObjectURL(blob);
-// //       link.download = "Inventory_Report.csv";
-// //       link.click();
-// //     } 
-// //     else if (type === "excel") {
-// //       const cleanData = selectedRowObjects.map(({id, ...rest}) => rest); // Remove 'id' field
-// //       const worksheet = XLSX.utils.json_to_sheet(cleanData);
-// //       const workbook = XLSX.utils.book_new();
-// //       XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-// //       XLSX.writeFile(workbook, "Inventory_Report.xlsx");
-// //     } 
-// //     else if (type === "pdf") {
-// //       const doc = new jsPDF("landscape");
-// //       doc.text("Inventory Report", 14, 15);
-// //       doc.autoTable({ head: [headers], body: exportData, startY: 20 });
-// //       doc.save("Inventory_Report.pdf");
-// //     }
-// //   };
-
-// //   if (loading) return <div className="text-center p-5"><Spinner animation="border" variant="primary" /></div>;
-
-// //   return (
-// //     <Card className="border-0 shadow-sm">
-// //       <Card.Header className="bg-white py-3 border-bottom-0">
-// //         <Row className="g-3 align-items-center">
-// //           <Col md={4}>
-// //             <h5 className="mb-0 fw-bold" style={{color: "var(--primary-color)"}}>Book Inventory Report</h5>
-// //             {selectedRows.length > 0 && (
-// //                 <small className="text-primary">{selectedRows.length} items selected</small>
-// //             )}
-// //           </Col>
-// //           <Col md={8} className="d-flex justify-content-md-end gap-2">
-// //             <Button variant="outline-primary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button>
-// //             {/* <Button variant="success" size="sm" onClick={() => exportFile("excel")}><i className="fa-solid fa-file-excel me-1" /> Excel</Button>
-// //             <Button variant="info" size="sm" onClick={() => exportFile("csv")}><i className="fa-solid fa-file-csv me-1" /> CSV</Button>
-// //             <Button variant="danger" size="sm" onClick={() => exportFile("pdf")}><i className="fa-solid fa-file-pdf me-1" /> PDF</Button> */}
-
-// //             <Dropdown align="end">
-// //                 <Dropdown.Toggle variant="outline-secondary" size="sm" id="dropdown-actions"
-// //                     className="d-flex align-items-center rounded-2 px-3"
-// //                     style={{ border: '1px solid #ced4da', color: '#212529' }}
-// //                  >
-// //                 Actions
-// //                 </Dropdown.Toggle>
-// //                 <Dropdown.Menu className="shadow-sm border-0 mt-2">
-// //                     <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Data</Dropdown.Header>
-                    
-// //                     <Dropdown.Item onClick={() => exportFile("excel")} className="py-2">
-// //                         <i className="fa-solid fa-file-excel me-2 text-success" />Excel
-// //                     </Dropdown.Item>
-                    
-// //                     <Dropdown.Item onClick={() => exportFile("csv")} className="py-2">
-// //                         <i className="fa-solid fa-file-csv me-2 text-info" />CSV
-// //                     </Dropdown.Item>
-// //                     {/* <Dropdown.Divider /> */}
-// //                     <Dropdown.Item onClick={() => exportFile("pdf")} className="py-2 text-danger">
-// //                     <i className="fa-solid fa-file-pdf me-2" />PDF
-// //                     </Dropdown.Item>
-// //                 </Dropdown.Menu>
-// //           </Dropdown>
-// //           </Col>
-// //         </Row>
-// //       </Card.Header>
-
-// //       <Card.Body>
-// //         {/* <Row className="mb-3">
-// //           <Col md={4}>
-// //             <InputGroup size="sm">
-// //               <InputGroup.Text className="bg-white"><i className="fa fa-search text-muted" /></InputGroup.Text>
-// //               <Form.Control 
-// //                 placeholder="Search across columns..." 
-// //                 onChange={(e) => setSearchTerm(e.target.value)} 
-// //               />
-// //             </InputGroup>
-// //           </Col>
-// //         </Row> */}
-
-// //         <div className="table-responsive border rounded">
-// //           <ResizableTable
-// //             data={filteredData}
-// //             columns={columns}
-// //             loading={loading}
-// //             currentPage={currentPage}
-// //             recordsPerPage={rowsPerPage}
-// //             onPageChange={setCurrentPage}
-// //             showSerialNumber={true}
-// //             showActions={false}
-// //             showCheckbox={true}
-// //             selectedItems={selectedRows}
-// //             onSelectionChange={handleSelectionChange}
-// //           />
-// //         </div>
-// //       </Card.Body>
-// //     </Card>
-// //   );
-// // };
-
-// // export default BookInventoryReport;
-
-
-
-// import React, { useState, useEffect, useMemo } from "react";
-// import { Card, Button, Spinner, Row, Col, Form, InputGroup, Dropdown, ButtonGroup } from "react-bootstrap";
-// import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-// import DataApi from "../../api/dataApi";
-// import * as XLSX from "xlsx";
-// import jsPDF from "jspdf";
-// import "jspdf-autotable";
-// import ResizableTable from "../common/ResizableTable";
-
-// const BookInventoryReport = () => {
-//   const [reportData, setReportData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [selectedRows, setSelectedRows] = useState([]);
-//   const [vendors, setVendors] = useState([]);
-  
-//   const [columnFilters, setColumnFilters] = useState({});
-  
-//   const [viewMode, setViewMode] = useState("table");
-//   const [chartGroupBy, setChartGroupBy] = useState("category_name");
-//   const [vendorFilter, setVendorFilter] = useState("All Vendors");
-
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-//   const columns = [
-//     { field: "book_title", label: "Book Title", searchable: true },
-//     { field: "author_name", label: "Author", searchable: true },
-//     { field: "publisher_name", label: "Publisher", searchable: true },
-//     { field: "category_name", label: "Category", searchable: true },
-//     { field: "total_copies", label: "Total", align: "center" },
-//     { field: "available_copies", label: "Available", align: "center", className: "text-success fw-bold" },
-//     { field: "issued_copies", label: "Issued", align: "center", className: "text-primary" },
-//     { 
-//       field: "status", 
-//       label: "Status",
-//       render: (val) => (
-//         <span className={`badge rounded-pill ${val === "Available" ? "bg-success" : "bg-warning text-dark"}`}>
-//           {val || "N/A"}
-//         </span>
-//       )
-//     },
-//   ];
-
-//   const fetchInventoryReport = async () => {
-//     try {
-//       setLoading(true);
-//       const bookApi = new DataApi("book");
-//       const response = await bookApi.fetchInventoryReport();
-//       const dataWithIds = (response.data || []).map((item, index) => ({ ...item, id: item.id || index }));
-//       setReportData(dataWithIds);
-//     } catch (err) {
-//       setError("Failed to load inventory report.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const fetchVendors = async () => {
-//     try {
-//       const vendorApi = new DataApi("vendor");
-//       console.log("Fetching vendors...", vendorApi);
-//       const response = await vendorApi.fetchAll();
-//       console.log("Vendors fetched:", response.data);
-//       //in filter give only active vendors names  
-
-    
-
-//      const vendorList = (response.data || [])
-//       .filter(vendor => vendor.status === true)   // keep only active
-//       .map(vendor => vendor.vendor_name || vendor.name) // pick correct field
-//       .filter(Boolean); // remove null/empty
-
-//       console.log("Processed vendor list:", vendorList);
-//       setVendors(vendorList);
-//     } catch (err) {
-//       console.error("Failed to load vendors.", err);
-//     }
-//   };
-
-//   useEffect(() => { 
-//     fetchInventoryReport();
-//     fetchVendors();
-//   }, []);
-
-//   const handleSelectionChange = (selectedIds) => setSelectedRows(selectedIds);
-
-//   const filteredData = useMemo(() => {
-//     return reportData.filter((row) => {
-//       // Filter by search term
-//       const matchesSearch = columns.some((col) => 
-//         col.searchable && String(row[col.field] || "").toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-      
-//       // Filter by vendor
-//       const matchesVendor = vendorFilter === "All Vendors" || row.vendor_name === vendorFilter;
-      
-//       return matchesSearch && matchesVendor;
-//     });
-//   }, [searchTerm, reportData, vendorFilter]);
-//   // --- CHART LOGIC ---
-//   const chartData = useMemo(() => {
-//     const aggregation = reportData.reduce((acc, item) => {
-//       const key = item[chartGroupBy] || "Unknown";
-//       if (!acc[key]) {
-//         acc[key] = { name: key, total: 0, available: 0, issued: 0 };
-//       }
-//       acc[key].total += parseInt(item.total_copies || 0);
-//       acc[key].available += parseInt(item.available_copies || 0);
-//       acc[key].issued += parseInt(item.issued_copies || 0);
-//       return acc;
-//     }, {});
-
-//     return Object.values(aggregation).sort((a, b) => b.total - a.total).slice(0, 10); 
-//   }, [reportData, chartGroupBy]);
-
-//   //Dynamic Export Logic
-
-//   const exportFile = (type) => {
-//     // if (selectedRows.length === 0) {
-//     //   alert("Please select at least one record to export.");
-//     //   return;
-//     // }
-//     // const selectedRowObjects = filteredData.filter(row => selectedRows.includes(row.id));
-//     const dataToExport = selectedRows.length > 0 ? filteredData.filter(row => selectedRows.includes(row.id)) : filteredData;
-//     const headers = columns.map(col => col.label);
-//     const exportData = dataToExport.map(row => columns.map(col => row[col.field] || "N/A"));
-
-//     if (type === "csv") {
-//         const csvContent = [headers, ...exportData].map(e => e.join(",")).join("\n");
-//         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-//         const link = document.createElement("a");
-//         link.href = URL.createObjectURL(blob);
-//         link.download = "Inventory_Report.csv";
-//         link.click();
-//     } else if (type === "excel") {
-
-//         const excelData  = dataToExport.map(row =>{
-//             const rowData = {};
-//             columns.forEach(col => {
-//                 rowData[col.label] = row[col.field] || "N/A";
-//             });
-//             return rowData;
-//         }) 
-
-
-//         const worksheet = XLSX.utils.json_to_sheet(excelData);
-//         const workbook = XLSX.utils.book_new();
-//         XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
-//         XLSX.writeFile(workbook, "Inventory_Report.xlsx");
-//     } else if (type === "pdf") {
-//         const doc = new jsPDF("landscape");
-//         doc.text("Inventory Report", 14, 15);
-//         doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
-//         doc.autoTable({ head: [headers], body: exportData, startY: 30  });
-//         doc.setFontSize(10);
-//         doc.setFontSize(16);
-//         doc.save("Inventory_Report.pdf");
-//     }
-//   };
-
-//   if (loading) return <div className="text-center p-5"><Spinner animation="border" variant="primary" /></div>;
-
-//   return (
-//     <Card className="border-0 shadow-sm">
-//       <Card.Header className="bg-white py-3 border-bottom-0">
-//         <Row className="g-3 align-items-center">
-//           <Col md={4}>
-//             <h5 className="mb-0 fw-bold text-uppercase" style={{color: "var(--primary-color)"}}>Book Inventory</h5>
-//             {/* <small className="text-muted">Analyze your collection stock</small> */}
-           
-//           </Col>
-//           <Col md={8} className="d-flex justify-content-md-end gap-2">
-//             {viewMode === 'table' && (
-//               <Form.Select  size="sm"
-//                   value={vendorFilter}
-//                   onChange={(e) => setVendorFilter(e.target.value)}
-//                   style={{ maxWidth: '150px' }}
-//               >
-//                 <option value="All Vendors">All Vendors</option>
-//               {vendors.map((vendor, index) => ( <option key={index} value={vendor}> {vendor} </option> ))}
-//               </Form.Select>
-//             )}
-
-//             {/* View Toggle */}
-//             <ButtonGroup size="sm" className="me-2">
-//               <Button 
-//                 variant={viewMode === 'table' ? '' : 'outline-primary'} 
-//                 style={
-//                   viewMode === 'table'
-//                     ? { backgroundColor: 'var(--primary-color)', color:'#fff', borderColor: 'var(--primary-color)' }
-//                     : {}
-//                 }
-//                 onClick={() => setViewMode('table')}
-//                 >
-//                 <i className="fa fa-table me-1" /> Table
-//               </Button>
-//               <Button 
-//                 variant={viewMode === 'chart' ? '' : 'outline-primary'} 
-//                 style={
-//                   viewMode === 'chart'
-//                     ? { backgroundColor: 'var(--primary-color)', color:'#fff', borderColor: 'var(--primary-color)' }
-//                     : {}
-//                 }
-//                 onClick={() => setViewMode('chart')}
-//               >
-//                 <i className="fa fa-chart-bar me-1" /> Chart
-//               </Button>
-//             </ButtonGroup>
-
-//             {/* <Button variant="outline-primary" size="sm" onClick={fetchInventoryReport}><i className="fa fa-refresh" /></Button> */}
-
-//             <Dropdown align="end">
-//                 <Dropdown.Toggle variant="outline-dark" size="sm" style={{onhover: "cursor-pointer",color:'black'}}> <i className="fa fa-download" /> Actions</Dropdown.Toggle>
-//                 <Dropdown.Menu className="shadow-sm border-0">
-//                     <Dropdown.Header>Export Selected</Dropdown.Header>
-//                     <Dropdown.Item onClick={() => exportFile("excel")}><i className="fa-solid fa-file-excel me-2 text-success" />Excel</Dropdown.Item>
-//                     <Dropdown.Item onClick={() => exportFile("csv")}><i className="fa-solid fa-file-csv me-2 text-info" />CSV</Dropdown.Item>
-//                     <Dropdown.Item onClick={() => exportFile("pdf")}><i className="fa-solid fa-f  ile-pdf me-2 text-danger" />PDF</Dropdown.Item>
-//                 </Dropdown.Menu>
-//             </Dropdown>
-//           </Col>
-//         </Row>
-//       </Card.Header>
-
-//       <Card.Body>
-//         {viewMode === "table" ? (
-//           <>
-//             {/* <Row className="mb-3">
-//               <Col md={4}>
-//                 <InputGroup size="sm">
-//                   <InputGroup.Text className="bg-white"><i className="fa fa-search text-muted" /></InputGroup.Text>
-//                   <Form.Control 
-//                     placeholder="Search books, authors..." 
-//                     onChange={(e) => setSearchTerm(e.target.value)} 
-//                   />
-//                 </InputGroup>
-//               </Col>
-//             </Row> */}
-//             <div className="table-responsive border rounded">
-//               <ResizableTable
-//                 data={filteredData}
-//                 columns={columns}
-//                 loading={loading}
-//                 currentPage={currentPage}
-//                 recordsPerPage={rowsPerPage}
-//                 onPageChange={setCurrentPage}
-//                 showSerialNumber={true}
-//                 showCheckbox={true}
-//                 showActions={false}
-//                 selectedItems={selectedRows}
-//                 onSelectionChange={handleSelectionChange}
-//               />
-//             </div>
-//           </>
-//         ) : (
-//           <div className="p-2">
-//             <Row className="mb-4 align-items-center">
-//                 <Col md={2}>
-//                     <Form.Group>
-//                         <Form.Label className="small fw-bold text-uppercase text-muted">Group Data By:</Form.Label>
-//                         <Form.Select 
-//                             size="sm" 
-//                             value={chartGroupBy} 
-//                             onChange={(e) => setChartGroupBy(e.target.value)}
-//                             className="form-select-sm"
-//                         >
-//                             <option value="category_name">Category</option>
-//                             <option value="publisher_name">Publisher</option>
-//                             <option value="author_name">Author</option>
-//                             <option value="vendor_name">Vendor</option>
-//                             {/* Add vendor_name here if it exists in your API data */}
-//                         </Form.Select>
-//                     </Form.Group>
-//                 </Col>
-//                 {/* <Col md={4} className="text-end float-end">
-//                     <div className="small text-muted italic">Showing top 10 items by total volume</div>
-//                 </Col> */}
-//             </Row>
-//               <div style={{ width: '100%', height: 400 }}>
-//                 <ResponsiveContainer>
-//                   <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-//                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-//                     <XAxis 
-//                       dataKey="name" 
-//                       angle={-45} 
-//                       textAnchor="end" 
-//                       interval={0} 
-//                       height={80}
-//                       tick={{fontSize: 12}}
-//                       />
-//                     <YAxis />
-//                     <Tooltip cursor={{fill: '#f8f9fa'}} />
-//                     <Legend verticalAlign="top" wrapperStyle={{paddingBottom: '20px'}} />
-//                     <Bar dataKey="total" name="Total Stock" fill="#11439b" radius={[4, 4, 0, 0]} barSize={40} />
-//                     <Bar dataKey="available" name="Available" fill="#82ca9d" radius={[4, 4, 0, 0]} barSize={40} />
-//                   </BarChart>
-//                 </ResponsiveContainer>
-//               </div>
-              
-//           </div>
-//         )}
-//       </Card.Body>
-//     </Card>
-//   );
-// };
-
-// export default BookInventoryReport;
-
-
 
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -519,7 +15,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import ResizableTable from "../common/ResizableTable";
-import  "../../App.css";
+import "../../App.css";
 import TableHeader from "../common/TableHeader";
 const BookInventoryReport = () => {
   const navigate = useNavigate();
@@ -531,7 +27,7 @@ const BookInventoryReport = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [vendors, setVendors] = useState([]);
 
-  
+
 
   const [vendorFilter, setVendorFilter] = useState("All Vendors");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -545,7 +41,7 @@ const BookInventoryReport = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
 
-    const labelStyle = {
+  const labelStyle = {
     fontSize: '0.875rem',
     fontWeight: '600',
     color: '#495057',
@@ -567,9 +63,9 @@ const BookInventoryReport = () => {
   };
 
   const columns = [
-    { 
-      field: "book_title", 
-      label: "Book Title", 
+    {
+      field: "book_title",
+      label: "Book Title",
       searchable: true,
       render: (val, row) => (
         <div>
@@ -578,25 +74,25 @@ const BookInventoryReport = () => {
         </div>
       )
     },
-    { 
-      field: "author_name", 
-      label: "Author", 
+    {
+      field: "author_name",
+      label: "Author",
       searchable: true,
       render: (val) => <span className="text-secondary">{val}</span>
     },
-    { 
-      field: "publisher_name", 
-      label: "Publisher", 
-      searchable: true 
+    {
+      field: "publisher_name",
+      label: "Publisher",
+      searchable: true
     },
     {
       field: "category_name",
       label: "Category",
       searchable: true
     },
-    { 
-      field: "vendor_name", 
-      label: "Vendor", 
+    {
+      field: "vendor_name",
+      label: "Vendor",
       searchable: true,
       render: (val) => val || <span className="text-muted">N/A</span>
     },
@@ -633,9 +129,9 @@ const BookInventoryReport = () => {
       setError(null);
       const bookApi = new DataApi("book");
       const response = await bookApi.fetchInventoryReport();
-      const dataWithIds = (response.data || []).map((item, index) => ({ 
-        ...item, 
-        id: item.id || index 
+      const dataWithIds = (response.data || []).map((item, index) => ({
+        ...item,
+        id: item.id || index
       }));
       setReportData(dataWithIds);
     } catch (err) {
@@ -660,7 +156,7 @@ const BookInventoryReport = () => {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchInventoryReport();
     fetchVendors();
   }, []);
@@ -673,13 +169,13 @@ const BookInventoryReport = () => {
 
   const filteredData = useMemo(() => {
     return reportData.filter((row) => {
-      const matchesSearch = searchTerm === "" || columns.some((col) => 
+      const matchesSearch = searchTerm === "" || columns.some((col) =>
         col.searchable && String(row[col.field] || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
+
       const matchesVendor = vendorFilter === "All Vendors" || row.vendor_name === vendorFilter;
       const matchesCategory = categoryFilter === "All Categories" || row.category_name === categoryFilter;
-      
+
       let matchesStatus = true;
       if (statusFilter === "Available") {
         matchesStatus = row.available_copies > 0;
@@ -688,7 +184,7 @@ const BookInventoryReport = () => {
       } else if (statusFilter === "Low Stock") {
         matchesStatus = row.available_copies > 0 && (row.available_copies / row.total_copies) < 0.3;
       }
-      
+
       return matchesSearch && matchesVendor && matchesCategory && matchesStatus;
     });
   }, [searchTerm, reportData, vendorFilter, categoryFilter, statusFilter]);
@@ -710,10 +206,10 @@ const BookInventoryReport = () => {
   }, [filteredData, reportData]);
 
   const chartData = useMemo(() => {
-    const dataToAggregate = vendorFilter === "All Vendors" 
-      ? reportData 
+    const dataToAggregate = vendorFilter === "All Vendors"
+      ? reportData
       : reportData.filter(item => item.vendor_name === vendorFilter);
-      
+
     const aggregation = dataToAggregate.reduce((acc, item) => {
       const key = item[chartGroupBy] || "Unknown";
       if (!acc[key]) {
@@ -741,17 +237,17 @@ const BookInventoryReport = () => {
 
 
   const exportFile = (type) => {
-    const dataToExport = selectedRows.length > 0 
-      ? filteredData.filter(row => selectedRows.includes(row.id)) 
+    const dataToExport = selectedRows.length > 0
+      ? filteredData.filter(row => selectedRows.includes(row.id))
       : filteredData;
-      
+
     if (dataToExport.length === 0) {
       alert("No data to export!");
       return;
     }
 
     const headers = columns.map(col => col.label);
-    const exportData = dataToExport.map(row => 
+    const exportData = dataToExport.map(row =>
       columns.map(col => {
         if (col.field === 'status') {
           return row.available_copies > 0 ? 'Available' : 'Out of Stock';
@@ -786,32 +282,32 @@ const BookInventoryReport = () => {
       XLSX.writeFile(workbook, `Inventory_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
     } else if (type === "pdf") {
       const doc = new jsPDF("landscape");
-      
+
       doc.setFontSize(18);
       doc.setTextColor(17, 67, 155);
       doc.text("Book Inventory Report", 14, 20);
-      
+
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
       doc.text(`Total Records: ${dataToExport.length}`, 14, 34);
-      
+
       doc.setFontSize(11);
       doc.setTextColor(0);
       doc.text(`Total Copies: ${statistics.totalBooks} | Available: ${statistics.availableBooks} | Issued: ${statistics.issuedBooks}`, 14, 42);
-      
-      doc.autoTable({ 
-        head: [headers], 
-        body: exportData, 
+
+      doc.autoTable({
+        head: [headers],
+        body: exportData,
         startY: 48,
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [17, 67, 155], textColor: 255 },
         alternateRowStyles: { fillColor: [245, 245, 245] },
       });
-      
+
       doc.save(`Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     }
-    
+
 
   };
 
@@ -835,103 +331,85 @@ const BookInventoryReport = () => {
   return (
     <>
       <Card className="border-0 shadow-sm ">
-   
-<Card.Header className="py-2 bg-light mt-3 border-0 px-4">
-  <Row className="align-items-center px-3">
 
-    {/* LEFT SECTION */}
-    <Col md={6} className="d-flex align-items-center gap-3">
+        <Card.Header className="py-2 bg-light mt-3 border-0 px-4" >
+          <Row className="align-items-center px-3">
 
-      {/* Back Button */}
-      <button
-        onClick={() => navigate('/reports')}
-        className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
-      >
-        <i className="fa-solid fa-arrow-left"></i>
-      </button>
+            <Col md={6} className="d-flex align-items-center gap-3">
 
-      {/* Icon */}
-      {/* <div
-        className="d-flex align-items-center justify-content-center"
-        style={{
-          width: "42px",
-          height: "42px",
-          borderRadius: "10px",
-          background: "var(--primary-background-color)"
-        }}
-      >
-        <i
-          className="fa fa-book"
-          style={{ fontSize: '20px', color: "var(--primary-color)" }}
-        />
-      </div> */}
+              <button
+                onClick={() => navigate('/reports')}
+                className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
+              >
+                <i className="fa-solid fa-arrow-left"></i>
+              </button>
 
-      {/* Title */}
-      <div>
-        <h4 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
-          Book Inventory
-        </h4>
-        {/* <small className="text-muted">Manage and analyze your book stock</small> */}
-      </div>
 
-    </Col>
+              <div>
+                <h4 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
+                  Book Inventory
+                </h4>
+                {/* <small className="text-muted">Manage and analyze your book stock</small> */}
+              </div>
 
-    {/* RIGHT SECTION */}
-    <Col md={6} className="text-end">
-      <Dropdown align="end">
-        <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
-          <i className="fa fa-bars me-1" /> Options
-        </Dropdown.Toggle>
+            </Col>
 
-        <Dropdown.Menu className="shadow-sm border-0 mt-2">
-          <Dropdown.Header className="small text-uppercase fw-bold text-muted">
-            View Mode
-          </Dropdown.Header>
+            {/* RIGHT SECTION */}
+            <Col md={6} className="text-end">
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
+                  <i className="fa fa-bars me-1" /> Options
+                </Dropdown.Toggle>
 
-          <Dropdown.Item
-            active={viewMode === 'table'}
-            onClick={() => setViewMode('table')}
-          >
-            <i className="fa fa-table me-2" /> Table
-          </Dropdown.Item>
+                <Dropdown.Menu className="shadow-sm border-0 mt-2">
+                  <Dropdown.Header className="small text-uppercase fw-bold text-muted">
+                    View Mode
+                  </Dropdown.Header>
 
-          <Dropdown.Item
-            active={viewMode === 'dashboard'}
-            onClick={() => setViewMode('dashboard')}
-          >
-            <i className="fa fa-chart-pie me-2" /> Dashboard
-          </Dropdown.Item>
+                  <Dropdown.Item
+                    active={viewMode === 'table'}
+                    onClick={() => setViewMode('table')}
+                  >
+                    <i className="fa fa-table me-2" /> Table
+                  </Dropdown.Item>
 
-          <Dropdown.Item
-            active={viewMode === 'chart'}
-            onClick={() => setViewMode('chart')}
-          >
-            <i className="fa fa-chart-bar me-2" /> Analytics
-          </Dropdown.Item>
+                  <Dropdown.Item
+                    active={viewMode === 'dashboard'}
+                    onClick={() => setViewMode('dashboard')}
+                  >
+                    <i className="fa fa-chart-pie me-2" /> Dashboard
+                  </Dropdown.Item>
 
-          <Dropdown.Divider />
+                  <Dropdown.Item
+                    active={viewMode === 'chart'}
+                    onClick={() => setViewMode('chart')}
+                  >
+                    <i className="fa fa-chart-bar me-2" /> Analytics
+                  </Dropdown.Item>
 
-          <Dropdown.Header className="small text-uppercase fw-bold text-muted">
-            Export Options
-          </Dropdown.Header>
+                  <Dropdown.Divider />
 
-          <Dropdown.Item onClick={() => exportFile("excel")}>
-            <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
-          </Dropdown.Item>
+                  <Dropdown.Header className="small text-uppercase fw-bold text-muted">
+                    Export Options
+                  </Dropdown.Header>
 
-          <Dropdown.Item onClick={() => exportFile("csv")}>
-            <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
-          </Dropdown.Item>
+                  <Dropdown.Item onClick={() => exportFile("excel")}>
+                    <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
+                  </Dropdown.Item>
 
-          <Dropdown.Item onClick={() => exportFile("pdf")}>
-            <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
-          </Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
-    </Col>
+                  <Dropdown.Item onClick={() => exportFile("csv")}>
+                    <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
+                  </Dropdown.Item>
 
-  </Row>
-</Card.Header>
+                  <Dropdown.Item onClick={() => exportFile("pdf")}>
+                    <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </Col>
+
+          </Row>
+        </Card.Header>
 
 
         <Card.Body className="p-4">
@@ -1018,24 +496,24 @@ const BookInventoryReport = () => {
               <Card className="border-0 bg-light mb-3">
                 <Card.Body>
                   <Row className="g-3 align-items-end">
-                   
-                     <Col xs={12} md={2}>
-                        <div style={labelStyle}>
-                            <i className={ "fa-solid fa-magnifying-glass"}></i>
-                            <span>Search</span>
-                          </div>
-                          <Form.Control
-                            type="text"
-                            className="filter-input"
-                            style={inputBaseStyle}
-                            placeholder={`Search by book, author...`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm( e.target.value)}
-                          />
+
+                    <Col xs={12} md={2}>
+                      <div style={labelStyle}>
+                        <i className={"fa-solid fa-magnifying-glass"}></i>
+                        <span>Search</span>
+                      </div>
+                      <Form.Control
+                        type="text"
+                        className="filter-input"
+                        style={inputBaseStyle}
+                        placeholder={`Search by book, author...`}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </Col>
                     <Col xs={12} md={2}>
                       <div style={labelStyle}>
-                        <i className={ "fa-solid fa-filter"}></i>
+                        <i className={"fa-solid fa-filter"}></i>
                         <span>Vendor</span>
                       </div>
                       <Form.Select
@@ -1062,7 +540,7 @@ const BookInventoryReport = () => {
 
                     <Col xs={12} md={2}>
                       <div style={labelStyle}>
-                        <i className={ "fa-solid fa-filter"}></i>
+                        <i className={"fa-solid fa-filter"}></i>
                         <span>Category</span>
                       </div>
                       <Form.Select
@@ -1086,7 +564,7 @@ const BookInventoryReport = () => {
                         ))}
                       </Form.Select>
                     </Col>
-                  
+
                     {/* <Col xs={12} md={2}>
                      <div style={labelStyle}>
                         <i className={ "fa-solid fa-filter"}></i>
@@ -1114,27 +592,27 @@ const BookInventoryReport = () => {
                       </Form.Select>
                       
                     </Col> */}
-                    
-                     <Button
-                        variant="light"
-                        onClick={resetFilters}
-                        tooltip="Clear all filters"
-                        className="filter-clear-btn d-flex align-items-center justify-content-center"
-                        style={{
-                          width: '44px',
-                          height: '44px',
-                          borderRadius: '8px',
-                          border: '1.5px solid #dee2e6',
-                          padding: 0,
-                          backgroundColor: '#fff',
-                          transition: 'all 0.2s ease',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
-                        <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
+
+                    <Button
+                      variant="light"
+                      onClick={resetFilters}
+                      tooltip="Clear all filters"
+                      className="filter-clear-btn d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '8px',
+                        border: '1.5px solid #dee2e6',
+                        padding: 0,
+                        backgroundColor: '#fff',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
+                      <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
                     </Button>
-                   
+
                   </Row>
                 </Card.Body>
               </Card>
@@ -1164,8 +642,8 @@ const BookInventoryReport = () => {
                   <Card.Header className="bg-white border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0 fw-bold">Inventory Overview</h6>
-                      <Form.Select 
-                        size="sm" 
+                      <Form.Select
+                        size="sm"
                         value={chartGroupBy}
                         onChange={(e) => setChartGroupBy(e.target.value)}
                         style={{ width: 'auto' }}
@@ -1181,20 +659,20 @@ const BookInventoryReport = () => {
                     <ResponsiveContainer width="100%" height={350}>
                       <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 60 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="name" 
-                          angle={-45} 
-                          textAnchor="end" 
+                        <XAxis
+                          dataKey="name"
+                          angle={-45}
+                          textAnchor="end"
                           interval={0}
                           height={80}
                           tick={{ fontSize: 11 }}
                         />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <RechartsTooltip 
+                        <RechartsTooltip
                           contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
                         />
-                        <Legend 
-                          verticalAlign="top" 
+                        <Legend
+                          verticalAlign="top"
                           wrapperStyle={{ paddingBottom: '20px' }}
                         />
                         <Bar dataKey="total" name="Total Stock" fill="#667eea" radius={[8, 8, 0, 0]} />
@@ -1205,7 +683,7 @@ const BookInventoryReport = () => {
                   </Card.Body>
                 </Card>
               </Col>
-              
+
               <Col md={4}>
                 <Card className="border-0 shadow-sm h-100">
                   <Card.Header className="bg-white border-bottom">
@@ -1234,7 +712,7 @@ const BookInventoryReport = () => {
                   </Card.Body>
                 </Card>
               </Col>
-              
+
               <Col md={12}>
                 <Card className="border-0 shadow-sm">
                   <Card.Header className="bg-white border-bottom">
@@ -1278,21 +756,21 @@ const BookInventoryReport = () => {
                       </Col>
                       <Col className="text-end">
                         <ButtonGroup size="sm">
-                          <Button 
+                          <Button
                             variant={chartType === 'bar' ? 'primary' : 'outline-primary'}
                             onClick={() => setChartType('bar')}
                           >
                             <i className="fa fa-bar-chart" /> Bar
                           </Button>
-                          <Button 
+                          <Button
                             variant={chartType === 'line' ? 'primary' : 'outline-primary'}
                             onClick={() => setChartType('line')}
                           >
                             <i className="fa fa-line-chart" /> Line
                           </Button>
                         </ButtonGroup>
-                        <Form.Select 
-                          size="sm" 
+                        <Form.Select
+                          size="sm"
                           value={chartGroupBy}
                           onChange={(e) => setChartGroupBy(e.target.value)}
                           className="ms-2"
@@ -1311,16 +789,16 @@ const BookInventoryReport = () => {
                       {chartType === 'bar' ? (
                         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis 
-                            dataKey="name" 
-                            angle={-45} 
-                            textAnchor="end" 
+                          <XAxis
+                            dataKey="name"
+                            angle={-45}
+                            textAnchor="end"
                             interval={0}
                             height={100}
                             tick={{ fontSize: 11 }}
                           />
                           <YAxis />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
                           />
                           <Legend />
@@ -1332,16 +810,16 @@ const BookInventoryReport = () => {
                       ) : (
                         <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis 
-                            dataKey="name" 
-                            angle={-45} 
-                            textAnchor="end" 
+                          <XAxis
+                            dataKey="name"
+                            angle={-45}
+                            textAnchor="end"
                             interval={0}
                             height={100}
                             tick={{ fontSize: 11 }}
                           />
                           <YAxis />
-                          <RechartsTooltip 
+                          <RechartsTooltip
                             contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0' }}
                           />
                           <Legend />

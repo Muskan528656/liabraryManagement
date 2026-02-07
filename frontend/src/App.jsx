@@ -80,8 +80,6 @@ function AppContent() {
   };
 
 
-  // console.log("Permission for 'Books' module:", getPermissionForModule("Shelf"));
-  // Check if user has view permission for any module
   const hasAnyViewPermission = () => {
     console.log("Checking view permissions in:", permissions);
     if (!permissions || permissions.length === 0) return false;
@@ -118,10 +116,8 @@ function AppContent() {
         setConnectedSocket(socket);
       });
 
-      // Listen for permissions update from server
       socket.on("permissions_updated", (data) => {
         console.log("Permissions updated notification received:", data);
-        // Dispatch the custom event to trigger permission refresh
         window.dispatchEvent(new Event("permissionsUpdated"));
       });
 
@@ -215,8 +211,8 @@ function AppContent() {
                 <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
                 <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
-                <Route path="/gradeSection" element={<GradeSection permissions={getPermissionForModule("gradeSection")} />} />
-                <Route path="/gradeSection/:id" element={<GradeSectionDetail permissions={getPermissionForModule("gradeSection")} />} />
+                <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
+                <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
 
               </Route>
             </Routes>
