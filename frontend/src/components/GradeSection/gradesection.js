@@ -17,7 +17,7 @@ const GradeSection = ({ permissions, ...props }) => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                
+
                 const response = await new DataApi("grade-sections").fetchAll();
                 console.log("Response =>>>>>>", response);
                 setExternalData(response.data);
@@ -31,14 +31,14 @@ const GradeSection = ({ permissions, ...props }) => {
         fetchData();
     }, []);
 
-    
+
     if (isSuperAdmin) {
         const finalPermissions = {
             allowView: true,
             allowCreate: true,
             allowEdit: true,
             allowDelete: true,
-            ...permissions 
+            ...permissions
         };
 
         const finalConfig = getGradeSectionConfig({
@@ -56,7 +56,7 @@ const GradeSection = ({ permissions, ...props }) => {
         );
     }
 
-    console.log("permissions?.allowViepermissions?.allowVie",permissions?.allowVie)
+    console.log("permissions?.allowViepermissions?.allowVie", permissions?.allowVie)
     if (!permissions?.allowView) {
         return <PermissionDenied />;
     }
