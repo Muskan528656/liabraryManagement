@@ -1526,6 +1526,7 @@ const BookPopularityReport = () => {
             <Dropdown.Header>Export</Dropdown.Header>
             <Dropdown.Item onClick={exportToCSV}><i className="fa-solid fa-file-csv me-2 text-info" /> CSV</Dropdown.Item>
             <Dropdown.Item onClick={exportToExcel}><i className="fa-solid fa-file-excel me-2 text-success" /> Excel</Dropdown.Item>
+            <Dropdown.Item onClick={exportToPDF}><i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </div>
