@@ -168,7 +168,8 @@ useEffect(() => {
             setFormData(prev => ({
               ...prev,
               shelf_name: value,
-              shelf_id: ""
+              sub_shelf_id: "",
+              sub_shelf: ""
             }));
           },
         },

@@ -22,7 +22,7 @@ async function findAll() {
                     pub.name AS publisher_name,
                     s.shelf_name,
                     s.sub_shelf,
-                    b.sub_shelf_id,
+                    b.shelf_id AS sub_shelf_id,
                     CASE
                       WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
                       ELSE (
