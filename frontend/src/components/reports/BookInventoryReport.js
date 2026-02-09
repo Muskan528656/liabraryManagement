@@ -436,7 +436,7 @@
 //                 </Card.Body>
 //               </Card>
 //             </Col>
-            
+
 //             <Col md={3} sm={6}>
 //               <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #28a745' }}>
 //                 <Card.Body>
@@ -455,7 +455,7 @@
 //                 </Card.Body>
 //               </Card>
 //             </Col>
-            
+
 //             <Col md={3} sm={6}>
 //               <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #ffc107' }}>
 //                 <Card.Body>
@@ -472,7 +472,7 @@
 //                 </Card.Body>
 //               </Card>
 //             </Col>
-            
+
 //             <Col md={3} sm={6}>
 //               <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #dc3545' }}>
 //                 <Card.Body>
@@ -590,7 +590,7 @@
 //                           <option value="Low Stock">Low Stock</option>
 //                           <option value="Out of Stock">Out of Stock</option>
 //                       </Form.Select>
-                      
+
 //                     </Col> */}
 
 //                     <Button
@@ -1367,7 +1367,9 @@ import {
 import DataApi from "../../api/dataApi";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+
+// import "jspdf-autotable";
 import ResizableTable from "../common/ResizableTable";
 import "../../App.css";
 import TableHeader from "../common/TableHeader";
@@ -1441,19 +1443,19 @@ const BookInventoryReport = () => {
       field: "publisher_name",
       label: "Publisher",
       searchable: true,
-       align: "center", 
+      align: "center",
     },
     {
       field: "category_name",
       label: "Category",
       searchable: true,
-       align: "center", 
+      align: "center",
     },
     {
       field: "vendor_name",
       label: "Vendor",
       searchable: true,
-       align: "center", 
+      align: "center",
       render: (val) => val || <span className="text-muted">N/A</span>
     },
     {
