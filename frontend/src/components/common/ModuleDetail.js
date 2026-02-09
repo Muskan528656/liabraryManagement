@@ -863,7 +863,6 @@ const ModuleDetail = ({
         return;
       }
 
-
       let updatedData = {
         ...tempData,
         [fieldKey]: value,

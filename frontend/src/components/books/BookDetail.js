@@ -168,16 +168,24 @@ useEffect(() => {
             setFormData(prev => ({
               ...prev,
               shelf_name: value,
-              sub_shelf_id: ""   
+              shelf_id: ""
             }));
           },
         },
     
      {
-        key: "sub_shelf_id",
+        key: "shelf_id",
         label: "Sub Shelf",
         type: "select",
-        options: subShelfOptions
+        options: subShelfOptions,
+        onChange: (value, formData, setFormData) => {
+          const selectedSub = subShelfOptions.find(s => s.value === value);
+          setFormData(prev => ({
+            ...prev,
+            shelf_id: value,
+            sub_shelf: selectedSub ? selectedSub.label : ""
+          }));
+        }
       },
 
       { key: "total_copies", label: "Total Copies", type: "number" },
