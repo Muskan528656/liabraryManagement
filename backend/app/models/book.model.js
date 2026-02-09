@@ -948,17 +948,14 @@ async function exportBookPopularityReportPDF(params) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
-    // Get the report data
     const reportData = await this.generateBookPopularityReport(params);
 
-    // Create PDF document
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-    // Title
+    
     doc.fontSize(20).text('Book Popularity Analytics Report', { align: 'center' });
     doc.moveDown();
 
-    // Filters
     doc.fontSize(12).text('Filters Applied:', { underline: true });
     if (params.days) {
       doc.text(`Time Period: Last ${params.days} days`);
@@ -971,7 +968,6 @@ async function exportBookPopularityReportPDF(params) {
     }
     doc.moveDown();
 
-    // Summary Statistics
     doc.fontSize(14).text('Summary Statistics:', { underline: true });
     doc.fontSize(10);
     doc.text(`Total Books: ${reportData.mainTable.length}`);
@@ -982,7 +978,6 @@ async function exportBookPopularityReportPDF(params) {
     doc.text(`Never Issued Books: ${reportData.keyMetrics.neverIssuedBooks}`);
     doc.moveDown();
 
-    // Table Headers
     const tableTop = doc.y;
     const headers = ['Book Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level'];
 
