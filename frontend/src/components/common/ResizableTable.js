@@ -506,7 +506,8 @@ const ResizableTable = ({
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
-                                                        height: '43px'
+                                                        height: '43px',
+                                                        textAlign : column.align || 'left'
                                                     }}
                                                 >
                                                     {column.render
