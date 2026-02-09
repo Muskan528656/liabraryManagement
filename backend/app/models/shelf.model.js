@@ -159,6 +159,33 @@ async function updateById(id, data) {
     }
 }
 
+// ================= FIND GROUPED SHELVES =================
+async function findGroupedShelves() {
+    const q = `
+        SELECT shelf_name, sub_shelf
+        FROM ${this.schema}.shelf
+        WHERE status = true
+        ORDER BY shelf_name, sub_shelf;
+    `;
+    const r = await sql.query(q);
+
+    // Group by shelf_name and aggregate sub_shelves
+    const grouped = {};
+    r.rows.forEach(row => {
+        if (!grouped[row.shelf_name]) {
+            grouped[row.shelf_name] = [];
+        }
+        if (row.sub_shelf) {
+            grouped[row.shelf_name].push(row.sub_shelf);
+        }
+    });
+
+    return Object.keys(grouped).map(shelf_name => ({
+        shelf_name,
+        sub_shelves: grouped[shelf_name].join(',')
+    })).sort((a, b) => a.shelf_name.localeCompare(b.shelf_name));
+}
+
 // ================= DELETE =================
 async function deleteById(id) {
     await sql.query(
@@ -174,4 +201,5 @@ module.exports = {
     create,
     updateById,
     deleteById,
+    findGroupedShelves,
 };
