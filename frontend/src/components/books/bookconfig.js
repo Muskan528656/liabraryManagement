@@ -169,24 +169,28 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                     }));
                 }
             },
-
             {
-                name: "sub_shelf",
+                name: "sub_shelf_id",   
                 label: "Sub Shelf",
                 type: "select",
                 options: (formData) => {
                     if (!formData.shelf_name) return [];
-                    const selectedShelf = groupedShelves.find(s => s.shelf_name === formData.shelf_name);
-                    if (!selectedShelf || !selectedShelf.sub_shelves) return [];
-                    return selectedShelf.sub_shelves.split(',').map(sub => ({
-                        value: sub.trim(),
-                        label: sub.trim()
+
+                    const selectedShelf = groupedShelves.find(
+                        s => s.shelf_name === formData.shelf_name
+                    );
+
+                    if (!selectedShelf || !Array.isArray(selectedShelf.sub_shelves)) return [];
+
+                    return selectedShelf.sub_shelves.map(sub => ({
+                        value: sub.id,    
+                        label: sub.name    
                     }));
                 },
                 required: false,
                 colSize: 6,
-            },
-
+            }
+            ,
             {
                 name: "isbn",
                 label: "ISBN",

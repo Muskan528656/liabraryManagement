@@ -308,6 +308,11 @@ module.exports = (app) => {
           return true;
         }),
       body("isbn").notEmpty().withMessage("ISBN is required"),
+      body("shelf_id")
+        .optional()
+        .custom((value) => {
+          return true;
+        }),
     ],
     async (req, res) => {
       try {
