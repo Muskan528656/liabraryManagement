@@ -20,6 +20,9 @@ async function findAll() {
                     a.name AS author_name,
                     c.name AS category_name,
                     pub.name AS publisher_name,
+                    s.shelf_name,
+                    s.sub_shelf,
+                    b.sub_shelf_id,
                     CASE
                       WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
                       ELSE (
@@ -34,6 +37,7 @@ async function findAll() {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
                    ORDER BY b.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -52,6 +56,8 @@ async function findById(id) {
                     a.name AS author_name,
                     c.name AS category_name,
                     pub.name AS publisher_name,
+                    s.shelf_name,
+                    s.sub_shelf,
                     CASE
                       WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
                       ELSE (
@@ -66,6 +72,7 @@ async function findById(id) {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
                    WHERE b.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {

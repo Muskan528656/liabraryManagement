@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
@@ -11,6 +11,9 @@ const BookDetail = ({ permissions}) => {
   console.log("BookDetail permission prop:", permissions);
   const { id } = useParams();
   const [externalData, setExternalData] = useState({ authors: [], categories: [] });
+  const [groupedShelves, setGroupedShelves] = useState([]);
+  const [subShelfOptions, setSubShelfOptions] = useState([]);
+  
   const [book, setBook] = useState(null);
   const [availableBooks, setAvailableBooks] = useState(0);
   const [totalBooks, setTotalBooks] = useState(0);
@@ -67,13 +70,19 @@ const BookDetail = ({ permissions}) => {
       const categoriesResponse = await categoryApi.fetchAll();
       const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
 
+      const shelfApi = new DataApi("shelf/grouped");
+      const groupedShelvesResponse = await shelfApi.fetchAll();
+      const groupedShelves = groupedShelvesResponse?.data?.data || groupedShelvesResponse?.data || [];
+
       console.log("Fetched authors:", authors);
       console.log("Fetched categories:", categories);
+      console.log("Fetched groupedShelves:", groupedShelves);
 
       setExternalData({
         authors: Array.isArray(authors) ? authors : [],
         categories: Array.isArray(categories) ? categories : [],
       });
+      setGroupedShelves(Array.isArray(groupedShelves) ? groupedShelves : []);
     } catch (error) {
       console.error("Error fetching external data:", error);
     }
@@ -87,7 +96,30 @@ const BookDetail = ({ permissions}) => {
     }
   }, [id]);
 
-  const fields = {
+useEffect(() => {
+  if (book?.shelf_name && groupedShelves.length) {
+    const shelf = groupedShelves.find(
+      s => s.shelf_name === book.shelf_name
+    );
+
+    if (shelf?.sub_shelves) {
+      setSubShelfOptions(
+        shelf.sub_shelves.map(sub => ({
+          value: sub.id,
+          label: sub.name
+        }))
+      );
+    }
+  }
+}, [book?.shelf_name, groupedShelves]);
+
+
+  const shelfOptions = useMemo(() => groupedShelves.map(s => ({
+    value: s.shelf_name,
+    label: s.shelf_name
+  })), [groupedShelves]);
+
+  const fields = useMemo(() => ({
     title: "title",
     subtitle: "isbn",
     details: [
@@ -115,11 +147,44 @@ const BookDetail = ({ permissions}) => {
         options: "categories",
         displayKey: "category_name"
       },
+
+         {
+          key: "shelf_name",
+          label: "Shelf",
+          type: "select",
+          options: shelfOptions,
+          onChange: (value, formData, setFormData) => {
+            const selectedShelf = groupedShelves.find(
+              s => s.shelf_name === value
+            );
+
+            const newSubOptions = selectedShelf?.sub_shelves?.map(sub => ({
+              value: sub.id,
+              label: sub.name
+            })) || [];
+
+            setSubShelfOptions(newSubOptions);
+
+            setFormData(prev => ({
+              ...prev,
+              shelf_name: value,
+              sub_shelf_id: ""   
+            }));
+          },
+        },
+    
+     {
+        key: "sub_shelf_id",
+        label: "Sub Shelf",
+        type: "select",
+        options: subShelfOptions
+      },
+
       { key: "total_copies", label: "Total Copies", type: "number" },
       { key: "available_copies", label: "Available Copies", type: "number" },
       { key: 'min_age', label: 'Min Age', type: 'number' },
       { key: 'max_age', label: 'Max Age', type: 'number' },
-      { key: "inventory_binding", label: "Inventory Binding", type: "select", options: inventoryBindings, },
+      { key: "inventory_binding", label: "Inventory Binding", type: "select", options: inventoryBindings },
 
     ],
     other: [
@@ -137,7 +202,7 @@ const BookDetail = ({ permissions}) => {
       },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
     ],
-  };
+  }), [groupedShelves, shelfOptions, inventoryBindings, timeZone, subShelfOptions]);
 
   const lookupNavigation = {
     author_name: {
