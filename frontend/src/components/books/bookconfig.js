@@ -11,153 +11,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
 
     console.log("getBooksConfig - publishers:", publishers);
-    const shelves = props.shelf || externalData.shelf || [];
-    console.log("getBooksConfig - shelves:", shelves);
 
-    const uniqueShelves = Object.values(
-        shelves.reduce((acc, shelf) => {
-            if (!acc[shelf.shelf_name]) {
-                acc[shelf.shelf_name] = shelf;
-            }
-            return acc;
-        }, {})
-    );
-
-    console.log("uniqueShelves:", uniqueShelves);
-    // Output: 3 items - "Muskan", "aaa", "a" (first occurrence only)
-
-    // Create shelf options
-    const shelfOptions = uniqueShelves.map(s => ({
-        value: s.id,
-        name: s.shelf_name
-    }));
-
-    console.log("shelfOptions:", shelfOptions);
-    // Output: [
-    //   {value: "Muskan", name: "Muskan"},
-    //   {value: "aaa", name: "aaa"},
-    //   {value: "a", name: "a"}
-    // ]
-
-    const subShelfOptions = (selectedShelfName) => {
-        console.log("subShelfOptions called with:", selectedShelfName);
-
-        if (!selectedShelfName) {
-            console.log("No shelf selected");
-            return [];
-        }
-
-        // Find ALL shelves with this name
-        const allShelvesWithName = shelves.filter(s => s.shelf_name === selectedShelfName);
-
-        console.log("Found shelves with name", selectedShelfName, ":", allShelvesWithName.length);
-
-        if (!allShelvesWithName.length) {
-            console.log("No shelves found with name:", selectedShelfName);
-            return [];
-        }
-
-        // Collect ALL sub-shelves from all matching shelves
-        let allSubShelves = [];
-        allShelvesWithName.forEach(shelf => {
-            console.log("Processing shelf:", shelf.id, "sub_shelf:", shelf.sub_shelf);
-
-            if (shelf.sub_shelf) {
-                // If sub_shelf is string, try to parse it
-                if (typeof shelf.sub_shelf === 'string') {
-                    try {
-                        const parsed = JSON.parse(shelf.sub_shelf);
-                        if (Array.isArray(parsed)) {
-                            allSubShelves.push(...parsed);
-                        }
-                    } catch (e) {
-                        console.log("Error parsing sub_shelf string:", e);
-                    }
-                }
-                // If sub_shelf is array, use it directly
-                else if (Array.isArray(shelf.sub_shelf)) {
-                    allSubShelves.push(...shelf.sub_shelf);
-                }
-            }
-        });
-
-        // Remove duplicates and filter out empty/null values
-        const uniqueSubShelves = [...new Set(allSubShelves.filter(item => item && item.trim() !== ''))];
-
-        console.log("All unique sub shelves for", selectedShelfName, ":", uniqueSubShelves);
-
-        return uniqueSubShelves.map(ss => ({
-            value: ss,
-            name: ss
-        }));
-    };
-
-    // Test the function
-    console.log("Testing subShelfOptions for 'Muskan':");
-    const muskanSubShelves = subShelfOptions("Muskan");
-    console.log("Muskan sub-shelves:", muskanSubShelves);
-    // Expected output: ["23", "A3", "A2", "a1"] (all 4 sub-shelves)
-
-    console.log("Testing subShelfOptions for 'aaa':");
-    const aaaSubShelves = subShelfOptions("aaa");
-    console.log("aaa sub-shelves:", aaaSubShelves);
-    // Expected output: ["sad"]
-
-    console.log("Testing subShelfOptions for 'a':");
-    const aSubShelves = subShelfOptions("a");
-    console.log("a sub-shelves:", aSubShelves);
-    // Expected output: ["a"]
-    // const subShelfOptions = (selectedShelfName) => {
-
-    //     const matchedShelves = shelves.filter(
-    //         s => s.shelf_name === selectedShelfName
-    //     );
-    //     console.log("matchedShelvesmatchedShelves", matchedShelves)
-    //     let allSubs = [];
-
-    //     matchedShelves.forEach(shelf => {
-    //         let subs = shelf.sub_shelf || [];
-
-    //         if (typeof subs === "string") {
-    //             try {
-    //                 subs = JSON.parse(subs);
-    //             } catch {
-    //                 subs = [];
-    //             }
-    //         }
-
-    //         allSubs.push(...subs);
-    //     });
-
-    //     const uniqueSubs = [...new Set(allSubs)];
-    //     console.log("uniqueSubsuniqueSubs", uniqueSubs)
-
-    //     return uniqueSubs.map(ss => ({
-    //         value: ss,
-    //         name: ss
-    //     }));
-
-    // };
-
-
-    // console.log("uniqueSubsuniqueSubs", uniqueSubs)
-    // console.log("shelvesshelves", shelf)
-    // const shelfOptions = shelf.map(s => ({
-    //     value: s.id,
-    //     name: s.shelf_name
-    // }));
-
-    // Dependent sub-shelf options
-    // const subShelfOptions = (selectedShelfId) => {
-    //     const shelf = shelves.find(s => s.id == selectedShelfId);
-    //     if (!shelf || !shelf.sub_shelves) return [];
-
-    //     return shelf.sub_shelves.map(ss => ({
-    //         value: ss,
-    //         name: ss
-    //     }));
-    // };
-    //changes
     const authorOptions = authors.map(a => ({
 
         // value: String(a.id),
@@ -206,8 +60,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
         authors: authorOptions,
         categories: categoryOptions,
         publishers: publisherOptions,
-        shelf: shelfOptions,
-        subShelfOptions: subShelfOptions,
+
         moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
@@ -247,8 +100,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
             language: "",
             min_age: "",
             max_age: "",
-            shelf_name: "",
-            sub_shelf: ""
+
         },
         columns: [
             { field: "title", label: "Title" },

@@ -89,7 +89,7 @@
 
 
 
-  
+
 //     const labelStyle = {
 //     fontSize: '0.875rem',
 //     fontWeight: '600',
@@ -580,7 +580,7 @@
 //           </div>
 //       </div>
 
-      
+
 
 //       {/* Statistics Cards */}
 //       <div className="library-stats-row">
@@ -627,7 +627,7 @@
 //               </div>
 //               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
 //                 <i className="fa fa-line-chart text-danger" style={{ fontSize: '24px' }} />
-              
+
 //               </div>
 //             </div>
 //             <small className="text-muted">Current month issues</small>
@@ -642,7 +642,7 @@
 //               </div>
 //               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
 //                 <i className="fa fa-award text-danger" style={{ fontSize: '24px' }} />
-               
+
 //               </div>
 //             </div>
 //             <small className="text-muted">{reportData?.keyMetrics?.mostPopularBook?.total_issues || 0}{" "}
@@ -658,7 +658,7 @@
 //               </div>
 //               <div className="bg-primary bg-opacity-10 rounded-circle p-3 ">
 //                 <i className="fa fa-clock text-primary" style={{ fontSize: '24px' }} />
-            
+
 //               </div>
 //             </div>
 //             <small className="text-muted">Books not borrowed</small>
@@ -713,13 +713,13 @@
 //       </div>
 
 //       {/* Filters */}
-  
+
 
 //       <div className=" px-3 border-0 bg-light">
 //          <Card className="border-0 bg-light mb-3">
 //                       <Card.Body>
 //                         <Row className="g-3 align-items-end">
-                         
+
 //                            <Col xs={12} md={2}>
 //                               <div style={labelStyle}>
 //                                   <i className="fa-solid fa-calendar-days"></i>
@@ -751,7 +751,7 @@
 //                               onChange={(e) => setSearchTerm(e.target.value)}
 //                             />
 //                           </Col>
-                       
+
 
 //                           <Col xs={12} md={2}>
 //                             <div style={labelStyle}>
@@ -807,7 +807,7 @@
 //                             </Form.Select>
 
 //                           </Col> */}
-                          
+
 //                            <Button
 //                               variant="light"
 //                               onClick={resetFilters}
@@ -827,7 +827,7 @@
 //                               {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
 //                               <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
 //                           </Button>
-                         
+
 //                         </Row>
 //                       </Card.Body>
 //                     </Card>
@@ -860,7 +860,7 @@
 //             />
 //           </div>
 
-     
+
 //         </div>
 //       )}
 
@@ -1512,7 +1512,7 @@ const BookPopularityReport = () => {
           <FileEarmarkBarGraph size={24} className="text-primary" />
           <h4 className="mb-0">Book Borrowing Popularity Analytics</h4>
         </div>
-        
+
         <Dropdown align="end">
           <Dropdown.Toggle variant="outline-secondary" size="sm">
             <i className="fa fa-bars me-1" /> Options
@@ -1537,16 +1537,16 @@ const BookPopularityReport = () => {
             <Col xs={12} md={2}>
               <div style={labelStyle}><i className="fa-solid fa-calendar-days" /> Time Period</div>
               <Form.Select
-                  className="small text-muted"
-                  style={{
-                    ...inputBaseStyle,
-                    cursor: 'pointer',
-                    paddingRight: '2.5rem',
-                    appearance: 'none',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 0.75rem center',
-                    backgroundSize: '16px 12px'
-                  }}
+                className="small text-muted"
+                style={{
+                  ...inputBaseStyle,
+                  cursor: 'pointer',
+                  paddingRight: '2.5rem',
+                  appearance: 'none',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.75rem center',
+                  backgroundSize: '16px 12px'
+                }}
                 value={filters.days}
                 onChange={(e) => handleFilterChange("days", e.target.value)}
               >
@@ -1559,15 +1559,15 @@ const BookPopularityReport = () => {
             <Col xs={12} md={2}>
               <div style={labelStyle}><i className="fa-solid fa-magnifying-glass" /> Search</div>
               <Form.Control
-                  className="small text-muted"
-                  style={{
-                    ...inputBaseStyle,
-                    cursor: 'pointer',
-                    paddingRight: '2.5rem',
-                    appearance: 'none',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 0.75rem center',
-                    backgroundSize: '16px 12px'
+                className="small text-muted"
+                style={{
+                  ...inputBaseStyle,
+                  cursor: 'pointer',
+                  paddingRight: '2.5rem',
+                  appearance: 'none',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.75rem center',
+                  backgroundSize: '16px 12px'
                 }}
                 placeholder="Search book or author..."
                 value={filters.searchTerm}
@@ -1588,7 +1588,7 @@ const BookPopularityReport = () => {
                   backgroundPosition: 'right 0.75rem center',
                   backgroundSize: '16px 12px'
                 }}
-                
+
                 value={filters.category}
                 onChange={(e) => handleFilterChange("category", e.target.value)}
               >
@@ -1599,7 +1599,7 @@ const BookPopularityReport = () => {
               </Form.Select>
             </Col>
 
-         <Button
+            <Button
               variant="light"
               onClick={resetFilters}
               tooltip="Clear all filters"
@@ -1617,7 +1617,7 @@ const BookPopularityReport = () => {
             >
               {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
               <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
-           </Button>
+            </Button>
           </Row>
         </Card.Body>
       </Card>
@@ -1666,24 +1666,24 @@ const BookPopularityReport = () => {
 
       {viewMode === "analytics" && (
         <Row className="g-4">
-           <Col lg={12}>
-              <Card className="border-0 shadow-sm">
-                <Card.Body>
-                  <h6 className="fw-bold mb-3"><Award className="me-2 text-warning" />Ranked Popularity</h6>
-                  <div className="list-group list-group-flush">
-                    {reportData?.popularBooks?.slice(0, 10).map((book, idx) => (
-                      <div key={idx} className="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <div>
-                          <span className="badge bg-light text-dark border me-3">#{idx + 1}</span>
-                          <span className="fw-bold">{book.book_name}</span>
-                        </div>
-                        <Badge bg="primary" pill>{book.total_issues} Issues</Badge>
+          <Col lg={12}>
+            <Card className="border-0 shadow-sm">
+              <Card.Body>
+                <h6 className="fw-bold mb-3"><Award className="me-2 text-warning" />Ranked Popularity</h6>
+                <div className="list-group list-group-flush">
+                  {reportData?.popularBooks?.slice(0, 10).map((book, idx) => (
+                    <div key={idx} className="list-group-item d-flex justify-content-between align-items-center py-3">
+                      <div>
+                        <span className="badge bg-light text-dark border me-3">#{idx + 1}</span>
+                        <span className="fw-bold">{book.book_name}</span>
                       </div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
-           </Col>
+                      <Badge bg="primary" pill>{book.total_issues} Issues</Badge>
+                    </div>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
       )}
     </div>

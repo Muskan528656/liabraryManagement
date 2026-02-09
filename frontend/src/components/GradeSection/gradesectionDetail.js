@@ -20,21 +20,18 @@ const GradeSectionDetail = ({ permissions }) => {
         try {
             const gradeApi = new DataApi("grade-sections");
 
-            // Fetch grade section details
             const gradeResponse = await gradeApi.fetchById(gradeSectionId);
             const gradeData = gradeResponse?.data || {};
             setGradeSection(gradeData);
 
-            // Fetch counts
             const allSectionsResponse = await gradeApi.fetchAll();
             const allSections = allSectionsResponse?.data?.data || allSectionsResponse?.data || [];
 
-            // Count active sections
             const activeSections = allSections.filter(section => section.status === true);
             setActiveSectionsCount(activeSections.length);
             setTotalSectionsCount(allSections.length);
 
-            // Count sections with same grade
+
             if (gradeData.grade_name) {
                 const sameGrade = allSections.filter(section =>
                     section.grade_name === gradeData.grade_name
@@ -63,7 +60,7 @@ const GradeSectionDetail = ({ permissions }) => {
             {
                 key: "status",
                 label: "Status",
-                type: "badge",
+                type: "toggle",
                 options: [
                     { value: true, label: "Active", variant: "success" },
                     { value: false, label: "Inactive", variant: "danger" }
@@ -92,44 +89,14 @@ const GradeSectionDetail = ({ permissions }) => {
         ],
     };
 
-    const cardData = [
-        {
-            title: "Total Grade Sections",
-            value: totalSectionsCount,
-            icon: "fa-solid fa-layer-group",
-            border: "border-start",
-            color: "primary"
-        },
-        {
-            title: "Active Sections",
-            value: activeSectionsCount,
-            icon: "fa-solid fa-circle-check",
-            border: "border-start",
-            color: "success"
-        },
-        {
-            title: "Same Grade Sections",
-            value: sameGradeSections,
-            icon: "fa-solid fa-graduation-cap",
-            border: "border-start",
-            color: "info"
-        },
-        {
-            title: "Current Status",
-            value: gradeSection?.status ? "Active" : "Inactive",
-            icon: "fa-solid fa-flag",
-            border: "border-start",
-            color: gradeSection?.status ? "success" : "danger",
-            isText: true
-        }
-    ];
+
 
     console.log("GradeSectionDetail permissions:", permissions);
 
     return (
         <>
             <Row>
-                <Col lg={9} className="mb-3">
+                <Col lg={12} className="mb-3">
                     {gradeSection && (
                         <ModuleDetail
                             moduleName="grade-sections"
@@ -144,41 +111,7 @@ const GradeSectionDetail = ({ permissions }) => {
                     )}
                 </Col>
 
-                <Col lg={3} className="mb-3 mt-4">
-                    <Row>
-                        <Card className="p-4">
-                            {cardData.map((item, index) => (
-                                <Col lg={12} xs={12} key={index}>
-                                    <Card
-                                        className={`shadow-sm border-0 ${item.border} border-5 border-${item.color} mt-3`}
-                                    >
-                                        <Card.Body className="p-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <div className="d-flex align-items-center">
-                                                    <div
-                                                        className="p-2 rounded-circle me-2"
-                                                        style={{ background: 'var(--primary-background-color)' }}
-                                                    >
-                                                        <i
-                                                            className={`${item.icon} fa-sm`}
-                                                            style={{ color: `var(--${item.color}-color)` }}
-                                                        ></i>
-                                                    </div>
-                                                    <p className="mb-0 small text-muted fs-6">{item.title}</p>
-                                                </div>
-                                                {item.isText ? (
-                                                    <span className={`badge bg-${item.color}`}>{item.value}</span>
-                                                ) : (
-                                                    <h5 className="mb-0 fw-bold">{item.value}</h5>
-                                                )}
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Card>
-                    </Row>
-                </Col>
+
             </Row>
         </>
     );

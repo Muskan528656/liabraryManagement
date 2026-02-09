@@ -74,10 +74,16 @@ module.exports = (app) => {
 
                 const data = await GradeSection.create(req.body, req.userinfo.userid);
 
-                res.status(201).json(data);
+                res.status(201).json({
+                    success: true,
+                    message: "Grade section created successfully",
+                    data: data
+                });
 
             } catch (err) {
-                res.status(400).json({ error: err.message });
+                res.status(400).json({
+                    error: err.message || "Failed to create grade section"
+                });
             }
         }
     );
@@ -110,9 +116,15 @@ module.exports = (app) => {
                     req.userinfo.userid
                 );
 
-                res.status(201).json(data);
+                res.status(201).json({
+                    success: true,
+                    message: "Bulk sections created successfully",
+                    data: data
+                });
             } catch (err) {
-                res.status(400).json({ error: err.message });
+                res.status(400).json({
+                    error: err.message || "Failed to create bulk sections"
+                });
             }
         }
     );
@@ -156,9 +168,15 @@ module.exports = (app) => {
                 if (!data)
                     return res.status(404).json({ error: "Grade section not found" });
 
-                res.json(data);
+                res.json({
+                    success: true,
+                    message: "Grade section updated successfully",
+                    data: data
+                });
             } catch (err) {
-                res.status(400).json({ error: err.message });
+                res.status(400).json({
+                    error: err.message || "Failed to update grade section"
+                });
             }
         }
     );
@@ -169,7 +187,10 @@ module.exports = (app) => {
             GradeSection.init(req.userinfo.tenantcode);
             await GradeSection.deleteById(req.params.id);
 
-            res.json({ message: "Grade section deleted successfully" });
+            res.json({
+                success: true,
+                message: "Grade section deleted successfully"
+            });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
@@ -179,34 +200,14 @@ module.exports = (app) => {
     router.post("/search", fetchUser, async (req, res) => {
         try {
             GradeSection.init(req.userinfo.tenantcode);
-            const { grade_name, section_name, status } = req.body;
+            const filters = req.body;
+            const data = await GradeSection.search(filters);
 
-            let query = `SELECT * FROM ${req.userinfo.tenantcode}.grade_sections WHERE 1=1`;
-            const params = [];
-            let paramCount = 1;
-
-            if (grade_name) {
-                query += ` AND grade_name ILIKE $${paramCount}`;
-                params.push(`%${grade_name}%`);
-                paramCount++;
-            }
-
-            if (section_name) {
-                query += ` AND section_name ILIKE $${paramCount}`;
-                params.push(`%${section_name}%`);
-                paramCount++;
-            }
-
-            if (status !== undefined) {
-                query += ` AND status = $${paramCount}`;
-                params.push(status === true || status === "true");
-                paramCount++;
-            }
-
-            query += ` ORDER BY grade_name, section_name ASC`;
-
-            const result = await sql.query(query, params);
-            res.json(result.rows);
+            res.json({
+                success: true,
+                count: data.length,
+                data: data
+            });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

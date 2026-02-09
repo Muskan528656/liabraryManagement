@@ -11,16 +11,15 @@ const GradeSection = ({ permissions, ...props }) => {
     const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
     console.log("GradeSection Component Permissions:", permissions);
+    console.log("isSuperAdmin:", isSuperAdmin);
 
-    // Simple data fetch if needed
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                // Add your data fetching logic here if needed
-                // Example:
+
                 const response = await new DataApi("grade-sections").fetchAll();
-                console.log("Reposne=>>>>>>",response)
+                console.log("Response =>>>>>>", response);
                 setExternalData(response.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -32,7 +31,33 @@ const GradeSection = ({ permissions, ...props }) => {
         fetchData();
     }, []);
 
-    if (permissions?.allowView) {
+
+    if (isSuperAdmin) {
+        const finalPermissions = {
+            allowView: true,
+            allowCreate: true,
+            allowEdit: true,
+            allowDelete: true,
+            ...permissions
+        };
+
+        const finalConfig = getGradeSectionConfig({
+            canCreate: finalPermissions.allowCreate,
+            canEdit: finalPermissions.allowEdit,
+            canDelete: finalPermissions.allowDelete
+        });
+
+        return (
+            <DynamicCRUD
+                {...finalConfig}
+                icon="fa-solid fa-graduation-cap"
+                permissions={finalPermissions}
+            />
+        );
+    }
+
+    console.log("permissions?.allowViepermissions?.allowVie", permissions?.allowVie)
+    if (!permissions?.allowView) {
         return <PermissionDenied />;
     }
 
