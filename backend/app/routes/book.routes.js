@@ -39,42 +39,42 @@ module.exports = (app) => {
     }
   );
 
-     router.get(
-      "/book-popularity-analytics",
-      fetchUser,
-      // checkPermission("Reports", "allow_view"),
-      async (req, res) => {
-        try {
-          Book.init(req.userinfo.tenantcode);
+  router.get(
+    "/book-popularity-analytics",
+    fetchUser,
+    // checkPermission("Reports", "allow_view"),
+    async (req, res) => {
+      try {
+        Book.init(req.userinfo.tenantcode);
 
-          const filters = {
-            days: req.query.days,
-            startDate: req.query.startDate,
-            endDate: req.query.endDate,
-            category: req.query.category,
-            searchTerm: req.query.searchTerm
-          };
+        const filters = {
+          days: req.query.days,
+          startDate: req.query.startDate,
+          endDate: req.query.endDate,
+          category: req.query.category,
+          searchTerm: req.query.searchTerm
+        };
 
-          const reportData = await Book.generateBookPopularityReport(filters);
-          res.json(reportData);
-        } catch (err) {
-          console.error("Error generating book popularity report:", err);
-          res.status(500).json({ error: "Internal server error" });
-        }
+        const reportData = await Book.generateBookPopularityReport(filters);
+        res.json(reportData);
+      } catch (err) {
+        console.error("Error generating book popularity report:", err);
+        res.status(500).json({ error: "Internal server error" });
       }
-    );
+    }
+  );
 
   router.get("/inventory-report",
-     fetchUser, checkPermission("Books", "allow_view"),
-     async (req, res) => {
-       try {
-            Book.init(req.userinfo.tenantcode);
-            const report = await Book.generateInventoryReport();
-            res.json(report);
-          } catch (error) {
-            console.error("Error generating inventory report:", error);
-            res.status(500).json({ errors: "Internal server error" });
-          }
+    fetchUser, checkPermission("Books", "allow_view"),
+    async (req, res) => {
+      try {
+        Book.init(req.userinfo.tenantcode);
+        const report = await Book.generateInventoryReport();
+        res.json(report);
+      } catch (error) {
+        console.error("Error generating inventory report:", error);
+        res.status(500).json({ errors: "Internal server error" });
+      }
     });
 
   router.get("/export-excel",
@@ -135,21 +135,21 @@ module.exports = (app) => {
     }
   );
 
-  router.get("/:id", fetchUser, 
+  router.get("/:id", fetchUser,
     // checkPermission("Books", "allow_view"), 
     async (req, res) => {
-    try {
-      Book.init(req.userinfo.tenantcode);
-      const book = await Book.findById(req.params.id);
-      if (!book) {
-        return res.status(404).json({ errors: "Book not found" });
+      try {
+        Book.init(req.userinfo.tenantcode);
+        const book = await Book.findById(req.params.id);
+        if (!book) {
+          return res.status(404).json({ errors: "Book not found" });
+        }
+        return res.status(200).json(book);
+      } catch (error) {
+        console.error("Error fetching book:", error);
+        return res.status(500).json({ errors: "Internal server error" });
       }
-      return res.status(200).json(book);
-    } catch (error) {
-      console.error("Error fetching book:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+    });
 
 
   router.get("/isbn/:isbn", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
@@ -308,6 +308,11 @@ module.exports = (app) => {
           return true;
         }),
       body("isbn").notEmpty().withMessage("ISBN is required"),
+      body("shelf_id")
+        .optional()
+        .custom((value) => {
+          return true;
+        }),
     ],
     async (req, res) => {
       try {
@@ -360,7 +365,7 @@ module.exports = (app) => {
     }
   });
 
-  
-        
-    app.use(process.env.BASE_API_URL + "/api/book", router);
+
+
+  app.use(process.env.BASE_API_URL + "/api/book", router);
 };

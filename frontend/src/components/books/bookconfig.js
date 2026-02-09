@@ -9,8 +9,15 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     console.log("getBooksConfig - categories:", categories);
 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
+    const groupedShelves = props.groupedShelves || externalData.groupedShelves || [];
 
     console.log("getBooksConfig - publishers:", publishers);
+    console.log("getBooksConfig - groupedShelves:", groupedShelves);
+
+    const shelfOptions = groupedShelves.map(s => ({
+        value: s.shelf_name,
+        label: s.shelf_name
+    }));
 
     const authorOptions = authors.map(a => ({
 
@@ -150,20 +157,40 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 name: "shelf_name",
                 type: "select",
                 label: "Shelf",
-                options: "shelf",
+                options: shelfOptions,
                 required: false,
                 colSize: 6,
+                onChange: (value, formData, setFormData) => {
+                    // Reset sub_shelf when shelf changes
+                    setFormData(prev => ({
+                        ...prev,
+                        shelf_name: value,
+                        sub_shelf: ""
+                    }));
+                }
             },
-
             {
-                name: "sub_shelf",
+                name: "sub_shelf_id",   
                 label: "Sub Shelf",
                 type: "select",
-                options: "subShelfOptions",
+                options: (formData) => {
+                    if (!formData.shelf_name) return [];
+
+                    const selectedShelf = groupedShelves.find(
+                        s => s.shelf_name === formData.shelf_name
+                    );
+
+                    if (!selectedShelf || !Array.isArray(selectedShelf.sub_shelves)) return [];
+
+                    return selectedShelf.sub_shelves.map(sub => ({
+                        value: sub.id,    
+                        label: sub.name    
+                    }));
+                },
                 required: false,
                 colSize: 6,
-            },
-
+            }
+            ,
             {
                 name: "isbn",
                 label: "ISBN",

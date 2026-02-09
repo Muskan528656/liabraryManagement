@@ -5,6 +5,21 @@ module.exports = (app) => {
     const { body, validationResult } = require("express-validator");
     const router = require("express").Router();
 
+       // ================= GET GROUPED SHELVES =================
+    router.get("/grouped", fetchUser, async (req, res) => {
+        
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            const data = await Shelf.findGroupedShelves();
+            console.log("data=>",data);
+            res.json(data);
+        } catch (err) {
+            console.error("Error fetching grouped shelves:", err);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+
+
     // ================= GET ALL =================
     router.get("/", fetchUser, async (req, res) => {
         try {
@@ -34,6 +49,7 @@ module.exports = (app) => {
         }
     });
 
+ 
     // ================= CREATE =================
     router.post(
         "/",

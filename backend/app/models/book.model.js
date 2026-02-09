@@ -20,6 +20,9 @@ async function findAll() {
                     a.name AS author_name,
                     c.name AS category_name,
                     pub.name AS publisher_name,
+                    s.shelf_name,
+                    s.sub_shelf,
+                    b.shelf_id AS sub_shelf_id,
                     CASE
                       WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
                       ELSE (
@@ -34,6 +37,7 @@ async function findAll() {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
                    ORDER BY b.createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -52,6 +56,8 @@ async function findById(id) {
                     a.name AS author_name,
                     c.name AS category_name,
                     pub.name AS publisher_name,
+                    s.shelf_name,
+                    s.sub_shelf,
                     CASE
                       WHEN b.price IS NOT NULL AND b.price != '' THEN b.price
                       ELSE (
@@ -66,6 +72,7 @@ async function findById(id) {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
                    WHERE b.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
@@ -101,8 +108,8 @@ async function create(bookData, userId) {
     const query = `INSERT INTO ${this.schema}.books
                    (title, author_id, category_id, isbn, total_copies, available_copies,
                     company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid,
-                    language, status, pages, price, publisher_id, min_age, max_age , inventory_binding)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    language, status, pages, price, publisher_id, min_age, max_age, inventory_binding, shelf_id)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                    RETURNING *`;
 
     const values = [
@@ -122,6 +129,7 @@ async function create(bookData, userId) {
       bookData.min_age || bookData.minAge || null,
       bookData.max_age || bookData.maxAge || null,
       bookData.inventory_binding || null,
+      bookData.sub_shelf_id || null,
     ];
     console.log("Creating book with values:", bookData.price);
     const result = await sql.query(query, values);
@@ -135,6 +143,7 @@ async function create(bookData, userId) {
 }
 
 async function updateById(id, bookData, userId) {
+  console.log("update book data:", bookData)
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -156,7 +165,7 @@ async function updateById(id, bookData, userId) {
                        total_copies = $6, available_copies = $7,
                        lastmodifieddate = NOW(), lastmodifiedbyid = $8,
                        language = $9, status = $10, pages = $11, price = $12,
-                       publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16
+                       publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16, shelf_id = $17
                    WHERE id = $1
                    RETURNING *`;
 
@@ -177,6 +186,7 @@ async function updateById(id, bookData, userId) {
       bookData.min_age !== undefined ? (bookData.min_age || bookData.minAge) : currentBook.min_age,
       bookData.max_age !== undefined ? (bookData.max_age || bookData.maxAge) : currentBook.max_age,
       bookData.inventory_binding !== undefined ? bookData.inventory_binding : currentBook.inventory_binding,
+      bookData.shelf_id !== undefined ? bookData.shelf_id : currentBook.shelf_id,
     ];
 
     const result = await sql.query(query, values);
@@ -1053,5 +1063,6 @@ module.exports = {
   findByISBN,
   findByAgeRange,
   generateInventoryReport,
-  generateBookPopularityReport
+  generateBookPopularityReport,
+  exportBookPopularityReportPDF
 };
