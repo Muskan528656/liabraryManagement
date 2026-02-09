@@ -965,6 +965,7 @@ const Permission = () => {
             setLoading(true);
             // We only save roles that exist in editingPermissions
             const roleIdsToUpdate = Object.keys(editingPermissions);
+            console.log("Roles to Update:", roleIdsToUpdate);
 
             if (roleIdsToUpdate.length === 0) {
                 PubSub.publish("RECORD_ERROR_TOAST", { title: "Info", message: "No data loaded to save." });

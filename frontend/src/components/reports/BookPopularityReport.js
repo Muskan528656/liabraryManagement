@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Button,
@@ -57,6 +58,7 @@ ChartJS.register(
 );
 
 const BookPopularityReport = () => {
+  const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,8 +97,8 @@ const BookPopularityReport = () => {
 
 
 
-  
-    const labelStyle = {
+
+  const labelStyle = {
     fontSize: '0.875rem',
     fontWeight: '600',
     color: '#495057',
@@ -293,6 +295,8 @@ const BookPopularityReport = () => {
       field: "book_name",
       label: "Book Title",
       width: "200px",
+      align: "center",
+      // style: { textAlign: "center" },
       render: (value, record) => (
         <div className="book-title-cell">
           <div className="book-name">{value}</div>
@@ -300,10 +304,13 @@ const BookPopularityReport = () => {
         </div>
       ),
     },
+
+
     {
       field: "author",
       label: "Author",
       width: "150px",
+      align: "center",
       render: (value) => value || "N/A",
     },
     // {
@@ -316,6 +323,7 @@ const BookPopularityReport = () => {
       field: "category",
       label: "Category",
       width: "120px",
+      align: "center", 
       render: (value) => value || "N/A",
     },
     // {
@@ -334,18 +342,21 @@ const BookPopularityReport = () => {
       field: "available",
       label: "Available",
       width: "100px",
+      align: "center", 
       render: (value, record) => (record.copies || 0) - (record.total_issues || 0),
     },
     {
       field: "total_issues",
       label: "Issued",
       width: "80px",
+      align: "center", 
       render: (value) => value || 0,
     },
     {
       field: "unique_borrowers",
       label: "Unique Borrowers",
       width: "120px",
+      align: "center", 
       render: (value) => value || 0,
     },
     // {
@@ -508,64 +519,80 @@ const BookPopularityReport = () => {
   }
 
   return (
-    <div className="library-report-container">
-      {/* Header */}
-      <div className="library-header bg-light">
-        <div className="library-header-left">
-          <div className="library-icon">
-            <FileEarmarkBarGraph size={20} />
+    <div className="container-fluid bg-light">
+      <div className="card  ">
+        {/* Header */}
+        <div className="library-header border shadow-sm  mt-4 mb-2 rounded mx-2"
+        >
+
+          <Col md={6} className="d-flex align-items-center gap-3 ms-3">
+
+            {/* Back Button */}
+            <button
+              onClick={() => navigate('/reports')}
+              className="shadow-sm d-flex align-items-center justify-content-center custom-btn-back"
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+            </button>
+
+
+            <div>
+              <h4 className="mb-0 fw-bold fs-7" style={{ color: "var(--primary-color)" }}>
+                Book Borrowing Popularity Analytics
+              </h4>
+
+            </div>
+
+          </Col>
+          <div className="library-header-right">
+            <Dropdown align="end">
+              <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
+                <i className="fa fa-bars me-1" />  Options
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="shadow-sm border-0 mt-2">
+                <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
+                <Dropdown.Item
+                  className="text-dark"
+                  active={viewMode === 'table'}
+                  onClick={() => setViewMode('table')}
+                >
+                  <i className="fa fa-table me-2 color-black" /> Table
+                </Dropdown.Item>
+                <Dropdown.Item
+                  className="text-dark"
+                  active={viewMode === 'dashboard'}
+                  onClick={() => setViewMode('dashboard')}
+                >
+                  <i className="fa fa-chart-pie me-2" /> Dashboard
+                </Dropdown.Item>
+                <Dropdown.Item
+                  className="text-dark"
+                  active={viewMode === 'analytics'}
+                  onClick={() => setViewMode('analytics')}
+                >
+                  <i className="fa fa-chart-bar me-2" /> Analytics
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
+                <Dropdown.Item onClick={exportToExcel}>
+                  <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
+                </Dropdown.Item>
+                <Dropdown.Item onClick={exportToCSV}>
+                  <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
+                </Dropdown.Item>
+                <Dropdown.Item onClick={exportToPDF}>
+                  <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
-          <h1 className="library-title">Book Borrowing Popularity Analytics</h1>
         </div>
-        <div className="library-header-right">
-              <Dropdown align="end">
-                  <Dropdown.Toggle variant="light" size="sm" id="options-dropdown">
-                    <i className="fa fa-bars me-1" />  Options
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu className="shadow-sm border-0 mt-2">
-                    <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
-                    <Dropdown.Item
-                      className="text-dark"
-                      active={viewMode === 'table'}
-                      onClick={() => setViewMode('table')}
-                    >
-                      <i className="fa fa-table me-2 color-black" /> Table
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      className="text-dark"
-                      active={viewMode === 'dashboard'}
-                      onClick={() => setViewMode('dashboard')}
-                    >
-                      <i className="fa fa-chart-pie me-2" /> Dashboard
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      className="text-dark"
-                      active={viewMode === 'analytics'}
-                      onClick={() => setViewMode('analytics')}
-                    >
-                      <i className="fa fa-chart-bar me-2" /> Analytics
-                    </Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
-                    <Dropdown.Item onClick={exportToExcel}>
-                      <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={exportToCSV}>
-                      <i className="fa-solid fa-file-csv me-2 text-info" /> CSV
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={exportToPDF}>
-                      <i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF
-                    </Dropdown.Item>    
-                  </Dropdown.Menu>
-                </Dropdown>
-          </div>
-      </div>
 
-      
 
-      {/* Statistics Cards */}
-      <div className="library-stats-row">
-        {/* <div className="library-stat-card blue">
+
+        {/* Statistics Cards */}
+        <div >
+          {/* <div className="library-stat-card blue">
           <div className="stat-icon">
             <Book />
           </div>
@@ -582,7 +609,7 @@ const BookPopularityReport = () => {
             </div>
           </div>
         </div> */}
-       {/* <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #007bff' }}>
+          {/* <Card className="border-0 shadow-sm h-100" style={{ borderLeft: '4px solid #007bff' }}>
           <Card.Body>
             <div className="d-flex justify-content-between align-items-center">
               <div>
@@ -646,7 +673,7 @@ const BookPopularityReport = () => {
           </Card.Body>
         </Card> */}
 
-        {/* <div className="library-stat-card green">
+          {/* <div className="library-stat-card green">
           <div className="stat-icon">
             <GraphUp />
           </div>
@@ -659,7 +686,7 @@ const BookPopularityReport = () => {
           </div>
         </div> */}
 
-        {/* <div className="library-stat-card yellow">
+          {/* <div className="library-stat-card yellow">
           <div className="stat-icon">
             <Award />
           </div>
@@ -679,7 +706,7 @@ const BookPopularityReport = () => {
           </div>
         </div> */}
 
-        {/* <div className="library-stat-card red">
+          {/* <div className="library-stat-card red">
           <div className="stat-icon">
             <Clock />
           </div>
@@ -691,77 +718,84 @@ const BookPopularityReport = () => {
             <div className="stat-meta">Books not borrowed</div>
           </div>
         </div> */}
-      </div>
+        </div>
 
-      {/* Filters */}
-  
+        {/* Filters */}
 
-      <div className=" px-3 border-0 bg-light">
-         <Card className="border-0 bg-light mb-3">
-                      <Card.Body>
-                        <Row className="g-3 align-items-end">
-                         
-                           <Col xs={12} md={2}>
-                              <div style={labelStyle}>
-                                  <i className="fa-solid fa-calendar-days"></i>
-                                  <span>Time Period</span>
-                                </div>
-                                <Form.Select
-                                  className="filter-input"
-                                  style={inputBaseStyle}
-                                  value={filters.days}
-                                  onChange={(e) => handleFilterChange("days", e.target.value)}
-                                >
-                                  <option value="30">Last 30 Days</option>
-                                  <option value="90">Last 90 Days</option>
-                                  <option value="180">Last 6 Months</option>
-                                  <option value="365">Last Year</option>
-                                </Form.Select>
-                          </Col>
-                          <Col xs={12} md={2}>
-                            <div style={labelStyle}>
-                              <i className="fa-solid fa-magnifying-glass"></i>
-                              <span>Search</span>
-                            </div>
-                            <Form.Control
-                              type="text"
-                              className="filter-input"
-                              style={inputBaseStyle}
-                              placeholder="Search by book, author..."
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                          </Col>
-                       
 
-                          <Col xs={12} md={2}>
-                            <div style={labelStyle}>
-                              <i className="fa-solid fa-filter"></i>
-                              <span>Category</span>
-                            </div>
-                            <Form.Select
-                              className="small text-muted"
-                              style={{
-                                ...inputBaseStyle,
-                                color: categoryFilter ? '#212529' : '#6c757d',
-                                cursor: 'pointer',
-                                paddingRight: '2.5rem',
-                                appearance: 'none',
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: 'right 0.75rem center',
-                                backgroundSize: '16px 12px'
-                              }}
-                              value={categoryFilter}
-                              onChange={(e) => setCategoryFilter(e.target.value)}
-                            >
-                              <option value="">All Categories</option>
-                              {categories.map((opt, i) => (
-                                <option className="color-dark" key={i} value={opt.category}>{opt.name}</option>
-                              ))}
-                            </Form.Select>
-                          </Col>
+        <div className=" px-3 mx-1"
+        // style={{
+        //   color: "var(--primary-color)",
+        //   background: "var(--primary-background-color)",
+        //   borderRadius: "10px",
+        // }}
+        >
 
-                          {/* <Col xs={12} md={2}>
+
+          <Card.Body>
+            <Row className="g-3 align-items-end b">
+
+              <Col xs={12} md={2}>
+                <div style={labelStyle}>
+                  <i className="fa-solid fa-calendar-days"></i>
+                  <span>Time Period</span>
+                </div>
+                <Form.Select
+                  className="filter-input"
+                  style={inputBaseStyle}
+                  value={filters.days}
+                  onChange={(e) => handleFilterChange("days", e.target.value)}
+                >
+                  <option value="30">Last 30 Days</option>
+                  <option value="90">Last 90 Days</option>
+                  <option value="180">Last 6 Months</option>
+                  <option value="365">Last Year</option>
+                </Form.Select>
+              </Col>
+              <Col xs={12} md={2}>
+                <div style={labelStyle}>
+                  <i className="fa-solid fa-magnifying-glass"></i>
+                  <span>Search</span>
+                </div>
+                <Form.Control
+                  type="text"
+                  className="filter-input"
+                  style={inputBaseStyle}
+                  placeholder="Search by book, author..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </Col>
+
+
+              <Col xs={12} md={2}>
+                <div style={labelStyle}>
+                  <i className="fa-solid fa-filter"></i>
+                  <span>Category</span>
+                </div>
+                <Form.Select
+                  className="small text-muted"
+                  style={{
+                    ...inputBaseStyle,
+                    color: categoryFilter ? '#212529' : '#6c757d',
+                    cursor: 'pointer',
+                    paddingRight: '2.5rem',
+                    appearance: 'none',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundSize: '16px 12px'
+                  }}
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((opt, i) => (
+                    <option className="color-dark" key={i} value={opt.category}>{opt.name}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+
+              {/* <Col xs={12} md={2}>
                            <div style={labelStyle}>
                               <i className="fa-solid fa-filter"></i>
                               <span>Status</span>
@@ -788,204 +822,205 @@ const BookPopularityReport = () => {
                             </Form.Select>
 
                           </Col> */}
-                          
-                           <Button
-                              variant="light"
-                              onClick={resetFilters}
-                              tooltip="Clear all filters"
-                              className="filter-clear-btn d-flex align-items-center justify-content-center"
-                              style={{
-                                width: '44px',
-                                height: '44px',
-                                borderRadius: '8px',
-                                border: '1.5px solid #dee2e6',
-                                padding: 0,
-                                backgroundColor: '#fff',
-                                transition: 'all 0.2s ease',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
-                              <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
-                          </Button>
-                         
-                        </Row>
-                      </Card.Body>
-                    </Card>
-      </div>
 
-      {/* Main Content - Table View */}
-      {viewMode === "table" && (
-        <div className="library-content">
-          <div className="library-table-header">
-            <span className="record-count">
-              Showing 1 to {Math.min(10, reportData?.mainTable?.length || 0)} of{" "}
-              {reportData?.mainTable?.length || 0} records
-            </span>
-          </div>
+              <Button
+                variant="light"
+                onClick={resetFilters}
+                tooltip="Clear all filters"
+                className="filter-clear-btn d-flex align-items-center justify-content-center"
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '8px',
+                  border: '1.5px solid #dee2e6',
+                  padding: 0,
+                  backgroundColor: '#fff',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+              >
+                {/* <i className="fa-solid fa-xmark" style={{ fontSize: '1.25rem', color: '#6c757d' }}></i> */}
+                <i className="fa-solid fa-undo" style={{ fontSize: '1.25rem', color: '#6c757d' }}> </i>
+              </Button>
 
-          <div className="library-table-wrapper">
-            <ResizableTable
-              data={reportData?.mainTable || []}
-              columns={columns}
-              loading={loading}
-              currentPage={currentPage}
-              recordsPerPage={10}
-              onPageChange={handlePageChange}
-              showSerialNumber={true}
-              showCheckbox={true}
-              showActions={false}
-              selectedItems={selectedItems}
-              onSelectionChange={handleSelectionChange}
-              emptyMessage="No book popularity data available"
-            />
-          </div>
+            </Row>
+          </Card.Body>
 
-     
         </div>
-      )}
 
-      {/* Dashboard View with Charts */}
-      {viewMode === "dashboard" && (
-        <div className="charts-container">
-          <Row>
-            <Col lg={6}>
-              <Card className="chart-card">
-                <Card.Body>
-                  <div className="chart-wrapper">
-                    <Bar data={barChartData} options={barChartOptions} />
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col lg={6}>
-              <Card className="chart-card">
-                <Card.Body>
-                  <div className="chart-wrapper">
-                    <Pie data={pieChartData} options={pieChartOptions} />
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+        {/* Main Content - Table View */}
+        {viewMode === "table" && (
+          <div className="library-content mx-2">
+            {/* <div className="library-table-header">
+              <span className="record-count">
+                Showing 1 to {Math.min(10, reportData?.mainTable?.length || 0)} of{" "}
+                {reportData?.mainTable?.length || 0} records
+              </span>
+            </div> */}
 
-          {/* Top Books List */}
-          <Row className="mt-4">
-            <Col lg={12}>
-              <Card className="library-analytics-card">
-                <Card.Body>
-                  <h6 className="library-card-title">
-                    <Award className="me-2" />
-                    Top 10 Popular Books - Detailed View
-                  </h6>
-                  <div className="analytics-list">
-                    {reportData?.popularBooks
-                      ?.slice(0, 10)
-                      .map((book, index) => (
+            <div className="">
+              <ResizableTable
+                data={reportData?.mainTable || []}
+                columns={columns}
+                loading={loading}
+                currentPage={currentPage}
+                recordsPerPage={10}
+                onPageChange={handlePageChange}
+                showSerialNumber={true}
+                showCheckbox={true}
+                showActions={false}
+                selectedItems={selectedItems}
+                onSelectionChange={handleSelectionChange}
+                emptyMessage="No book popularity data available"
+              />
+            </div>
+
+
+          </div>
+        )}
+
+        {/* Dashboard View with Charts */}
+        {viewMode === "dashboard" && (
+          <div className="charts-container">
+            <Row>
+              <Col lg={6}>
+                <Card className="chart-card">
+                  <Card.Body>
+                    <div className="chart-wrapper">
+                      <Bar data={barChartData} options={barChartOptions} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col lg={6}>
+                <Card className="chart-card">
+                  <Card.Body>
+                    <div className="chart-wrapper">
+                      <Pie data={pieChartData} options={pieChartOptions} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Top Books List */}
+            <Row className="mt-4">
+              <Col lg={12}>
+                <Card className="library-analytics-card">
+                  <Card.Body>
+                    <h6 className="library-card-title">
+                      <Award className="me-2" />
+                      Top 10 Popular Books - Detailed View
+                    </h6>
+                    <div className="analytics-list">
+                      {reportData?.popularBooks
+                        ?.slice(0, 10)
+                        .map((book, index) => (
+                          <div key={index} className="analytics-item">
+                            <div className="analytics-rank">#{book.ranking}</div>
+                            <div className="analytics-info">
+                              <div className="analytics-name">
+                                {book.book_name}
+                              </div>
+                              <div className="analytics-meta">
+                                {book.total_issues} issues •{" "}
+                                {book.avg_issues_per_month?.toFixed(2)}/month
+                              </div>
+                            </div>
+                            {book.total_issues}
+                          </div>
+                        ))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+        )}
+
+        {/* Analytics View */}
+        {viewMode === "analytics" && (
+          <div className="charts-container">
+            <Row>
+              <Col lg={8}>
+                <Card className="chart-card chart-card-large">
+                  <Card.Body>
+                    <div className="chart-wrapper-large">
+                      <Bar data={barChartData} options={barChartOptions} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col lg={4}>
+                <Card className="chart-card">
+                  <Card.Body>
+                    <div className="chart-wrapper">
+                      <Pie data={pieChartData} options={pieChartOptions} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Category Details */}
+            <Row className="mt-4">
+              <Col lg={6}>
+                <Card className="library-analytics-card">
+                  <Card.Body>
+                    <h6 className="library-card-title">
+                      <PieChart className="me-2" />
+                      Category Statistics
+                    </h6>
+                    <div className="analytics-list">
+                      {reportData?.categoryPopularity?.map((category, index) => (
                         <div key={index} className="analytics-item">
-                          <div className="analytics-rank">#{book.ranking}</div>
+                          <div className="analytics-rank">{index + 1}</div>
                           <div className="analytics-info">
                             <div className="analytics-name">
-                              {book.book_name}
+                              {category.category_name}
                             </div>
                             <div className="analytics-meta">
-                              {book.total_issues} issues •{" "}
-                              {book.avg_issues_per_month?.toFixed(2)}/month
+                              {category.total_issues} total issues
                             </div>
                           </div>
-                          {book.total_issues}
+                          <Badge bg="primary" className="analytics-badge">
+                            {category.total_issues}
+                          </Badge>
                         </div>
                       ))}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
 
-      {/* Analytics View */}
-      {viewMode === "analytics" && (
-        <div className="charts-container">
-          <Row>
-            <Col lg={8}>
-              <Card className="chart-card chart-card-large">
-                <Card.Body>
-                  <div className="chart-wrapper-large">
-                    <Bar data={barChartData} options={barChartOptions} />
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col lg={4}>
-              <Card className="chart-card">
-                <Card.Body>
-                  <div className="chart-wrapper">
-                    <Pie data={pieChartData} options={pieChartOptions} />
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Category Details */}
-          <Row className="mt-4">
-            <Col lg={6}>
-              <Card className="library-analytics-card">
-                <Card.Body>
-                  <h6 className="library-card-title">
-                    <PieChart className="me-2" />
-                    Category Statistics
-                  </h6>
-                  <div className="analytics-list">
-                    {reportData?.categoryPopularity?.map((category, index) => (
-                      <div key={index} className="analytics-item">
-                        <div className="analytics-rank">{index + 1}</div>
-                        <div className="analytics-info">
-                          <div className="analytics-name">
-                            {category.category_name}
+              <Col lg={6}>
+                <Card className="library-analytics-card">
+                  <Card.Body>
+                    <h6 className="library-card-title">
+                      <Clock className="me-2" />
+                      Most Used Book Copies
+                    </h6>
+                    <div className="analytics-list">
+                      {reportData?.copyUsage?.slice(0, 10).map((copy, index) => (
+                        <div key={index} className="analytics-item">
+                          {copy.copy_id}
+                          <div className="analytics-info">
+                            <div className="analytics-name">{copy.book_name}</div>
+                            <div className="analytics-meta">
+                              {copy.total_issues} times issued
+                            </div>
                           </div>
-                          <div className="analytics-meta">
-                            {category.total_issues} total issues
-                          </div>
+                          {copy.total_issues}
                         </div>
-                        <Badge bg="primary" className="analytics-badge">
-                          {category.total_issues}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col lg={6}>
-              <Card className="library-analytics-card">
-                <Card.Body>
-                  <h6 className="library-card-title">
-                    <Clock className="me-2" />
-                    Most Used Book Copies
-                  </h6>
-                  <div className="analytics-list">
-                    {reportData?.copyUsage?.slice(0, 10).map((copy, index) => (
-                      <div key={index} className="analytics-item">
-                        {copy.copy_id}
-                        <div className="analytics-info">
-                          <div className="analytics-name">{copy.book_name}</div>
-                          <div className="analytics-meta">
-                            {copy.total_issues} times issued
-                          </div>
-                        </div>
-                        {copy.total_issues}
-                      </div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-      )}
+                      ))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

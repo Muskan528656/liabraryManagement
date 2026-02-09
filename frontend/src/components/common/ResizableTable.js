@@ -10,12 +10,12 @@ const ResizableTable = ({
     recordsPerPage = 5,
     onPageChange = () => { },
     showSerialNumber = true,
-    showActions={},
+    showActions = {},
     showCheckbox = true,
     actionsRenderer = null,
     onRowClick = null,
     emptyMessage = "No records found",
-    selectedItems = [],  
+    selectedItems = [],
     onSelectionChange = () => { },
 }) => {
 
@@ -34,11 +34,11 @@ const ResizableTable = ({
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
- 
+
     const totalPages = Math.ceil(safeData.length / recordsPerPage);
-    const startRecord = (currentPage - 1) * recordsPerPage; 
+    const startRecord = (currentPage - 1) * recordsPerPage;
     const endRecord = startRecord + recordsPerPage;
- 
+
 
 
     const paginatedData = useMemo(() => {
@@ -335,8 +335,6 @@ const ResizableTable = ({
                                             color: "var(--primary-color)",
                                             borderBottom: "2px solid #e9d5ff",
                                             padding: "12px 8px",
-
-
                                             letterSpacing: "0.5px"
                                         }}
                                     >
@@ -438,26 +436,27 @@ const ResizableTable = ({
                                             }}
                                         />
                                     </th>
-                                )}                         
+                                )}
                             </tr>
                         </thead>
                         <tbody className="detail-h4">
                             {paginatedData.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={
-                                            columns.length + (showCheckbox ? 1 : 0) + (showSerialNumber ? 1 : 0) + (showActions ? 1 : 0)
-                                        }
-                                        className="text-center py-5 text-muted"
-                                        style={{
+                                // <tr>
+                                //     <td
+                                //         colSpan={
+                                //             columns.length + (showCheckbox ? 1 : 0) + (showSerialNumber ? 1 : 0) + (showActions ? 1 : 0)
+                                //         }
+                                //         className="text-center py-5 text-muted"
+                                //         style={{
 
-                                            color: "#6c757d"
-                                        }}
-                                    >
-                                        <i className="fa-solid fa-inbox me-2" style={{ opacity: 0.5 }}></i>
-                                        {emptyMessage}
-                                    </td>
-                                </tr>
+                                //             // color: "#6c757d"
+                                //         }}
+                                //     >
+                                //         {/* <i className="fa-solid fa-inbox me-2" style={{ opacity: 0.5 }}></i> */}
+                                //         {/* {emptyMessage} */}
+                                //     </td>
+                                // </tr>
+                                <></>
                             ) : (
                                 paginatedData.map((record, index) => (
                                     <tr
@@ -505,7 +504,8 @@ const ResizableTable = ({
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
-                                                        height: '43px'
+                                                        height: '43px',
+                                                        textAlign: column.align || "left"
                                                     }}
                                                 >
                                                     {column.render
@@ -514,7 +514,7 @@ const ResizableTable = ({
                                                 </td>
                                             );
                                         })}
-                                     {showActions && (
+                                        {showActions && (
                                             <td
                                                 style={{
                                                     textAlign: "center",

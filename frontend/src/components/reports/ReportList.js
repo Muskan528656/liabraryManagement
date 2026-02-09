@@ -110,7 +110,7 @@ const ReportsList = () => {
           <div>
             <TableHeader
               icon='fa fa-book'
-              title={'Reports Library'}
+              title={'Report Library'}
             />
             {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
             {/* <p className="text-muted small mb-0">Manage library reports</p> */}
