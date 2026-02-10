@@ -156,11 +156,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         }
     } catch (error) {
         console.error("Error fetching data:", error);
-        defaultCountryCode = "+91"; // Default to India if company fetch fails
+        defaultCountryCode = "+91"; 
     }
 
-
-
+    const library_member_type = ["Boys", "Girls", "Other"];
 
 
     const defaultColumns = [
@@ -251,7 +250,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     row.status === "active";
 
                 return (
-                    <Badge  bg={isActive ? "primary" : "danger"}>
+                    <Badge bg={isActive ? "primary" : "danger"}>
                         {isActive ? "Active" : "Inactive"}
                     </Badge>
                 );
@@ -390,7 +389,14 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 options: plansList,
                 colSize: 6,
             },
-
+            {
+                name: "library_member_type",
+                label: "Gender",
+                type: "select",
+                required: false,
+                options: library_member_type.map((item) => ({ label: item, value: item })),
+                colSize: 6,
+            },
 
             {
                 name: "image",

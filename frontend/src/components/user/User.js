@@ -8,9 +8,9 @@ import PermissionDenied from "../../utils/permission_denied";
 import "../../App.css";
 
 
-const Users = ({permissions ,...props}) => {
+const Users = ({ permissions, ...props }) => {
   const { timeZone, companyInfo } = useTimeZone();
- 
+
   if (permissions.loading) {
     return <div className="loading"></div>;
   }
@@ -31,9 +31,9 @@ const Users = ({permissions ,...props}) => {
   );
 
   return (
-    <DynamicCRUD 
-      {...finalConfig} 
-      icon="fa-solid fa-user" 
+    <DynamicCRUD
+      {...finalConfig}
+      icon="fa-solid fa-user"
       permissions={permissions}
     />
   );

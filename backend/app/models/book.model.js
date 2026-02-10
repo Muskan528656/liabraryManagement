@@ -9,6 +9,7 @@ function init(schema_name) {
 
   this.schema = schema_name;
 }
+
 async function findAll() {
   try {
     console.log("schema->>", this.schema)

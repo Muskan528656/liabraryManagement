@@ -29,12 +29,13 @@ const Permission = () => {
 
     const [roles, setRoles] = useState([]);
 
-
+    // For delete
     const [roleId, setRoleId] = useState(null)
     const [roleName, setRoleName] = useState(null)
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-
+    // State for Permissions Editing (The "Dirty" State)
+    // Structure: { [roleId]: { [moduleId]: { allow_view: bool, ... } } }
     const [editingPermissions, setEditingPermissions] = useState({});
 
     const fetchPermissions = async () => {
@@ -77,6 +78,8 @@ const Permission = () => {
         fetchRoles();
     }, [refreshKey]);
 
+
+    // --- DATA GROUPING ---
     const groupPermissionsByRole = () => {
         const grouped = {};
         const filteredPermissions = permissions.filter(perm => {
@@ -85,30 +88,6 @@ const Permission = () => {
             const roleName = roleInfo.role_name || roleInfo.name;
             return !roleName || roleName.toUpperCase() !== "SYSTEM ADMIN";
         });
-
-        // ✅ Static view types definition
-        const staticViewTypes = [
-            {
-                id: 'girls_view',
-                name: 'Girls View',
-                description: 'View permissions for girls section'
-            },
-            {
-                id: 'boys_view',
-                name: 'Boys View',
-                description: 'View permissions for boys section'
-            },
-            {
-                id: 'teachers_view',
-                name: 'Teachers View',
-                description: 'View permissions for teachers section'
-            },
-            {
-                id: 'admin_view',
-                name: 'Admin View',
-                description: 'View permissions for admin section'
-            }
-        ];
 
         filteredPermissions.forEach(perm => {
             const roleId = perm.role_id || 'null';
@@ -126,102 +105,31 @@ const Permission = () => {
                 grouped[roleId] = {
                     role_id: roleId,
                     role_name: roleName,
-                    permissions: {},
+                    permissions: [],
                     modules_count: 0
                 };
             }
 
-            const moduleId = perm.module_id || 'default';
+            grouped[roleId].permissions.push({
+                ...perm,
+                module_id: perm.module_id,
+                module_name: perm.module_name || `Module ${perm.module_id}`,
+                allow_view: perm.allow_view || false,
+                allow_create: perm.allow_create || false,
+                allow_edit: perm.allow_edit || false,
+                allow_delete: perm.allow_delete || false
+            });
 
-            if (!grouped[roleId].permissions[moduleId]) {
-                grouped[roleId].permissions[moduleId] = {
-                    module_id: moduleId,
-                    module_name: perm.module_name || `Module ${moduleId}`,
-                    views: [],
-                    all_permissions: {
-                        allow_view: false,
-                        allow_create: false,
-                        allow_edit: false,
-                        allow_delete: false
-                    }
-                };
-
-                // ✅ Static view types add करें (सभी modules के लिए)
-                staticViewTypes.forEach(viewType => {
-                    // ✅ Database से permission check करें
-                    const existingPermission = filteredPermissions.find(p =>
-                        p.role_id === roleId &&
-                        p.module_id === moduleId &&
-                        p.view_type === viewType.id
-                    );
-
-                    grouped[roleId].permissions[moduleId].views.push({
-                        view_id: viewType.id,
-                        view_name: viewType.name,
-                        view_description: viewType.description,
-                        // ✅ Existing permission है तो वो use करें, नहीं तो default
-                        allow_view: existingPermission?.allow_view || false,
-                        allow_create: existingPermission?.allow_create || false,
-                        allow_edit: existingPermission?.allow_edit || false,
-                        allow_delete: existingPermission?.allow_delete || false,
-                        custom_permissions: existingPermission?.custom_permissions || {}
-                    });
-                });
-            }
-
-            // ✅ Module count update
-            if (grouped[roleId].permissions[moduleId] &&
-                grouped[roleId].permissions[moduleId].views.length === staticViewTypes.length) {
-                grouped[roleId].modules_count++;
-            }
+            grouped[roleId].modules_count++;
         });
 
-        // ✅ Final structure
-        return Object.values(grouped).map(roleGroup => ({
-            role_id: roleGroup.role_id,
-            role_name: roleGroup.role_name,
-            modules_count: roleGroup.modules_count,
-            permissions: Object.values(roleGroup.permissions).map(module => ({
-                module_id: module.module_id,
-                module_name: module.module_name,
-                all_permissions: module.all_permissions,
-                views: module.views.map(view => ({
-                    view_id: view.view_id,
-                    view_name: view.view_name,
-                    view_description: view.view_description,
-                    permissions: {
-                        allow_view: view.allow_view,
-                        allow_create: view.allow_create,
-                        allow_edit: view.allow_edit,
-                        allow_delete: view.allow_delete
-                    },
-                    custom_permissions: view.custom_permissions,
-                    toggle_status: view.allow_view // ✅ Toggle button के लिए status
-                }))
-            }))
-        }));
+        return Object.values(grouped);
     };
 
-
-    const handleViewToggle = (roleId, moduleId, viewId, isEnabled) => {
-        // Update permission in database
-        console.log(`Toggle ${viewId} for role ${roleId}, module ${moduleId}: ${isEnabled}`);
-
-        // या फिर state update करें:
-        setPermissions(prev => prev.map(perm => {
-            if (perm.role_id === roleId &&
-                perm.module_id === moduleId &&
-                perm.view_type === viewId) {
-                return {
-                    ...perm,
-                    allow_view: isEnabled
-                };
-            }
-            return perm;
-        }));
-    };
     const rolePermissions = groupPermissionsByRole();
 
+    // --- HELPER: Initialize Edit State for a specific role ---
+    // We populate 'editingPermissions' with DB data so checkboxes appear correctly
     const initializeEditStateForRole = (roleId, currentEditState) => {
         const rolePermsList = permissions.filter(p => (p.role_id || 'null') === roleId);
         const editingData = {};
@@ -245,10 +153,11 @@ const Permission = () => {
     // --- TOGGLE LOGIC (GLOBAL) ---
     const handleGlobalToggle = () => {
         if (isExpanded) {
-
+            // Turning OFF: Collapse all
             setExpandedRoles({});
             setIsExpanded(false);
-
+            // Note: We don't clear editingPermissions here so that if user collapses 
+            // but forgets to save, the "Save All" button still has the data.
         } else {
             // Turning ON: Expand all & Initialize data
             const newExpanded = {};
@@ -267,6 +176,8 @@ const Permission = () => {
             setIsExpanded(true);
         }
     };
+
+    // --- TOGGLE LOGIC (INDIVIDUAL ROW) ---
     const handleRowToggle = (roleId) => {
         setExpandedRoles(prev => {
             const isCurrentlyOpen = !!prev[roleId];
@@ -506,7 +417,8 @@ const Permission = () => {
     );
 
     const PermissionCell = ({ roleId, moduleId, field, value }) => {
-
+        // If editingPermissions has data, use it (Editable). 
+        // If not, use 'value' from DB (Read-only, though we initialize on expand so it should be editable).
         let checked = value || false;
         const isEditable = true; // Always clickable if visible
 
@@ -578,28 +490,6 @@ const Permission = () => {
 
                     <div className="d-flex gap-2 align-items-center">
                         {/* Chevron Trigger */}
-                        <div>
-                            <label>
-                                <input
-                                    type="radio"
-                                    value="male"
-                                //   checked={gender === "male"}
-                                //   onChange={(e) => setGender(e.target.value)}
-                                />
-                                Male
-                            </label>
-
-                            <label style={{ marginLeft: 15 }}>
-                                <input
-                                    type="radio"
-                                    value="female"
-                                //   checked={gender === "female"}
-                                //   onChange={(e) => setGender(e.target.value)}
-                                />
-                                Female
-                            </label>
-
-                        </div>
                         <i
                             className={`fa-solid ${isOpen ? "fa-chevron-down" : "fa-chevron-up"} me-2`}
                             style={{ cursor: "pointer" }}
@@ -612,7 +502,6 @@ const Permission = () => {
                             handleDeleteRole(role.role_id, role.role_name);
                         }}></i> */}
                     </div>
-
                 </div>
 
                 {isOpen && (

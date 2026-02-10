@@ -102,7 +102,8 @@ const LibraryCardDetail = ({
       "father_gurdian_name",
       "parent_contact",
       "dob",
-      "type_id"
+      "type_id",
+      
     ],
     []
   );
