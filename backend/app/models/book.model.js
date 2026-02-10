@@ -952,7 +952,7 @@ async function exportBookPopularityReportPDF(params) {
 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-    
+
     doc.fontSize(20).text('Book Popularity Analytics Report', { align: 'center' });
     doc.moveDown();
 
