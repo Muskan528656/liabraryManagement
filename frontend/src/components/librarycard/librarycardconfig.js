@@ -52,6 +52,18 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
     let plansList = [];
 
     let objectTypesList = [];
+    let grades = [];
+    let sections = [];
+    let gradeSectionsMap = {}; // Map to store sections per grade
+    let jobTitles = [
+        { value: "Principal", label: "Principal" },
+        { value: "Vice Principal", label: "Vice Principal" },
+        { value: "Teacher", label: "Teacher" },
+        { value: "Assistant Teacher", label: "Assistant Teacher" },
+        { value: "Librarian", label: "Librarian" },
+        { value: "Counselor", label: "Counselor" },
+        { value: "Administrator", label: "Administrator" }
+    ];
 
     try {
 
@@ -125,8 +137,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         const objectTypeApi = new DataApi("objecttype");
         const objectTypeResponse = await objectTypeApi.fetchAll();
 
-
-
         let objectTypeData = [];
 
         if (objectTypeResponse.success && objectTypeResponse.data && Array.isArray(objectTypeResponse.data)) {
@@ -140,27 +150,57 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         }
 
 
-
+        console.log("objectTypeData=>",objectTypeData)
         if (objectTypeData.length > 0) {
-            objectTypesList = objectTypeData
-                .filter(type => type.status === 'active' || type.status === 'Active' || type.status === true)
-                .map(type => ({
-                    value: type.id,
-                    label: type.label.charAt(0).toUpperCase() + type.label.slice(1),
-                    data: type
-                }));
+           objectTypesList = objectTypeData
+            .filter(type => type.status === 'Active' || type.status === true)
+            .map(type => ({
+                value: type.id,
+                label: type.label,
+                type: type.type.toLowerCase(),
+                data: type
+            }));
 
 
         } else {
             console.warn("No object type data found");
         }
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        defaultCountryCode = "+91"; // Default to India if company fetch fails
-    }
 
+            const gradeApi = new DataApi("grade-sections/grouped");
+            const gradeResponse = await gradeApi.fetchAll();
 
+            const gradesList = Array.isArray(gradeResponse.data)
+            ? gradeResponse.data
+            : [];
 
+            if (gradesList.length > 0) {
+            grades = gradesList.map(g => ({
+                value: g.grade_name,
+                label: g.grade_name
+            }));
+
+            gradeSectionsMap = {};
+            gradesList.forEach(g => {
+                gradeSectionsMap[g.grade_name] = g.sections.map(s => ({
+                value: s.name,
+                label: s.name
+                }));
+            });
+
+            sections = [...new Set(
+                gradesList.flatMap(g => g.sections.map(s => s.name))
+            )].map(s => ({ value: s, label: s }));
+            }
+
+            
+            
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+        
+        console.log("Grades:", grades);
+        console.log("GradeSectionsMap:", gradeSectionsMap);
+        console.log("Sections:", sections);
 
 
     const defaultColumns = [
@@ -282,10 +322,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             image: null,
             father_gurdian_name: "",
             parent_contact: "",
-            dob: ""
+            dob: "",
+            job_title: "",
+            grade: "",
+            section: ""
         },
 
-        formFields: [
+        formFields:[
             {
                 name: "father_gurdian_name",
                 label: "Father / Guardian Name",
@@ -302,7 +345,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 placeholder: "Enter parent contact number",
                 colSize: 6,
             },
-
             {
                 name: "first_name",
                 label: "First Name",
@@ -347,7 +389,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 placeholder: "Enter phone number",
                 colSize: 3,
             },
-
             {
                 name: "dob",
                 label: "Date of Birth",
@@ -355,16 +396,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 required: false,
                 colSize: 6,
             },
-
-            // {
-            //     name: "age",
-            //     label: "Age",
-            //     type: "number",
-            //     required: false,
-            //     placeholder: "Enter age",
-            //     colSize: 3,
-            //     props: { min: 0, max: 120 }
-            // },
             {
                 name: "registration_date",
                 label: "Registration Date",
@@ -372,16 +403,71 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 required: false,
                 colSize: 6,
             },
+           
             {
-                name: "type",
+                name: "type_id",
                 label: "Type",
                 type: "select",
-                required: false,
                 options: objectTypesList,
                 colSize: 6,
+                onChange: (value, formData, setFormData) => {
+                   setFormData(prev => ({
+                    ...prev,
+                    type_id: value,
+                    grade: "",
+                    section: "",
+                    job_title: ""
+                    }));
+
+                 }
             },
-
-
+            {
+                name: "job_title",
+                label: "Job Title",
+                type: "select",
+                required: false,
+                options: jobTitles,
+                colSize: 6,
+                condition: (formData) => {
+                    const selectedType = objectTypesList.find(
+                        t => t.value === formData.type_id
+                    );
+                    return selectedType?.type === "teacher";
+                }
+            },
+          {
+            name: "grade",
+            label: "Grade",
+            type: "select",
+            colSize: 6,
+            options: [
+                { value: "", label: "Select Grade" },
+                ...grades
+            ],
+            condition: (formData) => {
+                const t = objectTypesList.find(x => x.value === formData.type_id);
+                return t?.type === "student";
+            }
+            },
+             {
+                name: "section",
+                label: "Section",
+                type: "select",
+                colSize: 6,
+                options: (formData) => {
+                    if (!formData.grade) {
+                    return [{ value: "", label: "Select Section" }];
+                    }
+                    return [
+                    { value: "", label: "Select Section" },
+                    ...(gradeSectionsMap[formData.grade] || [])
+                    ];
+                },
+                condition: (formData) => {
+                    const t = objectTypesList.find(x => x.value === formData.type_id);
+                    return t?.type === "student";
+                }
+            },
             {
                 name: "plan_id",
                 label: "Plan",
@@ -390,8 +476,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 options: plansList,
                 colSize: 6,
             },
-
-
             {
                 name: "image",
                 label: "User Photo",
@@ -419,7 +503,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 ],
                 colSize: 6,
             },
-
         ],
 
         validationRules: (formData, allCards, editingCard) => {
@@ -555,7 +638,58 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             },
 
             { key: "registration_date", label: "Registration Date", type: "date" },
-            { key: "type", label: "Type", type: "text" },
+            // { key: "type", label: "Type", type: "text" },
+            {
+            name: "type",
+            label: "Type",
+            type: "select",
+            options: objectTypesList,
+            colSize: 6,
+            },
+            {
+                name: "job_title",
+                label: "Job Title",
+                type: "select",
+                options: jobTitles,
+                colSize: 6,
+                condition: (formData) => {
+                    const selectedType = objectTypesList.find(
+                    t => t.value === formData.type_id
+                    );
+                    return selectedType?.label?.toLowerCase() === "teacher";
+                }
+            },
+
+            {
+                name: "grade",
+                label: "Grade",
+                type: "select",
+                options: grades,
+                colSize: 6,
+                condition: (formData) => {
+                const selectedType = objectTypesList.find(
+                    t => t.value === formData.type_id
+                );
+                return selectedType?.type === "student";
+
+                }
+            },
+
+
+            {
+                name: "section",
+                label: "Section",
+                type: "select",
+                options: sections,
+                colSize: 6,
+                condition: (formData) => {
+                    const selectedType = objectTypesList.find(
+                    t => t.value === formData.type_id
+                    );
+                    return selectedType?.type === "student";
+                }
+            },
+
             { key: "issue_date", label: "Issue Date", type: "date" },
             { key: "expiry_date", label: "Submission Date", type: "date" },
             {

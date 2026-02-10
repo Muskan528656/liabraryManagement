@@ -28,6 +28,41 @@ async function findById(id) {
     return r.rows[0];
 }
 
+
+async function findGroupedGrades() {
+    const q = `
+        SELECT id, grade_name, section_name
+        FROM ${this.schema}.grade
+        WHERE status = true
+        ORDER BY grade_name, section_name;
+    `;
+
+    const r = await sql.query(q);
+
+    const grouped = {};
+
+    r.rows.forEach(row => {
+        if (!grouped[row.grade_name]) {
+            grouped[row.grade_name] = [];
+        }
+
+        if (row.section_name) {
+            grouped[row.grade_name].push({
+                id: row.id,
+                name: row.section_name
+            });
+        }
+    });
+
+    return Object.keys(grouped)
+        .map(grade_name => ({
+            grade_name,
+            sections: grouped[grade_name]
+        }))
+        .sort((a, b) => a.grade_name.localeCompare(b.grade_name));
+}
+
+
 // ================= FIND BY GRADE NAME =================
 async function findByGradeName(grade_name) {
     const q = `
@@ -212,5 +247,6 @@ module.exports = {
     updateById,
     deleteById,
     bulkCreateSections,
-    search
+    search,
+    findGroupedGrades
 };

@@ -172,7 +172,7 @@ async function findGroupedShelves() {
     // Group by shelf_name
     const grouped = {};
 
-    r.rows.forEach(row => {
+    r.rows.forEach(row => { 
         if (!grouped[row.shelf_name]) {
             grouped[row.shelf_name] = [];
         }

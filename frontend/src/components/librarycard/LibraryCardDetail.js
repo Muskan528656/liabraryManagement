@@ -694,6 +694,43 @@ const LibraryCardDetail = ({
         },
         colSize: 3,
       },
+        {
+        key: "job_title",
+        label: "Job Title",
+        type: "text",
+        colSize: 3,
+        condition: (data) => {
+          const selected = typeOptions.find(
+            t => t.value === (data.type_id || data.type)
+          );
+          return selected?.label?.toLowerCase() === "teacher";
+        },
+      },
+      {
+        key: "grade",
+        label: "Grade",
+        type: "text",
+        colSize: 3,
+        condition: (data) => {
+          const selected = typeOptions.find(
+            t => t.value === (data.type_id || data.type)
+          );
+          return selected?.label?.toLowerCase() === "student";
+        },
+      },
+      {
+        key: "section",
+        label: "Section",
+        type: "text",
+        colSize: 3,
+        condition: (data) => {
+          const selected = typeOptions.find(
+            t => t.value === (data.type_id || data.type)
+          );
+          return selected?.label?.toLowerCase() === "student";
+        },
+      },
+
     ],
   };
 
@@ -1704,6 +1741,11 @@ const LibraryCardDetail = ({
     if (!field) return null;
     const currentData = isEditing ? tempData || {} : data;
     if (!currentData) return null;
+
+    // Check condition if present
+    if (field.condition && !field.condition(currentData)) {
+      return null;
+    }
 
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
