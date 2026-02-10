@@ -1237,22 +1237,52 @@ const BulkIssue = ({ permissions }) => {
                     <div className="text-center mb-3">
                       {memberInfo?.image ? (
                         <div className="mb-2">
-                          <img
-                            // src={memberInfo.image}
-
-                            // src={getImageUrl(memberInfo.image)}
-                            src={memberInfo?.image ? getImageUrl(memberInfo.image) : "/Logo.png"}
-
-
-                            // alt={getMemberName()}
-                            className="rounded-circle"
+                          <div
+                            className="rounded-circle d-flex justify-content-center align-items-center mx-auto position-relative overflow-hidden"
                             style={{
                               width: "80px",
                               height: "80px",
-                              objectFit: "cover",
-                              border: "3px solid #8b5cf6"
+                              border: "3px solid #8b5cf6",
+                              backgroundColor: "#e9ecef"
                             }}
-                          />
+                          >
+                            {/* Image with fallback */}
+                            {memberInfo?.image ? (
+                              <img
+                                src={getImageUrl(memberInfo.image)}
+                                alt={getMemberName()}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                  position: "absolute"
+                                }}
+                                onError={(e) => {
+                                  // Hide broken image
+                                  e.target.style.opacity = "0";
+                                }}
+                              />
+                            ) : null}
+
+                            {/* Always show initial */}
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                color: "#8b5cf6",
+                                fontSize: "2.5rem",
+                                fontWeight: "bold",
+                                zIndex: 1
+                              }}
+                            >
+                              {/* {getMemberName()} */}
+                              {/* {memberInfo?.image ?  null :getMemberName()?.charAt(0).toUpperCase() || '?'} */}
+                              {getMemberName()?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <div className="mb-2">
