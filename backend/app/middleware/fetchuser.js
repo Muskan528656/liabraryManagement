@@ -47,11 +47,7 @@ const checkPermission = (moduleName, action) => {
         (user.userrole === "SYSTEM ADMIN")) {
         return next();
       }
-
-
       const permissions = user.permissions || [];
-
-
       if (!permissions.length) {
         return res.status(403).json({
           message: "No permissions assigned to this role"

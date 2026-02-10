@@ -162,7 +162,7 @@ const ReportsList = () => {
                   >
                     <td className="text-muted text-center align-middle border"
                       style={{ width: "80px" }}>
-                         {i + 1}
+                      {i + 1}
                     </td>
                     <td className="ps-4 py-0">
                       <div className=" d-flex align-items-center">

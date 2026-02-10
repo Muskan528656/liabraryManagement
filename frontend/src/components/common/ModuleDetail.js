@@ -852,7 +852,13 @@ const ModuleDetail = ({
     console.log("Field Change:", fieldKey, value);
     if (isEditing && tempData) {
 
-      if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
+      // if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
+      //   field.onChange(value, tempData, setTempData);
+      //   return;
+      // }
+
+      // 🔥 allow custom onChange for ANY field (Shelf, Country, etc.)
+      if (field && typeof field.onChange === "function") {
         field.onChange(value, tempData, setTempData);
         return;
       }
