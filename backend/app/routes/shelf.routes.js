@@ -5,13 +5,13 @@ module.exports = (app) => {
     const { body, validationResult } = require("express-validator");
     const router = require("express").Router();
 
-       // ================= GET GROUPED SHELVES =================
+    // ================= GET GROUPED SHELVES =================
     router.get("/grouped", fetchUser, async (req, res) => {
-        
+
         try {
             Shelf.init(req.userinfo.tenantcode);
             const data = await Shelf.findGroupedShelves();
-            console.log("data=>",data);
+            console.log("data=>", data);
             res.json(data);
         } catch (err) {
             console.error("Error fetching grouped shelves:", err);
@@ -49,7 +49,7 @@ module.exports = (app) => {
         }
     });
 
- 
+
     // ================= CREATE =================
     router.post(
         "/",
@@ -59,19 +59,20 @@ module.exports = (app) => {
                 .notEmpty()
                 .withMessage("Shelf name is required")
                 .trim(),
-            
+            body("shelf_name").notEmpty().withMessage("Name is required"),
+
             body("sub_shelf")
                 .optional()
                 .isString()
                 .withMessage("Sub shelf must be a string")
                 .trim(),
-                
+
             body("note")
                 .optional()
                 .isString()
                 .withMessage("Note must be a string")
                 .trim(),
-                
+
             body("status")
                 .optional()
                 .isBoolean()
@@ -81,8 +82,11 @@ module.exports = (app) => {
             try {
                 // Validate request
                 const errors = validationResult(req);
+
                 if (!errors.isEmpty()) {
-                    return res.status(400).json({ errors: errors.array() });
+                    return res.status(400).json({
+                        errors: errors.array()[0].msg
+                    });
                 }
 
                 Shelf.init(req.userinfo.tenantcode);
@@ -98,16 +102,16 @@ module.exports = (app) => {
 
             } catch (err) {
                 console.error("Error creating shelf:", err);
-                
-                if (err.message.includes("zaten mevcut") || 
+
+                if (err.message.includes("zaten mevcut") ||
                     err.message.includes("already exists")) {
-                    return res.status(409).json({ 
-                        error: err.message 
+                    return res.status(409).json({
+                        error: err.message
                     });
                 }
-                
-                res.status(400).json({ 
-                    error: err.message || "Failed to create shelf" 
+
+                res.status(400).json({
+                    error: err.message || "Failed to create shelf"
                 });
             }
         }
@@ -122,20 +126,27 @@ module.exports = (app) => {
                 .optional()
                 .notEmpty()
                 .withMessage("Shelf name cannot be empty if provided")
+                .matches(/^[A-Za-z\s]+$/)
+                .withMessage("Shelf name should not contain numbers")
                 .trim(),
-            
+
             body("sub_shelf")
                 .optional()
-                .isString()
-                .withMessage("Sub shelf must be a string")
+                .notEmpty()
+                .withMessage("Sub shelf cannot be empty if provided")
+                .matches(/^[A-Za-z\s]+$/)
+                .withMessage("Sub shelf should not contain numbers")
                 .trim(),
-                
+
             body("note")
                 .optional()
-                .isString()
-                .withMessage("Note must be a string")
+                .notEmpty()
+                .withMessage("Note cannot be empty if provided")
+                .matches(/^[A-Za-z\s]+$/)
+                .withMessage("Note should not contain numbers")
                 .trim(),
-                
+
+
             body("status")
                 .optional()
                 .isBoolean()
@@ -146,12 +157,14 @@ module.exports = (app) => {
                 // Validate request
                 const errors = validationResult(req);
                 if (!errors.isEmpty()) {
-                    return res.status(400).json({ errors: errors.array() });
+                    return res.status(400).json({
+                        errors: errors.array()[0].msg
+                    });
                 }
 
                 if (Object.keys(req.body).length === 0) {
-                    return res.status(400).json({ 
-                        error: "No data provided for update" 
+                    return res.status(400).json({
+                        error: "No data provided for update"
                     });
                 }
 
@@ -173,16 +186,16 @@ module.exports = (app) => {
                 });
             } catch (err) {
                 console.error("Error updating shelf:", err);
-                
-                if (err.message.includes("zaten mevcut") || 
+
+                if (err.message.includes("zaten mevcut") ||
                     err.message.includes("already exists")) {
-                    return res.status(409).json({ 
-                        error: err.message 
+                    return res.status(409).json({
+                        error: err.message
                     });
                 }
-                
-                res.status(400).json({ 
-                    error: err.message || "Failed to update shelf" 
+
+                res.status(400).json({
+                    error: err.message || "Failed to update shelf"
                 });
             }
         }
@@ -192,18 +205,18 @@ module.exports = (app) => {
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
             Shelf.init(req.userinfo.tenantcode);
-            
+
             // Önce rafın var olup olmadığını kontrol et
             const shelf = await Shelf.findById(req.params.id);
             if (!shelf) {
                 return res.status(404).json({ error: "Shelf not found" });
             }
-            
+
             await Shelf.deleteById(req.params.id);
 
-            res.json({ 
+            res.json({
                 success: true,
-                message: "Shelf deleted successfully" 
+                message: "Shelf deleted successfully"
             });
         } catch (err) {
             console.error("Error deleting shelf:", err);

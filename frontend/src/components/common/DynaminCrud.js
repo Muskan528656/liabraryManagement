@@ -805,7 +805,7 @@ const DynamicCRUD = ({
             console.log("formDaformDataformDataformData", formData);
             if (hasFileUpload) {
                 const submitData = new FormData();
-
+                console.log("submitdatasubmitData", submitData);
                 Object.keys(formData).forEach(key => {
                     const value = formData[key];
                     if (value !== null && value !== undefined && value !== '') {
@@ -848,6 +848,7 @@ const DynamicCRUD = ({
             } else {
 
                 const submitData = { ...formData };
+                
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
                 });

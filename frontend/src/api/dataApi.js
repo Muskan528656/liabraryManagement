@@ -37,6 +37,7 @@ export default class DataApi {
 
   create(data) {
     const isFormData = data instanceof FormData;
+    console.log("isformdata",isFormData)
     return axios.post(this.baseUrl, data, {
       headers: isFormData ? this.getHeaders() : this.getHeaders(true),
     });
