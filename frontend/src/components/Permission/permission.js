@@ -272,6 +272,7 @@ const Permission = () => {
             setLoading(true);
             // We only save roles that exist in editingPermissions
             const roleIdsToUpdate = Object.keys(editingPermissions);
+            console.log("Roles to Update:", roleIdsToUpdate);
 
             if (roleIdsToUpdate.length === 0) {
                 PubSub.publish("RECORD_ERROR_TOAST", { title: "Info", message: "No data loaded to save." });
@@ -477,7 +478,6 @@ const Permission = () => {
         const isOpen = expandedRoles[role.role_id] || false;
 
         return (
-
             <div className="card mb-3 border shadow-sm mx-3">
                 {/* Header is Clickable to Toggle */}
                 <div className="card-header p-3 d-flex justify-content-between align-items-center bg-light">

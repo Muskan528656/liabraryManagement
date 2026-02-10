@@ -1,5 +1,6 @@
 import { Badge } from "react-bootstrap";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
+import Shelf from "./shelf";
 
 export const getShelfConfig = (
     externalData = {},
@@ -68,6 +69,7 @@ export const getShelfConfig = (
                 name: "sub_shelf",
                 label: "Sub Shelf",
                 type: "text",
+                required: true,
                 placeholder: "Enter sub shelf name",
                 colSize: 6,
             },
@@ -75,6 +77,7 @@ export const getShelfConfig = (
                 name: "note",
                 label: "Note",
                 type: "textarea",
+                required: true,
                 placeholder: "Enter notes",
                 colSize: 6,
             },
@@ -109,24 +112,76 @@ export const getShelfConfig = (
             }
             return data;
         },
-        validationRules: (formData) => {
+        // validationRules: (formData,allPlans, editingPlan) => {
+        //     const errors = [];
+
+        //     console.log("formData in validationRules:", formData);
+        //     console.log("allPlans in validationRules:", allPlans);
+        //     console.log("editingPlan in validationRules:", editingPlan);
+        //     if (!formData.shelf_name?.trim()) {
+        //         errors.push("Shelf name is required");
+        //     }
+
+        //      if (!formData.sub_shelf?.trim()) { 
+        //         errors.push("Sub Shelf is required");
+        //     }
+        //       if (!formData.note?.trim()) {
+        //         errors.push("Note is required");
+        //     }
+
+        //     const duplicateName = allPlans.find(
+        //         Shelf => Shelf.sub_shelf?.toLowerCase() === formData.sub_shelf?.toLowerCase() &&
+        //             Shelf.id !== editingPlan?.id
+        //     );
+        //     if (duplicateName) {
+        //         errors.push("Shelf with this sub shelf already exists");
+        //     }
+
+        //     // Shelf name unique validation (optional)
+        //     // if (formData.shelf_name?.trim()) {
+        //     //     const existingShelves = externalData.existingShelves || [];
+        //     //     const isDuplicate = existingShelves.some(shelf =>
+        //     //         shelf.shelf_name === formData.shelf_name.trim() &&
+        //     //         shelf.id !== formData.id
+        //     //     );
+
+        //     //     if (isDuplicate) {
+        //     //         errors.push("Shelf name already exists");
+        //     //     }
+        //     // }
+
+        //     return errors;
+        // },
+        validationRules: (formData, allPlans, editingPlan) => {
             const errors = [];
+            const noNumberRegex = /^[A-Za-z\s]+$/;
 
             if (!formData.shelf_name?.trim()) {
                 errors.push("Shelf name is required");
+            } else if (!noNumberRegex.test(formData.shelf_name.trim())) {
+                errors.push("Numbers are not allowed in shelf name");
             }
 
-            // Shelf name unique validation (optional)
-            if (formData.shelf_name?.trim()) {
-                const existingShelves = externalData.existingShelves || [];
-                const isDuplicate = existingShelves.some(shelf =>
-                    shelf.shelf_name === formData.shelf_name.trim() &&
-                    shelf.id !== formData.id
-                );
+            if (!formData.sub_shelf?.trim()) {
+                errors.push("Sub Shelf is required");
+            } else if (!noNumberRegex.test(formData.sub_shelf.trim())) {
+                errors.push("Numbers are not allowed in sub shelf");
+            }
 
-                if (isDuplicate) {
-                    errors.push("Shelf name already exists");
-                }
+            if (!formData.note?.trim()) {
+                errors.push("Note is required");
+            } else if (!noNumberRegex.test(formData.note.trim())) {
+                errors.push("Numbers are not allowed in note");
+            }
+
+            const duplicateName = allPlans.find(
+                shelf =>
+                    shelf.sub_shelf?.toLowerCase() === formData.sub_shelf?.toLowerCase() &&
+                    shelf.id !== editingPlan?.id
+            );
+
+            if (duplicateName) {
+                errors.push("Shelf with this sub shelf already exists");
             }
 
             return errors;
