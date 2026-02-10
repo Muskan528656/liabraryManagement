@@ -169,6 +169,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             const gradeApi = new DataApi("grade-sections/grouped");
             const gradeResponse = await gradeApi.fetchAll();
 
+            console.log("gradeResponse=>", gradeResponse.data)
+
             const gradesList = Array.isArray(gradeResponse.data)
             ? gradeResponse.data
             : [];
@@ -325,7 +327,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             dob: "",
             job_title: "",
             grade: "",
-            section: ""
+            section: "",
+            code_type:"",
         },
 
         formFields:[
@@ -411,31 +414,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 options: objectTypesList,
                 colSize: 6,
                 onChange: (value, formData, setFormData) => {
-                   setFormData(prev => ({
+                  const selectedType = objectTypesList.find(t => t.value === value);
+
+                setFormData(prev => ({
                     ...prev,
                     type_id: value,
+                    type_code: selectedType?.type || "", 
                     grade: "",
                     section: "",
                     job_title: ""
-                    }));
-
-                 }
-            },
-            {
-                name: "job_title",
-                label: "Job Title",
-                type: "select",
-                required: false,
-                options: jobTitles,
-                colSize: 6,
-                condition: (formData) => {
-                    const selectedType = objectTypesList.find(
-                        t => t.value === formData.type_id
-                    );
-                    return selectedType?.type === "teacher";
+                }));
                 }
+
             },
-          {
+           {
+            name: "job_title",
+            label: "Job Title",
+            type: "select",
+            options: jobTitles,
+            colSize: 6,
+            condition: (formData) => formData.type_code === "teacher"
+            },
+
+           {
             name: "grade",
             label: "Grade",
             type: "select",
@@ -444,12 +445,9 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 { value: "", label: "Select Grade" },
                 ...grades
             ],
-            condition: (formData) => {
-                const t = objectTypesList.find(x => x.value === formData.type_id);
-                return t?.type === "student";
-            }
+            condition: (formData) => formData.type_code === "student"
             },
-             {
+            {
                 name: "section",
                 label: "Section",
                 type: "select",
@@ -463,11 +461,9 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     ...(gradeSectionsMap[formData.grade] || [])
                     ];
                 },
-                condition: (formData) => {
-                    const t = objectTypesList.find(x => x.value === formData.type_id);
-                    return t?.type === "student";
-                }
+                condition: (formData) => formData.type_code === "student"
             },
+
             {
                 name: "plan_id",
                 label: "Plan",

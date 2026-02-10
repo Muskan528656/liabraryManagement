@@ -171,6 +171,8 @@ async function create(cardData, userId) {
       "registration_date",
       "plan_id",
       "type_id",
+      "job_title",
+      "grade_id",
       "createddate",
       "lastmodifieddate",
       "createdbyid",
@@ -219,6 +221,8 @@ async function create(cardData, userId) {
       cardData.registration_date || null,
       cardData.plan_id || null,
       cardData.type_id || null,
+      cardData.job_title || null,
+      cardData.section_id || null,
       new Date(),
       new Date(),
       userId,
@@ -281,6 +285,8 @@ async function updateById(id, cardData, userId) {
       "dob",
       "father_gurdian_name",
       "parent_contact",
+      "job_title",
+      "grade_id",
     ];
 
     allowedFields.forEach((field) => {
