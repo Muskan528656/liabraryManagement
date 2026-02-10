@@ -280,7 +280,9 @@ export const applyAdvancedFilters = (data = [], filterValues = {}) => {
 const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }) => {
 
   const [localFilters, setLocalFilters] = useState({});
-
+  // console.log("AdvancedFilter fields:", fields);
+  // console.log("AdvancedFilter onFilterChange:", onFilterChange);
+  // console.log("AdvancedFilter onClear:", onClear);
   const handleChange = (name, value) => {
     const newFilters = { ...localFilters, [name]: value };
     setLocalFilters(newFilters);
@@ -322,14 +324,14 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
   return (
 
     <div className={`advanced-filter-wrapper px-3 mb-0 ${className}`}>
-      <Row className="align-items-end border p-2 rounded-4" style={{background:"var(--primary-background-color)"}}>
+      <Row className="align-items-end border p-2 rounded-4" style={{background:"var(--primary-background-color)"}} >
         {fields.map((field, idx) => {
           const fName = field.name || field.field;
 
           // Date Range Fields
           if (field.type === "date") {
             return (
-              <React.Fragment key={idx}>
+             <React.Fragment key={idx}>
                 <Col xs={12} md={2}>
                   <div style={labelStyle}>
                     <i className="fa-regular fa-calendar"></i>
@@ -343,6 +345,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     onChange={(e) => handleChange(fName + "_from", e.target.value)}
                   />
                 </Col>
+
                 <Col xs={12} md={2}>
                   <div style={labelStyle}>
                     <i className="fa-regular fa-calendar"></i>
@@ -353,10 +356,12 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     className="filter-input"
                     style={inputBaseStyle}
                     value={localFilters[fName + "_to"] || ""}
+                    min={localFilters[fName + "_from"] || ""}
                     onChange={(e) => handleChange(fName + "_to", e.target.value)}
                   />
                 </Col>
               </React.Fragment>
+
             );
           }
 

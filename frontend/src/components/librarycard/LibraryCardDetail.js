@@ -40,7 +40,7 @@ const LibraryCardDetail = ({
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-
+  
 
   console.log("permissions", permissions)
 
@@ -71,6 +71,7 @@ const LibraryCardDetail = ({
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [objectTypes, setObjectTypes] = useState([]);
   const [planStatus, setPlanStatus] = useState("No Plan");
+  const [visible, setVisible] = useState(true);
 
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
@@ -1990,11 +1991,14 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (
-                    <button onClick={handleEdit} className="custom-btn-primary">
+                  {canEdit && !isEditing ? (visible 
+                  ?
+                      <button onClick={handleEdit} className="custom-btn-primary">
                       <i className="fa-solid fa-edit me-2"></i>
                       Edit {moduleLabel}
                     </button>
+                  : null
+                  
                   ) : !isEditing ? null : (
                     <div className="d-flex gap-2">
                       <button
@@ -2031,7 +2035,7 @@ const LibraryCardDetail = ({
                 <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
                   <Nav variant="tabs" className="border-bottom-0">
                     <Nav.Item>
-                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`}
+                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`} onClick={() => setVisible(true)}
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",
@@ -2048,7 +2052,7 @@ const LibraryCardDetail = ({
                       </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
-                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`}
+                      <Nav.Link className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`} onClick={() => setVisible(false)} eventKey="related"  
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",
