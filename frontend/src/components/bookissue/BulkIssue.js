@@ -56,7 +56,7 @@ const styles = `
 const BulkIssue = ({ permissions }) => {
 
 
- 
+
 
   const [books, setBooks] = useState([]);
   const [libraryCards, setLibraryCards] = useState([]);
@@ -137,6 +137,7 @@ const BulkIssue = ({ permissions }) => {
   };
 
   useEffect(() => {
+
     fetchAll();
   }, [refreshTrigger]);
 
@@ -190,6 +191,7 @@ const BulkIssue = ({ permissions }) => {
 
 
   useEffect(() => {
+    console.log("Selected member info:", memberInfo);
     if (selectedCard) {
       loadMemberInfo(selectedCard.value);
     } else {
@@ -292,6 +294,7 @@ const BulkIssue = ({ permissions }) => {
       const subscriptionApi = new DataApi("subscriptions");
       const planApi = new DataApi("plans");
 
+      console.log("cardapi", cardApi)
       const [
         booksResp,
         cardsResp,
@@ -312,6 +315,8 @@ const BulkIssue = ({ permissions }) => {
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
+
+      console.log("cardsList", cardsList);
 
       let subscriptionsList = [];
       if (subscriptionResponse?.data?.data) {
@@ -1058,23 +1063,24 @@ const BulkIssue = ({ permissions }) => {
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
   };
-const getImageUrl = (image) => {
-  if (!image) return "/default-avatar.png"; 
+  const getImageUrl = (image) => {
+    if (!image) return "/default-avatar.png";
 
-  if (image.startsWith("http")) {
-    return image;
-  }
-  const baseUrl =
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3003"
-      : process.env.REACT_APP_API_URL;
+    if (image.startsWith("http")) {
+      return image;
+    }
+    const baseUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3003"
+        : process.env.REACT_APP_API_URL;
 
-  return `${baseUrl}${image}`;
-};
+    return `${baseUrl}${image}`;
+  };
   const getMemberName = () => {
     if (!selectedCard) return "Unknown";
 
     if (memberInfo) {
+      console.log("memberInfo", memberInfo);
       return `${memberInfo.first_name || ''} ${memberInfo.last_name || ''}`.trim() ||
         memberInfo.user_name ||
         memberInfo.student_name ||
@@ -1087,7 +1093,7 @@ const getImageUrl = (image) => {
   };
 
 
-  
+
 
   const limitsTooltip = (props) => (
     <Tooltip id="limits-tooltip" {...props}>
@@ -1235,147 +1241,60 @@ const getImageUrl = (image) => {
                 ) : (
                   <>
                     <div className="text-center mb-3">
-                      {memberInfo?.image ? (
-                        <div className="mb-2">
-                          <img
-                            // src={memberInfo.image}
+                      <div className="mb-2">
+                        <div
+                          className="rounded-circle d-flex justify-content-center align-items-center mx-auto position-relative overflow-hidden"
+                          style={{
+                            width: "80px",
+                            height: "80px",
+                            border: "3px solid #8b5cf6",
+                            backgroundColor: "#e9ecef"
+                          }}
+                        >
+                          {/* Image with fallback */}
+                          {memberInfo?.image ? (
+                            <img
                               src={getImageUrl(memberInfo.image)}
+                              alt={getMemberName()}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                position: "absolute"
+                              }}
+                              onError={(e) => {
+                                // Hide broken image
+                                e.target.style.opacity = "0";
+                              }}
+                            />
+                          ) : null}
 
-                            alt={getMemberName()}
-                            className="rounded-circle"
+                          {/* Always show initial */}
+                          <div
                             style={{
-                              width: "80px",
-                              height: "80px",
-                              objectFit: "cover",
-                              border: "3px solid #8b5cf6"
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              color: "#8b5cf6",
+                              fontSize: "2.5rem",
+                              fontWeight: "bold",
+                              zIndex: 1
                             }}
-                          />
+                          >
+                            {/* {getMemberName()} */}
+                            {/* {memberInfo?.image ?  null :getMemberName()?.charAt(0).toUpperCase() || '?'} */}
+                            {getMemberName()?.charAt(0).toUpperCase() || '?'}
+                          </div>
                         </div>
-                      ) : (
-                        <div className="mb-2">
-                          <i className="fa-solid fa-user-circle fa-3x text-primary"></i>
-                        </div>
-                      )}
+                      </div>
 
                       <h5 className="fw-bold mb-1">
                         {getMemberName()}
                       </h5>
-                      <div className="mb-2">
-                        <Row>
-                          {/* 
-                        <Col lg={4} className="text-start">
-                          <Badge
-                            bg={memberInfo?.is_active ? "success" : "danger"}
-                            className="me-1"
-                          >
-                            {memberInfo?.is_active ? (
-                              <><i className="fa-solid fa-check-circle me-1"></i> Active</>
-                            ) : (
-                              <><i className="fa-solid fa-times-circle me-1"></i> Inactive</>
-                            )}
-                          </Badge>
-                        </Col> */}
-                          <Col className="text-center">
-                            <Badge
-                              bg={(memberPlan?.is_active || memberSubscription?.is_active) ? "success" : "danger"}
-                              className="mb-1"
-                            >
-                              <i className="fa-solid fa-crown me-1"></i>
-                              {memberPlan?.plan_name || memberSubscription?.plan_name || memberSubscription?.name || 'Plan'}
-                              {(memberPlan?.is_active || memberSubscription?.is_active) ? " ✓" : " ✗"} age {memberAge !== null ? `${memberAge} yrs` : 'N/A'}
-                            </Badge>
-                          </Col>
-                          {/* <Col lg={8} className="text-end">
-                          <OverlayTrigger
-                            placement="top"
-                            delay={{ show: 250, hide: 400 }}
-                            overlay={limitsTooltip}
-                          > 
-                            <Badge
-                              bg="info"
-                              className="me-1"
-                              style={{ cursor: "pointer" }}
-                            >
-                              <i className="fa-solid fa-chart-simple me-1"></i>
-                              Limits Info
-                            </Badge>
-                          </OverlayTrigger>
-                        </Col> */}
-                        </Row>
-                        {/* <Row>
-                        <Col lg={3} className="text-start mt-1">
-                          <small className="text-muted">
-                            Card Number: {selectedCard.data.card_number || 'N/A'}
-                          </small>
-                        </Col>
-                        <Col lg={3} className="mt-1">
-                          <small className="text-muted">
-                            member age : {memberAge !== null ? `${memberAge} years` : 'N/A'}
-                          </small>  
-                        </Col>
-                        <Col lg={4} className="mt-1">
-                          <small className="text-muted">  
-                            filtered books : {filteredBooksByAge.length} books available for this age
-                          </small>
-                        </Col>
-                      </Row> */}
-                      </div>
-                      {/* {memberAge !== null && (
-                        <div className="text-dark small mb-2">
-                          <i className="fa-solid fa-cake-candles me-1"></i>
-                          Age: {memberAge} years
-                          <br />
-                          <span className="text-muted">
-                            {filteredBooksByAge.length} books available for this age
-                          </span>
-                        </div>
-                      )} */}
-
-                      {/* {memberInfo?.card_number && (
-                        <div className="text-muted small mb-2">
-                          <i className="fa-solid fa-id-card me-1"></i>
-                          Card: {memberInfo.card_number}
-                        </div>
-                      )} */}
-
-                      {/* {(memberPlan || memberSubscription) && (
-                        <div className="mt-2">
-                          <Badge
-                            bg={(memberPlan?.is_active || memberSubscription?.is_active) ? "success" : "danger"}
-                            className="mb-1"
-                          >
-                            <i className="fa-solid fa-crown me-1"></i>
-                            {memberPlan?.plan_name || memberSubscription?.plan_name || memberSubscription?.name || 'Plan'}
-                            {(memberPlan?.is_active || memberSubscription?.is_active) ? " ✓" : " ✗"}
-                          </Badge>
-                          <div className="small text-muted mt-1">
-                            {systemMaxBooks} books total • {dailyLimitCount} per day • {durationDays} days
-                          </div>
-                        </div>
-                      )} */}
-                      {/* 
-                      <div className="small text-muted mt-2">
-                        {memberInfo?.email && (
-                          <div className="mb-1">
-                            <i className="fa-solid fa-envelope me-1"></i>
-                            <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
-                              {memberInfo.email}
-                            </span>
-                          </div>
-                        )}
-
-                        {memberInfo?.phone_number && (
-                          <div>
-                            <i className="fa-solid fa-phone me-1"></i>
-                            {memberInfo.phone_number}
-                            {memberInfo?.country_code && (
-                              <span className="ms-1">({memberInfo.country_code})</span>
-                            )}
-                          </div>
-                        )}
-                      </div> */}
+                      {/* ... rest of your code */}
                     </div>
-
                     {/* <hr className="my-3" style={{ borderColor: "#f0f0f0" }} /> */}
 
                     <Row className="g-2 mb-3">
@@ -1794,7 +1713,7 @@ const getImageUrl = (image) => {
                   </Col>
                   <Col md={4}>
                     <Button
-                      className="btn btn-custom"
+                      className="btn btn-custom "
                       style={{
                         backgroundColor: `var(--primary-color)`,
                       }}

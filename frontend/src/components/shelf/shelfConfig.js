@@ -25,7 +25,6 @@ export const getShelfConfig = (
 
         importMatchFields: ["shelf_name"],
 
-        // ================= INITIAL =================
         initialFormData: {
             shelf_name: "",
             note: "",
@@ -33,32 +32,29 @@ export const getShelfConfig = (
             status: true
         },
 
-        // ================= TABLE =================
         columns: [
             { field: "shelf_name", label: "Shelf Name" },
             { field: "note", label: "Note" },
             {
                 field: "sub_shelf",
                 label: "Sub Shelf",
-                render: (val) =>
-                    Array.isArray(val) ? val.join(", ") : val || ""
+                render: (val) => val || "-"
             },
             {
                 field: "status",
                 label: "Status",
                 sortable: true,
                 render: (value) => {
-                    const statusValue = value === true || value === "active" ? "Active" : "Inactive";
+                    const isActive = value === true || value === "true" || value === true;
                     return (
-                        <Badge bg={statusValue === "Active" ? "success" : "danger"}>
-                            {statusValue}
+                        <Badge bg={isActive ? "success" : "danger"}>
+                            {isActive ? "Active" : "Inactive"}
                         </Badge>
                     );
                 }
             }
         ],
 
-        // ================= FORM =================
         formFields: [
             {
                 name: "shelf_name",
@@ -68,18 +64,18 @@ export const getShelfConfig = (
                 placeholder: "Enter shelf name",
                 colSize: 6,
             },
-
             {
                 name: "sub_shelf",
-                label: "Sub Shelves",
+                label: "Sub Shelf",
                 type: "text",
-                placeholder: "A1,A2,A3",
+                placeholder: "Enter sub shelf name",
                 colSize: 6,
             },
             {
                 name: "note",
                 label: "Note",
                 type: "textarea",
+                placeholder: "Enter notes",
                 colSize: 6,
             },
             {
@@ -94,30 +90,43 @@ export const getShelfConfig = (
             }
         ],
 
-        // ================= TRANSFORMS =================
         transformBeforeSave: (data) => {
-            if (typeof data.sub_shelf === "string") {
-                data.sub_shelf = data.sub_shelf
-                    .split(",")
-                    .map(s => s.trim())
-                    .filter(Boolean);
+            if (data.sub_shelf) {
+                data.sub_shelf = data.sub_shelf.toString().trim();
             }
             return data;
         },
 
         transformAfterFetch: (data) => {
-            if (Array.isArray(data.sub_shelf)) {
-                data.sub_shelf = data.sub_shelf.join(",");
+            if (data.sub_shelf && typeof data.sub_shelf === 'string') {
+                if (data.sub_shelf.trim().startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(data.sub_shelf);
+                        data.sub_shelf = Array.isArray(parsed) ? parsed.join(', ') : data.sub_shelf;
+                    } catch (e) {
+                    }
+                }
             }
             return data;
         },
-
-        // ================= VALIDATION =================
         validationRules: (formData) => {
             const errors = [];
 
             if (!formData.shelf_name?.trim()) {
-                errors.push("Shelf name required");
+                errors.push("Shelf name is required");
+            }
+
+            // Shelf name unique validation (optional)
+            if (formData.shelf_name?.trim()) {
+                const existingShelves = externalData.existingShelves || [];
+                const isDuplicate = existingShelves.some(shelf =>
+                    shelf.shelf_name === formData.shelf_name.trim() &&
+                    shelf.id !== formData.id
+                );
+
+                if (isDuplicate) {
+                    errors.push("Shelf name already exists");
+                }
             }
 
             return errors;
@@ -147,18 +156,52 @@ export const getShelfConfig = (
                 name: "shelf_name",
                 label: "Shelf Name",
                 type: "text",
+                placeholder: "Search by shelf name"
+            },
+            {
+                name: "sub_shelf",
+                label: "Sub Shelf",
+                type: "text",
+                placeholder: "Search by sub shelf"
             },
             {
                 name: "status",
                 label: "Status",
                 type: "select",
                 options: [
+                    { label: "All", value: "" },
                     { label: "Active", value: true },
                     { label: "Inactive", value: false }
                 ]
             }
         ],
 
-        importModel: ShelfModel
+        importModel: ShelfModel,
+
+        // ================= CUSTOM METHODS =================
+        onBeforeSubmit: (formData) => {
+            return {
+                ...formData,
+                sub_shelf: formData.sub_shelf ? String(formData.sub_shelf).trim() : ""
+            };
+        },
+
+        // ================= DETAIL VIEW =================
+        detailViewFields: [
+            { label: "Shelf Name", field: "shelf_name" },
+            { label: "Sub Shelf", field: "sub_shelf" },
+            { label: "Note", field: "note" },
+            {
+                label: "Status",
+                field: "status",
+                render: (value) => (
+                    <Badge bg={value ? "success" : "danger"}>
+                        {value ? "Active" : "Inactive"}
+                    </Badge>
+                )
+            },
+            { label: "Created Date", field: "createddate", type: "datetime" },
+            { label: "Last Modified", field: "lastmodifieddate", type: "datetime" }
+        ]
     };
 };

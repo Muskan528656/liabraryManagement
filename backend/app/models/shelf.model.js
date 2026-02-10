@@ -27,92 +27,136 @@ async function findById(id) {
     const r = await sql.query(q, [id]);
     return r.rows[0];
 }
+
 async function create(data) {
+    let subShelvesText = null;
+    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
+        subShelvesText = String(data.sub_shelf).trim();
+    }
 
-    const subShelves = Array.isArray(data.sub_shelf)
-        ? data.sub_shelf
-        : (data.sub_shelf ? [data.sub_shelf] : []);
+    // Check for duplicate shelf_name + sub_shelf combination
+    if (data.shelf_name) {
+        let dupQuery;
+        let params;
 
-    // 🔍 SUB-SHELF DUPLICATE CHECK (GLOBAL)
-    if (subShelves.length) {
-        const dupQuery = `
-            SELECT id FROM ${this.schema}.shelf
-            WHERE sub_shelf ?| $1::text[]
-            LIMIT 1
-        `;
+        if (subShelvesText === null) {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf IS NULL
+                LIMIT 1
+            `;
+            params = [data.shelf_name];
+        } else {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf = $2
+                LIMIT 1
+            `;
+            params = [data.shelf_name, subShelvesText];
+        }
 
-        const dup = await sql.query(dupQuery, [subShelves]);
+        const dup = await sql.query(dupQuery, params);
 
         if (dup.rows.length > 0) {
-            throw new Error("Sub-shelf already exists");
+            throw new Error("This shelf name and sub-shelf combination already exists");
         }
     }
 
-    // ✅ INSERT
+    // INSERT
     const query = `
         INSERT INTO ${this.schema}.shelf
         (shelf_name, note, sub_shelf, status, createddate, lastmodifieddate)
-        VALUES ($1,$2,$3,$4,NOW(),NOW())
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
         RETURNING *
     `;
 
     const values = [
         data.shelf_name || null,
         data.note || null,
-        subShelves.length ? JSON.stringify(subShelves) : null,
-        data.status === true || data.status === "true"
+        subShelvesText,
+        data.status === true || data.status === "true" || data.status === "1"
     ];
 
-    const result = await sql.query(query, values);
-    return result.rows[0];
+    try {
+        const result = await sql.query(query, values);
+        return result.rows[0];
+    } catch (error) {
+        if (error.code === '23505') { // unique_violation
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
+        throw error;
+    }
 }
 
-
 async function updateById(id, data) {
+    let subShelvesText = null;
+    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
+        subShelvesText = String(data.sub_shelf).trim();
+    }
 
-    const subShelves = Array.isArray(data.sub_shelf)
-        ? data.sub_shelf
-        : (data.sub_shelf ? [data.sub_shelf] : []);
+    // Check for duplicates (excluding current id)
+    if (data.shelf_name) {
+        let dupQuery, params;
 
-    // 🔍 SUB-SHELF DUPLICATE CHECK (exclude current id)
-    if (subShelves.length) {
-        const dupQuery = `
-            SELECT id FROM ${this.schema}.shelf
-            WHERE id <> $2
-            AND sub_shelf ?| $1::text[]
-            LIMIT 1
-        `;
+        if (subShelvesText === null) {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE id <> $1
+                AND shelf_name = $2 
+                AND sub_shelf IS NULL
+                LIMIT 1
+            `;
+            params = [id, data.shelf_name];
+        } else {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE id <> $1
+                AND shelf_name = $2 
+                AND sub_shelf = $3
+                LIMIT 1
+            `;
+            params = [id, data.shelf_name, subShelvesText];
+        }
 
-        const dup = await sql.query(dupQuery, [
-            subShelves,
-            id
-        ]);
+        const dup = await sql.query(dupQuery, params);
 
         if (dup.rows.length > 0) {
-            throw new Error("Sub-shelf already exists");
+            throw new Error("This shelf name and sub-shelf combination already exists");
         }
     }
 
+    // UPDATE query
     const q = `
         UPDATE ${this.schema}.shelf
-        SET shelf_name=$2,
-            note=$3,
-            sub_shelf=$4,
-            status=$5,
-            lastmodifieddate=NOW()
-        WHERE id=$1
+        SET shelf_name = COALESCE($2, shelf_name),
+            note = COALESCE($3, note),
+            sub_shelf = COALESCE($4, sub_shelf),
+            status = COALESCE($5, status),
+            lastmodifieddate = NOW()
+        WHERE id = $1
         RETURNING *
     `;
 
-    const r = await sql.query(q, [
-        id,
-        data.shelf_name || null,
-        data.note || null,
-        subShelves.length ? JSON.stringify(subShelves) : null,
-        data.status === true || data.status === "true"
-    ]);
+    try {
+        const r = await sql.query(q, [
+            id,
+            data.shelf_name || null,
+            data.note || null,
+            subShelvesText,
+            data.status !== undefined ? (data.status === true || data.status === "true" || data.status === "1") : null
+        ]);
 
-    return r.rows[0];
+        if (r.rows.length === 0) {
+            throw new Error("Shelf not found");
+        }
+
+        return r.rows[0];
+    } catch (error) {
+        if (error.code === '23505') { // unique_violation
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
+        throw error;
+    }
 }
 
 // ================= DELETE =================

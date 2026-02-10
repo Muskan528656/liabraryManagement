@@ -4,7 +4,14 @@
 
 }
 
-
+/* book inventory  */
+.custom-card-header.card-header {
+  color: var(--primary-color) !important;
+  background: var(--primary-background-color) !important;
+  border-radius: 10px !important;
+  border: 1px solid #dee2e6 !important;
+  /* If needed */
+}
 /* Pulse animation for attention */
 @keyframes pulse {
   0% {

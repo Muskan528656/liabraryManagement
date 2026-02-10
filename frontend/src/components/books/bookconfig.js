@@ -1,6 +1,6 @@
 import { name } from "pubsub-js";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
-export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) => {
+export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, shelf = {}) => {
 
     console.log("externalData in getBooksConfig check:", externalData);
     const authors = props.authors || externalData.authors || externalData.author || [];
@@ -11,76 +11,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
 
     console.log("getBooksConfig - publishers:", publishers);
-    // const shelf = props.shelf || externalData.shelf || [];
-    const shelves = props.shelf || externalData.shelf || [];
-    const uniqueShelves = Object.values(
-        shelves.reduce((acc, shelf) => {
-            if (!acc[shelf.shelf_name]) {
-                acc[shelf.shelf_name] = shelf; // first occurrence
-            }
-            return acc;
-        }, {})
-    );
 
-    const shelfOptions = uniqueShelves.map(s => ({
-        value: s.shelf_name,
-        name: s.shelf_name
-    }));
-
-
-    console.log("shelfOptionsshelfOptions", shelfOptions)
-
-    const subShelfOptions = (selectedShelfName) => {
-
-        const matchedShelves = shelves.filter(
-            s => s.shelf_name === selectedShelfName
-        );
-        console.log("matchedShelvesmatchedShelves", matchedShelves)
-        let allSubs = [];
-
-        matchedShelves.forEach(shelf => {
-            let subs = shelf.sub_shelf || [];
-
-            if (typeof subs === "string") {
-                try {
-                    subs = JSON.parse(subs);
-                } catch {
-                    subs = [];
-                }
-            }
-
-            allSubs.push(...subs);
-        });
-
-        const uniqueSubs = [...new Set(allSubs)];
-        console.log("uniqueSubsuniqueSubs", uniqueSubs)
-
-        return uniqueSubs.map(ss => ({
-            value: ss,
-            name: ss
-        }));
-
-    };
-
-
-    // console.log("uniqueSubsuniqueSubs", uniqueSubs)
-    // console.log("shelvesshelves", shelf)
-    // const shelfOptions = shelf.map(s => ({
-    //     value: s.id,
-    //     name: s.shelf_name
-    // }));
-
-    // Dependent sub-shelf options
-    // const subShelfOptions = (selectedShelfId) => {
-    //     const shelf = shelves.find(s => s.id == selectedShelfId);
-    //     if (!shelf || !shelf.sub_shelves) return [];
-
-    //     return shelf.sub_shelves.map(ss => ({
-    //         value: ss,
-    //         name: ss
-    //     }));
-    // };
-    //changes
     const authorOptions = authors.map(a => ({
 
         // value: String(a.id),
@@ -129,13 +60,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
         authors: authorOptions,
         categories: categoryOptions,
         publishers: publisherOptions,
-        // shelf: shelf,
-        shelf: shelfOptions,
-        subShelfOptions: subShelfOptions,
-        // subShelfOptions: subShelfOptions,
 
-
-        // console.log("changes author",authors)
         moduleName: "book",
         moduleLabel: "Book",
         apiEndpoint: "book",
@@ -174,7 +99,8 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
             available_copies: 1,
             language: "",
             min_age: "",
-            max_age: ""
+            max_age: "",
+
         },
         columns: [
             { field: "title", label: "Title" },
@@ -221,9 +147,9 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}) 
                 colSize: 6,
             },
             {
-                name: "shelf_id",
-                label: "Shelf",
+                name: "shelf_name",
                 type: "select",
+                label: "Shelf",
                 options: "shelf",
                 required: false,
                 colSize: 6,

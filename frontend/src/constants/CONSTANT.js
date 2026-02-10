@@ -32,6 +32,8 @@ export const MODULES = {
   COMPANY: "Company",
   PLAN: "Plan",
   SETTINGS: "Settings",
+  SHELF: "Shelf",
+  GRADESECTION: "Grade Section",
 
   MY_PROFILE: "My Profile",
 

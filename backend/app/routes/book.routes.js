@@ -50,7 +50,9 @@ module.exports = (app) => {
           const filters = {
             days: req.query.days,
             startDate: req.query.startDate,
-            endDate: req.query.endDate
+            endDate: req.query.endDate,
+            category: req.query.category,
+            searchTerm: req.query.searchTerm
           };
 
           const reportData = await Book.generateBookPopularityReport(filters);
@@ -63,19 +65,79 @@ module.exports = (app) => {
     );
 
   router.get("/inventory-report",
-     fetchUser, checkPermission("Books", "allow_view"), 
-     async (req, res) => {   
-       try {  
-            Book.init(req.userinfo.tenantcode); 
-            const report = await Book.generateInventoryReport();      
-            res.json(report);   
+     fetchUser, checkPermission("Books", "allow_view"),
+     async (req, res) => {
+       try {
+            Book.init(req.userinfo.tenantcode);
+            const report = await Book.generateInventoryReport();
+            res.json(report);
           } catch (error) {
-            console.error("Error generating inventory report:", error);      
-            res.status(500).json({ errors: "Internal server error" });    
-          }  
-    });  
+            console.error("Error generating inventory report:", error);
+            res.status(500).json({ errors: "Internal server error" });
+          }
+    });
 
-  router.get("/:id", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
+  router.get("/export-excel",
+    fetchUser,
+    // checkPermission("Reports", "allow_view"),
+    async (req, res) => {
+      try {
+        Book.init(req.userinfo.tenantcode);
+
+        const filters = {
+          days: req.query.days,
+          startDate: req.query.startDate,
+          endDate: req.query.endDate,
+          category: req.query.category,
+          searchTerm: req.query.searchTerm
+        };
+
+        const workbook = await Book.exportBookPopularityReportExcel(filters);
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=book-popularity-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+      } catch (err) {
+        console.error("Error exporting to Excel:", err);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  );
+
+  router.get("/export-pdf",
+    fetchUser,
+    // checkPermission("Reports", "allow_view"),
+    async (req, res) => {
+      try {
+        Book.init(req.userinfo.tenantcode);
+
+        const filters = {
+          days: req.query.days,
+          startDate: req.query.startDate,
+          endDate: req.query.endDate,
+          category: req.query.category,
+          searchTerm: req.query.searchTerm
+        };
+
+        const doc = await Book.exportBookPopularityReportPDF(filters);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=book-popularity-report-${new Date().toISOString().split('T')[0]}.pdf`);
+
+        doc.pipe(res);
+        doc.end();
+      } catch (err) {
+        console.error("Error exporting to PDF:", err);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  );
+
+  router.get("/:id", fetchUser, 
+    // checkPermission("Books", "allow_view"), 
+    async (req, res) => {
     try {
       Book.init(req.userinfo.tenantcode);
       const book = await Book.findById(req.params.id);
