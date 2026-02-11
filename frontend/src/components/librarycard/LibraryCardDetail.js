@@ -752,17 +752,28 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           { label: "Administrator", value: "Administrator" },
         ],
         colSize: 3,
-        condition: (data) => data.type_label?.toLowerCase() === "teacher",
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "teacher";
+        }
       },
-      {
+
+     {
         key: "grade_name",
         label: "Grade",
         type: "select",
         options: grades,
         colSize: 3,
-        condition: (data) => data.type_label?.toLowerCase() === "student",
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
       },
-     {
+      {
         key: "section_name",
         label: "Section",
         type: "select",
@@ -771,8 +782,14 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           return gradeSectionsMap[data.grade_name] || [];
         },
         colSize: 3,
-        condition: (data) => data.type_label?.toLowerCase() === "student",
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
       }
+
     ],
   };
 
