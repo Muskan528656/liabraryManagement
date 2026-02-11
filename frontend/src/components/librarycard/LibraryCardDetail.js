@@ -73,6 +73,9 @@ const LibraryCardDetail = ({
   const [planStatus, setPlanStatus] = useState("No Plan");
   const [visible, setVisible] = useState(true);
 
+const [grades, setGrades] = useState([]);
+const [gradeSectionsMap, setGradeSectionsMap] = useState({});
+
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
 
@@ -103,7 +106,8 @@ const LibraryCardDetail = ({
       "father_gurdian_name",
       "parent_contact",
       "dob",
-      "type_id"
+      "type_id",
+      
     ],
     []
   );
@@ -115,6 +119,33 @@ const LibraryCardDetail = ({
     loading: permissions.loading || false
   });
 
+
+  const fetchGradesAndSections = async () => {
+    try {
+      const api = new DataApi("grade-sections/grouped");
+      const res = await api.fetchAll();
+
+      const list = Array.isArray(res.data) ? res.data : [];
+
+      const gradeList = list.map(g => ({
+        label: g.grade_name,
+        value: g.grade_name,
+      }));
+
+      const sectionMap = {};
+      list.forEach(g => {
+        sectionMap[g.grade_name] = g.sections.map(s => ({
+          label: s.name,
+          value: s.name,
+        }));
+      });
+
+      setGrades(gradeList);
+      setGradeSectionsMap(sectionMap);
+    } catch (err) {
+      console.error("Failed to fetch grades/sections", err);
+    }
+  };
 
   useEffect(() => {
     if (!permissions || Object.keys(permissions).length === 0) {
@@ -145,6 +176,7 @@ const LibraryCardDetail = ({
         }
       };
       fetchPermissions();
+      fetchGradesAndSections();
     }
   }, []);
   const effectivePermissions = Object.keys(permissions).length > 0
@@ -610,6 +642,15 @@ const LibraryCardDetail = ({
       value: item.id,
     }));
   }, [objectTypes]);
+
+
+  const getSelectedType = (data) => {
+  return typeOptions.find(
+    t => String(t.value) === String(data.type_id || data.type)
+  );
+};
+
+
   const fields = {
     details: [
       {
@@ -695,6 +736,54 @@ const LibraryCardDetail = ({
         },
         colSize: 3,
       },
+    {
+        key: "job_title",
+        label: "Job Title",
+        type: "select",
+        options: [
+          { label: "Principal", value: "Principal" },
+          { label: "Vice Principal", value: "Vice Principal" },
+          { label: "Teacher", value: "Teacher" },
+          { label: "Assistant Teacher", value: "Assistant Teacher" },
+          { label: "Librarian", value: "Librarian" },
+          { label: "Counselor", value: "Counselor" },
+          { label: "Administrator", value: "Administrator" },
+        ],
+        colSize: 3,
+        condition: (data) => {
+          const type = getSelectedType(data);
+          return type?.label?.toLowerCase() === "teacher";
+        },
+      },
+      {
+        key: "grade",
+        label: "Grade",
+        type: "select",
+        options: grades,
+        colSize: 3,
+        condition: (data) => {
+          const selected = typeOptions.find(
+            t => t.value === (data.type_id || data.type)
+          );
+          return selected?.label?.toLowerCase() === "student";
+        },
+      },
+     {
+        key: "section",
+        label: "Section",
+        type: "select",
+        options: (data) => {
+          if (!data.grade) return [];
+          return gradeSectionsMap[data.grade] || [];
+        },
+        colSize: 3,
+        condition: (data) => {
+          const selected = typeOptions.find(
+            t => t.value === (data.type_id || data.type)
+          );
+          return selected?.label?.toLowerCase() === "student";
+        },
+      }
     ],
   };
 
@@ -1198,6 +1287,8 @@ const LibraryCardDetail = ({
       setTempData(editData);
       await fetchLookupData();
       await fetchTypeOptions();
+      await fetchGradesAndSections();
+
     }
   };
   const fetchLookupData = async () => {
@@ -1521,6 +1612,7 @@ const LibraryCardDetail = ({
       setTempData((prev) => ({
         ...(prev || {}),
         [fieldKey]: value,
+        ...(fieldKey === "grade" ? { section: "" } : {}),
       }));
     }
   };
@@ -1706,6 +1798,11 @@ const LibraryCardDetail = ({
     const currentData = isEditing ? tempData || {} : data;
     if (!currentData) return null;
 
+    // Check condition if present
+    if (field.condition && !field.condition(currentData)) {
+      return null;
+    }
+
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
     const hasEditPermission = canEdit;
@@ -1807,7 +1904,12 @@ const LibraryCardDetail = ({
     }
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field);
+      let options;
+      if (typeof field.options === 'function') {
+        options = field.options(currentData);
+      } else {
+        options = getSelectOptions(field);
+      }
       const rawValue = currentData[field.key];
       const currentValue = normalizeOptionValue(rawValue);
 

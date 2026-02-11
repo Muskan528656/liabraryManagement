@@ -171,10 +171,13 @@ async function create(cardData, userId) {
       "registration_date",
       "plan_id",
       "type_id",
+      "job_title",
+      "grade_id",
       "createddate",
       "lastmodifieddate",
       "createdbyid",
       "lastmodifiedbyid",
+      "library_member_type"
     ];
 
     const placeholders = fields.map((_, i) => `$${i + 1}`).join(", ");
@@ -195,34 +198,32 @@ async function create(cardData, userId) {
         ? cardData.is_active
         : cardData.status === true || cardData.status === "true";
 
-    const fullName = `${cardData.first_name || ""} ${
-      cardData.last_name || ""
-    }`.trim();
-
+    const fullName = `${cardData.first_name || ""} ${cardData.last_name || ""
+      }`.trim();
     const values = [
       cardData.card_number,
       isActive,
       imageValue,
       cardData.subscription_id || null,
-
       cardData.first_name || null,
       cardData.last_name || null,
       fullName || null,
-
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
-
       cardData.email || null,
       cardData.phone_number || null,
       cardData.country_code || null,
       cardData.registration_date || null,
       cardData.plan_id || null,
       cardData.type_id || null,
+      cardData.job_title || null,
+      cardData.grade_id || null,
       new Date(),
       new Date(),
       userId,
       userId,
+      cardData.library_member_type || null
     ];
 
 
@@ -281,6 +282,10 @@ async function updateById(id, cardData, userId) {
       "dob",
       "father_gurdian_name",
       "parent_contact",
+      "job_title",
+      "grade_id",
+      "library_member_type"
+
     ];
 
     allowedFields.forEach((field) => {

@@ -1,4 +1,4 @@
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const GradeSection = require("../models/grademodel.js");
 
 module.exports = (app) => {
@@ -15,6 +15,22 @@ module.exports = (app) => {
             res.status(500).json({ error: err.message });
         }
     });
+
+
+     router.get("/grouped", fetchUser, async (req, res) => {
+            
+            try {
+                GradeSection.init(req.userinfo.tenantcode);
+                const data = await GradeSection.findGroupedGrades();
+                console.log("data=>",data);
+                res.json(data);
+            } catch (err) {
+                console.error("Error fetching grouped grade:", err);
+                res.status(500).json({ error: "Internal server error" });
+            }
+        });
+    
+    
 
     // ================= GET BY ID =================
     router.get("/:id", fetchUser, async (req, res) => {
