@@ -146,7 +146,8 @@ const LibraryCard = ({ permissions, ...props }) => {
     setShowBarcodeModal(false);
     setSelectedCard(null);
   };
-
+  
+  console.log("setshowlibraryimportmodel=>",showLibraryImportModal)
   return (
     <>
       <DynamicCRUD
@@ -164,7 +165,8 @@ const LibraryCard = ({ permissions, ...props }) => {
             onClick: () => setShowLibraryImportModal(true),
           },
         ]}
-      />
+        />
+
 
       <LibraryImportModal
         show={showLibraryImportModal}

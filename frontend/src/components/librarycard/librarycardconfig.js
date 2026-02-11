@@ -166,35 +166,44 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             console.warn("No object type data found");
         }
 
-            const gradeApi = new DataApi("grade-sections/grouped");
+          const gradeApi = new DataApi("grade-sections/grouped");
             const gradeResponse = await gradeApi.fetchAll();
 
-            console.log("gradeResponse=>", gradeResponse.data)
+            console.log("gradeResponse=>", gradeResponse.data);
 
             const gradesList = Array.isArray(gradeResponse.data)
-            ? gradeResponse.data
-            : [];
+                ? gradeResponse.data
+                : [];
 
             if (gradesList.length > 0) {
-            grades = gradesList.map(g => ({
-                value: g.id,
-                label: g.grade_name
-            }));
 
-            gradeSectionsMap = {};
-            gradesList.forEach(g => {
-                gradeSectionsMap[g.id] = g.sections.map(s => ({
-                value: s.id,
-                label: s.name
+                // ✅ Use grade_name as value
+                grades = gradesList.map(g => ({
+                    value: g.grade_name,
+                    label: g.grade_name
                 }));
-            });
 
-            sections = [...new Set(
-                gradesList.flatMap(g => g.sections.map(s => s.name))
-            )].map(s => ({ value: s, label: s }));
+                // ✅ Create section map using grade_name as key
+                gradeSectionsMap = {};
+
+                gradesList.forEach(g => {
+                    gradeSectionsMap[g.grade_name] = Array.isArray(g.sections)
+                        ? g.sections.map(s => ({
+                            value: s.id,
+                            label: s.name
+                        }))
+                        : [];
+                });
+
+                // Optional flat section list
+                sections = [
+                    ...new Set(
+                        gradesList.flatMap(g =>
+                            (g.sections || []).map(s => s.name)
+                        )
+                    )
+                ].map(s => ({ value: s, label: s }));
             }
-
-            
             
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -329,7 +338,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             job_title: "",
             grade_id: "",
             section_id: "",
-            code_type:"",
         },
 
         formFields:[
@@ -407,34 +415,35 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 required: false,
                 colSize: 6,
             },
-           
             {
                 name: "type_id",
                 label: "Type",
                 type: "select",
                 options: objectTypesList,
                 colSize: 6,
-                onChange: (value, formData, setFormData) => {
-                  const selectedType = objectTypesList.find(t => t.value === value);
-
+               onChange: (value, formData, setFormData) => {
                 setFormData(prev => ({
                     ...prev,
                     type_id: value,
-                    type_code: selectedType?.type || "", 
-                    grade_id: value,
+                    grade_id: "",
                     section_id: "",
                     job_title: ""
                 }));
-                }
-
+            }
             },
            {
             name: "job_title",
             label: "Job Title",
-            type: "select",
-            options: jobTitles,
+            type: "text",
+            // options: jobTitles,
             colSize: 6,
-            condition: (formData) => formData.type_code === "teacher"
+            // condition: (formData) => formData.type_code === "teacher"
+            condition: (formData) => {
+                const selectedType = objectTypesList.find(
+                    t => String(t.value) === String(formData.type_id)
+                );
+                return selectedType?.type === "teacher";
+            }
             },
 
            {
@@ -446,7 +455,14 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 { value: "", label: "Select Grade" },
                 ...grades
             ],
-            condition: (formData) => formData.type_code === "student"
+            // condition: (formData) => formData.type_code === "student"
+            condition: (formData) => {
+
+                const selectedType = objectTypesList.find(
+                    t => String(t.value) === String(formData.type_id)
+                );
+                return selectedType?.type === "student";
+            }
             },
             {
                 name: "section_id",
@@ -454,17 +470,29 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 type: "select",
                 colSize: 6,
                 options: (formData) => {
-                    if (!formData.grade) {
-                    return [{ value: "", label: "Select Section" }];
+
+                    console.log("Selected Grade:", formData.grade_id);
+                    console.log("Section Map:", gradeSectionsMap);
+
+
+                    if (!formData.grade_id) {
+                        return [{ value: "", label: "Select Section" }];
                     }
+
                     return [
-                    { value: "", label: "Select Section" },
-                    ...(gradeSectionsMap[formData.grade_id] || [])
+                        { value: "", label: "Select Section" },
+                        // ...(gradeSectionsMap[String(formData.grade_id)] || [])
+                        ...(gradeSectionsMap[formData.grade_id] || [])
+
                     ];
                 },
-                condition: (formData) => formData.type_code === "student"
+                condition: (formData) => {
+                    const selectedType = objectTypesList.find(
+                        t => String(t.value) === String(formData.type_id)
+                    );
+                    return selectedType?.type === "student";
+                }
             },
-
             {
                 name: "plan_id",
                 label: "Plan",

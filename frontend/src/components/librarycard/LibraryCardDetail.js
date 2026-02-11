@@ -71,6 +71,7 @@ const LibraryCardDetail = ({
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [objectTypes, setObjectTypes] = useState([]);
   const [planStatus, setPlanStatus] = useState("No Plan");
+  const [renderTrigger, setRenderTrigger] = useState(0);
 
 const [grades, setGrades] = useState([]);
 const [gradeSectionsMap, setGradeSectionsMap] = useState({});
@@ -621,18 +622,21 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
   };
   const fetchTypeOptions = async () => {
     try {
-      const api = new DataApi("librarycard");
-      const res = await api.get("/object-types");
+      const objectTypeApi = new DataApi("objecttype");
+      const res = await objectTypeApi.fetchAll();
 
+      let objectTypeData = [];
 
-
-      if (res.data?.success) {
-        setObjectTypes(res.data.data || []);
-
-      } else {
-        console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
-        setObjectTypes([]);
+      if (res.success && res.data && Array.isArray(res.data)) {
+        objectTypeData = res.data;
+      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        objectTypeData = res.data.data;
+      } else if (Array.isArray(res)) {
+        objectTypeData = res;
       }
+
+      console.log("Fetched object types:", objectTypeData);
+      setObjectTypes(objectTypeData.filter(type => type.status === 'Active' || type.status === true));
     } catch (err) {
       console.error("Error fetching object types:", err);
       setObjectTypes([]);
@@ -727,30 +731,18 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         colSize: 3,
       },
       {
-        key: "is_active",
-        label: "Status",
-        type: "badge",
-        badgeConfig: {
-          true: "success",
-          false: "secondary",
-          true_label: "Active",
-          false_label: "Inactive",
-        },
-        colSize: 3,
-      },
-      {
         key: "job_title",
         label: "Job Title",
-        type: "select",
-        options: [
-          { label: "Principal", value: "Principal" },
-          { label: "Vice Principal", value: "Vice Principal" },
-          { label: "Teacher", value: "Teacher" },
-          { label: "Assistant Teacher", value: "Assistant Teacher" },
-          { label: "Librarian", value: "Librarian" },
-          { label: "Counselor", value: "Counselor" },
-          { label: "Administrator", value: "Administrator" },
-        ],
+        type: "text",
+        // options: [
+        //   { label: "Principal", value: "Principal" },
+        //   { label: "Vice Principal", value: "Vice Principal" },
+        //   { label: "Teacher", value: "Teacher" },
+        //   { label: "Assistant Teacher", value: "Assistant Teacher" },
+        //   { label: "Librarian", value: "Librarian" },
+        //   { label: "Counselor", value: "Counselor" },
+        //   { label: "Administrator", value: "Administrator" },
+        // ],
         colSize: 3,
         condition: (data) => {
           const selectedType = typeOptions.find(
@@ -788,7 +780,19 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           );
           return selectedType?.label?.toLowerCase() === "student";
         }
-      }
+      },
+       {
+        key: "is_active",
+        label: "Status",
+        type: "badge",
+        badgeConfig: {
+          true: "success",
+          false: "secondary",
+          true_label: "Active",
+          false_label: "Inactive",
+        },
+        colSize: 3,
+      },
 
     ],
   };
@@ -813,7 +817,6 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       if (barcodeContainerRef.current && data?.card_number) {
         try {
           barcodeContainerRef.current.innerHTML = '';
-
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           barcodeContainerRef.current.appendChild(svg);
 
@@ -1563,21 +1566,37 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       }
 
 
-
       if (updatedData) {
-
         setData(updatedData);
-
         setOriginalData(JSON.parse(JSON.stringify(updatedData)));
-
         setCardData(updatedData);
-
       }
+
+
+
+      // if (updatedData) {
+
+      //   setData({ ...updatedData });
+
+      //   setOriginalData({ ...JSON.parse(JSON.stringify(updatedData)) });
+
+      //   setCardData({ ...updatedData });
+
+      // }
+
+      // Fetch type options to ensure conditional fields render correctly
+      await fetchTypeOptions();
+
+      // Force re-render to update conditional fields
+      setRenderTrigger(prev => prev + 1);
 
       PubSub.publish("RECORD_SAVED_TOAST", {
         title: "Success",
         message: "Record saved successfully",
       });
+
+
+    
 
       resetImageSelection();
 
@@ -1588,6 +1607,12 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       setIsEditing(false);
 
       setTempData(null);
+      await fetchData();       // reload main data state
+
+      setIsEditing(false);
+      setTempData(null);
+
+
 
     } catch (error) {
       console.error(`Error updating ${moduleLabel}:`, error);
