@@ -28,23 +28,34 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission("Book Issue", "allow_view"),
+    async (req, res) => {
+      try {
+        BookIssue.init(req.userinfo.tenantcode);
 
-  router.get("/", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
-    try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findAll();
-      return res.status(200).json(issues);
-    } catch (error) {
-      console.error("Error fetching book issues:", error);
-      return res.status(500).json({ errors: "Internal server error" });
+        const memberType = req.userinfo.library_member_type;
+
+        const issues = await BookIssue.findAll(memberType);
+
+        return res.status(200).json(issues);
+
+      } catch (error) {
+        console.error("Error fetching book issues:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
     }
-  });
+  );
 
 
   router.get("/active", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findActive();
+      // const issues = await BookIssue.findActive();
+      const memberType = req.userinfo.library_member_type;
+      const issues = await BookIssue.findActive(memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching active issues:", error);
@@ -56,7 +67,9 @@ module.exports = (app) => {
   router.get("/book/:bookId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findByBookId(req.params.bookId);
+      // const issues = await BookIssue.findByBookId(req.params.bookId);
+      const memberType = req.userinfo.library_member_type;
+      const issues = await BookIssue.findByBookId(req.params.bookId, memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching book issues:", error);
@@ -68,7 +81,9 @@ module.exports = (app) => {
   router.get("/user/:userId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findByUserId(req.params.userId);
+      // const issues = await BookIssue.findByUserId(req.params.userId);
+      const memberType = req.userinfo.library_member_type;
+      const issues = await BookIssue.findByUserId(req.params.userId, memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching user issues:", error);
@@ -92,7 +107,9 @@ module.exports = (app) => {
   router.get("/:id", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
       BookIssue.init(req.userinfo.tenantcode);
-      const issue = await BookIssue.findById(req.params.id);
+      // const issue = await BookIssue.findById(req.params.id);
+      const memberType = req.userinfo.library_member_type;
+      const issue = await BookIssue.findById(req.params.id, memberType);
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }
@@ -344,7 +361,10 @@ module.exports = (app) => {
       const userId = req.userinfo.id;
 
 
-      const issue = await BookIssue.findById(req.params.id);
+      // const issue = await BookIssue.findById(req.params.id);
+      const memberType = req.userinfo.library_member_type;
+      const issue = await BookIssue.findById(req.params.id, memberType);
+
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }

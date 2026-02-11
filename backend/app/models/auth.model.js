@@ -99,6 +99,7 @@ async function createUser(newUser) {
     whatsapp_number,
     whatsapp_settings,
     country_code,
+    library_member_type
   } = newUser;
 
   let finalCompanyId = companyid;
@@ -140,7 +141,7 @@ async function createUser(newUser) {
   }
 
   const result = await sql.query(
-    `INSERT into ${this.schema}.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code`,
+    `INSERT into ${this.schema}.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code,library_member_type`,
     [
       firstname,
       lastname,
@@ -153,6 +154,7 @@ async function createUser(newUser) {
       whatsapp_number,
       whatsapp_settings,
       country_code,
+      library_member_type
     ]
   );
 
@@ -162,32 +164,17 @@ async function createUser(newUser) {
   return null;
 }
 
-
 async function findByEmail(email) {
-
   console.log("Finding user by email:", email);
+
   if (!this.schema) {
     console.error("Error: Schema not initialized in findByEmail");
-    throw new Error(
-      "Schema name is not initialized. Please call Auth.init() first."
-    );
+    throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
 
   const emailLower = email ? email.toLowerCase().trim() : "";
 
   try {
-    const userCheck = await sql.query(
-      `SELECT * FROM ${this.schema}.user 
-       WHERE LOWER(TRIM(email)) = $1 
-       LIMIT 1`,
-      [emailLower]
-    );
-
-    if (!userCheck || userCheck.rows.length === 0) {
-      return null;
-    }
-
-    const user = userCheck.rows[0];
     const result = await sql.query(
       `
       WITH user_info AS (
@@ -201,7 +188,8 @@ async function findByEmail(email) {
           u.password,
           u.userrole,
           u.companyid,
-          u.isactive
+          u.isactive,
+          u.library_member_type
         FROM ${this.schema}.user u
         WHERE LOWER(TRIM(u.email)) = $1
         LIMIT 1
@@ -215,10 +203,10 @@ async function findByEmail(email) {
         'country_code', COALESCE(u.country_code, ''),
         'password', u.password,
         'userrole', u.userrole,
-        'role_name', ur.role_name,           
+        'role_name', COALESCE(ur.role_name, ''),
         'companyid', u.companyid,
         'isactive', u.isactive,
-
+        'library_member_type', u.library_member_type,
         -- Company info
         'time_zone', COALESCE(c.time_zone, 'UTC'),
         'companyname', COALESCE(c.name, ''),
@@ -232,31 +220,29 @@ async function findByEmail(email) {
       ) AS userinfo
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
-     LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
+      LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
       LIMIT 1;
-    `,
+      `,
       [emailLower]
     );
 
     if (result.rows.length > 0) {
-      const userData = result.rows[0].userinfo;
-      return { userinfo: userData };
+      return { userinfo: result.rows[0].userinfo };
     }
-
-
     return {
       userinfo: {
-        id: user.id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        email: user.email,
-        phone: user.phone || "",
-        country_code: user.country_code || "",
-        password: user.password,
-        userrole: user.userrole,
-        role_name: userinfo.role_name,
-        companyid: user.companyid,
-        isactive: user.isactive,
+        id: null,
+        firstname: "",
+        lastname: "",
+        email: emailLower,
+        phone: "",
+        country_code: "",
+        password: "",
+        userrole: null,
+        role_name: "",
+        companyid: null,
+        isactive: false,
+        library_member_type: null,
         time_zone: "UTC",
         companyname: "",
         companystreet: "",
@@ -265,8 +251,8 @@ async function findByEmail(email) {
         companystate: "",
         companycountry: "",
         tenantcode: "",
-        logourl: "",
-      },
+        logourl: ""
+      }
     };
   } catch (error) {
     console.error("Error in findByEmail:", error);

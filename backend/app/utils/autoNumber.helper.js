@@ -29,13 +29,6 @@ async function getNextAutoNumber(tableName, defaults = {}, userId = null) {
 }
 
 
-
-
-
-
-
-
-
 async function generateAutoNumberSafe(tableName, userId, prefix = "GEN-", digitCount = 5) {
     try {
         return await getNextAutoNumber(tableName, { prefix: prefix, digit_count: digitCount }, userId);
@@ -44,8 +37,32 @@ async function generateAutoNumberSafe(tableName, userId, prefix = "GEN-", digitC
         throw error;
     }
 }
+function applyMemberTypeFilter(baseQuery, memberType, values = []) {
+    if (!memberType) {
+        return { query: baseQuery, values };
+    }
+
+    const type = memberType.toLowerCase();
+
+  
+    if (type === "all" || type === "other") {
+        return { query: baseQuery, values };
+    }
+
+    const condition = `LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+    values.push(memberType);
+
+    if (baseQuery.toLowerCase().includes("where")) {
+        baseQuery += ` AND ${condition}`;
+    } else {
+        baseQuery += ` WHERE ${condition}`;
+    }
+
+    return { query: baseQuery, values };
+}
 
 module.exports = {
     getNextAutoNumber,
-    generateAutoNumberSafe
+    generateAutoNumberSafe,
+    applyMemberTypeFilter
 };

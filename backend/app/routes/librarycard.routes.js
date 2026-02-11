@@ -25,6 +25,7 @@ const { body, validationResult } = require("express-validator");
 const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const LibraryCard = require("../models/librarycard.model.js");
 const sql = require("../models/db.js");
+const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 
 require("dotenv").config();
 const uploadDir = path.join(
@@ -95,24 +96,39 @@ module.exports = (app) => {
       res.status(500).json({ error: "Auto-config failed" });
     }
   });
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission("Library Members", "allow_view"),
+    async (req, res) => {
+      try {
+        LibraryCard.init(req.userinfo.tenantcode);
 
+        const memberType = req.userinfo.library_member_type;
 
-  router.get("/", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
-    try {
-      LibraryCard.init(req.userinfo.tenantcode);
-      const cards = await LibraryCard.findAll();
-      return res.status(200).json(cards);
-    } catch (error) {
-      console.error("Error fetching library cards:", error);
-      return res.status(500).json({ error: "Internal server error" });
+        console.log("Member Type:", memberType);
+
+        const cards = await LibraryCard.findAll(memberType);
+
+        return res.status(200).json(cards);
+
+      } catch (error) {
+        console.error("Error fetching library cards:", error);
+        return res.status(500).json({ error: "Internal server error" });
+      }
     }
-  });
+  );
+
 
 
   router.get("/card/:cardNumber", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
-      const card = await LibraryCard.findByCardNumber(req.params.cardNumber);
+      // const card = await LibraryCard.findByCardNumber(req.params.cardNumber);
+      const card = await LibraryCard.findByCardNumber(
+        req.params.cardNumber,
+        req.userinfo.library_member_type
+      );
       if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
@@ -125,7 +141,11 @@ module.exports = (app) => {
   router.get("/student/:studentId", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
-      const card = await LibraryCard.findByStudentId(req.params.studentId);
+      // const card = await LibraryCard.findByStudentId(req.params.studentId);
+      const card = await LibraryCard.findByStudentId(
+        req.params.studentId,
+        req.userinfo.library_member_type
+      );
       if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
@@ -138,7 +158,11 @@ module.exports = (app) => {
   router.get("/:id", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
       LibraryCard.init(req.userinfo.tenantcode);
-      const card = await LibraryCard.findById(req.params.id);
+      // const card = await LibraryCard.findById(req.params.id);
+      const card = await LibraryCard.findById(
+        req.params.id,
+        req.userinfo.library_member_type
+      );
       if (!card) return res.status(404).json({ error: "Library card not found" });
       return res.status(200).json(card);
     } catch (error) {
@@ -246,111 +270,86 @@ module.exports = (app) => {
     }
   );
 
+  router.put(
+    "/:id",
+    fetchUser,
+    checkPermission("Library Members", "allow_edit"),
+    upload.single("image"),
+    async (req, res) => {
+      try {
+        LibraryCard.init(req.userinfo.tenantcode);
 
-  router.put("/:id", fetchUser, checkPermission("Library Members", "allow_edit"), upload.single('image'), async (req, res) => {
-    try {
-      LibraryCard.init(req.userinfo.tenantcode);
-
-
-      const existingCard = await LibraryCard.findById(req.params.id);
-      if (!existingCard) {
-        return res.status(404).json({ error: "Library card not found" });
-      }
-
-      const userId = req.userinfo?.id || null;
-      const cardData = { ...req.body };
-      const previousImagePath = existingCard.image;
-
-      if (req.file) {
-
-        if (previousImagePath) {
-          deleteFileIfExists(previousImagePath);
+        const existingCard = await LibraryCard.findById(req.params.id);
+        if (!existingCard) {
+          return res.status(404).json({ error: "Library card not found" });
         }
-        cardData.image = `/uploads/librarycards/${req.file.filename}`;
-      } else if (cardData.image === 'null' || cardData.image === null) {
-        console.log("else if block for image nullification triggered.");
-        if (previousImagePath) {
-          deleteFileIfExists(previousImagePath);
+
+        const userId = req.userinfo?.id || null;
+        const cardData = { ...req.body };
+
+        console.log("Incoming body:", cardData);
+
+        const previousImagePath = existingCard.image;
+
+        if (req.file) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          cardData.image = `/uploads/librarycards/${req.file.filename}`;
+        } else if (cardData.image === "null" || cardData.image === null) {
+          if (previousImagePath) deleteFileIfExists(previousImagePath);
+          cardData.image = null;
         }
-        cardData.image = null;
-      }
 
 
-      if (cardData.status !== undefined) {
-        cardData.is_active = cardData.status === 'true' || cardData.status === true;
-      }
-
-
-      if (cardData.plan_id !== undefined) {
-        cardData.subscription_id = cardData.plan_id;
-        delete cardData.plan_id;
-      }
-
-
-      if (cardData.type_id !== undefined && !cardData.type) {
-        cardData.type = cardData.type_id;
-        delete cardData.type_id;
-      }
-
-
-      if (cardData.first_name || cardData.last_name) {
-        const firstName = cardData.first_name || existingCard.first_name;
-        const lastName = cardData.last_name || existingCard.last_name;
-        cardData.name = `${firstName} ${lastName}`;
-      }
-
-
-      if (cardData.dob) {
-
-        cardData.dob = new Date(cardData.dob);
-      }
-
-      if (cardData.registration_date) {
-
-        cardData.registration_date = new Date(cardData.registration_date);
-      }
-
-
-      const fieldsToUpdate = {
-        ...cardData,
-        lastmodifiedbyid: userId,
-        lastmodifieddate: new Date()
-      };
-
-
-      Object.keys(fieldsToUpdate).forEach(key => {
-        if (fieldsToUpdate[key] === '' && key !== 'name') {
-          fieldsToUpdate[key] = null;
+        if (cardData.status !== undefined) {
+          cardData.is_active =
+            cardData.status === "true" || cardData.status === true;
         }
-      });
 
 
+        if (cardData.plan_id !== undefined) {
+          cardData.subscription_id = cardData.plan_id;
+          delete cardData.plan_id;
+        }
 
 
-      const updatedCard = await LibraryCard.updateById(req.params.id, fieldsToUpdate, userId);
+        if (cardData.type_id !== undefined) {
+          cardData.type = cardData.type_id;
+          delete cardData.type_id;
+        }
 
+        if (cardData.first_name || cardData.last_name) {
+          cardData.name = `${cardData.first_name || ""} ${cardData.last_name || ""
+            }`.trim();
+        }
+        if (cardData.dob) cardData.dob = new Date(cardData.dob);
+        if (cardData.registration_date)
+          cardData.registration_date = new Date(cardData.registration_date);
 
-      const responseCard = {
-        ...updatedCard,
+        Object.keys(cardData).forEach((key) => {
+          if (cardData[key] === "") cardData[key] = null;
+        });
+        if (cardData.library_member_type !== undefined) {
+          cardData.library_member_type = cardData.library_member_type;
+        }
+        console.log("cardDatacardDatacardData",cardData)
+        const updatedCard = await LibraryCard.updateById(
+          req.params.id,
+          cardData,
+          userId
+        );
 
-        dob: updatedCard.dob ? new Date(updatedCard.dob).toISOString().split('T')[0] : null,
-        registration_date: updatedCard.registration_date ? new Date(updatedCard.registration_date).toISOString().split('T')[0] : null,
-
-        plan_id: updatedCard.subscription_id,
-
-        type_id: updatedCard.type
-      };
-
-      return res.status(200).json({
-        success: true,
-        data: responseCard,
-        message: "Library card updated successfully",
-      });
-    } catch (error) {
-      console.error("❌ Error updating library card:", error);
-      return res.status(500).json({ error: error.message });
+        return res.status(200).json({
+          success: true,
+          data: updatedCard,
+          message: "Library card updated successfully",
+        });
+      } catch (error) {
+        console.error("❌ Error updating:", error);
+        return res.status(500).json({ error: error.message });
+      }
     }
-  });
+  );
+
 
   router.delete("/:id", fetchUser, checkPermission("Library Members", "allow_delete"), async (req, res) => {
     try {

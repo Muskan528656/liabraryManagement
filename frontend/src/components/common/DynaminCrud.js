@@ -4,7 +4,6 @@ import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, 
 import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
-// import Loader from "./Loader";
 import TableHeader from "./TableHeader";
 import FormModal from "./FormModal";
 import DataApi from "../../api/dataApi";
@@ -671,58 +670,58 @@ const DynamicCRUD = ({
     // }, [formFields, relatedData, formData, editingItem]);
 
     const getProcessedFormFields = useCallback(() => {
-    return formFields
-        .map(field => {
-        if (!field) return null;
+        return formFields
+            .map(field => {
+                if (!field) return null;
 
-        let processedField = { ...field };
+                let processedField = { ...field };
 
-        // ===== READONLY / REQUIRED FIXES =====
-        if (field.readOnlyWhenEditing && editingItem) {
-            processedField.readOnly = true;
-        }
+                // ===== READONLY / REQUIRED FIXES =====
+                if (field.readOnlyWhenEditing && editingItem) {
+                    processedField.readOnly = true;
+                }
 
-        if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
-            processedField.required = false;
-        }
+                if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
+                    processedField.required = false;
+                }
 
-        // ===== OPTIONS PROCESSING (IMPORTANT PART) =====
-        if (field.type === 'select' && field.options) {
-            let optionsArray = [];
+                // ===== OPTIONS PROCESSING (IMPORTANT PART) =====
+                if (field.type === 'select' && field.options) {
+                    let optionsArray = [];
 
-            if (Array.isArray(field.options)) {
-            optionsArray = field.options;
-            } else if (typeof field.options === 'function') {
-            optionsArray = field.options(formData) || [];
-            } else if (typeof field.options === 'string') {
-            const relatedOptions = relatedData[field.options];
-            if (Array.isArray(relatedOptions)) {
-                optionsArray = relatedOptions.map(item => ({
-                value: item.id?.toString() || '',
-                label: item.name || item.title || item.email || `Item ${item.id}`
-                }));
-            }
-            }
+                    if (Array.isArray(field.options)) {
+                        optionsArray = field.options;
+                    } else if (typeof field.options === 'function') {
+                        optionsArray = field.options(formData) || [];
+                    } else if (typeof field.options === 'string') {
+                        const relatedOptions = relatedData[field.options];
+                        if (Array.isArray(relatedOptions)) {
+                            optionsArray = relatedOptions.map(item => ({
+                                value: item.id?.toString() || '',
+                                label: item.name || item.title || item.email || `Item ${item.id}`
+                            }));
+                        }
+                    }
 
-            optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
+                    optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
 
-            if (!optionsArray.some(opt => opt.value === '')) {
-            optionsArray = [{ value: '', label: `Select ${field.label}` }, ...optionsArray];
-            }
+                    if (!optionsArray.some(opt => opt.value === '')) {
+                        optionsArray = [{ value: '', label: `Select ${field.label}` }, ...optionsArray];
+                    }
 
-            processedField.options = optionsArray;
-        }
+                    processedField.options = optionsArray;
+                }
 
-        return processedField;
-        })
-        // ✅ CONDITION MUST BE APPLIED LAST
-        .filter(field => {
-        if (!field) return false;
-        if (typeof field.condition === "function") {
-            return field.condition(formData);
-        }
-        return true;
-        });
+                return processedField;
+            })
+            // ✅ CONDITION MUST BE APPLIED LAST
+            .filter(field => {
+                if (!field) return false;
+                if (typeof field.condition === "function") {
+                    return field.condition(formData);
+                }
+                return true;
+            });
     }, [formFields, relatedData, formData, editingItem]);
 
 
@@ -905,7 +904,7 @@ const DynamicCRUD = ({
             } else {
 
                 const submitData = { ...formData };
-                
+
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
                 });

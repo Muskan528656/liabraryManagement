@@ -25,19 +25,33 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
-    try {
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission("Book Submissions", "allow_view"),
+    async (req, res) => {
+      try {
+        BookSubmission.init(req.userinfo.tenantcode);
 
-      BookSubmission.init(req.userinfo.tenantcode);
+        const filters = {
+          ...req.query,
+          memberType: req.userinfo.library_member_type
+        };
 
+        const submissions = await BookSubmission.findAll(filters);
 
-      const submissions = await BookSubmission.findAll(req.query);
-      return res.status(200).json({ success: true, data: submissions });
-    } catch (error) {
-      console.error("Error fetching book submissions:", error);
-      return res.status(500).json({ errors: "Internal server error" });
+        return res.status(200).json({
+          success: true,
+          data: submissions
+        });
+
+      } catch (error) {
+        console.error("Error fetching book submissions:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
     }
-  });
+  );
+
 
   router.get("/due_notifications", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
 
@@ -65,7 +79,11 @@ module.exports = (app) => {
   router.get("/:id", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
       BookSubmission.init(req.userinfo.tenantcode);
-      const submission = await BookSubmission.findById(req.params.id);
+
+      const submission = await BookSubmission.findById(
+        req.params.id,
+        req.userinfo.library_member_type
+      );
       if (!submission) {
         return res.status(404).json({ errors: "Book submission not found" });
       }

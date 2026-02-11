@@ -1251,7 +1251,6 @@ const BulkIssue = ({ permissions }) => {
                             backgroundColor: "#e9ecef"
                           }}
                         >
-                          {/* Image with fallback */}
                           {memberInfo?.image ? (
                             <img
                               src={getImageUrl(memberInfo.image)}
@@ -1263,39 +1262,31 @@ const BulkIssue = ({ permissions }) => {
                                 position: "absolute"
                               }}
                               onError={(e) => {
-                                // Hide broken image
-                                e.target.style.opacity = "0";
+                                e.target.style.display = "none";
                               }}
                             />
-                          ) : null}
-
-                          {/* Always show initial */}
-                          <div
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              color: "#8b5cf6",
-                              fontSize: "2.5rem",
-                              fontWeight: "bold",
-                              zIndex: 1
-                            }}
-                          >
-                            {/* {getMemberName()} */}
-                            {/* {memberInfo?.image ?  null :getMemberName()?.charAt(0).toUpperCase() || '?'} */}
-                            {getMemberName()?.charAt(0).toUpperCase() || '?'}
-                          </div>
+                          ) : (
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                color: "#8b5cf6",
+                                fontSize: "2.5rem",
+                                fontWeight: "bold",
+                                zIndex: 1
+                              }}
+                            >
+                              {getMemberName()?.charAt(0).toUpperCase() || "?"}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <h5 className="fw-bold mb-1">
-                        {getMemberName()}
-                      </h5>
-                      {/* ... rest of your code */}
+                      <h5 className="fw-bold mb-1">{getMemberName()}</h5>
                     </div>
-                    {/* <hr className="my-3" style={{ borderColor: "#f0f0f0" }} /> */}
 
                     <Row className="g-2 mb-3">
                       <Col xs={4}>

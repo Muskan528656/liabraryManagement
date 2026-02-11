@@ -2,15 +2,17 @@ const sql = require("./db.js");
 const Notification = require("./notification.model.js");
 let schema = "";
 
+const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 function init(schema_name) {
   schema = schema_name;
 }
 
-async function findAll() {
+
+async function findAll(memberType) {
   try {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `SELECT 
+    let query = `SELECT 
                     bi.*,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
@@ -18,117 +20,134 @@ async function findAll() {
                     lm.first_name || ' ' || lm.last_name AS member_name,
                     lm.id AS card_id,
                     u.firstname || ' ' || u.lastname AS issued_by_name
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-                   LEFT JOIN ${schema}."user" u ON bi.issued_by = u.id
-                   ORDER BY bi.createddate DESC`;
+                 FROM ${schema}.book_issues bi
+                 LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+                 LEFT JOIN ${schema}.library_members lm 
+                      ON bi.issued_to = lm.id 
+                     AND lm.is_active = true
+                 LEFT JOIN ${schema}."user" u ON bi.issued_by = u.id`;
 
-    const result = await sql.query(query);
-    return result.rows.length > 0 ? result.rows : [];
+    let values = [];
+
+
+    const filtered = applyMemberTypeFilter(query, memberType, values);
+
+    query = filtered.query + ` ORDER BY bi.createddate DESC`;
+    values = filtered.values;
+
+    const result = await sql.query(query, values);
+    return result.rows || [];
+
   } catch (error) {
     console.error("Error in findAll:", error);
     throw error;
   }
 }
 
-async function findById(id) {
+async function findById(id, memberType) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!schema) throw new Error("Schema not initialized.");
 
-    const query = `SELECT 
-                    bi.*,
-                    b.title AS book_title,
-                    b.isbn AS book_isbn,
-                    lm.card_number,
-                    lm.first_name || ' ' || lm.last_name AS member_name,
-                    lm.id AS card_id
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-                   WHERE bi.id = $1`;
+    let query = `SELECT 
+        bi.*,
+        b.title AS book_title,
+        b.isbn AS book_isbn,
+        lm.card_number,
+        lm.first_name || ' ' || lm.last_name AS member_name,
+        lm.id AS card_id
+      FROM ${schema}.book_issues bi
+      LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+      LEFT JOIN ${schema}.library_members lm 
+        ON bi.issued_to = lm.id 
+       AND lm.is_active = true
+      WHERE bi.id = $1`;
 
-    const result = await sql.query(query, [id]);
-    return result.rows.length > 0 ? result.rows[0] : null;
+    let values = [id];
+
+    const filtered = applyMemberTypeFilter(query, memberType, values);
+
+    const result = await sql.query(filtered.query, filtered.values);
+    return result.rows[0] || null;
+
   } catch (error) {
-    console.error("Error in findById:", error);
     throw error;
   }
 }
+async function findActive(memberType) {
+  let query = `SELECT 
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn,
+      lm.card_number,
+      lm.first_name || ' ' || lm.last_name AS member_name,
+      lm.id AS card_id
+    FROM ${schema}.book_issues bi
+    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${schema}.library_members lm 
+      ON bi.issued_to = lm.id 
+     AND lm.is_active = true
+    WHERE bi.return_date IS NULL`;
 
-async function findActive() {
-  try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  let values = [];
 
-    const query = `SELECT 
-                    bi.*,
-                    b.title AS book_title,
-                    b.isbn AS book_isbn,
-                    lm.card_number,
-                    lm.first_name || ' ' || lm.last_name AS member_name,
-                    lm.id AS card_id
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-                   WHERE bi.return_date IS NULL
-                   ORDER BY bi.issue_date DESC`;
+  const filtered = applyMemberTypeFilter(query, memberType, values);
 
-    const result = await sql.query(query);
-    return result.rows.length > 0 ? result.rows : [];
-  } catch (error) {
-    console.error("Error in findActive:", error);
-    throw error;
-  }
+  query = filtered.query + ` ORDER BY bi.issue_date DESC`;
+
+  const result = await sql.query(query, filtered.values);
+  return result.rows || [];
 }
 
-async function findByBookId(bookId) {
-  try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+async function findByBookId(bookId, memberType) {
+  let query = `SELECT 
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn,
+      lm.card_number,
+      lm.first_name || ' ' || lm.last_name AS member_name,
+      lm.id AS card_id
+    FROM ${schema}.book_issues bi
+    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${schema}.library_members lm 
+      ON bi.issued_to = lm.id 
+     AND lm.is_active = true
+    WHERE bi.book_id = $1 
+      AND bi.return_date IS NULL 
+      AND bi.status = 'issued'`;
 
-    const query = `SELECT 
-                    bi.*,
-                    b.title AS book_title,
-                    b.isbn AS book_isbn,
-                    lm.card_number,
-                    lm.first_name || ' ' || lm.last_name AS member_name,
-                    lm.id AS card_id
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id AND lm.is_active = true
-                   WHERE bi.book_id = $1 AND bi.return_date IS NULL AND bi.status = 'issued'`;
+  let values = [bookId];
 
-    const result = await sql.query(query, [bookId]);
-    return result.rows.length > 0 ? result.rows : [];
-  } catch (error) {
-    console.error("Error in findByBookId:", error);
-    throw error;
-  }
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  const result = await sql.query(filtered.query, filtered.values);
+  return result.rows || [];
 }
 
-async function findByCardId(cardId) {
-  try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+async function findByCardId(cardId, memberType) {
+  let query = `SELECT 
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn
+    FROM ${schema}.book_issues bi
+    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${schema}.library_members lm 
+      ON bi.issued_to = lm.id
+    WHERE bi.issued_to = $1 
+      AND bi.return_date IS NULL 
+      AND bi.status = 'issued'`;
 
-    const query = `SELECT 
-                    bi.*,
-                    b.title AS book_title,
-                    b.isbn AS book_isbn
-                   FROM ${schema}.book_issues bi
-                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                   WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued'
-                   ORDER BY bi.issue_date DESC`;
+  let values = [cardId];
 
-    const result = await sql.query(query, [cardId]);
-    return result.rows.length > 0 ? result.rows : [];
-  } catch (error) {
-    console.error("Error in findByCardId:", error);
-    throw error;
-  }
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  const result = await sql.query(filtered.query, filtered.values);
+  return result.rows || [];
 }
+
 async function issueBook(req) {
- 
-  console.log("request =>",req.body);
-  
+
+  console.log("request =>", req.body);
+
   try {
     const tenantcode = req.headers.tenantcode || 'demo';
     schema = tenantcode;
@@ -140,7 +159,7 @@ async function issueBook(req) {
       return { success: false, message: "Book ID is required" };
     }
 
- 
+
     let userId = null;
     if (req.userinfo && req.userinfo.id) {
       userId = req.userinfo.id;
@@ -155,7 +174,7 @@ async function issueBook(req) {
       userId = 1;
     }
 
- 
+
     const memberRes = await sql.query(
       `SELECT
         m.id AS member_id,
@@ -179,7 +198,7 @@ async function issueBook(req) {
     }
 
     const member = memberRes.rows[0];
- 
+
     console.log("membermember", member);
 
     if (!member.plan_id) {
@@ -194,12 +213,12 @@ async function issueBook(req) {
       return { success: false, message: "This plan does not allow issuing books" };
     }
 
- 
+
     let dailyLimit = member.max_allowed_books_at_time ? parseInt(member.max_allowed_books_at_time) : 2;
     if (isNaN(dailyLimit) || dailyLimit < 1) {
       dailyLimit = 2; // Default fallback
     }
- 
+
 
     const issuedRes = await sql.query(
       `SELECT COUNT(*) AS total 
@@ -209,7 +228,7 @@ async function issueBook(req) {
     );
 
     const alreadyIssued = Number(issuedRes.rows[0].total || 0);
- 
+
 
     if (alreadyIssued >= member.allowed_books) {
       return {
@@ -218,10 +237,10 @@ async function issueBook(req) {
       };
     }
 
- 
- 
+
+
     const today = new Date().toISOString().split('T')[0];
- 
+
 
     const dailyIssuedRes = await sql.query(
       `SELECT COUNT(*) AS daily_total 
@@ -234,7 +253,7 @@ async function issueBook(req) {
     );
 
     const issuedToday = Number(dailyIssuedRes.rows[0].daily_total || 0);
- 
+
 
     if (issuedToday >= dailyLimit) {
       return {
@@ -243,7 +262,7 @@ async function issueBook(req) {
       };
     }
 
- 
+
     const bookRes = await sql.query(
       `SELECT * FROM ${schema}.books WHERE id = $1`,
       [req.body.book_id]
@@ -254,9 +273,9 @@ async function issueBook(req) {
     }
 
     const book = bookRes.rows[0];
- 
- 
- 
+
+
+
 
     if (!book.available_copies || book.available_copies <= 0) {
       return {
@@ -274,7 +293,7 @@ async function issueBook(req) {
       book.available_copies = book.total_copies;
     }
 
- 
+
     const memberHasBookRes = await sql.query(
       `SELECT COUNT(*) as count FROM ${schema}.book_issues 
        WHERE book_id = $1 
@@ -291,7 +310,7 @@ async function issueBook(req) {
       };
     }
 
- 
+
     const issueDate = req.body.issue_date
       ? new Date(req.body.issue_date)
       : new Date();
@@ -304,10 +323,10 @@ async function issueBook(req) {
       dueDate.setDate(dueDate.getDate() + (member.duration_days || 14));
     }
 
- 
- 
 
- 
+
+
+
     const issueData = {
       book_id: req.body.book_id,
       issued_to: req.body.card_id,
@@ -319,9 +338,9 @@ async function issueBook(req) {
       lastmodifiedbyid: userId,
     };
 
- 
 
- 
+
+
     const columns = Object.keys(issueData);
     const values = Object.values(issueData);
     const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -332,12 +351,12 @@ async function issueBook(req) {
       RETURNING *
     `;
 
- 
+
     const insertRes = await sql.query(insertQuery, values);
     const newIssue = insertRes.rows[0];
- 
 
- 
+
+
     const updateBookQuery = `
       UPDATE ${schema}.books 
       SET 
@@ -363,9 +382,9 @@ async function issueBook(req) {
     }
 
     const updatedBook = updateBookRes.rows[0];
- 
 
- 
+
+
     try {
       const updateIssuedCountQuery = `
         UPDATE ${schema}.books 
@@ -379,12 +398,12 @@ async function issueBook(req) {
         req.body.book_id,
         userId
       ]);
- 
+
     } catch (err) {
       console.warn("Could not update issued count:", err.message);
     }
 
- 
+
     try {
       const updateMemberQuery = `
         UPDATE ${schema}.library_members
@@ -404,92 +423,92 @@ async function issueBook(req) {
       console.warn("Could not update member issued count:", err.message);
     }
 
-/* =========================
-   CREATE DUE REMINDER NOTIFICATION
-========================= */
-// try {
-//   Notification.init(schema);
+    /* =========================
+       CREATE DUE REMINDER NOTIFICATION
+    ========================= */
+    // try {
+    //   Notification.init(schema);
 
-//   // 📅 Tomorrow date (YYYY-MM-DD)
-//   const tomorrow = new Date();
-//   tomorrow.setDate(tomorrow.getDate() + 1);
-//   const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    //   // 📅 Tomorrow date (YYYY-MM-DD)
+    //   const tomorrow = new Date();
+    //   tomorrow.setDate(tomorrow.getDate() + 1);
+    //   const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-//   // 📅 Due date from request
-//   const dueDateStr = new Date(req.body.due_date)
-//     .toISOString()
-//     .split("T")[0];
+    //   // 📅 Due date from request
+    //   const dueDateStr = new Date(req.body.due_date)
+    //     .toISOString()
+    //     .split("T")[0];
 
-//   console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
+    //   console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
 
-//   // ✅ Create notification ONLY if due date is tomorrow
-//   if (userId && dueDateStr === tomorrowStr) {
-//     console.log("Creating due reminder notification...");
+    //   // ✅ Create notification ONLY if due date is tomorrow
+    //   if (userId && dueDateStr === tomorrowStr) {
+    //     console.log("Creating due reminder notification...");
 
-//     // 🛑 Prevent duplicate notification for same book, same user, same day
-//     const existsRes = await sql.query(
-//       `
-//       SELECT id
-//       FROM ${schema}.notifications
-//       WHERE user_id = $1
-//       AND member_id = $2
-//         AND book_id = $3
-//         AND type = 'due_reminder'
-//         AND DATE(createddate) = CURRENT_DATE
-//       `,
-//       [userId, member.member_id, newIssue.book_id]
-//     );
+    //     // 🛑 Prevent duplicate notification for same book, same user, same day
+    //     const existsRes = await sql.query(
+    //       `
+    //       SELECT id
+    //       FROM ${schema}.notifications
+    //       WHERE user_id = $1
+    //       AND member_id = $2
+    //         AND book_id = $3
+    //         AND type = 'due_reminder'
+    //         AND DATE(createddate) = CURRENT_DATE
+    //       `,
+    //       [userId, member.member_id, newIssue.book_id]
+    //     );
 
-//     if (existsRes.rows.length === 0) {
+    //     if (existsRes.rows.length === 0) {
 
-//       // // ✅ Insert & RETURN notification
-//       // const insertRes = await sql.query(
-//       //   `
-//       //   INSERT INTO ${schema}.notifications
-//       //   (
-//       //     user_id,
-//       //     member_id,
-//       //     book_id,
-//       //     message,
-//       //     is_read,
-//       //     type,
-//       //     createddate
-//       //   )
-//       //   VALUES ($1, $2, $3, $4, false, $5, NOW())
-//       //   RETURNING *
-//       //   `,
-//       //   [
-//       //     userId,
-//       //     member.member_id,
-//       //     newIssue.book_id,
-//       //     `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-//       //     "due_reminder"
-//       //   ]
-//       // );
+    //       // // ✅ Insert & RETURN notification
+    //       // const insertRes = await sql.query(
+    //       //   `
+    //       //   INSERT INTO ${schema}.notifications
+    //       //   (
+    //       //     user_id,
+    //       //     member_id,
+    //       //     book_id,
+    //       //     message,
+    //       //     is_read,
+    //       //     type,
+    //       //     createddate
+    //       //   )
+    //       //   VALUES ($1, $2, $3, $4, false, $5, NOW())
+    //       //   RETURNING *
+    //       //   `,
+    //       //   [
+    //       //     userId,
+    //       //     member.member_id,
+    //       //     newIssue.book_id,
+    //       //     `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+    //       //     "due_reminder"
+    //       //   ]
+    //       // );
 
 
-//      let notification =  {
-//          "user_id": userId,
-//          "member_id": member.member_id,
-//          "book_id": newIssue.book_id,
-//          "message" : `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-//           "type": "due_reminder"
-//         }
+    //      let notification =  {
+    //          "user_id": userId,
+    //          "member_id": member.member_id,
+    //          "book_id": newIssue.book_id,
+    //          "message" : `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
+    //           "type": "due_reminder"
+    //         }
 
-//         console.log("notification=>",notification);
-//       Notification.create(notification);
-    
-//       // const notification = insertRes.rows[0];
+    //         console.log("notification=>",notification);
+    //       Notification.create(notification);
 
-//       // console.log("✅ Due reminder notification created and emitted:", notification.id);
-//     } else {
-//       console.log("⚠️ Due reminder already exists for today");
-//     }
-//   }
+    //       // const notification = insertRes.rows[0];
 
-// } catch (notifErr) {
-//   console.error("❌ Error creating due reminder notification:", notifErr);
-// }
+    //       // console.log("✅ Due reminder notification created and emitted:", notification.id);
+    //     } else {
+    //       console.log("⚠️ Due reminder already exists for today");
+    //     }
+    //   }
+
+    // } catch (notifErr) {
+    //   console.error("❌ Error creating due reminder notification:", notifErr);
+    // }
 
 
     try {
@@ -511,7 +530,7 @@ async function issueBook(req) {
 
     } catch (error) {
       console.log(error);
-      
+
     }
 
     return {
@@ -617,7 +636,7 @@ async function calculatePenalty(issueId) {
       return { penalty: 0, daysOverdue: 0 };
     }
 
-    const dueDate = new Date(issue.due_date); // expiry_date नहीं, due_date है
+    const dueDate = new Date(issue.due_date);
     const today = new Date();
     const daysOverdue = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
 
@@ -626,7 +645,7 @@ async function calculatePenalty(issueId) {
     }
 
 
-    let finePerDay = 10; // Default
+    let finePerDay = 10;
 
     try {
       const settingsRes = await sql.query(
@@ -637,7 +656,7 @@ async function calculatePenalty(issueId) {
         finePerDay = parseFloat(settingsRes.rows[0].fine_per_day);
       }
     } catch (settingsError) {
- 
+
     }
 
     const penalty = finePerDay * daysOverdue;

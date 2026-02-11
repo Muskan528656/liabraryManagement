@@ -279,6 +279,7 @@ module.exports = (app) => {
       body("email").optional().isEmail().withMessage("Email must be a valid email address"),
       body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
       body("isactive").optional().isBoolean().withMessage("isactive must be a boolean"),
+      body("library_member_type").optional().isBoolean().withMessage("library_member_type "),
     ],
     async (req, res) => {
       try {
@@ -351,8 +352,9 @@ module.exports = (app) => {
           password: hashedPassword,
           companyid: finalCompanyId
         };
-
+console.log("userDatauserDatauserData",userData)
         const user = await User.create(userData, userId);
+        console.log("user->>>>",user)
         if (!user) {
           return res.status(400).json({ errors: "Failed to create user" });
         }

@@ -54,7 +54,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
     let objectTypesList = [];
     let grades = [];
     let sections = [];
-    let gradeSectionsMap = {}; // Map to store sections per grade
+    let gradeSectionsMap = {};
     let jobTitles = [
         { value: "Principal", label: "Principal" },
         { value: "Vice Principal", label: "Vice Principal" },
@@ -64,9 +64,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         { value: "Counselor", label: "Counselor" },
         { value: "Administrator", label: "Administrator" }
     ];
-
     try {
-
         const companyApi = new DataApi("company");
         const companyResponse = await companyApi.fetchAll();
 
@@ -74,7 +72,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             const companyWithCountryCode = companyResponse.data.find(
                 (c) => c && c.country_code
             );
-
             if (companyWithCountryCode && companyWithCountryCode.country_code) {
                 const countryCodeStr = String(companyWithCountryCode.country_code).trim();
                 const codePart = countryCodeStr.split(/[—\-]/)[0].trim();
@@ -84,20 +81,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 } else if (codePart) {
                     defaultCountryCode = codePart;
                 }
-
-
             }
         }
-
-
         const plansApi = new DataApi("plans");
         const plansResponse = await plansApi.fetchAll();
-
-
-
         let plansData = [];
-
-
         if (plansResponse.success && plansResponse.data && Array.isArray(plansResponse.data)) {
             plansData = plansResponse.data;
         } else if (plansResponse.data && plansResponse.data.data && Array.isArray(plansResponse.data.data)) {
@@ -107,9 +95,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         } else if (Array.isArray(plansResponse)) {
             plansData = plansResponse;
         }
-
-
-
         if (plansData.length > 0) {
             plansList = plansData
                 .filter(plan => {
@@ -150,32 +135,32 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         }
 
 
-        console.log("objectTypeData=>",objectTypeData)
+        console.log("objectTypeData=>", objectTypeData)
         if (objectTypeData.length > 0) {
-           objectTypesList = objectTypeData
-            .filter(type => type.status === 'Active' || type.status === true)
-            .map(type => ({
-                value: type.id,
-                label: type.label,
-                type: type.type.toLowerCase(),
-                data: type
-            }));
+            objectTypesList = objectTypeData
+                .filter(type => type.status === 'Active' || type.status === true)
+                .map(type => ({
+                    value: type.id,
+                    label: type.label,
+                    type: type.type.toLowerCase(),
+                    data: type
+                }));
 
 
         } else {
             console.warn("No object type data found");
         }
 
-            const gradeApi = new DataApi("grade-sections/grouped");
-            const gradeResponse = await gradeApi.fetchAll();
+        const gradeApi = new DataApi("grade-sections/grouped");
+        const gradeResponse = await gradeApi.fetchAll();
 
-            console.log("gradeResponse=>", gradeResponse.data)
+        console.log("gradeResponse=>", gradeResponse.data)
 
-            const gradesList = Array.isArray(gradeResponse.data)
+        const gradesList = Array.isArray(gradeResponse.data)
             ? gradeResponse.data
             : [];
 
-            if (gradesList.length > 0) {
+        if (gradesList.length > 0) {
             grades = gradesList.map(g => ({
                 value: g.grade_name,
                 label: g.grade_name
@@ -184,25 +169,25 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             gradeSectionsMap = {};
             gradesList.forEach(g => {
                 gradeSectionsMap[g.grade_name] = g.sections.map(s => ({
-                value: s.name,
-                label: s.name
+                    value: s.name,
+                    label: s.name
                 }));
             });
 
             sections = [...new Set(
                 gradesList.flatMap(g => g.sections.map(s => s.name))
             )].map(s => ({ value: s, label: s }));
-            }
-
-            
-            
-        } catch (error) {
-            console.error("Error fetching data:", error);
         }
-        
-        console.log("Grades:", grades);
-        console.log("GradeSectionsMap:", gradeSectionsMap);
-        console.log("Sections:", sections);
+
+
+
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+
+    console.log("Grades:", grades);
+    console.log("GradeSectionsMap:", gradeSectionsMap);
+    console.log("Sections:", sections);
 
     const library_member_type = ["Boys", "Girls", "Other"];
 
@@ -329,10 +314,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             job_title: "",
             grade: "",
             section: "",
-            code_type:"",
+            code_type: "",
         },
 
-        formFields:[
+        formFields: [
             {
                 name: "father_gurdian_name",
                 label: "Father / Guardian Name",
@@ -407,7 +392,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 required: false,
                 colSize: 6,
             },
-           
+
             {
                 name: "type_id",
                 label: "Type",
@@ -415,38 +400,38 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 options: objectTypesList,
                 colSize: 6,
                 onChange: (value, formData, setFormData) => {
-                  const selectedType = objectTypesList.find(t => t.value === value);
+                    const selectedType = objectTypesList.find(t => t.value === value);
 
-                setFormData(prev => ({
-                    ...prev,
-                    type_id: value,
-                    type_code: selectedType?.type || "", 
-                    grade: "",
-                    section: "",
-                    job_title: ""
-                }));
+                    setFormData(prev => ({
+                        ...prev,
+                        type_id: value,
+                        type_code: selectedType?.type || "",
+                        grade: "",
+                        section: "",
+                        job_title: ""
+                    }));
                 }
 
             },
-           {
-            name: "job_title",
-            label: "Job Title",
-            type: "select",
-            options: jobTitles,
-            colSize: 6,
-            condition: (formData) => formData.type_code === "teacher"
+            {
+                name: "job_title",
+                label: "Job Title",
+                type: "select",
+                options: jobTitles,
+                colSize: 6,
+                condition: (formData) => formData.type_code === "teacher"
             },
 
-           {
-            name: "grade",
-            label: "Grade",
-            type: "select",
-            colSize: 6,
-            options: [
-                { value: "", label: "Select Grade" },
-                ...grades
-            ],
-            condition: (formData) => formData.type_code === "student"
+            {
+                name: "grade",
+                label: "Grade",
+                type: "select",
+                colSize: 6,
+                options: [
+                    { value: "", label: "Select Grade" },
+                    ...grades
+                ],
+                condition: (formData) => formData.type_code === "student"
             },
             {
                 name: "section",
@@ -455,11 +440,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 colSize: 6,
                 options: (formData) => {
                     if (!formData.grade) {
-                    return [{ value: "", label: "Select Section" }];
+                        return [{ value: "", label: "Select Section" }];
                     }
                     return [
-                    { value: "", label: "Select Section" },
-                    ...(gradeSectionsMap[formData.grade] || [])
+                        { value: "", label: "Select Section" },
+                        ...(gradeSectionsMap[formData.grade] || [])
                     ];
                 },
                 condition: (formData) => formData.type_code === "student"
@@ -646,11 +631,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             { key: "registration_date", label: "Registration Date", type: "date" },
             // { key: "type", label: "Type", type: "text" },
             {
-            name: "type",
-            label: "Type",
-            type: "select",
-            options: objectTypesList,
-            colSize: 6,
+                name: "type",
+                label: "Type",
+                type: "select",
+                options: objectTypesList,
+                colSize: 6,
             },
             {
                 name: "job_title",
@@ -660,7 +645,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 colSize: 6,
                 condition: (formData) => {
                     const selectedType = objectTypesList.find(
-                    t => t.value === formData.type_id
+                        t => t.value === formData.type_id
                     );
                     return selectedType?.label?.toLowerCase() === "teacher";
                 }
@@ -673,10 +658,10 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 options: grades,
                 colSize: 6,
                 condition: (formData) => {
-                const selectedType = objectTypesList.find(
-                    t => t.value === formData.type_id
-                );
-                return selectedType?.type === "student";
+                    const selectedType = objectTypesList.find(
+                        t => t.value === formData.type_id
+                    );
+                    return selectedType?.type === "student";
 
                 }
             },
@@ -690,7 +675,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 colSize: 6,
                 condition: (formData) => {
                     const selectedType = objectTypesList.find(
-                    t => t.value === formData.type_id
+                        t => t.value === formData.type_id
                     );
                     return selectedType?.type === "student";
                 }

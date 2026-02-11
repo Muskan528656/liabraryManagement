@@ -72,9 +72,9 @@ const LibraryCardDetail = ({
   const [objectTypes, setObjectTypes] = useState([]);
   const [planStatus, setPlanStatus] = useState("No Plan");
 
-const [grades, setGrades] = useState([]);
-const [gradeSectionsMap, setGradeSectionsMap] = useState({});
-
+  const [grades, setGrades] = useState([]);
+  const [gradeSectionsMap, setGradeSectionsMap] = useState({});
+  const [visible, setVisible] = useState(true);
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
 
@@ -106,7 +106,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       "parent_contact",
       "dob",
       "type_id",
-      
+      "library_member_type"
     ],
     []
   );
@@ -637,17 +637,18 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
   };
   const typeOptions = useMemo(() => {
     return objectTypes.map((item) => ({
-      label: item.label,   // STAFF / STUDENT / OTHER
+      label: item.label,
       value: item.id,
     }));
   }, [objectTypes]);
 
 
   const getSelectedType = (data) => {
-  return typeOptions.find(
-    t => String(t.value) === String(data.type_id || data.type)
-  );
-};
+    return typeOptions.find(
+      t => String(t.value) === String(data.type_id || data.type)
+    );
+  };
+  const library_member_type = ["Boys", "Girls", "Other"];
 
 
   const fields = {
@@ -735,7 +736,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         },
         colSize: 3,
       },
-    {
+      {
         key: "job_title",
         label: "Job Title",
         type: "select",
@@ -767,7 +768,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           return selected?.label?.toLowerCase() === "student";
         },
       },
-     {
+      {
         key: "section",
         label: "Section",
         type: "select",
@@ -782,7 +783,15 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           );
           return selected?.label?.toLowerCase() === "student";
         },
-      }
+      },
+      {
+        name: "library_member_type",
+        label: "Gender",
+        type: "select",
+        required: false,
+        options: library_member_type.map((item) => ({ label: item, value: item })),
+        colSize: 6,
+      },
     ],
   };
 
@@ -1475,9 +1484,6 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         }
       });
 
-
-
-
       let response;
 
       if (selectedImageFile) {
@@ -2092,11 +2098,11 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (
-                    <button onClick={handleEdit} className="custom-btn-primary">
-                      <i className="fa-solid fa-edit me-2"></i>
-                      Edit {moduleLabel}
-                    </button>
+                  {canEdit && !isEditing ? (visible ? <button onClick={handleEdit} className="custom-btn-primary">
+                    <i className="fa-solid fa-edit me-2"></i>
+                    Edit {moduleLabel}
+                  </button> : null
+
                   ) : !isEditing ? null : (
                     <div className="d-flex gap-2">
                       <button
@@ -2133,7 +2139,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
                 <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
                   <Nav variant="tabs" className="border-bottom-0">
                     <Nav.Item>
-                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`}
+                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`} onClick={() => setVisible(true)}
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",
@@ -2146,11 +2152,12 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
                           transition: "all 0.3s ease",
                           marginBottom: "-1px"
                         }}>
+
                         <span>Detail</span>
                       </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
-                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`}
+                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`} onClick={() => setVisible(false)}
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",

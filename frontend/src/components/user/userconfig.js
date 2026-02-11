@@ -19,6 +19,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
         if (source.data && Array.isArray(source.data)) return source.data;
         return [];
     };
+    const library_member_type = ["Boys", "Girls", "Other"];
 
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
@@ -160,6 +161,8 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     );
                 }
             }
+            ,
+
         ],
 
         initialFormData: {
@@ -296,7 +299,15 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     { value: false, label: "Inactive" }
                 ],
                 colSize: 6,
-            }
+            },
+            {
+                name: "library_member_type",
+                label: "Gender",
+                type: "select",
+                required: false,
+                options: library_member_type.map((item) => ({ label: item, value: item })),
+                colSize: 6,
+            },
         ],
 
         validationRules: (formData, allUsers, editingUser) => {

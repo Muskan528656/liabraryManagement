@@ -3,45 +3,110 @@
  * @date        DEC, 2025
  */
 const sql = require("./db.js");
-const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+const { generateAutoNumberSafe, applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 
 let schema = "";
 
 function init(schema_name) {
   schema = schema_name;
 }
+async function findAll(memberType) {
+  let query = `
+    SELECT
+      lm.*,
+      CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+      u.email AS user_email,
+      p.plan_name,
+      p.duration_days,
+      ot.label AS type_label
+    FROM ${schema}.library_members lm
+    LEFT JOIN ${schema}."user" u
+      ON lm.createdbyid = u.id
+    LEFT JOIN ${schema}.plan p
+      ON lm.plan_id = p.id
+    LEFT JOIN demo.object_type ot
+      ON lm.type_id = ot.id
+  `;
 
-async function findAll() {
-  try {
-    const query = `
-      SELECT
-        lm.*,
-        CONCAT(u.firstname, ' ', u.lastname) AS user_name,
-        u.email AS user_email,
-        p.plan_name,
-        p.duration_days,
-        ot.label AS type_label
-      FROM ${schema}.library_members lm
-      LEFT JOIN ${schema}."user" u
-        ON lm.createdbyid = u.id
-      LEFT JOIN ${schema}.plan p
-        ON lm.plan_id = p.id
-      LEFT JOIN demo.object_type ot
-        ON lm.type_id = ot.id
-      ORDER BY lm.createddate DESC;
-    `;
+  let values = [];
 
-    const result = await sql.query(query);
-    return result.rows;
-  } catch (error) {
-    console.error("Error in findAll:", error);
-    throw error;
-  }
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  query = filtered.query + ` ORDER BY lm.createddate DESC`;
+  values = filtered.values;
+
+  const result = await sql.query(query, values);
+  return result.rows;
 }
 
-async function findById(id) {
+// async function findAll() {
+//   try {
+//     const query = `
+//       SELECT
+//         lm.*,
+//         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+//         u.email AS user_email,
+//         p.plan_name,
+//         p.duration_days,
+//         ot.label AS type_label
+//       FROM ${schema}.library_members lm
+//       LEFT JOIN ${schema}."user" u
+//         ON lm.createdbyid = u.id
+//       LEFT JOIN ${schema}.plan p
+//         ON lm.plan_id = p.id
+//       LEFT JOIN demo.object_type ot
+//         ON lm.type_id = ot.id
+//       ORDER BY lm.createddate DESC;
+//     `;
+
+//     const result = await sql.query(query);
+//     return result.rows;
+//   } catch (error) {
+//     console.error("Error in findAll:", error);
+//     throw error;
+//   }
+// }
+// async function findAll(memberType) {
+//   try {
+//     let query = `
+//       SELECT
+//         lm.*,
+//         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+//         u.email AS user_email,
+//         p.plan_name,
+//         p.duration_days,
+//         ot.label AS type_label
+//       FROM ${schema}.library_members lm
+//       LEFT JOIN ${schema}."user" u
+//         ON lm.createdbyid = u.id
+//       LEFT JOIN ${schema}.plan p
+//         ON lm.plan_id = p.id
+//       LEFT JOIN demo.object_type ot
+//         ON lm.type_id = ot.id
+//     `;
+
+//     const values = [];
+
+//     if (memberType) {
+//       query += ` WHERE LOWER(lm.library_member_type) = LOWER($1)`;
+//       values.push(memberType);
+//     }
+
+//     query += ` ORDER BY lm.createddate DESC`;
+
+//     const result = await sql.query(query, values);
+//     return result.rows;
+
+//   } catch (error) {
+//     console.error("Error in findAll:", error);
+//     throw error;
+//   }
+// }
+
+async function findById(id, memberType) {
   try {
-    const query = `
+
+    let query = `
       SELECT
         lm.*,
         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
@@ -59,17 +124,26 @@ async function findById(id) {
       WHERE lm.id = $1
     `;
 
-    const result = await sql.query(query, [id]);
+    let values = [id];
+
+    // Apply member type filter
+    if (memberType) {
+      query += ` AND LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+      values.push(memberType);
+    }
+
+    const result = await sql.query(query, values);
     return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in findById:", error);
     throw error;
   }
 }
-
-async function findByCardNumber(cardNumber) {
+async function findByCardNumber(cardNumber, memberType) {
   try {
-    const query = `
+
+    let query = `
       SELECT
         lm.*,
         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
@@ -87,13 +161,23 @@ async function findByCardNumber(cardNumber) {
       WHERE lm.card_number = $1
     `;
 
-    const result = await sql.query(query, [cardNumber]);
+    let values = [cardNumber];
+
+    // Member type filter
+    if (memberType) {
+      query += ` AND LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+      values.push(memberType);
+    }
+
+    const result = await sql.query(query, values);
     return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in findByCardNumber:", error);
     throw error;
   }
 }
+
 
 async function resolveTypeId(typeName) {
   if (!typeName) return null;
@@ -234,7 +318,7 @@ async function create(cardData, userId) {
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
   } catch (error) {
-    console.error("❌ Error in create:", {
+    console.error(" Error in create:", {
       message: error.message,
       code: error.code,
       detail: error.detail,
@@ -242,30 +326,11 @@ async function create(cardData, userId) {
     });
     throw error;
   }
-}
-async function updateById(id, cardData, userId) {
+} async function updateById(id, cardData, userId) {
   try {
     const updates = [];
     const values = [];
     let idx = 1;
-    if (cardData.is_active !== undefined) {
-      updates.push("is_active = $" + idx);
-      values.push(cardData.is_active);
-      idx++;
-    }
-
-    if (cardData.type !== undefined) {
-      let typeValue = cardData.type;
-
-      if (!isNaN(typeValue) && typeValue !== null && typeValue !== '') {
-        typeValue = parseInt(typeValue);
-
-      }
-
-      updates.push("type_id = $" + idx);
-      values.push(typeValue);
-      idx++;
-    }
 
     const allowedFields = [
       "card_number",
@@ -284,45 +349,32 @@ async function updateById(id, cardData, userId) {
       "parent_contact",
       "job_title",
       "grade_id",
-      "library_member_type"
-
+      "library_member_type",
+      "is_active",
+      "type"
     ];
 
     allowedFields.forEach((field) => {
       if (cardData[field] !== undefined) {
-        if (field === "name") {
-          if (!cardData[field] && cardData.first_name && cardData.last_name) {
-            updates.push(`name = $${idx}`);
-            values.push(`${cardData.first_name} ${cardData.last_name}`);
-            idx++;
-          } else if (cardData[field]) {
-            updates.push(`name = $${idx}`);
-            values.push(cardData[field]);
-            idx++;
-          }
-        } else if (field === "dob" || field === "registration_date") {
-          if (cardData[field]) {
-            updates.push(`${field} = $${idx}`);
-            const dateValue = new Date(cardData[field]);
-            values.push(dateValue);
-            idx++;
-          } else if (cardData[field] === null || cardData[field] === "") {
-            updates.push(`${field} = $${idx}`);
-            values.push(null);
-            idx++;
-          }
-        } else if (field !== "name") {
+        let value = cardData[field];
+
+        if (field === "type") {
+          updates.push(`type_id = $${idx}`);
+        } else {
           updates.push(`${field} = $${idx}`);
-          values.push(cardData[field]);
-          idx++;
         }
+
+        values.push(value);
+        idx++;
       }
     });
 
-    updates.push("lastmodifieddate = CURRENT_TIMESTAMP");
+    // audit fields
     updates.push(`lastmodifiedbyid = $${idx}`);
     values.push(userId);
     idx++;
+
+    updates.push(`lastmodifieddate = CURRENT_TIMESTAMP`);
 
     if (updates.length === 0) {
       return await findById(id);
@@ -334,8 +386,11 @@ async function updateById(id, cardData, userId) {
       UPDATE ${schema}.library_members
       SET ${updates.join(", ")}
       WHERE id = $${idx}
-      RETURNING *
+      RETURNING *;
     `;
+
+    console.log("UPDATE QUERY:", query);
+    console.log("VALUES:", values);
 
     const result = await sql.query(query, values);
 
@@ -343,14 +398,13 @@ async function updateById(id, cardData, userId) {
       throw new Error("Record not found");
     }
 
-    const updatedRecord = await findById(id);
-
-    return updatedRecord;
+    return result.rows[0];
   } catch (error) {
-    console.error("❌ Error in updateById:", error);
+    console.error("❌ updateById error:", error);
     throw error;
   }
 }
+
 
 async function resolveTypeId(typeInput) {
   try {
@@ -492,51 +546,6 @@ async function search(searchTerm) {
     throw error;
   }
 }
-//name check
-// async function findByName(name, excludeId = null) {
-//   try {
-//     if (!this.schema) {
-//       throw new Error("Schema not initialized. Call init() first.");
-//     }
-//     let query = `SELECT * FROM ${this.schema}.library_members WHERE name = $1`;
-//     const params = [name];
-
-//     if (excludeId) {
-//       query += ` AND id != $2`;
-//       params.push(excludeId);
-//     }
-
-//     const result = await sql.query(query, params);
-//     return result.rows.length > 0 ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByName:", error);
-//     throw error;
-//   }
-// }
-//email check
-// async function findByEmail(email, excludeId = null) {
-//   try {
-//     console.log("Checking email:", email);
-//     console.log("Exclude ID:", excludeId);
-//     console.log("schema:", this.schema);
-//     if (!this.schema) {
-//       throw new Error("Schema not initialized. Call init() first.");
-//     }
-//     let query = `SELECT * FROM ${this.schema}.library_members WHERE email = $1`;
-//     const params = [email];
-
-//     if (excludeId) {
-//       query += ` AND id != $2`;
-//       params.push(excludeId);
-//     }
-
-//     const result = await sql.query(query, params);
-//     return result.rows.length > 0 ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByEmail:", error);
-//     throw error;
-//   }
-// }
 module.exports = {
   init,
   getAllRecords,

@@ -38,7 +38,7 @@ const LibraryCard = ({ permissions, ...props }) => {
     loading: true
   });
 
-  
+
 
 
   const normalizedApiBaseUrl = useMemo(() => {
@@ -47,7 +47,7 @@ const LibraryCard = ({ permissions, ...props }) => {
       : "";
   }, []);
 
-  
+
   useEffect(() => {
     const fetchPermissions = async () => {
       const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
@@ -69,8 +69,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setSubscriptionsData(data);
       return data;
     } catch {
@@ -85,8 +85,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setUsersData(data);
       return data;
     } catch {
@@ -178,6 +178,7 @@ const LibraryCard = ({ permissions, ...props }) => {
           {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
         </Modal.Body>
       </Modal>
+
     </>
   );
 };

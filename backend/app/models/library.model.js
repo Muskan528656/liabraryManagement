@@ -119,69 +119,94 @@ async function getDashboardStats() {
   }
 }
 
-
-async function getStudentDashboardStats(userId) {
+async function getStudentDashboardStats(userId, memberType = "all") {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
+    // Helper function to apply member_type filter
+    function applyMemberTypeFilter(baseQuery, memberType, values = []) {
+      if (!memberType) return { query: baseQuery, values };
+      const type = memberType.toLowerCase();
 
+      if (type === "all" || type === "other") return { query: baseQuery, values };
+
+      const condition = `LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+      values.push(memberType);
+
+      if (baseQuery.toLowerCase().includes("where")) {
+        baseQuery += ` AND ${condition}`;
+      } else {
+        baseQuery += ` WHERE ${condition}`;
+      }
+
+      return { query: baseQuery, values };
+    }
+
+    // 1️⃣ Total books (no member_type filter needed)
     const totalBooksQuery = `SELECT COUNT(*) as count FROM ${this.schema}.books WHERE available_copies > 0`;
     const totalBooksResult = await sql.query(totalBooksQuery);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
-
-    const issuedBooksQuery = `
-      SELECT COUNT(*) as count 
-      FROM ${this.schema}.book_issues 
-      WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'
+    // 2️⃣ Issued books
+    let issuedBooksQuery = `
+      SELECT COUNT(*) as count
+      FROM ${this.schema}.book_issues bi
+      JOIN ${this.schema}.library_members lm ON lm.user_id = bi.issued_to
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued'
     `;
-    const issuedBooksResult = await sql.query(issuedBooksQuery, [userId]);
+    let issuedBooksValues = [userId];
+    issuedBooksQuery = applyMemberTypeFilter(issuedBooksQuery, memberType, issuedBooksValues);
+    const issuedBooksResult = await sql.query(issuedBooksQuery.query, issuedBooksQuery.values);
     const issuedBooks = parseInt(issuedBooksResult.rows[0]?.count || 0);
 
-
-    const pendingRequestsQuery = `
-      SELECT COUNT(*) as count 
-      FROM ${this.schema}.book_requests 
-      WHERE requested_by = $1 AND status = 'pending'
+    // 3️⃣ Pending requests
+    let pendingRequestsQuery = `
+      SELECT COUNT(*) as count
+      FROM ${this.schema}.book_requests br
+      JOIN ${this.schema}.library_members lm ON lm.user_id = br.requested_by
+      WHERE br.requested_by = $1 AND br.status = 'pending'
     `;
-    const pendingRequestsResult = await sql.query(pendingRequestsQuery, [userId]);
+    let pendingRequestsValues = [userId];
+    pendingRequestsQuery = applyMemberTypeFilter(pendingRequestsQuery, memberType, pendingRequestsValues);
+    const pendingRequestsResult = await sql.query(pendingRequestsQuery.query, pendingRequestsQuery.values);
     const pendingRequests = parseInt(pendingRequestsResult.rows[0]?.count || 0);
 
-
-    const approvedRequestsQuery = `
-      SELECT COUNT(*) as count 
-      FROM ${this.schema}.book_requests 
-      WHERE requested_by = $1 AND status = 'approved'
+    // 4️⃣ Approved requests
+    let approvedRequestsQuery = `
+      SELECT COUNT(*) as count
+      FROM ${this.schema}.book_requests br
+      JOIN ${this.schema}.library_members lm ON lm.user_id = br.requested_by
+      WHERE br.requested_by = $1 AND br.status = 'approved'
     `;
-    const approvedRequestsResult = await sql.query(approvedRequestsQuery, [userId]);
+    let approvedRequestsValues = [userId];
+    approvedRequestsQuery = applyMemberTypeFilter(approvedRequestsQuery, memberType, approvedRequestsValues);
+    const approvedRequestsResult = await sql.query(approvedRequestsQuery.query, approvedRequestsQuery.values);
     const approvedRequests = parseInt(approvedRequestsResult.rows[0]?.count || 0);
 
-
-    const overdueBooksQuery = `
-      SELECT COUNT(*) as count 
-      FROM ${this.schema}.book_issues 
-      WHERE issued_to = $1 
-        AND return_date IS NULL 
-        AND status = 'issued'
-        AND due_date < CURRENT_DATE
+    // 5️⃣ Overdue books
+    let overdueBooksQuery = `
+      SELECT COUNT(*) as count
+      FROM ${this.schema}.book_issues bi
+      JOIN ${this.schema}.library_members lm ON lm.user_id = bi.issued_to
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued' AND bi.due_date < CURRENT_DATE
     `;
-    const overdueBooksResult = await sql.query(overdueBooksQuery, [userId]);
+    let overdueBooksValues = [userId];
+    overdueBooksQuery = applyMemberTypeFilter(overdueBooksQuery, memberType, overdueBooksValues);
+    const overdueBooksResult = await sql.query(overdueBooksQuery.query, overdueBooksQuery.values);
     const overdueBooks = parseInt(overdueBooksResult.rows[0]?.count || 0);
 
-
+    // 6️⃣ Total fines
     const totalFinesQuery = `
       SELECT COALESCE(SUM(penalty_amount), 0) as total_fines
-      FROM ${this.schema}.book_issues 
-      WHERE issued_to = $1 
-        AND return_date IS NOT NULL
-        AND penalty_amount > 0
+      FROM ${this.schema}.book_issues
+      WHERE issued_to = $1 AND return_date IS NOT NULL AND penalty_amount > 0
     `;
     const totalFinesResult = await sql.query(totalFinesQuery, [userId]);
     const totalFines = parseFloat(totalFinesResult.rows[0]?.total_fines || 0);
 
-
+    // 7️⃣ Recent issued books
     const recentIssuedQuery = `
       SELECT 
         bi.*,
@@ -198,7 +223,7 @@ async function getStudentDashboardStats(userId) {
     `;
     const recentIssuedResult = await sql.query(recentIssuedQuery, [userId]);
 
-
+    // 8️⃣ Recent requests
     const recentRequestsQuery = `
       SELECT 
         br.*,
@@ -212,16 +237,17 @@ async function getStudentDashboardStats(userId) {
     `;
     const recentRequestsResult = await sql.query(recentRequestsQuery, [userId]);
 
-
-    const dueSoonQuery = `
-      SELECT COUNT(*) as count 
-      FROM ${this.schema}.book_issues 
-      WHERE issued_to = $1 
-        AND return_date IS NULL 
-        AND status = 'issued'
-        AND due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+    // 9️⃣ Due soon
+    let dueSoonQuery = `
+      SELECT COUNT(*) as count
+      FROM ${this.schema}.book_issues bi
+      JOIN ${this.schema}.library_members lm ON lm.user_id = bi.issued_to
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.status = 'issued'
+        AND bi.due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
     `;
-    const dueSoonResult = await sql.query(dueSoonQuery, [userId]);
+    let dueSoonValues = [userId];
+    dueSoonQuery = applyMemberTypeFilter(dueSoonQuery, memberType, dueSoonValues);
+    const dueSoonResult = await sql.query(dueSoonQuery.query, dueSoonQuery.values);
     const dueSoon = parseInt(dueSoonResult.rows[0]?.count || 0);
 
     return {
@@ -242,6 +268,129 @@ async function getStudentDashboardStats(userId) {
     throw error;
   }
 }
+
+// async function getStudentDashboardStats(userId) {
+//   try {
+//     if (!this.schema) {
+//       throw new Error("Schema not initialized. Call init() first.");
+//     }
+
+
+//     const totalBooksQuery = `SELECT COUNT(*) as count FROM ${this.schema}.books WHERE available_copies > 0`;
+//     const totalBooksResult = await sql.query(totalBooksQuery);
+//     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
+
+
+//     const issuedBooksQuery = `
+//       SELECT COUNT(*) as count 
+//       FROM ${this.schema}.book_issues 
+//       WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'
+//     `;
+//     const issuedBooksResult = await sql.query(issuedBooksQuery, [userId]);
+//     const issuedBooks = parseInt(issuedBooksResult.rows[0]?.count || 0);
+
+
+//     const pendingRequestsQuery = `
+//       SELECT COUNT(*) as count 
+//       FROM ${this.schema}.book_requests 
+//       WHERE requested_by = $1 AND status = 'pending'
+//     `;
+//     const pendingRequestsResult = await sql.query(pendingRequestsQuery, [userId]);
+//     const pendingRequests = parseInt(pendingRequestsResult.rows[0]?.count || 0);
+
+
+//     const approvedRequestsQuery = `
+//       SELECT COUNT(*) as count 
+//       FROM ${this.schema}.book_requests 
+//       WHERE requested_by = $1 AND status = 'approved'
+//     `;
+//     const approvedRequestsResult = await sql.query(approvedRequestsQuery, [userId]);
+//     const approvedRequests = parseInt(approvedRequestsResult.rows[0]?.count || 0);
+
+
+//     const overdueBooksQuery = `
+//       SELECT COUNT(*) as count 
+//       FROM ${this.schema}.book_issues 
+//       WHERE issued_to = $1 
+//         AND return_date IS NULL 
+//         AND status = 'issued'
+//         AND due_date < CURRENT_DATE
+//     `;
+//     const overdueBooksResult = await sql.query(overdueBooksQuery, [userId]);
+//     const overdueBooks = parseInt(overdueBooksResult.rows[0]?.count || 0);
+
+
+//     const totalFinesQuery = `
+//       SELECT COALESCE(SUM(penalty_amount), 0) as total_fines
+//       FROM ${this.schema}.book_issues 
+//       WHERE issued_to = $1 
+//         AND return_date IS NOT NULL
+//         AND penalty_amount > 0
+//     `;
+//     const totalFinesResult = await sql.query(totalFinesQuery, [userId]);
+//     const totalFines = parseFloat(totalFinesResult.rows[0]?.total_fines || 0);
+
+
+//     const recentIssuedQuery = `
+//       SELECT 
+//         bi.*,
+//         b.title AS book_title,
+//         b.isbn AS book_isbn,
+//         b.available_copies,
+//         lc.card_number
+//       FROM ${this.schema}.book_issues bi
+//       LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+//       LEFT JOIN ${this.schema}.library_members lc ON bi.issued_to = lc.user_id AND lc.is_active = true
+//       WHERE bi.issued_to = $1
+//       ORDER BY bi.issue_date DESC
+//       LIMIT 5
+//     `;
+//     const recentIssuedResult = await sql.query(recentIssuedQuery, [userId]);
+
+
+//     const recentRequestsQuery = `
+//       SELECT 
+//         br.*,
+//         b.title AS book_title,
+//         b.isbn AS book_isbn
+//       FROM ${this.schema}.book_requests br
+//       LEFT JOIN ${this.schema}.books b ON br.book_id = b.id
+//       WHERE br.requested_by = $1
+//       ORDER BY br.createddate DESC
+//       LIMIT 5
+//     `;
+//     const recentRequestsResult = await sql.query(recentRequestsQuery, [userId]);
+
+
+//     const dueSoonQuery = `
+//       SELECT COUNT(*) as count 
+//       FROM ${this.schema}.book_issues 
+//       WHERE issued_to = $1 
+//         AND return_date IS NULL 
+//         AND status = 'issued'
+//         AND due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days'
+//     `;
+//     const dueSoonResult = await sql.query(dueSoonQuery, [userId]);
+//     const dueSoon = parseInt(dueSoonResult.rows[0]?.count || 0);
+
+//     return {
+//       summary: {
+//         totalBooks,
+//         issuedBooks,
+//         pendingRequests,
+//         approvedRequests,
+//         overdueBooks,
+//         totalFines,
+//         dueSoon,
+//       },
+//       recentIssued: recentIssuedResult.rows,
+//       recentRequests: recentRequestsResult.rows,
+//     };
+//   } catch (error) {
+//     console.error("Error in getStudentDashboardStats:", error);
+//     throw error;
+//   }
+// }
 
 
 

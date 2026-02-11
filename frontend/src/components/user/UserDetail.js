@@ -41,6 +41,8 @@ const UserDetail = ({ permissions }) => {
     companies: [],
   });
 
+  const library_member_type = ["Boys", "Girls", "Other"];
+
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
@@ -192,12 +194,12 @@ const UserDetail = ({ permissions }) => {
         readOnly: true,
 
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
-        
+
         render: (value, data) => {
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
             return "Loading...";
           }
-          
+
           const role = externalData.userRoles.find(r =>
             String(r.id) === String(value) || String(r._id) === String(value)
           );
@@ -212,6 +214,14 @@ const UserDetail = ({ permissions }) => {
           { value: true, label: "Active" },
           { value: false, label: "Inactive" },
         ],
+      },
+      {
+        key: "library_member_type",
+        label: "Gender",
+        type: "select",
+        required: false,
+        options: library_member_type.map((item) => ({ label: item, value: item })),
+        colSize: 6,
       },
     ],
     other: [
