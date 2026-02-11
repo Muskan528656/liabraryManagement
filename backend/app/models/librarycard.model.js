@@ -153,6 +153,11 @@ async function create(cardData, userId) {
     }
   }
 
+  // Resolve grade_id from grade_name and section_name
+  if (cardData.grade_name && cardData.section_name) {
+    cardData.grade_id = await resolveGradeId(cardData.grade_name, cardData.section_name);
+  }
+
   try {
 
     const fields = [
@@ -249,10 +254,27 @@ async function create(cardData, userId) {
   }
 }
 async function updateById(id, cardData, userId) {
+
+  console.log("update library member=>", cardData)
   try {
     const updates = [];
     const values = [];
     let idx = 1;
+
+    // Handle grade_id resolution from grade_name and section_name
+    if (cardData.grade_name && cardData.section_name) {
+      const gradeId = await resolveGradeId(cardData.grade_name, cardData.section_name);
+      if (gradeId) {
+        updates.push("grade_id = $" + idx);
+        values.push(gradeId);
+        idx++;
+      } else {
+        console.warn(`Could not resolve grade_id for grade_name: ${cardData.grade_name}, section_name: ${cardData.section_name}`);
+      }
+    }
+
+    console.log("cardData")
+
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
@@ -288,8 +310,8 @@ async function updateById(id, cardData, userId) {
       "father_gurdian_name",
       "parent_contact",
       "job_title",
-      "grade_id",
-      "section_id",
+      // "grade_id", // Handled separately above
+      // "section_id", // Not needed since we resolve to grade_id
       // "library_member_type"
 
     ];
@@ -369,7 +391,7 @@ async function resolveTypeId(typeInput) {
     }
 
     const queryById = `
-      SELECT id FROM ${schema}.library_member_types 
+      SELECT id FROM ${schema}.library_member_types
       WHERE id::text = $1 OR code = $1 OR LOWER(name) = LOWER($1)
     `;
 
@@ -380,7 +402,7 @@ async function resolveTypeId(typeInput) {
     }
 
     const queryByName = `
-      SELECT id FROM ${schema}.library_member_types 
+      SELECT id FROM ${schema}.library_member_types
       WHERE LOWER(name) = LOWER($1) OR LOWER(code) = LOWER($1)
     `;
 
@@ -396,6 +418,30 @@ async function resolveTypeId(typeInput) {
     return null;
   } catch (error) {
     console.error("Error resolving type ID:", error);
+    return null;
+  }
+}
+
+async function resolveGradeId(gradeName, sectionName) {
+  try {
+    if (!gradeName || !sectionName) return null;
+
+    const query = `
+      SELECT id FROM ${schema}.grade
+      WHERE LOWER(grade_name) = LOWER($1) AND LOWER(section_name) = LOWER($2)
+      LIMIT 1
+    `;
+
+    const result = await sql.query(query, [gradeName.trim(), sectionName.trim()]);
+
+    if (result.rows.length > 0) {
+      return result.rows[0].id;
+    }
+
+    console.warn(`❌ Could not resolve grade ID for: ${gradeName} - ${sectionName}`);
+    return null;
+  } catch (error) {
+    console.error("Error resolving grade ID:", error);
     return null;
   }
 }

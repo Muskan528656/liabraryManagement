@@ -106,7 +106,9 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       "parent_contact",
       "dob",
       "type_id",
-      
+      "grade_name",
+      "section_name",
+
     ],
     []
   );
@@ -147,6 +149,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
   };
 
   useEffect(() => {
+    fetchGradesAndSections();
     if (!permissions || Object.keys(permissions).length === 0) {
       const fetchPermissions = async () => {
         try {
@@ -175,7 +178,6 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         }
       };
       fetchPermissions();
-      fetchGradesAndSections();
     }
   }, []);
   const effectivePermissions = Object.keys(permissions).length > 0
@@ -735,7 +737,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         },
         colSize: 3,
       },
-    {
+      {
         key: "job_title",
         label: "Job Title",
         type: "select",
@@ -749,39 +751,26 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
           { label: "Administrator", value: "Administrator" },
         ],
         colSize: 3,
-        condition: (data) => {
-          const type = getSelectedType(data);
-          return type?.label?.toLowerCase() === "teacher";
-        },
+        condition: (data) => data.type_label?.toLowerCase() === "teacher",
       },
       {
-        key: "grade",
+        key: "grade_name",
         label: "Grade",
         type: "select",
         options: grades,
         colSize: 3,
-        condition: (data) => {
-          const selected = typeOptions.find(
-            t => t.value === (data.type_id || data.type)
-          );
-          return selected?.label?.toLowerCase() === "student";
-        },
+        condition: (data) => data.type_label?.toLowerCase() === "student",
       },
      {
-        key: "section_id",
+        key: "section_name",
         label: "Section",
         type: "select",
         options: (data) => {
-          if (!data.grade) return [];
-          return gradeSectionsMap[data.grade] || [];
+          if (!data.grade_name) return [];
+          return gradeSectionsMap[data.grade_name] || [];
         },
         colSize: 3,
-        condition: (data) => {
-          const selected = typeOptions.find(
-            t => t.value === (data.type_id || data.type)
-          );
-          return selected?.label?.toLowerCase() === "student";
-        },
+        condition: (data) => data.type_label?.toLowerCase() === "student",
       }
     ],
   };
@@ -1611,7 +1600,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       setTempData((prev) => ({
         ...(prev || {}),
         [fieldKey]: value,
-        ...(fieldKey === "grade" ? { section: "" } : {}),
+        ...(fieldKey === "grade_name" ? { section_name: "" } : {}),
       }));
     }
   };
