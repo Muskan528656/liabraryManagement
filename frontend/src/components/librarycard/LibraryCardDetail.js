@@ -71,6 +71,7 @@ const LibraryCardDetail = ({
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [objectTypes, setObjectTypes] = useState([]);
   const [planStatus, setPlanStatus] = useState("No Plan");
+  const [renderTrigger, setRenderTrigger] = useState(0);
 
   const [grades, setGrades] = useState([]);
   const [gradeSectionsMap, setGradeSectionsMap] = useState({});
@@ -106,7 +107,10 @@ const LibraryCardDetail = ({
       "parent_contact",
       "dob",
       "type_id",
-      "library_member_type"
+      "job_title",
+      "grade_name",
+      "section_name",
+
     ],
     []
   );
@@ -147,6 +151,7 @@ const LibraryCardDetail = ({
   };
 
   useEffect(() => {
+    fetchGradesAndSections();
     if (!permissions || Object.keys(permissions).length === 0) {
       const fetchPermissions = async () => {
         try {
@@ -175,7 +180,6 @@ const LibraryCardDetail = ({
         }
       };
       fetchPermissions();
-      fetchGradesAndSections();
     }
   }, []);
   const effectivePermissions = Object.keys(permissions).length > 0
@@ -618,18 +622,21 @@ const LibraryCardDetail = ({
   };
   const fetchTypeOptions = async () => {
     try {
-      const api = new DataApi("librarycard");
-      const res = await api.get("/object-types");
+      const objectTypeApi = new DataApi("objecttype");
+      const res = await objectTypeApi.fetchAll();
 
+      let objectTypeData = [];
 
-
-      if (res.data?.success) {
-        setObjectTypes(res.data.data || []);
-
-      } else {
-        console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
-        setObjectTypes([]);
+      if (res.success && res.data && Array.isArray(res.data)) {
+        objectTypeData = res.data;
+      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        objectTypeData = res.data.data;
+      } else if (Array.isArray(res)) {
+        objectTypeData = res;
       }
+
+      console.log("Fetched object types:", objectTypeData);
+      setObjectTypes(objectTypeData.filter(type => type.status === 'Active' || type.status === true));
     } catch (err) {
       console.error("Error fetching object types:", err);
       setObjectTypes([]);
@@ -725,6 +732,57 @@ const LibraryCardDetail = ({
         colSize: 3,
       },
       {
+        key: "job_title",
+        label: "Job Title",
+        type: "text",
+        // options: [
+        //   { label: "Principal", value: "Principal" },
+        //   { label: "Vice Principal", value: "Vice Principal" },
+        //   { label: "Teacher", value: "Teacher" },
+        //   { label: "Assistant Teacher", value: "Assistant Teacher" },
+        //   { label: "Librarian", value: "Librarian" },
+        //   { label: "Counselor", value: "Counselor" },
+        //   { label: "Administrator", value: "Administrator" },
+        // ],
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "teacher";
+        }
+      },
+
+     {
+        key: "grade_name",
+        label: "Grade",
+        type: "select",
+        options: grades,
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
+      },
+      {
+        key: "section_name",
+        label: "Section",
+        type: "select",
+        options: (data) => {
+          if (!data.grade_name) return [];
+          return gradeSectionsMap[data.grade_name] || [];
+        },
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
+      },
+       {
         key: "is_active",
         label: "Status",
         type: "badge",
@@ -735,62 +793,6 @@ const LibraryCardDetail = ({
           false_label: "Inactive",
         },
         colSize: 3,
-      },
-      {
-        key: "job_title",
-        label: "Job Title",
-        type: "select",
-        options: [
-          { label: "Principal", value: "Principal" },
-          { label: "Vice Principal", value: "Vice Principal" },
-          { label: "Teacher", value: "Teacher" },
-          { label: "Assistant Teacher", value: "Assistant Teacher" },
-          { label: "Librarian", value: "Librarian" },
-          { label: "Counselor", value: "Counselor" },
-          { label: "Administrator", value: "Administrator" },
-        ],
-        colSize: 3,
-        condition: (data) => {
-          const type = getSelectedType(data);
-          return type?.label?.toLowerCase() === "teacher";
-        },
-      },
-      {
-        key: "grade",
-        label: "Grade",
-        type: "select",
-        options: grades,
-        colSize: 3,
-        condition: (data) => {
-          const selected = typeOptions.find(
-            t => t.value === (data.type_id || data.type)
-          );
-          return selected?.label?.toLowerCase() === "student";
-        },
-      },
-      {
-        key: "section",
-        label: "Section",
-        type: "select",
-        options: (data) => {
-          if (!data.grade) return [];
-          return gradeSectionsMap[data.grade] || [];
-        },
-        colSize: 3,
-        condition: (data) => {
-          const selected = typeOptions.find(
-            t => t.value === (data.type_id || data.type)
-          );
-          return selected?.label?.toLowerCase() === "student";
-        },
-      },
-      {
-        name: "library_member_type",
-        label: "Gender",
-        type: "select",
-        required: false,
-        options: library_member_type.map((item) => ({ label: item, value: item })),
-        colSize: 6,
       },
     ],
   };
@@ -815,7 +817,6 @@ const LibraryCardDetail = ({
       if (barcodeContainerRef.current && data?.card_number) {
         try {
           barcodeContainerRef.current.innerHTML = '';
-
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           barcodeContainerRef.current.appendChild(svg);
 
@@ -1562,21 +1563,37 @@ const LibraryCardDetail = ({
       }
 
 
-
       if (updatedData) {
-
         setData(updatedData);
-
         setOriginalData(JSON.parse(JSON.stringify(updatedData)));
-
         setCardData(updatedData);
-
       }
+
+
+
+      // if (updatedData) {
+
+      //   setData({ ...updatedData });
+
+      //   setOriginalData({ ...JSON.parse(JSON.stringify(updatedData)) });
+
+      //   setCardData({ ...updatedData });
+
+      // }
+
+      // Fetch type options to ensure conditional fields render correctly
+      await fetchTypeOptions();
+
+      // Force re-render to update conditional fields
+      setRenderTrigger(prev => prev + 1);
 
       PubSub.publish("RECORD_SAVED_TOAST", {
         title: "Success",
         message: "Record saved successfully",
       });
+
+
+    
 
       resetImageSelection();
 
@@ -1587,6 +1604,12 @@ const LibraryCardDetail = ({
       setIsEditing(false);
 
       setTempData(null);
+      await fetchData();       // reload main data state
+
+      setIsEditing(false);
+      setTempData(null);
+
+
 
     } catch (error) {
       console.error(`Error updating ${moduleLabel}:`, error);
@@ -1617,7 +1640,7 @@ const LibraryCardDetail = ({
       setTempData((prev) => ({
         ...(prev || {}),
         [fieldKey]: value,
-        ...(fieldKey === "grade" ? { section: "" } : {}),
+        ...(fieldKey === "grade_name" ? { section_name: "" } : {}),
       }));
     }
   };

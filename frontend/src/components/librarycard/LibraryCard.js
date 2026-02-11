@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Button, Modal, Alert } from "react-bootstrap";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getLibraryCardConfig } from "./librarycardconfig";
@@ -146,7 +146,8 @@ const LibraryCard = ({ permissions, ...props }) => {
     setShowBarcodeModal(false);
     setSelectedCard(null);
   };
-
+  
+  console.log("setshowlibraryimportmodel=>",showLibraryImportModal)
   return (
     <>
       <DynamicCRUD
@@ -164,7 +165,8 @@ const LibraryCard = ({ permissions, ...props }) => {
             onClick: () => setShowLibraryImportModal(true),
           },
         ]}
-      />
+        />
+
 
       <LibraryImportModal
         show={showLibraryImportModal}
