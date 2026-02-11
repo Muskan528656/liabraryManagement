@@ -106,6 +106,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
       "parent_contact",
       "dob",
       "type_id",
+      "job_title",
       "grade_name",
       "section_name",
 
