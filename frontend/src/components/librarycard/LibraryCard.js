@@ -13,7 +13,6 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import LibraryImportModal from "./LibraryImportModal";
 import { AuthHelper } from "../../utils/authHelper";
 import PermissionDenied from "../../utils/permission_denied";
-import { handlePrintBarcode } from "./LibrarycardPrint";
 import "../../App.css";
 
 const LibraryCard = ({ permissions, ...props }) => {
@@ -30,7 +29,6 @@ const LibraryCard = ({ permissions, ...props }) => {
   const [configError, setConfigError] = useState(null);
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
 
-  const barcodeRef = useRef(null);
 
   const [modulePermissions, setModulePermissions] = useState({
     canView: false,
@@ -49,6 +47,7 @@ const LibraryCard = ({ permissions, ...props }) => {
       : "";
   }, []);
 
+  
   useEffect(() => {
     const fetchPermissions = async () => {
       const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
@@ -63,26 +62,6 @@ const LibraryCard = ({ permissions, ...props }) => {
     window.addEventListener("permissionsUpdated", fetchPermissions);
     return () => window.removeEventListener("permissionsUpdated", fetchPermissions);
   }, []);
-
-  useEffect(() => {
-    if (showBarcodeModal && selectedCard && barcodeRef.current) {
-      try {
-        const cardNumber = selectedCard.card_number || selectedCard.id;
-        JsBarcode(barcodeRef.current, cardNumber, {
-          format: "CODE128",
-          width: 2,
-          height: 50,
-          displayValue: true,
-          text: cardNumber,
-          fontSize: 12,
-          margin: 5,
-        });
-      } catch (error) {
-        console.error("Error generating barcode:", error);
-        setBarcodeError("Failed to generate barcode");
-      }
-    }
-  }, [showBarcodeModal, selectedCard]);
 
   const fetchSubscriptions = useCallback(async () => {
     try {
@@ -140,47 +119,6 @@ const LibraryCard = ({ permissions, ...props }) => {
     if (timeZone) init();
   }, [fetchSubscriptions, fetchUsers, timeZone]);
 
-  useEffect(() => {
-    if (showBarcodeModal && selectedCard && barcodeRef.current) {
-      try {
-        const cardNumber = selectedCard.card_number || selectedCard.id;
-        JsBarcode(barcodeRef.current, cardNumber, {
-          format: "CODE128",
-          width: 2,
-          height: 50,
-          displayValue: true,
-          text: cardNumber,
-          fontSize: 12,
-          margin: 5,
-        });
-      } catch (error) {
-        console.error("Error generating barcode:", error);
-        setBarcodeError("Failed to generate barcode");
-      }
-    }
-  }, [showBarcodeModal, selectedCard]);
-
-  const handleModalOpen = (card) => {
-    setSelectedCard(card);
-    setShowBarcodeModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowBarcodeModal(false);
-    setSelectedCard(null);
-    setBarcodeError(null);
-  };
-
-  const handlePrint = () => {
-    if (selectedCard) {
-      handlePrintBarcode(selectedCard, normalizedApiBaseUrl, (card) => card.card_number || card.id, (date) => {
-        if (!date) return "N/A";
-        const d = new Date(date);
-        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-      }, setBarcodeError);
-    }
-  };
-
   if (permissions.loading || loadingConfig) return <span className="loader"></span>;
   if (!permissions.allowView) return <PermissionDenied />;
   if (configError) return <div className="alert alert-danger m-3">{configError}</div>;
@@ -193,14 +131,21 @@ const LibraryCard = ({ permissions, ...props }) => {
         canCreate: modulePermissions.allowCreate,
         canEdit: modulePermissions.allowEdit,
         canDelete: modulePermissions.allowDelete
-      },
-      customHandlers: {
-        handleBarcodePreview: handleModalOpen
       }
     };
     setFinalConfig(config);
     return <span className="loader"></span>;
   }
+
+  const handleModalOpen = (card) => {
+    setSelectedCard(card);
+    setShowBarcodeModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowBarcodeModal(false);
+    setSelectedCard(null);
+  };
   
   console.log("setshowlibraryimportmodel=>",showLibraryImportModal)
   return (
@@ -229,21 +174,10 @@ const LibraryCard = ({ permissions, ...props }) => {
         onImport={(data) => alert(`Importing ${data.file.name}`)}
       />
 
-      <Modal show={showBarcodeModal} onHide={handleModalClose} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Library Card Barcode</Modal.Title>
-        </Modal.Header>
+      <Modal show={showBarcodeModal} onHide={handleModalClose} centered>
         <Modal.Body className="text-center">
-          {selectedCard && (
-            <>
-              <h5>Card No: {selectedCard.card_number}</h5>
-              <div className="mt-3">
-                <svg ref={barcodeRef}></svg>
-              </div>
-            
-            </>
-          )}
-          {barcodeError && <Alert variant="warning" className="mt-3">{barcodeError}</Alert>}
+          {selectedCard && <h5>Card No: {selectedCard.card_number}</h5>}
+          {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
         </Modal.Body>
       </Modal>
     </>

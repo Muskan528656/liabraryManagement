@@ -40,30 +40,49 @@ module.exports = (app) => {
     }
   );
 
-  router.get(
-    "/book-popularity-analytics",
-    fetchUser,
-    // checkPermission("Reports", "allow_view"),
-    async (req, res) => {
-      try {
-        Book.init(req.userinfo.tenantcode);
+    router.get(
+      "/book-popularity-analytics",
+      fetchUser,
+      async (req, res) => {
+        try {
+     
+          Book.init(req.userinfo.tenantcode);
 
-        const filters = {
-          days: req.query.days,
-          startDate: req.query.startDate,
-          endDate: req.query.endDate,
-          category: req.query.category,
-          searchTerm: req.query.searchTerm
-        };
+          const filters = {
+            days: req.query.days || "",
+            startDate: req.query.startDate ? req.query.startDate.trim() : null,
+            endDate: req.query.endDate ? req.query.endDate.trim() : null,
+            category: req.query.category || null,
+            searchTerm: req.query.searchTerm || null
+          };
 
-        const reportData = await Book.generateBookPopularityReport(filters);
-        res.json(reportData);
-      } catch (err) {
-        console.error("Error generating book popularity report:", err);
-        res.status(500).json({ error: "Internal server error" });
+         
+          if (filters.days === 'custom') {
+            if (!filters.startDate || !filters.endDate) {
+              return res.status(400).json({ error: "startDate and endDate are required when days=custom" });
+            }
+
+        
+            const startDate = new Date(filters.startDate);
+            const endDate = new Date(filters.endDate);
+
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              return res.status(400).json({ error: "Invalid date format for startDate or endDate" });
+            }
+
+            if (startDate > endDate) {
+              return res.status(400).json({ error: "startDate cannot be after endDate" });
+            }
+          }
+
+          const reportData = await Book.generateBookPopularityReport(filters);
+          res.json(reportData);
+        } catch (err) {
+          console.error("Error generating book popularity report:", err);
+          res.status(500).json({ error: "Internal server error" });
+        }
       }
-    }
-  );
+    );
 
   router.get("/inventory-report",
     fetchUser, checkPermission("Books", "allow_view"),

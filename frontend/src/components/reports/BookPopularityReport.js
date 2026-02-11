@@ -1865,10 +1865,39 @@ const BookPopularityReport = () => {
     fetchCategories();
   }, []);
 
+
+
+
   // Fetch Report Data on Filter Change
   useEffect(() => {
+
+    if (filters.days === "custom" && !filters.startDate && !filters.endDate) {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+
+    const formatDate = (date) => date.toISOString().split("T")[0];
+
+    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
+    handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
+  
+    }
     fetchReportData();
   }, [filters]);
+
+
+    const currentDate = new Date();
+
+    const lastMonthDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 1,
+      currentDate.getDate()
+    );
+
+
+
+ 
+   
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -1879,7 +1908,9 @@ const BookPopularityReport = () => {
 
       // Handle Custom Date Logic
       if (filters.days === "custom") {
+        
         params.append("days", "custom");
+      
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
       } else {
@@ -2093,7 +2124,8 @@ const BookPopularityReport = () => {
                 <Form.Control
                   type="date"
                   style={inputBaseStyle}
-                  value={filters.startDate}
+                  value={filters.startDate }
+                  
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
                 />
               </Col>
