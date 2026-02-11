@@ -177,14 +177,14 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
 
             if (gradesList.length > 0) {
             grades = gradesList.map(g => ({
-                value: g.grade_name,
+                value: g.id,
                 label: g.grade_name
             }));
 
             gradeSectionsMap = {};
             gradesList.forEach(g => {
-                gradeSectionsMap[g.grade_name] = g.sections.map(s => ({
-                value: s.name,
+                gradeSectionsMap[g.id] = g.sections.map(s => ({
+                value: s.id,
                 label: s.name
                 }));
             });
@@ -327,8 +327,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             parent_contact: "",
             dob: "",
             job_title: "",
-            grade: "",
-            section: "",
+            grade_id: "",
+            section_id: "",
             code_type:"",
         },
 
@@ -421,8 +421,8 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     ...prev,
                     type_id: value,
                     type_code: selectedType?.type || "", 
-                    grade: "",
-                    section: "",
+                    grade_id: value,
+                    section_id: "",
                     job_title: ""
                 }));
                 }
@@ -438,7 +438,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             },
 
            {
-            name: "grade",
+            name: "grade_id",
             label: "Grade",
             type: "select",
             colSize: 6,
@@ -449,7 +449,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             condition: (formData) => formData.type_code === "student"
             },
             {
-                name: "section",
+                name: "section_id",
                 label: "Section",
                 type: "select",
                 colSize: 6,
@@ -459,7 +459,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     }
                     return [
                     { value: "", label: "Select Section" },
-                    ...(gradeSectionsMap[formData.grade] || [])
+                    ...(gradeSectionsMap[formData.grade_id] || [])
                     ];
                 },
                 condition: (formData) => formData.type_code === "student"

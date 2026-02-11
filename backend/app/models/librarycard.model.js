@@ -48,7 +48,9 @@ async function findById(id) {
         u.email AS user_email,
         p.plan_name,
         p.duration_days,
-        ot.label AS type_label
+        ot.label AS type_label,
+        g.grade_name,
+        g.section_name
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
@@ -56,6 +58,8 @@ async function findById(id) {
         ON lm.plan_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
+      LEFT JOIN ${schema}.grade g
+        ON lm.grade_id = g.id
       WHERE lm.id = $1
     `;
 
@@ -177,7 +181,7 @@ async function create(cardData, userId) {
       "lastmodifieddate",
       "createdbyid",
       "lastmodifiedbyid",
-      "library_member_type"
+      // "library_member_type"
     ];
 
     const placeholders = fields.map((_, i) => `$${i + 1}`).join(", ");
@@ -218,12 +222,13 @@ async function create(cardData, userId) {
       cardData.plan_id || null,
       cardData.type_id || null,
       cardData.job_title || null,
-      cardData.grade_id || null,
+      cardData.section_id || null,
+
       new Date(),
       new Date(),
       userId,
       userId,
-      cardData.library_member_type || null
+      // cardData.library_member_type || null
     ];
 
 
@@ -284,7 +289,8 @@ async function updateById(id, cardData, userId) {
       "parent_contact",
       "job_title",
       "grade_id",
-      "library_member_type"
+      "section_id",
+      // "library_member_type"
 
     ];
 

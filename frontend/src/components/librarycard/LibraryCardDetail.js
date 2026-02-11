@@ -768,7 +768,7 @@ const [gradeSectionsMap, setGradeSectionsMap] = useState({});
         },
       },
      {
-        key: "section",
+        key: "section_id",
         label: "Section",
         type: "select",
         options: (data) => {
