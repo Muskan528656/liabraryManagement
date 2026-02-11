@@ -156,21 +156,24 @@ const UserDetail = ({ permissions }) => {
       {
         key: "currency",
         label: "Currency",
-        type: "select",
+        type: "text",
         options: currencyOptions,
         readOnly: true,
+        disabled: true, 
         render: (value) => {
           if (value) return value;
           if (companyInfo?.currency) return companyInfo.currency;
           return "N/A";
         }
       },
+
       {
         key: "time_zone",
         label: "Time Zone",
-        type: "select",
+        type: "text",
         options: timeZoneOptions,
-        readOnly: false,
+        readOnly: true,
+        disabled: true, 
         render: (value) => {
           if (value) {
             const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
@@ -192,12 +195,12 @@ const UserDetail = ({ permissions }) => {
         readOnly: true,
 
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
-        
+
         render: (value, data) => {
           if (!externalData.userRoles || externalData.userRoles.length === 0) {
             return "Loading...";
           }
-          
+
           const role = externalData.userRoles.find(r =>
             String(r.id) === String(value) || String(r._id) === String(value)
           );

@@ -126,24 +126,24 @@ module.exports = (app) => {
                 .optional()
                 .notEmpty()
                 .withMessage("Shelf name cannot be empty if provided")
-                .matches(/^[A-Za-z\s]+$/)
-                .withMessage("Shelf name should not contain numbers")
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Shelf name should not contain numbers")
                 .trim(),
 
             body("sub_shelf")
                 .optional()
                 .notEmpty()
                 .withMessage("Sub shelf cannot be empty if provided")
-                .matches(/^[A-Za-z\s]+$/)
-                .withMessage("Sub shelf should not contain numbers")
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Sub shelf should not contain numbers")
                 .trim(),
 
             body("note")
                 .optional()
                 .notEmpty()
                 .withMessage("Note cannot be empty if provided")
-                .matches(/^[A-Za-z\s]+$/)
-                .withMessage("Note should not contain numbers")
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Note should not contain numbers")
                 .trim(),
 
 

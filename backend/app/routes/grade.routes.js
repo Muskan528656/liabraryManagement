@@ -154,17 +154,17 @@ module.exports = (app) => {
                 .notEmpty()
                 .withMessage("Grade name is required")
                 .isLength({ max: 50 })
-                .withMessage("Grade name must be 50 characters or less")
-                .matches(/^[A-Za-z\s]+$/)
-                .withMessage("Numbers are not allowed in grade name"),
+                .withMessage("Grade name must be 50 characters or less"),
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Numbers are not allowed in grade name"),
 
             body("section_name")
                 .notEmpty() 
                 .withMessage("Section name is required")
                 .isLength({ max: 10 })
-                .withMessage("Section name must be 10 characters or less")
-                .matches(/^[A-Za-z\s]+$/)
-                .withMessage("Numbers are not allowed in section name"),
+                .withMessage("Section name must be 10 characters or less"), 
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Numbers are not allowed in section name"),
 
             body("status")
                 .optional()
