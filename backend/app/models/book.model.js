@@ -4,6 +4,8 @@
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
 
 function init(schema_name) {
 
@@ -566,42 +568,46 @@ async function generateBookPopularityReport(params) {
     //   WHERE 1=1 ${categoryFilter} ${searchFilter} ${customFilter}
     //   ORDER BY total_issues DESC;
     // `;
-const query = `
-SELECT
-    b.id AS book_id,
-    b.title AS book_name,
-    a.name AS author,
-    c.name AS category,
- b.total_copies AS copies,
-    COUNT(bi.id) AS total_issues,
-    COUNT(DISTINCT bi.issued_to) AS unique_borrowers,
+    const query = `SELECT *
+          FROM (
+              SELECT
+                  b.id AS book_id,
+                  b.title AS book_name,
+                  a.name AS author,
+                  c.name AS category,
+                  b.total_copies AS copies,
 
-    MAX(bi.issue_date) AS last_issue_date,
-    (CURRENT_DATE - MAX(bi.issue_date)) AS days_since_last_issue
+                  COUNT(bi.id) AS total_issues,
+                  COUNT(DISTINCT bi.issued_to) AS unique_borrowers,
 
-FROM ${this.schema}.books b
+                  MAX(bi.issue_date) AS last_issue_date,
+                  (CURRENT_DATE - MAX(bi.issue_date)) AS days_since_last_issue,
 
-LEFT JOIN ${this.schema}.book_issues bi 
-       ON b.id = bi.book_id
-       ${dateFilter}          -- Issue date filter goes in JOIN
+                  RANK() OVER (ORDER BY COUNT(bi.id) DESC) AS popularity_rank
 
-LEFT JOIN ${this.schema}.authors a 
-       ON b.author_id = a.id
+              FROM ${this.schema}.books b
 
-LEFT JOIN ${this.schema}.categories c 
-       ON b.category_id = c.id
+              JOIN ${this.schema}.book_issues bi
+                  ON b.id = bi.book_id
+                  ${dateFilter}
 
-WHERE 1=1
-      ${categoryFilter}       -- Category filter here
-      ${searchFilter}         -- Search filter here
+              LEFT JOIN ${this.schema}.authors a 
+                    ON b.author_id = a.id
 
-GROUP BY
-    b.id, b.title, a.name, c.name
+              LEFT JOIN ${this.schema}.categories c 
+                    ON b.category_id = c.id
 
-HAVING COUNT(bi.id) > 0   -- Only books that were issued
+              WHERE 1=1
+                    ${categoryFilter}
+                    ${searchFilter}
 
-ORDER BY total_issues DESC;
-`;
+              GROUP BY
+                  b.id, b.title, a.name, c.name, b.total_copies
+          ) ranked_books
+
+          ORDER BY total_issues DESC
+    `;
+
 
 
     const result = await sql.query(query, queryParams);
@@ -1309,5 +1315,6 @@ module.exports = {
   findByAgeRange,
   generateInventoryReport,
   generateBookPopularityReport,
-  exportBookPopularityReportPDF
+  exportBookPopularityReportPDF,
+  exportBookPopularityReportExcel
 };
