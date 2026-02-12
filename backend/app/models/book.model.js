@@ -12,13 +12,14 @@ function init(schema_name) {
   this.schema = schema_name;
 }
 
-async function findAll() {
+async function findAll(filters = {}) {
   try {
     console.log("schema->>", this.schema)
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT
+    
+    let query = `SELECT
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
@@ -40,21 +41,43 @@ async function findAll() {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
-                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
-                   ORDER BY b.createddate DESC`;
-    const result = await sql.query(query);
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id`;
+    
+    const conditions = [];
+    const params = [];
+    
+    // Add branch filter if provided
+    if (filters.branch_id) {
+      conditions.push(`b.branch_id = $${params.length + 1}`);
+      params.push(filters.branch_id);
+    }
+    
+    // Add search filter if provided
+    if (filters.search) {
+      conditions.push(`(b.title ILIKE $${params.length + 1} OR a.name ILIKE $${params.length + 2})`);
+      params.push(`%${filters.search}%`, `%${filters.search}%`);
+    }
+    
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    
+    query += ` ORDER BY b.createddate DESC`;
+    
+    const result = await sql.query(query, params);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);
     throw error;
   }
 }
-async function findById(id) {
+async function findById(id, branchId = null) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT
+    
+    let query = `SELECT
                     b.*,
                     a.name AS author_name,
                     c.name AS category_name,
@@ -75,9 +98,19 @@ async function findById(id) {
                    LEFT JOIN ${this.schema}.authors a ON b.author_id = a.id
                    LEFT JOIN ${this.schema}.categories c ON b.category_id = c.id
                    LEFT JOIN ${this.schema}.publisher pub ON b.publisher_id = pub.id
-                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id
-                   WHERE b.id = $1`;
-    const result = await sql.query(query, [id]);
+                   LEFT JOIN ${this.schema}.shelf s ON b.shelf_id = s.id`;
+    
+    const params = [id];
+    let paramIndex = 2;
+    
+    if (branchId) {
+      query += ` WHERE b.id = $1 AND b.branch_id = $${paramIndex}`;
+      params.push(branchId);
+    } else {
+      query += ` WHERE b.id = $1`;
+    }
+    
+    const result = await sql.query(query, params);
     if (result.rows.length > 0) {
       return result.rows[0];
     }
@@ -111,8 +144,8 @@ async function create(bookData, userId) {
     const query = `INSERT INTO ${this.schema}.books
                    (title, author_id, category_id, isbn, total_copies, available_copies,
                     company_id, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid,
-                    language, status, pages, price, publisher_id, min_age, max_age, inventory_binding, shelf_id)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                    language, status, pages, price, publisher_id, min_age, max_age, inventory_binding, shelf_id, branch_id)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
                    RETURNING *`;
 
     const values = [
@@ -133,6 +166,7 @@ async function create(bookData, userId) {
       bookData.max_age || bookData.maxAge || null,
       bookData.inventory_binding || null,
       bookData.sub_shelf_id || null,
+      bookData.branch_id || null, // Add branch_id
     ];
     console.log("Creating book with values:", bookData.price);
     const result = await sql.query(query, values);
@@ -145,13 +179,13 @@ async function create(bookData, userId) {
   }
 }
 
-async function updateById(id, bookData, userId) {
+async function updateById(id, bookData, userId, branchId = null) {
   console.log("update book data:", bookData)
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const currentBook = await this.findById(id);
+    const currentBook = await this.findById(id, branchId);
     if (!currentBook) {
       throw new Error("Book not found");
     }
@@ -163,14 +197,26 @@ async function updateById(id, bookData, userId) {
       throw new Error(`Available copies (${availableCopies}) cannot exceed total copies (${totalCopies})`);
     }
 
-    const query = `UPDATE ${this.schema}.books
+    let query = `UPDATE ${this.schema}.books
                    SET title = $2, author_id = $3, category_id = $4, isbn = $5,
                        total_copies = $6, available_copies = $7,
                        lastmodifieddate = NOW(), lastmodifiedbyid = $8,
                        language = $9, status = $10, pages = $11, price = $12,
-                       publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16, shelf_id = $17
-                   WHERE id = $1
-                   RETURNING *`;
+                       publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16, shelf_id = $17`;
+    
+    // Add branch_id to update if provided
+    if (bookData.branch_id !== undefined) {
+      query += `, branch_id = $18`;
+    }
+    
+    query += ` WHERE id = $1`;
+    
+    // Add branch filter if provided
+    if (branchId) {
+      query += ` AND branch_id = $19 RETURNING *`;
+    } else {
+      query += ` RETURNING *`;
+    }
 
     const values = [
       id,
@@ -191,6 +237,16 @@ async function updateById(id, bookData, userId) {
       bookData.inventory_binding !== undefined ? bookData.inventory_binding : currentBook.inventory_binding,
       bookData.shelf_id !== undefined ? bookData.shelf_id : currentBook.shelf_id,
     ];
+    
+    // Add branch_id to values if provided
+    if (bookData.branch_id !== undefined) {
+      values.push(bookData.branch_id);
+      if (branchId) {
+        values.push(branchId); // Add the branch filter value
+      }
+    } else if (branchId) {
+      values.push(branchId); // Add the branch filter value
+    }
 
     const result = await sql.query(query, values);
     if (result.rows.length > 0) {
@@ -203,13 +259,23 @@ async function updateById(id, bookData, userId) {
   }
 }
 
-async function deleteById(id) {
+async function deleteById(id, branchId = null) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `DELETE FROM ${this.schema}.books WHERE id = $1 RETURNING *`;
-    const result = await sql.query(query, [id]);
+    
+    let query = `DELETE FROM ${this.schema}.books WHERE id = $1`;
+    const params = [id];
+    
+    if (branchId) {
+      query += ` AND branch_id = $2`;
+      params.push(branchId);
+    }
+    
+    query += ` RETURNING *`;
+    
+    const result = await sql.query(query, params);
     if (result.rows.length > 0) {
       return { success: true, message: "Book deleted successfully" };
     }
@@ -220,7 +286,7 @@ async function deleteById(id) {
   }
 }
 
-async function findByAgeRange(minAge, maxAge) {
+async function findByAgeRange(minAge, maxAge, filters = {}) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -239,7 +305,13 @@ async function findByAgeRange(minAge, maxAge) {
 
     const params = [];
     let paramIndex = 1;
-
+    
+    // Add branch filter if provided
+    if (filters.branch_id) {
+      query += ` AND b.branch_id = $${paramIndex}`;
+      params.push(filters.branch_id);
+      paramIndex++;
+    }
 
     if (minAge !== null && minAge !== undefined) {
       query += ` AND (b.min_age IS NULL OR b.min_age <= $${paramIndex})`;
@@ -263,17 +335,26 @@ async function findByAgeRange(minAge, maxAge) {
   }
 }
 
-async function findByISBN(isbn, excludeId = null) {
+async function findByISBN(isbn, excludeId = null, filters = {}) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
+    
     let query = `SELECT * FROM ${this.schema}.books WHERE isbn = $1`;
     const params = [isbn];
+    let paramIndex = 2;
 
     if (excludeId) {
-      query += ` AND id != $2`;
+      query += ` AND id != $${paramIndex}`;
       params.push(excludeId);
+      paramIndex++;
+    }
+    
+    // Add branch filter if provided
+    if (filters.branch_id) {
+      query += ` AND branch_id = $${paramIndex}`;
+      params.push(filters.branch_id);
     }
 
     const result = await sql.query(query, params);
@@ -284,7 +365,7 @@ async function findByISBN(isbn, excludeId = null) {
   }
 }
 
-async function generateInventoryReport() {
+async function generateInventoryReport(filters = {}) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -345,7 +426,7 @@ async function generateInventoryReport() {
     //   ORDER BY b.title ASC
     // `;
 
-    const query = `
+    let query = `
            SELECT
             b.id,
             b.title AS book_title,
@@ -422,9 +503,14 @@ async function generateInventoryReport() {
                 COUNT(*) FILTER (WHERE status = 'damaged') AS damaged_count
             FROM ${this.schema}.book_issues
             GROUP BY book_id
-        ) bd ON b.id = bd.book_id
-        ORDER BY b.title ASC;
-    `;
+        ) bd ON b.id = bd.book_id`;
+        
+    // Add branch filter if provided
+    if (filters.branch_id) {
+      query += ` WHERE b.branch_id = '${filters.branch_id}'`;
+    }
+    
+    query += ` ORDER BY b.title ASC;`;
 
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -444,6 +530,13 @@ async function generateBookPopularityReport(params) {
     let dateFilter = '';
     let customFilter = '';
     const queryParams = [];
+    
+    // Add branch filter if provided
+    let branchFilter = '';
+    if (params.branch_id) {
+      branchFilter = `AND b.branch_id = $${queryParams.length + 1}`;
+      queryParams.push(params.branch_id);
+    }
 
     // --- 1. DATE FILTER LOGIC ---
     // Handle presets (30, 90, 365)
@@ -598,6 +691,7 @@ async function generateBookPopularityReport(params) {
                     ON b.category_id = c.id
 
               WHERE 1=1
+                    ${branchFilter}
                     ${categoryFilter}
                     ${searchFilter}
 

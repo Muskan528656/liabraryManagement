@@ -36,6 +36,9 @@ export const UserProvider = ({ children }) => {
     const user = getUserFromToken();
     setUserInfo(user);
     if (user) {
+      // Store user role in sessionStorage for helper function
+      const userRole = user.userrole || user.role || user.role_name || user.userrole_name || '';
+      sessionStorage.setItem('userRole', userRole);
       await fetchPermissions();
     }
     setIsLoading(false);

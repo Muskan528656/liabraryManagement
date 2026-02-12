@@ -5,10 +5,12 @@ import jwt_decode from "jwt-decode";
 import * as constants from "../../constants/CONSTANT";
 import helper from "../common/helper";
 import DataApi from "../../api/dataApi";
+import { useBranch } from "../../contexts/BranchContext";
 
 export default function Sidebar({ open, handleDrawerClose }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isSuperAdmin } = useBranch();
   const [userInfo, setUserInfo] = useState(null);
   const [modulesFromDB, setModulesFromDB] = useState([]);
 
@@ -181,6 +183,61 @@ export default function Sidebar({ open, handleDrawerClose }) {
           </Nav.Link>
         ))}
       </Nav>
+
+      {/* Branch Management Link for Super Admin */}
+      {isSuperAdmin && (
+        <Nav className="flex-column px-3 pt-2 mt-auto">
+          <Nav.Link
+            onClick={() => handleNavigation('/branches')}
+            className={`sidebar-item mb-2 ${isActive('/branches') ? 'sidebar-item-active' : ''
+              }`}
+            style={{
+              color: isActive('/branches') ? 'var(--primary-color)' : '#8b5cf6',
+              background: isActive('/branches')
+                ? 'rgba(111, 66, 193, 0.1)'
+                : 'transparent',
+              borderRadius: '10px',
+              padding: '12px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              textDecoration: 'none',
+              borderTop: '1px solid rgba(111, 66, 193, 0.1)',
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive('/branches')) {
+                e.target.style.background = 'rgba(111, 66, 193, 0.05)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive('/branches')) {
+                e.target.style.background = 'transparent';
+              }
+            }}
+          >
+            <i
+              className='fa-solid fa-building'
+              style={{
+                fontSize: '16px',
+                width: '24px',
+                textAlign: 'center',
+              }}
+            ></i>
+            {open && (
+              <span
+                style={{
+                  marginLeft: '12px',
+                  fontSize: '13px',
+                  fontWeight: isActive('/branches') ? '600' : '400',
+                }}
+              >
+                Branch Management
+              </span>
+            )}
+          </Nav.Link>
+        </Nav>
+      )}
     </div>
   );
 }

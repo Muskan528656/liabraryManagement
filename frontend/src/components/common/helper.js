@@ -55,6 +55,23 @@ const helper = {
   },
 
   async fetchWithAuth(url, method, body = undefined, bodyType = undefined) {
+    // Add branch_id to URL if available and user is not super admin
+    let modifiedUrl = url;
+    const selectedBranch = sessionStorage.getItem('selectedBranch');
+    const userRole = sessionStorage.getItem('userRole');
+    
+    if (selectedBranch && userRole !== 'SYSTEM ADMIN') {
+      try {
+        const branch = JSON.parse(selectedBranch);
+        if (branch && branch.id) {
+          const separator = url.includes('?') ? '&' : '?';
+          modifiedUrl = `${url}${separator}branch_id=${branch.id}`;
+        }
+      } catch (e) {
+        console.error('Error parsing selected branch:', e);
+      }
+    }
+    
     let accessToken = sessionStorage.getItem("token");
     const refreshToken = sessionStorage.getItem("r-t");
 
@@ -112,7 +129,7 @@ const helper = {
       }
 
       if (method === "GET" || method === "DELETE") {
-        return await fetch(url, {
+        return await fetch(modifiedUrl, {
           method,
           mode: "cors",
           headers: {
@@ -123,7 +140,7 @@ const helper = {
           },
         });
       } else if (method === "POST" || method === "PUT" || method === "PATCH") {
-        return await fetch(url, {
+        return await fetch(modifiedUrl, {
           method,
           mode: "cors",
           headers: {
