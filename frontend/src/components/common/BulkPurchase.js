@@ -553,6 +553,9 @@ const BulkPurchasePage = ({permissions}) => {
         try {
             const vendorApi = new DataApi("vendor");
             const response = await vendorApi.fetchAll();
+
+            console.log("resp=>",response?.data?.status);
+
             if (response.data) {
                 setVendors(response.data);
             }

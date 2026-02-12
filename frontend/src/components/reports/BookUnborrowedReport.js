@@ -31,6 +31,7 @@ import { Bar, Pie } from "react-chartjs-2";
 import DataApi from "../../api/dataApi";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx'; 
 import "./BookPopularityReport.css";
 
 // Register ChartJS components
@@ -117,8 +118,8 @@ const InactiveBooksReport = () => {
 
     const formatDate = (date) => date.toISOString().split("T")[0];
 
-    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
-    handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
+    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);    
+    handleFilterChange("endDate", today.toISOString().split("T")[0]);    
   
     }
     fetchReportData();
@@ -175,7 +176,6 @@ const InactiveBooksReport = () => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
-      // Clear specific dates if user switches away from "custom"
       ...(field === "days" && value !== "custom" ? { startDate: "", endDate: "" } : {})
     }));
     setCurrentPage(1);
@@ -192,66 +192,81 @@ const InactiveBooksReport = () => {
   };
 
   // Export Functions
+  const prepareExportData = () => {
+    const data = Array.isArray(reportData) ? reportData : (reportData?.records || []);
+    return data.map(item => ({
+      "Book Title": item.title,
+      "Category": item.category_name || "N/A",
+      "Available Copies": item.available_copies,
+      "Last Activity": item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString() : 'Never',
+      "Days Inactive": item.days_not_borrowed
+    }));
+  };
+
   const exportToCSV = () => {
-    if (!reportData?.mainTable) return;
-    const headers = ["Book Name", "Author", "Category", "Issued", "Borrowers", "Level"];
-    const csvContent = [
-      headers.join(","),
-      ...reportData.mainTable.map((row) =>
-        [`"${row.book_name}"`, `"${row.author || "N/A"}"`, `"${row.category || "N/A"}"`, row.total_issues || 0, row.unique_borrowers || 0, `"${row.popularity_level}"`].join(",")
-      ),
-    ].join("\n");
+    const data = prepareExportData();
+    if (data.length === 0) return alert("No data to export");
+
+    const headers = Object.keys(data[0]).join(",");
+    const rows = data.map(row => 
+      Object.values(row).map(value => `"${value}"`).join(",")
+    ).join("\n");
+
+    const csvContent = `${headers}\n${rows}`;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `popularity-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Inactive_Books_${todayStr}.csv`);
     link.click();
   };
 
-  const exportToExcel = async () => {
-    setExporting(true);
-    try {
-      const api = new DataApi("book");
-      const params = new URLSearchParams();
+  const exportToExcel = () => {
+    const data = prepareExportData();
+    if (data.length === 0) return alert("No data to export");
 
-      if (filters.days) params.append("days", filters.days);
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inactive Books");
+    
+    // Auto-size columns
+    const maxWidth = 40;
+    worksheet['!cols'] = Object.keys(data[0]).map(key => ({
+      wch: Math.min(maxWidth, Math.max(key.length, ...data.map(obj => obj[key]?.toString().length || 0)))
+    }));
 
-      const response = await api.get(`/export-excel?${params.toString()}`, {
-        responseType: 'blob'
-      });
-      const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `book-popularity-report.xlsx`);
-      link.click();
-    } catch (error) {
-      console.error("Excel export error:", error);
-      alert("Excel export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+    XLSX.writeFile(workbook, `Inactive_Books_Report_${todayStr}.xlsx`);
   };
 
-  
   const exportToPDF = () => {
-    if (!reportData?.mainTable) return;
-    const doc = new jsPDF();
-    doc.text('Book Popularity Analytics Report', 105, 20, { align: 'center' });
-    const tableData = reportData.mainTable.slice(0, 30).map(row => [
-      row.book_name, row.author || 'N/A', row.category || 'N/A', row.total_issues, row.unique_borrowers, row.popularity_level
+    const data = Array.isArray(reportData) ? reportData : (reportData?.records || []);
+    if (data.length === 0) return alert("No data to export");
+
+    const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+    doc.setFontSize(18);
+    doc.text('Long-Time Unborrowed Books Report', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableColumn = ["Title", "Category", "Copies", "Last Activity", "Days Inactive"];
+    const tableRows = data.map(item => [
+      item.title,
+      item.category_name,
+      item.available_copies,
+      item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString() : 'Never',
+      item.days_not_borrowed
     ]);
+
     doc.autoTable({
-      head: [['Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level']],
-      body: tableData,
-      startY: 30
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [13, 110, 253] }
     });
-    doc.save('book-popularity-report.pdf');
+
+    doc.save(`Inactive_Books_${todayStr}.pdf`);
   };
+
 
   // Table Columns Definition
   const columns = [

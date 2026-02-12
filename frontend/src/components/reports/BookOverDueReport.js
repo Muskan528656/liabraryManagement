@@ -31,6 +31,7 @@ import { Bar, Pie } from "react-chartjs-2";
 import DataApi from "../../api/dataApi";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx'
 import "./BookPopularityReport.css";
 
 // Register ChartJS components
@@ -195,65 +196,77 @@ const BookBrrowedReport = () => {
   };
 
   // Export Functions
+  const prepareDataForExport = () => {
+    return reportData.map(row => ({
+      "Book Title": row.title,
+      "Issued To": row.member_name || "Unknown",
+      "Issue Date": row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A',
+      "Due Date": row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A',
+      "Status": row.circulation_status
+    }));
+  };
+
+  // --- Export: CSV ---
   const exportToCSV = () => {
-    if (!reportData?.records) return;
-    const headers = ["Book Title", "Issued To", "Issue Date", "Due Date", "Return Date", "Status", "Circulation Status"];
+    const data = prepareDataForExport();
+    if (data.length === 0) return alert("No data to export");
+
+    const headers = Object.keys(data[0]).join(",");
     const csvContent = [
-      headers.join(","),
-      ...reportData.records.map((row) =>
-        [`"${row.title}"`, `"${row.issued_to}"`, `"${row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A'}"`, `"${row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A'}"`, `"${row.return_date ? new Date(row.return_date).toLocaleDateString() : 'N/A'}"`, `"${row.status}"`, `"${row.circulation_status}"`].join(",")
-      ),
+      headers,
+      ...data.map(row => Object.values(row).map(v => `"${v}"`).join(","))
     ].join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `book-borrowing-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Overdue_Report_${todayStr}.csv`);
     link.click();
   };
 
-  const exportToExcel = async () => {
-    setExporting(true);
-    try {
-      const api = new DataApi("book");
-      const params = new URLSearchParams();
+  // --- Export: XLSX (Excel) ---
+  const exportToExcel = () => {
+    const data = prepareDataForExport();
+    if (data.length === 0) return alert("No data to export");
 
-      if (filters.days) params.append("days", filters.days);
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Overdue Books");
+    
+    // Auto-size columns
+    const wscols = Object.keys(data[0]).map(key => ({ wch: key.length + 10 }));
+    worksheet['!cols'] = wscols;
 
-      const response = await api.get(`/export-excel?${params.toString()}`, {
-        responseType: 'blob'
-      });
-      const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `book-popularity-report.xlsx`);
-      link.click();
-    } catch (error) {
-      console.error("Excel export error:", error);
-      alert("Excel export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+    XLSX.writeFile(workbook, `Overdue_Report_${todayStr}.xlsx`);
   };
 
-  
+  // --- Export: PDF ---
   const exportToPDF = () => {
-    if (!reportData?.records) return;
-    const doc = new jsPDF();
-    doc.text('Book Borrowing Report', 105, 20, { align: 'center' });
-    const tableData = reportData.records.slice(0, 30).map(row => [
-      row.title, row.issued_to, row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A', row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A', row.return_date ? new Date(row.return_date).toLocaleDateString() : 'N/A', row.status, row.circulation_status
+    if (reportData.length === 0) return alert("No data to export");
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    doc.setFontSize(16);
+    doc.text('Overdue Books Report', 105, 15, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableData = reportData.map(row => [
+      row.title, 
+      row.member_name, 
+      row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A', 
+      row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A', 
+      row.circulation_status
     ]);
+
     doc.autoTable({
-      head: [['Book Title', 'Issued To', 'Issue Date', 'Due Date', 'Return Date', 'Status', 'Circulation Status']],
+      head: [['Book Title', 'Member', 'Issue Date', 'Due Date', 'Status']],
       body: tableData,
-      startY: 30
+      startY: 28,
+      theme: 'striped',
+      headStyles: { fillColor: [220, 53, 69] } // Red theme for overdue
     });
-    doc.save('book-borrowing-report.pdf');
+
+    doc.save(`Overdue_Report_${todayStr}.pdf`);
   };
 
   // Table Columns Definition
