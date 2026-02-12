@@ -362,19 +362,19 @@ const BookInventoryReport = () => {
 
                 {/* Icon */}
                 {/* <div
-        className="d-flex align-items-center justify-content-center"
-        style={{
-          width: "42px",
-          height: "42px",
-          borderRadius: "10px",
-          background: "var(--primary-background-color)"
-        }}
-      >
-        <i
-          className="fa fa-book"
-          style={{ fontSize: '20px', color: "var(--primary-color)" }}
-        />
-      </div> */}
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "10px",
+                  background: "var(--primary-background-color)"
+                }}
+              >
+                <i
+                  className="fa fa-book"
+                  style={{ fontSize: '20px', color: "var(--primary-color)" }}
+                />
+              </div> */}
 
                 {/* Title */}
                 <div>

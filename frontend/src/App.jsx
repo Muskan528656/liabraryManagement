@@ -65,6 +65,8 @@ import Shelf from "./components/shelf/shelf";
 import ShelfDetail from "./components/shelf/shelfDetail";
 import GradeSectionDetail from "./components/GradeSection/gradesectionDetail";
 import GradeSection from "./components/GradeSection/gradesection";
+import InactiveBooksReport from "./components/reports/InactiveBooksReport";
+import BookBrrowedReport from "./components/reports/BookBrrowedReport";
 const ENDPOINT = "http://localhost:3003";
 
 function AppContent() {
@@ -213,7 +215,9 @@ function AppContent() {
                 <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
                 <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
-
+                <Route path="reports/inactivebooks" element={<InactiveBooksReport/>} />
+                <Route path="reports/book-borrowing" element={<BookBrrowedReport/>} />
+                
               </Route>
             </Routes>
           </Router>
