@@ -924,7 +924,7 @@ async function generateBookPopularityReport(params) {
 //         bi.issue_date,
 //         DATE_TRUNC('month', bi.issue_date) AS issue_month
 //     FROM ${this.schema}.book_issues bi
-    
+
 // ),
 
 // issue_summary AS (

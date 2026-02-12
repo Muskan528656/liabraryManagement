@@ -302,7 +302,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name' || col.field === 'branch_name' || col.field === 'shelf_name' || col.field === 'grade_name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -726,71 +726,71 @@ const DynamicCRUD = ({
 
 
     const getProcessedFormFields = useCallback(() => {
-    return formFields
-        .map(field => {
-            if (!field) return null;
+        return formFields
+            .map(field => {
+                if (!field) return null;
 
-            let processedField = { ...field };
+                let processedField = { ...field };
 
-         
-            if (field.readOnlyWhenEditing && editingItem) {
-                processedField.readOnly = true;
-            }
 
-            if (
-                (field.name === 'password' || field.name === 'confirmPassword') &&
-                editingItem
-            ) {
-                processedField.required = false;
-            }
+                if (field.readOnlyWhenEditing && editingItem) {
+                    processedField.readOnly = true;
+                }
 
-     
-            if (typeof field.condition === "function") {
-                const shouldShow = field.condition(formData);
-                if (!shouldShow) return null;
-            }
+                if (
+                    (field.name === 'password' || field.name === 'confirmPassword') &&
+                    editingItem
+                ) {
+                    processedField.required = false;
+                }
 
-            // ===== OPTIONS PROCESSING =====
-            if (field.type === 'select' && field.options) {
-                let optionsArray = [];
 
-                if (Array.isArray(field.options)) {
-                    optionsArray = field.options;
-                } else if (typeof field.options === 'function') {
-                    optionsArray = field.options(formData) || [];
-                } else if (typeof field.options === 'string') {
-                    const relatedOptions = relatedData[field.options];
-                    if (Array.isArray(relatedOptions)) {
-                        optionsArray = relatedOptions.map(item => ({
-                            value: String(item.id || ''),
-                            label:
-                                item.name ||
-                                item.title ||
-                                item.email ||
-                                `Item ${item.id}`
-                        }));
+                if (typeof field.condition === "function") {
+                    const shouldShow = field.condition(formData);
+                    if (!shouldShow) return null;
+                }
+
+                // ===== OPTIONS PROCESSING =====
+                if (field.type === 'select' && field.options) {
+                    let optionsArray = [];
+
+                    if (Array.isArray(field.options)) {
+                        optionsArray = field.options;
+                    } else if (typeof field.options === 'function') {
+                        optionsArray = field.options(formData) || [];
+                    } else if (typeof field.options === 'string') {
+                        const relatedOptions = relatedData[field.options];
+                        if (Array.isArray(relatedOptions)) {
+                            optionsArray = relatedOptions.map(item => ({
+                                value: String(item.id || ''),
+                                label:
+                                    item.name ||
+                                    item.title ||
+                                    item.email ||
+                                    `Item ${item.id}`
+                            }));
+                        }
                     }
+
+                    optionsArray = optionsArray.filter(
+                        opt => opt && typeof opt === 'object'
+                    );
+
+                    if (!optionsArray.some(opt => opt.value === '')) {
+                        optionsArray = [
+                            { value: '', label: `Select ${field.label}` },
+                            ...optionsArray
+                        ];
+                    }
+
+                    processedField.options = optionsArray;
                 }
 
-                optionsArray = optionsArray.filter(
-                    opt => opt && typeof opt === 'object'
-                );
+                return processedField;
+            })
+            .filter(Boolean); // cleaner
+    }, [formFields, relatedData, formData, editingItem]);
 
-                if (!optionsArray.some(opt => opt.value === '')) {
-                    optionsArray = [
-                        { value: '', label: `Select ${field.label}` },
-                        ...optionsArray
-                    ];
-                }
-
-                processedField.options = optionsArray;
-            }
-
-            return processedField;
-        })
-        .filter(Boolean); // cleaner
-}, [formFields, relatedData, formData, editingItem]);
-    
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {

@@ -452,7 +452,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     { key: "updated_at", label: "Updated At", type: "date" },
                 ]
             },
-            permissions: permissions 
+            permissions: permissions
         },
 
         permissions: permissions,

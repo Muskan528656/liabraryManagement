@@ -66,8 +66,8 @@ import Shelf from "./components/shelf/shelf";
 import ShelfDetail from "./components/shelf/shelfDetail";
 import GradeSectionDetail from "./components/GradeSection/gradesectionDetail";
 import GradeSection from "./components/GradeSection/gradesection";
-import BranchList from "./components/branch/BranchList";
-import BranchDetail from "./components/branch/BranchDetail";
+import Branch from "./components/branches/branch";
+import BranchDetail from "./components/branches/branchDetail";
 const ENDPOINT = "http://localhost:3003";
 
 function AppContent() {
@@ -220,6 +220,9 @@ function AppContent() {
                 <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
                 <Route path="branches" element={<BranchList permissions={getPermissionForModule("Branches")} />} />
                 <Route path="branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
+
+                <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
+                <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
 
               </Route>
             </Routes>

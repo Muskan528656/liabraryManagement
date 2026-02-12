@@ -652,7 +652,6 @@ export default function Header({ socket }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0.5rem 0.5rem",
           borderBottom: "1px solid #e5e7eb",
           background: "#ffffff",
         }}
@@ -669,14 +668,15 @@ export default function Header({ socket }) {
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
+            marginLeft: "30px"
           }}
         >
-          <img
+          {/* <img
             // src={Company?.logourl || "/Logo.png"}
             src={"/ibirds.png"}
             height="50"
             style={{ height: "70px", marginLeft: "20px", objectFit: "contain" }}
-          />
+          /> */}
           <span>{Company?.name}</span>
         </Navbar.Brand>
 
@@ -747,13 +747,12 @@ export default function Header({ socket }) {
             onClick={() => setShowScannerModal(true)}
             className="shadow-lg pulse-button"
             style={{
-              height: "45px",
+              height: "40px",
               padding: "6px",
               backgroundColor: "#fff",
               border: "2px solid var(--primary-color)",
               borderRadius: "8px",
               cursor: "pointer",
-
               transition: "transform 0.2s ease",
             }}
           />
