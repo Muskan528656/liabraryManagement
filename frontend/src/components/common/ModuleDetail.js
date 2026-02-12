@@ -266,6 +266,7 @@ const ModuleDetail = ({
           cursor: clickable ? "pointer" : "default",
           textDecoration: "none",
           gap: "8px",
+
         }}
       >
         <img
@@ -684,7 +685,7 @@ const ModuleDetail = ({
       const badgeConfig = field.badgeConfig || {};
       const bgColor = badgeConfig[value] || (value ? "primary" : "danger");
       const label = badgeConfig[`${value}_label`] || (value ? "Active" : "Inactive");
-      return <Badge style={{borderRadius:"5px", padding:"2px"}}  bg={bgColor}>{label}</Badge>;
+      return <Badge style={{ borderRadius: "5px", padding: "2px" }} bg={bgColor}>{label}</Badge>;
     }
     if (field.type === "currency") {
       return `₹${parseFloat(value).toLocaleString("en-IN", {
@@ -800,7 +801,7 @@ const ModuleDetail = ({
         });
 
         console.log("cleandata", cleanData)
-        console.log("ide",id)
+        console.log("ide", id)
 
         response = await api.update(cleanData, id);
         console.log("response", response)
@@ -1054,18 +1055,18 @@ const ModuleDetail = ({
 
           {!isEditing && (
             <OverlayTrigger
-                placement="top"
-                overlay={<Tooltip>{data?.status ? "Active" : "Inactive"}</Tooltip>}
+              placement="top"
+              overlay={<Tooltip>{data?.status ? "Active" : "Inactive"}</Tooltip>}
             >
-            <Badge 
-              bg={value ? "primary" : "danger"}
-              toolTip={value ? "Active" : "Inactive"}
-              className="px-3 py-2 fs-6"
-              style={{marginTop:"32px"}}
-            >
-              {value ? "Active" : "Inactive"}
-            </Badge>
-              </OverlayTrigger>
+              <Badge
+                bg={value ? "primary" : "danger"}
+                toolTip={value ? "Active" : "Inactive"}
+                className="px-3 py-2 fs-6"
+                style={{ marginTop: "32px" }}
+              >
+                {value ? "Active" : "Inactive"}
+              </Badge>
+            </OverlayTrigger>
           )}
 
           {isEditing && !isNonEditableField && (
@@ -1289,7 +1290,7 @@ const ModuleDetail = ({
 
   return (
     <>
-      <Container fluid className="py-4">
+      <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
         <ScrollToTop />
 
         <Row className="justify-content-center">
@@ -1322,47 +1323,47 @@ const ModuleDetail = ({
                   </div>
 
                   {/* Right Side - Action Buttons */}
-                 
-                    <div className="d-flex gap-2">
-                      {!isEditing ? (
-                        <>
-                          {allowEdit && (
-                            <button
-                              className="custom-btn-primary"
-                              onClick={handleEdit}
-                            >
-                              <i className="fa-solid fa-edit me-2"></i>
-                              Edit {moduleLabel}
-                            </button>)}
-                          {/* <button
+
+                  <div className="d-flex gap-2">
+                    {!isEditing ? (
+                      <>
+                        {allowEdit && (
+                          <button
+                            className="custom-btn-primary"
+                            onClick={handleEdit}
+                          >
+                            <i className="fa-solid fa-edit me-2"></i>
+                            Edit {moduleLabel}
+                          </button>)}
+                        {/* <button
                             className="custom-btn-delete-detail"
                             onClick={handleDelete}
                           >
                             <i className="fa-solid fa-trash me-2"></i>
                             Delete
                           </button> */}
-                        </>
-                      ) : (
-                        <div className="d-flex gap-2">
-                          <button
-                            className="custom-btn-primary"
-                            onClick={handleSave}
-                            disabled={saving}
-                          >
-                            <i className="fa-solid fa-check me-2"></i>
-                            {saving ? "Saving..." : "Save"}
-                          </button>
-                          <button
-                            className="custom-btn-secondary"
-                            onClick={handleCancel}
-                            disabled={saving}
-                          >
-                            <i className="fa-solid fa-times me-2"></i>
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <div className="d-flex gap-2">
+                        <button
+                          className="custom-btn-primary"
+                          onClick={handleSave}
+                          disabled={saving}
+                        >
+                          <i className="fa-solid fa-check me-2"></i>
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          className="custom-btn-secondary"
+                          onClick={handleCancel}
+                          disabled={saving}
+                        >
+                          <i className="fa-solid fa-times me-2"></i>
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details Section */}
@@ -1378,9 +1379,9 @@ const ModuleDetail = ({
                       }}
                     >
                       {moduleLabel} Information
-                        <Badge bg={data?.status || data?.is_active? "success" : "danger"} className="mx-2 float-end">
-                          {data?.status || data?.is_active ? "Active" : "Inactive" }
-                        </Badge>
+                      <Badge bg={data?.status || data?.is_active ? "success" : "danger"} className="mx-2 float-end">
+                        {data?.status || data?.is_active ? "Active" : "Inactive"}
+                      </Badge>
                     </h6>
                   </Col>
                   <Row className="px-5">

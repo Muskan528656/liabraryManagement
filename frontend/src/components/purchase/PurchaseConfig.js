@@ -15,7 +15,6 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone, permissions =
     const PurchaseModel = createModel({
         modelName: "Purchase",
         fields: {
-            // "Purchase Serial No":"Purchase Serial No",
             "Vendor": "Vendor",
             "Book": "Book",
             "ISBN": "ISBN",
@@ -178,10 +177,9 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone, permissions =
                 const unitPrice = parseFloat(formData.unit_price) || 0;
                 const totalAmount = quantity * unitPrice;
 
-                // String comparison करें numeric comparison के बजाय
                 const currentTotalAmount = parseFloat(formData.total_amount) || 0;
 
-                if (Math.abs(currentTotalAmount - totalAmount) > 0.01) { // Floating point comparison tolerance
+                if (Math.abs(currentTotalAmount - totalAmount) > 0.01) {
                     setFormData(prev => ({
                         ...prev,
                         total_amount: totalAmount.toFixed(2)
@@ -192,35 +190,32 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone, permissions =
                 return data.map(row => {
                     const transformed = { ...row };
 
-                    // Ensure quantity is a number
+
                     if (transformed.quantity) {
                         transformed.quantity = parseInt(transformed.quantity, 10) || 1;
                     }
 
-                    // Ensure unit_price is a number
+
                     if (transformed.unit_price) {
                         transformed.unit_price = parseFloat(transformed.unit_price) || 0;
                     }
 
-                    // Calculate total_amount if not provided
                     if (!transformed.total_amount && transformed.quantity && transformed.unit_price) {
                         transformed.total_amount = (transformed.quantity * transformed.unit_price).toFixed(2);
                     }
 
-                    // Ensure purchase_date is in correct format
+
                     if (transformed.purchase_date) {
-                        // If it's already in YYYY-MM-DD format, keep it
+
                         if (/^\d{4}-\d{2}-\d{2}$/.test(transformed.purchase_date)) {
-                            // Already in correct format
+
                         } else {
-                            // Try to parse other formats
                             const date = new Date(transformed.purchase_date);
                             if (!isNaN(date.getTime())) {
                                 transformed.purchase_date = date.toISOString().split('T')[0];
                             }
                         }
                     } else {
-                        // Set default date if not provided
                         transformed.purchase_date = new Date().toISOString().split('T')[0];
                     }
 

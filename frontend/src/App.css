@@ -12,6 +12,7 @@
   border: 1px solid #dee2e6 !important;
   /* If needed */
 }
+
 /* Pulse animation for attention */
 @keyframes pulse {
   0% {
@@ -1953,6 +1954,7 @@ textarea.form-control[required] {
 
 /* Ensure parent containers don't overflow */
 .card-body {
+  margin-top: -10px;
   overflow: visible !important;
 }
 

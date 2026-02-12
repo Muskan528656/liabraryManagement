@@ -40,7 +40,7 @@ const LibraryCardDetail = ({
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
 
   console.log("permissions", permissions)
 
@@ -753,7 +753,7 @@ const LibraryCardDetail = ({
         }
       },
 
-     {
+      {
         key: "grade_name",
         label: "Grade",
         type: "select",
@@ -782,7 +782,7 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
-       {
+      {
         key: "is_active",
         label: "Status",
         type: "badge",
@@ -1593,7 +1593,7 @@ const LibraryCardDetail = ({
       });
 
 
-    
+
 
       resetImageSelection();
 
@@ -2091,7 +2091,7 @@ const LibraryCardDetail = ({
   };
 
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
