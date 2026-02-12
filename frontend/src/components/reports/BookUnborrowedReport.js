@@ -44,13 +44,13 @@ ChartJS.register(
   Legend
 );
 
-const BookBrrowedReport = () => {
+const InactiveBooksReport = () => {
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
-
+  
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -160,12 +160,9 @@ const BookBrrowedReport = () => {
       if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
 
       const response = await api.get(
-        `/book-borrowing?${params.toString()}`
+        `/inactive-books?${params.toString()}`
       );
-
-      console.log("respons",response)
-      console.log("book-borrwoing resp=>",response.data.records)
-      setReportData(response.data.records);
+      setReportData(response.data);
     } catch (err) {
       console.error("Error fetching report data:", err);
       setError("Failed to load report data. Please try again.");
@@ -196,18 +193,18 @@ const BookBrrowedReport = () => {
 
   // Export Functions
   const exportToCSV = () => {
-    if (!reportData?.records) return;
-    const headers = ["Book Title", "Issued To", "Issue Date", "Due Date", "Return Date", "Status", "Circulation Status"];
+    if (!reportData?.mainTable) return;
+    const headers = ["Book Name", "Author", "Category", "Issued", "Borrowers", "Level"];
     const csvContent = [
       headers.join(","),
-      ...reportData.records.map((row) =>
-        [`"${row.title}"`, `"${row.issued_to}"`, `"${row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A'}"`, `"${row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A'}"`, `"${row.return_date ? new Date(row.return_date).toLocaleDateString() : 'N/A'}"`, `"${row.status}"`, `"${row.circulation_status}"`].join(",")
+      ...reportData.mainTable.map((row) =>
+        [`"${row.book_name}"`, `"${row.author || "N/A"}"`, `"${row.category || "N/A"}"`, row.total_issues || 0, row.unique_borrowers || 0, `"${row.popularity_level}"`].join(",")
       ),
     ].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `book-borrowing-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `popularity-report-${new Date().toISOString().split('T')[0]}.csv`);
     link.click();
   };
 
@@ -242,18 +239,18 @@ const BookBrrowedReport = () => {
 
   
   const exportToPDF = () => {
-    if (!reportData?.records) return;
+    if (!reportData?.mainTable) return;
     const doc = new jsPDF();
-    doc.text('Book Borrowing Report', 105, 20, { align: 'center' });
-    const tableData = reportData.records.slice(0, 30).map(row => [
-      row.title, row.issued_to, row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A', row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A', row.return_date ? new Date(row.return_date).toLocaleDateString() : 'N/A', row.status, row.circulation_status
+    doc.text('Book Popularity Analytics Report', 105, 20, { align: 'center' });
+    const tableData = reportData.mainTable.slice(0, 30).map(row => [
+      row.book_name, row.author || 'N/A', row.category || 'N/A', row.total_issues, row.unique_borrowers, row.popularity_level
     ]);
     doc.autoTable({
-      head: [['Book Title', 'Issued To', 'Issue Date', 'Due Date', 'Return Date', 'Status', 'Circulation Status']],
+      head: [['Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level']],
       body: tableData,
       startY: 30
     });
-    doc.save('book-borrowing-report.pdf');
+    doc.save('book-popularity-report.pdf');
   };
 
   // Table Columns Definition
@@ -262,56 +259,23 @@ const BookBrrowedReport = () => {
       field: "title",
       label: "Book Title",
       width: "250px",
-      render: (value) => (
+      render: (value, record) => (
         <div className="book-title-cell">
           <div className="fw-bold">{value}</div>
+          {/* <div className="text-muted small">ID: {record.id}</div> */}
         </div>
       ),
     },
-    { field: "issued_to", label: "Issued To", width: "200px", align: "center" },
+    { field: "available_copies", label: "Available Copies", width: "150px", align: "center" },
+    { field: "category_name", label: "Category", width: "150px", align: "center" },
     {
-      field: "issue_date",
-      label: "Issue Date",
-      width: "120px",
+      field: "last_activity_date",
+      label: "Last Activity Date",
+      width: "180px",
       align: "center",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A"
+      render: (value) => new Date(value).toLocaleDateString(),
     },
-    {
-      field: "due_date",
-      label: "Due Date",
-      width: "120px",
-      align: "center",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A"
-    },
-    {
-      field: "return_date",
-      label: "Return Date",
-      width: "120px",
-      align: "center",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A"
-    },
-    {
-      field: "status",
-      label: "Status",
-      width: "100px",
-      align: "center",
-      render: (value) => (
-        <Badge bg={value === 'returned' ? 'success' : value === 'issued' ? 'primary' : 'secondary'}>
-          {value?.toUpperCase()}
-        </Badge>
-      )
-    },
-    {
-      field: "circulation_status",
-      label: "Circulation Status",
-      width: "150px",
-      align: "center",
-      render: (value) => (
-        <Badge bg={value === 'OVERDUE' ? 'danger' : 'info'}>
-          {value}
-        </Badge>
-      )
-    },
+    { field: "days_not_borrowed", label: "Days Not Borrowed", width: "150px", align: "center" },
   ];
 
   // Chart Data
@@ -342,37 +306,9 @@ const BookBrrowedReport = () => {
     );
   }
 
-  console.log("reportData",reportData)
-
   return (
     <div className="container-fluid bg-light min-vh-100 pb-5">
       <div className="card shadow-sm border-0 mt-1 mx-2">
-        {/* Header */}
-        {/* <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
-          <div className="d-flex align-items-center gap-3">
-            <Button variant="light" className="shadow-sm border" onClick={() => navigate('/reports')}>
-              <i className="fa-solid fa-arrow-left"></i>
-            </Button>
-            <h4 className="mb-0 fw-bold text-primary">Book Borrowing Popularity Analytics</h4>
-          </div>
-
-          <Dropdown align="end">
-            <Dropdown.Toggle variant="outline-secondary" size="sm">
-              <i className="fa fa-bars me-1" /> Options
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="shadow-sm border-0">
-              <Dropdown.Header>View Mode</Dropdown.Header>
-              <Dropdown.Item onClick={() => setViewMode('table')} active={viewMode === 'table'}>Table</Dropdown.Item>
-              <Dropdown.Item onClick={() => setViewMode('dashboard')} active={viewMode === 'dashboard'}>Dashboard</Dropdown.Item>
-              <Dropdown.Item onClick={() => setViewMode('analytics')} active={viewMode === 'analytics'}>Detailed Analytics</Dropdown.Item>
-              <Dropdown.Divider />
-              <Dropdown.Header>Export</Dropdown.Header>
-              <Dropdown.Item onClick={exportToExcel}><i className="fa-solid fa-file-excel me-2 text-success" /> Excel</Dropdown.Item>
-              <Dropdown.Item onClick={exportToCSV}><i className="fa-solid fa-file-csv me-2 text-info" /> CSV</Dropdown.Item>
-              <Dropdown.Item onClick={exportToPDF}><i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </div> */}
 
        <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
           <Col md={6} className="d-flex align-items-center gap-3 ms-3">
@@ -384,7 +320,7 @@ const BookBrrowedReport = () => {
             </button>
             <div>
               <h4 className="mb-0 fw-bold fs-7" style={{ color: "var(--primary-color)" }}>
-                Overdue Books Borrowing & circulation
+                Long- Time Unborrowed Books
               </h4>
             </div>
           </Col>
@@ -415,8 +351,8 @@ const BookBrrowedReport = () => {
                   onClick={() => setViewMode('analytics')}
                 >
                   <i className="fa fa-chart-bar me-2" /> Analytics
-                </Dropdown.Item> */}
-                {/* <Dropdown.Divider /> */}
+                </Dropdown.Item>
+                <Dropdown.Divider /> */}
                 <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
                 <Dropdown.Item onClick={exportToExcel}>
                   <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
@@ -524,7 +460,7 @@ const BookBrrowedReport = () => {
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">
               <ResizableTable
-                data={reportData}
+                data={reportData?.records || []}
                 columns={columns}
                 loading={loading}
                 currentPage={currentPage}
@@ -603,4 +539,4 @@ const BookBrrowedReport = () => {
   );
 };
 
-export default BookBrrowedReport;
+export default InactiveBooksReport;
