@@ -127,6 +127,7 @@ require("./app/routes/objecttype.routes.js")(app);
 require("./app/routes/reports.routes.js")(app);
 require("./app/routes/shelf.routes.js")(app);
 require("./app/routes/grade.routes.js")(app);
+require("./app/routes/branch.routes.js")(app);
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(

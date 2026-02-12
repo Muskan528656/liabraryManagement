@@ -790,7 +790,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
       }
     },
 
-    labels: ['Issuedddd', 'Available', 'Overdue', 'Damaged'],
+    labels: ['Issued', 'Available', 'Overdue', 'Damaged'],
     colors: [SUCCESS_COLOR, ACCENT_COLOR, WARNING_COLOR, DANGER_COLOR],
 
     legend: {
