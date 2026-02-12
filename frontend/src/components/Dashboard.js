@@ -1159,6 +1159,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                 </div>
               </Card.Header>
               <Card.Body className="p-2">
+                
                 {topAvailableBooks.length > 0 ? (
                   <Chart
                     options={funnelChartOptions}
@@ -1166,6 +1167,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                     type="bar"
                     height={280}
                   />
+                  
                 ) : (
                   <div className="d-flex flex-column align-items-center justify-content-center py-4 text-muted">
                     <i className="fa-solid fa-book-open-reader fa-2x mb-2"></i>

@@ -270,7 +270,7 @@ async function create(cardData, userId) {
       "lastmodifieddate",
       "createdbyid",
       "lastmodifiedbyid",
-      // "library_member_type"
+      "library_member_type"
     ];
 
     const placeholders = fields.map((_, i) => `$${i + 1}`).join(", ");
@@ -317,7 +317,7 @@ async function create(cardData, userId) {
       new Date(),
       userId,
       userId,
-      // cardData.library_member_type || null
+      cardData.library_member_type || null
     ];
 
 
@@ -396,7 +396,7 @@ async function updateById(id, cardData, userId) {
       "job_title",
       // "grade_id", // Handled separately above
       // "section_id", // Not needed since we resolve to grade_id
-      // "library_member_type"
+      "library_member_type"
 
     ];
 
