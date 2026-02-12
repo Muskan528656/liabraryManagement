@@ -40,7 +40,7 @@ const LibraryCardDetail = ({
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-
+  
 
   console.log("permissions", permissions)
 

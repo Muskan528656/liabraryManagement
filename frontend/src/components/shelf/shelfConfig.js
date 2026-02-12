@@ -154,25 +154,28 @@ export const getShelfConfig = (
         // },
         validationRules: (formData, allPlans, editingPlan) => {
             const errors = [];
-            const noNumberRegex = /^[A-Za-z\s]+$/;
+            // const noNumberRegex = /^[A-Za-z\s]+$/;
 
             if (!formData.shelf_name?.trim()) {
                 errors.push("Shelf name is required");
-            } else if (!noNumberRegex.test(formData.shelf_name.trim())) {
-                errors.push("Numbers are not allowed in shelf name");
-            }
+            } 
+            // else if (!noNumberRegex.test(formData.shelf_name.trim())) {
+            //     errors.push("Numbers are not allowed in shelf name");
+            // }
 
             if (!formData.sub_shelf?.trim()) {
                 errors.push("Sub Shelf is required");
-            } else if (!noNumberRegex.test(formData.sub_shelf.trim())) {
-                errors.push("Numbers are not allowed in sub shelf");
-            }
+            } 
+            // else if (!noNumberRegex.test(formData.sub_shelf.trim())) {
+            //     errors.push("Numbers are not allowed in sub shelf");
+            // }
 
             if (!formData.note?.trim()) {
                 errors.push("Note is required");
-            } else if (!noNumberRegex.test(formData.note.trim())) {
-                errors.push("Numbers are not allowed in note");
             }
+            //  else if (!noNumberRegex.test(formData.note.trim())) {
+            //     errors.push("Numbers are not allowed in note");
+            // }
 
             const duplicateName = allPlans.find(
                 shelf =>

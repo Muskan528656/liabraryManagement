@@ -7,12 +7,15 @@ import { createModel } from "../common/UniversalCSVXLSXImporter";
 import { Link } from "react-router-dom";
 export const getUserConfig = (externalData = {}, props = {}, permissions = {}, companyInfo, editingItem = null) => {
 
-
+    console.log("externalData in config:", externalData);
     const {
         canCreate = true,
         canEdit = true,
         canDelete = false
     } = permissions || {};
+
+
+    
     const extractData = (source) => {
         if (!source) return [];
         if (Array.isArray(source)) return source;
@@ -23,7 +26,8 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
 
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
-
+    console.log("Extracted user roles:", userRoles);
+    
     const UserModel = createModel({
         modelName: "User",
         fields: {
@@ -286,7 +290,10 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 name: "userrole",
                 label: "Role",
                 type: "select",
-                options: "user-role",
+                options: userRoles.map(role => ({
+                    value: role.id,
+                    label: role.role_name
+                })),
                 required: true,
                 colSize: 6,
             },
