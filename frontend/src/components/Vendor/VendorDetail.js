@@ -17,6 +17,35 @@ const countryCodeOptions = COUNTRY_CODES.map((country) => ({
 const VendorDetail = ({ permissions }) => {
   console.log("VendorDetail permissions:", permissions);
   const { timeZone } = useTimeZone();
+console.log( "!permissions?.allowEdit", !permissions?.allowEdit);
+
+  const other = permissions?.allowEdit
+    ? {
+        other: [
+          { key: "createdbyid", label: "Created By", type: "text" },
+          { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+          {
+            key: "createddate",
+            label: "Created Date",
+            type: "date",
+            render: (value) =>
+              value ? convertToUserTimezone(value, timeZone) : "N/A",
+          },
+          {
+            key: "lastmodifieddate",
+            label: "Last Modified Date",
+            type: "date",
+            render: (value) =>
+              value ? convertToUserTimezone(value, timeZone) : "N/A",
+          },
+        ],
+      }
+    : {};
+
+
+  //  console.log("othersection",other)
+
+
   const fields = {
     title: "name",
     subtitle: "company_name",
@@ -38,23 +67,6 @@ const VendorDetail = ({ permissions }) => {
           return country ? `${country.country_code} (${country.country})` : value || 'N/A';
         },
       },
-      // {
-      //   key: "status",
-      //   label: "Status",
-      //   type: "select",
-      //   options: Object.entries(statusBadges).map(([value, { label }]) => ({ value, label })),
-      //   render: (value) => {
-      //     const badge = statusBadges[value.toLowerCase()] || { variant: "light", label: value };
-      //     return (
-      //       <span className={`badge bg-${badge.variant}`}>
-      //         {badge.label}
-      //       </span>
-      //     );
-      //   },
-      // }
-
-      
-
       {
         key: "status",
         label: "Status",
@@ -70,12 +82,8 @@ const VendorDetail = ({ permissions }) => {
       { key: "city", label: "City", type: "text" },
 
     ],
-    other: [
-      { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      { key: "createddate", label: "Created Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
-      { key: "lastmodifieddate", label: "Last Modified Date", type: "date", render: (value) => convertToUserTimezone(value, timeZone) },
-    ],
+    ...other
+    
   };
 
 

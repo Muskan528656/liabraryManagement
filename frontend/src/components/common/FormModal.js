@@ -411,46 +411,46 @@ const FormModal = ({
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
         // case "toggle":
-        return (
-          <Form.Group className="mb-3" key={field.name}>
-            {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
-            <Form.Label className="d-flex justify-content-between">
-              <span>
-                {field.label} {field.required && <span className="text-danger">*</span>}
-              </span>
-              <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
-            </Form.Label>
+        // return (
+        //   <Form.Group className="mb-3" key={field.name}>
+        //     {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
+        //     <Form.Label className="d-flex justify-content-between">
+        //       <span>
+        //         {field.label} {field.required && <span className="text-danger">*</span>}
+        //       </span>
+        //       <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
+        //     </Form.Label>
 
-            <div
-              className="custom-toggle"
-              onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
-              style={{
-                width: "55px",
-                height: "28px",
-                borderRadius: "20px",
-                background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
-                position: "relative",
-                cursor: isReadOnly ? "not-allowed" : "pointer",
-                transition: "0.3s",
-              }}
-            >
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  background: "#fff",
-                  borderRadius: "50%",
-                  position: "absolute",
-                  top: "3px",
-                  left: formData[field.name] ? "29px" : "3px",
-                  transition: "0.3s",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                }}
-              ></div>
-            </div>
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
-          </Form.Group>
-        );
+        //     <div
+        //       className="custom-toggle"
+        //       onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
+        //       style={{
+        //         width: "55px",
+        //         height: "28px",
+        //         borderRadius: "20px",
+        //         background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
+        //         position: "relative",
+        //         cursor: isReadOnly ? "not-allowed" : "pointer",
+        //         transition: "0.3s",
+        //       }}
+        //     >
+        //       <div
+        //         style={{
+        //           width: "22px",
+        //           height: "22px",
+        //           background: "#fff",
+        //           borderRadius: "50%",
+        //           position: "absolute",
+        //           top: "3px",
+        //           left: formData[field.name] ? "29px" : "3px",
+        //           transition: "0.3s",
+        //           boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        //         }}
+        //       ></div>
+        //     </div>
+        //     {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+        //   </Form.Group>
+        // );
 
       case "toggle":
         const toggleValue = !!formData[field.name];
