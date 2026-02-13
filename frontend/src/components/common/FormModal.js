@@ -329,6 +329,13 @@ const FormModal = ({
         );
 
       case "select":
+        
+      const fieldOptions =
+  typeof field.options === "function"
+    ? field.options(formData)
+    : field.options || [];
+
+
         return (
           <Form.Group className="mb-3" key={field.name}>
             <Form.Label>
@@ -347,6 +354,8 @@ const FormModal = ({
                 {...field.selectProps}
               />
             ) : (
+
+    
               <Form.Select
                 name={field.name}
                 id={fieldId}
@@ -356,8 +365,10 @@ const FormModal = ({
                 isInvalid={!!error}
                 {...field.props}
               >
+            
                 {field.placeholder && <option value="">{field.placeholder}</option>}
-                {field.options?.map((option) => (
+                {/* {field.options?.map((option) => ( */}
+                {fieldOptions?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
