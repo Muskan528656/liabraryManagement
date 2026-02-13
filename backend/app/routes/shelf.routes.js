@@ -1,79 +1,85 @@
-/**
- * Handles all incoming request for /api/shelf endpoint
- * DB table for this public.shelves
- * Model used here is shelf.model.js
- * SUPPORTED API ENDPOINTS
- *              GET     /api/shelf
- *              GET     /api/shelf/:id
- *              POST    /api/shelf
- *              PUT     /api/shelf/:id
- *              DELETE  /api/shelf/:id
- *
- * @author      Muskan Khan
- * @date        DEC, 2025
- * @copyright   www.ibirdsservices.com
- */
-
-const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
+const { fetchUser } = require("../middleware/fetchuser.js");
 const Shelf = require("../models/shelf.model.js");
 
 module.exports = (app) => {
     const { body, validationResult } = require("express-validator");
     const router = require("express").Router();
 
-    router.get(
-        "/",
-        fetchUser,
-        // checkPermission("Shelves", "allow_view"),
-        async (req, res) => {
-            try {
-                Shelf.init(req.userinfo.tenantcode);
-                const shelves = await Shelf.findAll();
-                res.json(shelves);
-            } catch (err) {
-                console.error(err);
-                res.status(500).json({ errors: "Internal server error" });
-            }
+       // ================= GET GROUPED SHELVES =================
+    router.get("/grouped", fetchUser, async (req, res) => {
+        
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            const data = await Shelf.findGroupedShelves();
+            console.log("data=>",data);
+            res.json(data);
+        } catch (err) {
+            console.error("Error fetching grouped shelves:", err);
+            res.status(500).json({ error: "Internal server error" });
         }
-    );
+    });
 
-    router.get(
-        "/:id",
-        fetchUser,
-        // checkPermission("Shelves", "allow_view"),
-        async (req, res) => {
-            try {
-                Shelf.init(req.userinfo.tenantcode);
 
-                const shelf = await Shelf.findById(req.params.id);
-                if (!shelf) {
-                    return res.status(404).json({ errors: "Shelf not found" });
-                }
-
-                res.status(200).json(shelf);
-            } catch (error) {
-                console.error(error);
-                res.status(500).json({ errors: "Internal server error" });
-            }
+    // ================= GET ALL =================
+    router.get("/", fetchUser, async (req, res) => {
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            const data = await Shelf.findAll();
+            res.json(data);
+        } catch (err) {
+            console.error("Error fetching shelves:", err);
+            res.status(500).json({ error: "Internal server error" });
         }
-    );
+    });
 
+    // ================= GET BY ID =================
+    router.get("/:id", fetchUser, async (req, res) => {
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            const data = await Shelf.findById(req.params.id);
+
+            if (!data) {
+                return res.status(404).json({ error: "Shelf not found" });
+            }
+
+            res.json(data);
+        } catch (err) {
+            console.error("Error fetching shelf:", err);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+
+ 
+    // ================= CREATE =================
     router.post(
         "/",
         fetchUser,
-        // checkPermission("Shelves", "allow_create"),
         [
             body("shelf_name")
                 .notEmpty()
-                .withMessage("Shelf name is required"),
-
-            body("copies")
+                .withMessage("Shelf name is required")
+                .trim(),
+            
+            body("sub_shelf")
                 .optional()
-                .isInt({ min: 0 })
-                .withMessage("Copies must be a non-negative number"),
+                .isString()
+                .withMessage("Sub shelf must be a string")
+                .trim(),
+                
+            body("note")
+                .optional()
+                .isString()
+                .withMessage("Note must be a string")
+                .trim(),
+                
+            body("status")
+                .optional()
+                .isBoolean()
+                .withMessage("Status must be boolean")
         ],
         async (req, res) => {
             try {
+                // Validate request
                 const errors = validationResult(req);
                 if (!errors.isEmpty()) {
                     return res.status(400).json({ errors: errors.array() });
@@ -81,90 +87,129 @@ module.exports = (app) => {
 
                 Shelf.init(req.userinfo.tenantcode);
 
-                const userId = req.userinfo?.id || null;
+                const data = await Shelf.create(req.body);
+                console.log("Shelf created:", data);
 
-                const shelf = await Shelf.create(req.body, userId);
-
-                res.status(200).json({
+                res.status(201).json({
                     success: true,
-                    data: shelf,
+                    message: "Shelf created successfully",
+                    data: data
                 });
 
-            } catch (error) {
-                console.error(error);
-                res.status(500).json({ errors: error.message });
+            } catch (err) {
+                console.error("Error creating shelf:", err);
+                
+                if (err.message.includes("zaten mevcut") || 
+                    err.message.includes("already exists")) {
+                    return res.status(409).json({ 
+                        error: err.message 
+                    });
+                }
+                
+                res.status(400).json({ 
+                    error: err.message || "Failed to create shelf" 
+                });
             }
         }
     );
 
+    // ================= UPDATE =================
     router.put(
         "/:id",
         fetchUser,
-        checkPermission("Shelves", "allow_edit"),
         [
             body("shelf_name")
+                .optional()
                 .notEmpty()
-                .withMessage("Shelf name is required"),
+                .withMessage("Shelf name cannot be empty if provided")
+                .trim(),
+            
+            body("sub_shelf")
+                .optional()
+                .isString()
+                .withMessage("Sub shelf must be a string")
+                .trim(),
+                
+            body("note")
+                .optional()
+                .isString()
+                .withMessage("Note must be a string")
+                .trim(),
+                
+            body("status")
+                .optional()
+                .isBoolean()
+                .withMessage("Status must be boolean")
         ],
         async (req, res) => {
             try {
+                // Validate request
                 const errors = validationResult(req);
                 if (!errors.isEmpty()) {
                     return res.status(400).json({ errors: errors.array() });
                 }
 
-                Shelf.init(req.userinfo.tenantcode);
-
-                const existing = await Shelf.findById(req.params.id);
-                if (!existing) {
-                    return res.status(404).json({ errors: "Shelf not found" });
+                if (Object.keys(req.body).length === 0) {
+                    return res.status(400).json({ 
+                        error: "No data provided for update" 
+                    });
                 }
 
-                const userId = req.userinfo?.id || null;
+                Shelf.init(req.userinfo.tenantcode);
 
-                const updated = await Shelf.updateById(
+                const data = await Shelf.updateById(
                     req.params.id,
-                    req.body,
-                    userId
+                    req.body
                 );
 
-                res.status(200).json({
-                    success: true,
-                    data: updated,
-                });
-
-            } catch (error) {
-                console.error(error);
-                res.status(500).json({ errors: error.message });
-            }
-        }
-    );
-
-    router.delete(
-        "/:id",
-        fetchUser,
-        checkPermission("Shelves", "allow_delete"),
-        async (req, res) => {
-            try {
-                Shelf.init(req.userinfo.tenantcode);
-
-                const result = await Shelf.deleteById(req.params.id);
-
-                if (!result.success) {
-                    return res.status(404).json({ errors: result.message });
+                if (!data) {
+                    return res.status(404).json({ error: "Shelf not found" });
                 }
 
-                res.status(200).json({
+                res.json({
                     success: true,
-                    message: result.message,
+                    message: "Shelf updated successfully",
+                    data: data
                 });
-
-            } catch (error) {
-                console.error(error);
-                res.status(500).json({ errors: "Internal server error" });
+            } catch (err) {
+                console.error("Error updating shelf:", err);
+                
+                if (err.message.includes("zaten mevcut") || 
+                    err.message.includes("already exists")) {
+                    return res.status(409).json({ 
+                        error: err.message 
+                    });
+                }
+                
+                res.status(400).json({ 
+                    error: err.message || "Failed to update shelf" 
+                });
             }
         }
     );
+
+    // ================= DELETE =================
+    router.delete("/:id", fetchUser, async (req, res) => {
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            
+            // Önce rafın var olup olmadığını kontrol et
+            const shelf = await Shelf.findById(req.params.id);
+            if (!shelf) {
+                return res.status(404).json({ error: "Shelf not found" });
+            }
+            
+            await Shelf.deleteById(req.params.id);
+
+            res.json({ 
+                success: true,
+                message: "Shelf deleted successfully" 
+            });
+        } catch (err) {
+            console.error("Error deleting shelf:", err);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
 
     app.use(process.env.BASE_API_URL + "/api/shelf", router);
 };

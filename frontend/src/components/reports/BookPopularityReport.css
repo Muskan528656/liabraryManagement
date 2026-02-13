@@ -22,8 +22,13 @@
 
 /* Header */
 .library-header {
-  background: white;
-  padding: 1rem 1.5rem;
+  color: var(--primary-color) !important;
+  background: var(--primary-background-color) !important;
+  border-radius: 10px !important;
+  border: 1px solid #dee2e6 !important;
+  /* padding: 1rem 1.5rem; */
+  padding: 0.5rem 1rem;
+
   border-bottom: 1px solid #e9ecef;
   display: flex;
   justify-content: space-between;
@@ -31,6 +36,8 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
+
+
 
 .library-header-left {
   display: flex;
@@ -212,9 +219,9 @@
 /* Content Area */
 .library-content {
   background: white;
-  margin: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  /* margin: 1.5rem; */
+  /* border-radius: 8px; */
+  /* border: 1px solid #e9ecef; */
   overflow: hidden;
 }
 
@@ -659,6 +666,7 @@
 
 /* Print Styles */
 @media print {
+
   .library-header-right,
   .library-filters,
   .library-pagination {

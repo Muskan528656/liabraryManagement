@@ -1,155 +1,204 @@
-/**
- * @author      Muskan Khan
- * @date        DEC, 2025
- * @copyright   www.ibirdsservices.com
- */
-
 const sql = require("./db.js");
 
-function init(schema_name) {
-    this.schema = schema_name;
+function init(schema) {
+    this.schema = schema;
 }
+
+// ================= FIND ALL =================
 async function findAll() {
-    try {
-        if (!this.schema) {
-            throw new Error("Schema not initialized. Call init() first.");
-        }
-
-        const query = `
-      SELECT *
-      FROM ${this.schema}.shelf
-      ORDER BY createddate DESC
+    const q = `
+        SELECT id, shelf_name, note, sub_shelf, status,
+               createddate, lastmodifieddate
+        FROM ${this.schema}.shelf
+        ORDER BY createddate DESC
     `;
-
-        const result = await sql.query(query);
-        return result.rows.length ? result.rows : [];
-
-    } catch (error) {
-        console.error("Error in findAll:", error);
-        throw error;
-    }
+    const r = await sql.query(q);
+    return r.rows;
 }
 
+// ================= FIND BY ID =================
 async function findById(id) {
-    try {
-        if (!this.schema) {
-            throw new Error("Schema not initialized.");
-        }
-
-        const query = `
-      SELECT *
-      FROM ${this.schema}.shelf
-      WHERE id = $1
+    const q = `
+        SELECT id, shelf_name, note, sub_shelf, status,
+               createddate, lastmodifieddate
+        FROM ${this.schema}.shelf
+        WHERE id=$1
     `;
-
-        const result = await sql.query(query, [id]);
-        return result.rows[0] || null;
-
-    } catch (error) {
-        console.error("Error in findById:", error);
-        throw error;
-    }
+    const r = await sql.query(q, [id]);
+    return r.rows[0];
 }
 
-async function create(data, userId) {
-    try {
-        if (!this.schema) {
-            throw new Error("Schema not initialized.");
+async function create(data) {
+    let subShelvesText = null;
+    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
+        subShelvesText = String(data.sub_shelf).trim();
+    }
+
+    // Check for duplicate shelf_name + sub_shelf combination
+    if (data.shelf_name) {
+        let dupQuery;
+        let params;
+
+        if (subShelvesText === null) {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf IS NULL
+                LIMIT 1
+            `;
+            params = [data.shelf_name];
+        } else {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf = $2
+                LIMIT 1
+            `;
+            params = [data.shelf_name, subShelvesText];
         }
 
-        const query = `
-      INSERT INTO ${this.schema}.shelf
-      (shelf_name, note, sub_shelf, copies, book_id,
-       createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
-      VALUES ($1,$2,$3,$4,$5,NOW(),NOW(),$6,$6)
-      RETURNING *
+        const dup = await sql.query(dupQuery, params);
+
+        if (dup.rows.length > 0) {
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
+    }
+
+    // INSERT
+    const query = `
+        INSERT INTO ${this.schema}.shelf
+        (shelf_name, note, sub_shelf, status, createddate, lastmodifieddate)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        RETURNING *
     `;
 
-        const values = [
-            data.shelf_name,
-            data.note || null,
-            data.sub_shelf ? JSON.stringify(data.sub_shelf) : null,
-            data.copies || 0,
-            data.book_id || null,
-            userId || null
-        ];
+    const values = [
+        data.shelf_name || null,
+        data.note || null,
+        subShelvesText,
+        data.status === true || data.status === "true" || data.status === "1"
+    ];
 
+    try {
         const result = await sql.query(query, values);
-        return result.rows[0] || null;
-
+        return result.rows[0];
     } catch (error) {
-        console.error("Error in create:", error);
+        if (error.code === '23505') { // unique_violation
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
         throw error;
     }
 }
 
-async function updateById(id, data, userId) {
-    try {
-        if (!this.schema) {
-            throw new Error("Schema not initialized.");
+async function updateById(id, data) {
+    let subShelvesText = null;
+    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
+        subShelvesText = String(data.sub_shelf).trim();
+    }
+
+    // Check for duplicates (excluding current id)
+    if (data.shelf_name) {
+        let dupQuery, params;
+
+        if (subShelvesText === null) {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE id <> $1
+                AND shelf_name = $2 
+                AND sub_shelf IS NULL
+                LIMIT 1
+            `;
+            params = [id, data.shelf_name];
+        } else {
+            dupQuery = `
+                SELECT id FROM ${this.schema}.shelf
+                WHERE id <> $1
+                AND shelf_name = $2 
+                AND sub_shelf = $3
+                LIMIT 1
+            `;
+            params = [id, data.shelf_name, subShelvesText];
         }
 
-        const current = await findById.call(this, id);
-        if (!current) {
+        const dup = await sql.query(dupQuery, params);
+
+        if (dup.rows.length > 0) {
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
+    }
+
+    // UPDATE query
+    const q = `
+        UPDATE ${this.schema}.shelf
+        SET shelf_name = COALESCE($2, shelf_name),
+            note = COALESCE($3, note),
+            sub_shelf = COALESCE($4, sub_shelf),
+            status = COALESCE($5, status),
+            lastmodifieddate = NOW()
+        WHERE id = $1
+        RETURNING *
+    `;
+
+    try {
+        const r = await sql.query(q, [
+            id,
+            data.shelf_name || null,
+            data.note || null,
+            subShelvesText,
+            data.status !== undefined ? (data.status === true || data.status === "true" || data.status === "1") : null
+        ]);
+
+        if (r.rows.length === 0) {
             throw new Error("Shelf not found");
         }
 
-        const query = `
-      UPDATE ${this.schema}.shelf
-      SET
-        shelf_name = $2,
-        note = $3,
-        sub_shelf = $4,
-        copies = $5,
-        book_id = $6,
-        lastmodifieddate = NOW(),
-        lastmodifiedbyid = $7
-      WHERE id = $1
-      RETURNING *
-    `;
-
-        const values = [
-            id,
-            data.shelf_name ?? current.shelf_name,
-            data.note ?? current.note,
-            data.sub_shelf ? JSON.stringify(data.sub_shelf) : current.sub_shelf,
-            data.copies ?? current.copies,
-            data.book_id ?? current.book_id,
-            userId || null
-        ];
-
-        const result = await sql.query(query, values);
-        return result.rows[0] || null;
-
+        return r.rows[0];
     } catch (error) {
-        console.error("Error in updateById:", error);
+        if (error.code === '23505') { // unique_violation
+            throw new Error("This shelf name and sub-shelf combination already exists");
+        }
         throw error;
     }
 }
-async function deleteById(id) {
-    try {
-        if (!this.schema) {
-            throw new Error("Schema not initialized.");
-        }
 
-        const query = `
-      DELETE FROM ${this.schema}.shelf
-      WHERE id = $1
-      RETURNING *
+// ================= FIND GROUPED SHELVES =================
+async function findGroupedShelves() {
+    const q = `
+        SELECT id, shelf_name, sub_shelf
+        FROM ${this.schema}.shelf
+        WHERE status = true
+        ORDER BY shelf_name, sub_shelf;
     `;
+    const r = await sql.query(q);
 
-        const result = await sql.query(query, [id]);
+    // Group by shelf_name
+    const grouped = {};
 
-        if (result.rows.length) {
-            return { success: true, message: "Shelf deleted successfully" };
+    r.rows.forEach(row => {
+        if (!grouped[row.shelf_name]) {
+            grouped[row.shelf_name] = [];
         }
 
-        return { success: false, message: "Shelf not found" };
+        if (row.sub_shelf) {
+            grouped[row.shelf_name].push({
+                id: row.id,             
+                name: row.sub_shelf      
+            });
+        }
+    });
 
-    } catch (error) {
-        console.error("Error in deleteById:", error);
-        throw error;
-    }
+    return Object.keys(grouped)
+        .map(shelf_name => ({
+            shelf_name,
+            sub_shelves: grouped[shelf_name]
+        }))
+        .sort((a, b) => a.shelf_name.localeCompare(b.shelf_name));
+}
+
+// ================= DELETE =================
+async function deleteById(id) {
+    await sql.query(
+        `DELETE FROM ${this.schema}.shelf WHERE id=$1`,
+        [id]
+    );
 }
 
 module.exports = {
@@ -159,4 +208,5 @@ module.exports = {
     create,
     updateById,
     deleteById,
+    findGroupedShelves,
 };

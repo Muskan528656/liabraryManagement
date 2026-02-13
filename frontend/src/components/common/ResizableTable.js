@@ -10,12 +10,12 @@ const ResizableTable = ({
     recordsPerPage = 5,
     onPageChange = () => { },
     showSerialNumber = true,
-    showActions={},
+    showActions = {},
     showCheckbox = true,
     actionsRenderer = null,
     onRowClick = null,
     emptyMessage = "No records found",
-    selectedItems = [],  
+    selectedItems = [],
     onSelectionChange = () => { },
 }) => {
 
@@ -34,11 +34,11 @@ const ResizableTable = ({
     const observerRef = useRef(null);
     const loadMoreRef = useRef(null);
 
- 
+
     const totalPages = Math.ceil(safeData.length / recordsPerPage);
-    const startRecord = (currentPage - 1) * recordsPerPage; 
+    const startRecord = (currentPage - 1) * recordsPerPage;
     const endRecord = startRecord + recordsPerPage;
- 
+
 
 
     const paginatedData = useMemo(() => {
@@ -278,6 +278,7 @@ const ResizableTable = ({
                             tableLayout: "fixed",
                             width: "100%",
                             minWidth: "100%",
+                            // textAlign: "centert"
                             border: "1px solid #ffffffff",
                         }}
                     >
@@ -438,7 +439,7 @@ const ResizableTable = ({
                                             }}
                                         />
                                     </th>
-                                )}                         
+                                )}
                             </tr>
                         </thead>
                         <tbody className="detail-h4">
@@ -505,7 +506,8 @@ const ResizableTable = ({
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
-                                                        height: '43px'
+                                                        height: '43px',
+                                                        textAlign : column.align || 'left'
                                                     }}
                                                 >
                                                     {column.render
@@ -514,7 +516,7 @@ const ResizableTable = ({
                                                 </td>
                                             );
                                         })}
-                                     {showActions && (
+                                        {showActions && (
                                             <td
                                                 style={{
                                                     textAlign: "center",

@@ -1,10 +1,10 @@
 
 export const API_BASE_URL =
   window.location.hostname === "localhost"
-    ? "http://localhost:3003"
-    :""
-    // : `http://192.168.6.50:9028`
-    // : `http://103.159.182.162:9028`
+    // ? "http://localhost:3003"
+    // :""
+    ?`http://192.168.6.50:9028`
+    : `http://103.159.182.162:9028`
 
 // export const API_BASE_URL =
 //   window.location.hostname === "localhost"

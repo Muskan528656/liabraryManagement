@@ -72,12 +72,12 @@ export const AuthHelper = {
         }
     },
     isSuperAdmin() {
-        // console.log(" Checking super admin status");
+        console.log(" Checking super admin status");
         const user = this.getUser();
         if (!user || !user.userrole) return false;
-
+console.log("yser",user.userrole)
         const superAdminRoles = ["SYSTEM ADMIN"];
-
+console.log("super admi->>>",superAdminRoles)
         return superAdminRoles.includes(user.userrole);
     },
 

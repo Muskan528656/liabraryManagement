@@ -8,7 +8,7 @@ require("dotenv").config();
 const app = express();
 const MODE = process.env.NODE_ENV || "production";
 // const PORT = process.env.PORT || 9028;
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 9028;
 console.log("PORTPORT", PORT)
 const BASE_PATH =
   MODE === "sandbox" ? "/sandbox/ibs" : "/ibs";
@@ -125,6 +125,8 @@ require("./app/routes/mail.routes.js")(app);
 require("./app/routes/dashbard.router.js")(app);
 require("./app/routes/objecttype.routes.js")(app);
 require("./app/routes/reports.routes.js")(app);
+require("./app/routes/shelf.routes.js")(app);
+require("./app/routes/grade.routes.js")(app);
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(

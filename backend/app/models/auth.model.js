@@ -48,7 +48,7 @@ async function findPermissionsByRole(roleId) {
   if (!roleId) return [];
 
   try {
-    // Direct join query use karo
+    // Join permissions to role via role_permissions table (role_permissions links roles to permissions)
     const permissionsResult = await sql.query(`
       SELECT 
         p.id as permission_id,
@@ -60,7 +60,8 @@ async function findPermissionsByRole(roleId) {
         p.allow_delete
       FROM demo.permissions p
       LEFT JOIN demo.module m ON p.module_id = m.id
-      WHERE p.role_id = $1
+      LEFT JOIN demo.role_permissions rp ON rp.permission_id = p.id
+      WHERE rp.role_id = $1
       ORDER BY m.name ASC
     `, [roleId]);
 
