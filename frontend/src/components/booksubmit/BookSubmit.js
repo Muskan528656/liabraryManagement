@@ -1117,7 +1117,7 @@ const BookSubmit = ({ permissions }) => {
                 JSON.stringify(cancelData)
             );
 
-                
+
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
                 PubSub.publish("RECORD_ERROR_TOAST", {
@@ -1407,13 +1407,13 @@ const BookSubmit = ({ permissions }) => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'issued':
-                return <Badge  bg="success">Issued</Badge>;
+                return <Badge bg="success">Issued</Badge>;
             case 'submitted':
-                return <Badge  bg="info">Submitted</Badge>;
+                return <Badge bg="info">Submitted</Badge>;
             case 'cancelled':
-                return <Badge  bg="danger">Cancelled</Badge>;
+                return <Badge bg="danger">Cancelled</Badge>;
             case 'overdue':
-                return <Badge  bg="danger">Overdue</Badge>;
+                return <Badge bg="danger">Overdue</Badge>;
             default:
                 return <Badge bg="warning">Unknown</Badge>;
         }
@@ -1423,7 +1423,7 @@ const BookSubmit = ({ permissions }) => {
         {
             field: "book_title",
             label: "Book Title",
-            
+
             width: 300,
             height: 0,
             render: (value, record) => {
@@ -1549,8 +1549,8 @@ const BookSubmit = ({ permissions }) => {
             width: 100,
             render: (value) => getStatusBadge(value)
         },
-        
-        (allowEdit  && {
+
+        (allowEdit && {
             field: "actions",
             label: "Actions",
             width: 200,
@@ -1584,7 +1584,7 @@ const BookSubmit = ({ permissions }) => {
                     </div>
                 );
             }
-        } )
+        })
     ];
 
     const submittedBooksColumns = [
@@ -1761,21 +1761,21 @@ const BookSubmit = ({ permissions }) => {
         }
     ];
 
-    if(!permissions?.allowView){
-        return <PermissionDenied/>
+    if (!permissions?.allowView) {
+        return <PermissionDenied />
     }
 
     return (
         <>
             <Container fluid >
-                <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden" }}>
+                <Card style={{ border: "1px solid #e2e8f0", boxShadow: "none", borderRadius: "8px", overflow: "hidden", marginTop: "10px" }}>
                     <Card.Body className="p-0">
                         <Tab.Container
                             activeKey={activeTab}
                             onSelect={(k) => setActiveTab(k || "submit")}
                             id="book-tabs-container"
                         >
-                            <Nav variant="tabs" className="border-bottom-0 position-relative">
+                            <Nav variant="tabs" className="border-bottom-0 position-relative" style={{ marginTop: "10px" }}>
                                 <Nav.Item>
                                     <Nav.Link
                                         eventKey="submit"
@@ -1873,12 +1873,7 @@ const BookSubmit = ({ permissions }) => {
                                 <Tab.Pane eventKey="submit">
                                     <Row>
                                         <Col xs={12}>
-                                            {/* <Card className="shadow-sm" style={{
-                                                background: "#f3e8ff",
-                                                border: "1px solid #d8b4fe",
-                                                borderRadius: "8px"
-                                            }}> */}
-                                            {/* <Card.Body> */}
+
                                             {!overdueMode && (
                                                 <Row className="align-items-center">
                                                     {/* Search By Dropdown */}
@@ -1901,7 +1896,6 @@ const BookSubmit = ({ permissions }) => {
                                                         </Form.Group>
                                                     </Col>
 
-                                                    {/* Search Input with Scan Button */}
                                                     <Col md={6}>
                                                         <Form.Group >
                                                             <Form.Label className="fw-bold small">
@@ -2119,7 +2113,7 @@ const BookSubmit = ({ permissions }) => {
                                                         searchTerm={searchTerm}
                                                         currentPage={currentPage}
                                                         recordsPerPage={recordsPerPage}
-                                                        
+
                                                         onPageChange={(page) => setCurrentPage(page)}
                                                         emptyMessage={loadingSubmitted ?
                                                             <div className="text-center py-5">

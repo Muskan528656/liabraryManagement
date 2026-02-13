@@ -210,9 +210,8 @@ function AppContent() {
                 <Route path="myprofile" element={<EditProfile />} />
                 <Route path="Company" element={<Company permissions={getPermissionForModule("Company")} />} />
                 <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
-                <Route path="reports/bookinventoryreport" element={<BookInventoryReport />} />
-                <Route path="reports" element={<ReportsList />} />
-                <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
+                <Route path="reports/bookinventoryreport" element={<BookInventoryReport permissions={getPermissionForModule("Reports")} />} />
+
                 <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
@@ -220,9 +219,10 @@ function AppContent() {
 
                 <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
                 <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
-
-                <Route path="reports/inactivebooks" element={<BookUnborrowedReport />} />
-                <Route path="reports/book-borrowing" element={<BookOverDueReport />} />
+                <Route path="reports" element={<ReportsList permissions={getPermissionForModule("Reports")} />} />
+                <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
+                <Route path="reports/inactivebooks" element={<BookUnborrowedReport permissions={getPermissionForModule("Reports")} />} />
+                <Route path="reports/book-borrowing" element={<BookOverDueReport permissions={getPermissionForModule("Reports")} />} />
               </Route>
             </Routes>
           </Router>

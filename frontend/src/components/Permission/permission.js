@@ -7,7 +7,6 @@ import { AuthHelper } from '../../utils/authHelper';
 import PubSub from "pubsub-js";
 import { Button, OverlayTrigger, Tooltip, Form } from "react-bootstrap";
 import ConfirmationModal from "../common/ConfirmationModal";
-import { useNavigate } from "react-router-dom";
 
 const TooltipButton = ({ title, children }) => (
     <OverlayTrigger placement="top" overlay={<Tooltip>{title}</Tooltip>}>
@@ -22,20 +21,12 @@ const Permission = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
-
     const [expandedRoles, setExpandedRoles] = useState({});
-
     const [isExpanded, setIsExpanded] = useState(false);
-
     const [roles, setRoles] = useState([]);
-
-    // For delete
     const [roleId, setRoleId] = useState(null)
     const [roleName, setRoleName] = useState(null)
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-    // State for Permissions Editing (The "Dirty" State)
-    // Structure: { [roleId]: { [moduleId]: { allow_view: bool, ... } } }
     const [editingPermissions, setEditingPermissions] = useState({});
 
     const fetchPermissions = async () => {
@@ -43,7 +34,7 @@ const Permission = () => {
             setLoading(true);
             const api = new DataApi("permissions");
             const result = await api.fetchAll();
-
+            console.log("resultresult", result)
             let permissionsData = [];
             if (result && result.data && result.data.data) {
                 permissionsData = result.data.data;
@@ -78,8 +69,6 @@ const Permission = () => {
         fetchRoles();
     }, [refreshKey]);
 
-
-    // --- DATA GROUPING ---
     const groupPermissionsByRole = () => {
         const grouped = {};
         const filteredPermissions = permissions.filter(perm => {
@@ -582,7 +571,7 @@ const Permission = () => {
         handleDeleteRole()
     };
 
-    // Handler for Add Modal (New Role)
+    
     const handleSavePermission = async (formData) => {
         try {
             const permissionsToSave = formData.permissions.map(perm => ({

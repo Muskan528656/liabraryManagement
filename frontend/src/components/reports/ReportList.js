@@ -17,6 +17,7 @@ import PubSub from "pubsub-js";
 import TableHeader from "../common/TableHeader";
 
 const ReportsList = () => {
+  console.log("working");
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);

@@ -62,8 +62,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setSubscriptionsData(data);
       return data;
     } catch {
@@ -78,8 +78,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setUsersData(data);
       return data;
     } catch {
@@ -112,7 +112,7 @@ const LibraryCard = ({ permissions, ...props }) => {
     if (timeZone) init();
   }, [fetchSubscriptions, fetchUsers, timeZone]);
 
- 
+
   useEffect(() => {
     if (showBarcodeModal && selectedCard) {
       // Small delay to ensure DOM is ready
@@ -121,7 +121,7 @@ const LibraryCard = ({ permissions, ...props }) => {
     }
   }, [showBarcodeModal, selectedCard]);
 
-  
+
   const initializeModalBarcode = () => {
     if (!selectedCard || !showBarcodeModal) return;
 
@@ -154,7 +154,7 @@ const LibraryCard = ({ permissions, ...props }) => {
     }
   };
 
-  
+
   const handleModalOpen = (card) => {
     setSelectedCard(card);
     setBarcodeError(null);
@@ -167,12 +167,12 @@ const LibraryCard = ({ permissions, ...props }) => {
     setBarcodeError(null);
   };
 
-  
+
   const generateCardNumber = (card) => {
     return card?.card_number || card?.card_no || 'N/A';
   };
 
-  
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -191,7 +191,7 @@ const LibraryCard = ({ permissions, ...props }) => {
   if (configError) return <div className="alert alert-danger m-3">{configError}</div>;
   if (!baseConfig) return <span className="loader"></span>;
 
- 
+
   if (!finalConfig) {
     const config = {
       ...baseConfig,
@@ -237,7 +237,7 @@ const LibraryCard = ({ permissions, ...props }) => {
         onImport={(data) => alert(`Importing ${data.file.name}`)}
       />
 
-      
+
       <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
         <Modal.Header
           closeButton
@@ -262,14 +262,13 @@ const LibraryCard = ({ permissions, ...props }) => {
               maxWidth: "500px",
               margin: "0 auto"
             }}>
-              {/* Barcode Error */}
+
               {barcodeError && (
                 <Alert variant="warning" className="mb-3">
                   {barcodeError}
                 </Alert>
               )}
 
-              {/* Barcode Display */}
               <div style={{
                 border: "1px solid #ddd",
                 padding: "15px",

@@ -50,7 +50,7 @@ const BookPopularityReport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
-  
+
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -109,34 +109,34 @@ const BookPopularityReport = () => {
   useEffect(() => {
 
     if (filters.days === "custom" && !filters.startDate && !filters.endDate) {
-    const today = new Date();
-    const lastMonth = new Date();
-    lastMonth.setMonth(today.getMonth() - 1);
+      const today = new Date();
+      const lastMonth = new Date();
+      lastMonth.setMonth(today.getMonth() - 1);
 
 
 
-    const formatDate = (date) => date.toISOString().split("T")[0];
+      const formatDate = (date) => date.toISOString().split("T")[0];
 
-    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
-    handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
-  
+      handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
+      handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
+
     }
     fetchReportData();
   }, [filters]);
 
 
-    const currentDate = new Date();
+  const currentDate = new Date();
 
-    const lastMonthDate = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - 1,
-      currentDate.getDate()
-    );
+  const lastMonthDate = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() - 1,
+    currentDate.getDate()
+  );
 
 
 
- 
-   
+
+
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -147,9 +147,9 @@ const BookPopularityReport = () => {
 
       // Handle Custom Date Logic
       if (filters.days === "custom") {
-        
+
         params.append("days", "custom");
-      
+
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
       } else {
@@ -237,7 +237,7 @@ const BookPopularityReport = () => {
     }
   };
 
-  
+
   const exportToPDF = () => {
     if (!reportData?.mainTable) return;
     const doc = new jsPDF();
@@ -337,7 +337,7 @@ const BookPopularityReport = () => {
           </Dropdown>
         </div> */}
 
-       <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
+        <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
           <Col md={6} className="d-flex align-items-center gap-3 ms-3">
             <button
               onClick={() => navigate('/reports')}
@@ -420,8 +420,8 @@ const BookPopularityReport = () => {
                 <Form.Control
                   type="date"
                   style={inputBaseStyle}
-                  value={filters.startDate }
-                  
+                  value={filters.startDate}
+
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
                 />
               </Col>
@@ -482,7 +482,7 @@ const BookPopularityReport = () => {
           </Row>
         </div>
 
-        {/* Content View */}
+      
         <div className="p-3">
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">
@@ -544,7 +544,7 @@ const BookPopularityReport = () => {
                 </Card>
               </Col>
               <Col lg={6}>
-                 <Card className="border-0 shadow-sm">
+                <Card className="border-0 shadow-sm">
                   <Card.Body>
                     <h6 className="fw-bold mb-3"><PieChartIcon className="me-2 text-info" />Category Stats</h6>
                     <div className="list-group list-group-flush">

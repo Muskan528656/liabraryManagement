@@ -10,24 +10,27 @@ function init(schema_name) {
 }
 
 async function findAll() {
+  console.log("Working...")
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT 
-            r.id,
-            r.report_name,
-            r.api_name,
-            r.created_date,
-            r.description,
-            r.created_by,
-            u.firstname AS created_by_name
-        FROM ${this.schema}.reports r
-        INNER JOIN ${this.schema}."user" u 
-            ON r.created_by = u.id
-        WHERE r.is_active = true
-        ORDER BY r.created_date DESC
-    `;
+    // const query = `SELECT 
+    //         r.id,
+    //         r.report_name,
+    //         r.api_name,
+    //         r.created_date,
+    //         r.description,
+    //         r.created_by,
+    //         u.firstname AS created_by_name
+    //     FROM ${this.schema}.reports r
+    //     INNER JOIN ${this.schema}."user" u 
+    //         ON r.created_by = u.id
+    //     WHERE r.is_active = true
+    //     ORDER BY r.created_date DESC
+    // `;
+
+    const query = `Select * from demo.reports`
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -75,7 +78,7 @@ async function create(reportData, userId) {
   }
 }
 
-async function getInactiveBooks(params) { 
+async function getInactiveBooks(params) {
   try {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -309,7 +312,7 @@ async function getBorrowingReport(params) {
     // `;
 
 
-   const query = ` SELECT
+    const query = ` SELECT
           b.title,
           bi.issued_to,
           bi.issue_date,

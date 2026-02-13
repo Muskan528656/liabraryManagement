@@ -473,7 +473,7 @@ const InactiveBooksReport = () => {
         {/* Content View */}
         <div className="p-3">
           {viewMode === "table" && (
-            <div className="border rounded overflow-hidden">
+            
               <ResizableTable
                 data={reportData?.records || []}
                 columns={columns}
@@ -487,7 +487,7 @@ const InactiveBooksReport = () => {
                 selectedItems={selectedItems}
                 onSelectionChange={setSelectedItems}
               />
-            </div>
+        
           )}
 
           {viewMode === "dashboard" && (

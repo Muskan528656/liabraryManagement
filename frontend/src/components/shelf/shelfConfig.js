@@ -158,14 +158,14 @@ export const getShelfConfig = (
 
             if (!formData.shelf_name?.trim()) {
                 errors.push("Shelf name is required");
-            } 
+            }
             // else if (!noNumberRegex.test(formData.shelf_name.trim())) {
             //     errors.push("Numbers are not allowed in shelf name");
             // }
 
             if (!formData.sub_shelf?.trim()) {
                 errors.push("Sub Shelf is required");
-            } 
+            }
             // else if (!noNumberRegex.test(formData.sub_shelf.trim())) {
             //     errors.push("Numbers are not allowed in sub shelf");
             // }
@@ -227,7 +227,6 @@ export const getShelfConfig = (
                 label: "Status",
                 type: "select",
                 options: [
-                    { label: "All", value: "" },
                     { label: "Active", value: true },
                     { label: "Inactive", value: false }
                 ]
