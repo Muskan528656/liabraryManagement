@@ -66,8 +66,10 @@ import Shelf from "./components/shelf/shelf";
 import ShelfDetail from "./components/shelf/shelfDetail";
 import GradeSectionDetail from "./components/GradeSection/gradesectionDetail";
 import GradeSection from "./components/GradeSection/gradesection";
-import Branch from "./components/branches/branch";
-import BranchDetail from "./components/branches/branchDetail";
+import BookUnborrowedReport from "./components/reports/BookUnborrowedReport";
+import BookOverDueReport from "./components/reports/BookOverDueReport";
+import Branch from "./components/branches/branch"
+import BranchDetail from "./components/branches/branchDetail"
 const ENDPOINT = "http://localhost:3003";
 
 function AppContent() {
@@ -221,6 +223,8 @@ function AppContent() {
                 <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
                 <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
 
+                <Route path="reports/inactivebooks" element={<BookUnborrowedReport />} />
+                <Route path="reports/book-borrowing" element={<BookOverDueReport />} />
               </Route>
             </Routes>
           </Router>

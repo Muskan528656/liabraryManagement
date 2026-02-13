@@ -15,10 +15,10 @@ import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
 import "../../App.css";
 import PermissionDenied from '../../utils/permission_denied';
-const BulkPurchasePage = ({permissions}) => {
+const BulkPurchasePage = ({ permissions }) => {
 
 
-  
+
 
     const navigate = useNavigate();
 
@@ -553,6 +553,7 @@ const BulkPurchasePage = ({permissions}) => {
         try {
             const vendorApi = new DataApi("vendor");
             const response = await vendorApi.fetchAll();
+
             if (response.data) {
                 setVendors(response.data);
             }
@@ -892,10 +893,10 @@ const BulkPurchasePage = ({permissions}) => {
 
     if (loading) {
         // return <Loader />;
-         <span className="loader"></span>
+        <span className="loader"></span>
     }
 
-      if(!permissions?.allowCreate){
+    if (!permissions?.allowCreate) {
         return <PermissionDenied />;
     }
 
@@ -963,7 +964,6 @@ const BulkPurchasePage = ({permissions}) => {
                         </div>
 
                         <div className="border rounded" style={{
-                            // maxHeight: 'calc(100vh - 400px)',
                             overflow: 'auto',
                             backgroundColor: 'white',
                             width: '100%',
@@ -986,10 +986,10 @@ const BulkPurchasePage = ({permissions}) => {
                                     }}>
                                         <tr>
                                             <th style={{ background: 'var(--primary-background-color)', width: '22%' }} >
-                                                {/* <div className="d-flex align-items-center"> */}
+
                                                 <span>Vendor</span>
                                                 <span className="text-danger ms-1">*</span>
-                                                {/* </div> */}
+
                                             </th>
                                             <th style={{ background: 'var(--primary-background-color)', width: '22%' }} >
                                                 <div className="d-flex align-items-center">
@@ -1793,7 +1793,7 @@ const BulkPurchasePage = ({permissions}) => {
                 </Row>
 
                 {/* Add Vendor Modal */}
-                <Modal    backdrop="static"  show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
+                <Modal backdrop="static" show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
                     <Modal.Header closeButton className="border-bottom-0 pb-0" style={{ background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)", color: "white" }}>
                         <Modal.Title className="fw-bold">
                             Add New Vendor

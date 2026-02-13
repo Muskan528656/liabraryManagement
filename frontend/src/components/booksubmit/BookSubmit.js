@@ -2119,6 +2119,7 @@ const BookSubmit = ({ permissions }) => {
                                                         searchTerm={searchTerm}
                                                         currentPage={currentPage}
                                                         recordsPerPage={recordsPerPage}
+                                                        
                                                         onPageChange={(page) => setCurrentPage(page)}
                                                         emptyMessage={loadingSubmitted ?
                                                             <div className="text-center py-5">

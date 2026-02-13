@@ -31,6 +31,7 @@ import { Bar, Pie } from "react-chartjs-2";
 import DataApi from "../../api/dataApi";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx'
 import "./BookPopularityReport.css";
 
 // Register ChartJS components
@@ -44,13 +45,13 @@ ChartJS.register(
   Legend
 );
 
-const BookPopularityReport = () => {
+const BookBrrowedReport = () => {
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
-  
+
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -142,7 +143,7 @@ const BookPopularityReport = () => {
     setLoading(true);
     setError(null);
     try {
-      const api = new DataApi("book");
+      const api = new DataApi("reports");
       const params = new URLSearchParams();
 
       // Handle Custom Date Logic
@@ -160,9 +161,12 @@ const BookPopularityReport = () => {
       if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
 
       const response = await api.get(
-        `/book-popularity-analytics?${params.toString()}`
+        `/book-borrowing?${params.toString()}`
       );
-      setReportData(response.data);
+
+      console.log("respons",response)
+      console.log("book-borrwoing resp=>",response.data.records)
+      setReportData(response.data.records);
     } catch (err) {
       console.error("Error fetching report data:", err);
       setError("Failed to load report data. Please try again.");
@@ -192,91 +196,129 @@ const BookPopularityReport = () => {
   };
 
   // Export Functions
+  const prepareDataForExport = () => {
+    return reportData.map(row => ({
+      "Book Title": row.title,
+      "Issued To": row.member_name || "Unknown",
+      "Issue Date": row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A',
+      "Due Date": row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A',
+      "Status": row.circulation_status
+    }));
+  };
+
+  // --- Export: CSV ---
   const exportToCSV = () => {
-    if (!reportData?.mainTable) return;
-    const headers = ["Book Name", "Author", "Category", "Issued", "Borrowers", "Level"];
+    const data = prepareDataForExport();
+    if (data.length === 0) return alert("No data to export");
+
+    const headers = Object.keys(data[0]).join(",");
     const csvContent = [
-      headers.join(","),
-      ...reportData.mainTable.map((row) =>
-        [`"${row.book_name}"`, `"${row.author || "N/A"}"`, `"${row.category || "N/A"}"`, row.total_issues || 0, row.unique_borrowers || 0, `"${row.popularity_level}"`].join(",")
-      ),
+      headers,
+      ...data.map(row => Object.values(row).map(v => `"${v}"`).join(","))
     ].join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `popularity-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Overdue_Report_${todayStr}.csv`);
     link.click();
   };
 
-  const exportToExcel = async () => {
-    setExporting(true);
-    try {
-      const api = new DataApi("book");
-      const params = new URLSearchParams();
+  // --- Export: XLSX (Excel) ---
+  const exportToExcel = () => {
+    const data = prepareDataForExport();
+    if (data.length === 0) return alert("No data to export");
 
-      if (filters.days) params.append("days", filters.days);
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Overdue Books");
+    
+    // Auto-size columns
+    const wscols = Object.keys(data[0]).map(key => ({ wch: key.length + 10 }));
+    worksheet['!cols'] = wscols;
 
-      const response = await api.get(`/export-excel?${params.toString()}`, {
-        responseType: 'blob'
-      });
-      const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `book-popularity-report.xlsx`);
-      link.click();
-    } catch (error) {
-      console.error("Excel export error:", error);
-      alert("Excel export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+    XLSX.writeFile(workbook, `Overdue_Report_${todayStr}.xlsx`);
   };
 
-  
+  // --- Export: PDF ---
   const exportToPDF = () => {
-    if (!reportData?.mainTable) return;
-    const doc = new jsPDF();
-    doc.text('Book Popularity Analytics Report', 105, 20, { align: 'center' });
-    const tableData = reportData.mainTable.slice(0, 30).map(row => [
-      row.book_name, row.author || 'N/A', row.category || 'N/A', row.total_issues, row.unique_borrowers, row.popularity_level
+    if (reportData.length === 0) return alert("No data to export");
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    doc.setFontSize(16);
+    doc.text('Overdue Books Report', 105, 15, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableData = reportData.map(row => [
+      row.title, 
+      row.member_name, 
+      row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A', 
+      row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A', 
+      row.circulation_status
     ]);
+
     doc.autoTable({
-      head: [['Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level']],
+      head: [['Book Title', 'Member', 'Issue Date', 'Due Date', 'Status']],
       body: tableData,
-      startY: 30
+      startY: 28,
+      theme: 'striped',
+      headStyles: { fillColor: [220, 53, 69] } // Red theme for overdue
     });
-    doc.save('book-popularity-report.pdf');
+
+    doc.save(`Overdue_Report_${todayStr}.pdf`);
   };
 
   // Table Columns Definition
   const columns = [
     {
-      field: "book_name",
+      field: "title",
       label: "Book Title",
       width: "250px",
-      render: (value, record) => (
+      render: (value) => (
         <div className="book-title-cell">
           <div className="fw-bold">{value}</div>
-          {record.isbn && <div className="text-muted small">ISBN: {record.isbn}</div>}
         </div>
       ),
     },
-    { field: "author", label: "Author", width: "150px", align: "center" },
-    { field: "category", label: "Category", width: "120px", align: "center" },
+    { field: "member_name", label: "Issued To", width: "200px", align: "center" },
     {
-      field: "available",
-      label: "Available",
-      width: "100px",
+      field: "issue_date",
+      label: "Issue Date",
+      width: "120px",
       align: "center",
-      render: (_, record) => (record.copies || 0) - (record.total_issues || 0),
+      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A"
     },
-    { field: "total_issues", label: "Issued", width: "80px", align: "center" },
-    { field: "unique_borrowers", label: "Borrowers", width: "100px", align: "center" },
+    {
+      field: "due_date",
+      label: "Due Date",
+      width: "120px",
+      align: "center",
+      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A"
+    },
+
+    // {
+    //   field: "status",
+    //   label: "Status",
+    //   width: "100px",
+    //   align: "center",
+    //   render: (value) => (
+    //     <Badge bg={value === 'returned' ? 'success' : value === 'issued' ? 'primary' : 'secondary'}>
+    //       {value?.toUpperCase()}
+    //     </Badge>
+    //   )
+    // },
+    {
+      field: "circulation_status",
+      label: "Circulation Status",
+      width: "150px",
+      align: "center",
+      render: (value) => (
+        <Badge bg={value === 'OVERDUE' ? 'danger' : 'info'}>
+          {value}
+        </Badge>
+      )
+    },
   ];
 
   // Chart Data
@@ -306,6 +348,8 @@ const BookPopularityReport = () => {
       </div>
     );
   }
+
+  console.log("reportData",reportData)
 
   return (
     <div className="container-fluid bg-light min-vh-100 pb-5">
@@ -347,7 +391,7 @@ const BookPopularityReport = () => {
             </button>
             <div>
               <h4 className="mb-0 fw-bold fs-7" style={{ color: "var(--primary-color)" }}>
-                Book Borrowing Popularity Analytics
+                Overdue Books Report
               </h4>
             </div>
           </Col>
@@ -357,7 +401,7 @@ const BookPopularityReport = () => {
                 <i className="fa fa-bars me-1" />  Options
               </Dropdown.Toggle>
               <Dropdown.Menu className="shadow-sm border-0 mt-2">
-                <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
+                {/* <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
                 <Dropdown.Item
                   className="text-dark"
                   active={viewMode === 'table'}
@@ -378,8 +422,8 @@ const BookPopularityReport = () => {
                   onClick={() => setViewMode('analytics')}
                 >
                   <i className="fa fa-chart-bar me-2" /> Analytics
-                </Dropdown.Item>
-                <Dropdown.Divider />
+                </Dropdown.Item> */}
+                {/* <Dropdown.Divider /> */}
                 <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
                 <Dropdown.Item onClick={exportToExcel}>
                   <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
@@ -487,7 +531,7 @@ const BookPopularityReport = () => {
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">
               <ResizableTable
-                data={reportData?.mainTable || []}
+                data={reportData}
                 columns={columns}
                 loading={loading}
                 currentPage={currentPage}
@@ -566,4 +610,4 @@ const BookPopularityReport = () => {
   );
 };
 
-export default BookPopularityReport;
+export default BookBrrowedReport;

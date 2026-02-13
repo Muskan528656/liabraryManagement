@@ -31,6 +31,7 @@ import { Bar, Pie } from "react-chartjs-2";
 import DataApi from "../../api/dataApi";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx'; 
 import "./BookPopularityReport.css";
 
 // Register ChartJS components
@@ -44,7 +45,7 @@ ChartJS.register(
   Legend
 );
 
-const BookPopularityReport = () => {
+const InactiveBooksReport = () => {
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -117,8 +118,8 @@ const BookPopularityReport = () => {
 
     const formatDate = (date) => date.toISOString().split("T")[0];
 
-    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
-    handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
+    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);    
+    handleFilterChange("endDate", today.toISOString().split("T")[0]);    
   
     }
     fetchReportData();
@@ -142,7 +143,7 @@ const BookPopularityReport = () => {
     setLoading(true);
     setError(null);
     try {
-      const api = new DataApi("book");
+      const api = new DataApi("reports");
       const params = new URLSearchParams();
 
       // Handle Custom Date Logic
@@ -160,7 +161,7 @@ const BookPopularityReport = () => {
       if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
 
       const response = await api.get(
-        `/book-popularity-analytics?${params.toString()}`
+        `/inactive-books?${params.toString()}`
       );
       setReportData(response.data);
     } catch (err) {
@@ -175,7 +176,6 @@ const BookPopularityReport = () => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
-      // Clear specific dates if user switches away from "custom"
       ...(field === "days" && value !== "custom" ? { startDate: "", endDate: "" } : {})
     }));
     setCurrentPage(1);
@@ -192,91 +192,105 @@ const BookPopularityReport = () => {
   };
 
   // Export Functions
+  const prepareExportData = () => {
+    const data = Array.isArray(reportData) ? reportData : (reportData?.records || []);
+    return data.map(item => ({
+      "Book Title": item.title,
+      "Category": item.category_name || "N/A",
+      "Available Copies": item.available_copies,
+      "Last Activity": item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString() : 'Never',
+      "Days Inactive": item.days_not_borrowed
+    }));
+  };
+
   const exportToCSV = () => {
-    if (!reportData?.mainTable) return;
-    const headers = ["Book Name", "Author", "Category", "Issued", "Borrowers", "Level"];
-    const csvContent = [
-      headers.join(","),
-      ...reportData.mainTable.map((row) =>
-        [`"${row.book_name}"`, `"${row.author || "N/A"}"`, `"${row.category || "N/A"}"`, row.total_issues || 0, row.unique_borrowers || 0, `"${row.popularity_level}"`].join(",")
-      ),
-    ].join("\n");
+    const data = prepareExportData();
+    if (data.length === 0) return alert("No data to export");
+
+    const headers = Object.keys(data[0]).join(",");
+    const rows = data.map(row => 
+      Object.values(row).map(value => `"${value}"`).join(",")
+    ).join("\n");
+
+    const csvContent = `${headers}\n${rows}`;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `popularity-report-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Inactive_Books_${todayStr}.csv`);
     link.click();
   };
 
-  const exportToExcel = async () => {
-    setExporting(true);
-    try {
-      const api = new DataApi("book");
-      const params = new URLSearchParams();
+  const exportToExcel = () => {
+    const data = prepareExportData();
+    if (data.length === 0) return alert("No data to export");
 
-      if (filters.days) params.append("days", filters.days);
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.searchTerm) params.append("searchTerm", filters.searchTerm);
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Inactive Books");
+    
+    // Auto-size columns
+    const maxWidth = 40;
+    worksheet['!cols'] = Object.keys(data[0]).map(key => ({
+      wch: Math.min(maxWidth, Math.max(key.length, ...data.map(obj => obj[key]?.toString().length || 0)))
+    }));
 
-      const response = await api.get(`/export-excel?${params.toString()}`, {
-        responseType: 'blob'
-      });
-      const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `book-popularity-report.xlsx`);
-      link.click();
-    } catch (error) {
-      console.error("Excel export error:", error);
-      alert("Excel export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+    XLSX.writeFile(workbook, `Inactive_Books_Report_${todayStr}.xlsx`);
   };
 
-  
   const exportToPDF = () => {
-    if (!reportData?.mainTable) return;
-    const doc = new jsPDF();
-    doc.text('Book Popularity Analytics Report', 105, 20, { align: 'center' });
-    const tableData = reportData.mainTable.slice(0, 30).map(row => [
-      row.book_name, row.author || 'N/A', row.category || 'N/A', row.total_issues, row.unique_borrowers, row.popularity_level
+    const data = Array.isArray(reportData) ? reportData : (reportData?.records || []);
+    if (data.length === 0) return alert("No data to export");
+
+    const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+    doc.setFontSize(18);
+    doc.text('Long-Time Unborrowed Books Report', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    const tableColumn = ["Title", "Category", "Copies", "Last Activity", "Days Inactive"];
+    const tableRows = data.map(item => [
+      item.title,
+      item.category_name,
+      item.available_copies,
+      item.last_activity_date ? new Date(item.last_activity_date).toLocaleDateString() : 'Never',
+      item.days_not_borrowed
     ]);
+
     doc.autoTable({
-      head: [['Title', 'Author', 'Category', 'Issues', 'Borrowers', 'Level']],
-      body: tableData,
-      startY: 30
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [13, 110, 253] }
     });
-    doc.save('book-popularity-report.pdf');
+
+    doc.save(`Inactive_Books_${todayStr}.pdf`);
   };
+
 
   // Table Columns Definition
   const columns = [
     {
-      field: "book_name",
+      field: "title",
       label: "Book Title",
       width: "250px",
       render: (value, record) => (
         <div className="book-title-cell">
           <div className="fw-bold">{value}</div>
-          {record.isbn && <div className="text-muted small">ISBN: {record.isbn}</div>}
+          {/* <div className="text-muted small">ID: {record.id}</div> */}
         </div>
       ),
     },
-    { field: "author", label: "Author", width: "150px", align: "center" },
-    { field: "category", label: "Category", width: "120px", align: "center" },
+    { field: "available_copies", label: "Available Copies", width: "150px", align: "center" },
+    { field: "category_name", label: "Category", width: "150px", align: "center" },
     {
-      field: "available",
-      label: "Available",
-      width: "100px",
+      field: "last_activity_date",
+      label: "Last Activity Date",
+      width: "180px",
       align: "center",
-      render: (_, record) => (record.copies || 0) - (record.total_issues || 0),
+      render: (value) => new Date(value).toLocaleDateString(),
     },
-    { field: "total_issues", label: "Issued", width: "80px", align: "center" },
-    { field: "unique_borrowers", label: "Borrowers", width: "100px", align: "center" },
+    { field: "days_not_borrowed", label: "Days Not Borrowed", width: "150px", align: "center" },
   ];
 
   // Chart Data
@@ -310,32 +324,6 @@ const BookPopularityReport = () => {
   return (
     <div className="container-fluid bg-light min-vh-100 pb-5">
       <div className="card shadow-sm border-0 mt-1 mx-2">
-        {/* Header */}
-        {/* <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
-          <div className="d-flex align-items-center gap-3">
-            <Button variant="light" className="shadow-sm border" onClick={() => navigate('/reports')}>
-              <i className="fa-solid fa-arrow-left"></i>
-            </Button>
-            <h4 className="mb-0 fw-bold text-primary">Book Borrowing Popularity Analytics</h4>
-          </div>
-
-          <Dropdown align="end">
-            <Dropdown.Toggle variant="outline-secondary" size="sm">
-              <i className="fa fa-bars me-1" /> Options
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="shadow-sm border-0">
-              <Dropdown.Header>View Mode</Dropdown.Header>
-              <Dropdown.Item onClick={() => setViewMode('table')} active={viewMode === 'table'}>Table</Dropdown.Item>
-              <Dropdown.Item onClick={() => setViewMode('dashboard')} active={viewMode === 'dashboard'}>Dashboard</Dropdown.Item>
-              <Dropdown.Item onClick={() => setViewMode('analytics')} active={viewMode === 'analytics'}>Detailed Analytics</Dropdown.Item>
-              <Dropdown.Divider />
-              <Dropdown.Header>Export</Dropdown.Header>
-              <Dropdown.Item onClick={exportToExcel}><i className="fa-solid fa-file-excel me-2 text-success" /> Excel</Dropdown.Item>
-              <Dropdown.Item onClick={exportToCSV}><i className="fa-solid fa-file-csv me-2 text-info" /> CSV</Dropdown.Item>
-              <Dropdown.Item onClick={exportToPDF}><i className="fa-solid fa-file-pdf me-2 text-danger" /> PDF</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-        </div> */}
 
        <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
           <Col md={6} className="d-flex align-items-center gap-3 ms-3">
@@ -347,7 +335,7 @@ const BookPopularityReport = () => {
             </button>
             <div>
               <h4 className="mb-0 fw-bold fs-7" style={{ color: "var(--primary-color)" }}>
-                Book Borrowing Popularity Analytics
+                Long- Time Unborrowed Books
               </h4>
             </div>
           </Col>
@@ -357,7 +345,7 @@ const BookPopularityReport = () => {
                 <i className="fa fa-bars me-1" />  Options
               </Dropdown.Toggle>
               <Dropdown.Menu className="shadow-sm border-0 mt-2">
-                <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
+                {/* <Dropdown.Header className="small text-uppercase fw-bold text-muted">View Mode</Dropdown.Header>
                 <Dropdown.Item
                   className="text-dark"
                   active={viewMode === 'table'}
@@ -379,7 +367,7 @@ const BookPopularityReport = () => {
                 >
                   <i className="fa fa-chart-bar me-2" /> Analytics
                 </Dropdown.Item>
-                <Dropdown.Divider />
+                <Dropdown.Divider /> */}
                 <Dropdown.Header className="small text-uppercase fw-bold text-muted">Export Options</Dropdown.Header>
                 <Dropdown.Item onClick={exportToExcel}>
                   <i className="fa-solid fa-file-excel me-2 text-success" /> Excel
@@ -487,7 +475,7 @@ const BookPopularityReport = () => {
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">
               <ResizableTable
-                data={reportData?.mainTable || []}
+                data={reportData?.records || []}
                 columns={columns}
                 loading={loading}
                 currentPage={currentPage}
@@ -566,4 +554,4 @@ const BookPopularityReport = () => {
   );
 };
 
-export default BookPopularityReport;
+export default InactiveBooksReport;

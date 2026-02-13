@@ -40,7 +40,7 @@ const LibraryCardDetail = ({
   const location = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
 
   console.log("permissions", permissions)
 
@@ -110,7 +110,7 @@ const LibraryCardDetail = ({
       "job_title",
       "grade_name",
       "section_name",
-
+      "library_member_type"
     ],
     []
   );
@@ -753,7 +753,7 @@ const LibraryCardDetail = ({
         }
       },
 
-     {
+      {
         key: "grade_name",
         label: "Grade",
         type: "select",
@@ -766,6 +766,16 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
+    {
+      key: "library_member_type", 
+      label: "Gender",
+      type: "select",
+      options: library_member_type.map((item) => ({ 
+        label: item, 
+        value: item 
+      })),
+      colSize: 3,
+    },
       {
         key: "section_name",
         label: "Section",
@@ -782,7 +792,7 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
-       {
+      {
         key: "is_active",
         label: "Status",
         type: "badge",
@@ -1593,7 +1603,7 @@ const LibraryCardDetail = ({
       });
 
 
-    
+
 
       resetImageSelection();
 
@@ -1621,6 +1631,8 @@ const LibraryCardDetail = ({
       setSaving(false);
     }
   };
+
+
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -2091,7 +2103,7 @@ const LibraryCardDetail = ({
   };
 
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
@@ -2121,7 +2133,8 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (visible ? <button onClick={handleEdit} className="custom-btn-primary">
+                  {canEdit && !isEditing ? (visible ? 
+                  <button onClick={handleEdit} className="custom-btn-primary">
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit {moduleLabel}
                   </button> : null
@@ -2252,11 +2265,14 @@ const LibraryCardDetail = ({
                         normalizedFields.details &&
                         moduleName === "librarycard" && (
                           <>
-                            <Col md={9}>
+                            <Col md={9}
+                              
+                            >
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
+                                  background: "var(--header-highlighter-color)",
                                   borderRadius: "10px",
                                 }}
                               >

@@ -340,7 +340,7 @@ const BookInventoryReport = () => {
 
   return (
     <>
-      <div className="container-fluid ">
+      <div className="container-fluid " style={{ marginTop: "-14px" }}>
         <Card className="border-0 shadow-sm ">
 
           <Card.Header
@@ -362,26 +362,26 @@ const BookInventoryReport = () => {
 
                 {/* Icon */}
                 {/* <div
-        className="d-flex align-items-center justify-content-center"
-        style={{
-          width: "42px",
-          height: "42px",
-          borderRadius: "10px",
-          background: "var(--primary-background-color)"
-        }}
-      >
-        <i
-          className="fa fa-book"
-          style={{ fontSize: '20px', color: "var(--primary-color)" }}
-        />
-      </div> */}
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "10px",
+                  background: "var(--primary-background-color)"
+                }}
+              >
+                <i
+                  className="fa fa-book"
+                  style={{ fontSize: '20px', color: "var(--primary-color)" }}
+                />
+              </div> */}
 
                 {/* Title */}
                 <div>
                   <h4 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
                     Book Inventory
                   </h4>
-                  {/* <small className="text-muted">Manage and analyze your book stock</small> */}
+
                 </div>
 
               </Col>
