@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '../constants/CONSTANT';
+import DataApi from "../api/dataApi";
 import helper from '../components/common/helper';
 import jwt_decode from "jwt-decode";
 const BranchContext = createContext();
-
 export const BranchProvider = ({ children }) => {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -17,48 +17,47 @@ export const BranchProvider = ({ children }) => {
   const loadBranchData = async () => {
     try {
       setLoading(true);
-        // const token = sessionStorage.getItem("token");
-        // console.log("loadBranchData token:", token);
+    
           let userInfo = jwt_decode(sessionStorage.getItem("token"));
-    setLoginUserRole(userInfo.role_name);
-      // Check if user is super admin by getting user info
-     
+        
+    
+          console.log("userInfo", userInfo);
+        setLoginUserRole(userInfo.role_name);
         const userRole = userInfo.role_name;
         const userBranchId = userInfo.branch_id;
+        console.log("userBranchId", userBranchId);
         
         setIsSuperAdmin(userRole === 'SYSTEM ADMIN');
-        
-        // Fetch all branches
-        const branchResponse = await helper.fetchWithAuth(`${API_BASE_URL}/api/branch`, 'GET');
-        console.log("Branch data:", branchResponse);
+ const branchesApi = new DataApi("branches");
 
-        const branchData = await branchResponse.json();
+      const branchData = await branchesApi.fetchAll();
+      
         
-        if (branchData.success) {
-          setBranches(branchData.data || []);
-          
-          // Set initial selected branch based on user role
-          if (userRole === 'SYSTEM ADMIN') {
-            // Super admin can select "All Branches" initially
-            const savedBranch = localStorage.getItem('selectedBranch');
-            if (savedBranch) {
-              try {
-                const parsedBranch = JSON.parse(savedBranch);
-                setSelectedBranch(parsedBranch);
-              } catch (e) {
-                // If parsing fails, set to null (All Branches)
-                setSelectedBranch(null);
-              }
-            } else {
-              setSelectedBranch(null); // Default to All Branches for super admin
-            }
-          } else {
-            // Regular user gets their assigned branch
+        if (branchData.data.success) {
+          setBranches(branchData.data.data || []);
+          // if (userRole === 'SYSTEM ADMIN') {
+          //   const savedBranch = localStorage.getItem('selectedBranch');
+          //   if (savedBranch) {
+          //     try {
+          //       const parsedBranch = JSON.parse(savedBranch);
+          //       setSelectedBranch(parsedBranch);
+          //     } catch (e) {
+          //       setSelectedBranch(null);
+          //     }
+          //   } else {
+          //     setSelectedBranch(null); 
+          //   }
+          // } else {
             const userBranch = (branchData.data || []).find(b => b.id === userBranchId);
-            if (userBranch) {
+            console.log("Selected Branch from sessionStorage:", sessionStorage.getItem('selectedBranch'));
+              if(sessionStorage.getItem('selectedBranch')){
+                
+              setSelectedBranch(JSON.parse(sessionStorage.getItem('selectedBranch')).id || null);
+              }else if (userBranch) {
               setSelectedBranch(userBranch);
+              sessionStorage.setItem('selectedBranch', JSON.stringify(userBranch));
             }
-          }
+          
         }
       
     } catch (error) {
@@ -69,15 +68,18 @@ export const BranchProvider = ({ children }) => {
   };
 
   const selectBranch = (branch) => {
+    console.log("Selected Branch:", branch);
+    
     setSelectedBranch(branch);
     
     // Save to localStorage for super admins
     if (isSuperAdmin) {
-      if (branch) {
-        localStorage.setItem('selectedBranch', JSON.stringify(branch));
+      if (branch) { 
+           sessionStorage.setItem('selectedBranch', JSON.stringify(branch));
       } else {
-        localStorage.removeItem('selectedBranch');
+           sessionStorage.setItem('selectedBranch', JSON.stringify(branch));
       }
+
     }
   };
 

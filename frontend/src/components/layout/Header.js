@@ -690,14 +690,10 @@ export default function Header({ socket }) {
                 value={selectedBranch ? selectedBranch.id : ''}
                 onChange={(e) => {
                   const branchId = e.target.value;
-                  if (branchId === '') {
-                    selectBranch(null); // Select 'All Branches'
-                  } else {
-                    const branch = branches.find(b => b.id === parseInt(branchId));
+                    const branch = branches.find(b => b.id ===branchId);
                     if (branch) {
                       selectBranch(branch);
                     }
-                  }
                 }}
                 style={{
                   minWidth: '150px',
@@ -710,7 +706,7 @@ export default function Header({ socket }) {
                   color: '#495057',
                 }}
               >
-                <option value="">All Branches</option>
+                {/* <option value="">All Branches</option> */}
                 {branches.map((branch) => (
                   <option key={branch.id} value={branch.id}>
                     {branch.branch_name}
