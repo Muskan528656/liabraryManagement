@@ -36,7 +36,7 @@ module.exports = (app) => {
     async (req, res) => {
       try {
         BookIssue.init(req.userinfo.tenantcode, req.branchId);
- 
+
 
         const memberType = req.userinfo.library_member_type;
 
