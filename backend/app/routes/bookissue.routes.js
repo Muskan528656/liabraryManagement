@@ -281,7 +281,7 @@ module.exports = (app) => {
   router.post("/issue", fetchUser, checkPermission("Book Issue", "allow_create"), async (req, res) => {
     try {
 
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode,req.branchId);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
