@@ -1,3 +1,4 @@
+
 /**
  * Handles all incoming request for /api/bookissue endpoint
  * DB table for this demo.book_issues
@@ -281,7 +282,7 @@ module.exports = (app) => {
   router.post("/issue", fetchUser, checkPermission("Book Issue", "allow_create"), async (req, res) => {
     try {
 
-      BookIssue.init(req.userinfo.tenantcode,req.branchId);
+      BookIssue.init(req.userinfo.tenantcode);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
