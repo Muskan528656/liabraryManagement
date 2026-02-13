@@ -55,7 +55,10 @@ const helper = {
   },
 
   async fetchWithAuth(url, method, body = undefined, bodyType = undefined) {
+    let modifiedUrl = url;
+    
     let accessToken = sessionStorage.getItem("token");
+     let branchId = JSON.parse(sessionStorage?.getItem('selectedBranch'))?.id || null;
     const refreshToken = sessionStorage.getItem("r-t");
 
     if (!accessToken || !refreshToken) {
@@ -108,11 +111,13 @@ const helper = {
         if (data.success) {
           accessToken = data.authToken;
           sessionStorage.setItem("token", accessToken);
+          let userInfo = jwt_decode(accessToken);
+          branchId = userInfo.branch_id || null;
         }
       }
 
       if (method === "GET" || method === "DELETE") {
-        return await fetch(url, {
+        return await fetch(modifiedUrl, {
           method,
           mode: "cors",
           headers: {
@@ -120,16 +125,18 @@ const helper = {
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
             Authorization: `Bearer ${accessToken}`,
+            "Branch-Id": `${branchId || ""}`,
           },
         });
       } else if (method === "POST" || method === "PUT" || method === "PATCH") {
-        return await fetch(url, {
+        return await fetch(modifiedUrl, {
           method,
           mode: "cors",
           headers: {
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
             Authorization: `Bearer ${accessToken}`,
+            "Branch-Id": `${branchId || ""}`,
             ...(bodyType !== "form" && { "Content-Type": "application/json" }),
           },
           body,

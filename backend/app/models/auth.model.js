@@ -189,6 +189,7 @@ async function findByEmail(email) {
           u.userrole,
           u.companyid,
           u.isactive,
+          u.branch_id,
           u.library_member_type
         FROM ${this.schema}.user u
         WHERE LOWER(TRIM(u.email)) = $1
@@ -204,8 +205,10 @@ async function findByEmail(email) {
         'password', u.password,
         'userrole', u.userrole,
         'role_name', COALESCE(ur.role_name, ''),
+        'branch_name', COALESCE(b.branch_name, ''),
         'companyid', u.companyid,
         'isactive', u.isactive,
+        'branch_id', u.branch_id,
         'library_member_type', u.library_member_type,
         -- Company info
         'time_zone', COALESCE(c.time_zone, 'UTC'),
@@ -220,6 +223,7 @@ async function findByEmail(email) {
       ) AS userinfo
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
+      LEFT JOIN demo.branches b ON b.id = u.branch_id   
       LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
       LIMIT 1;
       `,
@@ -242,6 +246,7 @@ async function findByEmail(email) {
         role_name: "",
         companyid: null,
         isactive: false,
+        branch_id: null,  
         library_member_type: null,
         time_zone: "UTC",
         companyname: "",

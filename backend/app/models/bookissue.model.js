@@ -1,17 +1,23 @@
 const sql = require("./db.js");
 const Notification = require("./notification.model.js");
 let schema = "";
+let branchId = "";
 
 const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
-function init(schema_name) {
-  schema = schema_name;
+function init(schema_name, branchId) {
+  this.schema = schema_name;
+  console.log("Schema:", schema);
+  
+  this.branchId = branchId || "";
+  console.log("Branch ID:", branchId);
 }
 
 
 async function findAll(memberType) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
-
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.branchId) throw new Error("Branch ID not initialized. Call init() first.");
+    console.log("Branch INW ID:", this.branchId);
     let query = `SELECT 
                     bi.*,
                     b.title AS book_title,
@@ -20,13 +26,12 @@ async function findAll(memberType) {
                     lm.first_name || ' ' || lm.last_name AS member_name,
                     lm.id AS card_id,
                     u.firstname || ' ' || u.lastname AS issued_by_name
-                 FROM ${schema}.book_issues bi
-                 LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-                 LEFT JOIN ${schema}.library_members lm 
+                 FROM ${this.schema}.book_issues bi
+                 LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+                 LEFT JOIN ${this.schema}.library_members lm 
                       ON bi.issued_to = lm.id 
                      AND lm.is_active = true
-                 LEFT JOIN ${schema}."user" u ON bi.issued_by = u.id`;
-
+                 LEFT JOIN ${this.schema}."user" u ON bi.issued_by = u.id WHERE bi.branch_id = '${this.branchId}' `;
     let values = [];
 
 
@@ -334,6 +339,7 @@ async function issueBook(req) {
       issue_date: issueDate.toISOString().split('T')[0],
       due_date: dueDate.toISOString().split('T')[0],
       status: 'issued',
+      branch_id: req.branchId,
       createdbyid: userId,
       lastmodifiedbyid: userId,
     };

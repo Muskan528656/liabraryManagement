@@ -56,6 +56,7 @@ import PlanDetail from "./components/plan/PlanDetail";
 import Publisher from "./components/Publisher/Publisher";
 import PublisherDetail from "./components/Publisher/PublisherDetail";
 import { AuthProvider } from "./contexts/authwrapper";
+import { BranchProvider } from "./contexts/BranchContext";
 import Loader from "./components/common/Loader";
 import BookInventoryReport from "./components/reports/BookInventoryReport";
 import ReportsList from "./components/reports/ReportList";
@@ -157,9 +158,11 @@ function AppContent() {
   return (
     <TimeZoneProvider>
       <BookSubmissionProvider>
-        <AuthProvider>       <ToastManager />
-          <Router >
-            <Routes>
+        <BranchProvider>
+          <AuthProvider>
+            <ToastManager />
+            <Router >
+              <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Main socket={connectedSocket} />}>
                 <Route
@@ -216,7 +219,6 @@ function AppContent() {
                 <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
                 <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
                 <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
-
                 <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
                 <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
                 <Route path="reports" element={<ReportsList permissions={getPermissionForModule("Reports")} />} />
@@ -227,7 +229,7 @@ function AppContent() {
             </Routes>
           </Router>
         </AuthProvider>
-
+      </BranchProvider>
       </BookSubmissionProvider>
     </TimeZoneProvider>
   );
