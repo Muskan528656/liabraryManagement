@@ -626,7 +626,8 @@ const BookIssue = ({ permissions }) => {
                     loading={loadingIssuedBooks}
                     showCheckbox={false}
                     showSerialNumber={true}
-                    showActions= {allowEdit}
+                    // showActions= {allowEdit}
+                    showActions={false}
                     searchTerm={searchTerm}
                     currentPage={currentPage}
                     recordsPerPage={recordsPerPage}
