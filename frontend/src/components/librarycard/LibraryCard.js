@@ -1,14 +1,12 @@
-
-
-
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Modal, Alert } from "react-bootstrap";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getLibraryCardConfig } from "./librarycardconfig";
 import JsBarcode from "jsbarcode";
 import DataApi from "../../api/dataApi";
 import { API_BASE_URL, MODULES } from "../../constants/CONSTANT";
-
+import { handleDownloadBarcode } from './LibraryCardDownload';
+import { handlePrintBarcode } from './LibrarycardPrint';
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import LibraryImportModal from "./LibraryImportModal";
 import { AuthHelper } from "../../utils/authHelper";
@@ -29,7 +27,6 @@ const LibraryCard = ({ permissions, ...props }) => {
   const [configError, setConfigError] = useState(null);
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
 
-
   const [modulePermissions, setModulePermissions] = useState({
     canView: false,
     canCreate: false,
@@ -38,15 +35,11 @@ const LibraryCard = ({ permissions, ...props }) => {
     loading: true
   });
 
-
-
-
   const normalizedApiBaseUrl = useMemo(() => {
     return typeof API_BASE_URL === "string"
       ? API_BASE_URL.replace(/\/ibs$/, "")
       : "";
   }, []);
-
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -69,8 +62,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-          ? response.data
-          : [];
+        ? response.data
+        : [];
       setSubscriptionsData(data);
       return data;
     } catch {
@@ -85,8 +78,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-          ? response.data
-          : [];
+        ? response.data
+        : [];
       setUsersData(data);
       return data;
     } catch {
@@ -119,11 +112,86 @@ const LibraryCard = ({ permissions, ...props }) => {
     if (timeZone) init();
   }, [fetchSubscriptions, fetchUsers, timeZone]);
 
+ 
+  useEffect(() => {
+    if (showBarcodeModal && selectedCard) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => initializeModalBarcode(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showBarcodeModal, selectedCard]);
+
+  
+  const initializeModalBarcode = () => {
+    if (!selectedCard || !showBarcodeModal) return;
+
+    const cardNumber = selectedCard.card_number || selectedCard?.card_no || "N/A";
+    if (!cardNumber || cardNumber === "N/A") {
+      setBarcodeError("Cannot generate barcode: card number missing");
+      return;
+    }
+
+    const barcodeElement = document.getElementById(`barcode-modal-${selectedCard.id || selectedCard._id}`);
+    if (!barcodeElement) return;
+
+    try {
+      barcodeElement.innerHTML = '';
+      JsBarcode(barcodeElement, cardNumber, {
+        width: 2,
+        height: 80,
+        displayValue: true,
+        text: cardNumber,
+        fontSize: 14,
+        margin: 10,
+        background: "#ffffff",
+        lineColor: "#000000",
+        flat: true
+      });
+      setBarcodeError(null);
+    } catch (error) {
+      console.error("Barcode generation error:", error);
+      setBarcodeError("Failed to generate barcode");
+    }
+  };
+
+  
+  const handleModalOpen = (card) => {
+    setSelectedCard(card);
+    setBarcodeError(null);
+    setShowBarcodeModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowBarcodeModal(false);
+    setSelectedCard(null);
+    setBarcodeError(null);
+  };
+
+  
+  const generateCardNumber = (card) => {
+    return card?.card_number || card?.card_no || 'N/A';
+  };
+
+  
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
   if (permissions.loading || loadingConfig) return <span className="loader"></span>;
   if (!permissions.allowView) return <PermissionDenied />;
   if (configError) return <div className="alert alert-danger m-3">{configError}</div>;
   if (!baseConfig) return <span className="loader"></span>;
 
+ 
   if (!finalConfig) {
     const config = {
       ...baseConfig,
@@ -131,23 +199,19 @@ const LibraryCard = ({ permissions, ...props }) => {
         canCreate: modulePermissions.allowCreate,
         canEdit: modulePermissions.allowEdit,
         canDelete: modulePermissions.allowDelete
+      },
+      // Add customHandlers for barcode preview
+      customHandlers: {
+        ...baseConfig.customHandlers,
+        handleBarcodePreview: handleModalOpen,
+        formatDateToDDMMYYYY: formatDate,
+        generateCardNumber: generateCardNumber
       }
     };
     setFinalConfig(config);
     return <span className="loader"></span>;
   }
 
-  const handleModalOpen = (card) => {
-    setSelectedCard(card);
-    setShowBarcodeModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowBarcodeModal(false);
-    setSelectedCard(null);
-  };
-  
-  console.log("setshowlibraryimportmodel=>",showLibraryImportModal)
   return (
     <>
       <DynamicCRUD
@@ -165,8 +229,7 @@ const LibraryCard = ({ permissions, ...props }) => {
             onClick: () => setShowLibraryImportModal(true),
           },
         ]}
-        />
-
+      />
 
       <LibraryImportModal
         show={showLibraryImportModal}
@@ -174,13 +237,118 @@ const LibraryCard = ({ permissions, ...props }) => {
         onImport={(data) => alert(`Importing ${data.file.name}`)}
       />
 
-      <Modal show={showBarcodeModal} onHide={handleModalClose} centered>
-        <Modal.Body className="text-center">
-          {selectedCard && <h5>Card No: {selectedCard.card_number}</h5>}
-          {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
-        </Modal.Body>
-      </Modal>
+      
+      <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+        <Modal.Header
+          closeButton
+          style={{
+            background: "var(--primary-color)",
+            color: "white",
+            borderBottom: "none"
+          }}
+        >
+          <Modal.Title style={{ color: "white" }}>
+            <i className="fa-solid fa-id-card me-2"></i> Member Information
+          </Modal.Title>
+        </Modal.Header>
 
+        <Modal.Body style={{ padding: "20px", background: "#f8f9fa" }}>
+          {selectedCard && (
+            <div style={{
+              background: "white",
+              border: "2px solid var(--primary-color)",
+              borderRadius: "10px",
+              padding: "20px",
+              maxWidth: "500px",
+              margin: "0 auto"
+            }}>
+              {/* Barcode Error */}
+              {barcodeError && (
+                <Alert variant="warning" className="mb-3">
+                  {barcodeError}
+                </Alert>
+              )}
+
+              {/* Barcode Display */}
+              <div style={{
+                border: "1px solid #ddd",
+                padding: "15px",
+                background: "white",
+                textAlign: "center",
+                marginBottom: "15px",
+                borderRadius: "8px"
+              }}>
+                <svg
+                  id={`barcode-modal-${selectedCard.id || selectedCard._id}`}
+                  style={{ width: '100%', height: '80px', display: 'block' }}
+                ></svg>
+                <div style={{
+                  marginTop: "10px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "var(--primary-color)",
+                  fontFamily: "monospace"
+                }}>
+                  {generateCardNumber(selectedCard)}
+                </div>
+              </div>
+
+              {/* User Information */}
+              <div style={{
+                background: "#f8f9fa",
+                padding: "15px",
+                borderRadius: "8px",
+                marginBottom: "15px"
+              }}>
+                <p className="mb-1"><strong>Card No:</strong> {generateCardNumber(selectedCard)}</p>
+                <p className="mb-1"><strong>Name:</strong> {selectedCard.first_name || selectedCard.user_name || 'N/A'} {selectedCard.last_name || ''}</p>
+                <p className="mb-1"><strong>Email:</strong> {selectedCard.email || 'N/A'}</p>
+                <p className="mb-1"><strong>Registration Date:</strong> {formatDate(selectedCard.registration_date)}</p>
+                <p className="mb-1"><strong>Status:</strong>
+                  <span style={{
+                    color: selectedCard.is_active ? "green" : "gray",
+                    fontWeight: "bold",
+                    marginLeft: "5px"
+                  }}>
+                    {selectedCard.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </p>
+              </div>
+
+              {/* Footer Note */}
+              <div style={{
+                textAlign: "center",
+                fontSize: "12px",
+                color: "#666"
+              }}>
+                <p className="mb-0">Scan barcode to verify membership</p>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="d-flex justify-content-between">
+          <div>
+            <Button
+              variant="outline-success"
+              onClick={() => handleDownloadBarcode(selectedCard, normalizedApiBaseUrl, generateCardNumber, setBarcodeError, formatDate)}
+              className="me-2"
+            >
+              <i className="fa-solid fa-download me-1"></i> Download
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => handlePrintBarcode(selectedCard, normalizedApiBaseUrl, generateCardNumber, formatDate, setBarcodeError)}
+              className="me-2"
+            >
+              <i className="fa-solid fa-print me-1"></i> Print
+            </Button>
+          </div>
+          <Button variant="secondary" onClick={handleModalClose}>
+            <i className="fa-solid fa-times me-1"></i> Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

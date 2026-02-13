@@ -320,6 +320,8 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
     backgroundColor: '#fff',
     width: '100%'
   };
+  //today date for search
+  const today = new Date().toISOString().split("T")[0];
 
   return (
 
@@ -343,6 +345,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     className="filter-input"
                     style={inputBaseStyle}
                     value={localFilters[fName + "_from"] || ""}
+                    max={today}  
                     onChange={(e) => handleChange(fName + "_from", e.target.value)}
 
                   />
@@ -359,6 +362,7 @@ const AdvancedFilter = ({ fields = [], onFilterChange, onClear, className = "" }
                     style={inputBaseStyle}
                     value={localFilters[fName + "_to"] || ""}
                     min={localFilters[fName + "_from"] || ""}
+                    max={today}  
                     onChange={(e) => handleChange(fName + "_to", e.target.value)}
                   />
                 </Col>
