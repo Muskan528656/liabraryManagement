@@ -55,24 +55,10 @@ const helper = {
   },
 
   async fetchWithAuth(url, method, body = undefined, bodyType = undefined) {
-    // Add branch_id to URL if available and user is not super admin
     let modifiedUrl = url;
-    const selectedBranch = sessionStorage.getItem('selectedBranch');
-    const userRole = sessionStorage.getItem('userRole');
-    
-    if (selectedBranch && userRole !== 'SYSTEM ADMIN') {
-      try {
-        const branch = JSON.parse(selectedBranch);
-        if (branch && branch.id) {
-          const separator = url.includes('?') ? '&' : '?';
-          modifiedUrl = `${url}${separator}branch_id=${branch.id}`;
-        }
-      } catch (e) {
-        console.error('Error parsing selected branch:', e);
-      }
-    }
     
     let accessToken = sessionStorage.getItem("token");
+     let branchId = JSON.parse(sessionStorage?.getItem('selectedBranch'))?.id || null;
     const refreshToken = sessionStorage.getItem("r-t");
 
     if (!accessToken || !refreshToken) {
@@ -125,6 +111,8 @@ const helper = {
         if (data.success) {
           accessToken = data.authToken;
           sessionStorage.setItem("token", accessToken);
+          let userInfo = jwt_decode(accessToken);
+          branchId = userInfo.branch_id || null;
         }
       }
 
@@ -137,6 +125,7 @@ const helper = {
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
             Authorization: `Bearer ${accessToken}`,
+            "Branch-Id": `${branchId || ""}`,
           },
         });
       } else if (method === "POST" || method === "PUT" || method === "PATCH") {
@@ -147,6 +136,7 @@ const helper = {
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
             Authorization: `Bearer ${accessToken}`,
+            "Branch-Id": `${branchId || ""}`,
             ...(bodyType !== "form" && { "Content-Type": "application/json" }),
           },
           body,

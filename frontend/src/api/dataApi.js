@@ -5,7 +5,7 @@ import axios from "axios";
 export default class DataApi {
   constructor(path) {
     this.token = sessionStorage.getItem("token");
-    this.branchId = JSON.parse(sessionStorage.getItem('selectedBranch')).id || null;
+    this.branchId = JSON.parse(sessionStorage?.getItem('selectedBranch'))?.id || null;
     this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
   }
 

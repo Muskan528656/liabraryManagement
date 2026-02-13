@@ -4,6 +4,8 @@ const sql = require("../models/db.js");
 
 const fetchUser = async (req, res, next) => {
   var token = req.headers.authorization;
+  var branchId = req.headers["branch-id"];
+  console.log("Branch ID:", branchId);
   if (!token) {
 
     global.currentLoggedInUserId = null;
@@ -19,6 +21,7 @@ const fetchUser = async (req, res, next) => {
     if (!decoded) return res.status(401).json({ errors: "Invalid token" });
 
     req.userinfo = decoded;
+    req.branchId=branchId;
     global.currentLoggedInUserId = decoded.id;
 
 

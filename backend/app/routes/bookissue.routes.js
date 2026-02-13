@@ -34,7 +34,8 @@ module.exports = (app) => {
     checkPermission("Book Issue", "allow_view"),
     async (req, res) => {
       try {
-        BookIssue.init(req.userinfo.tenantcode);
+        BookIssue.init(req.userinfo.tenantcode, req.branchId);
+ 
 
         const memberType = req.userinfo.library_member_type;
 

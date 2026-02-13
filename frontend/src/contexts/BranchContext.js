@@ -19,10 +19,7 @@ export const BranchProvider = ({ children }) => {
       setLoading(true);
     
           let userInfo = jwt_decode(sessionStorage.getItem("token"));
-        
-    
-          console.log("userInfo", userInfo);
-        setLoginUserRole(userInfo.role_name);
+          setLoginUserRole(userInfo.role_name);
         const userRole = userInfo.role_name;
         const userBranchId = userInfo.branch_id;
         console.log("userBranchId", userBranchId);
@@ -48,16 +45,26 @@ export const BranchProvider = ({ children }) => {
           //     setSelectedBranch(null); 
           //   }
           // } else {
-            const userBranch = (branchData.data || []).find(b => b.id === userBranchId);
-            console.log("Selected Branch from sessionStorage:", sessionStorage.getItem('selectedBranch'));
-              if(sessionStorage.getItem('selectedBranch')){
-                
-              setSelectedBranch(JSON.parse(sessionStorage.getItem('selectedBranch')).id || null);
-              }else if (userBranch) {
-              setSelectedBranch(userBranch);
-              sessionStorage.setItem('selectedBranch', JSON.stringify(userBranch));
+          if(sessionStorage.getItem('selectedBranch')){
+            const savedBranch = sessionStorage.getItem('selectedBranch');
+            if (savedBranch) {
+              try {
+                const parsedBranch = JSON.parse(savedBranch);
+                setSelectedBranch(parsedBranch);
+              } catch (e) {
+                setSelectedBranch(null);
+              }
+            } else {
+              setSelectedBranch(null); 
             }
-          
+          }else{
+            const userBranch = (branchData?.data?.data || []).find(b => b.id === userBranchId);
+            console.log("userBranch", userBranch);
+            
+            if (userBranch) {
+              setSelectedBranch(userBranch);
+            }
+          }
         }
       
     } catch (error) {
@@ -68,19 +75,17 @@ export const BranchProvider = ({ children }) => {
   };
 
   const selectBranch = (branch) => {
+    setSelectedBranch(branch);
     console.log("Selected Branch:", branch);
     
-    setSelectedBranch(branch);
-    
     // Save to localStorage for super admins
-    if (isSuperAdmin) {
-      if (branch) { 
-           sessionStorage.setItem('selectedBranch', JSON.stringify(branch));
+    // if (isSuperAdmin) {
+      if (branch) {
+        sessionStorage.setItem('selectedBranch', JSON.stringify(branch));
       } else {
-           sessionStorage.setItem('selectedBranch', JSON.stringify(branch));
+        sessionStorage.removeItem('selectedBranch');
       }
-
-    }
+    // }
   };
 
   const getSelectedBranchId = () => {
