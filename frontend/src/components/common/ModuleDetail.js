@@ -21,7 +21,7 @@ import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-
+import { Country, State } from "country-state-city"; 
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
   author: "author",
@@ -56,6 +56,36 @@ const normalizeListResponse = (payload) => {
   if (Array.isArray(payload.rows)) return payload.rows;
   if (payload.records && Array.isArray(payload.records)) return payload.records;
   return [];
+};
+
+
+
+const normalizeLocationData = (record) => {
+  if (!record) return record;
+
+  let updated = { ...record };
+
+  // Convert country name → ISO
+  if (record.country && record.country.length > 2) {
+    const countryObj = Country.getAllCountries()
+      .find(c => c.name.toLowerCase() === record.country.toLowerCase());
+
+    if (countryObj) {
+      updated.country = countryObj.isoCode;
+    }
+  }
+
+  // Convert state name → ISO
+  if (record.state && updated.country) {
+    const stateObj = State.getStatesOfCountry(updated.country)
+      .find(s => s.name.toLowerCase() === record.state.toLowerCase());
+
+    if (stateObj) {
+      updated.state = stateObj.isoCode;
+    }
+  }
+
+  return updated;
 };
 
 const getOptionValue = (option = {}) => {
@@ -357,28 +387,35 @@ const ModuleDetail = ({
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
 
-      if (response && response.data) {
-        const responseData = response.data;
-        if (responseData.success && responseData.data) {
-          setData(responseData.data);
-        } else if (
-          responseData.data &&
-          responseData.data.success &&
-          responseData.data.data
-        ) {
-          setData(responseData.data.data);
-        } else if (responseData.data) {
-          setData(responseData.data);
-        } else if (responseData.id) {
-          setData(responseData);
-        } else if (Array.isArray(responseData) && responseData.length > 0) {
-          setData(responseData[0]);
-        } else {
-          setData(responseData);
-        }
+      
+    if (response && response.data) {
+      const responseData = response.data;
+
+      let finalData = null;
+
+      if (responseData.success && responseData.data) {
+        finalData = responseData.data;
+      } else if (
+        responseData.data &&
+        responseData.data.success &&
+        responseData.data.data
+      ) {
+        finalData = responseData.data.data;
+      } else if (responseData.data) {
+        finalData = responseData.data;
+      } else if (responseData.id) {
+        finalData = responseData;
+      } else if (Array.isArray(responseData) && responseData.length > 0) {
+        finalData = responseData[0];
       } else {
-        throw new Error("No response received from API");
+        finalData = responseData;
       }
+
+      const normalized = normalizeLocationData(finalData);
+
+      setData(normalized);
+    }
+
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
       PubSub.publish("RECORD_ERROR_TOAST", {
@@ -558,18 +595,41 @@ const ModuleDetail = ({
     return value ?? "—";
   };
 
+  // const getSelectOptions = useCallback(
+  //   (field) => {
+  //     if (!field || field.type !== "select" || !field.options) {
+  //       return [];
+  //     }
+  //     if (Array.isArray(field.options)) {
+  //       return field.options;
+  //     }
+  //     return externalData?.[field.options] || lookupOptions?.[field.options] || [];
+  //   },
+  //   [externalData, lookupOptions]
+  // );
+
+
   const getSelectOptions = useCallback(
-    (field) => {
-      if (!field || field.type !== "select" || !field.options) {
-        return [];
-      }
-      if (Array.isArray(field.options)) {
-        return field.options;
-      }
-      return externalData?.[field.options] || lookupOptions?.[field.options] || [];
-    },
-    [externalData, lookupOptions]
-  );
+  (field, currentData) => {
+    if (!field || field.type !== "select" || !field.options) {
+      return [];
+    }
+
+    // ✅ If options is a function → execute it
+    if (typeof field.options === "function") {
+      return field.options(currentData || tempData || data || {});
+    }
+
+    // ✅ Static array
+    if (Array.isArray(field.options)) {
+      return field.options;
+    }
+
+    // ✅ Lookup string
+    return externalData?.[field.options] || lookupOptions?.[field.options] || [];
+  },
+  [externalData, lookupOptions, tempData, data]
+);
 
   const handleLookupNavigation = (lookupConfig, record, event = null) => {
     if (event) {
@@ -850,68 +910,131 @@ const ModuleDetail = ({
 
 
   const handleFieldChange = (fieldKey, value, field) => {
-    console.log("Field Change:", fieldKey, value);
-    if (isEditing && tempData) {
+  console.log("Field Change:", fieldKey, value);
 
-      // if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
-      //   field.onChange(value, tempData, setTempData);
-      //   return;
-      // }
+  if (!isEditing || !tempData) return;
 
-      // 🔥 allow custom onChange for ANY field (Shelf, Country, etc.)
-      if (field && typeof field.onChange === "function") {
-        field.onChange(value, tempData, setTempData);
-        return;
-      }
+  // 🔥 Custom onChange handler support
+  if (field && typeof field.onChange === "function") {
+    field.onChange(value, tempData, setTempData);
+    return;
+  }
 
-      let updatedData = {
-        ...tempData,
-        [fieldKey]: value,
-      };
-
-
-      if (fieldKey === 'country' || fieldKey === 'country_code') {
-        const countryInfo = getCountryInfo(value);
-
-
-
-
-        if (countryInfo.timezone) {
-
-          const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
-          timezoneFields.forEach(timezoneField => {
-            if (updatedData.hasOwnProperty(timezoneField)) {
-              updatedData[timezoneField] = countryInfo.timezone;
-            }
-          });
-        }
-
-
-        if (countryInfo.currency) {
-
-          const currencyFields = ['currency', 'currency_code', 'currencyCode'];
-          currencyFields.forEach(currencyField => {
-            if (updatedData.hasOwnProperty(currencyField)) {
-              updatedData[currencyField] = countryInfo.currency;
-            }
-          });
-        }
-      }
-
-
-      if (moduleName === 'purchase') {
-        if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
-          const quantity = parseFloat(updatedData.quantity) || 0;
-          const unitPrice = parseFloat(updatedData.unit_price) || 0;
-          const totalAmount = quantity * unitPrice;
-
-          updatedData.total_amount = totalAmount.toFixed(2);
-        }
-      }
-
-      setTempData(updatedData);
-    }
+  // ✅ Create updatedData FIRST
+  let updatedData = {
+    ...tempData,
+    [fieldKey]: value,
   };
+
+  // ✅ Reset dependent dropdowns
+  if (fieldKey === "country") {
+    updatedData.state = "";
+    updatedData.city = "";
+  }
+
+  if (fieldKey === "state") {
+    updatedData.city = "";
+  }
+
+  // ✅ Auto timezone & currency logic
+  if (fieldKey === "country" || fieldKey === "country_code") {
+    const countryInfo = getCountryInfo(value);
+
+    if (countryInfo.timezone) {
+      ["timezone", "time_zone", "timeZone"].forEach((key) => {
+        if (updatedData.hasOwnProperty(key)) {
+          updatedData[key] = countryInfo.timezone;
+        }
+      });
+    }
+
+    if (countryInfo.currency) {
+      ["currency", "currency_code", "currencyCode"].forEach((key) => {
+        if (updatedData.hasOwnProperty(key)) {
+          updatedData[key] = countryInfo.currency;
+        }
+      });
+    }
+  }
+
+  // ✅ Purchase calculation logic
+  if (moduleName === "purchase") {
+    if (fieldKey === "quantity" || fieldKey === "unit_price") {
+      const quantity = parseFloat(updatedData.quantity) || 0;
+      const unitPrice = parseFloat(updatedData.unit_price) || 0;
+      updatedData.total_amount = (quantity * unitPrice).toFixed(2);
+    }
+  }
+
+  setTempData(updatedData);
+};
+
+
+  // const handleFieldChange = (fieldKey, value, field) => {
+  //   console.log("Field Change:", fieldKey, value);
+  //   if (isEditing && tempData) {
+
+  //     // if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
+  //     //   field.onChange(value, tempData, setTempData);
+  //     //   return;
+  //     // }
+
+
+
+  //     // 🔥 allow custom onChange for ANY field (Shelf, Country, etc.)
+  //     if (field && typeof field.onChange === "function") {
+  //       field.onChange(value, tempData, setTempData);
+  //       return;
+  //     }
+
+  //     let updatedData = {
+  //       ...tempData,
+  //       [fieldKey]: value,
+  //     };
+
+
+  //     if (fieldKey === 'country' || fieldKey === 'country_code') {
+  //       const countryInfo = getCountryInfo(value);
+
+
+
+
+  //       if (countryInfo.timezone) {
+
+  //         const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
+  //         timezoneFields.forEach(timezoneField => {
+  //           if (updatedData.hasOwnProperty(timezoneField)) {
+  //             updatedData[timezoneField] = countryInfo.timezone;
+  //           }
+  //         });
+  //       }
+
+
+  //       if (countryInfo.currency) {
+
+  //         const currencyFields = ['currency', 'currency_code', 'currencyCode'];
+  //         currencyFields.forEach(currencyField => {
+  //           if (updatedData.hasOwnProperty(currencyField)) {
+  //             updatedData[currencyField] = countryInfo.currency;
+  //           }
+  //         });
+  //       }
+  //     }
+
+
+  //     if (moduleName === 'purchase') {
+  //       if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
+  //         const quantity = parseFloat(updatedData.quantity) || 0;
+  //         const unitPrice = parseFloat(updatedData.unit_price) || 0;
+  //         const totalAmount = quantity * unitPrice;
+
+  //         updatedData.total_amount = totalAmount.toFixed(2);
+  //       }
+  //     }
+
+  //     setTempData(updatedData);
+  //   }
+  // };
 
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
@@ -1113,7 +1236,8 @@ const ModuleDetail = ({
 
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field);
+      // const options = getSelectOptions(field);
+      const options = getSelectOptions(field, isEditing ? tempData : data);
       const rawValue = currentData ? currentData[field.key] : null;
       const currentValue =
         rawValue === undefined || rawValue === null ? "" : rawValue.toString();
