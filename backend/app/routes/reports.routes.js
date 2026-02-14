@@ -22,7 +22,7 @@ module.exports = (app) => {
   router.get(
     "/",
     fetchUser,
-    checkPermission("Reports", "allow_view"),
+    // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
         Report.init(req.userinfo.tenantcode);

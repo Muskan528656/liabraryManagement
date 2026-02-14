@@ -69,7 +69,7 @@ module.exports = (app) => {
   var router = require("express").Router();
   router.get("/object-types", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
       const records = await LibraryCard.getAllRecords();
       res.status(200).json({
         success: true,
@@ -102,7 +102,7 @@ module.exports = (app) => {
     checkPermission("Library Members", "allow_view"),
     async (req, res) => {
       try {
-        LibraryCard.init(req.userinfo.tenantcode);
+        LibraryCard.init(req.userinfo.tenantcode, req.branchId);
 
         const memberType = req.userinfo.library_member_type;
 
@@ -123,7 +123,7 @@ module.exports = (app) => {
 
   router.get("/card/:cardNumber", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
       // const card = await LibraryCard.findByCardNumber(req.params.cardNumber);
       const card = await LibraryCard.findByCardNumber(
         req.params.cardNumber,
@@ -140,7 +140,7 @@ module.exports = (app) => {
 
   router.get("/student/:studentId", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
       // const card = await LibraryCard.findByStudentId(req.params.studentId);
       const card = await LibraryCard.findByStudentId(
         req.params.studentId,
@@ -157,7 +157,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Library Members", "allow_view"), async (req, res) => {
     try {
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
       // const card = await LibraryCard.findById(req.params.id);
       const card = await LibraryCard.findById(
         req.params.id,
@@ -193,7 +193,7 @@ module.exports = (app) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-        LibraryCard.init(req.userinfo.tenantcode);
+        LibraryCard.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
         const cardData = { ...req.body };
         const originalPlanId = cardData.plan_id;
@@ -277,7 +277,7 @@ module.exports = (app) => {
     upload.single("image"),
     async (req, res) => {
       try {
-        LibraryCard.init(req.userinfo.tenantcode);
+         LibraryCard.init(req.userinfo.tenantcode, req.branchId);
 
         const existingCard = await LibraryCard.findById(req.params.id);
         if (!existingCard) {
@@ -353,7 +353,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Library Members", "allow_delete"), async (req, res) => {
     try {
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
 
 
       const card = await LibraryCard.findById(req.params.id);
@@ -385,7 +385,7 @@ module.exports = (app) => {
         return res.status(400).json({ error: "Members should be an array" });
       }
 
-      LibraryCard.init(req.userinfo.tenantcode);
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);      
       const userId = req.userinfo?.id || null;
 
       const results = [];

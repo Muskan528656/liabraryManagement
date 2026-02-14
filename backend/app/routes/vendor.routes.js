@@ -27,7 +27,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const vendors = await Vendor.findAll();
       return res.status(200).json(vendors);
     } catch (error) {
@@ -39,7 +39,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const vendor = await Vendor.findById(req.params.id);
       if (!vendor) {
         return res.status(404).json({ errors: "Vendor not found" });
@@ -59,7 +59,7 @@ module.exports = (app) => {
       try {
 
 
-        Vendor.init(req.userinfo.tenantcode);
+        Vendor.init(req.userinfo.tenantcode, req.branchId);
         if (req.body.email) {
           const existingVendor = await Vendor.findByEmail(req.body.email);
           if (existingVendor) {
@@ -118,7 +118,7 @@ module.exports = (app) => {
           });
         }
 
-        Vendor.init(req.userinfo.tenantcode);
+        Vendor.init(req.userinfo.tenantcode, req.branchId);
 
         const existingVendor = await Vendor.findById(req.params.id);
         if (!existingVendor) {
@@ -163,7 +163,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Vendors", "allow_delete"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const result = await Vendor.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

@@ -315,6 +315,7 @@ const BulkIssue = ({ permissions }) => {
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
+      console.log("usersList", usersList);
 
       console.log("cardsList", cardsList);
 
@@ -345,6 +346,8 @@ const BulkIssue = ({ permissions }) => {
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
       setPlans(plansList);
+      console.log("subscriptionsList", subscriptionsList);
+      console.log("cardsList", cardsList);
 
       const activeCards = cardsList.filter((c) =>
         c.is_active === true || c.is_active === "true" || c.is_active === 1

@@ -6,9 +6,11 @@ const sql = require("./db.js");
 const { generateAutoNumberSafe, applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 
 let schema = "";
+let branchId = null;
 
-function init(schema_name) {
+function init(schema_name, branch_id = null) {
   schema = schema_name;
+  branchId = branch_id;
 }
 async function findAll(memberType) {
   let query = `
@@ -26,9 +28,10 @@ async function findAll(memberType) {
       ON lm.plan_id = p.id
     LEFT JOIN demo.object_type ot
       ON lm.type_id = ot.id
+    WHERE lm.branch_id = $1
   `;
 
-  let values = [];
+  let values = [branchId];
 
   const filtered = applyMemberTypeFilter(query, memberType, values);
 
@@ -125,10 +128,10 @@ async function findById(id, memberType) {
         ON lm.type_id = ot.id
       LEFT JOIN ${schema}.grade g
         ON lm.grade_id = g.id
-      WHERE lm.id = $1
+      WHERE lm.id = $1 AND lm.branch_id = $2
     `;
 
-    let values = [id];
+    let values = [id, branchId];
 
     // Apply member type filter
     if (memberType) {
@@ -162,10 +165,10 @@ async function findByCardNumber(cardNumber, memberType) {
         ON lm.subscription_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
-      WHERE lm.card_number = $1
+      WHERE lm.card_number = $1 AND lm.branch_id = $2
     `;
 
-    let values = [cardNumber];
+    let values = [cardNumber, branchId];
 
     // Member type filter
     if (memberType) {
@@ -266,6 +269,7 @@ async function create(cardData, userId) {
       "type_id",
       "job_title",
       "grade_id",
+      "branch_id",
       "createddate",
       "lastmodifieddate",
       "createdbyid",
@@ -312,6 +316,7 @@ async function create(cardData, userId) {
       cardData.type_id || null,
       cardData.job_title || null,
       cardData.section_id || null,
+      branchId,
 
       new Date(),
       new Date(),
@@ -441,11 +446,12 @@ async function updateById(id, cardData, userId) {
     }
 
     values.push(id);
+    values.push(branchId);
 
     const query = `
       UPDATE ${schema}.library_members
       SET ${updates.join(", ")}
-      WHERE id = $${idx}
+      WHERE id = $${idx} AND branch_id = $${idx + 1}
       RETURNING *
     `;
 
@@ -535,11 +541,11 @@ async function deleteById(id) {
   try {
     const query = `
       DELETE FROM ${schema}.library_members
-      WHERE id = $1
+      WHERE id = $1 AND branch_id = $2
       RETURNING id, card_number, name
     `;
 
-    const result = await sql.query(query, [id]);
+    const result = await sql.query(query, [id, branchId]);
 
     if (result.rows.length > 0) {
       return {
@@ -579,11 +585,11 @@ async function findByUserId(userId) {
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
-      WHERE lm.user_id = $1
+      WHERE lm.user_id = $1 AND lm.branch_id = $2
       LIMIT 1
     `;
 
-    const result = await sql.query(query, [userId]);
+    const result = await sql.query(query, [userId, branchId]);
     return result.rows[0] || null;
   } catch (error) {
     console.error("Error in findByUserId:", error);
@@ -612,17 +618,16 @@ async function search(searchTerm) {
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u ON lm.createdbyid = u.id
       LEFT JOIN ${schema}.object_type ot ON lm.type = ot.id
-      WHERE
-        lm.card_number ILIKE $1 OR
+      WHERE (lm.card_number ILIKE $1 OR
         lm.name ILIKE $1 OR
         lm.email ILIKE $1 OR
         lm.phone_number ILIKE $1 OR
-        CONCAT(lm.first_name, ' ', lm.last_name) ILIKE $1
+        CONCAT(lm.first_name, ' ', lm.last_name) ILIKE $1) AND lm.branch_id = $2
       ORDER BY lm.createddate DESC
       LIMIT 50
     `;
 
-    const result = await sql.query(query, [`%${searchTerm}%`]);
+    const result = await sql.query(query, [`%${searchTerm}%`, branchId]);
     return result.rows;
   } catch (error) {
     console.error("Error in search:", error);

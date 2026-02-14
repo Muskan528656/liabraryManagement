@@ -12,11 +12,13 @@ const sendMail = require("../utils/Mailer.js");
 const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
 let schema = "demo";
+let branchId = null;
 
 // global.currentLoggedInUserId = null;
 
-function init(schema_name) {
+function init(schema_name, branch_id = null) {
   schema = schema_name || "demo";
+  branchId = branch_id;
 }
 
 async function findAll(userId) {
@@ -27,11 +29,11 @@ async function findAll(userId) {
     FROM ${schema}.notifications n
     LEFT JOIN ${schema}.library_members m 
       ON n.member_id = m.id
-    WHERE n.user_id = $1
+    WHERE n.user_id = $1 AND n.branch_id = $2
     ORDER BY n.createddate DESC;
   `;
 
-  const result = await sql.query(query,[userId]);
+  const result = await sql.query(query,[userId, branchId]);
   return result.rows;
 }
 
@@ -41,9 +43,10 @@ async function getUnreadCount(userId) {
     FROM ${schema}.notifications
     WHERE user_id = $1
       AND is_read = false
+      AND branch_id = $2
   `;
 
-  const result = await sql.query(query, [userId]);
+  const result = await sql.query(query, [userId, branchId]);
   return Number(result.rows[0].count);
 }
 
@@ -59,9 +62,10 @@ async function create(notification) {
           message,
           is_read,
           type,
+          branch_id,
           createddate
         )
-        VALUES ($1, $2, $3, $4, false, $5, NOW())
+        VALUES ($1, $2, $3, $4, false, $5, $6, NOW())
         RETURNING *
         `;
   const result = await sql.query(query, [
@@ -70,6 +74,7 @@ async function create(notification) {
     notification.book_id || null,
     notification.message,
     notification.type || null,
+    branchId
   ]);
 
   const createdNotification = result.rows[0];
@@ -88,11 +93,11 @@ async function markAsRead(notificationId, userId) {
   const query = `
     UPDATE ${schema}.notifications
     SET is_read = true
-    WHERE id = $1 AND user_id = $2
+    WHERE id = $1 AND user_id = $2 AND branch_id = $3
     RETURNING *
   `;
 
-  const result = await sql.query(query, [notificationId, userId]);
+  const result = await sql.query(query, [notificationId, userId, branchId]);
   return result.rows[0];
 }
 
@@ -100,11 +105,11 @@ async function markAllAsRead(userId) {
   const query = `
     UPDATE ${schema}.notifications
     SET is_read = true, read_at = NOW()
-    WHERE user_id = $1 AND is_read = false
+    WHERE user_id = $1 AND is_read = false AND branch_id = $2
     RETURNING *
   `;
 
-  const result = await sql.query(query, [userId]);
+  const result = await sql.query(query, [userId, branchId]);
   return result.rows;
 }
 
@@ -117,11 +122,11 @@ async function markAsReadByRelatedId(userId, bookId, memberId, type) {
   ]);
   const query = `
     UPDATE ${schema}.notifications
-    SET is_read = true WHERE user_id = $1 AND member_id = $2 AND book_id = $3 AND type = $4 AND is_read = false
+    SET is_read = true WHERE user_id = $1 AND member_id = $2 AND book_id = $3 AND type = $4 AND is_read = false AND branch_id = $5
     RETURNING *
   `;
 
-  const result = await sql.query(query, [userId, memberId, bookId, type]);
+  const result = await sql.query(query, [userId, memberId, bookId, type, branchId]);
   console.log("result=>", result.rows);
   return result.rows;
 }
@@ -133,10 +138,10 @@ async function createBroadcast(userIds, notification) {
   const params = [];
 
   userIds.forEach((userId, i) => {
-    const idx = i * 6;
+    const idx = i * 7;
     values.push(
       `($${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6
-      }, false, NOW())`
+      }, $${idx + 7}, false, NOW())`
     );
     params.push(
       userId,
@@ -144,13 +149,14 @@ async function createBroadcast(userIds, notification) {
       message,
       type,
       related_id || null,
-      related_type || null
+      related_type || null,
+      branchId
     );
   });
 
   const query = `
     INSERT INTO ${schema}.notifications
-    (user_id, title, message, type, related_id, related_type, is_read, createddate)
+    (user_id, title, message, type, related_id, related_type, branch_id, is_read, createddate)
     VALUES ${values.join(",")}
     RETURNING *
   `;
@@ -177,10 +183,11 @@ async function getOverDueBooks() {
     WHERE bi.return_date IS NULL
       AND bi.due_date < CURRENT_DATE
       AND bi.status = 'issued'
+      AND bi.branch_id = $1
     ORDER BY bi.due_date ASC
   `;
 
-  const result = await sql.query(query);
+  const result = await sql.query(query, [branchId]);
   return result.rows;
 }
 
@@ -201,200 +208,109 @@ async function createDueReminderIfTomorrow(
     dueDateObj.getMonth() === tomorrow.getMonth() &&
     dueDateObj.getDate() === tomorrow.getDate()
   ) {
-    const existing = await sql.query(
-      `
-      SELECT id
-      FROM ${schema}.notifications
-      WHERE user_id = $1
-        AND related_id = $2
-        AND type = 'due_reminder'
-        AND DATE(createddate) = CURRENT_DATE
-      `,
-      [user_id, issue_id]
+    const existingNotification = await sql.query(
+      `SELECT 1 FROM ${schema}.notifications 
+      WHERE user_id = $1 
+      AND related_id = $2 
+      AND type = 'due_reminder' 
+      AND is_read = false
+      AND branch_id = $3
+      LIMIT 1`,
+      [user_id, issue_id, branchId]
     );
 
-    if (existing.rows.length === 0) {
-      const notification = await create({
-        user_id,
-        message: `Your book "${book_title}" is due tomorrow. Please return it to avoid penalties.`,
-        type: "due_reminder",
-        related_id: issue_id,
-        related_type: "book_issue",
-      });
-
-      if (app?.get("io")) {
-        app
-          .get("io")
-          .to(`user_${user_id}`)
-          .emit("new_notification", notification);
-      }
-
-      return notification;
+    if (existingNotification.rows.length > 0) {
+      console.log(
+        `Notification already exists for user ${user_id} and issue ${issue_id}`
+      );
+      return;
     }
-  }
 
-  return null;
+    const notification = await create({
+      user_id,
+      title: "Book Due Reminder",
+      message: `The book "${book_title}" is due for return tomorrow (${due_date}). Please return it to avoid penalties.`,
+      type: "due_reminder",
+      related_id: issue_id,
+      related_type: "book_issue"
+    });
+
+    console.log("Due reminder notification created:", notification);
+  }
 }
 
+async function upsertDueDateScheduler(due_date, members) {
+  const existingJob = await sql.query(
+    `SELECT * FROM ${schema}.scheduler 
+    WHERE action_type = 'BOOK_DUE_REMINDER' 
+    AND config->>'due_date' = $1
+    AND branch_id = $2`,
+    [due_date, branchId]
+  );
 
+  if (existingJob.rows.length > 0) {
+    const jobId = existingJob.rows[0].id;
+    const updatedConfig = {
+      ...existingJob.rows[0].config,
+      members: { ...existingJob.rows[0].config.members, ...members }
+    };
 
+    await sql.query(
+      `UPDATE ${schema}.scheduler 
+      SET config = $1, 
+      next_run = $2,
+      updated_at = NOW()
+      WHERE id = $3 AND branch_id = $4`,
+      [updatedConfig, due_date, jobId, branchId]
+    );
+  } else {
+    const config = {
+      due_date,
+      members
+    };
+
+    await sql.query(
+      `INSERT INTO ${schema}.scheduler 
+      (action_type, config, next_run, is_active, created_at, branch_id) 
+      VALUES ($1, $2, $3, true, NOW(), $4)`,
+      ["BOOK_DUE_REMINDER", config, due_date, branchId]
+    );
+  }
+}
+
+async function createOrUpdateDueScheduler(issues) {
+  const members = {};
+  for (const issue of issues) {
+    if (!members[issue.issued_to]) {
+      members[issue.issued_to] = {
+        user_id: issue.user_id,
+        books: []
+      };
+    }
+    members[issue.issued_to].books.push(issue.book_id);
+  }
+
+  await upsertDueDateScheduler(issues[0].due_date, members);
+}
 
 async function deleteNotification(notificationId, userId) {
-  try {
-    const query = `
-      DELETE FROM ${schema}.notifications
-      WHERE id = $1 AND user_id = $2
-      RETURNING *
-    `;
+  const query = `
+    DELETE FROM ${schema}.notifications
+    WHERE id = $1 AND user_id = $2 AND branch_id = $3
+    RETURNING *
+  `;
 
-    const result = await sql.query(query, [notificationId, userId]);
-    return result.rows[0] || null;
-  } catch (error) {
-    console.error("Error deleting notification:", error);
-    throw error;
-  }
-}
-
-async function createOrUpdateDueScheduler({
-  member_id,
-  user_id,
-  due_date,
-  book_id
-}) {
-  const nextRun = new Date(due_date);
-  console.log("nextRun=>", nextRun);
-  nextRun.setDate(nextRun.getDate() - 1);
-
-  if (nextRun < new Date()) {
-    nextRun.setMinutes(nextRun.getMinutes() + 1);
-  }
-
-  const existing = await sql.query(
-    `
-    SELECT id, config
-    FROM ${schema}.scheduler
-    WHERE action_type = 'BOOK_DUE_REMINDER'
-      AND is_active = true
-      AND config->>'member_id' = $1
-      AND config->>'due_date' = $2
-    `,
-    [member_id, due_date]
-  );
-
-  if (existing.rows.length > 0) {
-
-    const scheduler = existing.rows[0];
-    const config = scheduler.config;
-
-    if (!config.book_ids.includes(book_id)) {
-      config.book_ids.push(book_id);
-    }
-
-    await sql.query(
-      `
-      UPDATE ${schema}.scheduler
-      SET config = $1,
-          lastmodifieddate = NOW()
-      WHERE id = $2
-      `,
-      [config, scheduler.id]
-    );
-
-    return scheduler.id;
-  }
-
-  await sql.query(
-    `
-    INSERT INTO ${schema}.scheduler(
-      action_type, next_run,is_active, config, createddate )
-      VALUES ('BOOK_DUE_REMINDER', $1, true, $2, NOW())
-    `,
-    [
-      nextRun,
-      JSON.stringify({ member_id, user_id, due_date, book_ids: [book_id] })
-    ]
-  );
-}
-
-
-
-async function upsertDueDateScheduler({
-  due_date,
-  member_id,
-  user_id,
-  book_id
-}) {
-  const nextRun = new Date(due_date);
-  nextRun.setDate(nextRun.getDate() - 1);
-
-  const res = await sql.query(
-    `
-    SELECT id, config
-    FROM ${schema}.scheduler
-    WHERE action_type = 'BOOK_DUE_REMINDER'
-      AND is_active = true
-      AND config->>'due_date' = $1
-    `,
-    [due_date]
-  );
-
-  if (res.rows.length === 0) {
-
-    await sql.query(
-      `
-      INSERT INTO ${schema}.scheduler
-      (action_type, next_run, repeat_type, is_active, config)
-      VALUES ('BOOK_DUE_REMINDER', $1, 'once', true, $2)
-      `,
-      [
-        nextRun,
-        JSON.stringify({
-          due_date,
-          members: {
-            [member_id]: {
-              user_id,
-              books: [book_id]
-            }
-          }
-        })
-      ]
-    );
-    return;
-  }
-
-  const scheduler = res.rows[0];
-  const config = scheduler.config;
-
-  if (!config.members[member_id]) {
-    config.members[member_id] = {
-      user_id,
-      books: []
-    };
-  }
-
-  if (!config.members[member_id].books.includes(book_id)) {
-    config.members[member_id].books.push(book_id);
-  }
-
-  await sql.query(
-    ` UPDATE ${schema}.scheduler SET config = $1, lastmodifieddate = NOW() WHERE id = $2 `,
-    [config, scheduler.id]
-  );
+  const result = await sql.query(query, [notificationId, userId, branchId]);
+  return result.rows[0];
 }
 
 async function sendDueReminderEmail(memberId, books, dueDate) {
   try {
-
     const memberRes = await sql.query(
-      `
-      SELECT
-        lm.first_name,
-        lm.last_name,
-        lm.email
-      FROM ${schema}.library_members lm
-      WHERE lm.id = $1 AND lm.is_active = true
-      `,
-      [memberId]
+      `SELECT first_name, last_name, email 
+      FROM ${schema}.library_members 
+      WHERE id = $1 AND is_active = true AND branch_id = $2`,
+      [memberId, branchId]
     );
 
     if (memberRes.rows.length === 0) {
@@ -439,7 +355,9 @@ cron.schedule('0 9 * * *', async () => {
     SELECT * FROM ${schema}.scheduler WHERE is_active = true
       AND next_run <= NOW()
       AND action_type = 'BOOK_DUE_REMINDER'
-    `
+      AND branch_id = $1
+    `,
+    [branchId]
   );
   for (const job of jobs.rows) {
     const { due_date, members } = job.config;
@@ -461,10 +379,10 @@ cron.schedule('0 9 * * *', async () => {
         const exists = await sql.query(
           `
           SELECT 1 FROM ${schema}.notifications
-          WHERE user_id =$1 AND member_id = $2 AND book_id = $3 AND type = 'due_reminder' AND is_read = false
+          WHERE user_id =$1 AND member_id = $2 AND book_id = $3 AND type = 'due_reminder' AND is_read = false AND branch_id = $4
           LIMIT 1
           `,
-          [user_id, memberId, bookId]
+          [user_id, memberId, bookId, branchId]
         );
 
         if (exists.rows.length > 0) {
@@ -473,8 +391,8 @@ cron.schedule('0 9 * * *', async () => {
         }
 
         const bookRes = await sql.query(
-          `SELECT title FROM ${schema}.books WHERE id = $1`,
-          [bookId]
+          `SELECT title FROM ${schema}.books WHERE id = $1 AND branch_id = $2`,
+          [bookId, branchId]
         );
 
         if (!bookRes.rows.length) {
@@ -516,14 +434,13 @@ cron.schedule('0 9 * * *', async () => {
     }
 
     await sql.query(
-      `UPDATE ${schema}.scheduler SET is_active = false, last_run = NOW() WHERE id = $1`,
-      [job.id]
+      `UPDATE ${schema}.scheduler SET is_active = false, last_run = NOW() WHERE id = $1 AND branch_id = $2`,
+      [job.id, branchId]
     );
 
     console.log(`Completed processing job ${job.id}`);
   }
 });
-
 
 
 module.exports = {

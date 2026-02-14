@@ -31,7 +31,7 @@ module.exports = (app) => {
     checkPermission("Book Submissions", "allow_view"),
     async (req, res) => {
       try {
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
         const filters = {
           ...req.query,
@@ -78,7 +78,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
-      BookSubmission.init(req.userinfo.tenantcode);
+      BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
       const submission = await BookSubmission.findById(
         req.params.id,
@@ -109,7 +109,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
         const submissions = await BookSubmission.findByDateRange(req.query.startDate, req.query.endDate);
         return res.status(200).json({ success: true, data: submissions });
       } catch (error) {
@@ -134,7 +134,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
         const submission = await BookSubmission.create(req.body, userId);
 
@@ -187,7 +187,7 @@ module.exports = (app) => {
     checkPermission("Book Submissions", "allow_delete"),
     async (req, res) => {
       try {
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
         const result = await BookSubmission.deleteById(req.params.id);
 
         if (result.success) {
@@ -206,7 +206,7 @@ module.exports = (app) => {
       const bookId = req.params.bookId;
 
 
-      BookSubmission.init(req.userinfo.tenantcode);
+      BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
       const submitCount = await BookSubmission.getSubmitCountByBookId(bookId);
 
@@ -236,7 +236,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: "User ID is required" });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
         const result = await BookSubmission.cancelIssue(
           req.params.issueId,

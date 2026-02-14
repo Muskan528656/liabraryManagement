@@ -1,23 +1,15 @@
-
-
-/**
- * @author      Muskan Khan
- * @date        DEC, 2025
- * @copyright   www.ibirdsservices.com
- */
-
 const sql = require("./db.js");
 let schema = "";
+let branchId = null;
 
-
-function init(schema_name) {
-  this.schema = schema_name;
+function init(schema_name, branch_id = null) {
+  schema = schema_name;
+  branchId = branch_id;
 }
 
 
-
 async function findAll(filters = {}) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
     let query = `
@@ -34,12 +26,12 @@ async function findAll(filters = {}) {
         time_zone,
         isactive,
         companyid
-      FROM ${this.schema}."user"
-      WHERE 1=1
+      FROM ${schema}."user"
+      WHERE 1=1 AND branch_id = $1
     `;
 
-    const values = [];
-    let paramIndex = 1;
+    const values = [branchId]; // Add branchId as the first parameter
+    let paramIndex = 2;
 
     if (filters.isactive !== undefined && filters.isactive !== '') {
       query += ` AND isactive = $${paramIndex}`;
@@ -60,11 +52,11 @@ async function findAll(filters = {}) {
 
 
 async function findById(id) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    const query = `SELECT * FROM ${this.schema}."user" WHERE id = $1`;
-    const result = await sql.query(query, [id]);
+    const query = `SELECT * FROM ${schema}."user" WHERE id = $1 AND branch_id = $2`;
+    const result = await sql.query(query, [id, branchId]);
     return result.rows.length ? result.rows[0] : null;
   } catch (error) {
     console.error("Error in findById:", error);
@@ -76,10 +68,10 @@ async function findById(id) {
 
 
 async function findByEmail(email, excludeId = null) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
@@ -89,13 +81,13 @@ async function findByEmail(email, excludeId = null) {
 
     let query = `
       SELECT *
-      FROM ${this.schema}.user
-      WHERE email = $1
+      FROM ${schema}.user
+      WHERE email = $1 AND branch_id = $2
     `;
-    const params = [cleanEmail];
+    const params = [cleanEmail, branchId];
 
     if (excludeId) {
-      query += ` AND id != $2`;
+      query += ` AND id != $3`;
       params.push(excludeId);
       console.log("queryeeeeee", query)
     }
@@ -118,7 +110,7 @@ async function findByEmail(email, excludeId = null) {
 
 
 async function create(userData, userId) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
     // if (userData.email) {
@@ -132,7 +124,7 @@ async function create(userData, userId) {
 
 
     const query = `
-      INSERT INTO ${this.schema}."user"
+      INSERT INTO ${schema}."user"
       (
         firstname,
         lastname,
@@ -149,9 +141,10 @@ async function create(userData, userId) {
         createdbyid,
         lastmodifiedbyid,
         createddate,
-        library_member_type
+        library_member_type,
+        branch_id
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),$15)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),$15,$16)
       RETURNING
         id,
         firstname,
@@ -186,7 +179,8 @@ async function create(userData, userId) {
       userData.companyid,
       userId,
       userId,
-      userData.library_member_type
+      userData.library_member_type,
+      branchId
     ];
 
     const result = await sql.query(query, values);
@@ -199,8 +193,8 @@ async function create(userData, userId) {
 }
 
 
-async function updateById(id, userData) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+async function updateById(id, userData, userId = null) {
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
   try {
 
     // if (userData.email) {
@@ -237,19 +231,24 @@ async function updateById(id, userData) {
     add("profile_image", userData.profile_image);
     add("library_member_type", userData.library_member_type);
 
+    // Add lastmodifiedbyid if userId is provided
+    if (userId) {
+      add("lastmodifiedbyid", userId);
+    }
+
 
     if (updateFields.length === 0) {
       throw new Error("No fields to update");
     }
 
 
-    values.push(id);
+    values.push(id, branchId); // Add id and branchId to values
 
 
     const query = `
-      UPDATE ${this.schema}."user"
+      UPDATE ${schema}."user"
       SET ${updateFields.join(", ")}
-      WHERE id = $${i}
+      WHERE id = $${i-1} AND branch_id = $${i}  -- id is second to last, branch_id is last
       RETURNING
         id,
         firstname,
@@ -264,9 +263,12 @@ async function updateById(id, userData) {
         time_zone,
         isactive,
         companyid,
-        library_member_type
+        library_member_type,
+        branch_id
     `;
 
+console.log("Query:", query);
+console.log("Values:", values);
 
     const result = await sql.query(query, values);
 
@@ -280,11 +282,11 @@ async function updateById(id, userData) {
 }
 
 async function deleteById(id) {
-  if (!this.schema) throw new Error("Schema not initialized. Call User.init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
   try {
-    const query = `DELETE FROM ${this.schema}."user" WHERE id = $1 RETURNING *`;
-    const result = await sql.query(query, [id]);
+    const query = `DELETE FROM ${schema}."user" WHERE id = $1 AND branch_id = $2 RETURNING *`;
+    const result = await sql.query(query, [id, branchId]);
 
     return result.rows.length
       ? { success: true, message: "User deleted successfully" }

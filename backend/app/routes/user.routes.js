@@ -1,5 +1,3 @@
-
-
 /**
  * Handles all incoming request for /api/user endpoint
  * DB table for this demo.user
@@ -231,7 +229,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const users = await User.findAll(req.query);
       return res.status(200).json(users);
     } catch (error) {
@@ -242,7 +240,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const user = await User.findById(req.params.id);
       if (!user) {
         return res.status(404).json({ errors: "User not found" });
@@ -256,7 +254,7 @@ module.exports = (app) => {
 
   router.get("/email/:email", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const user = await User.findByEmail(req.params.email);
       if (!user) {
         return res.status(404).json({ errors: "User not found" });
@@ -329,7 +327,7 @@ module.exports = (app) => {
           }
         }
 
-        User.init(tenantcode);
+        User.init(tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
 
 
@@ -377,7 +375,7 @@ console.log("userDatauserDatauserData",userData)
       console.log("Updating company ID:", req.params.id, "with data:", req.body);
 
       try {
-        User.init(req.userinfo.tenantcode);
+        User.init(req.userinfo.tenantcode, req.branchId);
 
         const existingUser = await User.findById(req.params.id);
 
@@ -473,7 +471,7 @@ console.log("userDatauserDatauserData",userData)
 
   router.delete("/:id", fetchUser, checkPermission("Users", "allow_delete"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const result = await User.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

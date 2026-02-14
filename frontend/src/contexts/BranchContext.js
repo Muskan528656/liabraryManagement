@@ -19,6 +19,7 @@ export const BranchProvider = ({ children }) => {
       setLoading(true);
     
           let userInfo = jwt_decode(sessionStorage.getItem("token"));
+          console.log("userInfo", userInfo);
           setLoginUserRole(userInfo.role_name);
         const userRole = userInfo.role_name;
         const userBranchId = userInfo.branch_id;
@@ -60,7 +61,7 @@ export const BranchProvider = ({ children }) => {
           }else{
             const userBranch = (branchData?.data?.data || []).find(b => b.id === userBranchId);
             console.log("userBranch", userBranch);
-            
+             sessionStorage.setItem('selectedBranch', JSON.stringify(userBranch));
             if (userBranch) {
               setSelectedBranch(userBranch);
             }
@@ -85,6 +86,7 @@ export const BranchProvider = ({ children }) => {
       } else {
         sessionStorage.removeItem('selectedBranch');
       }
+      window.location.reload();
     // }
   };
 

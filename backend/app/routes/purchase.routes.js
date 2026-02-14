@@ -27,7 +27,7 @@ module.exports = (app) => {
   router.get("/", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
 
-      Purchase.init(req.userinfo.tenantcode);
+      Purchase.init(req.userinfo.tenantcode, req.branchId);
       const purchases = await Purchase.findAll();
       return res.status(200).json(purchases);
     } catch (error) {
@@ -39,7 +39,7 @@ module.exports = (app) => {
 
   router.get("/stats", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
-      Purchase.init(req.userinfo.tenantcode);
+      Purchase.init(req.userinfo.tenantcode, req.branchId);
       const stats = await Purchase.getStatistics();
       return res.status(200).json(stats);
     } catch (error) {
@@ -50,7 +50,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Purchases", "allow_view"), async (req, res) => {
     try {
-      Purchase.init(req.userinfo.tenantcode);
+      Purchase.init(req.userinfo.tenantcode, req.branchId);
       const purchase = await Purchase.findById(req.params.id);
       if (!purchase) {
         return res.status(404).json({ errors: "Purchase not found" });
@@ -81,7 +81,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Purchase.init(req.userinfo.tenantcode);
+        Purchase.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo.id;
         const purchase = await Purchase.create(req.body, userId);
         if (!purchase) {
@@ -118,7 +118,7 @@ module.exports = (app) => {
             errors: errors.array()[0].msg
           });
         }
-        Purchase.init(req.userinfo.tenantcode);
+        Purchase.init(req.userinfo.tenantcode, req.branchId);
         const existingPurchase = await Purchase.findById(req.params.id);
         if (!existingPurchase) {
           return res.status(404).json({ errors: "Purchase not found" });
@@ -140,7 +140,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Purchases", "allow_delete"), async (req, res) => {
     try {
-      Purchase.init(req.userinfo.tenantcode);
+      Purchase.init(req.userinfo.tenantcode, req.branchId);
       const result = await Purchase.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });
@@ -161,7 +161,7 @@ module.exports = (app) => {
         return res.status(400).json({ errors: "Book ID is required" });
       }
 
-      Purchase.init(req.userinfo.tenantcode);
+      Purchase.init(req.userinfo.tenantcode, req.branchId);
 
       const purchase = await Purchase.findByBookId(bookId);
 
