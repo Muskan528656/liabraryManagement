@@ -1044,30 +1044,17 @@ const ModuleDetail = ({
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
 
+
     if (field.type === "toggle") {
       const value = currentData ? Boolean(currentData[field.key]) : false;
 
       return (
         <Form.Group key={index} className="mb-3">
           <Form.Label className="fw-semibold">
-            {/* {field.label} */}
+         { isEditing ?  field.label : null} 
           </Form.Label>
 
-          {!isEditing && (
-            <OverlayTrigger
-              placement="top"
-              overlay={<Tooltip>{data?.status ? "Active" : "Inactive"}</Tooltip>}
-            >
-              <Badge
-                bg={value ? "primary" : "danger"}
-                toolTip={value ? "Active" : "Inactive"}
-                className="px-3 py-2 fs-6"
-                style={{ marginTop: "32px" }}
-              >
-                {value ? "Active" : "Inactive"}
-              </Badge>
-            </OverlayTrigger>
-          )}
+        
 
           {isEditing && !isNonEditableField && (
             <div

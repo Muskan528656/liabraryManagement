@@ -1,6 +1,7 @@
 import { Badge } from "react-bootstrap";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
+import { Country, State, City } from "country-state-city";
 
 export const getVendorConfig = (externalData = {}, props = {}, permissions = {}) => {
     const { CityState = [], CityPincode = [] } = externalData;
@@ -49,24 +50,13 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
         }
     }
 
-    const states = [...new Set(CityState.map(item => item.state))].map(state => ({
-        value: state,
-        label: state
+    const countryOptions = Country.getAllCountries().map(country => ({
+        value: country.name,
+        label: `${country.flag} ${country.name}`,
+        isoCode: country.isoCode
     }));
 
-    const allCities = CityState.map(item => ({
-        value: item.name,
-        label: item.name,
-        state: item.state
-    }));
-
-    const allPincodes = CityPincode.map(item => ({
-        value: item.pincode,
-        label: `${item.pincode} - ${item.city}, ${item.state}`,
-        city: item.city,
-        state: item.state
-    }));
-
+    console.log("countryOption=>",countryOptions)
 
     const {
         canCreate = true,
@@ -83,6 +73,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
         importModel: VendorModel,
 
         initialFormData: {
+
             name: "",
             company_name: "",
             email: "",
@@ -178,7 +169,6 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 label: "Phone",
                 type: "tel",
                 required: true,
-
                 placeholder: "Enter phone number",
                 colSize: 3,
                 section: "Vendor Contact  Information",
@@ -215,7 +205,6 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     return null;
                 }
             },
-
             {
                 name: "gst_number",
                 label: "GST Number",
@@ -248,44 +237,65 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 }
             },
             {
+                name: "country",
+                label: "Country",
+                type: "select",
+                colSize: 6,
+                placeholder: "Enter country",
+                section: "Company Information",
+                options: countryOptions
+            },
+            {
                 name: "state",
                 label: "State",
                 type: "select",
                 colSize: 6,
                 section: "Company Information",
-                options: states,
+                options: (formData) => {
+                    if (!formData?.country) return [];
 
-                customValidation: (value) => {
-                    if (!value || !value.trim()) {
-                        return "State is required";
-                    }
-                    return null;
-                }
+                      const selectedCountry = Country.getAllCountries()
+                       .find(c => c.name === formData.country);
+
+                        if (!selectedCountry) return [];
+                        return State.getStatesOfCountry(selectedCountry.isoCode)
+                        .map(state => ({
+                            value: state.name,         
+                            label: state.name,
+                            isoCode: state.isoCode
+                        }));
+                   }
             },
             {
-                name: "city",
-                label: "City",
-                type: "select",
-                colSize: 6,
-                section: "Company Information",
-                options: formData => {
-                    const selectedState = formData?.state;
-                    if (!selectedState) return [];
-                    return allCities
-                        .filter(city => city.state === selectedState)
-                        .map(city => ({
-                            value: city.value,
-                            label: city.label
-                        }));
-                },
+                    name: "city",
+                    label: "City",
+                    type: "select",
+                    colSize: 6,
+                    section: "Company Information",
+                    options: (formData) => {
+                        if (!formData?.country || !formData?.state) return [];
 
-                customValidation: (value, formData) => {
-                    if (formData?.state && (!value || !value.trim())) {
-                        return "City is required when state is selected";
+                        const selectedCountry = Country.getAllCountries()
+                            .find(c => c.name === formData.country);
+
+                        if (!selectedCountry) return [];
+
+                        const selectedState = State.getStatesOfCountry(selectedCountry.isoCode)
+                            .find(s => s.name === formData.state);
+
+                        if (!selectedState) return [];
+
+                        return City.getCitiesOfState(
+                            selectedCountry.isoCode,
+                            selectedState.isoCode
+                        ).map(city => ({
+                            value: city.name,     
+                            label: city.name
+                        }));
                     }
-                    return null;
-                }
+
             },
+
             {
                 name: "pincode",
                 label: "Pincode",
@@ -303,16 +313,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     return null;
                 }
             },
-            {
-                name: "country",
-                label: "Country",
-                type: "text",
-                placeholder: "Enter country",
-                colSize: 6,
-                section: "Company Information",
-                defaultValue: "India",
-                readOnly: true
-            },
+         
             {
                 name: "address",
                 label: "Address",
@@ -325,13 +326,13 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
             {
                 name: "status",
                 label: "Status",
-                type: "select",
+                type: "toggle",
                 colSize: 6,
                 section: "Company Information",
-                options: [
-                    { value: true, label: "Active" },
-                    { value: false, label: "Inactive" }
-                ],
+                // options: [
+                //     { value: true, label: "Active" },
+                //     { value: false, label: "Inactive" }
+                // ],
                 defaultValue: true
             },
         ],
@@ -490,7 +491,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 return cleanedData;
             },
             afterSave: (response, editingItem) => {
-                // After save logic
+    
             }
         },
         exportConfig: {

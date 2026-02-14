@@ -15,22 +15,12 @@ async function findAll() {
     if (!this.schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    // const query = `SELECT 
-    //         r.id,
-    //         r.report_name,
-    //         r.api_name,
-    //         r.created_date,
-    //         r.description,
-    //         r.created_by,
-    //         u.firstname AS created_by_name
-    //     FROM ${this.schema}.reports r
-    //     INNER JOIN ${this.schema}."user" u 
-    //         ON r.created_by = u.id
-    //     WHERE r.is_active = true
-    //     ORDER BY r.created_date DESC
-    // `;
-
-    const query = `Select * from demo.reports`
+    const query = `SELECT 
+           *
+        FROM ${this.schema}.reports 
+      
+        ORDER BY created_date DESC
+    `;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
