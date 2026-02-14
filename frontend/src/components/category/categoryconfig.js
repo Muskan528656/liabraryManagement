@@ -41,6 +41,14 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
         ],
         formFields: [
             {
+                name: "code",
+                label: "Code",
+                type: "select",
+                required: true,
+                placeholder: "Enter category name",
+                colSize: 6,
+            },
+            {
                 name: "name",
                 label: "Name",
                 type: "text",
@@ -57,7 +65,6 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
                 colSize: 6,
             }
         ],
-
         validationRules: (formData, allCategories, editingCategory) => {
             const errors = [];
             if (!formData.name?.trim()) errors.push("Category Name is required");
@@ -67,10 +74,8 @@ export const getCategoryConfig = (externalData = {}, props = {}, permissions = {
                     category.id !== editingCategory?.id
             );
             if (duplicate) errors.push("Category with this name already exists");
-
             return errors;
         },
-
         dataDependencies: {},
         features: {
             showBulkInsert: false,

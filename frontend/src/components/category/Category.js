@@ -1,110 +1,4 @@
-// import React, { useState, useEffect } from "react";
-// import DynamicCRUD from "../common/DynaminCrud";
-// import { getCategoryConfig } from "./categoryconfig";
-// import { useDataManager } from "../common/userdatamanager";
-// import Loader from "../common/Loader";
-// import { useTimeZone } from "../../contexts/TimeZoneContext";
-// import { AuthHelper } from "../../utils/authHelper";
-// import PermissionDenied from "../../utils/permission_denied";
-// import { MODULES } from "../../constants/CONSTANT";
-// import "../../App.css";
-// const Category = ({permissions,...props}) => {
-//   const { timeZone } = useTimeZone();
-//   const [permissions, setPermissions] = useState({
-//     canView: false,
-//     canCreate: false,
-//     canEdit: false,
-//     canDelete: false,
-//     loading: true
-//   });
 
-//   useEffect(() => {
-//     const fetchPermissions = async () => {
-
-//       const canView = await AuthHelper.hasModulePermission(MODULES.CATEGORIES, MODULES.CAN_VIEW);
-//       const canCreate = await AuthHelper.hasModulePermission(MODULES.CATEGORIES, MODULES.CAN_CREATE);
-//       const canEdit = await AuthHelper.hasModulePermission(MODULES.CATEGORIES, MODULES.CAN_EDIT);
-//       const canDelete = await AuthHelper.hasModulePermission(MODULES.CATEGORIES, MODULES.CAN_DELETE);
-
-//       setPermissions({
-//         canView,
-//         canCreate,
-//         canEdit,
-//         canDelete,
-//         loading: false
-//       });
-//     };
-//     fetchPermissions();
-//     window.addEventListener("permissionsUpdated", fetchPermissions);
-//     return () => {
-//       window.removeEventListener("permissionsUpdated", fetchPermissions);
-//     };
-//   }, []);
-
-
-//   const baseConfig = getCategoryConfig({
-//     canCreate: permissions.canCreate,
-//     canEdit: permissions.canEdit,
-//     canDelete: permissions.canDelete,
-//     timeZone: timeZone
-//   });
-
-
-//   const { data, loading: dataLoading, error } = useDataManager(
-//     baseConfig.dataDependencies,
-//     props
-//   );
-
-
-//   if (permissions.loading || dataLoading) {
-//     // return <Loader message="Loading categories data..." />;
-//     return <span class="loader"></span>
-//   }
-
-//   if (!permissions.canView) {
-//     return <PermissionDenied />;
-//   }
-
-
-//   if (error) {
-//     return (
-//       <div className="alert alert-danger">
-//         <h4>Error Loading Categories</h4>
-//         <p>{error.message}</p>
-//         <button
-//           className="btn btn-primary"
-//           onClick={() => window.location.reload()}
-//         >
-//           Retry
-//         </button>
-//       </div>
-//     );
-//   }
-
-
-//   const allData = {
-//     ...data,
-//     ...props
-//   };
-
-//   const finalConfig = getCategoryConfig(
-//     allData,
-//     timeZone,
-//     {
-//       canCreate: permissions.allowCreate,
-//       canEdit: permissions.allowEdit,
-//     }
-//   );
-//   return (
-//     <DynamicCRUD
-//       {...finalConfig}
-//       icon="fa-solid fa-tags"
-//       permissions={permissions}
-//     />
-//   );
-// };
-
-// export default Category;
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getCategoryConfig } from "./categoryconfig";
@@ -127,7 +21,7 @@ const Category = ({ permissions, ...props }) => {
     }
   );
 
-  
+
   const { data, loading: dataLoading, error } = useDataManager(
     baseConfig.dataDependencies,
     props
@@ -138,7 +32,7 @@ const Category = ({ permissions, ...props }) => {
   }
 
   if (dataLoading) {
-    // return <Loader message="Loading categories data..." />;
+
     return <span className="loader"></span>;
   }
 

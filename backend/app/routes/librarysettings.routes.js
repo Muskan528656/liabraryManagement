@@ -36,7 +36,6 @@ module.exports = (app) => {
     }
   });
 
-
   router.get("/all", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -47,7 +46,6 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-
 
   router.get("/active", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
@@ -63,7 +61,6 @@ module.exports = (app) => {
     }
   });
 
-
   router.get("/:key", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
       LibrarySettings.init(req.userinfo.tenantcode);
@@ -77,7 +74,6 @@ module.exports = (app) => {
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
-
 
   router.post(
     "/",
@@ -130,7 +126,8 @@ module.exports = (app) => {
           issue_approval_required: req.body.issue_approval_required !== undefined ? req.body.issue_approval_required : false,
           digital_access: req.body.digital_access !== undefined ? req.body.digital_access : false,
           description: req.body.description || null,
-          is_active: req.body.is_active !== undefined ? req.body.is_active : true
+          is_active: req.body.is_active !== undefined ? req.body.is_active : true,
+          config_classification: req.body.config_classification !== undefined ? req.body.config_classification : true
         };
 
         const setting = await LibrarySettings.updateSettings(settingData, userId);

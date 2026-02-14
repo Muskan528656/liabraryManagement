@@ -163,6 +163,7 @@ async function updateById(id, data, userId) {
           reservation_limit = COALESCE($8, reservation_limit),
           membership_validity_days = COALESCE($9, membership_validity_days),
           is_active = COALESCE($10, is_active),
+          config_classification = config_classification,
           lastmodifieddate = NOW(),
           lastmodifiedbyid = $11,
           createdbyid = $12

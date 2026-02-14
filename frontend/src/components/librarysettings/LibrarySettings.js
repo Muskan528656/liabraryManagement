@@ -13,7 +13,7 @@ import {
 import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 
-const Settings = ({permissions}) => {
+const Settings = ({ permissions }) => {
   const [librarySettings, setLibrarySettings] = useState({
     max_books_per_card: 1,
     duration_days: 15,
@@ -66,8 +66,8 @@ const Settings = ({permissions}) => {
   const canEditSettings = permissions?.allowEdit;
 
 
-  console.log("canEditSettings", canEditSettings) ;
-  console.log("isEditionSettings", isEditingSettings) ;
+  console.log("canEditSettings", canEditSettings);
+  console.log("isEditionSettings", isEditingSettings);
 
   useEffect(() => {
     fetchSettings();
@@ -498,6 +498,50 @@ const Settings = ({permissions}) => {
                           <small className="text-muted d-block mt-1">
                             Fine for lost books as percentage of book price
                           </small>
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        Classification
+                        <Badge bg="info" className="ms-2">
+                          Current: {librarySettings.config_classification}
+                        </Badge>
+                      </Form.Label>
+                      {isEditingSettings ? (
+                        <>
+                          <Form.Control
+                            type="text"
+                            min="0"
+                            max="200"
+                            value={tempSettings.config_classification}
+                            onChange={(e) =>
+                              handleSettingChange(
+                                "config_classification",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              border: "2px solid #e9ecef",
+                              borderRadius: "8px",
+                              padding: "10px",
+                            }}
+                          />
+                          <small className="text-muted d-block mt-1">
+                            Fine for lost books as percentage of book price
+                          </small>
+                        </>
+                      ) : (
+                        <div className="p-3 border rounded bg-light">
+                          <span className="fw-bold text-primary">
+                            {librarySettings.config_classification}
+
+                          </span>
+                          <small className="text-muted d-block mt-1">
+                            config_classification                          </small>
                         </div>
                       )}
                     </Form.Group>
