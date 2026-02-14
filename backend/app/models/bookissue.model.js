@@ -878,10 +878,9 @@ let branchId = "";
 
 const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 function init(schema_name, branchId) {
-  console.log("branchid->>", branchId)
   this.schema = schema_name;
   console.log("Schema:", schema);
-
+  
   this.branchId = branchId || "";
   console.log("Branch ID:", branchId);
 }
@@ -925,8 +924,8 @@ async function findAll(memberType) {
 
 async function findById(id, memberType) {
   try {
-    if (!schema) throw new Error("Schema not initialized.");
-
+    if (!this.schema) throw new Error("Schema not initialized.");
+    if (!this.branchId) throw new Error("Branch ID not initialized.");
     let query = `SELECT 
         bi.*,
         b.title AS book_title,
@@ -934,12 +933,12 @@ async function findById(id, memberType) {
         lm.card_number,
         lm.first_name || ' ' || lm.last_name AS member_name,
         lm.id AS card_id
-      FROM ${schema}.book_issues bi
-      LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-      LEFT JOIN ${schema}.library_members lm 
+      FROM ${this.schema}.book_issues bi
+      LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+      LEFT JOIN ${this.schema}.library_members lm 
         ON bi.issued_to = lm.id 
        AND lm.is_active = true
-      WHERE bi.id = $1`;
+      WHERE bi.id = $1  AND bi.branch_id = '${this.branchId}'`;
 
     let values = [id];
 
@@ -960,12 +959,12 @@ async function findActive(memberType) {
       lm.card_number,
       lm.first_name || ' ' || lm.last_name AS member_name,
       lm.id AS card_id
-    FROM ${schema}.book_issues bi
-    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${schema}.library_members lm 
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.library_members lm 
       ON bi.issued_to = lm.id 
      AND lm.is_active = true
-    WHERE bi.return_date IS NULL`;
+    WHERE bi.return_date IS NULL AND bi.branch_id = '${this.branchId}'`;
 
   let values = [];
 
@@ -985,14 +984,14 @@ async function findByBookId(bookId, memberType) {
       lm.card_number,
       lm.first_name || ' ' || lm.last_name AS member_name,
       lm.id AS card_id
-    FROM ${schema}.book_issues bi
-    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${schema}.library_members lm 
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.library_members lm 
       ON bi.issued_to = lm.id 
      AND lm.is_active = true
     WHERE bi.book_id = $1 
       AND bi.return_date IS NULL 
-      AND bi.status = 'issued'`;
+      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
 
   let values = [bookId];
 
@@ -1013,7 +1012,7 @@ async function findByCardId(cardId, memberType) {
       ON bi.issued_to = lm.id
     WHERE bi.issued_to = $1 
       AND bi.return_date IS NULL 
-      AND bi.status = 'issued'`;
+      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;  
 
   let values = [cardId];
 

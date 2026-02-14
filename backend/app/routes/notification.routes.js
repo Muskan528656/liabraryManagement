@@ -10,13 +10,14 @@ const router = express.Router();
 const Notification = require("../models/notification.model.js");
 const User = require("../models/user.model.js");
 const { fetchUser } = require("../middleware/fetchuser.js");
+const { listeners } = require("../utils/MailConfig.js");
 
 module.exports = (app) => {
   router.get("/due-tomorrow", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
 
-      userId = req.userinfo.id;
+      let userId = req.userinfo.id;
 
       const allNotifications = await Notification.findAll(userId);
 
@@ -48,7 +49,7 @@ module.exports = (app) => {
 
   router.get("/all", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
 
       userId = req.userinfo.id;
       const allNotifications = await Notification.findAll(userId);
@@ -77,7 +78,7 @@ module.exports = (app) => {
 
   router.put("/:id/read", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
 
       const notificationId = req.params.id;
       const userId = req.userinfo.id;
@@ -108,7 +109,7 @@ module.exports = (app) => {
 
   router.put("/mark-read-by-related/:relatedId/:memberId/:type", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
 
       console.log("req.params=>",req.params);
 
@@ -142,7 +143,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
 
       const notificationId = req.params.id;
       const userId = req.userinfo.id;
@@ -173,7 +174,7 @@ module.exports = (app) => {
 
   router.post("/request-access", fetchUser, async (req, res) => {
     try {
-      Notification.init(req.userinfo.tenantcode);
+      Notification.init(req.userinfo.tenantcode, req.branchId);
       User.init(req.userinfo.tenantcode);
 
       const currentUserId = req.userinfo.id;

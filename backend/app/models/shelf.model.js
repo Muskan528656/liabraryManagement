@@ -1,7 +1,11 @@
 const sql = require("./db.js");
 
-function init(schema) {
-    this.schema = schema;
+let schema = "";
+let branchId = null;
+
+function init(schema_name, branch_id = null) {
+    schema = schema_name;
+    branchId = branch_id;
 }
 
 // ================= FIND ALL =================
@@ -9,10 +13,11 @@ async function findAll() {
     const q = `
         SELECT id, shelf_name, note, sub_shelf, status,
                createddate, lastmodifieddate
-        FROM ${this.schema}.shelf
+        FROM ${schema}.shelf
+        WHERE branch_id = $1
         ORDER BY createddate DESC
     `;
-    const r = await sql.query(q);
+    const r = await sql.query(q, [branchId]);
     return r.rows;
 }
 
@@ -21,10 +26,10 @@ async function findById(id) {
     const q = `
         SELECT id, shelf_name, note, sub_shelf, status,
                createddate, lastmodifieddate
-        FROM ${this.schema}.shelf
-        WHERE id=$1
+        FROM ${schema}.shelf
+        WHERE id=$1 AND branch_id = $2
     `;
-    const r = await sql.query(q, [id]);
+    const r = await sql.query(q, [id, branchId]);
     return r.rows[0];
 }
 
@@ -41,18 +46,18 @@ async function create(data) {
 
         if (subShelvesText === null) {
             dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE shelf_name = $1 AND sub_shelf IS NULL
+                SELECT id FROM ${schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf IS NULL AND branch_id = $2
                 LIMIT 1
             `;
-            params = [data.shelf_name];
+            params = [data.shelf_name, branchId];
         } else {
             dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE shelf_name = $1 AND sub_shelf = $2
+                SELECT id FROM ${schema}.shelf
+                WHERE shelf_name = $1 AND sub_shelf = $2 AND branch_id = $3
                 LIMIT 1
             `;
-            params = [data.shelf_name, subShelvesText];
+            params = [data.shelf_name, subShelvesText, branchId];
         }
 
         const dup = await sql.query(dupQuery, params);
@@ -64,9 +69,9 @@ async function create(data) {
 
     // INSERT
     const query = `
-        INSERT INTO ${this.schema}.shelf
-        (shelf_name, note, sub_shelf, status, createddate, lastmodifieddate)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        INSERT INTO ${schema}.shelf
+        (shelf_name, note, sub_shelf, status, branch_id, createddate, lastmodifieddate)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         RETURNING *
     `;
 
@@ -74,7 +79,8 @@ async function create(data) {
         data.shelf_name || null,
         data.note || null,
         subShelvesText,
-        data.status === true || data.status === "true" || data.status === "1"
+        data.status === true || data.status === "true" || data.status === "1",
+        branchId
     ];
 
     try {
@@ -100,22 +106,24 @@ async function updateById(id, data) {
 
         if (subShelvesText === null) {
             dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
+                SELECT id FROM ${schema}.shelf
                 WHERE id <> $1
                 AND shelf_name = $2 
                 AND sub_shelf IS NULL
+                AND branch_id = $3
                 LIMIT 1
             `;
-            params = [id, data.shelf_name];
+            params = [id, data.shelf_name, branchId];
         } else {
             dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
+                SELECT id FROM ${schema}.shelf
                 WHERE id <> $1
                 AND shelf_name = $2 
                 AND sub_shelf = $3
+                AND branch_id = $4
                 LIMIT 1
             `;
-            params = [id, data.shelf_name, subShelvesText];
+            params = [id, data.shelf_name, subShelvesText, branchId];
         }
 
         const dup = await sql.query(dupQuery, params);
@@ -127,13 +135,13 @@ async function updateById(id, data) {
 
     // UPDATE query
     const q = `
-        UPDATE ${this.schema}.shelf
+        UPDATE ${schema}.shelf
         SET shelf_name = COALESCE($2, shelf_name),
             note = COALESCE($3, note),
             sub_shelf = COALESCE($4, sub_shelf),
             status = COALESCE($5, status),
             lastmodifieddate = NOW()
-        WHERE id = $1
+        WHERE id = $1 AND branch_id = $6
         RETURNING *
     `;
 
@@ -143,7 +151,8 @@ async function updateById(id, data) {
             data.shelf_name || null,
             data.note || null,
             subShelvesText,
-            data.status !== undefined ? (data.status === true || data.status === "true" || data.status === "1") : null
+            data.status !== undefined ? (data.status === true || data.status === "true" || data.status === "1") : null,
+            branchId
         ]);
 
         if (r.rows.length === 0) {
@@ -163,11 +172,11 @@ async function updateById(id, data) {
 async function findGroupedShelves() {
     const q = `
         SELECT id, shelf_name, sub_shelf
-        FROM ${this.schema}.shelf
-        WHERE status = true
+        FROM ${schema}.shelf
+        WHERE status = true AND branch_id = $1
         ORDER BY shelf_name, sub_shelf;
     `;
-    const r = await sql.query(q);
+    const r = await sql.query(q, [branchId]);
 
     // Group by shelf_name
     const grouped = {};
@@ -196,8 +205,8 @@ async function findGroupedShelves() {
 // ================= DELETE =================
 async function deleteById(id) {
     await sql.query(
-        `DELETE FROM ${this.schema}.shelf WHERE id=$1`,
-        [id]
+        `DELETE FROM ${schema}.shelf WHERE id=$1 AND branch_id = $2`,
+        [id, branchId]
     );
 }
 

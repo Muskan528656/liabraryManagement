@@ -16,7 +16,6 @@
 
 const e = require("express");
 const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
-const { branchAccess, checkBranchPermission, getBranchFilter, setBranchContext } = require("../middleware/branch.middleware.js");
 const Book = require("../models/book.model.js");
 
 module.exports = (app) => {
@@ -28,19 +27,13 @@ module.exports = (app) => {
   router.get(
     "/",
     fetchUser,
-    branchAccess,
-    checkBranchPermission("view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
-        
-        // Apply branch filter if user is not super admin
-        const filters = {};
-        if (req.currentBranchId) {
-          filters.branch_id = req.currentBranchId;
-        }
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
         
         // Add search filter if present in query
+        const filters = {};
         if (req.query.search) {
           filters.search = req.query.search;
         }
@@ -57,21 +50,17 @@ module.exports = (app) => {
     router.get(
       "/book-popularity-analytics",
       fetchUser,
-      branchAccess,
-      checkBranchPermission("view"),
       async (req, res) => {
         try {
-              
-          Book.init(req.userinfo.tenantcode);
-    
+          const branchId = req.headers["branch-id"];
+          Book.init(req.userinfo.tenantcode, branchId);
+        
           const filters = {
             days: req.query.days || "",
             startDate: req.query.startDate ? req.query.startDate.trim() : null,
             endDate: req.query.endDate ? req.query.endDate.trim() : null,
             category: req.query.category || null,
-            searchTerm: req.query.searchTerm || null,
-            // Add branch_id if user is not super admin
-            branch_id: req.currentBranchId || null
+            searchTerm: req.query.searchTerm || null
           };
     
               
@@ -103,18 +92,13 @@ module.exports = (app) => {
     );
 
   router.get("/inventory-report",
-    fetchUser, branchAccess, checkBranchPermission("view"),
+    fetchUser,
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
         
-        // Apply branch filter if user is not super admin
-        const filters = {};
-        if (req.currentBranchId) {
-          filters.branch_id = req.currentBranchId;
-        }
-        
-        const report = await Book.generateInventoryReport(filters);
+        const report = await Book.generateInventoryReport();
         res.json(report);
       } catch (error) {
         console.error("Error generating inventory report:", error);
@@ -124,20 +108,18 @@ module.exports = (app) => {
 
   router.get("/export-excel",
     fetchUser,
-    branchAccess,
-    checkBranchPermission("view"),
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
           days: req.query.days,
           startDate: req.query.startDate,
           endDate: req.query.endDate,
           category: req.query.category,
-          searchTerm: req.query.searchTerm,
-          branch_id: req.currentBranchId || null
+          searchTerm: req.query.searchTerm
         };
 
         const workbook = await Book.exportBookPopularityReportExcel(filters);
@@ -156,20 +138,18 @@ module.exports = (app) => {
 
   router.get("/export-pdf",
     fetchUser,
-    branchAccess,
-    checkBranchPermission("view"),
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
           days: req.query.days,
           startDate: req.query.startDate,
           endDate: req.query.endDate,
           category: req.query.category,
-          searchTerm: req.query.searchTerm,
-          branch_id: req.currentBranchId || null
+          searchTerm: req.query.searchTerm
         };
 
         const doc = await Book.exportBookPopularityReportPDF(filters);
@@ -187,14 +167,12 @@ module.exports = (app) => {
   );
 
   router.get("/:id", fetchUser,
-    branchAccess,
-    checkBranchPermission("view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
         
-        // Apply branch filter if user is not super admin
-        const book = await Book.findById(req.params.id, req.currentBranchId);
+        const book = await Book.findById(req.params.id);
         if (!book) {
           return res.status(404).json({ errors: "Book not found" });
         }
@@ -206,18 +184,13 @@ module.exports = (app) => {
     });
 
 
-  router.get("/isbn/:isbn", fetchUser, branchAccess, checkBranchPermission("view"), async (req, res) => {
+  router.get("/isbn/:isbn", fetchUser, async (req, res) => {
     try {
-      Book.init(req.userinfo.tenantcode);
+      const branchId = req.headers["branch-id"];
+      Book.init(req.userinfo.tenantcode, branchId);
       const isbn = decodeURIComponent(req.params.isbn);
       
-      // Apply branch filter if user is not super admin
-      const filters = {};
-      if (req.currentBranchId) {
-        filters.branch_id = req.currentBranchId;
-      }
-      
-      const book = await Book.findByISBN(isbn, null, filters);
+      const book = await Book.findByISBN(isbn);
       if (!book) {
         return res.status(404).json({ errors: "Book not found" });
       }
@@ -232,10 +205,7 @@ module.exports = (app) => {
 
   router.post(
     "/",
-    fetchUser,
-    branchAccess,
-    setBranchContext,
-    checkBranchPermission("create"),
+    fetchUser, 
     [
       body("title")
         .optional()
@@ -308,11 +278,11 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
 
         if (req.body.isbn && req.body.isbn.trim()) {
-          // Apply branch filter for existing book check
-          const existingBook = await Book.findByISBN(req.body.isbn, null, { branch_id: req.body.branch_id || req.currentBranchId });
+          const existingBook = await Book.findByISBN(req.body.isbn);
           if (existingBook) {
             return res
               .status(400)
@@ -334,10 +304,7 @@ module.exports = (app) => {
   );
   router.put(
     "/:id",
-    fetchUser,
-    branchAccess,
-    setBranchContext,
-    checkBranchPermission("edit"),
+    fetchUser, 
     [
       body("title").notEmpty().withMessage("Title is required"),
       body("author_id").notEmpty().withMessage("Author ID is required"),
@@ -387,17 +354,17 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
 
-        const existingBook = await Book.findById(req.params.id, req.currentBranchId);
+        const existingBook = await Book.findById(req.params.id);
         if (!existingBook) {
           return res.status(404).json({ errors: "Book not found" });
         }
 
         const duplicateBook = await Book.findByISBN(
           req.body.isbn,
-          req.params.id,
-          { branch_id: req.body.branch_id || req.currentBranchId }
+          req.params.id
         );
         if (duplicateBook) {
           return res
@@ -406,7 +373,7 @@ module.exports = (app) => {
         }
 
         const userId = req.userinfo?.id || null;
-        const book = await Book.updateById(req.params.id, req.body, userId, req.currentBranchId);
+        const book = await Book.updateById(req.params.id, req.body, userId);
         if (!book) {
           return res.status(400).json({ errors: "Failed to update book" });
         }
@@ -418,10 +385,11 @@ module.exports = (app) => {
     }
   );
 
-  router.delete("/:id", fetchUser, branchAccess, checkBranchPermission("delete"), async (req, res) => {
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
-      Book.init(req.userinfo.tenantcode);
-      const result = await Book.deleteById(req.params.id, req.currentBranchId);
+      const branchId = req.headers["branch-id"];
+      Book.init(req.userinfo.tenantcode, branchId);
+      const result = await Book.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });
       }

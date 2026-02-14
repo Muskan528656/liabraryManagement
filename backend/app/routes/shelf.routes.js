@@ -9,7 +9,7 @@ module.exports = (app) => {
     router.get("/grouped", fetchUser, async (req, res) => {
 
         try {
-            Shelf.init(req.userinfo.tenantcode);
+            Shelf.init(req.userinfo.tenantcode, req.branchId);
             const data = await Shelf.findGroupedShelves();
             console.log("data=>", data);
             res.json(data);
@@ -23,7 +23,7 @@ module.exports = (app) => {
     // ================= GET ALL =================
     router.get("/", fetchUser, async (req, res) => {
         try {
-            Shelf.init(req.userinfo.tenantcode);
+            Shelf.init(req.userinfo.tenantcode, req.branchId);
             const data = await Shelf.findAll();
             res.json(data);
         } catch (err) {
@@ -35,7 +35,7 @@ module.exports = (app) => {
     // ================= GET BY ID =================
     router.get("/:id", fetchUser, async (req, res) => {
         try {
-            Shelf.init(req.userinfo.tenantcode);
+            Shelf.init(req.userinfo.tenantcode, req.branchId);
             const data = await Shelf.findById(req.params.id);
 
             if (!data) {
@@ -89,7 +89,7 @@ module.exports = (app) => {
                     });
                 }
 
-                Shelf.init(req.userinfo.tenantcode);
+                Shelf.init(req.userinfo.tenantcode, req.branchId);
 
                 const data = await Shelf.create(req.body);
                 console.log("Shelf created:", data);
@@ -168,7 +168,7 @@ module.exports = (app) => {
                     });
                 }
 
-                Shelf.init(req.userinfo.tenantcode);
+                Shelf.init(req.userinfo.tenantcode, req.branchId);
 
                 const data = await Shelf.updateById(
                     req.params.id,
@@ -204,7 +204,7 @@ module.exports = (app) => {
     // ================= DELETE =================
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
-            Shelf.init(req.userinfo.tenantcode);
+            Shelf.init(req.userinfo.tenantcode, req.branchId);
 
             // Önce rafın var olup olmadığını kontrol et
             const shelf = await Shelf.findById(req.params.id);

@@ -190,6 +190,7 @@ module.exports = (app) => {
                     lastmodifiedbyid: createdByIdValue,
                     createddate: new Date(),
                     lastmodifieddate: new Date(),
+                    branch_id: req.branchId
                 };
 
 

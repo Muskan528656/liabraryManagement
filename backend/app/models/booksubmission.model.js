@@ -12,13 +12,14 @@ const { dueTemplate, overdueTemplate } = require("../../app/utils/ReminderTempla
 const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 
 let schema = "";
+let branchId = null;
 const emailTracker = {
   due: {},
   overdue: {}
 };
-
-function init(schema_name) {
+function init(schema_name, branch_id = null) {
   schema = schema_name;
+  branchId = branch_id;
 }
 async function create(submissionData, userId) {
   console.log("submissionData", submissionData);
@@ -29,10 +30,10 @@ async function create(submissionData, userId) {
 
     const issueRes = await sql.query(
       `SELECT bi.*, b.title, b.isbn, b.available_copies
-       FROM demo.book_issues bi
-       LEFT JOIN demo.books b ON bi.book_id = b.id
-       WHERE bi.id = $1`,
-      [submissionData.issue_id]
+       FROM ${schema}.book_issues bi
+       LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+       WHERE bi.id = $1 AND bi.branch_id = $2`,
+      [submissionData.issue_id, branchId]
     );
 
     if (!issueRes.rows.length) throw new Error("Issue not found");
@@ -50,16 +51,16 @@ async function create(submissionData, userId) {
     }
 
     const memberRes = await sql.query(
-      `SELECT * FROM demo.library_members 
-       WHERE id = $1 AND is_active = true`,
-      [issue.issued_to]
+      `SELECT * FROM ${schema}.library_members 
+       WHERE id = $1 AND is_active = true AND branch_id = $2`,
+      [issue.issued_to, branchId]
     );
 
     if (!memberRes.rows.length) throw new Error("Library member not found");
     const member = memberRes.rows[0];
 
     const settingRes = await sql.query(
-      `SELECT * FROM demo.library_setting LIMIT 1`
+      `SELECT * FROM ${schema}.library_setting  LIMIT 1`,
     );
 
     let finePerDay = 5;
@@ -84,11 +85,11 @@ async function create(submissionData, userId) {
     if (conditionAfterLower === "lost" || conditionAfterLower === "damaged") {
       const purchaseRes = await sql.query(
         `SELECT unit_price, purchase_date, quantity, total_amount
-         FROM demo.purchases 
-         WHERE book_id = $1 
+         FROM ${schema}.purchases 
+         WHERE book_id = $1 AND branch_id = $2
          ORDER BY purchase_date DESC, createddate DESC 
          LIMIT 1`,
-        [issue.book_id]
+        [issue.book_id, branchId]
       );
 
       if (purchaseRes.rows.length > 0) {
@@ -125,11 +126,11 @@ async function create(submissionData, userId) {
 
 
     const submissionRes = await sql.query(
-      `INSERT INTO demo.book_submissions
+      `INSERT INTO ${schema}.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
          condition_before, condition_after, remarks,
-         days_overdue, penalty, createddate, createdbyid)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3)
+         days_overdue, penalty, createddate, createdbyid, branch_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,CURRENT_TIMESTAMP,$3,$10)
        RETURNING *`,
       [
         issue.id,
@@ -142,7 +143,8 @@ async function create(submissionData, userId) {
         conditionAfter,
         submissionData.remarks || "",
         daysOverdue,
-        totalPenalty
+        totalPenalty,
+        branchId
       ]
     );
 
@@ -152,12 +154,12 @@ async function create(submissionData, userId) {
     if (conditionAfterLower !== 'lost') {
       console.log("updating book copies");
       await sql.query(
-        `UPDATE demo.books
+        `UPDATE ${schema}.books
          SET available_copies = COALESCE(available_copies, 0) + 1,
              lastmodifieddate = CURRENT_TIMESTAMP,
-             lastmodifiedbyid = $2
-         WHERE id = $1`,
-        [issue.book_id, userId]
+             lastmodifiedbyid = $3
+         WHERE id = $1 AND branch_id = $2`,
+        [issue.book_id, branchId, userId]
       );
     }
 
@@ -166,13 +168,13 @@ async function create(submissionData, userId) {
     else if (conditionAfterLower === 'damaged') issueStatus = 'damaged';
 
     await sql.query(
-      `UPDATE demo.book_issues
+      `UPDATE ${schema}.book_issues
        SET return_date = CURRENT_DATE,
-           status = $3,
+           status = $4,
            lastmodifieddate = CURRENT_TIMESTAMP,
-           lastmodifiedbyid = $2
-       WHERE id = $1`,
-      [issue.id, userId, issueStatus]
+           lastmodifiedbyid = $3
+       WHERE id = $1 AND branch_id = $2`,
+      [issue.id, branchId, userId, issueStatus]
     );
 
     await sql.query('COMMIT');
@@ -217,10 +219,10 @@ async function findById(id, memberType) {
       LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
       LEFT JOIN ${schema}.books b ON bs.book_id = b.id
       LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-      WHERE bs.id = $1
+      WHERE bs.id = $1 AND bs.branch_id = $2
     `;
 
-    let values = [id];
+    let values = [id, branchId];
     const filtered = applyMemberTypeFilter(query, memberType, values);
     query = filtered.query;
     values = filtered.values;
@@ -254,11 +256,12 @@ async function findAll(filters = {}) {
                  FROM ${schema}.book_submissions bs
                  LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
                  LEFT JOIN ${schema}.books b ON bs.book_id = b.id
-                 LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id`;
+                 LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
+                 WHERE bs.branch_id = $1`;
 
     const conditions = [];
-    const values = [];
-    let paramIndex = 1;
+    const values = [branchId]; // branch_id is the first parameter
+    let paramIndex = 2; // start from 2 since branch_id is $1
 
     if (filters.memberType && filters.memberType !== "All") {
       conditions.push(`LOWER(lm.library_member_type) = LOWER($${paramIndex})`);
@@ -316,7 +319,7 @@ async function findAll(filters = {}) {
 
     // WHERE clause
     if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(" AND ")}`;
+      query += ` AND ${conditions.join(" AND ")}`;
     }
 
     query += ` ORDER BY bs.createddate DESC`;
@@ -429,8 +432,8 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
 
     const issueRes = await sql.query(
-      `SELECT * FROM demo.book_issues WHERE id = $1`,
-      [issueId]
+      `SELECT * FROM ${schema}.book_issues WHERE id = $1 AND branch_id = $2`,
+      [issueId, branchId]
     );
 
     if (!issueRes.rows.length) {
@@ -448,17 +451,19 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
     let statusUpdated = false;
     let finalStatus = 'cancelled';
 
+
     try {
 
+
       await sql.query(
-        `UPDATE demo.book_issues 
+        `UPDATE ${schema}.book_issues 
          SET status = 'cancelled',
              return_date = CURRENT_TIMESTAMP,
              lastmodifieddate = CURRENT_TIMESTAMP,
              lastmodifiedbyid = $1,
              remarks = COALESCE(remarks || ' ', '') || 'Cancelled: ' || $2
-         WHERE id = $3`,
-        [userId, reason, issueId]
+         WHERE id = $3 AND branch_id = $4`,
+        [userId, reason, issueId, branchId]
       );
       statusUpdated = true;
 
@@ -467,14 +472,14 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
 
       await sql.query(
-        `UPDATE demo.book_issues 
+        `UPDATE ${schema}.book_issues 
          SET status = 'cancelled',
              return_date = CURRENT_TIMESTAMP,
              lastmodifieddate = CURRENT_TIMESTAMP,
              lastmodifiedbyid = $1,
              remarks = COALESCE(remarks || ' ', '') || 'Cancelled: ' || $2
-         WHERE id = $3`,
-        [userId, reason, issueId]
+         WHERE id = $3 AND branch_id = $4`,
+        [userId, reason, issueId, branchId]
       );
       finalStatus = 'cancelled';
       statusUpdated = true;
@@ -487,19 +492,19 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
 
     await sql.query(
-      `UPDATE demo.books
+      `UPDATE ${schema}.books
    SET available_copies = available_copies + 1,
        lastmodifieddate = CURRENT_TIMESTAMP,
        lastmodifiedbyid = $2
-   WHERE id = $1`,
-      [issue.book_id, userId]
+   WHERE id = $1 AND branch_id = $3`,
+      [issue.book_id, userId, branchId]
     );
     await sql.query(
-      `INSERT INTO demo.book_submissions
+      `INSERT INTO ${schema}.book_submissions
         (issue_id, book_id, submitted_by, submit_date,
          condition_before, condition_after, remarks,
-         days_overdue, penalty, createddate, createdbyid)
-       VALUES ($1,$2,$3,CURRENT_TIMESTAMP,$4,$5,$6,0,0,CURRENT_TIMESTAMP,$3)`,
+         days_overdue, penalty, createddate, createdbyid, branch_id)
+       VALUES ($1,$2,$3,CURRENT_TIMESTAMP,$4,$5,$6,0,0,CURRENT_TIMESTAMP,$3,$7)`,
       [
         issueId,
         issue.book_id,
@@ -507,6 +512,7 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
         issue.condition_before || 'Good',
         finalStatus,
         `Issue ${finalStatus}: ${reason}`,
+        branchId
       ]
     );
 
@@ -550,10 +556,10 @@ async function findByIssueId(issueId, memberType) {
       LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
       LEFT JOIN ${schema}.books b ON bs.book_id = b.id
       LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-      WHERE bs.issue_id = $1
+      WHERE bs.issue_id = $1 AND bs.branch_id = $2
     `;
 
-    let values = [issueId];
+    let values = [issueId, branchId];
 
     const filtered = applyMemberTypeFilter(query, memberType, values);
     query = filtered.query;
@@ -589,10 +595,10 @@ async function findByBookId(bookId, memberType) {
       LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
       LEFT JOIN ${schema}.books b ON bs.book_id = b.id
       LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-      WHERE bs.book_id = $1
+      WHERE bs.book_id = $1 AND bs.branch_id = $2
     `;
 
-    let values = [bookId];
+    let values = [bookId, branchId];
 
 
     const filtered = applyMemberTypeFilter(query, memberType, values);
@@ -630,9 +636,9 @@ async function findByDateRange(startDate, endDate) {
                    LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
                    LEFT JOIN ${schema}.books b ON bs.book_id = b.id
                    LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-                   WHERE bs.submit_date >= $1 AND bs.submit_date <= $2
+                   WHERE bs.submit_date >= $1 AND bs.submit_date <= $2 AND bs.branch_id = $3
                    ORDER BY bs.createddate DESC`;
-    const result = await sql.query(query, [startDate, endDate]);
+    const result = await sql.query(query, [startDate, endDate, branchId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findByDateRange:", error);
@@ -659,9 +665,9 @@ async function findByLibrarian(librarianId) {
                    LEFT JOIN ${schema}.book_issues bi ON bs.issue_id = bi.id
                    LEFT JOIN ${schema}.books b ON bs.book_id = b.id
                    LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
-                   WHERE bs.submitted_by = $1
+                   WHERE bs.submitted_by = $1 AND bs.branch_id = $2
                    ORDER BY bs.createddate DESC`;
-    const result = await sql.query(query, [librarianId]);
+    const result = await sql.query(query, [librarianId, branchId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findByLibrarian:", error);
@@ -671,8 +677,8 @@ async function findByLibrarian(librarianId) {
 
 async function deleteById(id) {
   try {
-    const query = `DELETE FROM ${schema}.book_submissions WHERE id = $1 RETURNING *`;
-    const result = await sql.query(query, [id]);
+    const query = `DELETE FROM ${schema}.book_submissions WHERE id = $1 AND branch_id = $2 RETURNING *`;
+    const result = await sql.query(query, [id, branchId]);
     if (result.rows.length > 0) {
       return { success: true, message: "Submission deleted successfully" };
     }
@@ -759,8 +765,9 @@ async function getSubmitCountByBookId(bookId) {
       WHERE book_id = $1 
         AND return_date IS NOT NULL 
         AND status = 'returned'
+        AND branch_id = $2
     `;
-    const result = await sql.query(query, [bookId]);
+    const result = await sql.query(query, [bookId, branchId]);
 
     return parseInt(result.rows[0].submit_count) || 0;
 
@@ -927,7 +934,14 @@ async function sendDueReminder() {
           subject: `📚 Library Reminder: ${member.books.length} Book(s) Due Tomorrow`,
           html: html,
           text: `Dear ${member.name},\n\nYou have ${member.books.length} book(s) due tomorrow:\n\n${member.books.map(book => `• ${book.name}`).join('\n')
-            }\n\nDue Date: ${tomorrowStr}\nCard Number: ${member.card_number || 'N/A'}\n\nPlease return or renew them on time.\n\nLibrary Management System`
+            }
+
+Due Date: ${tomorrowStr}
+Card Number: ${member.card_number || 'N/A'}
+
+Please return or renew them on time.
+
+Library Management System`
         });
 
 
@@ -978,12 +992,13 @@ async function sendOverdueReminder() {
     try {
       const penaltyQuery = `
         SELECT per_day_amount 
-        FROM demo.penalty_master 
+        FROM ${schema}.penalty_master 
         WHERE penalty_type = 'late' 
           AND is_active = true
+          AND branch_id = $1
         LIMIT 1
       `;
-      const penaltyResult = await sql.query(penaltyQuery);
+      const penaltyResult = await sql.query(penaltyQuery, [branchId]);
 
       if (penaltyResult.rows.length > 0) {
         penaltyPerDay = parseFloat(penaltyResult.rows[0].per_day_amount) || 0;
@@ -1167,9 +1182,10 @@ async function getPenaltyMasters() {
     const query = `
       SELECT * FROM ${schema}.penalty_master 
       WHERE is_active = true
+        AND branch_id = $1
       ORDER BY penalty_type
     `;
-    const result = await sql.query(query);
+    const result = await sql.query(query, [branchId]);
 
     return {
       success: true,
