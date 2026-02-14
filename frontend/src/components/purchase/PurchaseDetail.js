@@ -10,6 +10,27 @@ const PurchaseDetail = ({permissions}) => {
   const [timeZone, setTimeZone] = useState(null);
   const [currencySymbol, setCurrencySymbol] = useState("₹"); 
 
+   const other = permissions?.allowEdit
+      ? {
+         other: [
+            { key: "createdbyid", label: "Created By", type: "text" },
+            { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+            {
+              key: "createddate",
+              label: "Created Date",
+              type: "date",
+              render: (value) => convertToUserTimezone(value, timeZone)
+            },
+            {
+              key: "lastmodifieddate",
+              label: "Last Modified Date",
+              type: "date",
+              render: (value) => convertToUserTimezone(value, timeZone)
+            },
+          ],
+        }
+      : {};
+
   function getCompanyIdFromToken() {
     const token = sessionStorage.getItem("token");
     if (!token) return null;
@@ -35,10 +56,12 @@ const PurchaseDetail = ({permissions}) => {
     }
   };
 
+
+
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
-        const vendorApi = new DataApi("vendor");
+        const vendorApi = new DataApi("vendor/active");
         const vendorsResponse = await vendorApi.fetchAll();
         const vendors = vendorsResponse?.data?.data || vendorsResponse?.data || [];
 
@@ -110,22 +133,7 @@ const PurchaseDetail = ({permissions}) => {
       { key: "notes", label: "Notes", type: "textarea" },
     ],
 
-    other: [
-      { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
-      {
-        key: "createddate",
-        label: "Created Date",
-        type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone)
-      },
-      {
-        key: "lastmodifieddate",
-        label: "Last Modified Date",
-        type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone)
-      },
-    ],
+    ...other
   };
 
   const lookupNavigation = {

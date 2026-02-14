@@ -74,6 +74,22 @@ async function findAll(filters = {}) {
     throw error;
   }
 }
+async function findAllActive() {
+  try {
+    console.log("schema->>", schema)
+    if (!schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+    
+    let query = `SELECT * from ${schema}.books where is_active='true'`
+    
+    const result = await sql.query(query);
+    return result.rows.length > 0 ? result.rows : [];
+  } catch (error) {
+    console.error("Error in findAll:", error);
+    throw error;
+  }
+}
 async function findById(id) {
   try {
     if (!schema) {
@@ -1357,5 +1373,6 @@ module.exports = {
   generateInventoryReport,
   generateBookPopularityReport,
   exportBookPopularityReportPDF,
-  exportBookPopularityReportExcel
+  exportBookPopularityReportExcel,
+  findAllActive
 };

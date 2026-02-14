@@ -1479,7 +1479,7 @@ const ModuleDetail = ({
 
                 {/* Details Section */}
                 <Row className="mt-4">
-                  <Col md={12} className="mb-4">
+                  {/* <Col md={12} className="mb-4">
                     <h6
                       className="fw-bold mb-0 d-flex align-items-center p-3 border rounded"
                       style={{
@@ -1494,7 +1494,29 @@ const ModuleDetail = ({
                         {data?.status || data?.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </h6>
+                  </Col> */}
+                  <Col md={12} className="mb-4">
+                    <h6
+                      className="fw-bold mb-0 d-flex align-items-center p-3 border rounded"
+                      style={{
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {moduleLabel} Information
+
+                      {(data?.status !== undefined || data?.is_active !== undefined) && (
+                        <Badge
+                          bg={(data?.status || data?.is_active) ? "success" : "danger"}
+                          className="mx-2 float-end"
+                        >
+                          {(data?.status || data?.is_active) ? "Active" : "Inactive"}
+                        </Badge>
+                      )}
+                    </h6>
                   </Col>
+
                   <Row className="px-5">
                     {normalizedFields && normalizedFields.details && (
                       <Row>
