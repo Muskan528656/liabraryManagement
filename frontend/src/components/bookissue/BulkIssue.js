@@ -201,67 +201,113 @@ const BulkIssue = ({ permissions }) => {
 
 
 
+  // useEffect(() => {
+  //   if (!selectedCard || memberAge === null || books.length === 0) {
+  //     setFilteredBooksByAge([]);
+  //     return;
+  //   }
+
+  //   // const filtered = books.filter(book => {
+  //   //   const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
+  //   //   const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
+
+  //   //   //check also zero age books 
+  //   //   if (min === 0 && max === 0) {
+  //   //     return true;
+  //   //   }
+
+  //   //   //if member age is zero  
+  //   //   if (memberAge === 0) {
+  //   //     return min === null && max === null;
+  //   //   }
+
+  //   //   if (min === null) {
+  //   //     return false;
+  //   //   }
+  //   //   if (min < memberAge) {
+  //   //     return false;
+  //   //   }
+  //   //   if (max !== null && memberAge > max) return false;
+
+  //   //   return true;
+  //   // });
+
+  //   const filtered = books.filter(book => {
+  //     const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
+  //     const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
+
+
+  //     if (min === null || max === null) return false;
+  //     if (min === 0 && max === 0) return false;
+
+  //     if (memberAge === null || memberAge === undefined) return false;
+
+  //     return max <= memberAge;
+  //   });
+
+
+
+
+
+  //   console.log("Member Age:", memberAge);
+  //   console.table(filtered.map(b => ({
+  //     title: b.title,
+  //     min: b.min_age,
+  //     max: b.max_age
+  //   })));
+
+  //   console.log('filtered= ', filtered)
+
+
+  //   setFilteredBooksByAge(filtered);
+  // }, [books, selectedCard, memberAge]);
+
+
+
   useEffect(() => {
-    if (!selectedCard || memberAge === null || books.length === 0) {
-      setFilteredBooksByAge([]);
-      return;
+  if (!selectedCard || memberAge === null || books.length === 0) {
+    setFilteredBooksByAge([]);
+    return;
+  }
+
+  const filtered = books.filter(book => {
+    const min = book.min_age !== null && book.min_age !== "" 
+      ? Number(book.min_age) 
+      : null;
+
+    const max = book.max_age !== null && book.max_age !== "" 
+      ? Number(book.max_age) 
+      : null;
+
+    if (memberAge === null || memberAge === undefined) return false;
+
+    // ✅ If no age restriction → allow
+    if (min === null && max === null) return true;
+
+    // ✅ If only min defined
+    if (min !== null && max === null) {
+      return memberAge >= min;
     }
 
-    // const filtered = books.filter(book => {
-    //   const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
-    //   const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
+    // ✅ If only max defined
+    if (min === null && max !== null) {
+      return memberAge <= max;
+    }
 
-    //   //check also zero age books 
-    //   if (min === 0 && max === 0) {
-    //     return true;
-    //   }
+    // ✅ Normal case (min and max both exist)
+    return memberAge >= min && memberAge <= max;
+  });
 
-    //   //if member age is zero  
-    //   if (memberAge === 0) {
-    //     return min === null && max === null;
-    //   }
+  console.log("Member Age:", memberAge);
+  console.table(filtered.map(b => ({
+    title: b.title,
+    min: b.min_age,
+    max: b.max_age
+  })));
 
-    //   if (min === null) {
-    //     return false;
-    //   }
-    //   if (min < memberAge) {
-    //     return false;
-    //   }
-    //   if (max !== null && memberAge > max) return false;
+  setFilteredBooksByAge(filtered);
 
-    //   return true;
-    // });
-
-    const filtered = books.filter(book => {
-      const min = book.min_age !== null && book.min_age !== "" ? Number(book.min_age) : null;
-      const max = book.max_age !== null && book.max_age !== "" ? Number(book.max_age) : null;
-
-
-      if (min === null || max === null) return false;
-      if (min === 0 && max === 0) return false;
-
-      if (memberAge === null || memberAge === undefined) return false;
-
-      return max <= memberAge;
-    });
-
-
-
-
-
-    console.log("Member Age:", memberAge);
-    console.table(filtered.map(b => ({
-      title: b.title,
-      min: b.min_age,
-      max: b.max_age
-    })));
-
-    console.log('filtered= ', filtered)
-
-
-    setFilteredBooksByAge(filtered);
-  }, [books, selectedCard, memberAge]);
-
+}, [books, selectedCard, memberAge]);
 
 
   const getNumberValue = (value) => {
@@ -1096,6 +1142,35 @@ const BulkIssue = ({ permissions }) => {
   };
 
 
+ const getMemberAge = () => {
+  let dob = null;
+
+  if (memberInfo) {
+    dob = memberInfo.dob || memberInfo.date_of_birth;
+  } else {
+    const user = findUserByCardId(selectedCard?.value);
+    dob = user?.dob || user?.date_of_birth || selectedCard?.data?.dob;
+  }
+
+  if (!dob) return "N/A";
+
+  const birthDate = new Date(dob);
+  const today = new Date();
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  // Adjust if birthday hasn't occurred yet this year
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+};
+
 
 
   const limitsTooltip = (props) => (
@@ -1289,6 +1364,7 @@ const BulkIssue = ({ permissions }) => {
                       </div>
 
                       <h5 className="fw-bold mb-1">{getMemberName()}</h5>
+                       <span className="fw-bold mb-1"> Age: {getMemberAge()}</span>
                     </div>
 
                     <Row className="g-2 mb-3">

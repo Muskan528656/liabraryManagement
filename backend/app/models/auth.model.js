@@ -1,6 +1,15 @@
+const { query } = require("express");
 const sql = require("./db.js");
-function init(schema_name) {
-  this.schema = schema_name;
+let schema = "";
+let branchId = null;
+
+/* ------------------------------------------------------
+  INIT SCHEMA
+------------------------------------------------------ */
+function init(schema_name, branch_id = null) {
+  schema = schema_name;
+  branchId = branch_id;
+  if (!schema) throw new Error("Schema initialization failed.");
 }
 // async function findPermissionsByRole(roleId) {
 //   console.log("roleid->>", roleId)
@@ -43,49 +52,53 @@ function init(schema_name) {
 //   }
 // }
 
-async function findPermissionsByRole(roleId) {
-  console.log("roleid->>", roleId)
+async function findPermissionsByRole(roleId, roleName) {
   if (!roleId) return [];
-  console.log("Schema in findPermissionsByRole:", this.schema);
 
-  try {
-    // Join permissions to role via role_permissions table (role_permissions links roles to permissions)
-    const permissionsResult = await sql.query(`
-      SELECT 
-        p.id as permission_id,
-        p.module_id,
-        m.name as module_name,
-        p.allow_view,
-        p.allow_create,
-        p.allow_edit,
-        p.allow_delete
-      FROM ${this.schema}.permissions p
-      LEFT JOIN ${this.schema}.module m ON p.module_id = m.id
-      LEFT JOIN ${this.schema}.role_permissions rp ON rp.permission_id = p.id
-      WHERE rp.role_id = $1
-      ORDER BY m.name ASC
-    `, [roleId]);
+  let query = `
+    SELECT 
+      p.id as permission_id,
+      p.module_id,
+      m.name as module_name,
+      p.allow_view,
+      p.allow_create,
+      p.allow_edit,
+      p.allow_delete
+    FROM ${schema}.permissions p
+    LEFT JOIN ${schema}.module m ON p.module_id = m.id
+    LEFT JOIN ${schema}.role_permissions rp ON rp.permission_id = p.id
+    WHERE rp.role_id = $1
+  `;
 
-    if (!permissionsResult.rows.length) return [];
+  const values = [roleId];
+  console.log("roleName  =>", roleName);
 
-    const permissions = permissionsResult.rows.map(row => ({
-      permissionId: row.permission_id,
-      moduleId: row.module_id,
-      moduleName: row.module_name,
-      allowView: row.allow_view,
-      allowCreate: row.allow_create,
-      allowEdit: row.allow_edit,
-      allowDelete: row.allow_delete,
-    }));
+  //Only apply branch filter if NOT system admin
+  if (roleName !== "SYSTEM ADMIN") {
+    if (!branchId) {
+      console.warn("BranchId missing for non-system role");
+      return [];
+    }
 
-    console.log("Fetched Permissions for role:", permissions.length);
-    return permissions;
-
-  } catch (err) {
-    console.error("Error fetching permissions for role:", err);
-    return [];
+    query += ` AND rp.branch_id = $2`;
+    values.push(branchId);
   }
+
+  query += ` ORDER BY m.name ASC`;
+
+  const permissionsResult = await sql.query(query, values);
+
+  return permissionsResult.rows.map(row => ({
+    permissionId: row.permission_id,
+    moduleId: row.module_id,
+    moduleName: row.module_name,
+    allowView: row.allow_view,
+    allowCreate: row.allow_create,
+    allowEdit: row.allow_edit,
+    allowDelete: row.allow_delete,
+  }));
 }
+
 
 async function createUser(newUser) {
   const {
@@ -110,18 +123,18 @@ async function createUser(newUser) {
 
   }
 
-  if (!finalCompanyId && this.schema) {
+  if (!finalCompanyId && schema) {
     try {
       const companyCheck = await sql.query(`
         SELECT c.id FROM public.company c 
         WHERE LOWER(c.tenantcode) = LOWER($1) AND c.isactive = true
         LIMIT 1
-      `, [this.schema]);
+      `, [schema]);
       if (companyCheck.rows.length > 0) {
         finalCompanyId = companyCheck.rows[0].id;
 
       } else {
-        console.error("Company not found for schema:", this.schema);
+        console.error("Company not found for schema:", schema);
       }
     } catch (error) {
       console.error("Error fetching company id from schema:", error);
@@ -129,20 +142,20 @@ async function createUser(newUser) {
   }
 
   if (!finalCompanyId) {
-    console.error("Company ID not found. Schema:", this.schema, "Provided companyid:", companyid);
-    throw new Error(`Company ID is required for user creation. Schema: ${this.schema}`);
+    console.error("Company ID not found. Schema:", schema, "Provided companyid:", companyid);
+    throw new Error(`Company ID is required for user creation. Schema: ${schema}`);
   }
 
 
 
 
-  if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
-    console.error("Error: Invalid schema name:", this.schema);
-    throw new Error(`Invalid schema name: ${this.schema}. Cannot create user.`);
+  if (!schema || schema === 'undefined' || schema === 'null') {
+    console.error("Error: Invalid schema name:", schema);
+    throw new Error(`Invalid schema name: ${schema}. Cannot create user.`);
   }
 
   const result = await sql.query(
-    `INSERT into ${this.schema}.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code,library_member_type`,
+    `INSERT into ${schema}.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code,library_member_type`,
     [
       firstname,
       lastname,
@@ -168,7 +181,7 @@ async function createUser(newUser) {
 async function findByEmail(email) {
   console.log("Finding user by email:", email);
 
-  if (!this.schema) {
+  if (!schema) {
     console.error("Error: Schema not initialized in findByEmail");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
@@ -192,7 +205,7 @@ async function findByEmail(email) {
           u.isactive,
           u.branch_id,
           u.library_member_type
-        FROM ${this.schema}.user u
+        FROM ${schema}.user u
         WHERE LOWER(TRIM(u.email)) = $1
         LIMIT 1
       )
@@ -224,8 +237,8 @@ async function findByEmail(email) {
       ) AS userinfo
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
-      LEFT JOIN ${this.schema}.branches b ON b.id = u.branch_id   
-      LEFT JOIN ${this.schema}.user_role ur ON ur.id = u.userrole::uuid
+      LEFT JOIN ${schema}.branches b ON b.id = u.branch_id   
+      LEFT JOIN ${schema}.user_role ur ON ur.id = u.userrole::uuid
       LIMIT 1;
       `,
       [emailLower]
@@ -288,7 +301,7 @@ async function findAll(userinfo) {
     if (userinfo.userrole === "ADMIN") {
       let query1 =
         query +
-        ` AS companyname FROM ${this.schema}.user u LEFT JOIN public.company c ON c.id = u.companyid ORDER BY username`;
+        ` AS companyname FROM ${schema}.user u LEFT JOIN public.company c ON c.id = u.companyid ORDER BY username`;
       const result1 = await sql.query(query1);
       result = result.concat(result1.rows);
 
@@ -314,7 +327,7 @@ async function findAll(userinfo) {
       }
       if (result.length > 0) return result;
     } else {
-      query += ` AS companyname FROM ${this.schema}.user u LEFT JOIN public.company c ON c.id = u.companyid WHERE u.companyid = $1 AND u.id = $2`;
+      query += ` AS companyname FROM ${schema}.user u LEFT JOIN public.company c ON c.id = u.companyid WHERE u.companyid = $1 AND u.id = $2`;
       const result = await sql.query(query, [userinfo.companyid, userinfo.id]);
 
       if (result.rows.length > 0) return result.rows;
@@ -327,7 +340,7 @@ async function findAll(userinfo) {
 }
 
 async function checkForDuplicate(email, phone, userId = null) {
-  if (!this.schema) {
+  if (!schema) {
     console.error("Error: Schema not initialized in checkForDuplicate");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
@@ -335,12 +348,12 @@ async function checkForDuplicate(email, phone, userId = null) {
   const params = [email, phone];
   let query = `
       SELECT id, email, phone
-      FROM ${this.schema}.user
+      FROM ${schema}.user
       WHERE email = $1
       ${userId ? `AND id != $3` : ""}
       UNION ALL
       SELECT id, email, phone
-      FROM ${this.schema}.user
+      FROM ${schema}.user
       WHERE phone = $2
       ${userId ? `AND id != $3` : ""}
   `;
@@ -366,7 +379,7 @@ async function checkForDuplicate(email, phone, userId = null) {
 
 async function getAllManager(role) {
   try {
-    var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM ${this.schema}.user WHERE `;
+    var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM ${schema}.user WHERE `;
     query += " userrole = 'ADMIN' OR userrole = 'MANAGER' "; // Fixed duplicate condition
 
     const result = await sql.query(query);
@@ -381,7 +394,7 @@ async function getAllManager(role) {
 async function updateRecById(id, userRec, userid) {
   try {
     delete userRec.id;
-    const query = await buildUpdateQuery(id, userRec, this.schema);
+    const query = await buildUpdateQuery(id, userRec, schema);
     var colValues = Object.keys(userRec).map(function (key) {
       return userRec[key];
     });
@@ -398,7 +411,7 @@ async function updateRecById(id, userRec, userid) {
 async function updateById(id, userRec) {
   try {
     const result = await sql.query(
-      `UPDATE ${this.schema}.user SET password = $1 WHERE id = $2`,
+      `UPDATE ${schema}.user SET password = $1 WHERE id = $2`,
       [userRec.password, id]
     );
     if (result.rowCount > 0) return "Updated successfully";
@@ -425,13 +438,13 @@ async function buildUpdateQuery(id, cols, schema_name) {
 }
 
 async function getUserCount(companyId) {
-  if (!this.schema) {
+  if (!schema) {
     console.error("Error: Schema not initialized in getUserCount");
     throw new Error("Schema name is not initialized. Please call Auth.init() first.");
   }
 
   try {
-    const query = `SELECT COUNT(*) FROM ${this.schema}.user WHERE companyid = $1 AND userrole = $2`;
+    const query = `SELECT COUNT(*) FROM ${schema}.user WHERE companyid = $1 AND userrole = $2`;
     const result = await sql.query(query, [companyId, "USER"]);
     return parseInt(result.rows[0].count, 10);
   } catch (error) {

@@ -2,6 +2,7 @@ import { Badge, Card, Row, Col } from "react-bootstrap";
 import { API_BASE_URL } from "../../constants/CONSTANT";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import DataApi from "../../api/dataApi";
+import { max } from "moment";
 
 const formatDateToDDMMYYYY = (dateString) => {
     if (!dateString) return "";
@@ -17,6 +18,9 @@ const generateCardNumber = (card) => {
         card.id?.replace(/-/g, "").substring(0, 8).toUpperCase() || "LIB00000";
     return `LIB${uuidPart}`;
 };
+
+const todayStr = new Date().toISOString().split("T")[0];
+
 
 const calculateAge = (dob) => {
     if (!dob) return "-";
@@ -257,8 +261,22 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
         { field: "first_name", label: "First Name", sortable: true },
         { field: "last_name", label: "Last Name", sortable: true },
         { field: "email", label: "Email", sortable: true },
+        {
+            field: "phone_number",
+            label: "Phone",
+            sortable: true,
+            render: (value, row) => {
+                if (!value) return "-";
 
-        { field: "phone_number", label: "Phone Number", sortable: true },
+                let code = row.country_code || "";
+
+                // Remove + if present
+                code = code.replace("+", "").trim();
+
+                return `${code}-${value}`;
+            },
+        },
+
         // {
         //     field: "type_id",
         //     label: "Type",
@@ -405,13 +423,15 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 name: "dob",
                 label: "Date of Birth",
                 type: "date",
-                required: false,
+                max:todayStr,
+                required: true,
                 colSize: 6,
             },
             {
                 name: "registration_date",
                 label: "Registration Date",
                 type: "date",
+                max: todayStr,
                 required: false,
                 colSize: 6,
             },
@@ -539,11 +559,44 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
             },
         ],
 
+        // validationRules: (formData, allCards, editingCard) => {
+        //     const errors = [];
+
+        //      const today = new Date();
+        //      today.setHours(0, 0, 0, 0);
+
+
+        //     if (!formData.first_name?.trim()) {
+        //         errors.push("First name is required")
+        //         console.log("Validation error: First name is required");
+        //     }
+
+        //     if (!formData.email?.trim()) {
+        //         errors.push("Email is required");
+        //     } else {
+        //         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        //         if (!emailRegex.test(formData.email)) {
+        //             errors.push("Please enter a valid email address");
+        //         }
+        //     }
+        //     const duplicateEmail = allCards.find(
+        //         card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
+        //             card.id !== editingCard?.id
+        //     );
+        //     if (duplicateEmail) {
+        //         errors.push("Card with this email already exists");
+        //     }
+
+
+        //     return errors;
+        // },
         validationRules: (formData, allCards, editingCard) => {
             const errors = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             if (!formData.first_name?.trim()) {
-                errors.push("First name is required")
-                console.log("Validation error: First name is required");
+                errors.push("First name is required");
             }
 
             if (!formData.email?.trim()) {
@@ -554,14 +607,61 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     errors.push("Please enter a valid email address");
                 }
             }
+
+            
+            //  DOB validation (Required + Min Age 4)
+            if (!formData.dob) {
+                errors.push("Date of Birth is required");
+            } else {
+                const dobDate = new Date(formData.dob);
+                dobDate.setHours(0, 0, 0, 0);
+
+                if (dobDate >= today) {
+                    errors.push("Date of Birth cannot be today or in the future");
+                }
+
+                const age = calculateAge(formData.dob);
+
+                if (age < 4) {
+                    errors.push("Member must be at least 4 years old");
+                }
+            }
+
+            //  Registration date validation
+            if (formData.registration_date) {
+                const regDate = new Date(formData.registration_date);
+                regDate.setHours(0, 0, 0, 0);
+
+                if (regDate > today) {
+                    errors.push("Registration date cannot be in the future");
+                }
+
+                if (formData.dob) {
+                    const dobDate = new Date(formData.dob);
+                    dobDate.setHours(0, 0, 0, 0);
+
+                    if (regDate < dobDate) {
+                        errors.push("Registration date cannot be before Date of Birth");
+                    }
+                }
+            }
+
+            if (formData.parent_contact) {
+                const phoneRegex = /^[0-9]{10}$/;
+                if (!phoneRegex.test(formData.parent_contact)) {
+                    errors.push("Parent contact must be 10 digits");
+                }
+            }
+
             const duplicateEmail = allCards.find(
-                card => card.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                card =>
+                    card.email?.toLowerCase() === formData.email?.toLowerCase() &&
                     card.id !== editingCard?.id
             );
+
             if (duplicateEmail) {
                 errors.push("Card with this email already exists");
             }
-
 
             return errors;
         },
@@ -625,6 +725,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 name: "registration_date",
                 field: "registration_date",
                 label: "Registration Date",
+                max:todayStr,
                 type: "date",
             },
         ],
@@ -671,7 +772,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 },
             },
 
-            { key: "registration_date", label: "Registration Date", type: "date" },
+            { key: "registration_date", label: "Registration Date", max: todayStr, type: "date" },
             // { key: "type", label: "Type", type: "text" },
             {
             name: "type",

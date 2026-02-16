@@ -50,6 +50,7 @@ const FormModal = ({
   validationErrors = {},
   customFooter = null,
   children,
+  onFieldChange = null,
 }) => {
   const [filePreviews, setFilePreviews] = useState({});
   const [passwordVisibility, setPasswordVisibility] = useState({});
@@ -67,13 +68,19 @@ const FormModal = ({
   };
 
   const handleFieldChange = (field, value) => {
-
     console.log("Handling field change for", field.name, "with value", value);
     console.log("Current formData:", formData);
+
+    // First update the form data
     if (field.onChange) {
       field.onChange(value, formData, setFormData);
     } else {
       handleInputChange(field.name, value);
+    }
+
+    // Then call the global onFieldChange if provided
+    if (onFieldChange) {
+      onFieldChange(field.name, value, formData, setFormData);
     }
   };
 
@@ -151,11 +158,12 @@ const FormModal = ({
   const renderField = (field) => {
     const value = formData[field.name] || "";
     const error = validationErrors[field.name];
-    const isRequired = field.required;
+    const isRequired = typeof field.required === 'function' ? field.required(formData, editingItem) : field.required;
     const fieldId = `field-${field.name}`;
     const isReadOnly = field.readOnly || (field.readOnlyWhenEditing && editingItem);
+    const isDisabled = typeof field.disabled === 'function' ? field.disabled(formData, editingItem) : field.disabled;
+    const helpText = typeof field.helpText === 'function' ? field.helpText({}, formData) : field.helpText;
 
-    // console.log("Rendering field:", field.name, "of type:", field.type, "with value:", value);
 
     switch (field.type) {
       case "file":
@@ -247,13 +255,13 @@ const FormModal = ({
               placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
-              disabled={field.disabled}
+              disabled={isDisabled}
               readOnly={isReadOnly}
               isInvalid={!!error}
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
@@ -272,7 +280,7 @@ const FormModal = ({
                 placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
                 value={value}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
-                disabled={field.disabled}
+                disabled={isDisabled}
                 readOnly={isReadOnly}
                 isInvalid={!!error}
                 style={{ borderRight: "none" }}
@@ -293,7 +301,7 @@ const FormModal = ({
               </InputGroup.Text>
               {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
             </InputGroup>
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
@@ -311,7 +319,7 @@ const FormModal = ({
               placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
-              disabled={field.disabled}
+              disabled={isDisabled}
               readOnly={isReadOnly}
               style={
                 isReadOnly
@@ -327,16 +335,16 @@ const FormModal = ({
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
       case "select":
-        
-      const fieldOptions =
-  typeof field.options === "function"
-    ? field.options(formData)
-    : field.options || [];
+
+        const fieldOptions =
+          typeof field.options === "function"
+            ? field.options(formData)
+            : field.options || [];
 
 
         return (
@@ -350,9 +358,9 @@ const FormModal = ({
                   value={value ? { value, label: value } : null}
                   onChange={(selected) => handleFieldChange(field, selected?.value || "")}
                   isClearable={field.clearable !== false}
-                  isDisabled={field.disabled || isReadOnly}
+                  isDisabled={isDisabled || isReadOnly}
                   placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
-                  loadOptions={field.loadOptions}
+                  loadOptions={(inputValue) => field.loadOptions(inputValue, formData)}
                   defaultOptions={field.defaultOptions}
                   {...field.selectProps}
                 />
@@ -361,9 +369,9 @@ const FormModal = ({
                   value={value ? { value, label: value } : null}
                   onChange={(selected) => handleFieldChange(field, selected?.value || "")}
                   isClearable={field.clearable !== false}
-                  isDisabled={field.disabled || isReadOnly}
+                  isDisabled={isDisabled || isReadOnly}
                   placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
-                  loadOptions={field.loadOptions}
+                  loadOptions={(inputValue) => field.loadOptions(inputValue, formData)}
                   defaultOptions={field.defaultOptions}
                   {...field.selectProps}
                 />
@@ -374,7 +382,7 @@ const FormModal = ({
                 onChange={(selected) => handleFieldChange(field, selected?.value || "")}
                 options={fieldOptions}
                 isClearable={field.clearable !== false}
-                isDisabled={field.disabled || isReadOnly}
+                isDisabled={isDisabled || isReadOnly}
                 placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
                 {...field.selectProps}
               />
@@ -384,7 +392,7 @@ const FormModal = ({
                 id={fieldId}
                 value={value}
                 onChange={(e) => handleFieldChange(field, e.target.value)}
-                disabled={field.disabled || isReadOnly}
+                disabled={isDisabled || isReadOnly}
                 isInvalid={!!error}
                 {...field.props}
               >
@@ -397,7 +405,7 @@ const FormModal = ({
               </Form.Select>
             )}
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
@@ -413,13 +421,15 @@ const FormModal = ({
               id={fieldId}
               value={value}
               onChange={(e) => handleFieldChange(field, e.target.value)}
-              disabled={field.disabled}
+              disabled={isDisabled}
               readOnly={isReadOnly}
               isInvalid={!!error}
+              max={field.max}
+              // min={field.min}
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
@@ -431,58 +441,58 @@ const FormModal = ({
               label={field.label}
               checked={!!value}
               onChange={(e) => handleFieldChange(field, e.target.checked)}
-              disabled={field.disabled || isReadOnly}
+              disabled={isDisabled || isReadOnly}
               id={fieldId}
               {...field.props}
             />
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
 
       case "custom":
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
-        // case "toggle":
-        // return (
-        //   <Form.Group className="mb-3" key={field.name}>
-        //     {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
-        //     <Form.Label className="d-flex justify-content-between">
-        //       <span>
-        //         {field.label} {field.required && <span className="text-danger">*</span>}
-        //       </span>
-        //       <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
-        //     </Form.Label>
+      // case "toggle":
+      // return (
+      //   <Form.Group className="mb-3" key={field.name}>
+      //     {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
+      //     <Form.Label className="d-flex justify-content-between">
+      //       <span>
+      //         {field.label} {field.required && <span className="text-danger">*</span>}
+      //       </span>
+      //       <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
+      //     </Form.Label>
 
-        //     <div
-        //       className="custom-toggle"
-        //       onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
-        //       style={{
-        //         width: "55px",
-        //         height: "28px",
-        //         borderRadius: "20px",
-        //         background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
-        //         position: "relative",
-        //         cursor: isReadOnly ? "not-allowed" : "pointer",
-        //         transition: "0.3s",
-        //       }}
-        //     >
-        //       <div
-        //         style={{
-        //           width: "22px",
-        //           height: "22px",
-        //           background: "#fff",
-        //           borderRadius: "50%",
-        //           position: "absolute",
-        //           top: "3px",
-        //           left: formData[field.name] ? "29px" : "3px",
-        //           transition: "0.3s",
-        //           boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-        //         }}
-        //       ></div>
-        //     </div>
-        //     {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
-        //   </Form.Group>
-        // );
+      //     <div
+      //       className="custom-toggle"
+      //       onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
+      //       style={{
+      //         width: "55px",
+      //         height: "28px",
+      //         borderRadius: "20px",
+      //         background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
+      //         position: "relative",
+      //         cursor: isReadOnly ? "not-allowed" : "pointer",
+      //         transition: "0.3s",
+      //       }}
+      //     >
+      //       <div
+      //         style={{
+      //           width: "22px",
+      //           height: "22px",
+      //           background: "#fff",
+      //           borderRadius: "50%",
+      //           position: "absolute",
+      //           top: "3px",
+      //           left: formData[field.name] ? "29px" : "3px",
+      //           transition: "0.3s",
+      //           boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+      //         }}
+      //       ></div>
+      //     </div>
+      //     {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+      //   </Form.Group>
+      // );
 
       case "toggle":
         const toggleValue = !!formData[field.name];
@@ -534,7 +544,7 @@ const FormModal = ({
               </div>
             )}
 
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+            {helpText && <Form.Text className="text-muted">{helpText}</Form.Text>}
           </Form.Group>
         );
       default:

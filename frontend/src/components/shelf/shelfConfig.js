@@ -54,7 +54,6 @@ export const getShelfConfig = (
         },
 
         onFieldChange: async (fieldName, value, formData, setFormData, api, setFieldState) => {
-            // When floor changes, auto-generate next rack number
             if (fieldName === 'floor' && value?.trim()) {
                 try {
                     const response = await api.get(`/shelf/next-rack/${encodeURIComponent(value)}`);
@@ -81,10 +80,10 @@ export const getShelfConfig = (
                     const classificationApi = new api('classification');
                     const response = await classificationApi.get('/');
                     const classifications = response.data || [];
-                    
+
                     // Find the selected classification by name
                     const selected = classifications.find(item => item.name === value);
-                    
+
                     if (selected) {
                         setFormData(prev => ({
                             ...prev,
@@ -93,7 +92,7 @@ export const getShelfConfig = (
                             classification_from: selected.classification_from || '',
                             classification_to: selected.classification_to || ''
                         }));
-                        
+
                         if (setFieldState) {
                             setFieldState('classification_type', {
                                 helpText: `Auto-filled: ${selected.classification_type}`
@@ -130,12 +129,12 @@ export const getShelfConfig = (
                 width: "100px",
                 render: (value) => <span className="font-monospace">{value || '-'}</span>,
             },
-            {
-                field: "classification_type",
-                label: "Type",
-                width: "100px",
-                render: (value) => <span className="badge bg-info">{value || '-'}</span>,
-            },
+            // {
+            //     field: "classification_type",
+            //     label: "Type",
+            //     width: "100px",
+            //     render: (value) => <span className="badge bg-info">{value || '-'}</span>,
+            // },
             {
                 field: "classification_from",
                 label: "From",
@@ -159,13 +158,13 @@ export const getShelfConfig = (
                     let variant = "success";
                     if (percentage > 70) variant = "warning";
                     if (percentage > 90) variant = "danger";
-                    
+
                     return (
                         <div>
                             <small className="text-muted">{used}/{capacity}</small>
-                            <ProgressBar 
-                                now={percentage} 
-                                variant={variant} 
+                            <ProgressBar
+                                now={percentage}
+                                variant={variant}
                                 style={{ height: '8px', marginTop: '4px' }}
                             />
                         </div>
@@ -206,15 +205,15 @@ export const getShelfConfig = (
                         const classificationApi = new api('classification');
                         const response = await classificationApi.get('/');
                         const classifications = response.data || [];
-                        
+
                         // Filter by input value if provided
-                        const filtered = inputValue 
-                            ? classifications.filter(item => 
+                        const filtered = inputValue
+                            ? classifications.filter(item =>
                                 item.category?.toLowerCase().includes(inputValue.toLowerCase()) ||
                                 item.name?.toLowerCase().includes(inputValue.toLowerCase())
-                              )
+                            )
                             : classifications;
-                        
+
                         // Create options with category - name (from-to) format
                         return filtered.map(item => ({
                             value: item.name,
