@@ -243,12 +243,14 @@
 
 const sql = require("./db.js");
 let schema = "";
+let branchId = null;
 
 /* ------------------------------------------------------
-   INIT SCHEMA
+  INIT SCHEMA
 ------------------------------------------------------ */
-function init(schema_name) {
+function init(schema_name, branch_id = null) {
   schema = schema_name;
+  branchId = branch_id;
   if (!schema) throw new Error("Schema initialization failed.");
 }
 
@@ -261,11 +263,11 @@ async function findAll() {
   const query = `
       SELECT * 
       FROM ${schema}.library_setting
-      WHERE is_active = TRUE
+      WHERE is_active = TRUE AND branch_id = $1
       ORDER BY createddate DESC
     `;
 
-  const result = await sql.query(query);
+  const result = await sql.query(query, [branchId]);
   return result.rows || [];
 }
 
@@ -278,12 +280,15 @@ async function getActiveSetting() {
   const query = `
       SELECT *
       FROM ${schema}.library_setting
-      WHERE is_active = TRUE
+      WHERE is_active = TRUE AND branch_id = $1
       ORDER BY createddate DESC
       LIMIT 1
     `;
+  console.log("Query:", query, "Params:", [branchId]);
 
-  const result = await sql.query(query);
+  const result = await sql.query(query, [branchId]);
+  console.log("result",result);
+  
   return result.rows.length ? result.rows[0] : null;
 }
 
@@ -337,8 +342,8 @@ async function findById(id) {
   if (!schema) throw new Error("Schema not initialized.");
 
   const result = await sql.query(
-    `SELECT * FROM ${schema}.library_setting WHERE id = $1`,
-    [id]
+    `SELECT * FROM ${schema}.library_setting WHERE id = $1 AND branch_id = $2`,
+    [id, branchId]
   );
 
   return result.rows.length ? result.rows[0] : null;
@@ -384,6 +389,7 @@ async function create(data, userId) {
     data.lost_book_fine_percentage || 100,
     data.max_issue_per_day || 1,
     userId || null,
+    branchId, // Adding branch_id
   ];
 
   const result = await sql.query(query, params);
@@ -441,6 +447,7 @@ async function updateById(id, data, userId) {
     data.lost_book_fine_percentage,
     data.max_issue_per_day,
     userId || null,
+    branchId, // Adding branch_id for security check
   ];
 
   const result = await sql.query(query, params);
@@ -467,8 +474,8 @@ async function deleteById(id) {
   if (!schema) throw new Error("Schema not initialized.");
 
   const result = await sql.query(
-    `DELETE FROM ${schema}.library_setting WHERE id = $1 RETURNING *`,
-    [id]
+    `DELETE FROM ${schema}.library_setting WHERE id = $1 AND branch_id = $2 RETURNING *`,
+    [id, branchId]
   );
 
   if (!result.rows.length) {
@@ -476,6 +483,55 @@ async function deleteById(id) {
   }
 
   return { success: true, message: "Setting deleted successfully" };
+}
+
+/* ------------------------------------------------------
+   FIND BY KEY (ADDED FOR ROUTES COMPATIBILITY)
+------------------------------------------------------ */
+async function findByKey(key) {
+  if (!schema) throw new Error("Schema not initialized.");
+
+  // Since library_setting table doesn't have a key column, 
+  // we'll return the active setting regardless of key
+  // This is for route compatibility
+  return await getActiveSetting();
+}
+
+/* ------------------------------------------------------
+   UPSERT SETTING (ADDED FOR ROUTES COMPATIBILITY)
+------------------------------------------------------ */
+async function upsertSetting(data, userId) {
+  if (!schema) throw new Error("Schema not initialized.");
+
+  // For library_setting, we'll use updateSettings which creates or updates the active setting
+  return await updateSettings(data, userId);
+}
+
+/* ------------------------------------------------------
+   DELETE BY KEY (ADDED FOR ROUTES COMPATIBILITY)
+------------------------------------------------------ */
+async function deleteByKey(key) {
+  if (!schema) throw new Error("Schema not initialized.");
+
+  // Since library_setting doesn't have a key column, 
+  // we'll deactivate the active setting instead of deleting
+  const activeSetting = await getActiveSetting();
+  
+  if (!activeSetting) {
+    return { success: false, message: "Setting not found" };
+  }
+
+  const result = await sql.query(
+    `UPDATE ${schema}.library_setting SET is_active = FALSE, lastmodifieddate = NOW() 
+     WHERE id = $1 AND branch_id = $2 RETURNING *`,
+    [activeSetting.id, branchId]
+  );
+
+  if (!result.rows.length) {
+    return { success: false, message: "Failed to update setting" };
+  }
+
+  return { success: true, message: "Setting deactivated successfully" };
 }
 
 module.exports = {

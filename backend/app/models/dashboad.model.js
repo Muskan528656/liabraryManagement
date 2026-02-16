@@ -152,7 +152,7 @@ const fetchAll = async () => {
           WHERE return_date IS NOT NULL
           AND issue_date >= CURRENT_DATE - INTERVAL '30 days'
         ) AS avg_return_days
-      FROM ${schema}.books
+      FROM demo.books where b.branch_id = '${branchId}'
       LIMIT 1;
     `);
 

@@ -27,7 +27,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
-      LibrarySettings.init(req.userinfo.tenantcode);
+      LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
       const settings = await LibrarySettings.findAll();
       return res.status(200).json(settings);
     } catch (error) {
@@ -38,8 +38,10 @@ module.exports = (app) => {
 
   router.get("/all", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
-      LibrarySettings.init(req.userinfo.tenantcode);
+      LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
       const settings = await LibrarySettings.getAllSettings();
+      console.log("Settings:", settings);
+
       return res.status(200).json({ success: true, data: settings });
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -49,7 +51,7 @@ module.exports = (app) => {
 
   router.get("/active", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
-      LibrarySettings.init(req.userinfo.tenantcode);
+      LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
       const setting = await LibrarySettings.getActiveSetting();
       if (!setting) {
         return res.status(404).json({ errors: "No active setting found" });
@@ -63,7 +65,7 @@ module.exports = (app) => {
 
   router.get("/:key", fetchUser, checkPermission("Settings", "allow_view"), async (req, res) => {
     try {
-      LibrarySettings.init(req.userinfo.tenantcode);
+      LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
       const setting = await LibrarySettings.findByKey(req.params.key);
       if (!setting) {
         return res.status(404).json({ errors: "Setting not found" });
@@ -90,7 +92,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        LibrarySettings.init(req.userinfo.tenantcode);
+        LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
         const setting = await LibrarySettings.upsertSetting(req.body, userId);
         return res.status(200).json({ success: true, data: setting });
@@ -108,7 +110,7 @@ module.exports = (app) => {
     checkPermission("Settings", "allow_edit"),
     async (req, res) => {
       try {
-        LibrarySettings.init(req.userinfo.tenantcode);
+        LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
         console.log("woowooowow")
 
@@ -153,7 +155,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        LibrarySettings.init(req.userinfo.tenantcode);
+        LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
 
 
@@ -201,7 +203,7 @@ module.exports = (app) => {
 
   router.delete("/:key", fetchUser, checkPermission("Settings", "allow_delete"), async (req, res) => {
     try {
-      LibrarySettings.init(req.userinfo.tenantcode);
+      LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
       const result = await LibrarySettings.deleteByKey(req.params.key);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });
@@ -216,4 +218,3 @@ module.exports = (app) => {
 
   app.use(process.env.BASE_API_URL + "/api/librarysettings", router);
 };
-

@@ -478,12 +478,11 @@ async function generateBookPopularityReport(params) {
     let customFilter = '';
     const queryParams = [];
     
-    // Add branch filter if provided
-    let branchFilter = '';
-    if (params.branch_id) {
-      branchFilter = `AND b.branch_id = $${queryParams.length + 1}`;
-      queryParams.push(params.branch_id);
+
+    if (branchId) {
+      branchFilter = `AND b.branch_id = '${branchId}'`;
     }
+   
 
     // --- 1. DATE FILTER LOGIC ---
     // Handle presets (30, 90, 365)

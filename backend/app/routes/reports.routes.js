@@ -25,7 +25,7 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
         const reports = await Report.findAll();
         console.log("Reports->>", reports)
         res.json({ records: reports });
@@ -41,7 +41,7 @@ module.exports = (app) => {
     checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
 
         const data = await Report.getInactiveBooks(req.query);
 
@@ -65,7 +65,7 @@ module.exports = (app) => {
     checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
 
         const data = await Report.getBorrowingReport(req.query);
 
@@ -105,7 +105,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
 
         const userId = req.userinfo?.id || null;
         const report = await Report.create(req.body, userId);
@@ -119,7 +119,6 @@ module.exports = (app) => {
       }
     }
   );
-
 
 
 
