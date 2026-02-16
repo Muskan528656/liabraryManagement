@@ -71,7 +71,7 @@ async function findPermissionsByRole(roleId, roleName) {
   `;
 
   const values = [roleId];
-console.log("roleName  =>",roleName);
+  console.log("roleName  =>", roleName);
 
   //Only apply branch filter if NOT system admin
   if (roleName !== "SYSTEM ADMIN") {

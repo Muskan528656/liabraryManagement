@@ -427,7 +427,22 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     { key: "name", label: "Vendor Name", type: "text" },
                     { key: "company_name", label: "Company Name", type: "text" },
                     { key: "email", label: "Email", type: "email" },
-                    { key: "phone", label: "Phone", type: "tel" },
+                    // { key: "phone", label: "Phone", type: "tel",  },
+                     {
+                        field: "phone",
+                        label: "Phone",
+                        sortable: true,
+                        render: (value, row) => {
+                            if (!value) return "-";
+
+                            let code = row.country_code || "";
+
+                            
+                            code = code.replace("+", "").trim();
+
+                            return `${code}-${value}`;
+                        },
+                    },
                     { key: "gst_number", label: "GST Number", type: "text" },
                     { key: "pan_number", label: "PAN Number", type: "text" },
                     { key: "address", label: "Address", type: "text" },

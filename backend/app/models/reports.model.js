@@ -90,9 +90,7 @@ async function getInactiveBooks(params) {
     let categoryFilter = '';
     let searchFilter = '';
 
-    // ----------------------------
-    // 1️⃣ DATE FILTER
-    // ----------------------------
+    
 
     if (
       params.days &&
@@ -104,7 +102,7 @@ async function getInactiveBooks(params) {
 
       if (!isNaN(days)) {
         dateFilter = `
-          AND last_activity_date < 
+          AND last_activity_date >  
               CURRENT_DATE - ($${queryParams.length + 1} * INTERVAL '1 day')
         `;
         queryParams.push(days);
@@ -125,9 +123,6 @@ async function getInactiveBooks(params) {
       queryParams.push(params.startDate, params.endDate);
     }
 
-    // ----------------------------
-    // 2️⃣ CATEGORY FILTER
-    // ----------------------------
 
     if (params.category) {
       categoryFilter = `
@@ -136,9 +131,6 @@ async function getInactiveBooks(params) {
       queryParams.push(params.category);
     }
 
-    // ----------------------------
-    // 3️⃣ SEARCH FILTER
-    // ----------------------------
 
     if (params.searchTerm) {
       searchFilter = `
@@ -150,10 +142,6 @@ async function getInactiveBooks(params) {
       `;
       queryParams.push(`%${params.searchTerm}%`);
     }
-
-    // ----------------------------
-    // MAIN QUERY
-    // ----------------------------
 
     const query = `
       WITH book_activity AS (
@@ -293,7 +281,7 @@ async function getBorrowingReport(params) {
     const queryParams = [];
       queryParams.push(branchId);
 
-    // --- 1. DATE FILTER ---
+  
     if (
       params.days &&
       params.days !== 'custom' &&
