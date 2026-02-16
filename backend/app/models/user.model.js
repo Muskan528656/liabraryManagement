@@ -267,8 +267,8 @@ async function updateById(id, userData, userId = null) {
         branch_id
     `;
 
-console.log("Query:", query);
-console.log("Values:", values);
+    console.log("Query:", query);
+    console.log("Values:", values);
 
     const result = await sql.query(query, values);
 

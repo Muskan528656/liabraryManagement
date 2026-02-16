@@ -213,7 +213,10 @@ const helper = {
     let modifiedUrl = url;
 
     let accessToken = sessionStorage.getItem("token");
-    let branchId = JSON.parse(sessionStorage?.getItem('selectedBranch'))?.id || null;
+    let selectedBranch = JSON.parse(sessionStorage?.getItem('selectedBranch'));
+    let branchId = selectedBranch ? selectedBranch?.id ? selectedBranch.id : selectedBranch : null;
+    console.log("selectedBranch", selectedBranch);
+    console.log("selectedBranch", branchId);
     const refreshToken = sessionStorage.getItem("r-t");
 
     if (!accessToken || !refreshToken) {

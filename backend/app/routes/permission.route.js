@@ -14,7 +14,7 @@ module.exports = (app) => {
     // Get all permissions
     router.get("/", fetchUser, async (req, res) => {
         try {
-            Permission.init(req.userinfo.tenantcode);
+            Permission.init(req.userinfo.tenantcode, req.branchId);
             const perms = await Permission.findAll();
             res.json({ success: true, data: perms });
         } catch (e) {
@@ -32,7 +32,7 @@ module.exports = (app) => {
                 return res.status(400).json({ success: false, message: "Invalid roleId" });
             }
 
-            Permission.init(req.userinfo.tenantcode);
+            Permission.init(req.userinfo.tenantcode, req.branchId);
             const permissions = await Permission.findByRole(roleId);
             res.json({ success: true, data: permissions });
         } catch (e) {
@@ -53,7 +53,7 @@ module.exports = (app) => {
                     message: "Permissions array is required"
                 });
             }
-            Permission.init(req.userinfo.tenantcode);
+            Permission.init(req.userinfo.tenantcode, req.branchId);
 
             const result = await Permission.updateMultiple(roleId, permissions, req.userinfo.id);
 
@@ -108,7 +108,7 @@ module.exports = (app) => {
 
             try {
 
-                Permission.init(req.userinfo.tenantcode);
+                Permission.init(req.userinfo.tenantcode, req.branchId);
                 const perm = await Permission.create(req.body, req.userinfo?.id);
                 res.json({ success: true, data: perm });
             } catch (e) {
@@ -122,7 +122,7 @@ module.exports = (app) => {
     router.put("/:id", fetchUser, async (req, res) => {
         try {
 
-            Permission.init(req.userinfo.tenantcode);
+            Permission.init(req.userinfo.tenantcode, req.branchId);
             const perm = await Permission.updateById(req.params.id, req.body, req.userinfo?.id);
             res.json({ success: true, data: perm });
         } catch (e) {
@@ -136,7 +136,7 @@ module.exports = (app) => {
         console.log("Received request to delete permission with ID:", req.params.id);
         try {
 
-            Permission.init(req.userinfo.tenantcode);
+            Permission.init(req.userinfo.tenantcode, req.branchId);
             const out = await Permission.deleteById(req.params.id);
             console.log("deleteById output:", out);
             res.json({ success: true, data: out });
