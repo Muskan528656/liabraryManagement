@@ -179,9 +179,12 @@ const fetchUser = async (req, res, next) => {
     req.userinfo = decoded;
     req.branchId = branchId;
     global.currentLoggedInUserId = decoded.id;
-
-
-    const permissions = await Auth.findPermissionsByRole(decoded.userrole);
+    console.log("req.userinfo  =>", req.userinfo);
+    console.log("req.userinfo  dkk =>", req.branchId);
+    
+    Auth.init(req.userinfo.tenantcode, req.branchId);
+            
+    const permissions = await Auth.findPermissionsByRole(decoded.userrole, decoded.role_name);
     // console.log("Fetched permissions for user:", decoded.id, permissions);
 
     req.userinfo.permissions = permissions || [];

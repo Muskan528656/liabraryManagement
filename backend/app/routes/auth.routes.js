@@ -149,7 +149,7 @@ module.exports = (app) => {
           library_member_type: library_member_type
         });
 
-        console.log("newUsernewUser",newUser)
+        console.log("newUsernewUser", newUser)
 
         if (newUser) {
 
@@ -270,6 +270,7 @@ module.exports = (app) => {
           expiresIn: "5h",
         });
 
+
         const refreshToken = jwt.sign(
           { email: userInfo.email, tenantcode },
           process.env.JWT_REFRESH_SECERT_KEY,
@@ -277,7 +278,10 @@ module.exports = (app) => {
         );
 
 
-        const permissions = await Auth.findPermissionsByRole(userInfo.userrole);
+        console.log("userInfo.branch_id", userInfo.branch_id);
+        Auth.init(tenantcode, req.branch_id);
+
+        const permissions = await Auth.findPermissionsByRole(userInfo.userrole,userInfo.role_name);
 
         global.currentLoggedInUserId = userInfo.id;
 
@@ -529,7 +533,8 @@ module.exports = (app) => {
 
   router.get("/permissions", fetchUser, async (req, res) => {
     try {
-      const permissions = await Auth.findPermissionsByRole(req.userinfo.userrole);
+      Auth.init(req.userinfo.tenantcode, req.userinfo.branch_id)
+      const permissions = await Auth.findPermissionsByRole(req.userinfo.userrole, req.userinfo.role_name);
       return res.status(200).json({
         success: true,
         permissions,

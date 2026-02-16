@@ -135,6 +135,9 @@ const AuthApi = {
   async getPermissions() {
     try {
       const token = AuthHelper.getToken();
+       let selectedBranch = JSON.parse(sessionStorage?.getItem('selectedBranch'));
+    this.branchId = selectedBranch ? selectedBranch?.id ? selectedBranch.id : selectedBranch : null;
+
       if (!token) {
         return { success: false, errors: "No token found" };
       }
@@ -146,6 +149,7 @@ const AuthApi = {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
+            "Branch-Id": `${this.branchId}`,
           },
         }
       );
