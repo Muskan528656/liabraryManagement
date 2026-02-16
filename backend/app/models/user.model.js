@@ -248,7 +248,7 @@ async function updateById(id, userData, userId = null) {
     const query = `
       UPDATE ${schema}."user"
       SET ${updateFields.join(", ")}
-      WHERE id = $${i-1} AND branch_id = $${i}  -- id is second to last, branch_id is last
+      WHERE id = $${i - 1} AND branch_id = $${i}  -- id is second to last, branch_id is last
       RETURNING
         id,
         firstname,
@@ -267,8 +267,8 @@ async function updateById(id, userData, userId = null) {
         branch_id
     `;
 
-console.log("Query:", query);
-console.log("Values:", values);
+    console.log("Query:", query);
+    console.log("Values:", values);
 
     const result = await sql.query(query, values);
 

@@ -171,7 +171,9 @@
 
 const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Classification = require("../models/category.model.js");
+const sql = require("../models/db.js");
 
+let schema = "";
 
 module.exports = (app) => {
   const { body, validationResult } = require("express-validator");
@@ -239,6 +241,77 @@ module.exports = (app) => {
       return res.status(200).json(classifications);
     } catch (error) {
       console.error("Error fetching classifications:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // GET suggestions for category/name/code fields - MUST BE BEFORE /:id
+  router.get("/suggestions", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
+    try {
+      schema = req.userinfo.tenantcode || 'demo';
+      Classification.init(schema);
+      const { field, category, search, limit = 10 } = req.query;
+
+      // Validate field parameter to prevent SQL injection
+      const allowedFields = ['category', 'name', 'code'];
+      if (!allowedFields.includes(field)) {
+        return res.status(400).json({ errors: "Invalid field parameter" });
+      }
+
+      let query = `SELECT DISTINCT ${field} FROM ${schema}.classification WHERE ${field} IS NOT NULL`;
+      const params = [];
+      let paramIndex = 1;
+
+      if (field === 'name' && category) {
+        query += ` AND category = $${paramIndex}`;
+        params.push(category);
+        paramIndex++;
+      }
+
+      if (search) {
+        query += ` AND ${field} ILIKE $${paramIndex}`;
+        params.push(`%${search}%`);
+        paramIndex++;
+      }
+
+      const limitValue = parseInt(limit) || 10;
+      query += ` ORDER BY ${field} LIMIT ${limitValue}`;
+
+      const result = await sql.query(query, params);
+      const suggestions = result.rows.map(row => row[field]);
+
+      return res.status(200).json(suggestions);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // GET last classification by category only - MUST BE BEFORE /:id
+  router.get("/last-by-category/:category", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
+    try {
+      Classification.init(req.userinfo.tenantcode);
+      const lastClassification = await Classification.getLastClassificationByCategory(
+        req.params.category
+      );
+      return res.status(200).json(lastClassification);
+    } catch (error) {
+      console.error("Error fetching last classification by category:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  // GET last classification by category and name - MUST BE BEFORE /:id
+  router.get("/last-by-category-name/:category/:name", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
+    try {
+      Classification.init(req.userinfo.tenantcode);
+      const lastClassification = await Classification.getLastClassificationByCategoryAndName(
+        req.params.category,
+        req.params.name
+      );
+      return res.status(200).json(lastClassification);
+    } catch (error) {
+      console.error("Error fetching last classification by category and name:", error);
       return res.status(500).json({ errors: "Internal server error" });
     }
   });
@@ -414,89 +487,6 @@ module.exports = (app) => {
       return res.status(200).json({ success: true, message: result.message });
     } catch (error) {
       console.error("Error permanently deleting classification:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-  // GET last classification by category only
-  router.get("/last-by-category/:category", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
-    try {
-      Classification.init(req.userinfo.tenantcode);
-      const lastClassification = await Classification.getLastClassificationByCategory(
-        req.params.category
-      );
-      return res.status(200).json(lastClassification);
-    } catch (error) {
-      console.error("Error fetching last classification by category:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-
-  router.get("/last-by-category-name/:category/:name", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
-    try {
-      Classification.init(req.userinfo.tenantcode);
-      const lastClassification = await Classification.getLastClassificationByCategoryAndName(
-        req.params.category,
-        req.params.name
-      );
-      return res.status(200).json(lastClassification);
-    } catch (error) {
-      console.error("Error fetching last classification by category and name:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-
-  // GET next range by category and name
-  router.get("/next-range-by-category-name/:category/:name", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
-    try {
-      Classification.init(req.userinfo.tenantcode);
-      const nextRange = await Classification.getNextRangeByCategoryAndName(
-        req.params.category,
-        req.params.name
-      );
-      return res.status(200).json(nextRange);
-    } catch (error) {
-      console.error("Error calculating next range by category and name:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-
-  // GET suggestions for category/name/code fields
-  router.get("/suggestions", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
-    try {
-      Classification.init(req.userinfo.tenantcode);
-      const { field, category, search, limit = 10 } = req.query;
-
-      // Validate field parameter to prevent SQL injection
-      const allowedFields = ['category', 'name', 'code'];
-      if (!allowedFields.includes(field)) {
-        return res.status(400).json({ errors: "Invalid field parameter" });
-      }
-
-      let query = `SELECT DISTINCT ${field} FROM ${schema}.classification WHERE ${field} IS NOT NULL`;
-      const params = [];
-      let paramIndex = 1;
-
-      if (field === 'name' && category) {
-        query += ` AND category = $${paramIndex}`;
-        params.push(category);
-        paramIndex++;
-      }
-
-      if (search) {
-        query += ` AND ${field} ILIKE $${paramIndex}`;
-        params.push(`%${search}%`);
-        paramIndex++;
-      }
-
-      const limitValue = parseInt(limit) || 10;
-      query += ` ORDER BY ${field} LIMIT ${limitValue}`;
-
-      const result = await sql.query(query, params);
-      const suggestions = result.rows.map(row => row[field]);
-
-      return res.status(200).json(suggestions);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
       return res.status(500).json({ errors: "Internal server error" });
     }
   });

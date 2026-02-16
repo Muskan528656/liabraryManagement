@@ -1241,6 +1241,11 @@ const ModuleDetail = ({
       const rawValue = currentData ? currentData[field.key] : null;
       const currentValue =
         rawValue === undefined || rawValue === null ? "" : rawValue.toString();
+      
+      // Check if field is disabled (supports function)
+      const isFieldDisabled = typeof field.disabled === 'function' 
+        ? field.disabled(tempData || data) 
+        : field.disabled;
 
       return (
         <Form.Group key={index} className="mb-3">
@@ -1251,8 +1256,9 @@ const ModuleDetail = ({
               onChange={(e) =>
                 handleFieldChange(field.key, e.target.value || null, field)
               }
+              disabled={isFieldDisabled}
             >
-              <option value="">Select {field.label}</option>
+              <option value="">{isFieldDisabled ? `${field.label} (Category required)` : `Select ${field.label}`}</option>
               {options.map((option) => {
                 const optionId = getOptionValue(option);
                 const optionLabel = getOptionDisplayLabel(option);
@@ -1262,6 +1268,10 @@ const ModuleDetail = ({
                   </option>
                 );
               })}
+              {/* Add current value as option if not in list (for creatable) */}
+              {field.creatable && currentValue && !options.find(opt => getOptionValue(opt) === currentValue) && (
+                <option key={currentValue} value={currentValue}>{currentValue}</option>
+              )}
             </Form.Select>
           ) : (
             <Form.Control

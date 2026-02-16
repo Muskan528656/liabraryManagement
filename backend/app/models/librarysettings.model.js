@@ -287,8 +287,8 @@ async function getActiveSetting() {
   console.log("Query:", query, "Params:", [branchId]);
 
   const result = await sql.query(query, [branchId]);
-  console.log("result",result);
-  
+  console.log("result", result);
+
   return result.rows.length ? result.rows[0] : null;
 }
 
@@ -361,11 +361,11 @@ async function create(data, userId) {
        reservation_limit, membership_validity_days, issue_permission, 
        return_permission, issue_approval_required, digital_access,
        description, is_active, company_id, config_classification,
-       lost_book_fine_percentage, max_issue_per_day,
+       lost_book_fine_percentage, max_issue_per_day, branch_id,
        createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
       VALUES
       ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-       $14,$15,$16,$17,$18, NOW(),NOW(),$19,$19)
+       $14,$15,$16,$17,$18,$19, NOW(),NOW(),$20,$20)
       RETURNING *
     `;
 
@@ -388,14 +388,13 @@ async function create(data, userId) {
     data.config_classification || "",
     data.lost_book_fine_percentage || 100,
     data.max_issue_per_day || 1,
-    userId || null,
-    branchId, // Adding branch_id
+    branchId, // $19 - branch_id
+    userId || null, // $20 - createdbyid and lastmodifiedbyid
   ];
 
   const result = await sql.query(query, params);
   return result.rows[0];
 }
-
 /* ------------------------------------------------------
    UPDATE BY ID
 ------------------------------------------------------ */
@@ -516,7 +515,7 @@ async function deleteByKey(key) {
   // Since library_setting doesn't have a key column, 
   // we'll deactivate the active setting instead of deleting
   const activeSetting = await getActiveSetting();
-  
+
   if (!activeSetting) {
     return { success: false, message: "Setting not found" };
   }
