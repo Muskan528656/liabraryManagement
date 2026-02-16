@@ -262,6 +262,45 @@ const LibraryCard = ({ permissions, ...props }) => {
               maxWidth: "500px",
               margin: "0 auto"
             }}>
+              {/* User Image Section - ADDED */}
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                {selectedCard.image ? (
+                  <img
+                    src={selectedCard.image.startsWith("http") ? selectedCard.image : `${API_BASE_URL}${selectedCard.image}`}
+                    alt={selectedCard.first_name || 'User'}
+                    style={{
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid var(--primary-color)'
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `
+                        <div style="width:80px;height:80px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;margin:0 auto;border:3px solid var(--primary-color)">
+                          <i class="fa-solid fa-user" style="font-size:32px;color:var(--primary-color)"></i>
+                        </div>
+                      `;
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: '#f0f0f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto',
+                    border: '3px solid var(--primary-color)'
+                  }}>
+                    <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "var(--primary-color)" }}></i>
+                  </div>
+                )}
+              </div>
 
               {barcodeError && (
                 <Alert variant="warning" className="mb-3">
@@ -303,6 +342,8 @@ const LibraryCard = ({ permissions, ...props }) => {
                 <p className="mb-1"><strong>Name:</strong> {selectedCard.first_name || selectedCard.user_name || 'N/A'} {selectedCard.last_name || ''}</p>
                 <p className="mb-1"><strong>Email:</strong> {selectedCard.email || 'N/A'}</p>
                 <p className="mb-1"><strong>Registration Date:</strong> {formatDate(selectedCard.registration_date)}</p>
+                <p className="mb-1"><strong>Subscription:</strong> {selectedCard.subscription_name || 'No Subscription'}</p>
+                <p className="mb-1"><strong>Allowed Books:</strong> {selectedCard.allowed_books_effective || selectedCard.allowed_book || '5'}</p>
                 <p className="mb-1"><strong>Status:</strong>
                   <span style={{
                     color: selectedCard.is_active ? "green" : "gray",

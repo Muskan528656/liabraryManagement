@@ -56,11 +56,11 @@ module.exports = (app) => {
 
 
     router.post("/", fetchUser, checkPermission("Publisher", "allow_create"), [
-        body('name', 'Name is required').not().isEmpty(),
-        body('email', 'Valid email is required').isEmail(),
-        body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
-        body('city', 'City is required').not().isEmpty(),
-        body('country', 'Country is required').not().isEmpty()
+        // body('name', 'Name is required').not().isEmpty(),
+        // body('email', 'Valid email is required').isEmail(),
+        // body('phone', 'Phone number is required').isLength({ min: 10, max: 15 }),
+        // body('city', 'City is required').not().isEmpty(),
+        // body('country', 'Country is required').not().isEmpty()
     ], async (req, res) => {
  
         const errors = validationResult(req);
