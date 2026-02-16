@@ -102,6 +102,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setPermissions({});
         sessionStorage.removeItem("user");
+        sessionStorage.removeItem("selectedBranch");
         sessionStorage.removeItem("permissions");
         sessionStorage.clear();
         window.location.href = "/login";

@@ -17,7 +17,8 @@ async function getDashboardStats() {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-
+    console.log("Getting dashboard stats for schema:", schema);
+    console.log("Getting dashboard stats for branch:", branchId || "All Branches");
     const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.books WHERE branch_id = $1`;
     const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
@@ -40,12 +41,11 @@ async function getDashboardStats() {
         COUNT(b.id) as book_count
       FROM ${schema}.categories c
       LEFT JOIN ${schema}.books b ON c.id = b.category_id AND b.branch_id = $1
-      WHERE c.branch_id = $1
       GROUP BY c.id, c.name
       ORDER BY book_count DESC
       LIMIT 10
     `;
-    const booksByCategoryResult = await sql.query(booksByCategoryQuery, [branchId]);
+    const booksByCategoryResult = await sql.query(booksByCategoryQuery,[branchId]);
 
     const booksByAuthorQuery = `
       SELECT 
@@ -53,7 +53,6 @@ async function getDashboardStats() {
         COUNT(b.id) as book_count
       FROM ${schema}.authors a
       LEFT JOIN ${schema}.books b ON a.id = b.author_id AND b.branch_id = $1
-      WHERE a.branch_id = $1
       GROUP BY a.id, a.name
       ORDER BY book_count DESC
       LIMIT 10

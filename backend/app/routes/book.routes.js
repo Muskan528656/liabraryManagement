@@ -29,7 +29,7 @@ module.exports = (app) => {
     fetchUser,
     async (req, res) => {
       try {
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
         
         // Add search filter if present in query
@@ -52,7 +52,9 @@ module.exports = (app) => {
       fetchUser,
       async (req, res) => {
         try {
-          const branchId = req.headers["branch-id"];
+          const branchId = req.branchId;
+          console.log("Branchre ID:", branchId);
+          
           Book.init(req.userinfo.tenantcode, branchId);
         
           const filters = {
@@ -95,7 +97,7 @@ module.exports = (app) => {
     fetchUser,
     async (req, res) => {
       try {
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
         
         const report = await Book.generateInventoryReport();
@@ -111,7 +113,7 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
@@ -141,7 +143,7 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
@@ -169,7 +171,7 @@ module.exports = (app) => {
   router.get("/:id", fetchUser,
     async (req, res) => {
       try {
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
         
         const book = await Book.findById(req.params.id);
@@ -186,7 +188,7 @@ module.exports = (app) => {
 
   router.get("/isbn/:isbn", fetchUser, async (req, res) => {
     try {
-      const branchId = req.headers["branch-id"];
+      const branchId = req.branchId;
       Book.init(req.userinfo.tenantcode, branchId);
       const isbn = decodeURIComponent(req.params.isbn);
       
@@ -278,7 +280,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
 
         if (req.body.isbn && req.body.isbn.trim()) {
@@ -354,7 +356,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        const branchId = req.headers["branch-id"];
+        const branchId = req.branchId;
         Book.init(req.userinfo.tenantcode, branchId);
 
         const existingBook = await Book.findById(req.params.id);
@@ -387,7 +389,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, async (req, res) => {
     try {
-      const branchId = req.headers["branch-id"];
+      const branchId = req.branchId;
       Book.init(req.userinfo.tenantcode, branchId);
       const result = await Book.deleteById(req.params.id);
       if (!result.success) {
