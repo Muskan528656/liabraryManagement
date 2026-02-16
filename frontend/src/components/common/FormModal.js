@@ -417,7 +417,7 @@ const FormModal = ({
               readOnly={isReadOnly}
               isInvalid={!!error}
               max={field.max}
-              min={field.min}
+              // min={field.min}
               {...field.props}
             />
             {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}

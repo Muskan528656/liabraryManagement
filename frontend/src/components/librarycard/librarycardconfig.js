@@ -424,7 +424,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 label: "Date of Birth",
                 type: "date",
                 max:todayStr,
-                required: false,
+                required: true,
                 colSize: 6,
             },
             {
@@ -608,8 +608,11 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 }
             }
 
-            // ✅ DOB validation
-            if (formData.dob) {
+            
+            //  DOB validation (Required + Min Age 4)
+            if (!formData.dob) {
+                errors.push("Date of Birth is required");
+            } else {
                 const dobDate = new Date(formData.dob);
                 dobDate.setHours(0, 0, 0, 0);
 
@@ -618,12 +621,13 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 }
 
                 const age = calculateAge(formData.dob);
+
                 if (age < 4) {
                     errors.push("Member must be at least 4 years old");
                 }
             }
 
-            // ✅ Registration date validation
+            //  Registration date validation
             if (formData.registration_date) {
                 const regDate = new Date(formData.registration_date);
                 regDate.setHours(0, 0, 0, 0);
