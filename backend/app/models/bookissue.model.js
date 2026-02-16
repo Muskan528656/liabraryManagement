@@ -880,7 +880,7 @@ const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 function init(schema_name, branchId) {
   this.schema = schema_name;
   console.log("Schema:", schema);
-  
+
   this.branchId = branchId || "";
   console.log("Branch ID:", branchId);
 }
@@ -1012,7 +1012,7 @@ async function findByCardId(cardId, memberType) {
       ON bi.issued_to = lm.id
     WHERE bi.issued_to = $1 
       AND bi.return_date IS NULL 
-      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;  
+      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
 
   let values = [cardId];
 

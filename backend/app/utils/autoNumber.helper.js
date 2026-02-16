@@ -61,8 +61,39 @@ function applyMemberTypeFilter(baseQuery, memberType, values = []) {
     return { query: baseQuery, values };
 }
 
+/**
+ * Generate next rack number with prefix (e.g., RACK-01, RACK-02)
+ * @param {string} floor - Floor name
+ * @param {string} schema - Database schema
+ * @returns {Promise<string>} - Next rack number
+ */
+async function getNextRackNumber(floor, schema) {
+    const sql = require("../models/db.js");
+    
+    try {
+        // Get the last rack number for this floor
+        const query = `SELECT rack FROM ${schema}.rack_mapping WHERE floor = $1 AND rack ~ '^RACK-[0-9]+$' ORDER BY rack DESC LIMIT 1`;
+        const result = await sql.query(query, [floor]);
+        
+        let nextNumber = 1;
+        if (result.rows.length > 0) {
+            const lastRack = result.rows[0].rack;
+            const match = lastRack.match(/RACK-(\d+)/);
+            if (match) {
+                nextNumber = parseInt(match[1]) + 1;
+            }
+        }
+        
+        return `RACK-${nextNumber.toString().padStart(3, '0')}`;
+    } catch (error) {
+        console.error("Error generating rack number:", error);
+        return `RACK-001`;
+    }
+}
+
 module.exports = {
     getNextAutoNumber,
     generateAutoNumberSafe,
-    applyMemberTypeFilter
+    applyMemberTypeFilter,
+    getNextRackNumber
 };

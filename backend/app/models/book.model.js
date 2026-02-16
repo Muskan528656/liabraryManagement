@@ -65,7 +65,7 @@ async function findAll(filters = {}) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
     
-    query += ` ORDER BY b.createddate DESC`;
+    query += ` ORDER BY b.lastmodifieddate DESC`;
     
     const result = await sql.query(query, params);
     return result.rows.length > 0 ? result.rows : [];

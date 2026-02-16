@@ -1,7 +1,7 @@
 
 /**
  * Handles all incoming request for /api/bookissue endpoint
- * DB table for this demo.book_issues
+ * DB table for this ${schema}.book_issues
  * Model used here is bookissue.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/bookissue

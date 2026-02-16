@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/user-role
- * DB table: demo.user_role
+ * DB table: ${schema}.user_role
  * 
  * @author      Muskan Khan
  * @date        DEC, 2025

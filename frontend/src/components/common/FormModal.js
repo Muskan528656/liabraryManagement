@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col, InputGroup } from "react-bootstrap";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
+import CreatableSelect from "react-select/creatable";
+import AsyncCreatableSelect from "react-select/async-creatable";
 
 const EyeIcon = () => (
   <svg
@@ -342,20 +345,40 @@ const FormModal = ({
               {field.label} {isRequired && <span className="text-danger">*</span>}
             </Form.Label>
             {field.asyncSelect ? (
-              <Select
-                value={field.options?.find((opt) => opt.value === value) || null}
+              field.creatable ? (
+                <AsyncCreatableSelect
+                  value={value ? { value, label: value } : null}
+                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  isClearable={field.clearable !== false}
+                  isDisabled={field.disabled || isReadOnly}
+                  placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
+                  loadOptions={field.loadOptions}
+                  defaultOptions={field.defaultOptions}
+                  {...field.selectProps}
+                />
+              ) : (
+                <AsyncSelect
+                  value={value ? { value, label: value } : null}
+                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  isClearable={field.clearable !== false}
+                  isDisabled={field.disabled || isReadOnly}
+                  placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
+                  loadOptions={field.loadOptions}
+                  defaultOptions={field.defaultOptions}
+                  {...field.selectProps}
+                />
+              )
+            ) : field.creatable ? (
+              <CreatableSelect
+                value={value ? { value, label: value } : null}
                 onChange={(selected) => handleFieldChange(field, selected?.value || "")}
-                options={field.options || []}
+                options={fieldOptions}
                 isClearable={field.clearable !== false}
                 isDisabled={field.disabled || isReadOnly}
-                placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
-                loadOptions={field.loadOptions}
-                defaultOptions={field.defaultOptions}
+                placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
                 {...field.selectProps}
               />
             ) : (
-
-    
               <Form.Select
                 name={field.name}
                 id={fieldId}
@@ -365,9 +388,7 @@ const FormModal = ({
                 isInvalid={!!error}
                 {...field.props}
               >
-            
                 {field.placeholder && <option value="">{field.placeholder}</option>}
-                {/* {field.options?.map((option) => ( */}
                 {fieldOptions?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

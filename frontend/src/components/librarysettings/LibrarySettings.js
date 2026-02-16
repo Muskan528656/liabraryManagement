@@ -21,6 +21,7 @@ const Settings = ({ permissions }) => {
     renew_limit: 2,
     max_issue_per_day: 1,
     lost_book_fine_percentage: 100,
+    config_classification: "",
   });
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -32,34 +33,6 @@ const Settings = ({ permissions }) => {
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const [tempSettings, setTempSettings] = useState({ ...librarySettings });
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setAlertMessage("New password and confirm password do not match!");
-      setShowAlert(true);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setAlertMessage("Password must be at least 6 characters long!");
-      setShowAlert(true);
-      return;
-    }
-
-    setAlertMessage(
-      "Password changed successfully! You will be logged out of all devices."
-    );
-    setShowAlert(true);
-
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
-
-  const handleTwoFactorChange = (method) => {
-    setTwoFactorAuth(method);
-  };
 
   console.log("permissions in LibrarySettings:", permissions);
 
@@ -89,7 +62,9 @@ const Settings = ({ permissions }) => {
           lost_book_fine_percentage: parseInt(
             settingsData.lost_book_fine_percentage || 100
           ),
+          config_classification: settingsData.config_classification
         };
+        console.log("settingsObjsettingsObjsettingsObj", settingsObj)
         setLibrarySettings(settingsObj);
       }
     } catch (error) {
@@ -132,10 +107,16 @@ const Settings = ({ permissions }) => {
           setting_key: "lost_book_fine_percentage",
           setting_value: tempSettings.lost_book_fine_percentage.toString(),
         },
+        {
+          setting_key: "config_classification",
+          setting_value: tempSettings.config_classification,
+        },
       ];
 
-      const response = await settingsApi.put('/bulk', { settings: settingsArray });
+      console.log("settingsArraysettingsArray", settingsArray)
 
+      const response = await settingsApi.put('/bulk', { settings: settingsArray });
+console.log("reposne->>>",response)
       if (response.data && response.data.success) {
         setLibrarySettings({ ...tempSettings });
         setIsEditingSettings(false);
@@ -541,7 +522,8 @@ const Settings = ({ permissions }) => {
 
                           </span>
                           <small className="text-muted d-block mt-1">
-                            config_classification                          </small>
+                            config_classification
+                          </small>
                         </div>
                       )}
                     </Form.Group>

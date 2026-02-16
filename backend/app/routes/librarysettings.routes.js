@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/librarysettings endpoint
- * DB table for this demo.library_setting
+ * DB table for this ${schema}.library_setting
  * Model used here is librarysettings.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/librarysettings
@@ -110,7 +110,7 @@ module.exports = (app) => {
       try {
         LibrarySettings.init(req.userinfo.tenantcode);
         const userId = req.userinfo?.id || null;
-
+        console.log("woowooowow")
 
         const settingData = {
           name: req.body.name || 'Default',
@@ -129,7 +129,7 @@ module.exports = (app) => {
           is_active: req.body.is_active !== undefined ? req.body.is_active : true,
           config_classification: req.body.config_classification !== undefined ? req.body.config_classification : true
         };
-
+        console.log("settingDatasettingDatasettingData", settingData)
         const setting = await LibrarySettings.updateSettings(settingData, userId);
         return res.status(200).json({ success: true, data: setting });
       } catch (error) {
@@ -172,6 +172,9 @@ module.exports = (app) => {
           } else if (setting.setting_key === 'lost_book_fine_percentage') {
 
           }
+          else if (setting.setting_key === 'config_classification') {
+            settingData.config_classification = setting.setting_value
+          }
         });
 
 
@@ -184,6 +187,7 @@ module.exports = (app) => {
         settingData.issue_approval_required = false;
         settingData.digital_access = false;
         settingData.is_active = true;
+        settingData.config_classification = "";
 
         const setting = await LibrarySettings.updateSettings(settingData, userId);
         return res.status(200).json({ success: true, data: setting });

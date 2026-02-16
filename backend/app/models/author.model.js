@@ -13,7 +13,7 @@ function init(schema_name) {
 
 async function findAll(filters = {}) {
   try {
-    let query = `SELECT * FROM demo.authors WHERE 1=1`;
+    let query = `SELECT * FROM ${this.schema}.authors WHERE 1=1`;
     const values = [];
     let paramIndex = 1;
 
@@ -23,7 +23,7 @@ async function findAll(filters = {}) {
       paramIndex++;
     }
 
-    query += ` ORDER BY createddate DESC`;
+    query += ` ORDER BY lastmodifieddate DESC`;
 
     const result = await sql.query(query, values);
     return result.rows.length > 0 ? result.rows : [];
@@ -36,7 +36,7 @@ async function findAll(filters = {}) {
  
 async function findById(id) {
   try {
-    const query = `SELECT * FROM demo.authors WHERE id = $1`;
+    const query = `SELECT * FROM ${this.schema}.authors WHERE id = $1`;
     const result = await sql.query(query, [id]);
  
     if (result.rows.length > 0) {
@@ -51,7 +51,7 @@ async function findById(id) {
 
 async function create(authorData, userId) {
   try {
-    const query = `INSERT INTO demo.authors 
+    const query = `INSERT INTO ${this.schema}.authors 
                    (name, email, bio, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid) 
                    VALUES ($1, $2, $3, NOW(), NOW(), $4, $5) 
                    RETURNING *`;
@@ -77,7 +77,7 @@ async function create(authorData, userId) {
  
 async function updateById(id, authorData, userId) {
   try {
-    const query = `UPDATE demo.authors 
+    const query = `UPDATE ${this.schema}.authors 
                    SET name = $2, email = $3, bio = $4, 
                        lastmodifieddate = NOW(), lastmodifiedbyid = $5
                    WHERE id = $1 
@@ -103,7 +103,7 @@ async function updateById(id, authorData, userId) {
  
 async function deleteById(id) {
   try {
-    const query = `DELETE FROM demo.authors WHERE id = $1 RETURNING *`;
+    const query = `DELETE FROM ${this.schema}.authors WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) {
       return { success: true, message: "Author deleted successfully" };
@@ -118,7 +118,7 @@ async function deleteById(id) {
  
 async function findByEmail(email, excludeId = null) {
   try {
-    let query = `SELECT * FROM demo.authors WHERE email = $1`;
+    let query = `SELECT * FROM ${this.schema}.authors WHERE email = $1`;
     const params = [email];
 
     if (excludeId) {

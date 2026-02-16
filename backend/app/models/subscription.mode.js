@@ -31,7 +31,7 @@ function init(schema_name) {
 async function findAll() {
     const query = `
         SELECT * 
-        FROM demo.subscriptions 
+        FROM ${this.schema}.subscriptions 
         ORDER BY createddate DESC
     `;
     const result = await sql.query(query);
@@ -42,7 +42,7 @@ async function findAll() {
 
 
 async function findById(id) {
-    const query = `SELECT * FROM demo.subscriptions WHERE id = $1`;
+    const query = `SELECT * FROM ${schema}.subscriptions WHERE id = $1`;
     const result = await sql.query(query, [id]);
     return result.rows.length ? normalizeSubscriptionRow(result.rows[0]) : null;
 }
@@ -136,9 +136,9 @@ async function create(data, userId) {
 async function updateById(id, data, userId) {
     const current = await findById(id);
     if (!current) throw new Error("Subscription not found");
- 
+
     const query = `
-        UPDATE demo.subscriptions
+        UPDATE ${schema}.subscriptions
         SET plan_name = $2,
             start_date = $3,
             end_date = $4,
@@ -169,7 +169,7 @@ async function updateById(id, data, userId) {
 
 
 async function deleteById(id) {
-    const query = `DELETE FROM demo.subscriptions WHERE id = $1 RETURNING *`;
+    const query = `DELETE FROM ${schema}.subscriptions WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);
 
     return result.rows.length

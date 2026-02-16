@@ -2,7 +2,7 @@
  * Handles all incoming request for /api/dashboard endpoint
  * dashboard related data 
  * dashboard.model.js
- * DB table for this demo.authors
+ * DB table for this ${schema}.authors
  * SUPPORTED API ENDPOINTS
  *              GET     /api/dashboard/stats
  *              GET     /api/dashboard/other-metrics

@@ -9,7 +9,7 @@ function init(schema_name) {
 //   try {
 //     const rolePermsResult = await sql.query(`
 //       SELECT permission_id
-//       FROM demo.role_permissions
+//       FROM ${schema}.role_permissions
 //       WHERE role_id = $1
 //       ORDER BY id ASC
 //     `, [roleId]);
@@ -21,7 +21,7 @@ function init(schema_name) {
 
 //     const permissionsResult = await sql.query(`
 //       SELECT id, module_id, allow_view, allow_create, allow_edit, allow_delete
-//       FROM demo.permissions
+//       FROM ${schema}.permissions
 //       WHERE id = ANY($1::uuid[])
 //     `, [permissionIds]);
 
@@ -46,6 +46,7 @@ function init(schema_name) {
 async function findPermissionsByRole(roleId) {
   console.log("roleid->>", roleId)
   if (!roleId) return [];
+  console.log("Schema in findPermissionsByRole:", this.schema);
 
   try {
     // Join permissions to role via role_permissions table (role_permissions links roles to permissions)
@@ -58,9 +59,9 @@ async function findPermissionsByRole(roleId) {
         p.allow_create,
         p.allow_edit,
         p.allow_delete
-      FROM demo.permissions p
-      LEFT JOIN demo.module m ON p.module_id = m.id
-      LEFT JOIN demo.role_permissions rp ON rp.permission_id = p.id
+      FROM ${this.schema}.permissions p
+      LEFT JOIN ${this.schema}.module m ON p.module_id = m.id
+      LEFT JOIN ${this.schema}.role_permissions rp ON rp.permission_id = p.id
       WHERE rp.role_id = $1
       ORDER BY m.name ASC
     `, [roleId]);
@@ -70,7 +71,7 @@ async function findPermissionsByRole(roleId) {
     const permissions = permissionsResult.rows.map(row => ({
       permissionId: row.permission_id,
       moduleId: row.module_id,
-      moduleName: row.module_name, // IMPORTANT: Module name add karo
+      moduleName: row.module_name,
       allowView: row.allow_view,
       allowCreate: row.allow_create,
       allowEdit: row.allow_edit,
@@ -223,8 +224,8 @@ async function findByEmail(email) {
       ) AS userinfo
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
-      LEFT JOIN demo.branches b ON b.id = u.branch_id   
-      LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
+      LEFT JOIN ${this.schema}.branches b ON b.id = u.branch_id   
+      LEFT JOIN ${this.schema}.user_role ur ON ur.id = u.userrole::uuid
       LIMIT 1;
       `,
       [emailLower]
@@ -246,7 +247,7 @@ async function findByEmail(email) {
         role_name: "",
         companyid: null,
         isactive: false,
-        branch_id: null,  
+        branch_id: null,
         library_member_type: null,
         time_zone: "UTC",
         companyname: "",
@@ -267,7 +268,7 @@ async function findByEmail(email) {
 
 async function findById(id) {
   try {
-    let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM demo.user u`;
+    let query = `SELECT u.id, u.email, concat(u.firstname,' ', u.lastname) contactname, u.firstname, u.lastname, u.userrole, u.isactive, u.phone, u.country_code FROM ${schema}.user u`;
     query += ` WHERE u.id = $1`;
     const result = await sql.query(query, [id]);
     if (result.rows.length > 0) return result.rows[0];
@@ -445,7 +446,6 @@ async function checkCompanybyTcode(tcode) {
 
   try {
     const result = await sql.query(query, [tcode]);
-    console.log("REsult->>>>>", result)
     if (result.rows.length > 0) {
       return result.rows;
     }

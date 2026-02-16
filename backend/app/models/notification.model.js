@@ -11,13 +11,13 @@ const cron = require("node-cron");
 const sendMail = require("../utils/Mailer.js");
 const { dueTemplate } = require("../utils/ReminderTemplate.js");
 
-let schema = "demo";
+let schema = "${schema}";
 let branchId = null;
 
 // global.currentLoggedInUserId = null;
 
 function init(schema_name, branch_id = null) {
-  schema = schema_name || "demo";
+  schema = schema_name || "${schema}";
   branchId = branch_id;
 }
 

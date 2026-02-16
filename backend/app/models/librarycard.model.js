@@ -26,7 +26,7 @@ async function findAll(memberType) {
       ON lm.createdbyid = u.id
     LEFT JOIN ${schema}.plan p
       ON lm.plan_id = p.id
-    LEFT JOIN demo.object_type ot
+    LEFT JOIN ${schema}.object_type ot
       ON lm.type_id = ot.id
     WHERE lm.branch_id = $1
   `;
@@ -57,7 +57,7 @@ async function findAll(memberType) {
 //         ON lm.createdbyid = u.id
 //       LEFT JOIN ${schema}.plan p
 //         ON lm.plan_id = p.id
-//       LEFT JOIN demo.object_type ot
+//       LEFT JOIN ${schema}.object_type ot
 //         ON lm.type_id = ot.id
 //       ORDER BY lm.createddate DESC;
 //     `;
@@ -84,7 +84,7 @@ async function findAll(memberType) {
 //         ON lm.createdbyid = u.id
 //       LEFT JOIN ${schema}.plan p
 //         ON lm.plan_id = p.id
-//       LEFT JOIN demo.object_type ot
+//       LEFT JOIN ${schema}.object_type ot
 //         ON lm.type_id = ot.id
 //     `;
 
@@ -599,7 +599,7 @@ async function findByUserId(userId) {
 
 async function getAllRecords() {
   try {
-    const query = `SELECT * FROM demo.object_type WHERE status = 'Active'`;
+    const query = `SELECT * FROM ${schema}.object_type WHERE status = 'Active'`;
     const result = await sql.query(query);
     return result.rows;
   } catch (error) {

@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/purchase endpoint
- * DB table for this demo.purchases
+ * DB table for this ${schema}.purchases
  * Model used here is purchase.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/purchase
@@ -113,7 +113,7 @@ module.exports = (app) => {
         //   return res.status(400).json({ errors: errors.array() });
         // }
 
-         if (!errors.isEmpty()) {
+        if (!errors.isEmpty()) {
           return res.status(400).json({
             errors: errors.array()[0].msg
           });

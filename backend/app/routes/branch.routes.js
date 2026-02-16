@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/branch endpoint
- * DB table: demo.branches
+ * DB table: ${schema}.branches
  * Model: branch.model.js
  * 
  * SUPPORTED API ENDPOINTS

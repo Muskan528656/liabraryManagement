@@ -10,6 +10,7 @@ module.exports = (app) => {
 
     router.get("/", fetchUser, async (req, res) => {
         try {
+            Subscription.init(req.userinfo.tenantcode)
             const subs = await Subscription.findAll();
             res.status(200).json({ success: true, data: subs });
         } catch (error) {
@@ -19,7 +20,8 @@ module.exports = (app) => {
 
     router.get("/:id", fetchUser, async (req, res) => {
         try {
-            const sub = await Subscription.finsqlyId(req.params.id);
+            Subscription.init(req.userinfo.tenantcode)
+            const sub = await Subscription.findById(req.params.id);
             if (!sub) return res.status(404).json({ success: false, error: "Subscription not found" });
             res.status(200).json({ success: true, data: sub });
         } catch (error) {
@@ -62,10 +64,11 @@ module.exports = (app) => {
                     is_active = true
                 } = req.body;
 
+                Subscription.init(req.userinfo.tenantcode)
 
 
                 const planExists = await sql.query(
-                    "SELECT id FROM demo.plan WHERE id = $1",
+                    "SELECT id FROM ${schema}.plan WHERE id = $1",
                     [plan_id]
                 );
 
@@ -77,7 +80,7 @@ module.exports = (app) => {
                 }
 
                 const memberExists = await sql.query(
-                    "SELECT id FROM demo.library_members WHERE id = $1",
+                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
                     [member_id]
                 );
 
@@ -90,7 +93,7 @@ module.exports = (app) => {
 
 
                 const userExists = await sql.query(
-                    "SELECT id FROM demo.library_members WHERE id = $1",
+                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
                     [user_id]
                 );
 
@@ -103,7 +106,7 @@ module.exports = (app) => {
 
 
                 const cardExists = await sql.query(
-                    "SELECT id FROM demo.library_members WHERE id = $1",
+                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
                     [card_id]
                 );
 
@@ -116,7 +119,7 @@ module.exports = (app) => {
 
 
                 const existingSubscription = await sql.query(
-                    `SELECT id FROM demo.subscriptions
+                    `SELECT id FROM ${schema}.subscriptions
                  WHERE member_id = $1
                  AND is_active = true
                  AND (end_date IS NULL OR end_date > CURRENT_DATE)`,
@@ -158,7 +161,7 @@ module.exports = (app) => {
 
                 try {
                     const userQuery = await sql.query(
-                        "SELECT id FROM demo.user WHERE id = $1 OR user_id = $1",
+                        "SELECT id FROM ${schema}.user WHERE id = $1 OR user_id = $1",
                         [createdById]
                     );
 
@@ -202,7 +205,7 @@ module.exports = (app) => {
                 const columnNames = columns.join(', ');
 
                 const insertQuery = `
-                INSERT INTO demo.subscriptions (${columnNames})
+                INSERT INTO ${schema}.subscriptions (${columnNames})
                 VALUES (${placeholders})
                 RETURNING *
             `;
@@ -218,7 +221,7 @@ module.exports = (app) => {
 
 
                 await sql.query(
-                    "UPDATE demo.library_members SET plan_id = $1 WHERE id = $2",
+                    "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
                     [plan_id, member_id]
                 );
 
@@ -301,9 +304,9 @@ module.exports = (app) => {
             try {
                 const subscriptionId = req.params.id;
 
-
+                Subscription.init(req.userinfo.tenantcode);     
                 const subscriptionCheck = await sql.query(
-                    "SELECT id FROM demo.subscriptions WHERE id = $1",
+                    "SELECT id FROM ${schema}.subscriptions WHERE id = $1",
                     [subscriptionId]
                 );
 
@@ -346,7 +349,7 @@ module.exports = (app) => {
                 const values = [subscriptionId, ...Object.values(updateData)];
 
                 const updateQuery = `
-                UPDATE demo.subscriptions 
+                UPDATE ${schema}.subscriptions 
                 SET ${setClause}
                 WHERE id = $1
                 RETURNING *
@@ -369,7 +372,7 @@ module.exports = (app) => {
 
                 if (req.body.plan_id && req.body.member_id) {
                     await sql.query(
-                        "UPDATE demo.library_members SET plan_id = $1 WHERE id = $2",
+                        "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
                         [req.body.plan_id, req.body.member_id]
                     );
                 }
@@ -402,6 +405,7 @@ module.exports = (app) => {
 
     router.delete("/:id", fetchUser, async (req, res) => {
         try {
+            Subscription.init(req.userinfo.tenantcode);
             const result = await Subscription.deleteById(req.params.id);
             res.status(200).json(result);
         } catch (error) {

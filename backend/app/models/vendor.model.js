@@ -54,7 +54,7 @@ async function findAll() {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT * FROM ${schema}.vendors WHERE branch_id = $1 ORDER BY createddate DESC`;
+    const query = `SELECT * FROM ${schema}.vendors WHERE branch_id = $1 ORDER BY lastmodifieddate DESC`;
     const result = await sql.query(query, [branchId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {

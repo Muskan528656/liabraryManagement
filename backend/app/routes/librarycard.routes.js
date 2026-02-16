@@ -4,7 +4,7 @@
 
 /**
  * Handles all incoming request for /api/librarycard endpoint
- * DB table: demo.library_members
+ * DB table: ${schema}.library_members
  * Model: librarycard.model.js
  * SUPPORTED API ENDPOINTS
  *   GET     /api/librarycard
@@ -107,7 +107,6 @@ module.exports = (app) => {
         const memberType = req.userinfo.library_member_type;
 
         console.log("Member Type:", memberType);
-
         const cards = await LibraryCard.findAll(memberType);
 
         return res.status(200).json(cards);
@@ -277,7 +276,7 @@ module.exports = (app) => {
     upload.single("image"),
     async (req, res) => {
       try {
-         LibraryCard.init(req.userinfo.tenantcode, req.branchId);
+        LibraryCard.init(req.userinfo.tenantcode, req.branchId);
 
         const existingCard = await LibraryCard.findById(req.params.id);
         if (!existingCard) {
@@ -331,7 +330,7 @@ module.exports = (app) => {
         if (cardData.library_member_type !== undefined) {
           cardData.library_member_type = cardData.library_member_type;
         }
-        console.log("cardDatacardDatacardData",cardData)
+        console.log("cardDatacardDatacardData", cardData)
         const updatedCard = await LibraryCard.updateById(
           req.params.id,
           cardData,
@@ -385,7 +384,7 @@ module.exports = (app) => {
         return res.status(400).json({ error: "Members should be an array" });
       }
 
-      LibraryCard.init(req.userinfo.tenantcode, req.branchId);      
+      LibraryCard.init(req.userinfo.tenantcode, req.branchId);
       const userId = req.userinfo?.id || null;
 
       const results = [];

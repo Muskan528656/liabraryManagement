@@ -195,7 +195,6 @@ const fetchUser = async (req, res, next) => {
 };
 
 const checkPermission = (moduleName, action) => {
-  console.log("Checking permission for module:", moduleName, "action:", action);
   return async (req, res, next) => {
     try {
       const user = req.userinfo;
@@ -206,6 +205,7 @@ const checkPermission = (moduleName, action) => {
         (user.userrole === "SYSTEM ADMIN")) {
         return next();
       }
+      
       const permissions = user.permissions || [];
       if (!permissions.length) {
         return res.status(403).json({

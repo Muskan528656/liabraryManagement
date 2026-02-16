@@ -24,7 +24,7 @@ async function findAllPublisher(filters = {}) {
             paramIndex++;
         }
 
-        query += ` order by createddate desc`;
+        query += ` order by lastmodifieddate desc`;
 
         const result = await sql.query(query, values);
         return result.rows;

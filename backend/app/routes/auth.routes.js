@@ -225,7 +225,6 @@ module.exports = (app) => {
 
 
         const companyRes = await Auth.checkCompanybyTcode(tcode);
-        console.log("company000", companyRes)
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,

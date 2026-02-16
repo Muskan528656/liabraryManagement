@@ -21,11 +21,9 @@ module.exports = (app) => {
 
       const allNotifications = await Notification.findAll(userId);
 
-      console.log("All Notifications:", allNotifications);
 
       const unreadNotifications = allNotifications.filter(notification => !notification.is_read);
 
-      console.log("Unread Notifications:", unreadNotifications);
 
       const unreadCount = unreadNotifications.length;
 

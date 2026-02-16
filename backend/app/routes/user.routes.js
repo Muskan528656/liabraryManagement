@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/user endpoint
- * DB table for this demo.user
+ * DB table for this ${schema}.user
  * Model used here is user.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/user

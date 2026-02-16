@@ -4,7 +4,7 @@ import ModuleDetail from "../common/ModuleDetail";
 import DataApi from "../../api/dataApi";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import { Form } from "react-bootstrap";
+import { Badge } from "react-bootstrap";
 
 const ShelfDetail = ({ permissions }) => {
 
@@ -27,34 +27,36 @@ const ShelfDetail = ({ permissions }) => {
     }, [id]);
 
     const fields = {
-        title: "shelf_name",
-        subtitle: "note",
+        title: "name",
+        subtitle: "floor",
 
         details: [
-            { key: "shelf_name", label: "Shelf Name", type: "text" },
-            { key: "note", label: "Note", type: "text" },
-
-            {
-                key: "sub_shelf",
-                label: "Sub Shelves",
+            { key: "name", label: "Name", type: "text" },
+            { key: "floor", label: "Floor", type: "text" },
+            { key: "rack", label: "Rack", type: "text" },
+            { 
+                key: "classification_type", 
+                label: "Classification Type", 
                 type: "text",
-                render: (val) =>
-                    Array.isArray(val) ? val.join(", ") : val
+                render: (value) => value ? <Badge bg="info">{value}</Badge> : '-'
             },
-
-        
-            {
-                key: "status",
-                label: "Status",
-                type: "toggle",
-                render: (value) => (
-                    <Form.Check
-                        type="switch"
-                        checked={value}
-                        disabled
-                        label={value ? "Active" : "Inactive"}
-                    />
-                )
+            { 
+                key: "classification_from", 
+                label: "Range From", 
+                type: "text",
+                render: (value) => <span className="font-monospace text-info">{value || '-'}</span>
+            },
+            { 
+                key: "classification_to", 
+                label: "Range To", 
+                type: "text",
+                render: (value) => <span className="font-monospace text-info">{value || '-'}</span>
+            },
+            { 
+                key: "capacity", 
+                label: "Capacity", 
+                type: "text",
+                render: (value) => <Badge bg="secondary">{value || 100}</Badge>
             },
         ],
 
@@ -87,7 +89,7 @@ const ShelfDetail = ({ permissions }) => {
                 <ModuleDetail
                     moduleName="shelf"
                     moduleApi="shelf"
-                    moduleLabel="Shelf"
+                    moduleLabel="Rack Mapping"
                     icon="fa-solid fa-layer-group"
                     fields={fields}
                     data={shelf}

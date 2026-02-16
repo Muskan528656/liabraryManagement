@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/vendor endpoint
- * DB table for this demo.vendors (renamed from purchase_vendors)
+ * DB table for this ${schema}.vendors (renamed from purchase_vendors)
  * Model used here is vendor.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/vendor

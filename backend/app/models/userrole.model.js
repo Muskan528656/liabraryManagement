@@ -15,7 +15,7 @@ async function findAll() {
   try {
     if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `SELECT * FROM ${this.schema}.user_role ORDER BY createddate DESC`;
+    const query = `SELECT * FROM ${this.schema}.user_role ORDER BY lastmodifieddate DESC`;
     const result = await sql.query(query);
 
     return result.rows.length > 0 ? result.rows : [];

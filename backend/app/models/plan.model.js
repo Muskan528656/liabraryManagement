@@ -8,7 +8,7 @@ const Plan = {
     },
 
     async getAllPlans() {
-        const query = `SELECT * FROM ${schema}.plan ORDER BY createddate DESC`;
+        const query = `SELECT * FROM ${schema}.plan ORDER BY lastmodifieddate DESC`;
         const result = await sql.query(query);
         return result.rows;
     },

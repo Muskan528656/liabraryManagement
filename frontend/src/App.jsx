@@ -163,73 +163,73 @@ function AppContent() {
             <ToastManager />
             <Router >
               <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Main socket={connectedSocket} />}>
-                <Route
-                  index
-                  element={
-                    hasAnyViewPermission() ? (
-                      <Dashboard />
-                    ) : (
-                      <>
-                        <div style={{ opacity: 0.5, pointerEvents: 'none', filter: 'grayscale(50%)' }}>
-                          <Dashboard disabled={true} />
-                        </div>
-                        <PermissionDenied />
-                      </>
-                    )
-                  }
-                />
-                <Route path="userroles" element={<UserRole permissions={getPermissionForModule("User Roles")} />} />
-                <Route path="user-role/:id" element={<UserRoleDetail permissions={getPermissionForModule("User Roles")} />} />
-                <Route path="/publisher" element={<Publisher permissions={getPermissionForModule("Publisher")} />} />
-                <Route path="/publisher/:id" element={<PublisherDetail permissions={getPermissionForModule("Publisher")} />} />
-                <Route path="author" element={<Author permissions={getPermissionForModule("Authors")} />} />
-                <Route path="author/:id" element={<AuthorDetail permissions={getPermissionForModule("Authors")} />} />
-                <Route path="plans" element={<Plan permissions={getPermissionForModule("Plan")} />} />
-                <Route path="plans/:id" element={<PlanDetail permissions={getPermissionForModule("Plan")} />} />
-                <Route path="book" element={<Books permissions={getPermissionForModule("Books")} />} />
-                <Route path="book/:id" element={<BookDetail permissions={getPermissionForModule("Books")} />} />
-                <Route path="category" element={<Category permissions={getPermissionForModule("Categories")} />} />
-                <Route path="category/:id" element={<CategoryDetail permissions={getPermissionForModule("Categories")} />} />
-                <Route path="vendor" element={<Vendor permissions={getPermissionForModule("Vendors")} />} />
-                <Route path="vendor/:id" element={<VendorDetail permissions={getPermissionForModule("Vendors")} />} />
-                <Route path="purchase" element={<Purchase permissions={getPermissionForModule("Purchases")} />} />
-                <Route path="purchase/:id" element={<PurchaseDetail permissions={getPermissionForModule("Purchases")} />} />
-                <Route path="/purchase/bulk" element={<BulkPurchasePage permissions={getPermissionForModule("Purchases")} />} />
-                {/* <Route path="subscriptions" element={<Subscription />} /> */}
-                <Route path="subscriptions/:id" element={<SubscriptionDetail permissions={getPermissionForModule("Plan")} />} />
-                <Route path="permissions" element={<Permission permissions={getPermissionForModule("Permission")} />} />
-                <Route path="user" element={<User permissions={getPermissionForModule("Users")} />} />
-                <Route path="user/:id" element={<UserDetail permissions={getPermissionForModule("Users")} />} />
-                <Route path="librarycard" element={<LibraryCard permissions={getPermissionForModule("Library Members")} />} />
-                <Route path="librarycard/:id" element={<LibraryCardDetail permissions={getPermissionForModule("Library Members")} />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Main socket={connectedSocket} />}>
+                  <Route
+                    index
+                    element={
+                      hasAnyViewPermission() ? (
+                        <Dashboard />
+                      ) : (
+                        <>
+                          <div style={{ opacity: 0.5, pointerEvents: 'none', filter: 'grayscale(50%)' }}>
+                            <Dashboard disabled={true} />
+                          </div>
+                          <PermissionDenied />
+                        </>
+                      )
+                    }
+                  />
+                  <Route path="userroles" element={<UserRole permissions={getPermissionForModule("User Roles")} />} />
+                  <Route path="user-role/:id" element={<UserRoleDetail permissions={getPermissionForModule("User Roles")} />} />
+                  <Route path="/publisher" element={<Publisher permissions={getPermissionForModule("Publisher")} />} />
+                  <Route path="/publisher/:id" element={<PublisherDetail permissions={getPermissionForModule("Publisher")} />} />
+                  <Route path="author" element={<Author permissions={getPermissionForModule("Authors")} />} />
+                  <Route path="author/:id" element={<AuthorDetail permissions={getPermissionForModule("Authors")} />} />
+                  <Route path="plans" element={<Plan permissions={getPermissionForModule("Plan")} />} />
+                  <Route path="plans/:id" element={<PlanDetail permissions={getPermissionForModule("Plan")} />} />
+                  <Route path="book" element={<Books permissions={getPermissionForModule("Books")} />} />
+                  <Route path="book/:id" element={<BookDetail permissions={getPermissionForModule("Books")} />} />
+                  <Route path="classification" element={<Category permissions={getPermissionForModule("Categories")} />} />
+                  <Route path="classification/:id" element={<CategoryDetail permissions={getPermissionForModule("Categories")} />} />
+                  <Route path="vendor" element={<Vendor permissions={getPermissionForModule("Vendors")} />} />
+                  <Route path="vendor/:id" element={<VendorDetail permissions={getPermissionForModule("Vendors")} />} />
+                  <Route path="purchase" element={<Purchase permissions={getPermissionForModule("Purchases")} />} />
+                  <Route path="purchase/:id" element={<PurchaseDetail permissions={getPermissionForModule("Purchases")} />} />
+                  <Route path="/purchase/bulk" element={<BulkPurchasePage permissions={getPermissionForModule("Purchases")} />} />
+                  {/* <Route path="subscriptions" element={<Subscription />} /> */}
+                  <Route path="subscriptions/:id" element={<SubscriptionDetail permissions={getPermissionForModule("Plan")} />} />
+                  <Route path="permissions" element={<Permission permissions={getPermissionForModule("Permission")} />} />
+                  <Route path="user" element={<User permissions={getPermissionForModule("Users")} />} />
+                  <Route path="user/:id" element={<UserDetail permissions={getPermissionForModule("Users")} />} />
+                  <Route path="librarycard" element={<LibraryCard permissions={getPermissionForModule("Library Members")} />} />
+                  <Route path="librarycard/:id" element={<LibraryCardDetail permissions={getPermissionForModule("Library Members")} />} />
 
-                <Route path="bookissue" element={<BookIssue permissions={getPermissionForModule("Book Issue")} />} />
-                {/* <Route path="bulkissued" element={<BulkIssue/>} /> */}
-                <Route path="bookreturn" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
-                <Route path="librarycardtype" element={<LibrarySettings permissions={getPermissionForModule("Settings")} />} />
-                <Route path="booksubmit" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
-                <Route path="myprofile" element={<EditProfile />} />
-                <Route path="Company" element={<Company permissions={getPermissionForModule("Company")} />} />
-                <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
-                <Route path="reports/bookinventoryreport" element={<BookInventoryReport permissions={getPermissionForModule("Reports")} />} />
+                  <Route path="bookissue" element={<BookIssue permissions={getPermissionForModule("Book Issue")} />} />
+                  {/* <Route path="bulkissued" element={<BulkIssue/>} /> */}
+                  <Route path="bookreturn" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
+                  <Route path="librarycardtype" element={<LibrarySettings permissions={getPermissionForModule("Settings")} />} />
+                  <Route path="booksubmit" element={<BookSubmit permissions={getPermissionForModule("Book Submissions")} />} />
+                  <Route path="myprofile" element={<EditProfile />} />
+                  <Route path="Company" element={<Company permissions={getPermissionForModule("Company")} />} />
+                  <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
+                  <Route path="reports/bookinventoryreport" element={<BookInventoryReport permissions={getPermissionForModule("Reports")} />} />
 
-                <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
-                <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
-                <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
-                <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
-                <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
-                <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
-                <Route path="reports" element={<ReportsList permissions={getPermissionForModule("Reports")} />} />
-                <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
-                <Route path="reports/inactivebooks" element={<BookUnborrowedReport permissions={getPermissionForModule("Reports")} />} />
-                <Route path="reports/book-borrowing" element={<BookOverDueReport permissions={getPermissionForModule("Reports")} />} />
-              </Route>
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </BranchProvider>
+                  <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
+                  <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
+                  <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
+                  <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
+                  <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />
+                  <Route path="/branches/:id" element={<BranchDetail permissions={getPermissionForModule("Branches")} />} />
+                  <Route path="reports" element={<ReportsList permissions={getPermissionForModule("Reports")} />} />
+                  <Route path="reports/bookpopularityreport" element={<BookPopularityReport />} />
+                  <Route path="reports/inactivebooks" element={<BookUnborrowedReport permissions={getPermissionForModule("Reports")} />} />
+                  <Route path="reports/book-borrowing" element={<BookOverDueReport permissions={getPermissionForModule("Reports")} />} />
+                </Route>
+              </Routes>
+            </Router>
+          </AuthProvider>
+        </BranchProvider>
       </BookSubmissionProvider>
     </TimeZoneProvider>
   );

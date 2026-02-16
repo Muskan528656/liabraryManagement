@@ -21,7 +21,7 @@ import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-import { Country, State } from "country-state-city"; 
+import { Country, State } from "country-state-city";
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
   author: "author",
@@ -387,34 +387,34 @@ const ModuleDetail = ({
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
 
-      
-    if (response && response.data) {
-      const responseData = response.data;
 
-      let finalData = null;
+      if (response && response.data) {
+        const responseData = response.data;
 
-      if (responseData.success && responseData.data) {
-        finalData = responseData.data;
-      } else if (
-        responseData.data &&
-        responseData.data.success &&
-        responseData.data.data
-      ) {
-        finalData = responseData.data.data;
-      } else if (responseData.data) {
-        finalData = responseData.data;
-      } else if (responseData.id) {
-        finalData = responseData;
-      } else if (Array.isArray(responseData) && responseData.length > 0) {
-        finalData = responseData[0];
-      } else {
-        finalData = responseData;
+        let finalData = null;
+
+        if (responseData.success && responseData.data) {
+          finalData = responseData.data;
+        } else if (
+          responseData.data &&
+          responseData.data.success &&
+          responseData.data.data
+        ) {
+          finalData = responseData.data.data;
+        } else if (responseData.data) {
+          finalData = responseData.data;
+        } else if (responseData.id) {
+          finalData = responseData;
+        } else if (Array.isArray(responseData) && responseData.length > 0) {
+          finalData = responseData[0];
+        } else {
+          finalData = responseData;
+        }
+
+        const normalized = normalizeLocationData(finalData);
+
+        setData(normalized);
       }
-
-      const normalized = normalizeLocationData(finalData);
-
-      setData(normalized);
-    }
 
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
@@ -610,26 +610,26 @@ const ModuleDetail = ({
 
 
   const getSelectOptions = useCallback(
-  (field, currentData) => {
-    if (!field || field.type !== "select" || !field.options) {
-      return [];
-    }
+    (field, currentData) => {
+      if (!field || field.type !== "select" || !field.options) {
+        return [];
+      }
 
-    // ✅ If options is a function → execute it
-    if (typeof field.options === "function") {
-      return field.options(currentData || tempData || data || {});
-    }
+      // ✅ If options is a function → execute it
+      if (typeof field.options === "function") {
+        return field.options(currentData || tempData || data || {});
+      }
 
-    // ✅ Static array
-    if (Array.isArray(field.options)) {
-      return field.options;
-    }
+      // ✅ Static array
+      if (Array.isArray(field.options)) {
+        return field.options;
+      }
 
-    // ✅ Lookup string
-    return externalData?.[field.options] || lookupOptions?.[field.options] || [];
-  },
-  [externalData, lookupOptions, tempData, data]
-);
+      // ✅ Lookup string
+      return externalData?.[field.options] || lookupOptions?.[field.options] || [];
+    },
+    [externalData, lookupOptions, tempData, data]
+  );
 
   const handleLookupNavigation = (lookupConfig, record, event = null) => {
     if (event) {
@@ -910,64 +910,64 @@ const ModuleDetail = ({
 
 
   const handleFieldChange = (fieldKey, value, field) => {
-  console.log("Field Change:", fieldKey, value);
+    console.log("Field Change:", fieldKey, value);
 
-  if (!isEditing || !tempData) return;
+    if (!isEditing || !tempData) return;
 
-  // 🔥 Custom onChange handler support
-  if (field && typeof field.onChange === "function") {
-    field.onChange(value, tempData, setTempData);
-    return;
-  }
+    // 🔥 Custom onChange handler support
+    if (field && typeof field.onChange === "function") {
+      field.onChange(value, tempData, setTempData);
+      return;
+    }
 
-  // ✅ Create updatedData FIRST
-  let updatedData = {
-    ...tempData,
-    [fieldKey]: value,
+    // ✅ Create updatedData FIRST
+    let updatedData = {
+      ...tempData,
+      [fieldKey]: value,
+    };
+
+    // ✅ Reset dependent dropdowns
+    if (fieldKey === "country") {
+      updatedData.state = "";
+      updatedData.city = "";
+    }
+
+    if (fieldKey === "state") {
+      updatedData.city = "";
+    }
+
+    // ✅ Auto timezone & currency logic
+    if (fieldKey === "country" || fieldKey === "country_code") {
+      const countryInfo = getCountryInfo(value);
+
+      if (countryInfo.timezone) {
+        ["timezone", "time_zone", "timeZone"].forEach((key) => {
+          if (updatedData.hasOwnProperty(key)) {
+            updatedData[key] = countryInfo.timezone;
+          }
+        });
+      }
+
+      if (countryInfo.currency) {
+        ["currency", "currency_code", "currencyCode"].forEach((key) => {
+          if (updatedData.hasOwnProperty(key)) {
+            updatedData[key] = countryInfo.currency;
+          }
+        });
+      }
+    }
+
+    // ✅ Purchase calculation logic
+    if (moduleName === "purchase") {
+      if (fieldKey === "quantity" || fieldKey === "unit_price") {
+        const quantity = parseFloat(updatedData.quantity) || 0;
+        const unitPrice = parseFloat(updatedData.unit_price) || 0;
+        updatedData.total_amount = (quantity * unitPrice).toFixed(2);
+      }
+    }
+
+    setTempData(updatedData);
   };
-
-  // ✅ Reset dependent dropdowns
-  if (fieldKey === "country") {
-    updatedData.state = "";
-    updatedData.city = "";
-  }
-
-  if (fieldKey === "state") {
-    updatedData.city = "";
-  }
-
-  // ✅ Auto timezone & currency logic
-  if (fieldKey === "country" || fieldKey === "country_code") {
-    const countryInfo = getCountryInfo(value);
-
-    if (countryInfo.timezone) {
-      ["timezone", "time_zone", "timeZone"].forEach((key) => {
-        if (updatedData.hasOwnProperty(key)) {
-          updatedData[key] = countryInfo.timezone;
-        }
-      });
-    }
-
-    if (countryInfo.currency) {
-      ["currency", "currency_code", "currencyCode"].forEach((key) => {
-        if (updatedData.hasOwnProperty(key)) {
-          updatedData[key] = countryInfo.currency;
-        }
-      });
-    }
-  }
-
-  // ✅ Purchase calculation logic
-  if (moduleName === "purchase") {
-    if (fieldKey === "quantity" || fieldKey === "unit_price") {
-      const quantity = parseFloat(updatedData.quantity) || 0;
-      const unitPrice = parseFloat(updatedData.unit_price) || 0;
-      updatedData.total_amount = (quantity * unitPrice).toFixed(2);
-    }
-  }
-
-  setTempData(updatedData);
-};
 
 
   // const handleFieldChange = (fieldKey, value, field) => {
@@ -1174,10 +1174,10 @@ const ModuleDetail = ({
       return (
         <Form.Group key={index} className="mb-3">
           <Form.Label className="fw-semibold">
-         { isEditing ?  field.label : null} 
+            {isEditing ? field.label : null}
           </Form.Label>
 
-        
+
 
           {isEditing && !isNonEditableField && (
             <div

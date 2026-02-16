@@ -166,7 +166,7 @@ export const getPurchaseConfig = (data = {}, props = {}, timeZone, permissions =
             vendors: "vendor",
             books: "book",
             authors: "author",
-            categories: "category",
+            categories: "classification",
             company: "company"
         },
         customHandlers: {

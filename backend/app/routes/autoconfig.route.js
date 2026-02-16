@@ -20,6 +20,7 @@ module.exports = (app) => {
  
     router.get("/", fetchUser, async (req, res) => {
         try {
+                 AutoConfig.init(req.userinfo.tenantcode);
             const configs = await AutoConfig.findAll();
             res.status(200).json({
                 success: true,
@@ -47,7 +48,7 @@ module.exports = (app) => {
                     error: "Config ID is required"
                 });
             }
-
+     AutoConfig.init(req.userinfo.tenantcode);
             const config = await AutoConfig.findById(id);
             if (!config) {
                 return res.status(404).json({
@@ -196,7 +197,7 @@ module.exports = (app) => {
                         error: "User authentication required"
                     });
                 }
-
+     AutoConfig.init(req.userinfo.tenantcode);
                 const updatedConfig = await AutoConfig.updateById(id, req.body, userId);
                 if (!updatedConfig) {
                     return res.status(404).json({
@@ -242,6 +243,7 @@ module.exports = (app) => {
                 });
             }
 
+                 AutoConfig.init(req.userinfo.tenantcode);
             const result = await AutoConfig.deleteById(id);
 
             if (!result.success) {
@@ -276,6 +278,7 @@ module.exports = (app) => {
                     error: "Table name is required"
                 });
             }
+            AutoConfig.init(req.userinfo.tenantcode);
 
             const config = await AutoConfig.getByTableName(tableName);
 

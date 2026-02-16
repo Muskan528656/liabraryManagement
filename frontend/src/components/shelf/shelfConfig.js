@@ -1,6 +1,5 @@
-import { Badge } from "react-bootstrap";
+import { Badge, ProgressBar } from "react-bootstrap";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
-import Shelf from "./shelf";
 
 export const getShelfConfig = (
     externalData = {},
@@ -11,46 +10,165 @@ export const getShelfConfig = (
     const ShelfModel = createModel({
         modelName: "Shelf",
         fields: {
-            shelf_name: "Shelf Name",
-            note: "Note",
-            sub_shelf: "Sub Shelf",
-            status: "Status"
+            name: "Name",
+            floor: "Floor",
+            rack: "Rack",
+            classification_type: "Classification Type",
+            classification_from: "From Range",
+            classification_to: "To Range",
+            capacity: "Capacity"
         },
-        required: ["shelf_name"]
+        required: ["name", "floor", "rack"]
     });
 
     return {
         moduleName: "shelf",
-        moduleLabel: "Shelf",
+        moduleLabel: "Rack Mapping",
         apiEndpoint: "shelf",
 
-        importMatchFields: ["shelf_name"],
+        importMatchFields: ["name", "floor", "rack"],
+        importModel: ShelfModel,
 
-        initialFormData: {
-            shelf_name: "",
-            note: "",
-            sub_shelf: "",
-            status: true
+        initialFormData: (editingItem) => {
+            if (editingItem) {
+                return {
+                    name: editingItem.name || "",
+                    floor: editingItem.floor || "",
+                    rack: editingItem.rack || "",
+                    classification_type: editingItem.classification_type || "",
+                    classification_from: editingItem.classification_from || "",
+                    classification_to: editingItem.classification_to || "",
+                    capacity: editingItem.capacity || 100
+                };
+            }
+
+            return {
+                name: "",
+                floor: "",
+                rack: "",
+                classification_type: "",
+                classification_from: "",
+                classification_to: "",
+                capacity: 100
+            };
+        },
+
+        onFieldChange: async (fieldName, value, formData, setFormData, api, setFieldState) => {
+            // When floor changes, auto-generate next rack number
+            if (fieldName === 'floor' && value?.trim()) {
+                try {
+                    const response = await api.get(`/shelf/next-rack/${encodeURIComponent(value)}`);
+                    if (response.data?.rack) {
+                        setFormData(prev => ({
+                            ...prev,
+                            rack: response.data.rack
+                        }));
+                        if (setFieldState) {
+                            setFieldState('rack', {
+                                helpText: `Auto-generated: ${response.data.rack}`
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching next rack number:", error);
+                }
+            }
+
+            // When name (category) changes, auto-fill classification fields
+            if (fieldName === 'name' && value) {
+                try {
+                    const api = (await import('../../api/dataApi')).default;
+                    const classificationApi = new api('classification');
+                    const response = await classificationApi.get('/');
+                    const classifications = response.data || [];
+                    
+                    // Find the selected classification by name
+                    const selected = classifications.find(item => item.name === value);
+                    
+                    if (selected) {
+                        setFormData(prev => ({
+                            ...prev,
+                            name: value,
+                            classification_type: selected.classification_type || '',
+                            classification_from: selected.classification_from || '',
+                            classification_to: selected.classification_to || ''
+                        }));
+                        
+                        if (setFieldState) {
+                            setFieldState('classification_type', {
+                                helpText: `Auto-filled: ${selected.classification_type}`
+                            });
+                            setFieldState('classification_from', {
+                                helpText: `Auto-filled: ${selected.classification_from}`
+                            });
+                            setFieldState('classification_to', {
+                                helpText: `Auto-filled: ${selected.classification_to}`
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching classification details:", error);
+                }
+            }
         },
 
         columns: [
-            { field: "shelf_name", label: "Shelf Name" },
-            { field: "note", label: "Note" },
             {
-                field: "sub_shelf",
-                label: "Sub Shelf",
-                render: (val) => val || "-"
+                field: "name",
+                label: "Name",
+                width: "200px",
             },
             {
-                field: "status",
-                label: "Status",
-                sortable: true,
-                render: (value) => {
-                    const isActive = value === true || value === "true" || value === true;
+                field: "floor",
+                label: "Floor",
+                width: "100px",
+                render: (value) => <span className="font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "rack",
+                label: "Rack",
+                width: "100px",
+                render: (value) => <span className="font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "classification_type",
+                label: "Type",
+                width: "100px",
+                render: (value) => <span className="badge bg-info">{value || '-'}</span>,
+            },
+            {
+                field: "classification_from",
+                label: "From",
+                width: "80px",
+                render: (value) => <span className="text-info font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "classification_to",
+                label: "To",
+                width: "80px",
+                render: (value) => <span className="text-info font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "capacity",
+                label: "Capacity",
+                width: "150px",
+                render: (value, row) => {
+                    const capacity = parseInt(value) || 100;
+                    const used = row?.books_count || 0;
+                    const percentage = Math.min((used / capacity) * 100, 100);
+                    let variant = "success";
+                    if (percentage > 70) variant = "warning";
+                    if (percentage > 90) variant = "danger";
+                    
                     return (
-                        <Badge bg={isActive ? "success" : "danger"}>
-                            {isActive ? "Active" : "Inactive"}
-                        </Badge>
+                        <div>
+                            <small className="text-muted">{used}/{capacity}</small>
+                            <ProgressBar 
+                                now={percentage} 
+                                variant={variant} 
+                                style={{ height: '8px', marginTop: '4px' }}
+                            />
+                        </div>
                     );
                 }
             }
@@ -58,139 +176,135 @@ export const getShelfConfig = (
 
         formFields: [
             {
-                name: "shelf_name",
-                label: "Shelf Name",
+                name: "floor",
+                label: "Floor",
                 type: "text",
                 required: true,
-                placeholder: "Enter shelf name",
+                placeholder: "Enter floor",
                 colSize: 6,
             },
             {
-                name: "sub_shelf",
-                label: "Sub Shelf",
+                name: "rack",
+                label: "Rack",
                 type: "text",
                 required: true,
-                placeholder: "Enter sub shelf name",
+                placeholder: "Enter rack number (e.g., RACK-01)",
                 colSize: 6,
             },
             {
-                name: "note",
-                label: "Note",
-                type: "textarea",
-                required: true,
-                placeholder: "Enter notes",
-                colSize: 6,
-            },
-            {
-                name: "status",
-                label: "Status",
+                name: "name",
+                label: "Category Name",
                 type: "select",
-                options: [
-                    { label: "Active", value: true },
-                    { label: "Inactive", value: false }
-                ],
+                asyncSelect: true,
+                required: true,
+                placeholder: "Search and select category",
+                helpText: "Select category to auto-fill range",
+                colSize: 6,
+                loadOptions: async (inputValue) => {
+                    try {
+                        const api = (await import('../../api/dataApi')).default;
+                        const classificationApi = new api('classification');
+                        const response = await classificationApi.get('/');
+                        const classifications = response.data || [];
+                        
+                        // Filter by input value if provided
+                        const filtered = inputValue 
+                            ? classifications.filter(item => 
+                                item.category?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                                item.name?.toLowerCase().includes(inputValue.toLowerCase())
+                              )
+                            : classifications;
+                        
+                        // Create options with category - name (from-to) format
+                        return filtered.map(item => ({
+                            value: item.name,
+                            label: `${item.category} - ${item.name} (${item.classification_from || '0'} to ${item.classification_to || '0'})`,
+                            data: item
+                        }));
+                    } catch (e) {
+                        console.error("Error loading classifications:", e);
+                        return [];
+                    }
+                },
+                defaultOptions: true,
+                clearable: true,
+            },
+            {
+                name: "classification_type",
+                label: "Classification Type",
+                type: "text",
+                required: true,
+                placeholder: "e.g., DDC, LLC",
+                colSize: 6,
+                readOnly: true,
+                helpText: "Auto-filled from category selection"
+            },
+            {
+                name: "classification_from",
+                label: "Range From",
+                type: "text",
+                required: true,
+                placeholder: "Auto-filled",
+                colSize: 6,
+                readOnly: true,
+                helpText: "Auto-filled from category selection"
+            },
+            {
+                name: "classification_to",
+                label: "Range To",
+                type: "text",
+                required: true,
+                placeholder: "Auto-filled",
+                colSize: 6,
+                readOnly: true,
+                helpText: "Auto-filled from category selection"
+            },
+            {
+                name: "capacity",
+                label: "Capacity",
+                type: "number",
+                required: true,
+                placeholder: "Enter capacity",
+                defaultValue: 100,
+                min: 1,
                 colSize: 6,
             }
         ],
 
-        transformBeforeSave: (data) => {
-            if (data.sub_shelf) {
-                data.sub_shelf = data.sub_shelf.toString().trim();
-            }
-            return data;
-        },
-
-        transformAfterFetch: (data) => {
-            if (data.sub_shelf && typeof data.sub_shelf === 'string') {
-                if (data.sub_shelf.trim().startsWith('[')) {
-                    try {
-                        const parsed = JSON.parse(data.sub_shelf);
-                        data.sub_shelf = Array.isArray(parsed) ? parsed.join(', ') : data.sub_shelf;
-                    } catch (e) {
-                    }
-                }
-            }
-            return data;
-        },
-        // validationRules: (formData,allPlans, editingPlan) => {
-        //     const errors = [];
-
-        //     console.log("formData in validationRules:", formData);
-        //     console.log("allPlans in validationRules:", allPlans);
-        //     console.log("editingPlan in validationRules:", editingPlan);
-        //     if (!formData.shelf_name?.trim()) {
-        //         errors.push("Shelf name is required");
-        //     }
-
-        //      if (!formData.sub_shelf?.trim()) { 
-        //         errors.push("Sub Shelf is required");
-        //     }
-        //       if (!formData.note?.trim()) {
-        //         errors.push("Note is required");
-        //     }
-
-        //     const duplicateName = allPlans.find(
-        //         Shelf => Shelf.sub_shelf?.toLowerCase() === formData.sub_shelf?.toLowerCase() &&
-        //             Shelf.id !== editingPlan?.id
-        //     );
-        //     if (duplicateName) {
-        //         errors.push("Shelf with this sub shelf already exists");
-        //     }
-
-        //     // Shelf name unique validation (optional)
-        //     // if (formData.shelf_name?.trim()) {
-        //     //     const existingShelves = externalData.existingShelves || [];
-        //     //     const isDuplicate = existingShelves.some(shelf =>
-        //     //         shelf.shelf_name === formData.shelf_name.trim() &&
-        //     //         shelf.id !== formData.id
-        //     //     );
-
-        //     //     if (isDuplicate) {
-        //     //         errors.push("Shelf name already exists");
-        //     //     }
-        //     // }
-
-        //     return errors;
-        // },
-        validationRules: (formData, allPlans, editingPlan) => {
+        validationRules: (formData, allShelves, editingItem) => {
             const errors = [];
-            // const noNumberRegex = /^[A-Za-z\s]+$/;
 
-            if (!formData.shelf_name?.trim()) {
-                errors.push("Shelf name is required");
+            if (!formData.name?.trim()) {
+                errors.push("Name is required");
             }
-            // else if (!noNumberRegex.test(formData.shelf_name.trim())) {
-            //     errors.push("Numbers are not allowed in shelf name");
-            // }
 
-            if (!formData.sub_shelf?.trim()) {
-                errors.push("Sub Shelf is required");
+            if (!formData.floor?.trim()) {
+                errors.push("Floor is required");
             }
-            // else if (!noNumberRegex.test(formData.sub_shelf.trim())) {
-            //     errors.push("Numbers are not allowed in sub shelf");
-            // }
 
-            if (!formData.note?.trim()) {
-                errors.push("Note is required");
+            if (!formData.rack?.trim()) {
+                errors.push("Rack is required");
             }
-            //  else if (!noNumberRegex.test(formData.note.trim())) {
-            //     errors.push("Numbers are not allowed in note");
-            // }
 
-            const duplicateName = allPlans.find(
-                shelf =>
-                    shelf.sub_shelf?.toLowerCase() === formData.sub_shelf?.toLowerCase() &&
-                    shelf.id !== editingPlan?.id
-            );
+            if (!formData.classification_type?.trim()) {
+                errors.push("Classification Type is required");
+            }
 
-            if (duplicateName) {
-                errors.push("Shelf with this sub shelf already exists");
+            if (!formData.classification_from?.trim()) {
+                errors.push("Range From is required");
+            }
+
+            if (!formData.classification_to?.trim()) {
+                errors.push("Range To is required");
+            }
+
+            if (!formData.capacity) {
+                errors.push("Capacity is required");
             }
 
             return errors;
         },
 
-        // ================= FEATURES =================
         features: {
             showBulkInsert: false,
             showImportExport: true,
@@ -200,10 +314,8 @@ export const getShelfConfig = (
             showCheckbox: true,
             showActions: true,
             showAddButton: true,
-
             allowEdit: permissions?.allowEdit ?? true,
             allowDelete: permissions?.allowDelete ?? true,
-
             showImportButton: true,
             showAdvancedFilter: true,
             permissions: permissions || {},
@@ -211,54 +323,49 @@ export const getShelfConfig = (
 
         filterFields: [
             {
-                name: "shelf_name",
-                label: "Shelf Name",
+                name: "name",
+                label: "Name",
                 type: "text",
-                placeholder: "Search by shelf name"
+                placeholder: "Search by name"
             },
             {
-                name: "sub_shelf",
-                label: "Sub Shelf",
+                name: "floor",
+                label: "Floor",
                 type: "text",
-                placeholder: "Search by sub shelf"
+                placeholder: "Search by floor"
             },
             {
-                name: "status",
-                label: "Status",
-                type: "select",
-                options: [
-                    { label: "Active", value: true },
-                    { label: "Inactive", value: false }
-                ]
+                name: "rack",
+                label: "Rack",
+                type: "text",
+                placeholder: "Search by rack"
             }
         ],
 
-        importModel: ShelfModel,
-
-        // ================= CUSTOM METHODS =================
-        onBeforeSubmit: (formData) => {
-            return {
-                ...formData,
-                sub_shelf: formData.sub_shelf ? String(formData.sub_shelf).trim() : ""
-            };
+        customHandlers: {
+            beforeSave: (formData, editingItem) => {
+                if (formData.capacity) {
+                    formData.capacity = parseInt(formData.capacity);
+                }
+                return true;
+            },
+            afterSave: (response, editingItem) => {
+                console.log("Shelf saved:", response);
+            }
         },
 
-        // ================= DETAIL VIEW =================
-        detailViewFields: [
-            { label: "Shelf Name", field: "shelf_name" },
-            { label: "Sub Shelf", field: "sub_shelf" },
-            { label: "Note", field: "note" },
-            {
-                label: "Status",
-                field: "status",
-                render: (value) => (
-                    <Badge bg={value ? "success" : "danger"}>
-                        {value ? "Active" : "Inactive"}
-                    </Badge>
-                )
-            },
-            { label: "Created Date", field: "createddate", type: "datetime" },
-            { label: "Last Modified", field: "lastmodifieddate", type: "datetime" }
+        details: [
+            { key: "name", label: "Name", type: "text" },
+            { key: "floor", label: "Floor", type: "text" },
+            { key: "rack", label: "Rack", type: "text" },
+            { key: "classification_type", label: "Classification Type", type: "text" },
+            { key: "classification_from", label: "Range From", type: "text" },
+            { key: "classification_to", label: "Range To", type: "text" },
+            { key: "capacity", label: "Capacity", type: "text" },
+            { key: "createddate", label: "Created Date", type: "date" },
+            { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
+            { key: "createdbyid", label: "Created By", type: "text" },
+            { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
         ]
     };
 };

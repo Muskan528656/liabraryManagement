@@ -92,7 +92,6 @@ module.exports = (app) => {
         } catch (err) {
             console.error(err);
 
-
             if (err.code === '23502') {
                 return res.status(400).json({ errors: "Required field cannot be null" });
             }
@@ -151,7 +150,6 @@ module.exports = (app) => {
 
                 const updatedBy = req.userinfo.id;
                 const updateData = { id };
-
                 if (plan_name !== undefined) updateData.plan_name = plan_name;
                 if (duration_days !== undefined)
                     updateData.duration_days = parseInt(duration_days);
@@ -164,7 +162,6 @@ module.exports = (app) => {
                 if (is_active !== undefined) updateData.is_active = is_active;
 
                 updateData.lastmodifiedbyid = updatedBy;
-
                 const fieldsToUpdate = Object.keys(updateData);
                 if (fieldsToUpdate.length <= 2) {
                     return res.status(400).json({
@@ -263,7 +260,6 @@ module.exports = (app) => {
             }
 
             Plan.init(req.userinfo.tenantcode);
-
             const result = await Plan.deletePlan(id);
 
             return res.status(200).json({

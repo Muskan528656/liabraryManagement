@@ -13,6 +13,7 @@ function init(schema_name) {
 }
 
 async function getAllRecords() {
+  console.log("schemaschema", schema)
   let query = `SELECT * FROM demo.object_type ORDER BY label`;
 
   let result = await sql.query(query);
