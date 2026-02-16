@@ -38,7 +38,6 @@ module.exports = (app) => {
     router.get(
         "/",
         fetchUser,
-        checkPermission("Branches", "allow_view"),
         async (req, res) => {
             try {
                 Branch.init(req.userinfo.tenantcode);

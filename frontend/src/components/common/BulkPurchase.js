@@ -18,8 +18,6 @@ import PermissionDenied from '../../utils/permission_denied';
 const BulkPurchasePage = ({ permissions }) => {
 
 
-
-
     const navigate = useNavigate();
 
     const [multiInsertRows, setMultiInsertRows] = useState([{
@@ -133,7 +131,7 @@ const BulkPurchasePage = ({ permissions }) => {
             const purchaseApi = new DataApi("purchase");
             const purchaseResponse = await purchaseApi.fetchAll();
 
-            const bookApi = new DataApi("book");
+            const bookApi = new DataApi("book/active");
             const bookResponse = await bookApi.fetchAll();
 
             let currentIssuedCount = 0;
@@ -551,7 +549,7 @@ const BulkPurchasePage = ({ permissions }) => {
 
     const fetchVendors = async () => {
         try {
-            const vendorApi = new DataApi("vendor");
+            const vendorApi = new DataApi("vendor/active");
             const response = await vendorApi.fetchAll();
 
             if (response.data) {
@@ -564,7 +562,7 @@ const BulkPurchasePage = ({ permissions }) => {
 
     const fetchBooks = async () => {
         try {
-            const bookApi = new DataApi("book");
+            const bookApi = new DataApi("book/active");
             const response = await bookApi.fetchAll();
             if (response.data) {
                 setBooks(response.data);
@@ -739,7 +737,7 @@ const BulkPurchasePage = ({ permissions }) => {
 
         try {
             setLoading(true);
-            const bookApi = new DataApi("book");
+            const bookApi = new DataApi("book/active");
 
 
             const bookDataToSend = {

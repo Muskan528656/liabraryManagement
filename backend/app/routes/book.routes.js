@@ -47,6 +47,30 @@ module.exports = (app) => {
     }
   );
 
+ router.get(
+    "/active",
+    fetchUser,
+    async (req, res) => {
+      try {
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
+        
+        // Add search filter if present in query
+        const filters = {};
+        if (req.query.search) {
+          filters.search = req.query.search;
+        }
+        
+        const books = await Book.findAllActive();
+        res.json(books);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  );
+
+
     router.get(
       "/book-popularity-analytics",
       fetchUser,

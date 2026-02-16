@@ -1153,27 +1153,15 @@ ORDER BY lm.email`;
 }
 
 async function sendAllReminders() {
-
-
   const startTime = Date.now();
-
   try {
-
     await sendDueReminder();
-
-
-
-
     await sendOverdueReminder();
-
   } catch (error) {
     console.error(" ERROR in sendAllReminders:", error);
   } finally {
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
-
-
-
   }
 }
 

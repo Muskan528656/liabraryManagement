@@ -64,6 +64,22 @@ async function findAll() {
 }
 
 
+async function findAllActive() {
+  try {
+    if (!schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+    const query = `SELECT * FROM ${schema}.vendors WHERE branch_id = $1 AND status ='true' ORDER BY createddate DESC`;
+    const result = await sql.query(query, [branchId]);
+    return result.rows.length > 0 ? result.rows : [];
+  } catch (error) {
+    console.error("Error in findAllActive:", error);
+    throw error;
+  }
+}
+
+
+
 async function findById(id) {
   try {
     if (!schema) {
@@ -336,4 +352,5 @@ module.exports = {
   deleteById,
   // findByName,
   findByEmail,
+  findAllActive
 };

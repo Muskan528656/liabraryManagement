@@ -24,11 +24,21 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-
   router.get("/", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
       Vendor.init(req.userinfo.tenantcode, req.branchId);
       const vendors = await Vendor.findAll();
+      return res.status(200).json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  router.get("/active", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
+    try {
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
+      const vendors = await Vendor.findAllActive();
       return res.status(200).json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
