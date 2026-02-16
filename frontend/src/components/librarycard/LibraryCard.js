@@ -101,6 +101,7 @@ const LibraryCard = ({ permissions, ...props }) => {
             canDelete: permissions.allowDelete
           }
         );
+        console.log("config->",config);
         setBaseConfig(config);
       } catch {
         setConfigError("Failed to load configuration");

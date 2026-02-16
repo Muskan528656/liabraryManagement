@@ -59,9 +59,9 @@ async function findPermissionsByRole(roleId) {
         p.allow_create,
         p.allow_edit,
         p.allow_delete
-      FROM ${this.schema}.permissions p
-      LEFT JOIN ${this.schema}.module m ON p.module_id = m.id
-      LEFT JOIN ${this.schema}.role_permissions rp ON rp.permission_id = p.id
+      FROM demo.permissions p
+      LEFT JOIN demo.module m ON p.module_id = m.id
+      LEFT JOIN demo.role_permissions rp ON rp.permission_id = p.id
       WHERE rp.role_id = $1
       ORDER BY m.name ASC
     `, [roleId]);
@@ -130,7 +130,7 @@ async function createUser(newUser) {
 
   if (!finalCompanyId) {
     console.error("Company ID not found. Schema:", this.schema, "Provided companyid:", companyid);
-    throw new Error(`Company ID is required for user creation. Schema: ${this.schema}`);
+    throw new Error(`Company ID is required for user creation. Schema: demo`);
   }
 
 
@@ -138,11 +138,11 @@ async function createUser(newUser) {
 
   if (!this.schema || this.schema === 'undefined' || this.schema === 'null') {
     console.error("Error: Invalid schema name:", this.schema);
-    throw new Error(`Invalid schema name: ${this.schema}. Cannot create user.`);
+    throw new Error(`Invalid schema name: demo. Cannot create user.`);
   }
 
   const result = await sql.query(
-    `INSERT into ${this.schema}.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code,library_member_type`,
+    `INSERT into demo.user (firstname, lastname, email, password, userrole, companyid, managerid,isactive, whatsapp_number,whatsapp_settings, country_code) VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9, $10, $11) RETURNING id, firstname, lastname, email, password, userrole, companyid,managerid,isactive, whatsapp_number, whatsapp_settings, country_code,library_member_type`,
     [
       firstname,
       lastname,
@@ -192,7 +192,7 @@ async function findByEmail(email) {
           u.isactive,
           u.branch_id,
           u.library_member_type
-        FROM ${this.schema}.user u
+        FROM demo.user u
         WHERE LOWER(TRIM(u.email)) = $1
         LIMIT 1
       )
@@ -224,8 +224,8 @@ async function findByEmail(email) {
       ) AS userinfo
       FROM user_info u
       LEFT JOIN public.company c ON c.id = u.companyid
-      LEFT JOIN ${this.schema}.branches b ON b.id = u.branch_id   
-      LEFT JOIN ${this.schema}.user_role ur ON ur.id = u.userrole::uuid
+      LEFT JOIN demo.branches b ON b.id = u.branch_id   
+      LEFT JOIN demo.user_role ur ON ur.id = u.userrole::uuid
       LIMIT 1;
       `,
       [emailLower]
@@ -288,7 +288,7 @@ async function findAll(userinfo) {
     if (userinfo.userrole === "ADMIN") {
       let query1 =
         query +
-        ` AS companyname FROM ${this.schema}.user u LEFT JOIN public.company c ON c.id = u.companyid ORDER BY username`;
+        ` AS companyname FROM demo.user u LEFT JOIN public.company c ON c.id = u.companyid ORDER BY username`;
       const result1 = await sql.query(query1);
       result = result.concat(result1.rows);
 
@@ -314,7 +314,7 @@ async function findAll(userinfo) {
       }
       if (result.length > 0) return result;
     } else {
-      query += ` AS companyname FROM ${this.schema}.user u LEFT JOIN public.company c ON c.id = u.companyid WHERE u.companyid = $1 AND u.id = $2`;
+      query += ` AS companyname FROM demo.user u LEFT JOIN public.company c ON c.id = u.companyid WHERE u.companyid = $1 AND u.id = $2`;
       const result = await sql.query(query, [userinfo.companyid, userinfo.id]);
 
       if (result.rows.length > 0) return result.rows;
@@ -335,12 +335,12 @@ async function checkForDuplicate(email, phone, userId = null) {
   const params = [email, phone];
   let query = `
       SELECT id, email, phone
-      FROM ${this.schema}.user
+      FROM demo.user
       WHERE email = $1
       ${userId ? `AND id != $3` : ""}
       UNION ALL
       SELECT id, email, phone
-      FROM ${this.schema}.user
+      FROM demo.user
       WHERE phone = $2
       ${userId ? `AND id != $3` : ""}
   `;
@@ -366,7 +366,7 @@ async function checkForDuplicate(email, phone, userId = null) {
 
 async function getAllManager(role) {
   try {
-    var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM ${this.schema}.user WHERE `;
+    var query = `SELECT id, isactive, concat(firstname, ' ' ,lastname) username, userrole FROM demo.user WHERE `;
     query += " userrole = 'ADMIN' OR userrole = 'MANAGER' "; // Fixed duplicate condition
 
     const result = await sql.query(query);
@@ -398,7 +398,7 @@ async function updateRecById(id, userRec, userid) {
 async function updateById(id, userRec) {
   try {
     const result = await sql.query(
-      `UPDATE ${this.schema}.user SET password = $1 WHERE id = $2`,
+      `UPDATE demo.user SET password = $1 WHERE id = $2`,
       [userRec.password, id]
     );
     if (result.rowCount > 0) return "Updated successfully";
@@ -431,7 +431,7 @@ async function getUserCount(companyId) {
   }
 
   try {
-    const query = `SELECT COUNT(*) FROM ${this.schema}.user WHERE companyid = $1 AND userrole = $2`;
+    const query = `SELECT COUNT(*) FROM demo.user WHERE companyid = $1 AND userrole = $2`;
     const result = await sql.query(query, [companyId, "USER"]);
     return parseInt(result.rows[0].count, 10);
   } catch (error) {
