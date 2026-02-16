@@ -90,8 +90,9 @@ const BookPopularityReport = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoryApi = new DataApi("category");
+        const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
+        console.log("Categories API Response:", response);
         const categoriesData = response?.data?.data || response?.data || [];
         setCategories(categoriesData);
       } catch (error) {
@@ -162,6 +163,7 @@ const BookPopularityReport = () => {
       const response = await api.get(
         `/book-popularity-analytics?${params.toString()}`
       );
+
       setReportData(response.data);
     } catch (err) {
       console.error("Error fetching report data:", err);
@@ -175,7 +177,6 @@ const BookPopularityReport = () => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
-      // Clear specific dates if user switches away from "custom"
       ...(field === "days" && value !== "custom" ? { startDate: "", endDate: "" } : {})
     }));
     setCurrentPage(1);
@@ -267,7 +268,13 @@ const BookPopularityReport = () => {
       ),
     },
     { field: "author", label: "Author", width: "150px", align: "center" },
-    { field: "category", label: "Category", width: "120px", align: "center" },
+    {
+      field: "classification",
+      label: "Category",
+      width: "150px",
+      align: "center",
+      render: (_, record) => `${record.classification_from || ''}-${record.classification_to || ''} (${record.category || '-'})`
+    },
     {
       field: "available",
       label: "Available",
@@ -462,7 +469,7 @@ const BookPopularityReport = () => {
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id || cat.name}>{cat.classification_from}-{cat.classification_to} {cat.name}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -482,7 +489,7 @@ const BookPopularityReport = () => {
           </Row>
         </div>
 
-      
+
         <div className="p-3">
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">
