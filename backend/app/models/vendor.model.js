@@ -5,13 +5,15 @@
  */
 const sql = require("./db.js");
 let schema = "";
+let branchId = null;
 
-function init(schema_name) {
-  this.schema = schema_name;
+function init(schema_name, branch_id = null) {
+  schema = schema_name;
+  branchId = branch_id;
 }
 async function findByEmail(email, excludeId = null) {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
@@ -22,13 +24,13 @@ async function findByEmail(email, excludeId = null) {
 
     let query = `
       SELECT *
-      FROM ${this.schema}.vendors
-      WHERE email = $1
+      FROM ${schema}.vendors
+      WHERE email = $1 AND branch_id = $2
     `;
-    const params = [cleanEmail];
+    const params = [cleanEmail, branchId];
 
     if (excludeId) {
-      query += `AND id != $2`;
+      query += `AND id != $3`;
       params.push(excludeId);
     }
 
@@ -49,11 +51,11 @@ async function findByEmail(email, excludeId = null) {
 
 async function findAll() {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT * FROM ${this.schema}.vendors ORDER BY createddate DESC`;
-    const result = await sql.query(query);
+    const query = `SELECT * FROM ${schema}.vendors WHERE branch_id = $1 ORDER BY lastmodifieddate DESC`;
+    const result = await sql.query(query, [branchId]);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
     console.error("Error in findAll:", error);
@@ -62,13 +64,29 @@ async function findAll() {
 }
 
 
-async function findById(id) {
+async function findAllActive() {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `SELECT * FROM ${this.schema}.vendors WHERE id = $1`;
-    const result = await sql.query(query, [id]);
+    const query = `SELECT * FROM ${schema}.vendors WHERE branch_id = $1 AND status ='true' ORDER BY createddate DESC`;
+    const result = await sql.query(query, [branchId]);
+    return result.rows.length > 0 ? result.rows : [];
+  } catch (error) {
+    console.error("Error in findAllActive:", error);
+    throw error;
+  }
+}
+
+
+
+async function findById(id) {
+  try {
+    if (!schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+    const query = `SELECT * FROM ${schema}.vendors WHERE id = $1 AND branch_id = $2`;
+    const result = await sql.query(query, [id, branchId]);
     if (result.rows.length > 0) {
       return result.rows[0];
     }
@@ -94,8 +112,8 @@ async function findById(id) {
 //         : false;
 
 //     const query = `INSERT INTO ${this.schema}.vendors 
-//       (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code) 
-//       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15) 
+//       (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code, branch_id) 
+//       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15,$16) 
 //       RETURNING *`;
 
 //     const values = [
@@ -114,6 +132,7 @@ async function findById(id) {
 //       userId || null,
 //       vendorData.company_id || vendorData.companyId || null,
 //       vendorData.country_code || null,
+//       branchId
 //     ];
 
 //     const result = await sql.query(query, values);
@@ -127,7 +146,7 @@ async function findById(id) {
 
 async function create(vendorData, userId) {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
@@ -138,9 +157,9 @@ async function create(vendorData, userId) {
         ? true
         : false;
 
-    const query = `INSERT INTO ${this.schema}.vendors 
-      (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code) 
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15) 
+    const query = `INSERT INTO ${schema}.vendors 
+      (name, company_name, email, phone, gst_number, pan_number, address, city, state, pincode, country, status, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid, company_id, country_code, branch_id) 
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW(),$13,$13,$14,$15,$16) 
       RETURNING *`;
 
     const values = [
@@ -159,6 +178,7 @@ async function create(vendorData, userId) {
       userId || null,
       vendorData.company_id || vendorData.companyId || null,
       vendorData.country_code || null,
+      branchId
     ];
 
     const result = await sql.query(query, values);
@@ -170,10 +190,9 @@ async function create(vendorData, userId) {
 }
 
 
-
 async function updateById(id, vendorData, userId) {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
@@ -184,8 +203,8 @@ async function updateById(id, vendorData, userId) {
     console.log("vendor status", vendorData.status)
 
     const updateFields = [];
-    const values = [id];
-    let paramIndex = 2;
+    const values = [id, branchId];  // Add branchId to the values
+    let paramIndex = 3;  // Start from 3 since id is $1 and branchId is $2
 
     if (vendorData.name !== undefined) {
       updateFields.push(`name = $${paramIndex++}`);
@@ -253,9 +272,9 @@ async function updateById(id, vendorData, userId) {
       throw new Error("No fields to update");
     }
 
-    const query = `UPDATE ${this.schema}.vendors 
+    const query = `UPDATE ${schema}.vendors 
                    SET ${updateFields.join(', ')}
-                   WHERE id = $1 
+                   WHERE id = $1 AND branch_id = $2
                    RETURNING *`;
 
     const result = await sql.query(query, values);
@@ -270,11 +289,11 @@ async function updateById(id, vendorData, userId) {
 }
 async function deleteById(id) {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    const query = `DELETE FROM ${this.schema}.vendors WHERE id = $1 RETURNING *`;
-    const result = await sql.query(query, [id]);
+    const query = `DELETE FROM ${schema}.vendors WHERE id = $1 AND branch_id = $2 RETURNING *`;
+    const result = await sql.query(query, [id, branchId]);
     if (result.rows.length > 0) {
       return { success: true, message: "Vendor deleted successfully" };
     }
@@ -288,7 +307,7 @@ async function deleteById(id) {
 
 async function findByEmail(email, excludeId = null) {
   try {
-    if (!this.schema) {
+    if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
 
@@ -299,13 +318,13 @@ async function findByEmail(email, excludeId = null) {
     // Base query
     let query = `
       SELECT *
-      FROM ${this.schema}.vendors
-      WHERE email = $1
+      FROM ${schema}.vendors
+      WHERE email = $1 AND branch_id = $2
     `;
-    const params = [cleanEmail];
+    const params = [cleanEmail, branchId];
     // Exclude current ID if provided
     if (excludeId) {
-      query += ` AND id != $2`;
+      query += ` AND id != $3`;
       params.push(excludeId);
     }
 
@@ -324,7 +343,6 @@ async function findByEmail(email, excludeId = null) {
 }
 
 
-
 module.exports = {
   init,
   findAll,
@@ -334,5 +352,5 @@ module.exports = {
   deleteById,
   // findByName,
   findByEmail,
+  findAllActive
 };
-

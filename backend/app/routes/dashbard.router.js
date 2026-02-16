@@ -2,7 +2,7 @@
  * Handles all incoming request for /api/dashboard endpoint
  * dashboard related data 
  * dashboard.model.js
- * DB table for this demo.authors
+ * DB table for this ${schema}.authors
  * SUPPORTED API ENDPOINTS
  *              GET     /api/dashboard/stats
  *              GET     /api/dashboard/other-metrics
@@ -19,7 +19,7 @@ module.exports = (app) => {
     var router = require("express").Router();
     router.get("/", fetchUser, checkPermission("Dashboard", "allow_view"), async (req, res) => {
         try {
-
+            Dashboard.init(req.userinfo.tenantcode, req.branchId);
             const result = await Dashboard.fetchAll();
 
             res.status(200).json({ success: true, data: result });
@@ -33,7 +33,7 @@ module.exports = (app) => {
     router.get("/stats", checkPermission("Dashboard", "allow_view"), async (req, res) => {
         try {
 
-
+            Dashboard.init(req.userinfo.tenantcode, req.branchId);
             const result = await Dashboard.getDashboardStats();
 
             res.status(200).json({ success: true, data: result });
@@ -48,6 +48,7 @@ module.exports = (app) => {
 
     router.get("/other-metrics", checkPermission("Dashboard", "allow_view"), fetchUser, async (req, res) => {
         try {
+             Dashboard.init(req.userinfo.tenantcode, req.branchId);
             const result = await Dashboard.getOtherMetrics();
             res.status(200).json({ success: true, data: result });
 
@@ -59,7 +60,7 @@ module.exports = (app) => {
     });
     router.get("/dashboard", fetchUser, async (req, res) => {
         try {
-            Library.init(req.userinfo.tenantcode);
+            Library.init(req.userinfo.tenantcode, req.branchId);
             const userRole = req.userinfo.userrole?.toUpperCase();
 
             if (userRole === "STUDENT") {

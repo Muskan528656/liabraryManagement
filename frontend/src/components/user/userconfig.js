@@ -7,22 +7,27 @@ import { createModel } from "../common/UniversalCSVXLSXImporter";
 import { Link } from "react-router-dom";
 export const getUserConfig = (externalData = {}, props = {}, permissions = {}, companyInfo, editingItem = null) => {
 
-
+    console.log("externalData in config:", externalData);
     const {
         canCreate = true,
         canEdit = true,
         canDelete = false
     } = permissions || {};
+
+
+    
     const extractData = (source) => {
         if (!source) return [];
         if (Array.isArray(source)) return source;
         if (source.data && Array.isArray(source.data)) return source.data;
         return [];
     };
+    const library_member_type = ["Boys", "Girls", "Other"];
 
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
-
+    console.log("Extracted user roles:", userRoles);
+    
     const UserModel = createModel({
         modelName: "User",
         fields: {
@@ -160,6 +165,8 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     );
                 }
             }
+            ,
+
         ],
 
         initialFormData: {
@@ -283,7 +290,10 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 name: "userrole",
                 label: "Role",
                 type: "select",
-                options: "user-role",
+                options: userRoles.map(role => ({
+                    value: role.id,
+                    label: role.role_name
+                })),
                 required: true,
                 colSize: 6,
             },
@@ -296,7 +306,15 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     { value: false, label: "Inactive" }
                 ],
                 colSize: 6,
-            }
+            },
+            {
+                name: "library_member_type",
+                label: "Gender",
+                type: "select",
+                required: false,
+                options: library_member_type.map((item) => ({ label: item, value: item })),
+                colSize: 6,
+            },
         ],
 
         validationRules: (formData, allUsers, editingUser) => {

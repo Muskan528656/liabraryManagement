@@ -11,12 +11,10 @@ const Submodule = () => {
   const [userData, setUserData] = useState(null);
   const [visibleModulesCount, setVisibleModulesCount] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
-  const [isReportsOpen, setIsReportsOpen] = useState(false);
 
   const getUserData = () => {
     try {
       const user = AuthHelper.getUser();
-      // console.log("User from AuthHelper:", user);
       setUserData(user);
       return user;
     } catch (error) {
@@ -28,7 +26,6 @@ const Submodule = () => {
   const getPermissionsFromAuthHelper = () => {
     try {
       const permissions = AuthHelper.getPermissions();
-      // console.log("Permissions from AuthHelper:", permissions);
       return permissions || [];
     } catch (error) {
       console.error("Error getting permissions:", error);
@@ -61,7 +58,6 @@ const Submodule = () => {
 
       const api = new DataApi("module");
       const resp = await api.fetchAll();
-      // console.log("Modules API Response:", resp);
 
       let modules = [];
 
@@ -99,12 +95,7 @@ const Submodule = () => {
 
 
   const hasPermissionForModule = (module) => {
-    // console.log("\n=== Checking permission for module ===");
-    // console.log("Module:", {
-    //   id: module.id,
-    //   name: module.name,
-    //   api_name: module.api_name
-    // });
+
 
     if (isSystemAdmin()) {
       // console.log("✓ User is System Admin - full access");
@@ -113,20 +104,15 @@ const Submodule = () => {
 
 
     const permissions = getPermissionsFromAuthHelper();
-    // console.log("Total permissions available:", permissions.length);
 
-    // If no permissions found in storage, check if permissions API was called
     if (!permissions || permissions.length === 0) {
-      // console.log("No permissions found in sessionStorage");
 
-      // Check if permissions API was called and failed
       const permissionsApiCalled = sessionStorage.getItem("permissions_api_called");
       if (permissionsApiCalled === "true") {
-        // console.log("Permissions API was called but returned empty");
+
         return false;
       }
 
-      // If permissions API wasn't called yet, show all modules temporarily
       console.log("Permissions not loaded yet, showing all modules temporarily");
       return true;
     }
@@ -135,23 +121,19 @@ const Submodule = () => {
     const moduleName = (module.name || "").toLowerCase().trim();
     const moduleApiName = (module.api_name || "").toLowerCase().trim();
 
-    // console.log("Looking for module ID:", moduleId);
-    // console.log("Looking for module name:", moduleName);
-    // console.log("Looking for module api name:", moduleApiName);
 
     const matchingPermission = permissions.find(perm => {
-      // console.log("Checking permission object:", perm);
 
 
       if (perm.moduleId && moduleId && perm.moduleId.toString() === moduleId.toString()) {
-        // console.log("✓ Match by moduleId");
+
         return true;
       }
 
 
       const permModuleName = (perm.moduleName || perm.name || "").toLowerCase().trim();
       if (permModuleName && moduleName && permModuleName === moduleName) {
-        // console.log("✓ Match by moduleName");
+
         return true;
       }
 
@@ -238,7 +220,7 @@ const Submodule = () => {
         const isActive = m && m.status && m.status.toLowerCase() === "active";
 
         if (!isActive) {
-       
+
           // console.log(`Module "${m.name}" is not active`);
           return false;
         }
@@ -440,7 +422,7 @@ const Submodule = () => {
       <Navbar
         expand="lg"
         style={{
-          padding: "0.56rem 1.3rem",
+          // padding: "0.56rem 1.3rem",
           boxShadow: "none",
         }}
         className="bg-body-tertiary"
@@ -458,7 +440,7 @@ const Submodule = () => {
     <Navbar
       expand="lg"
       style={{
-        padding: "0.56rem 1.3rem",
+        padding: "0.46rem 1.3rem",
         boxShadow: "none",
       }}
       className="bg-body-tertiary"

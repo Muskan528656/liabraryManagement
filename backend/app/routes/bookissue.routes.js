@@ -1,6 +1,7 @@
+
 /**
  * Handles all incoming request for /api/bookissue endpoint
- * DB table for this demo.book_issues
+ * DB table for this ${schema}.book_issues
  * Model used here is bookissue.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/bookissue
@@ -28,23 +29,35 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission("Book Issue", "allow_view"),
+    async (req, res) => {
+      try {
+        BookIssue.init(req.userinfo.tenantcode, req.branchId);
 
-  router.get("/", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
-    try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findAll();
-      return res.status(200).json(issues);
-    } catch (error) {
-      console.error("Error fetching book issues:", error);
-      return res.status(500).json({ errors: "Internal server error" });
+
+        const memberType = req.userinfo.library_member_type;
+
+        const issues = await BookIssue.findAll(memberType);
+
+        return res.status(200).json(issues);
+
+      } catch (error) {
+        console.error("Error fetching book issues:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
     }
-  });
+  );
 
 
   router.get("/active", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findActive();
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
+      // const issues = await BookIssue.findActive();
+      const memberType = req.userinfo.library_member_type;
+      const issues = await BookIssue.findActive(memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching active issues:", error);
@@ -55,8 +68,10 @@ module.exports = (app) => {
 
   router.get("/book/:bookId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findByBookId(req.params.bookId);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
+      // const issues = await BookIssue.findByBookId(req.params.bookId);
+      const memberType = req.userinfo.library_member_type;
+      const issues = await BookIssue.findByBookId(req.params.bookId, memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching book issues:", error);
@@ -67,8 +82,10 @@ module.exports = (app) => {
 
   router.get("/user/:userId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issues = await BookIssue.findByUserId(req.params.userId);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
+      // const issues = await BookIssue.findByUserId(req.params.userId);
+      const memberType = req.userinfo.library_member_type;
+      // const issues = await BookIssue.findByUserId(req.params.userId, memberType);
       return res.status(200).json(issues);
     } catch (error) {
       console.error("Error fetching user issues:", error);
@@ -79,7 +96,7 @@ module.exports = (app) => {
 
   router.get("/card/:cardId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const issues = await BookIssue.findByCardId(req.params.cardId);
       return res.status(200).json(issues);
     } catch (error) {
@@ -91,8 +108,10 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
-      const issue = await BookIssue.findById(req.params.id);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
+      // const issue = await BookIssue.findById(req.params.id);
+      const memberType = req.userinfo.library_member_type;
+      const issue = await BookIssue.findById(req.params.id, memberType);
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }
@@ -128,7 +147,7 @@ module.exports = (app) => {
         const userId = req.userinfo.id;
         const updateData = req.body;
 
-        BookIssue.init(req.userinfo.tenantcode);
+        BookIssue.init(req.userinfo.tenantcode, req.branchId);
 
 
         const existingIssue = await BookIssue.findById(issueId);
@@ -263,7 +282,7 @@ module.exports = (app) => {
   router.post("/issue", fetchUser, checkPermission("Book Issue", "allow_create"), async (req, res) => {
     try {
 
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const result = await BookIssue.issueBook(req);
 
       return res.status(result.success ? 200 : 400).json(result);
@@ -276,7 +295,7 @@ module.exports = (app) => {
 
   router.get("/allowance/:cardId", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const allowance = await BookIssue.getMemberAllowance(req.params.cardId);
 
       if (!allowance) {
@@ -309,7 +328,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        BookIssue.init(req.userinfo.tenantcode);
+        BookIssue.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.user?.id || null;
         const returned = await BookIssue.returnBook(req.params.id, req.body, userId);
         return res.status(200).json({ success: true, data: returned });
@@ -322,7 +341,7 @@ module.exports = (app) => {
 
   router.get("/penalty/:id", fetchUser, checkPermission("Book Issue", "allow_view"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const penalty = await BookIssue.calculatePenalty(req.params.id);
       return res.status(200).json({ success: true, data: penalty });
     } catch (error) {
@@ -340,11 +359,14 @@ module.exports = (app) => {
         return res.status(400).json({ errors: "Invalid payment amount" });
       }
 
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const userId = req.userinfo.id;
 
 
-      const issue = await BookIssue.findById(req.params.id);
+      // const issue = await BookIssue.findById(req.params.id);
+      const memberType = req.userinfo.library_member_type;
+      const issue = await BookIssue.findById(req.params.id, memberType);
+
       if (!issue) {
         return res.status(404).json({ errors: "Book issue not found" });
       }
@@ -439,7 +461,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Book Issue", "allow_delete"), async (req, res) => {
     try {
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const result = await BookIssue.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });
@@ -457,7 +479,7 @@ module.exports = (app) => {
       const bookId = req.params.bookId;
 
 
-      BookIssue.init(req.userinfo.tenantcode);
+      BookIssue.init(req.userinfo.tenantcode, req.branchId);
       const issuedCount = await BookIssue.getIssuedCountByBookId(bookId);
 
       return res.status(200).json({ issued_count: issuedCount });

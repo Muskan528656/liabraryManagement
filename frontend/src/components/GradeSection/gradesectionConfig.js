@@ -33,14 +33,14 @@ export const getGradeSectionConfig = (
 
         // ================= TABLE =================
         columns: [
-            { 
-                field: "grade_name", 
+            {
+                field: "grade_name",
                 label: "Grade Name",
                 sortable: true,
                 filterable: true
             },
-            { 
-                field: "section_name", 
+            {
+                field: "section_name",
                 label: "Section Name",
                 sortable: true,
                 filterable: true
@@ -58,7 +58,7 @@ export const getGradeSectionConfig = (
                     );
                 }
             },
-           
+
         ],
 
         // ================= FORM =================
@@ -106,11 +106,11 @@ export const getGradeSectionConfig = (
         transformBeforeSave: (data) => {
             if (data.grade_name) data.grade_name = data.grade_name.trim();
             if (data.section_name) data.section_name = data.section_name.trim();
-            
+
             if (typeof data.status === 'string') {
                 data.status = data.status === 'true' || data.status === 'active';
             }
-            
+
             return data;
         },
 
@@ -177,7 +177,6 @@ export const getGradeSectionConfig = (
                 label: "Status",
                 type: "select",
                 options: [
-                    { label: "All", value: "" },
                     { label: "Active", value: true },
                     { label: "Inactive", value: false }
                 ]
@@ -193,24 +192,24 @@ export const getGradeSectionConfig = (
             ],
             validation: (row) => {
                 const errors = [];
-                
+
                 if (!row.grade_name?.trim()) {
                     errors.push("Grade name is required");
                 } else if (row.grade_name.length > 50) {
                     errors.push("Grade name cannot exceed 50 characters");
                 }
-                
+
                 if (!row.section_name?.trim()) {
                     errors.push("Section name is required");
                 } else if (row.section_name.length > 10) {
                     errors.push("Section name cannot exceed 10 characters");
                 }
-                
+
                 return errors;
             }
         },
 
-        
+
 
     };
 };

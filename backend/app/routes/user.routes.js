@@ -1,8 +1,6 @@
-
-
 /**
  * Handles all incoming request for /api/user endpoint
- * DB table for this demo.user
+ * DB table for this ${schema}.user
  * Model used here is user.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/user
@@ -231,7 +229,7 @@ module.exports = (app) => {
 
   router.get("/", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const users = await User.findAll(req.query);
       return res.status(200).json(users);
     } catch (error) {
@@ -242,7 +240,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const user = await User.findById(req.params.id);
       if (!user) {
         return res.status(404).json({ errors: "User not found" });
@@ -256,7 +254,7 @@ module.exports = (app) => {
 
   router.get("/email/:email", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const user = await User.findByEmail(req.params.email);
       if (!user) {
         return res.status(404).json({ errors: "User not found" });
@@ -279,6 +277,7 @@ module.exports = (app) => {
       body("email").optional().isEmail().withMessage("Email must be a valid email address"),
       body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
       body("isactive").optional().isBoolean().withMessage("isactive must be a boolean"),
+      body("library_member_type").optional().isBoolean().withMessage("library_member_type "),
     ],
     async (req, res) => {
       try {
@@ -328,7 +327,7 @@ module.exports = (app) => {
           }
         }
 
-        User.init(tenantcode);
+        User.init(tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
 
 
@@ -351,8 +350,9 @@ module.exports = (app) => {
           password: hashedPassword,
           companyid: finalCompanyId
         };
-
+console.log("userDatauserDatauserData",userData)
         const user = await User.create(userData, userId);
+        console.log("user->>>>",user)
         if (!user) {
           return res.status(400).json({ errors: "Failed to create user" });
         }
@@ -375,7 +375,7 @@ module.exports = (app) => {
       console.log("Updating company ID:", req.params.id, "with data:", req.body);
 
       try {
-        User.init(req.userinfo.tenantcode);
+        User.init(req.userinfo.tenantcode, req.branchId);
 
         const existingUser = await User.findById(req.params.id);
 
@@ -471,7 +471,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Users", "allow_delete"), async (req, res) => {
     try {
-      User.init(req.userinfo.tenantcode);
+      User.init(req.userinfo.tenantcode, req.branchId);
       const result = await User.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

@@ -6,7 +6,7 @@ const sql = require("./db.js");
 async function findAll() {
   const query = `
     SELECT *
-    FROM demo.role_permissions
+    FROM ${schema}.role_permissions
     ORDER BY id DESC
   `;
   const result = await sql.query(query);
@@ -19,7 +19,7 @@ async function findAll() {
 async function findById(id) {
   const query = `
     SELECT *
-    FROM demo.role_permissions
+    FROM ${schema}.role_permissions
     WHERE id = $1
   `;
   const result = await sql.query(query, [id]);
@@ -33,7 +33,7 @@ async function findById(id) {
 async function findByRoleAndPermission(roleId, permissionId) {
   const query = `
     SELECT *
-    FROM demo.role_permissions
+    FROM ${schema}.role_permissions
     WHERE role_id = $1
       AND permission_id = $2
   `;
@@ -60,7 +60,7 @@ async function create(data) {
   }
 
   const query = `
-    INSERT INTO demo.role_permissions
+    INSERT INTO ${schema}.role_permissions
     (
       role_id,
       permission_id
@@ -88,7 +88,7 @@ async function updateById(id, data) {
   }
 
   const query = `
-    UPDATE demo.role_permissions
+    UPDATE ${schema}.role_permissions
     SET
       role_id = $2,
       permission_id = $3
@@ -111,7 +111,7 @@ async function updateById(id, data) {
  */
 async function deleteById(id) {
   const query = `
-    DELETE FROM demo.role_permissions
+    DELETE FROM ${schema}.role_permissions
     WHERE id = $1
     RETURNING *
   `;

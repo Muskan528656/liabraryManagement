@@ -25,8 +25,9 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
         const reports = await Report.findAll();
+        console.log("Reports->>", reports)
         res.json({ records: reports });
       } catch (err) {
         console.error(err);
@@ -34,11 +35,57 @@ module.exports = (app) => {
       }
     }
   );
+  router.get(
+    "/inactive-books",
+    fetchUser,
+    checkPermission("Reports", "allow_view"),
+    async (req, res) => {
+      try {
+        Report.init(req.userinfo.tenantcode, req.branchId);
+
+        const data = await Report.getInactiveBooks(req.query);
+
+        return res.status(200).json({
+          success: true,
+          count: data.length,
+          records: data,
+        });
+
+      } catch (error) {
+        console.error("Inactive Books Error:", error);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  );
+
+
+  router.get(
+    "/book-borrowing",
+    fetchUser,
+    checkPermission("Reports", "allow_view"),
+    async (req, res) => {
+      try {
+        Report.init(req.userinfo.tenantcode, req.branchId);
+
+        const data = await Report.getBorrowingReport(req.query);
+
+        return res.status(200).json({
+          success: true,
+          total_records: data.length,
+          records: data,
+        });
+
+      } catch (error) {
+        console.error("Borrowing Report Error:", error);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  );
 
   router.post(
     "/",
     fetchUser,
-    // checkPermission("Reports", "allow_create"),
+    checkPermission("Reports", "allow_create"),
     [
       body("report_name")
         .notEmpty()
@@ -58,7 +105,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Report.init(req.userinfo.tenantcode);
+        Report.init(req.userinfo.tenantcode, req.branchId);
 
         const userId = req.userinfo?.id || null;
         const report = await Report.create(req.body, userId);
@@ -72,6 +119,10 @@ module.exports = (app) => {
       }
     }
   );
+
+
+
+
 
   app.use(process.env.BASE_API_URL + "/api/reports", router);
 };

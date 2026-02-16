@@ -13,7 +13,7 @@ import {
 import DataApi from "../../api/dataApi";
 import PubSub from "pubsub-js";
 
-const Settings = ({permissions}) => {
+const Settings = ({ permissions }) => {
   const [librarySettings, setLibrarySettings] = useState({
     max_books_per_card: 1,
     duration_days: 15,
@@ -21,6 +21,7 @@ const Settings = ({permissions}) => {
     renew_limit: 2,
     max_issue_per_day: 1,
     lost_book_fine_percentage: 100,
+    config_classification: "",
   });
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -32,42 +33,14 @@ const Settings = ({permissions}) => {
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const [tempSettings, setTempSettings] = useState({ ...librarySettings });
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setAlertMessage("New password and confirm password do not match!");
-      setShowAlert(true);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setAlertMessage("Password must be at least 6 characters long!");
-      setShowAlert(true);
-      return;
-    }
-
-    setAlertMessage(
-      "Password changed successfully! You will be logged out of all devices."
-    );
-    setShowAlert(true);
-
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
-
-  const handleTwoFactorChange = (method) => {
-    setTwoFactorAuth(method);
-  };
 
   console.log("permissions in LibrarySettings:", permissions);
 
   const canEditSettings = permissions?.allowEdit;
 
 
-  console.log("canEditSettings", canEditSettings) ;
-  console.log("isEditionSettings", isEditingSettings) ;
+  console.log("canEditSettings", canEditSettings);
+  console.log("isEditionSettings", isEditingSettings);
 
   useEffect(() => {
     fetchSettings();
@@ -89,7 +62,9 @@ const Settings = ({permissions}) => {
           lost_book_fine_percentage: parseInt(
             settingsData.lost_book_fine_percentage || 100
           ),
+          config_classification: settingsData.config_classification
         };
+        console.log("settingsObjsettingsObjsettingsObj", settingsObj)
         setLibrarySettings(settingsObj);
       }
     } catch (error) {
@@ -132,10 +107,16 @@ const Settings = ({permissions}) => {
           setting_key: "lost_book_fine_percentage",
           setting_value: tempSettings.lost_book_fine_percentage.toString(),
         },
+        {
+          setting_key: "config_classification",
+          setting_value: tempSettings.config_classification,
+        },
       ];
 
-      const response = await settingsApi.put('/bulk', { settings: settingsArray });
+      console.log("settingsArraysettingsArray", settingsArray)
 
+      const response = await settingsApi.put('/bulk', { settings: settingsArray });
+console.log("reposne->>>",response)
       if (response.data && response.data.success) {
         setLibrarySettings({ ...tempSettings });
         setIsEditingSettings(false);
@@ -497,6 +478,51 @@ const Settings = ({permissions}) => {
                           </span>
                           <small className="text-muted d-block mt-1">
                             Fine for lost books as percentage of book price
+                          </small>
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        Classification
+                        <Badge bg="info" className="ms-2">
+                          Current: {librarySettings.config_classification}
+                        </Badge>
+                      </Form.Label>
+                      {isEditingSettings ? (
+                        <>
+                          <Form.Control
+                            type="text"
+                            min="0"
+                            max="200"
+                            value={tempSettings.config_classification}
+                            onChange={(e) =>
+                              handleSettingChange(
+                                "config_classification",
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              border: "2px solid #e9ecef",
+                              borderRadius: "8px",
+                              padding: "10px",
+                            }}
+                          />
+                          <small className="text-muted d-block mt-1">
+                            Fine for lost books as percentage of book price
+                          </small>
+                        </>
+                      ) : (
+                        <div className="p-3 border rounded bg-light">
+                          <span className="fw-bold text-primary">
+                            {librarySettings.config_classification}
+
+                          </span>
+                          <small className="text-muted d-block mt-1">
+                            config_classification
                           </small>
                         </div>
                       )}

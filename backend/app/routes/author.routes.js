@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/author endpoint
- * DB table for this demo.authors
+ * DB table for this ${schema}.authors
  * Model used here is author.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/author
@@ -30,6 +30,7 @@ module.exports = (app) => {
     checkPermission("Authors", "allow_view"),
     async (req, res) => {
       try {
+        Author.init(req.userinfo.tenantcode);
         const authors = await Author.findAll(req.query);
         return res.status(200).json(authors);
       } catch (error) {
@@ -70,6 +71,8 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
         if (req.body.email) {
+                  Author.init(req.userinfo.tenantcode);
+
           const existingAuthor = await Author.findByEmail(req.body.email);
           if (existingAuthor) {
             return res
@@ -78,6 +81,8 @@ module.exports = (app) => {
           }
         }
         const userId = req.userinfo?.id || null;
+                Author.init(req.userinfo.tenantcode);
+
         const author = await Author.create(req.body, userId);
         if (!author) {
           return res.status(400).json({ errors: "Failed to create author" });
@@ -101,8 +106,12 @@ module.exports = (app) => {
     async (req, res) => {
       try {
         const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+               Author.init(req.userinfo.tenantcode);
+
+          if (!errors.isEmpty()) {
+          return res.status(400).json({
+            errors: errors.array()[0].msg
+          });
         }
  
         Author.init(req.userinfo.tenantcode);
@@ -140,6 +149,8 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Authors", "allow_delete"), async (req, res) => {
     try {
+              Author.init(req.userinfo.tenantcode);
+
       const result = await Author.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

@@ -14,6 +14,7 @@ module.exports = (app) => {
     // Get all permissions
     router.get("/", fetchUser, async (req, res) => {
         try {
+            Permission.init(req.userinfo.tenantcode);
             const perms = await Permission.findAll();
             res.json({ success: true, data: perms });
         } catch (e) {
@@ -31,6 +32,7 @@ module.exports = (app) => {
                 return res.status(400).json({ success: false, message: "Invalid roleId" });
             }
 
+            Permission.init(req.userinfo.tenantcode);
             const permissions = await Permission.findByRole(roleId);
             res.json({ success: true, data: permissions });
         } catch (e) {
@@ -51,15 +53,16 @@ module.exports = (app) => {
                     message: "Permissions array is required"
                 });
             }
+            Permission.init(req.userinfo.tenantcode);
 
             const result = await Permission.updateMultiple(roleId, permissions, req.userinfo.id);
 
             // Find all users with this role and notify them to refresh permissions
             try {
                 const User = require("../models/user.model.js");
-                User.init("demo");
+                User.init("${schema}");
                 const usersWithRole = await sql.query(
-                    `SELECT id FROM demo."user" WHERE userrole = $1 AND isactive = true`,
+                    `SELECT id FROM ${schema}."user" WHERE userrole = $1 AND isactive = true`,
                     [roleId]
                 );
 
@@ -104,6 +107,8 @@ module.exports = (app) => {
                 return res.status(400).json({ success: false, error: errors.array() });
 
             try {
+
+                Permission.init(req.userinfo.tenantcode);
                 const perm = await Permission.create(req.body, req.userinfo?.id);
                 res.json({ success: true, data: perm });
             } catch (e) {
@@ -116,6 +121,8 @@ module.exports = (app) => {
     // Update single permission by ID
     router.put("/:id", fetchUser, async (req, res) => {
         try {
+
+            Permission.init(req.userinfo.tenantcode);
             const perm = await Permission.updateById(req.params.id, req.body, req.userinfo?.id);
             res.json({ success: true, data: perm });
         } catch (e) {
@@ -128,6 +135,8 @@ module.exports = (app) => {
     router.delete("/:id", fetchUser, async (req, res) => {
         console.log("Received request to delete permission with ID:", req.params.id);
         try {
+
+            Permission.init(req.userinfo.tenantcode);
             const out = await Permission.deleteById(req.params.id);
             console.log("deleteById output:", out);
             res.json({ success: true, data: out });

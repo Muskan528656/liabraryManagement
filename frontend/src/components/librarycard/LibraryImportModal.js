@@ -16,6 +16,8 @@ import DataApi from "../../api/dataApi";
 import "../../App.css";
 
 const LibraryImportModal = ({ show, onClose, onSuccess }) => {
+
+  console.log("show model",show);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);

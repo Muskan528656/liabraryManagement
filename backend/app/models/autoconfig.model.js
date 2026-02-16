@@ -13,6 +13,7 @@ function init(schema_name) {
 
 
 async function findAll() {
+    console.log("this.schema", this.schema)
     const query = `SELECT * FROM demo.auto_config ORDER BY createddate DESC`;
     const result = await sql.query(query);
     return result.rows.length ? result.rows : [];

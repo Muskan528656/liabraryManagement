@@ -17,7 +17,7 @@ module.exports = (app) => {
   var router = require("express").Router();
   router.get("/dashboard", fetchUser, async (req, res) => {
     try {
-      Library.init(req.userinfo.tenantcode);
+      Library.init(req.userinfo.tenantcode, req.branchId);
       const userRole = req.userinfo.userrole?.toUpperCase();
 
 

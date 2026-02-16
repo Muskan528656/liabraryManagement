@@ -1,757 +1,3 @@
-// import React, { useState, useEffect, useCallback } from "react";
-// import { Button, Modal, Alert } from "react-bootstrap";
-// import DynamicCRUD from "../common/DynaminCrud";
-// import { getLibraryCardConfig } from "./librarycardconfig";
-// import { useDataManager } from "../common/userdatamanager";
-// import Loader from "../common/Loader";
-// import JsBarcode from "jsbarcode";
-// import DataApi from "../../api/dataApi";
-// import { API_BASE_URL, MODULES } from "../../constants/CONSTANT";
-// import { handleDownloadBarcode } from './LibraryCardDownload';
-// import { handlePrintBarcode } from './LibrarycardPrint';
-// import { useTimeZone } from "../../contexts/TimeZoneContext";
-// import LibraryImportModal from "./LibraryImportModal";
-// import { useMemo } from "react";
-// import { AuthHelper } from "../../utils/authHelper";
-// import PermissionDenied from "../../utils/permission_denied";
-// import "../../App.css";
-// const LibraryCard = ({permissions,...props}) => {
-//   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
-//   const [selectedCard, setSelectedCard] = useState(null);
-//   const [barcodeError, setBarcodeError] = useState(null);
-//   const [baseConfig, setBaseConfig] = useState(null);
-//   const [finalConfig, setFinalConfig] = useState(null);
-//   const [subscriptionsData, setSubscriptionsData] = useState([]);
-//   const [usersData, setUsersData] = useState([]);
-//   const [loadingConfig, setLoadingConfig] = useState(true);
-//   const [configError, setConfigError] = useState(null);
-//   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
-//   const { timeZone } = useTimeZone();
-//   const [permissions, setPermissions] = useState({
-//     canView: false,
-//     canCreate: true,
-//     canEdit: false,
-//     canDelete: false,
-//     loading: true
-//   });
-//   const normalizedApiBaseUrl = useMemo(() => {
-//     if (typeof API_BASE_URL === "string") {
-//       return API_BASE_URL.replace(/\/ibs$/, "");
-//     }
-//     return "";
-//   }, []);
-
-//   useEffect(() => {
-
-//     console.log("useeffect1")
-//     // console.log("header",headerActions)
-//     console.log("permission", permissions)
-//     console.log("userdata", usersData)
-//     console.log("subscriptiondata", subscriptionsData)
-//     const fetchPermissions = async () => {
-//       const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
-//       const canCreate = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_CREATE);
-//       const canEdit = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_EDIT);
-//       const canDelete = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_DELETE);
-
-//       setPermissions({
-//         canView,
-//         canCreate,
-//         canEdit,
-//         canDelete,
-//         loading: false
-//       });
-//     };
-
-//     fetchPermissions();
-//     window.addEventListener("permissionsUpdated", fetchPermissions);
-//     return () => {
-//       window.removeEventListener("permissionsUpdated", fetchPermissions);
-//     };
-//   }, []);
-//   const fetchSubscriptions = useCallback(async () => {
-//     try {
-
-//       const subscriptionApi = new DataApi("subscriptions");
-//       const response = await subscriptionApi.fetchAll();
-
-//       let subscriptionData = [];
-
-//       if (response?.data) {
-
-//         if (response.data.success && response.data.data) {
-//           subscriptionData = response.data.data;
-//         } else if (Array.isArray(response.data)) {
-//           subscriptionData = response.data;
-//         } else if (response.data.data && Array.isArray(response.data.data)) {
-//           subscriptionData = response.data.data;
-//         } else if (response.data.rows && Array.isArray(response.data.rows)) {
-//           subscriptionData = response.data.rows;
-//         }
-//       }
-
-
-//       setSubscriptionsData(subscriptionData);
-//       return subscriptionData;
-//     } catch (error) {
-//       console.error("Error fetching subscriptions:", error);
-//       setConfigError("Failed to load subscription data");
-//       return [];
-//     }
-//   }, []);
-
-
-//   const fetchUsers = useCallback(async () => {
-//     try {
-
-//       const userApi = new DataApi("user");
-//       const response = await userApi.fetchAll();
-
-//       let usersData = [];
-
-//       if (response?.data) {
-//         if (response.data.success && response.data.data) {
-//           usersData = response.data.data;
-//         } else if (Array.isArray(response.data)) {
-//           usersData = response.data;
-//         } else if (response.data.data && Array.isArray(response.data.data)) {
-//           usersData = response.data.data;
-//         }
-//       }
-
-
-//       setUsersData(usersData);
-//       return usersData;
-//     } catch (error) {
-//       console.error("Error fetching users:", error);
-//       return [];
-//     }
-//   }, []);
-
-
-//   useEffect(() => {
-//     console.log("useeffect2")
-//     const initializeConfig = async () => {
-//       try {
-//         setLoadingConfig(true);
-//         setConfigError(null);
-//         const [subscriptions, users] = await Promise.all([
-//           fetchSubscriptions(),
-//           fetchUsers()
-//         ]);
-
-
-//         const externalData = {
-//           subscriptions: subscriptions,
-//           users: users,
-//           ...props
-//         };
-
-//         console.log("externalData", externalData)
-//         console.log("props", props)
-
-//         const config = await getLibraryCardConfig(
-//           externalData,
-//           timeZone,
-//           {
-//             canCreate: permissions.canCreate,
-//             canEdit: permissions.canEdit,
-//             canDelete: permissions.canDelete
-//           }
-//         ); setBaseConfig(config);
-
-
-
-//       } catch (error) {
-//         console.error("Error initializing config:", error);
-//         setConfigError("Failed to load configuration");
-//       } finally {
-//         setLoadingConfig(false);
-//       }
-//     };
-
-//     initializeConfig();
-//   }, [fetchSubscriptions, fetchUsers, props]);
-
-
-//   useEffect(() => {
-//     console.log("useeffect3")
-//     if (!baseConfig || loadingConfig) return;
-
-//     const buildFinalConfig = () => {
-//       try {
-//         const final = {
-//           ...baseConfig,
-//           formFields: baseConfig.formFields?.map(field => {
-
-//             if (field.name === "subscription_id") {
-//               return {
-//                 ...field,
-//                 options: subscriptionsData.length > 0
-//                   ? subscriptionsData.map(sub => ({
-//                     value: sub.id,
-//                     label: `${sub.plan_name || sub.name || 'Subscription'} ${sub.allowed_books ? `(${sub.allowed_books} books)` : ''}`
-//                   }))
-//                   : [{ value: '', label: 'No subscriptions available' }],
-//                 key: `subscription-select-${subscriptionsData.length}`
-//               };
-//             }
-
-
-//             if (field.name === "user_id") {
-//               return {
-//                 ...field,
-//                 options: usersData.length > 0
-//                   ? usersData.map(user => ({
-//                     value: user.id,
-//                     label: `${user.first_name || ''} ${user.last_name || ''} - ${user.email || user.username || ''}`
-//                   }))
-//                   : [{ value: '', label: 'No users available' }],
-//                 key: `user-select-${usersData.length}`
-//               };
-//             }
-
-//             return field;
-//           }),
-
-
-//           columns: baseConfig.columns?.map(column => {
-//             if (column.field === "subscription_id") {
-//               return {
-//                 ...column,
-//                 render: (value, row) => {
-//                   if (!value) return "No Subscription";
-
-//                   const subscription = subscriptionsData.find(sub => sub.id === value);
-//                   if (!subscription) return `ID: ${value}`;
-
-//                   return subscription.plan_name || subscription.name || `Subscription ${value}`;
-//                 }
-//               };
-//             }
-
-//             if (column.field === "allowed_book") {
-//               return {
-//                 ...column,
-//                 render: (value, row) => {
-
-//                   if (value !== null && value !== undefined && value !== "") {
-//                     return `${value}`;
-//                   }
-
-
-//                   if (row.subscription_id) {
-//                     const subscription = subscriptionsData.find(sub => sub.id === row.subscription_id);
-//                     if (subscription && subscription.allowed_books) {
-//                       return `${subscription.allowed_books} `;
-//                     }
-//                   }
-
-
-//                 }
-//               };
-//             }
-
-//             return column;
-//           }),
-
-
-//           onSubmit: async (formData, setFormData) => {
-
-
-//             console.log("Submitting form data:", formData);
-
-//             if (!formData.user_id) {
-//               alert("Please select a user");
-//               return false;
-//             }
-
-
-//             if (!formData.card_number) {
-//               try {
-//                 const response = await DataApi.autoConfigCard();
-//                 if (response?.data?.card_number) {
-//                   formData.card_number = response.data.card_number;
-//                 } else {
-
-//                   formData.card_number = `LIB${Date.now().toString().slice(-8)}`;
-//                 }
-//               } catch (error) {
-//                 console.error("Error generating card number:", error);
-//                 formData.card_number = `LIB${Date.now().toString().slice(-8)}`;
-//               }
-//             }
-
-
-//             formData.isbn_code = generateDefaultISBN({ id: formData.card_number });
-
-
-//             if (!formData.registration_date) {
-//               formData.registration_date = new Date().toISOString().split('T')[0];
-//             }
-
-//             try {
-//               console.log("Creating library card with data:", formData);
-//               const response = await DataApi.createLibraryCard(formData);
-//               console.log("API response for creating library card:", response.data?.message);
-//               if (!response?.data?.success) {
-//                 const errorMsg = response?.data?.message || 'Failed to create library card';
-
-//                 console.error("API Error:", response);
-//                 alert(errorMsg);
-//                 return false;
-//               }
-
-//               const newCard = response.data.data;
-
-
-
-//               handleModalOpen(newCard);
-
-
-//               if (setFormData) {
-//                 setFormData(baseConfig.initialFormData || {});
-//               }
-
-//               return true;
-//             } catch (err) {
-//               console.error("Error creating card:", err);
-//               alert(`Error creating library card: ${err.message}`);
-//               return false;
-//             }
-//           },
-
-
-//           customHandlers: {
-//             ...baseConfig.customHandlers,
-//             handleBarcodePreview: handleModalOpen,
-//             formatDateToDDMMYYYY: formatDate,
-//             generateISBN13Number: generateDefaultISBN,
-
-
-//             getSubscriptionOptions: () => {
-//               return subscriptionsData.map(sub => ({
-//                 value: sub.id,
-//                 label: `${sub.plan_name || sub.name} (${sub.allowed_books || 5} books)`,
-//                 data: sub
-//               }));
-//             },
-
-//             getUserOptions: () => {
-//               return usersData.map(user => ({
-//                 value: user.id,
-//                 label: `${user.first_name || ''} ${user.last_name || ''} - ${user.email || ''}`,
-//                 data: user
-//               }));
-//             },
-
-
-//             onDataLoad: (data) => {
-
-
-//               if (!Array.isArray(data)) return data;
-
-//               return data.map(item => {
-//                 const enhancedItem = { ...item };
-
-
-//                 if (item.subscription_id && subscriptionsData.length > 0) {
-//                   const subscription = subscriptionsData.find(sub => sub.id === item.subscription_id);
-//                   if (subscription) {
-//                     enhancedItem.subscription_name = subscription.plan_name || subscription.name;
-//                     enhancedItem.subscription_allowed_books = subscription.allowed_books;
-
-
-//                     if (item.allowed_book !== null && item.allowed_book !== undefined && item.allowed_book !== "") {
-//                       enhancedItem.allowed_books_effective = item.allowed_book;
-//                       enhancedItem.allowed_books_source = "Card Override";
-//                     } else if (subscription.allowed_books !== null && subscription.allowed_books !== undefined) {
-//                       enhancedItem.allowed_books_effective = subscription.allowed_books;
-//                       enhancedItem.allowed_books_source = "Subscription";
-//                     } else {
-//                       enhancedItem.allowed_books_effective = 5;
-//                       enhancedItem.allowed_books_source = "System Default";
-//                     }
-//                   }
-//                 }
-
-
-//                 if (item.user_id && usersData.length > 0) {
-//                   const user = usersData.find(u => u.id === item.user_id);
-//                   if (user) {
-//                     enhancedItem.user_name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-//                     enhancedItem.user_email = user.email;
-//                   }
-//                 }
-
-
-//                 if (item.registration_date) {
-//                   enhancedItem.registration_date_formatted = formatDate(item.registration_date);
-//                 }
-//                 if (item.issue_date) {
-//                   enhancedItem.issue_date_formatted = formatDate(item.issue_date);
-//                 }
-
-//                 return enhancedItem;
-//               });
-//             }
-//           },
-
-
-
-
-//           beforeSubmit: (formData, isEditing) => {
-//             const errors = [];
-
-//             if (!formData.user_id) {
-//               errors.push("Please select a user");
-//             }
-
-//             if (!formData.card_number) {
-//               errors.push("Card number is required");
-//             }
-
-//             if (formData.image && formData.image.size > 2 * 1024 * 1024) {
-//               errors.push("Image size must be less than 2MB");
-//             }
-
-
-//             if (formData.allowed_book !== null && formData.allowed_book !== undefined && formData.allowed_book !== "") {
-//               const allowedBooks = parseInt(formData.allowed_book);
-//               if (isNaN(allowedBooks) || allowedBooks < 0) {
-//                 errors.push("Allowed books must be a positive number");
-//               }
-//             }
-
-//             return errors;
-//           }
-//         };
-
-
-//         setFinalConfig(final);
-
-//       } catch (error) {
-//         console.error("Error building final config:", error);
-//         setConfigError("Failed to build configuration");
-//       }
-//     };
-
-//     buildFinalConfig();
-//   }, [baseConfig, subscriptionsData, usersData, loadingConfig]);
-
-
-//   useEffect(() => {
-//     console.log("useefect4")
-//     if (showBarcodeModal && selectedCard) {
-//       const timer = setTimeout(() => initializeModalBarcode(), 500);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [showBarcodeModal, selectedCard]);
-
-//   const handleModalOpen = (card) => {
-
-//     setSelectedCard(card);
-//     setBarcodeError(null);
-//     setShowBarcodeModal(true);
-//   };
-
-//   const handleModalClose = () => {
-//     setShowBarcodeModal(false);
-//     setSelectedCard(null);
-//     setBarcodeError(null);
-//   };
-
-//   const initializeModalBarcode = () => {
-//     if (!selectedCard || !showBarcodeModal) return;
-
-//     const cardNumber = selectedCard.card_number || "N/A";
-//     if (!cardNumber || cardNumber === "N/A") {
-//       setBarcodeError("Cannot generate barcode: card number missing");
-//       return;
-//     }
-
-//     const barcodeElement = document.getElementById(`barcode-modal-${selectedCard.id}`);
-//     if (!barcodeElement) return;
-
-//     try {
-//       barcodeElement.innerHTML = '';
-//       JsBarcode(barcodeElement, cardNumber, {
-//         width: 2,
-//         height: 80,
-//         displayValue: true,
-//         text: cardNumber,
-//         fontSize: 14,
-//         margin: 10,
-//         background: "#ffffff",
-//         lineColor: "#000000",
-//         flat: true
-//       });
-//       setBarcodeError(null);
-//     } catch (error) {
-//       console.error("Barcode generation error:", error);
-//       setBarcodeError("Failed to generate barcode");
-//     }
-//   };
-
-
-
-//   const generateDefaultISBN = (card) => {
-//     try {
-//       const cardId = card.id || "000000000";
-//       const numericPart = cardId.replace(/\D/g, '').padEnd(9, '0').substring(0, 9);
-//       const baseNumber = "978" + numericPart;
-//       const isbn12 = (baseNumber + "000").slice(0, 12);
-//       let sum = 0;
-//       for (let i = 0; i < 12; i++) sum += (i % 2 === 0 ? parseInt(isbn12[i]) : parseInt(isbn12[i]) * 3);
-//       const checkDigit = ((10 - (sum % 10)) % 10).toString();
-//       return isbn12 + checkDigit;
-//     } catch {
-//       return "9780000000000";
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return 'N/A';
-//     try {
-//       const date = new Date(dateString);
-//       const day = String(date.getDate()).padStart(2, '0');
-//       const month = String(date.getMonth() + 1).padStart(2, '0');
-//       const year = date.getFullYear();
-//       return `${day}/${month}/${year}`;
-//     } catch {
-//       return 'Invalid Date';
-//     }
-//   };
-//   if (permissions.loading || loadingConfig) {
-//     // return <Loader message="Loading library card configuration..." />;
-//     return <span className="loader"></span>
-//   }
-
-//   if (!permissions.canView) {
-//     return <PermissionDenied />;
-//   }
-
-//   const generateCardNumber = (card) => card.card_number || 'N/A';
-
-
-//   if (loadingConfig) {
-//     // return <Loader message="Loading library card configuration..." />;
-//     return <span className="loader"></span>
-//   }
-
-//   if (configError) {
-//     return (
-//       <div className="alert alert-danger m-3">
-//         <h4>Configuration Error</h4>
-//         <p>{configError}</p>
-//         <button className="btn btn-primary mt-2" onClick={() => window.location.reload()}>
-//           Retry
-//         </button>
-//       </div>
-//     );
-//   }
-
-//   if (!finalConfig) {
-//     // return <Loader message="Finalizing configuration..." />;
-//     return <span className="loader"></span>
-//   }
-
-//   const handleLibraryImport = (data) => {
-
-//     alert(`Importing ${data.type} data from file: ${data.file.name}`);
-
-//   };
-
-//   return (
-//     <>
-
-
-//       <DynamicCRUD
-//         {...finalConfig}
-//         icon="fa-solid fa-id-card"
-//         subscriptionsData={subscriptionsData}
-//         usersData={usersData}
-//         permissions={permissions}
-//         headerActions={[
-//           {
-
-//             variant: "outline-primary",
-//             size: "sm",
-//             icon: "fa-solid fa-arrow-down",
-//             key: "import-member",
-//             onClick: () => setShowLibraryImportModal(true),
-//             order: 1,
-//           },
-//         ]}
-//       />
-
-//       <LibraryImportModal
-//         show={showLibraryImportModal}
-//         onClose={() => setShowLibraryImportModal(false)}
-//         onImport={handleLibraryImport}
-//       />
-
-
-//       <Modal backdrop="static" show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
-//         <Modal.Header
-//           closeButton
-//           style={{
-//             backgroundColor: "var(--primary-background-color)",
-//             color: "white",
-//             borderBottom: "none"
-//           }}
-//         >
-//           <Modal.Title style={{ color: "var(--primary-color)", }}>
-//             <i className="fa-solid fa-id-card me-2"></i> Member Information
-//           </Modal.Title>
-//         </Modal.Header>
-
-//         <Modal.Body style={{ padding: "20px", background: "#f8f9fa" }}>
-//           {selectedCard && (
-//             <div style={{
-//               background: "white",
-//               border: "2px solid var(--primary-color)",
-//               borderRadius: "10px",
-//               padding: "20px",
-//               maxWidth: "500px",
-//               margin: "0 auto"
-//             }}>
-//               {/* User Image */}
-//               <div style={{ textAlign: "center", marginBottom: "20px" }}>
-//                 {selectedCard.image ? (
-//                   <img
-//                     src={
-//                       selectedCard.image.startsWith("http")
-//                         ? selectedCard.image
-//                         : `${normalizedApiBaseUrl}${selectedCard.image}`
-//                     }
-//                     alt={selectedCard.first_name || 'User'}
-//                     style={{
-//                       width: '80px',
-//                       height: '80px',
-//                       borderRadius: '50%',
-//                       objectFit: 'cover',
-//                       border: '3px solid var(--primary-color)',
-//                     }}
-//                   />
-//                 ) : (
-//                   <div style={{
-//                     width: '80px',
-//                     height: '80px',
-//                     borderRadius: '50%',
-//                     background: '#f0f0f0',
-//                     display: 'flex',
-//                     alignItems: 'center',
-//                     justifyContent: 'center',
-//                     margin: '0 auto',
-//                     border: '3px solid var(--primary-color)',
-//                   }}>
-//                     <i className="fa-solid fa-user" style={{ fontSize: "32px", color: "var(--primary-color)" }}></i>
-//                   </div>
-//                 )}
-//               </div>
-
-//               {/* User Information */}
-//               <div style={{
-//                 background: "#f8f9fa",
-//                 padding: "15px",
-//                 borderRadius: "8px",
-//                 marginBottom: "20px"
-//               }}>
-//                 <p><strong>Card No:</strong> {generateCardNumber(selectedCard)}</p>
-//                 <p><strong>Name:</strong> {selectedCard.first_name || 'N/A'} {selectedCard.last_name || ''}</p>
-//                 <p><strong>Email:</strong> {selectedCard.email || 'N/A'}</p>
-//                 <p><strong>Registration Date:</strong> {formatDate(selectedCard.registration_date)}</p>
-//                 <p><strong>Subscription:</strong> {selectedCard.subscription_name || 'No Subscription'}</p>
-//                 <p><strong>Allowed Books:</strong> {selectedCard.allowed_books_effective || selectedCard.allowed_book || '5'}</p>
-//                 <p><strong>Status:</strong>
-//                   <span style={{
-//                     color: selectedCard.is_active ? "green" : "gray",
-//                     fontWeight: "bold",
-//                     marginLeft: "5px"
-//                   }}>
-//                     {selectedCard.is_active ? 'Active' : 'Inactive'}
-//                   </span>
-//                 </p>
-//               </div>
-
-//               {/* Barcode Error */}
-//               {barcodeError && (
-//                 <Alert variant="warning" className="mb-3">
-//                   {barcodeError}
-//                 </Alert>
-//               )}
-
-//               {/* Barcode Display */}
-//               <div style={{
-//                 border: "1px solid #ddd",
-//                 padding: "15px",
-//                 background: "white",
-//                 textAlign: "center",
-//                 marginBottom: "15px",
-//                 borderRadius: "8px"
-//               }}>
-//                 <svg
-//                   id={`barcode-modal-${selectedCard.id}`}
-//                   style={{ width: '100%', height: '70px', display: 'block' }}
-//                 ></svg>
-//                 <div style={{
-//                   marginTop: "10px",
-//                   fontSize: "14px",
-//                   fontWeight: "600",
-//                   color: "var(--primary-color)",
-//                   fontFamily: "monospace"
-//                 }}>
-//                   {generateCardNumber(selectedCard)}
-//                 </div>
-//               </div>
-
-//               {/* Footer Note */}
-//               <div style={{
-//                 textAlign: "center",
-//                 fontSize: "12px",
-//                 color: "#666",
-//                 marginTop: "15px"
-//               }}>
-//                 <p style={{ margin: 0 }}>Scan barcode to verify membership</p>
-//                 <p style={{ margin: "5px 0 0 0" }}>
-//                   Generated: {new Date().toLocaleDateString('en-GB')}
-//                 </p>
-//               </div>
-//             </div>
-//           )}
-//         </Modal.Body>
-
-//         <Modal.Footer className="d-flex justify-content-between">
-//           <div>
-//             <Button
-//               variant="outline-success"
-//               onClick={() => handleDownloadBarcode(selectedCard, API_BASE_URL, generateCardNumber, setBarcodeError, formatDate)}
-//               className="me-2"
-//             >
-//               <i className="fa-solid fa-download me-1"></i> Download
-//             </Button>
-//             <Button
-//               variant="outline-primary"
-//               onClick={() => handlePrintBarcode(selectedCard, API_BASE_URL, generateCardNumber, formatDate, setBarcodeError)}
-//               className="me-2"
-//             >
-//               <i className="fa-solid fa-print me-1"></i> Print
-//             </Button>
-//           </div>
-//           <Button variant="secondary" onClick={handleModalClose}>
-//             <i className="fa-solid fa-times me-1"></i> Close
-//           </Button>
-//         </Modal.Footer>
-//       </Modal>
-//     </>
-//   );
-// };
-
-// export default LibraryCard;
-
-
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Modal, Alert } from "react-bootstrap";
 import DynamicCRUD from "../common/DynaminCrud";
@@ -781,7 +27,6 @@ const LibraryCard = ({ permissions, ...props }) => {
   const [configError, setConfigError] = useState(null);
   const [showLibraryImportModal, setShowLibraryImportModal] = useState(false);
 
-
   const [modulePermissions, setModulePermissions] = useState({
     canView: false,
     canCreate: false,
@@ -790,16 +35,12 @@ const LibraryCard = ({ permissions, ...props }) => {
     loading: true
   });
 
-  
-
-
   const normalizedApiBaseUrl = useMemo(() => {
     return typeof API_BASE_URL === "string"
       ? API_BASE_URL.replace(/\/ibs$/, "")
       : "";
   }, []);
 
-  
   useEffect(() => {
     const fetchPermissions = async () => {
       const canView = await AuthHelper.hasModulePermission(MODULES.LIBRARY_MEMBERS, MODULES.CAN_VIEW);
@@ -821,8 +62,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setSubscriptionsData(data);
       return data;
     } catch {
@@ -837,8 +78,8 @@ const LibraryCard = ({ permissions, ...props }) => {
       const data = Array.isArray(response?.data?.data)
         ? response.data.data
         : Array.isArray(response?.data)
-        ? response.data
-        : [];
+          ? response.data
+          : [];
       setUsersData(data);
       return data;
     } catch {
@@ -871,10 +112,85 @@ const LibraryCard = ({ permissions, ...props }) => {
     if (timeZone) init();
   }, [fetchSubscriptions, fetchUsers, timeZone]);
 
+
+  useEffect(() => {
+    if (showBarcodeModal && selectedCard) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => initializeModalBarcode(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showBarcodeModal, selectedCard]);
+
+
+  const initializeModalBarcode = () => {
+    if (!selectedCard || !showBarcodeModal) return;
+
+    const cardNumber = selectedCard.card_number || selectedCard?.card_no || "N/A";
+    if (!cardNumber || cardNumber === "N/A") {
+      setBarcodeError("Cannot generate barcode: card number missing");
+      return;
+    }
+
+    const barcodeElement = document.getElementById(`barcode-modal-${selectedCard.id || selectedCard._id}`);
+    if (!barcodeElement) return;
+
+    try {
+      barcodeElement.innerHTML = '';
+      JsBarcode(barcodeElement, cardNumber, {
+        width: 2,
+        height: 80,
+        displayValue: true,
+        text: cardNumber,
+        fontSize: 14,
+        margin: 10,
+        background: "#ffffff",
+        lineColor: "#000000",
+        flat: true
+      });
+      setBarcodeError(null);
+    } catch (error) {
+      console.error("Barcode generation error:", error);
+      setBarcodeError("Failed to generate barcode");
+    }
+  };
+
+
+  const handleModalOpen = (card) => {
+    setSelectedCard(card);
+    setBarcodeError(null);
+    setShowBarcodeModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowBarcodeModal(false);
+    setSelectedCard(null);
+    setBarcodeError(null);
+  };
+
+
+  const generateCardNumber = (card) => {
+    return card?.card_number || card?.card_no || 'N/A';
+  };
+
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
   if (permissions.loading || loadingConfig) return <span className="loader"></span>;
   if (!permissions.allowView) return <PermissionDenied />;
   if (configError) return <div className="alert alert-danger m-3">{configError}</div>;
   if (!baseConfig) return <span className="loader"></span>;
+
 
   if (!finalConfig) {
     const config = {
@@ -883,21 +199,18 @@ const LibraryCard = ({ permissions, ...props }) => {
         canCreate: modulePermissions.allowCreate,
         canEdit: modulePermissions.allowEdit,
         canDelete: modulePermissions.allowDelete
+      },
+      // Add customHandlers for barcode preview
+      customHandlers: {
+        ...baseConfig.customHandlers,
+        handleBarcodePreview: handleModalOpen,
+        formatDateToDDMMYYYY: formatDate,
+        generateCardNumber: generateCardNumber
       }
     };
     setFinalConfig(config);
     return <span className="loader"></span>;
   }
-
-  const handleModalOpen = (card) => {
-    setSelectedCard(card);
-    setShowBarcodeModal(true);
-  };
-
-  const handleModalClose = () => {
-    setShowBarcodeModal(false);
-    setSelectedCard(null);
-  };
 
   return (
     <>
@@ -924,11 +237,116 @@ const LibraryCard = ({ permissions, ...props }) => {
         onImport={(data) => alert(`Importing ${data.file.name}`)}
       />
 
-      <Modal show={showBarcodeModal} onHide={handleModalClose} centered>
-        <Modal.Body className="text-center">
-          {selectedCard && <h5>Card No: {selectedCard.card_number}</h5>}
-          {barcodeError && <Alert variant="warning">{barcodeError}</Alert>}
+
+      <Modal show={showBarcodeModal} onHide={handleModalClose} size="lg" centered>
+        <Modal.Header
+          closeButton
+          style={{
+            background: "var(--primary-color)",
+            color: "white",
+            borderBottom: "none"
+          }}
+        >
+          <Modal.Title style={{ color: "white" }}>
+            <i className="fa-solid fa-id-card me-2"></i> Member Information
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ padding: "20px", background: "#f8f9fa" }}>
+          {selectedCard && (
+            <div style={{
+              background: "white",
+              border: "2px solid var(--primary-color)",
+              borderRadius: "10px",
+              padding: "20px",
+              maxWidth: "500px",
+              margin: "0 auto"
+            }}>
+
+              {barcodeError && (
+                <Alert variant="warning" className="mb-3">
+                  {barcodeError}
+                </Alert>
+              )}
+
+              <div style={{
+                border: "1px solid #ddd",
+                padding: "15px",
+                background: "white",
+                textAlign: "center",
+                marginBottom: "15px",
+                borderRadius: "8px"
+              }}>
+                <svg
+                  id={`barcode-modal-${selectedCard.id || selectedCard._id}`}
+                  style={{ width: '100%', height: '80px', display: 'block' }}
+                ></svg>
+                <div style={{
+                  marginTop: "10px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "var(--primary-color)",
+                  fontFamily: "monospace"
+                }}>
+                  {generateCardNumber(selectedCard)}
+                </div>
+              </div>
+
+              {/* User Information */}
+              <div style={{
+                background: "#f8f9fa",
+                padding: "15px",
+                borderRadius: "8px",
+                marginBottom: "15px"
+              }}>
+                <p className="mb-1"><strong>Card No:</strong> {generateCardNumber(selectedCard)}</p>
+                <p className="mb-1"><strong>Name:</strong> {selectedCard.first_name || selectedCard.user_name || 'N/A'} {selectedCard.last_name || ''}</p>
+                <p className="mb-1"><strong>Email:</strong> {selectedCard.email || 'N/A'}</p>
+                <p className="mb-1"><strong>Registration Date:</strong> {formatDate(selectedCard.registration_date)}</p>
+                <p className="mb-1"><strong>Status:</strong>
+                  <span style={{
+                    color: selectedCard.is_active ? "green" : "gray",
+                    fontWeight: "bold",
+                    marginLeft: "5px"
+                  }}>
+                    {selectedCard.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </p>
+              </div>
+
+              {/* Footer Note */}
+              <div style={{
+                textAlign: "center",
+                fontSize: "12px",
+                color: "#666"
+              }}>
+                <p className="mb-0">Scan barcode to verify membership</p>
+              </div>
+            </div>
+          )}
         </Modal.Body>
+
+        <Modal.Footer className="d-flex justify-content-between">
+          <div>
+            <Button
+              variant="outline-success"
+              onClick={() => handleDownloadBarcode(selectedCard, normalizedApiBaseUrl, generateCardNumber, setBarcodeError, formatDate)}
+              className="me-2"
+            >
+              <i className="fa-solid fa-download me-1"></i> Download
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => handlePrintBarcode(selectedCard, normalizedApiBaseUrl, generateCardNumber, formatDate, setBarcodeError)}
+              className="me-2"
+            >
+              <i className="fa-solid fa-print me-1"></i> Print
+            </Button>
+          </div>
+          <Button variant="secondary" onClick={handleModalClose}>
+            <i className="fa-solid fa-times me-1"></i> Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );

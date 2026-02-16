@@ -170,7 +170,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 }
             },
             {
-                name: "sub_shelf_id",   
+                name: "sub_shelf_id",
                 label: "Sub Shelf",
                 type: "select",
                 options: (formData) => {
@@ -183,8 +183,8 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                     if (!selectedShelf || !Array.isArray(selectedShelf.sub_shelves)) return [];
 
                     return selectedShelf.sub_shelves.map(sub => ({
-                        value: sub.id,    
-                        label: sub.name    
+                        value: sub.id,
+                        label: sub.name
                     }));
                 },
                 required: false,

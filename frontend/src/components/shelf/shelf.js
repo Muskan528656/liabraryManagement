@@ -6,8 +6,6 @@ import { AuthHelper } from "../../utils/authHelper";
 
 const Shelf = ({ permissions, ...props }) => {
 
-
-
     const isSuperAdmin = AuthHelper.isSuperAdmin?.();
 
     console.log("Shelf Component Permissions:", permissions?.allow);
@@ -16,12 +14,15 @@ const Shelf = ({ permissions, ...props }) => {
         return <PermissionDenied />;
     }
 
-    const finalConfig = getShelfConfig({
-        canCreate: permissions?.allowCreate,
-        canEdit: permissions?.allowEdit,
-        canDelete: permissions?.allowDelete
-    });
-    console.log("finalConfigfinalConfig", finalConfig)
+    const finalConfig = getShelfConfig(
+        {},
+        {},
+        {
+            allowEdit: permissions?.allowEdit,
+            allowDelete: permissions?.allowDelete
+        }
+    );
+    console.log("finalConfig", finalConfig)
 
     return (
         <DynamicCRUD

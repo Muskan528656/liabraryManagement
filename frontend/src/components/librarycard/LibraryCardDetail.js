@@ -71,7 +71,11 @@ const LibraryCardDetail = ({
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [objectTypes, setObjectTypes] = useState([]);
   const [planStatus, setPlanStatus] = useState("No Plan");
+  const [renderTrigger, setRenderTrigger] = useState(0);
 
+  const [grades, setGrades] = useState([]);
+  const [gradeSectionsMap, setGradeSectionsMap] = useState({});
+  const [visible, setVisible] = useState(true);
   const imageObjectUrlRef = useRef(null);
   const frontBarcodeRef = useRef(null);
 
@@ -102,7 +106,11 @@ const LibraryCardDetail = ({
       "father_gurdian_name",
       "parent_contact",
       "dob",
-      "type_id"
+      "type_id",
+      "job_title",
+      "grade_name",
+      "section_name",
+      "library_member_type"
     ],
     []
   );
@@ -115,7 +123,35 @@ const LibraryCardDetail = ({
   });
 
 
+  const fetchGradesAndSections = async () => {
+    try {
+      const api = new DataApi("grade-sections/grouped");
+      const res = await api.fetchAll();
+
+      const list = Array.isArray(res.data) ? res.data : [];
+
+      const gradeList = list.map(g => ({
+        label: g.grade_name,
+        value: g.grade_name,
+      }));
+
+      const sectionMap = {};
+      list.forEach(g => {
+        sectionMap[g.grade_name] = g.sections.map(s => ({
+          label: s.name,
+          value: s.name,
+        }));
+      });
+
+      setGrades(gradeList);
+      setGradeSectionsMap(sectionMap);
+    } catch (err) {
+      console.error("Failed to fetch grades/sections", err);
+    }
+  };
+
   useEffect(() => {
+    fetchGradesAndSections();
     if (!permissions || Object.keys(permissions).length === 0) {
       const fetchPermissions = async () => {
         try {
@@ -586,18 +622,21 @@ const LibraryCardDetail = ({
   };
   const fetchTypeOptions = async () => {
     try {
-      const api = new DataApi("librarycard");
-      const res = await api.get("/object-types");
+      const objectTypeApi = new DataApi("objecttype");
+      const res = await objectTypeApi.fetchAll();
 
+      let objectTypeData = [];
 
-
-      if (res.data?.success) {
-        setObjectTypes(res.data.data || []);
-
-      } else {
-        console.warn("Failed to fetch object types:", res.data?.message || "Unknown error");
-        setObjectTypes([]);
+      if (res.success && res.data && Array.isArray(res.data)) {
+        objectTypeData = res.data;
+      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
+        objectTypeData = res.data.data;
+      } else if (Array.isArray(res)) {
+        objectTypeData = res;
       }
+
+      console.log("Fetched object types:", objectTypeData);
+      setObjectTypes(objectTypeData.filter(type => type.status === 'Active' || type.status === true));
     } catch (err) {
       console.error("Error fetching object types:", err);
       setObjectTypes([]);
@@ -605,10 +644,20 @@ const LibraryCardDetail = ({
   };
   const typeOptions = useMemo(() => {
     return objectTypes.map((item) => ({
-      label: item.label,   // STAFF / STUDENT / OTHER
+      label: item.label,
       value: item.id,
     }));
   }, [objectTypes]);
+
+
+  const getSelectedType = (data) => {
+    return typeOptions.find(
+      t => String(t.value) === String(data.type_id || data.type)
+    );
+  };
+  const library_member_type = ["Boys", "Girls", "Other"];
+
+
   const fields = {
     details: [
       {
@@ -683,6 +732,67 @@ const LibraryCardDetail = ({
         colSize: 3,
       },
       {
+        key: "job_title",
+        label: "Job Title",
+        type: "text",
+        // options: [
+        //   { label: "Principal", value: "Principal" },
+        //   { label: "Vice Principal", value: "Vice Principal" },
+        //   { label: "Teacher", value: "Teacher" },
+        //   { label: "Assistant Teacher", value: "Assistant Teacher" },
+        //   { label: "Librarian", value: "Librarian" },
+        //   { label: "Counselor", value: "Counselor" },
+        //   { label: "Administrator", value: "Administrator" },
+        // ],
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "teacher";
+        }
+      },
+
+      {
+        key: "grade_name",
+        label: "Grade",
+        type: "select",
+        options: grades,
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
+      },
+    {
+      key: "library_member_type", 
+      label: "Gender",
+      type: "select",
+      options: library_member_type.map((item) => ({ 
+        label: item, 
+        value: item 
+      })),
+      colSize: 3,
+    },
+      {
+        key: "section_name",
+        label: "Section",
+        type: "select",
+        options: (data) => {
+          if (!data.grade_name) return [];
+          return gradeSectionsMap[data.grade_name] || [];
+        },
+        colSize: 3,
+        condition: (data) => {
+          const selectedType = typeOptions.find(
+            t => String(t.value) === String(data.type_id || data.type)
+          );
+          return selectedType?.label?.toLowerCase() === "student";
+        }
+      },
+      {
         key: "is_active",
         label: "Status",
         type: "badge",
@@ -717,7 +827,6 @@ const LibraryCardDetail = ({
       if (barcodeContainerRef.current && data?.card_number) {
         try {
           barcodeContainerRef.current.innerHTML = '';
-
           const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           barcodeContainerRef.current.appendChild(svg);
 
@@ -1197,6 +1306,8 @@ const LibraryCardDetail = ({
       setTempData(editData);
       await fetchLookupData();
       await fetchTypeOptions();
+      await fetchGradesAndSections();
+
     }
   };
   const fetchLookupData = async () => {
@@ -1384,9 +1495,6 @@ const LibraryCardDetail = ({
         }
       });
 
-
-
-
       let response;
 
       if (selectedImageFile) {
@@ -1465,21 +1573,37 @@ const LibraryCardDetail = ({
       }
 
 
-
       if (updatedData) {
-
         setData(updatedData);
-
         setOriginalData(JSON.parse(JSON.stringify(updatedData)));
-
         setCardData(updatedData);
-
       }
+
+
+
+      // if (updatedData) {
+
+      //   setData({ ...updatedData });
+
+      //   setOriginalData({ ...JSON.parse(JSON.stringify(updatedData)) });
+
+      //   setCardData({ ...updatedData });
+
+      // }
+
+      // Fetch type options to ensure conditional fields render correctly
+      await fetchTypeOptions();
+
+      // Force re-render to update conditional fields
+      setRenderTrigger(prev => prev + 1);
 
       PubSub.publish("RECORD_SAVED_TOAST", {
         title: "Success",
         message: "Record saved successfully",
       });
+
+
+
 
       resetImageSelection();
 
@@ -1490,6 +1614,12 @@ const LibraryCardDetail = ({
       setIsEditing(false);
 
       setTempData(null);
+      await fetchData();       // reload main data state
+
+      setIsEditing(false);
+      setTempData(null);
+
+
 
     } catch (error) {
       console.error(`Error updating ${moduleLabel}:`, error);
@@ -1501,6 +1631,8 @@ const LibraryCardDetail = ({
       setSaving(false);
     }
   };
+
+
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -1520,6 +1652,7 @@ const LibraryCardDetail = ({
       setTempData((prev) => ({
         ...(prev || {}),
         [fieldKey]: value,
+        ...(fieldKey === "grade_name" ? { section_name: "" } : {}),
       }));
     }
   };
@@ -1705,6 +1838,11 @@ const LibraryCardDetail = ({
     const currentData = isEditing ? tempData || {} : data;
     if (!currentData) return null;
 
+    // Check condition if present
+    if (field.condition && !field.condition(currentData)) {
+      return null;
+    }
+
     const isDisabledField = DISABLED_FIELDS_ON_EDIT.has(field.key);
     const isReadOnlyField = READONLY_FIELDS_ON_EDIT.has(field.key);
     const hasEditPermission = canEdit;
@@ -1806,7 +1944,12 @@ const LibraryCardDetail = ({
     }
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field);
+      let options;
+      if (typeof field.options === 'function') {
+        options = field.options(currentData);
+      } else {
+        options = getSelectOptions(field);
+      }
       const rawValue = currentData[field.key];
       const currentValue = normalizeOptionValue(rawValue);
 
@@ -1960,7 +2103,7 @@ const LibraryCardDetail = ({
   };
 
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
       <ScrollToTop />
       <Row className="justify-content-center">
         <Col lg={12} xl={12}>
@@ -1990,11 +2133,12 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (
-                    <button onClick={handleEdit} className="custom-btn-primary">
-                      <i className="fa-solid fa-edit me-2"></i>
-                      Edit {moduleLabel}
-                    </button>
+                  {canEdit && !isEditing ? (visible ? 
+                  <button onClick={handleEdit} className="custom-btn-primary">
+                    <i className="fa-solid fa-edit me-2"></i>
+                    Edit {moduleLabel}
+                  </button> : null
+
                   ) : !isEditing ? null : (
                     <div className="d-flex gap-2">
                       <button
@@ -2031,7 +2175,7 @@ const LibraryCardDetail = ({
                 <div className="d-flex align-items-center justify-content-between border-bottom pb-2">
                   <Nav variant="tabs" className="border-bottom-0">
                     <Nav.Item>
-                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`}
+                      <Nav.Link eventKey="detail" className={`fw-semibold ${activeTab === 'detail' ? 'active' : ''}`} onClick={() => setVisible(true)}
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",
@@ -2044,11 +2188,12 @@ const LibraryCardDetail = ({
                           transition: "all 0.3s ease",
                           marginBottom: "-1px"
                         }}>
+
                         <span>Detail</span>
                       </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
-                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`}
+                      <Nav.Link eventKey="related" className={`fw-semibold ${activeTab === 'related' ? 'active' : ''}`} onClick={() => setVisible(false)}
                         style={{
                           border: "none",
                           borderRadius: "8px 8px 0 0",
@@ -2120,11 +2265,14 @@ const LibraryCardDetail = ({
                         normalizedFields.details &&
                         moduleName === "librarycard" && (
                           <>
-                            <Col md={9}>
+                            <Col md={9}
+                              
+                            >
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                                 style={{
                                   color: "var(--primary-color)",
+                                  background: "var(--header-highlighter-color)",
                                   borderRadius: "10px",
                                 }}
                               >

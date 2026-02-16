@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col, InputGroup } from "react-bootstrap";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
+import CreatableSelect from "react-select/creatable";
+import AsyncCreatableSelect from "react-select/async-creatable";
 
 const EyeIcon = () => (
   <svg
@@ -329,21 +332,50 @@ const FormModal = ({
         );
 
       case "select":
+        
+      const fieldOptions =
+  typeof field.options === "function"
+    ? field.options(formData)
+    : field.options || [];
+
+
         return (
           <Form.Group className="mb-3" key={field.name}>
             <Form.Label>
               {field.label} {isRequired && <span className="text-danger">*</span>}
             </Form.Label>
             {field.asyncSelect ? (
-              <Select
-                value={field.options?.find((opt) => opt.value === value) || null}
+              field.creatable ? (
+                <AsyncCreatableSelect
+                  value={value ? { value, label: value } : null}
+                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  isClearable={field.clearable !== false}
+                  isDisabled={field.disabled || isReadOnly}
+                  placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
+                  loadOptions={field.loadOptions}
+                  defaultOptions={field.defaultOptions}
+                  {...field.selectProps}
+                />
+              ) : (
+                <AsyncSelect
+                  value={value ? { value, label: value } : null}
+                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  isClearable={field.clearable !== false}
+                  isDisabled={field.disabled || isReadOnly}
+                  placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
+                  loadOptions={field.loadOptions}
+                  defaultOptions={field.defaultOptions}
+                  {...field.selectProps}
+                />
+              )
+            ) : field.creatable ? (
+              <CreatableSelect
+                value={value ? { value, label: value } : null}
                 onChange={(selected) => handleFieldChange(field, selected?.value || "")}
-                options={field.options || []}
+                options={fieldOptions}
                 isClearable={field.clearable !== false}
                 isDisabled={field.disabled || isReadOnly}
-                placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
-                loadOptions={field.loadOptions}
-                defaultOptions={field.defaultOptions}
+                placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
                 {...field.selectProps}
               />
             ) : (
@@ -357,7 +389,7 @@ const FormModal = ({
                 {...field.props}
               >
                 {field.placeholder && <option value="">{field.placeholder}</option>}
-                {field.options?.map((option) => (
+                {fieldOptions?.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -411,46 +443,46 @@ const FormModal = ({
         return field.render ? field.render(value, formData, setFormData, error) : null;
 
         // case "toggle":
-        return (
-          <Form.Group className="mb-3" key={field.name}>
-            {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
-            <Form.Label className="d-flex justify-content-between">
-              <span>
-                {field.label} {field.required && <span className="text-danger">*</span>}
-              </span>
-              <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
-            </Form.Label>
+        // return (
+        //   <Form.Group className="mb-3" key={field.name}>
+        //     {console.log("Rendering toggle for", field.name, "with value", formData[field.name])}
+        //     <Form.Label className="d-flex justify-content-between">
+        //       <span>
+        //         {field.label} {field.required && <span className="text-danger">*</span>}
+        //       </span>
+        //       <span className="fw-bold">{formData[field.name] ? " " : " "}</span>
+        //     </Form.Label>
 
-            <div
-              className="custom-toggle"
-              onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
-              style={{
-                width: "55px",
-                height: "28px",
-                borderRadius: "20px",
-                background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
-                position: "relative",
-                cursor: isReadOnly ? "not-allowed" : "pointer",
-                transition: "0.3s",
-              }}
-            >
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  background: "#fff",
-                  borderRadius: "50%",
-                  position: "absolute",
-                  top: "3px",
-                  left: formData[field.name] ? "29px" : "3px",
-                  transition: "0.3s",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                }}
-              ></div>
-            </div>
-            {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
-          </Form.Group>
-        );
+        //     <div
+        //       className="custom-toggle"
+        //       onClick={() => !isReadOnly && handleFieldChange(field, !formData[field.name])}
+        //       style={{
+        //         width: "55px",
+        //         height: "28px",
+        //         borderRadius: "20px",
+        //         background: formData[field.name] ? "var(--primary-color)" : "#d1d5db",
+        //         position: "relative",
+        //         cursor: isReadOnly ? "not-allowed" : "pointer",
+        //         transition: "0.3s",
+        //       }}
+        //     >
+        //       <div
+        //         style={{
+        //           width: "22px",
+        //           height: "22px",
+        //           background: "#fff",
+        //           borderRadius: "50%",
+        //           position: "absolute",
+        //           top: "3px",
+        //           left: formData[field.name] ? "29px" : "3px",
+        //           transition: "0.3s",
+        //           boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        //         }}
+        //       ></div>
+        //     </div>
+        //     {field.helpText && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+        //   </Form.Group>
+        // );
 
       case "toggle":
         const toggleValue = !!formData[field.name];

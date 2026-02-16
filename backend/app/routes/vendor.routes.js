@@ -1,6 +1,6 @@
 /**
  * Handles all incoming request for /api/vendor endpoint
- * DB table for this demo.vendors (renamed from purchase_vendors)
+ * DB table for this ${schema}.vendors (renamed from purchase_vendors)
  * Model used here is vendor.model.js
  * SUPPORTED API ENDPOINTS
  *              GET     /api/vendor
@@ -24,11 +24,21 @@ module.exports = (app) => {
 
   var router = require("express").Router();
 
-
   router.get("/", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const vendors = await Vendor.findAll();
+      return res.status(200).json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      return res.status(500).json({ errors: "Internal server error" });
+    }
+  });
+
+  router.get("/active", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
+    try {
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
+      const vendors = await Vendor.findAllActive();
       return res.status(200).json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -39,7 +49,7 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Vendors", "allow_view"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const vendor = await Vendor.findById(req.params.id);
       if (!vendor) {
         return res.status(404).json({ errors: "Vendor not found" });
@@ -59,7 +69,7 @@ module.exports = (app) => {
       try {
 
 
-        Vendor.init(req.userinfo.tenantcode);
+        Vendor.init(req.userinfo.tenantcode, req.branchId);
         if (req.body.email) {
           const existingVendor = await Vendor.findByEmail(req.body.email);
           if (existingVendor) {
@@ -118,7 +128,7 @@ module.exports = (app) => {
           });
         }
 
-        Vendor.init(req.userinfo.tenantcode);
+        Vendor.init(req.userinfo.tenantcode, req.branchId);
 
         const existingVendor = await Vendor.findById(req.params.id);
         if (!existingVendor) {
@@ -163,7 +173,7 @@ module.exports = (app) => {
 
   router.delete("/:id", fetchUser, checkPermission("Vendors", "allow_delete"), async (req, res) => {
     try {
-      Vendor.init(req.userinfo.tenantcode);
+      Vendor.init(req.userinfo.tenantcode, req.branchId);
       const result = await Vendor.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

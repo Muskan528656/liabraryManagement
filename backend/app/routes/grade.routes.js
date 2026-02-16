@@ -1,4 +1,4 @@
-const { fetchUser } = require("../middleware/fetchuser.js");
+const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const GradeSection = require("../models/grademodel.js");
 
 module.exports = (app) => {
@@ -15,6 +15,22 @@ module.exports = (app) => {
             res.status(500).json({ error: err.message });
         }
     });
+
+
+     router.get("/grouped", fetchUser, async (req, res) => {
+            
+            try {
+                GradeSection.init(req.userinfo.tenantcode);
+                const data = await GradeSection.findGroupedGrades();
+                console.log("data=>",data);
+                res.json(data);
+            } catch (err) {
+                console.error("Error fetching grouped grade:", err);
+                res.status(500).json({ error: "Internal server error" });
+            }
+        });
+    
+    
 
     // ================= GET BY ID =================
     router.get("/:id", fetchUser, async (req, res) => {
@@ -139,23 +155,31 @@ module.exports = (app) => {
                 .withMessage("Grade name is required")
                 .isLength({ max: 50 })
                 .withMessage("Grade name must be 50 characters or less"),
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Numbers are not allowed in grade name"),
 
             body("section_name")
-                .notEmpty()
+                .notEmpty() 
                 .withMessage("Section name is required")
                 .isLength({ max: 10 })
-                .withMessage("Section name must be 10 characters or less"),
+                .withMessage("Section name must be 10 characters or less"), 
+                // .matches(/^[A-Za-z\s]+$/)
+                // .withMessage("Numbers are not allowed in section name"),
 
             body("status")
                 .optional()
                 .isBoolean()
-                .withMessage("Status must be true/false"),
+                .withMessage("Status must be true or false"),
         ],
+
         async (req, res) => {
             try {
                 const errors = validationResult(req);
-                if (!errors.isEmpty())
-                    return res.status(400).json({ errors: errors.array() });
+                if (!errors.isEmpty()) {
+                    return res.status(400).json({
+                        errors: errors.array()[0].msg
+                    });
+                }
 
                 GradeSection.init(req.userinfo.tenantcode);
 

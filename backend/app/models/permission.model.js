@@ -13,10 +13,10 @@ async function findAll() {
             rp.role_id,
             r.role_name,
             m.name as module_name
-        FROM demo.permissions p
-        LEFT JOIN demo.role_permissions rp ON p.id = rp.permission_id
-        LEFT JOIN demo.user_role r ON rp.role_id = r.id
-        LEFT JOIN demo.module m ON p.module_id = m.id
+        FROM ${this.schema}.permissions p
+        LEFT JOIN ${this.schema}.role_permissions rp ON p.id = rp.permission_id
+        LEFT JOIN ${this.schema}.user_role r ON rp.role_id = r.id
+        LEFT JOIN ${this.schema}.module m ON p.module_id = m.id
         ORDER BY COALESCE(r.role_name, 'No Role'), m.name
     `;
     const result = await sql.query(query);
@@ -33,8 +33,8 @@ async function findByRole(roleId) {
             p.allow_create,
             p.allow_edit,
             p.allow_delete
-        FROM demo.permissions p
-        LEFT JOIN demo.module m ON p.module_id = m.id
+        FROM ${schema}.permissions p
+        LEFT JOIN ${schema}.module m ON p.module_id = m.id
         WHERE p.role_id = $1
         ORDER BY m.name ASC
     `;
@@ -53,7 +53,7 @@ async function findByRole(roleId) {
 // Create a new permission
 async function create(data, userId = null) {
     const query = `
-        INSERT INTO demo.permissions (
+        INSERT INTO ${schema}.permissions (
             module_id, 
             allow_view, 
             allow_create, 
@@ -82,7 +82,7 @@ async function create(data, userId = null) {
 
     if (data.role_id) {
         await sql.query(
-            `INSERT INTO demo.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
+            `INSERT INTO ${schema}.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
             [data.role_id, result.rows[0].id]
         );
     }
@@ -93,7 +93,7 @@ async function create(data, userId = null) {
 // Update permission by ID
 async function updateById(id, data, userId = null) {
     const query = `
-        UPDATE demo.permissions
+        UPDATE ${schema}.permissions
         SET 
             module_id = $2,
             allow_view = $3,
@@ -123,20 +123,20 @@ async function updateById(id, data, userId = null) {
     if (data.role_id) {
 
         const existing = await sql.query(
-            `SELECT * FROM demo.role_permissions WHERE permission_id = $1`,
+            `SELECT * FROM ${schema}.role_permissions WHERE permission_id = $1`,
             [id]
         );
 
         if (existing.rows.length > 0) {
 
             await sql.query(
-                `UPDATE demo.role_permissions SET role_id = $1 WHERE permission_id = $2`,
+                `UPDATE ${schema}.role_permissions SET role_id = $1 WHERE permission_id = $2`,
                 [data.role_id, id]
             );
         } else {
 
             await sql.query(
-                `INSERT INTO demo.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
+                `INSERT INTO ${schema}.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
                 [data.role_id, id]
             );
         }
@@ -148,11 +148,11 @@ async function updateById(id, data, userId = null) {
 async function deleteById(id) {
     
 
-    await sql.query(`DELETE FROM demo.role_permissions WHERE permission_id = $1`, [id]);
+    await sql.query(`DELETE FROM ${schema}.role_permissions WHERE permission_id = $1`, [id]);
 
 
     const result = await sql.query(
-        `DELETE FROM demo.permissions WHERE id = $1 RETURNING *`,
+        `DELETE FROM ${schema}.permissions WHERE id = $1 RETURNING *`,
         [id]
     );
 
@@ -166,12 +166,12 @@ async function updateMultiple(roleId, permissions, userId = null) {
 
     try {
         await sql.query(
-            `DELETE FROM demo.permissions WHERE role_id = $1`,
+            `DELETE FROM ${schema}.permissions WHERE role_id = $1`,
             [roleId]
         );
 
         await sql.query(
-            `DELETE FROM demo.role_permissions WHERE role_id = $1`,
+            `DELETE FROM ${schema}.role_permissions WHERE role_id = $1`,
             [roleId]
         );
 
@@ -179,7 +179,7 @@ async function updateMultiple(roleId, permissions, userId = null) {
 
         for (const perm of permissions) {
             const query = `
-                INSERT INTO demo.permissions (
+                INSERT INTO ${schema}.permissions (
                     module_id, 
                     allow_view, 
                     allow_create, 
@@ -209,7 +209,7 @@ async function updateMultiple(roleId, permissions, userId = null) {
 
 
             await sql.query(
-                `INSERT INTO demo.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
+                `INSERT INTO ${schema}.role_permissions (role_id, permission_id) VALUES ($1, $2)`,
                 [roleId, permission.id]
             );
 

@@ -17,6 +17,7 @@ import PubSub from "pubsub-js";
 import TableHeader from "../common/TableHeader";
 
 const ReportsList = () => {
+  console.log("working");
   const [reports, setReports] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -110,7 +111,7 @@ const ReportsList = () => {
           <div>
             <TableHeader
               icon='fa fa-book'
-              title={'Reports Library'}
+              title={'Report Library'}
             />
             {/* <h4 className="fw-bold mb-1" style={{ color:"var(--primary-color)"}}>Reports Library</h4> */}
             {/* <p className="text-muted small mb-0">Manage library reports</p> */}
@@ -162,7 +163,7 @@ const ReportsList = () => {
                   >
                     <td className="text-muted text-center align-middle border"
                       style={{ width: "80px" }}>
-                         {i + 1}
+                      {i + 1}
                     </td>
                     <td className="ps-4 py-0">
                       <div className=" d-flex align-items-center">

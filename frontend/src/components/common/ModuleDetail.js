@@ -21,7 +21,7 @@ import { useLocation } from "react-router-dom";
 import ConfirmationModal from "./ConfirmationModal";
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
-
+import { Country, State } from "country-state-city";
 const LOOKUP_ENDPOINT_MAP = {
   authors: "author",
   author: "author",
@@ -56,6 +56,36 @@ const normalizeListResponse = (payload) => {
   if (Array.isArray(payload.rows)) return payload.rows;
   if (payload.records && Array.isArray(payload.records)) return payload.records;
   return [];
+};
+
+
+
+const normalizeLocationData = (record) => {
+  if (!record) return record;
+
+  let updated = { ...record };
+
+  // Convert country name → ISO
+  if (record.country && record.country.length > 2) {
+    const countryObj = Country.getAllCountries()
+      .find(c => c.name.toLowerCase() === record.country.toLowerCase());
+
+    if (countryObj) {
+      updated.country = countryObj.isoCode;
+    }
+  }
+
+  // Convert state name → ISO
+  if (record.state && updated.country) {
+    const stateObj = State.getStatesOfCountry(updated.country)
+      .find(s => s.name.toLowerCase() === record.state.toLowerCase());
+
+    if (stateObj) {
+      updated.state = stateObj.isoCode;
+    }
+  }
+
+  return updated;
 };
 
 const getOptionValue = (option = {}) => {
@@ -266,6 +296,7 @@ const ModuleDetail = ({
           cursor: clickable ? "pointer" : "default",
           textDecoration: "none",
           gap: "8px",
+
         }}
       >
         <img
@@ -356,28 +387,35 @@ const ModuleDetail = ({
       const api = new DataApi(moduleApi);
       const response = await api.fetchById(id);
 
+
       if (response && response.data) {
         const responseData = response.data;
+
+        let finalData = null;
+
         if (responseData.success && responseData.data) {
-          setData(responseData.data);
+          finalData = responseData.data;
         } else if (
           responseData.data &&
           responseData.data.success &&
           responseData.data.data
         ) {
-          setData(responseData.data.data);
+          finalData = responseData.data.data;
         } else if (responseData.data) {
-          setData(responseData.data);
+          finalData = responseData.data;
         } else if (responseData.id) {
-          setData(responseData);
+          finalData = responseData;
         } else if (Array.isArray(responseData) && responseData.length > 0) {
-          setData(responseData[0]);
+          finalData = responseData[0];
         } else {
-          setData(responseData);
+          finalData = responseData;
         }
-      } else {
-        throw new Error("No response received from API");
+
+        const normalized = normalizeLocationData(finalData);
+
+        setData(normalized);
       }
+
     } catch (error) {
       console.error(`Error fetching ${moduleLabel}:`, error);
       PubSub.publish("RECORD_ERROR_TOAST", {
@@ -557,17 +595,40 @@ const ModuleDetail = ({
     return value ?? "—";
   };
 
+  // const getSelectOptions = useCallback(
+  //   (field) => {
+  //     if (!field || field.type !== "select" || !field.options) {
+  //       return [];
+  //     }
+  //     if (Array.isArray(field.options)) {
+  //       return field.options;
+  //     }
+  //     return externalData?.[field.options] || lookupOptions?.[field.options] || [];
+  //   },
+  //   [externalData, lookupOptions]
+  // );
+
+
   const getSelectOptions = useCallback(
-    (field) => {
+    (field, currentData) => {
       if (!field || field.type !== "select" || !field.options) {
         return [];
       }
+
+      // ✅ If options is a function → execute it
+      if (typeof field.options === "function") {
+        return field.options(currentData || tempData || data || {});
+      }
+
+      // ✅ Static array
       if (Array.isArray(field.options)) {
         return field.options;
       }
+
+      // ✅ Lookup string
       return externalData?.[field.options] || lookupOptions?.[field.options] || [];
     },
-    [externalData, lookupOptions]
+    [externalData, lookupOptions, tempData, data]
   );
 
   const handleLookupNavigation = (lookupConfig, record, event = null) => {
@@ -684,7 +745,7 @@ const ModuleDetail = ({
       const badgeConfig = field.badgeConfig || {};
       const bgColor = badgeConfig[value] || (value ? "primary" : "danger");
       const label = badgeConfig[`${value}_label`] || (value ? "Active" : "Inactive");
-      return <Badge style={{borderRadius:"5px", padding:"2px"}}  bg={bgColor}>{label}</Badge>;
+      return <Badge style={{ borderRadius: "5px", padding: "2px" }} bg={bgColor}>{label}</Badge>;
     }
     if (field.type === "currency") {
       return `₹${parseFloat(value).toLocaleString("en-IN", {
@@ -800,7 +861,7 @@ const ModuleDetail = ({
         });
 
         console.log("cleandata", cleanData)
-        console.log("ide",id)
+        console.log("ide", id)
 
         response = await api.update(cleanData, id);
         console.log("response", response)
@@ -850,67 +911,130 @@ const ModuleDetail = ({
 
   const handleFieldChange = (fieldKey, value, field) => {
     console.log("Field Change:", fieldKey, value);
-    if (isEditing && tempData) {
 
-      // if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
-      //   field.onChange(value, tempData, setTempData);
-      //   return;
-      // }
+    if (!isEditing || !tempData) return;
 
-      // 🔥 allow custom onChange for ANY field (Shelf, Country, etc.)
-      if (field && typeof field.onChange === "function") {
-        field.onChange(value, tempData, setTempData);
-        return;
-      }
-
-      let updatedData = {
-        ...tempData,
-        [fieldKey]: value,
-      };
-
-
-      if (fieldKey === 'country' || fieldKey === 'country_code') {
-        const countryInfo = getCountryInfo(value);
-
-
-
-
-        if (countryInfo.timezone) {
-
-          const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
-          timezoneFields.forEach(timezoneField => {
-            if (updatedData.hasOwnProperty(timezoneField)) {
-              updatedData[timezoneField] = countryInfo.timezone;
-            }
-          });
-        }
-
-
-        if (countryInfo.currency) {
-
-          const currencyFields = ['currency', 'currency_code', 'currencyCode'];
-          currencyFields.forEach(currencyField => {
-            if (updatedData.hasOwnProperty(currencyField)) {
-              updatedData[currencyField] = countryInfo.currency;
-            }
-          });
-        }
-      }
-
-
-      if (moduleName === 'purchase') {
-        if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
-          const quantity = parseFloat(updatedData.quantity) || 0;
-          const unitPrice = parseFloat(updatedData.unit_price) || 0;
-          const totalAmount = quantity * unitPrice;
-
-          updatedData.total_amount = totalAmount.toFixed(2);
-        }
-      }
-
-      setTempData(updatedData);
+    // 🔥 Custom onChange handler support
+    if (field && typeof field.onChange === "function") {
+      field.onChange(value, tempData, setTempData);
+      return;
     }
+
+    // ✅ Create updatedData FIRST
+    let updatedData = {
+      ...tempData,
+      [fieldKey]: value,
+    };
+
+    // ✅ Reset dependent dropdowns
+    if (fieldKey === "country") {
+      updatedData.state = "";
+      updatedData.city = "";
+    }
+
+    if (fieldKey === "state") {
+      updatedData.city = "";
+    }
+
+    // ✅ Auto timezone & currency logic
+    if (fieldKey === "country" || fieldKey === "country_code") {
+      const countryInfo = getCountryInfo(value);
+
+      if (countryInfo.timezone) {
+        ["timezone", "time_zone", "timeZone"].forEach((key) => {
+          if (updatedData.hasOwnProperty(key)) {
+            updatedData[key] = countryInfo.timezone;
+          }
+        });
+      }
+
+      if (countryInfo.currency) {
+        ["currency", "currency_code", "currencyCode"].forEach((key) => {
+          if (updatedData.hasOwnProperty(key)) {
+            updatedData[key] = countryInfo.currency;
+          }
+        });
+      }
+    }
+
+    // ✅ Purchase calculation logic
+    if (moduleName === "purchase") {
+      if (fieldKey === "quantity" || fieldKey === "unit_price") {
+        const quantity = parseFloat(updatedData.quantity) || 0;
+        const unitPrice = parseFloat(updatedData.unit_price) || 0;
+        updatedData.total_amount = (quantity * unitPrice).toFixed(2);
+      }
+    }
+
+    setTempData(updatedData);
   };
+
+
+  // const handleFieldChange = (fieldKey, value, field) => {
+  //   console.log("Field Change:", fieldKey, value);
+  //   if (isEditing && tempData) {
+
+  //     // if ((fieldKey === 'country' || fieldKey === 'country_code') && field && field.onChange) {
+  //     //   field.onChange(value, tempData, setTempData);
+  //     //   return;
+  //     // }
+
+
+
+  //     // 🔥 allow custom onChange for ANY field (Shelf, Country, etc.)
+  //     if (field && typeof field.onChange === "function") {
+  //       field.onChange(value, tempData, setTempData);
+  //       return;
+  //     }
+
+  //     let updatedData = {
+  //       ...tempData,
+  //       [fieldKey]: value,
+  //     };
+
+
+  //     if (fieldKey === 'country' || fieldKey === 'country_code') {
+  //       const countryInfo = getCountryInfo(value);
+
+
+
+
+  //       if (countryInfo.timezone) {
+
+  //         const timezoneFields = ['timezone', 'time_zone', 'timeZone'];
+  //         timezoneFields.forEach(timezoneField => {
+  //           if (updatedData.hasOwnProperty(timezoneField)) {
+  //             updatedData[timezoneField] = countryInfo.timezone;
+  //           }
+  //         });
+  //       }
+
+
+  //       if (countryInfo.currency) {
+
+  //         const currencyFields = ['currency', 'currency_code', 'currencyCode'];
+  //         currencyFields.forEach(currencyField => {
+  //           if (updatedData.hasOwnProperty(currencyField)) {
+  //             updatedData[currencyField] = countryInfo.currency;
+  //           }
+  //         });
+  //       }
+  //     }
+
+
+  //     if (moduleName === 'purchase') {
+  //       if (fieldKey === 'quantity' || fieldKey === 'unit_price') {
+  //         const quantity = parseFloat(updatedData.quantity) || 0;
+  //         const unitPrice = parseFloat(updatedData.unit_price) || 0;
+  //         const totalAmount = quantity * unitPrice;
+
+  //         updatedData.total_amount = totalAmount.toFixed(2);
+  //       }
+  //     }
+
+  //     setTempData(updatedData);
+  //   }
+  // };
 
   const getFieldValue = (field, currentData) => {
     if (!currentData) return "";
@@ -1043,30 +1167,17 @@ const ModuleDetail = ({
     const shouldShowAsReadOnly = isEditing && isNonEditableField;
 
 
+
     if (field.type === "toggle") {
       const value = currentData ? Boolean(currentData[field.key]) : false;
 
       return (
         <Form.Group key={index} className="mb-3">
           <Form.Label className="fw-semibold">
-            {/* {field.label} */}
+            {isEditing ? field.label : null}
           </Form.Label>
 
-          {!isEditing && (
-            <OverlayTrigger
-                placement="top"
-                overlay={<Tooltip>{data?.status ? "Active" : "Inactive"}</Tooltip>}
-            >
-            <Badge 
-              bg={value ? "primary" : "danger"}
-              toolTip={value ? "Active" : "Inactive"}
-              className="px-3 py-2 fs-6"
-              style={{marginTop:"32px"}}
-            >
-              {value ? "Active" : "Inactive"}
-            </Badge>
-              </OverlayTrigger>
-          )}
+
 
           {isEditing && !isNonEditableField && (
             <div
@@ -1125,7 +1236,8 @@ const ModuleDetail = ({
 
 
     if (field.type === "select" && field.options) {
-      const options = getSelectOptions(field);
+      // const options = getSelectOptions(field);
+      const options = getSelectOptions(field, isEditing ? tempData : data);
       const rawValue = currentData ? currentData[field.key] : null;
       const currentValue =
         rawValue === undefined || rawValue === null ? "" : rawValue.toString();
@@ -1289,7 +1401,7 @@ const ModuleDetail = ({
 
   return (
     <>
-      <Container fluid className="py-4">
+      <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
         <ScrollToTop />
 
         <Row className="justify-content-center">
@@ -1322,52 +1434,52 @@ const ModuleDetail = ({
                   </div>
 
                   {/* Right Side - Action Buttons */}
-                 
-                    <div className="d-flex gap-2">
-                      {!isEditing ? (
-                        <>
-                          {allowEdit && (
-                            <button
-                              className="custom-btn-primary"
-                              onClick={handleEdit}
-                            >
-                              <i className="fa-solid fa-edit me-2"></i>
-                              Edit {moduleLabel}
-                            </button>)}
-                          {/* <button
+
+                  <div className="d-flex gap-2">
+                    {!isEditing ? (
+                      <>
+                        {allowEdit && (
+                          <button
+                            className="custom-btn-primary"
+                            onClick={handleEdit}
+                          >
+                            <i className="fa-solid fa-edit me-2"></i>
+                            Edit {moduleLabel}
+                          </button>)}
+                        {/* <button
                             className="custom-btn-delete-detail"
                             onClick={handleDelete}
                           >
                             <i className="fa-solid fa-trash me-2"></i>
                             Delete
                           </button> */}
-                        </>
-                      ) : (
-                        <div className="d-flex gap-2">
-                          <button
-                            className="custom-btn-primary"
-                            onClick={handleSave}
-                            disabled={saving}
-                          >
-                            <i className="fa-solid fa-check me-2"></i>
-                            {saving ? "Saving..." : "Save"}
-                          </button>
-                          <button
-                            className="custom-btn-secondary"
-                            onClick={handleCancel}
-                            disabled={saving}
-                          >
-                            <i className="fa-solid fa-times me-2"></i>
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <div className="d-flex gap-2">
+                        <button
+                          className="custom-btn-primary"
+                          onClick={handleSave}
+                          disabled={saving}
+                        >
+                          <i className="fa-solid fa-check me-2"></i>
+                          {saving ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          className="custom-btn-secondary"
+                          onClick={handleCancel}
+                          disabled={saving}
+                        >
+                          <i className="fa-solid fa-times me-2"></i>
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details Section */}
                 <Row className="mt-4">
-                  <Col md={12} className="mb-4">
+                  {/* <Col md={12} className="mb-4">
                     <h6
                       className="fw-bold mb-0 d-flex align-items-center p-3 border rounded"
                       style={{
@@ -1378,11 +1490,33 @@ const ModuleDetail = ({
                       }}
                     >
                       {moduleLabel} Information
-                        <Badge bg={data?.status || data?.is_active? "success" : "danger"} className="mx-2 float-end">
-                          {data?.status || data?.is_active ? "Active" : "Inactive" }
+                      <Badge bg={data?.status || data?.is_active ? "success" : "danger"} className="mx-2 float-end">
+                        {data?.status || data?.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </h6>
+                  </Col> */}
+                  <Col md={12} className="mb-4">
+                    <h6
+                      className="fw-bold mb-0 d-flex align-items-center p-3 border rounded"
+                      style={{
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      {moduleLabel} Information
+
+                      {(data?.status !== undefined || data?.is_active !== undefined) && (
+                        <Badge
+                          bg={(data?.status || data?.is_active) ? "success" : "danger"}
+                          className="mx-2 float-end"
+                        >
+                          {(data?.status || data?.is_active) ? "Active" : "Inactive"}
                         </Badge>
+                      )}
                     </h6>
                   </Col>
+
                   <Row className="px-5">
                     {normalizedFields && normalizedFields.details && (
                       <Row>

@@ -551,7 +551,7 @@ const BookIssue = ({ permissions }) => {
               </Nav.Item>
             </Nav>
 
-            {/* Search Bar - Only for List Tab */}
+         
             {activeTab === "list" && (
               <div className="d-flex align-items-center">
                 <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
@@ -626,7 +626,8 @@ const BookIssue = ({ permissions }) => {
                     loading={loadingIssuedBooks}
                     showCheckbox={false}
                     showSerialNumber={true}
-                    showActions= {allowEdit}
+                    // showActions= {allowEdit}
+                    showActions={false}
                     searchTerm={searchTerm}
                     currentPage={currentPage}
                     recordsPerPage={recordsPerPage}

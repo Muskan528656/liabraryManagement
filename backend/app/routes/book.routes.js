@@ -19,6 +19,7 @@ const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
 const Book = require("../models/book.model.js");
 
 module.exports = (app) => {
+  
   const { body, validationResult } = require("express-validator");
 
   var router = require("express").Router();
@@ -26,11 +27,18 @@ module.exports = (app) => {
   router.get(
     "/",
     fetchUser,
-    checkPermission("Books", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
-        const books = await Book.findAll();
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
+        
+        // Add search filter if present in query
+        const filters = {};
+        if (req.query.search) {
+          filters.search = req.query.search;
+        }
+        
+        const books = await Book.findAll(filters);
         res.json(books);
       } catch (err) {
         console.error(err);
@@ -39,36 +47,83 @@ module.exports = (app) => {
     }
   );
 
-  router.get(
-    "/book-popularity-analytics",
+ router.get(
+    "/active",
     fetchUser,
-    // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
-
-        const filters = {
-          days: req.query.days,
-          startDate: req.query.startDate,
-          endDate: req.query.endDate,
-          category: req.query.category,
-          searchTerm: req.query.searchTerm
-        };
-
-        const reportData = await Book.generateBookPopularityReport(filters);
-        res.json(reportData);
+        const branchId = req.headers["branch-id"];
+        Book.init(req.userinfo.tenantcode, branchId);
+        
+        // Add search filter if present in query
+        const filters = {};
+        if (req.query.search) {
+          filters.search = req.query.search;
+        }
+        
+        const books = await Book.findAllActive();
+        res.json(books);
       } catch (err) {
-        console.error("Error generating book popularity report:", err);
+        console.error(err);
         res.status(500).json({ error: "Internal server error" });
       }
     }
   );
 
+
+    router.get(
+      "/book-popularity-analytics",
+      fetchUser,
+      async (req, res) => {
+        try {
+          const branchId = req.branchId;
+          console.log("Branchre ID:", branchId);
+          
+          Book.init(req.userinfo.tenantcode, branchId);
+        
+          const filters = {
+            days: req.query.days || "",
+            startDate: req.query.startDate ? req.query.startDate.trim() : null,
+            endDate: req.query.endDate ? req.query.endDate.trim() : null,
+            category: req.query.category || null,
+            searchTerm: req.query.searchTerm || null
+          };
+    
+              
+          if (filters.days === 'custom') {
+            if (!filters.startDate || !filters.endDate) {
+              return res.status(400).json({ error: "startDate and endDate are required when days=custom" });
+            }
+    
+                
+            const startDate = new Date(filters.startDate);
+            const endDate = new Date(filters.endDate);
+    
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              return res.status(400).json({ error: "Invalid date format for startDate or endDate" });
+            }
+    
+            if (startDate > endDate) {
+              return res.status(400).json({ error: "startDate cannot be after endDate" });
+            }
+          }
+    
+          const reportData = await Book.generateBookPopularityReport(filters);
+          res.json(reportData);
+        } catch (err) {
+          console.error("Error generating book popularity report:", err);
+          res.status(500).json({ error: "Internal server error" });
+        }
+      }
+    );
+
   router.get("/inventory-report",
-    fetchUser, checkPermission("Books", "allow_view"),
+    fetchUser,
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
+        
         const report = await Book.generateInventoryReport();
         res.json(report);
       } catch (error) {
@@ -82,7 +137,8 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
           days: req.query.days,
@@ -111,7 +167,8 @@ module.exports = (app) => {
     // checkPermission("Reports", "allow_view"),
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
 
         const filters = {
           days: req.query.days,
@@ -136,10 +193,11 @@ module.exports = (app) => {
   );
 
   router.get("/:id", fetchUser,
-    // checkPermission("Books", "allow_view"), 
     async (req, res) => {
       try {
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
+        
         const book = await Book.findById(req.params.id);
         if (!book) {
           return res.status(404).json({ errors: "Book not found" });
@@ -152,10 +210,12 @@ module.exports = (app) => {
     });
 
 
-  router.get("/isbn/:isbn", fetchUser, checkPermission("Books", "allow_view"), async (req, res) => {
+  router.get("/isbn/:isbn", fetchUser, async (req, res) => {
     try {
-      Book.init(req.userinfo.tenantcode);
+      const branchId = req.branchId;
+      Book.init(req.userinfo.tenantcode, branchId);
       const isbn = decodeURIComponent(req.params.isbn);
+      
       const book = await Book.findByISBN(isbn);
       if (!book) {
         return res.status(404).json({ errors: "Book not found" });
@@ -171,8 +231,7 @@ module.exports = (app) => {
 
   router.post(
     "/",
-    fetchUser,
-    checkPermission("Books", "allow_create"),
+    fetchUser, 
     [
       body("title")
         .optional()
@@ -245,7 +304,8 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
 
         if (req.body.isbn && req.body.isbn.trim()) {
           const existingBook = await Book.findByISBN(req.body.isbn);
@@ -270,8 +330,7 @@ module.exports = (app) => {
   );
   router.put(
     "/:id",
-    fetchUser,
-    checkPermission("Books", "allow_edit"),
+    fetchUser, 
     [
       body("title").notEmpty().withMessage("Title is required"),
       body("author_id").notEmpty().withMessage("Author ID is required"),
@@ -321,7 +380,8 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        Book.init(req.userinfo.tenantcode);
+        const branchId = req.branchId;
+        Book.init(req.userinfo.tenantcode, branchId);
 
         const existingBook = await Book.findById(req.params.id);
         if (!existingBook) {
@@ -351,9 +411,10 @@ module.exports = (app) => {
     }
   );
 
-  router.delete("/:id", fetchUser, checkPermission("Books", "allow_delete"), async (req, res) => {
+  router.delete("/:id", fetchUser, async (req, res) => {
     try {
-      Book.init(req.userinfo.tenantcode);
+      const branchId = req.branchId;
+      Book.init(req.userinfo.tenantcode, branchId);
       const result = await Book.deleteById(req.params.id);
       if (!result.success) {
         return res.status(404).json({ errors: result.message });

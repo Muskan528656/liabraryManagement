@@ -21,11 +21,13 @@ import Submodule from "./Submodule";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import UniversalBarcodeScanner from "../common/UniversalBarcodeScanner";
 import { useBookSubmission } from "../../contexts/BookSubmissionContext";
+import { useBranch } from "../../contexts/BranchContext";
 
 export default function Header({ socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useBookSubmission();
+  const { branches, selectedBranch, selectBranch, isSuperAdmin, loading: branchLoading } = useBranch();
   const [userInfo, setUserInfo] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -650,7 +652,6 @@ export default function Header({ socket }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0.5rem 0.5rem",
           borderBottom: "1px solid #e5e7eb",
           background: "#ffffff",
         }}
@@ -667,18 +668,53 @@ export default function Header({ socket }) {
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
+            marginLeft: "30px"
           }}
         >
-          <img
+          {/* <img
             // src={Company?.logourl || "/Logo.png"}
             src={"/ibirds.png"}
             height="50"
             style={{ height: "70px", marginLeft: "20px", objectFit: "contain" }}
-          />
+          /> */}
           <span>{Company?.name}</span>
         </Navbar.Brand>
 
         <div className="d-flex align-items-center gap-2">
+
+          {/* Branch Selector for Super Admin */}
+          {isSuperAdmin && (
+            <div className="d-flex align-items-center">
+              <select 
+                className="form-select form-select-sm"
+                value={selectedBranch ? selectedBranch.id : ''}
+                onChange={(e) => {
+                  const branchId = e.target.value;
+                    const branch = branches.find(b => b.id ===branchId);
+                    if (branch) {
+                      selectBranch(branch);
+                    }
+                }}
+                style={{
+                  minWidth: '150px',
+                  maxWidth: '200px',
+                  fontSize: '14px',
+                  padding: '6px 12px',
+                  border: '1px solid #ced4da',
+                  borderRadius: '4px',
+                  backgroundColor: '#fff',
+                  color: '#495057',
+                }}
+              >
+                {/* <option value="">All Branches</option> */}
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.branch_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* <img
             src="qr-code.png"
@@ -707,13 +743,12 @@ export default function Header({ socket }) {
             onClick={() => setShowScannerModal(true)}
             className="shadow-lg pulse-button"
             style={{
-              height: "45px",
+              height: "40px",
               padding: "6px",
               backgroundColor: "#fff",
               border: "2px solid var(--primary-color)",
               borderRadius: "8px",
               cursor: "pointer",
-
               transition: "transform 0.2s ease",
             }}
           />

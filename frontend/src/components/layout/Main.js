@@ -29,7 +29,7 @@ export default function Main({ socket }) {
         <main
           style={{
 
-            marginTop: "140px",
+            marginTop: "116px",
             paddingBottom: "80px",
             overflowY: "auto",
             minHeight: "calc(100vh - 140px)",

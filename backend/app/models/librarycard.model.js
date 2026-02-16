@@ -3,52 +3,122 @@
  * @date        DEC, 2025
  */
 const sql = require("./db.js");
-const { generateAutoNumberSafe } = require("../utils/autoNumber.helper.js");
+const { generateAutoNumberSafe, applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
 
 let schema = "";
+let branchId = null;
 
-function init(schema_name) {
+function init(schema_name, branch_id = null) {
   schema = schema_name;
+  branchId = branch_id;
+}
+async function findAll(memberType) {
+  let query = `
+    SELECT
+      lm.*,
+      CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+      u.email AS user_email,
+      p.plan_name,
+      p.duration_days,
+      ot.label AS type_label
+    FROM ${schema}.library_members lm
+    LEFT JOIN ${schema}."user" u
+      ON lm.createdbyid = u.id
+    LEFT JOIN ${schema}.plan p
+      ON lm.plan_id = p.id
+    LEFT JOIN ${schema}.object_type ot
+      ON lm.type_id = ot.id
+    WHERE lm.branch_id = $1
+  `;
+
+  let values = [branchId];
+
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  query = filtered.query + ` ORDER BY lm.createddate DESC`;
+  values = filtered.values;
+
+  const result = await sql.query(query, values);
+  return result.rows;
 }
 
-async function findAll() {
+// async function findAll() {
+//   try {
+//     const query = `
+//       SELECT
+//         lm.*,
+//         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+//         u.email AS user_email,
+//         p.plan_name,
+//         p.duration_days,
+//         ot.label AS type_label
+//       FROM ${schema}.library_members lm
+//       LEFT JOIN ${schema}."user" u
+//         ON lm.createdbyid = u.id
+//       LEFT JOIN ${schema}.plan p
+//         ON lm.plan_id = p.id
+//       LEFT JOIN ${schema}.object_type ot
+//         ON lm.type_id = ot.id
+//       ORDER BY lm.createddate DESC;
+//     `;
+
+//     const result = await sql.query(query);
+//     return result.rows;
+//   } catch (error) {
+//     console.error("Error in findAll:", error);
+//     throw error;
+//   }
+// }
+// async function findAll(memberType) {
+//   try {
+//     let query = `
+//       SELECT
+//         lm.*,
+//         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
+//         u.email AS user_email,
+//         p.plan_name,
+//         p.duration_days,
+//         ot.label AS type_label
+//       FROM ${schema}.library_members lm
+//       LEFT JOIN ${schema}."user" u
+//         ON lm.createdbyid = u.id
+//       LEFT JOIN ${schema}.plan p
+//         ON lm.plan_id = p.id
+//       LEFT JOIN ${schema}.object_type ot
+//         ON lm.type_id = ot.id
+//     `;
+
+//     const values = [];
+
+//     if (memberType) {
+//       query += ` WHERE LOWER(lm.library_member_type) = LOWER($1)`;
+//       values.push(memberType);
+//     }
+
+//     query += ` ORDER BY lm.createddate DESC`;
+
+//     const result = await sql.query(query, values);
+//     return result.rows;
+
+//   } catch (error) {
+//     console.error("Error in findAll:", error);
+//     throw error;
+//   }
+// }
+
+async function findById(id, memberType) {
   try {
-    const query = `
+
+    let query = `
       SELECT
         lm.*,
         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
         u.email AS user_email,
         p.plan_name,
         p.duration_days,
-        ot.label AS type_label
-      FROM ${schema}.library_members lm
-      LEFT JOIN ${schema}."user" u
-        ON lm.createdbyid = u.id
-      LEFT JOIN ${schema}.plan p
-        ON lm.plan_id = p.id
-      LEFT JOIN demo.object_type ot
-        ON lm.type_id = ot.id
-      ORDER BY lm.createddate DESC;
-    `;
-
-    const result = await sql.query(query);
-    return result.rows;
-  } catch (error) {
-    console.error("Error in findAll:", error);
-    throw error;
-  }
-}
-
-async function findById(id) {
-  try {
-    const query = `
-      SELECT
-        lm.*,
-        CONCAT(u.firstname, ' ', u.lastname) AS user_name,
-        u.email AS user_email,
-        p.plan_name,
-        p.duration_days,
-        ot.label AS type_label
+        ot.label AS type_label,
+        g.grade_name,
+        g.section_name
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
@@ -56,20 +126,31 @@ async function findById(id) {
         ON lm.plan_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
-      WHERE lm.id = $1
+      LEFT JOIN ${schema}.grade g
+        ON lm.grade_id = g.id
+      WHERE lm.id = $1 AND lm.branch_id = $2
     `;
 
-    const result = await sql.query(query, [id]);
+    let values = [id, branchId];
+
+    // Apply member type filter
+    if (memberType) {
+      query += ` AND LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+      values.push(memberType);
+    }
+
+    const result = await sql.query(query, values);
     return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in findById:", error);
     throw error;
   }
 }
-
-async function findByCardNumber(cardNumber) {
+async function findByCardNumber(cardNumber, memberType) {
   try {
-    const query = `
+
+    let query = `
       SELECT
         lm.*,
         CONCAT(u.firstname, ' ', u.lastname) AS user_name,
@@ -84,16 +165,26 @@ async function findByCardNumber(cardNumber) {
         ON lm.subscription_id = p.id
       LEFT JOIN ${schema}.object_type ot
         ON lm.type_id = ot.id
-      WHERE lm.card_number = $1
+      WHERE lm.card_number = $1 AND lm.branch_id = $2
     `;
 
-    const result = await sql.query(query, [cardNumber]);
+    let values = [cardNumber, branchId];
+
+    // Member type filter
+    if (memberType) {
+      query += ` AND LOWER(lm.library_member_type) = LOWER($${values.length + 1})`;
+      values.push(memberType);
+    }
+
+    const result = await sql.query(query, values);
     return result.rows[0] || null;
+
   } catch (error) {
     console.error("Error in findByCardNumber:", error);
     throw error;
   }
 }
+
 
 async function resolveTypeId(typeName) {
   if (!typeName) return null;
@@ -149,6 +240,11 @@ async function create(cardData, userId) {
     }
   }
 
+  // Resolve grade_id from grade_name and section_name
+  if (cardData.grade_name && cardData.section_name) {
+    cardData.grade_id = await resolveGradeId(cardData.grade_name, cardData.section_name);
+  }
+
   try {
 
     const fields = [
@@ -171,10 +267,14 @@ async function create(cardData, userId) {
       "registration_date",
       "plan_id",
       "type_id",
+      "job_title",
+      "grade_id",
+      "branch_id",
       "createddate",
       "lastmodifieddate",
       "createdbyid",
       "lastmodifiedbyid",
+      "library_member_type"
     ];
 
     const placeholders = fields.map((_, i) => `$${i + 1}`).join(", ");
@@ -195,34 +295,34 @@ async function create(cardData, userId) {
         ? cardData.is_active
         : cardData.status === true || cardData.status === "true";
 
-    const fullName = `${cardData.first_name || ""} ${
-      cardData.last_name || ""
-    }`.trim();
-
+    const fullName = `${cardData.first_name || ""} ${cardData.last_name || ""
+      }`.trim();
     const values = [
       cardData.card_number,
       isActive,
       imageValue,
       cardData.subscription_id || null,
-
       cardData.first_name || null,
       cardData.last_name || null,
       fullName || null,
-
       cardData.father_gurdian_name || null,
       cardData.parent_contact || null,
       cardData.dob || null,
-
       cardData.email || null,
       cardData.phone_number || null,
       cardData.country_code || null,
       cardData.registration_date || null,
       cardData.plan_id || null,
       cardData.type_id || null,
+      cardData.job_title || null,
+      cardData.section_id || null,
+      branchId,
+
       new Date(),
       new Date(),
       userId,
       userId,
+      cardData.library_member_type || null
     ];
 
 
@@ -233,7 +333,7 @@ async function create(cardData, userId) {
     const completeRecord = await findById(result.rows[0].id);
     return completeRecord;
   } catch (error) {
-    console.error("❌ Error in create:", {
+    console.error(" Error in create:", {
       message: error.message,
       code: error.code,
       detail: error.detail,
@@ -243,10 +343,27 @@ async function create(cardData, userId) {
   }
 }
 async function updateById(id, cardData, userId) {
+
+  console.log("update library member=>", cardData)
   try {
     const updates = [];
     const values = [];
     let idx = 1;
+
+    // Handle grade_id resolution from grade_name and section_name
+    if (cardData.grade_name && cardData.section_name) {
+      const gradeId = await resolveGradeId(cardData.grade_name, cardData.section_name);
+      if (gradeId) {
+        updates.push("grade_id = $" + idx);
+        values.push(gradeId);
+        idx++;
+      } else {
+        console.warn(`Could not resolve grade_id for grade_name: ${cardData.grade_name}, section_name: ${cardData.section_name}`);
+      }
+    }
+
+    console.log("cardData")
+
     if (cardData.is_active !== undefined) {
       updates.push("is_active = $" + idx);
       values.push(cardData.is_active);
@@ -281,6 +398,11 @@ async function updateById(id, cardData, userId) {
       "dob",
       "father_gurdian_name",
       "parent_contact",
+      "job_title",
+      // "grade_id", // Handled separately above
+      // "section_id", // Not needed since we resolve to grade_id
+      "library_member_type"
+
     ];
 
     allowedFields.forEach((field) => {
@@ -324,11 +446,12 @@ async function updateById(id, cardData, userId) {
     }
 
     values.push(id);
+    values.push(branchId);
 
     const query = `
       UPDATE ${schema}.library_members
       SET ${updates.join(", ")}
-      WHERE id = $${idx}
+      WHERE id = $${idx} AND branch_id = $${idx + 1}
       RETURNING *
     `;
 
@@ -347,6 +470,7 @@ async function updateById(id, cardData, userId) {
   }
 }
 
+
 async function resolveTypeId(typeInput) {
   try {
     if (!typeInput) return null;
@@ -358,7 +482,7 @@ async function resolveTypeId(typeInput) {
     }
 
     const queryById = `
-      SELECT id FROM ${schema}.library_member_types 
+      SELECT id FROM ${schema}.library_member_types
       WHERE id::text = $1 OR code = $1 OR LOWER(name) = LOWER($1)
     `;
 
@@ -369,7 +493,7 @@ async function resolveTypeId(typeInput) {
     }
 
     const queryByName = `
-      SELECT id FROM ${schema}.library_member_types 
+      SELECT id FROM ${schema}.library_member_types
       WHERE LOWER(name) = LOWER($1) OR LOWER(code) = LOWER($1)
     `;
 
@@ -389,15 +513,39 @@ async function resolveTypeId(typeInput) {
   }
 }
 
+async function resolveGradeId(gradeName, sectionName) {
+  try {
+    if (!gradeName || !sectionName) return null;
+
+    const query = `
+      SELECT id FROM ${schema}.grade
+      WHERE LOWER(grade_name) = LOWER($1) AND LOWER(section_name) = LOWER($2)
+      LIMIT 1
+    `;
+
+    const result = await sql.query(query, [gradeName.trim(), sectionName.trim()]);
+
+    if (result.rows.length > 0) {
+      return result.rows[0].id;
+    }
+
+    console.warn(`❌ Could not resolve grade ID for: ${gradeName} - ${sectionName}`);
+    return null;
+  } catch (error) {
+    console.error("Error resolving grade ID:", error);
+    return null;
+  }
+}
+
 async function deleteById(id) {
   try {
     const query = `
       DELETE FROM ${schema}.library_members
-      WHERE id = $1
+      WHERE id = $1 AND branch_id = $2
       RETURNING id, card_number, name
     `;
 
-    const result = await sql.query(query, [id]);
+    const result = await sql.query(query, [id, branchId]);
 
     if (result.rows.length > 0) {
       return {
@@ -437,11 +585,11 @@ async function findByUserId(userId) {
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u
         ON lm.createdbyid = u.id
-      WHERE lm.user_id = $1
+      WHERE lm.user_id = $1 AND lm.branch_id = $2
       LIMIT 1
     `;
 
-    const result = await sql.query(query, [userId]);
+    const result = await sql.query(query, [userId, branchId]);
     return result.rows[0] || null;
   } catch (error) {
     console.error("Error in findByUserId:", error);
@@ -451,7 +599,7 @@ async function findByUserId(userId) {
 
 async function getAllRecords() {
   try {
-    const query = `SELECT * FROM demo.object_type WHERE status = 'Active'`;
+    const query = `SELECT * FROM ${schema}.object_type WHERE status = 'Active'`;
     const result = await sql.query(query);
     return result.rows;
   } catch (error) {
@@ -470,68 +618,22 @@ async function search(searchTerm) {
       FROM ${schema}.library_members lm
       LEFT JOIN ${schema}."user" u ON lm.createdbyid = u.id
       LEFT JOIN ${schema}.object_type ot ON lm.type = ot.id
-      WHERE
-        lm.card_number ILIKE $1 OR
+      WHERE (lm.card_number ILIKE $1 OR
         lm.name ILIKE $1 OR
         lm.email ILIKE $1 OR
         lm.phone_number ILIKE $1 OR
-        CONCAT(lm.first_name, ' ', lm.last_name) ILIKE $1
+        CONCAT(lm.first_name, ' ', lm.last_name) ILIKE $1) AND lm.branch_id = $2
       ORDER BY lm.createddate DESC
       LIMIT 50
     `;
 
-    const result = await sql.query(query, [`%${searchTerm}%`]);
+    const result = await sql.query(query, [`%${searchTerm}%`, branchId]);
     return result.rows;
   } catch (error) {
     console.error("Error in search:", error);
     throw error;
   }
 }
-//name check
-// async function findByName(name, excludeId = null) {
-//   try {
-//     if (!this.schema) {
-//       throw new Error("Schema not initialized. Call init() first.");
-//     }
-//     let query = `SELECT * FROM ${this.schema}.library_members WHERE name = $1`;
-//     const params = [name];
-
-//     if (excludeId) {
-//       query += ` AND id != $2`;
-//       params.push(excludeId);
-//     }
-
-//     const result = await sql.query(query, params);
-//     return result.rows.length > 0 ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByName:", error);
-//     throw error;
-//   }
-// }
-//email check
-// async function findByEmail(email, excludeId = null) {
-//   try {
-//     console.log("Checking email:", email);
-//     console.log("Exclude ID:", excludeId);
-//     console.log("schema:", this.schema);
-//     if (!this.schema) {
-//       throw new Error("Schema not initialized. Call init() first.");
-//     }
-//     let query = `SELECT * FROM ${this.schema}.library_members WHERE email = $1`;
-//     const params = [email];
-
-//     if (excludeId) {
-//       query += ` AND id != $2`;
-//       params.push(excludeId);
-//     }
-
-//     const result = await sql.query(query, params);
-//     return result.rows.length > 0 ? result.rows[0] : null;
-//   } catch (error) {
-//     console.error("Error in findByEmail:", error);
-//     throw error;
-//   }
-// }
 module.exports = {
   init,
   getAllRecords,

@@ -4,7 +4,6 @@ import { Container, Row, Col, Card, Button, Modal, Form, Table, OverlayTrigger, 
 import { useNavigate } from "react-router-dom";
 import ResizableTable from "./ResizableTable";
 import ScrollToTop from "./ScrollToTop";
-// import Loader from "./Loader";
 import TableHeader from "./TableHeader";
 import FormModal from "./FormModal";
 import DataApi from "../../api/dataApi";
@@ -303,7 +302,7 @@ const DynamicCRUD = ({
                 };
             }
 
-            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name') && showDetailView && !col.render) {
+            if ((col.field === 'title' || col.field === 'name' || col.field === 'card_number' || col.field === 'role_name' || col.field === 'purchase_serial_no' || col.field === 'firstname' || col.field === 'plan_name' || col.field === 'module_name' || col.field === 'branch_name' || col.field === 'shelf_name' || col.field === 'grade_name') && showDetailView && !col.render) {
                 return {
                     ...col,
                     render: (value, record) => (
@@ -586,89 +585,212 @@ const DynamicCRUD = ({
 
 
 
+    // const getProcessedFormFields = useCallback(() => {
+    //     return formFields.map(field => {
+    //         if (!field) return field;
+
+    //         let processedField = { ...field };
+
+    //         if (field.readOnlyWhenEditing && editingItem) {
+    //             processedField.readOnly = true;
+    //         }
+
+    //         if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
+    //             processedField.required = false;
+    //         }
+
+    //         if (field.type !== 'select' || !field.options) {
+    //             return processedField;
+    //         }
+
+    //         try {
+    //             let optionsArray = [];
+
+    //             if (Array.isArray(field.options)) {
+    //                 optionsArray = field.options;
+    //             } else if (typeof field.options === 'function') {
+    //                 // For dependent dropdowns (like subShelfOptions)
+    //                 if (field.dependentField) {
+    //                     const dependentValue = formData[field.dependentField];
+    //                     if (dependentValue) {
+    //                         // Call the function with dependent field value
+    //                         optionsArray = field.options(dependentValue) || [];
+    //                     } else {
+    //                         // If dependent field not selected, show empty or placeholder
+    //                         optionsArray = [{ value: '', label: `Select ${field.label}` }];
+    //                     }
+    //                 } else {
+    //                     // For other functions, pass formData
+    //                     optionsArray = field.options(formData) || [];
+    //                 }
+    //             } else if (typeof field.options === 'string') {
+    //                 // For regular select options from relatedData
+    //                 const relatedOptions = relatedData[field.options];
+    //                 if (Array.isArray(relatedOptions)) {
+    //                     optionsArray = relatedOptions.map(item => ({
+    //                         value: item.id?.toString() || item.role_name?.toString() || '',
+    //                         label: item.name || item.title || item.role_name || item.email || item.plan_name || `Item ${item.id}`
+    //                     }));
+    //                 } else {
+    //                     optionsArray = [];
+    //                 }
+    //             } else {
+    //                 console.warn(`Invalid options type for field ${field.name}:`, typeof field.options);
+    //                 optionsArray = [];
+    //             }
+
+    //             // Filter out invalid options
+    //             optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
+
+    //             // Add empty option if needed
+    //             if (optionsArray.length > 0) {
+    //                 const hasEmptyOption = optionsArray.some(opt =>
+    //                     opt.value === '' || opt.value === null || opt.value === undefined
+    //                 );
+
+    //                 if (!hasEmptyOption) {
+    //                     optionsArray = [
+    //                         { value: '', label: `Select ${field.label}` },
+    //                         ...optionsArray
+    //                     ];
+    //                 }
+    //             }
+
+    //             processedField.options = optionsArray;
+    //             return processedField;
+
+    //         } catch (error) {
+    //             console.error(`Error processing field ${field.name}:`, error);
+    //             return {
+    //                 ...processedField,
+    //                 options: []
+    //             };
+    //         }
+    //     });
+    // }, [formFields, relatedData, formData, editingItem]);
+
+    // const getProcessedFormFields = useCallback(() => {
+    // return formFields
+    //     .map(field => {
+    //     if (!field) return null;
+
+    //     let processedField = { ...field };
+
+    //     // ===== READONLY / REQUIRED FIXES =====
+    //     if (field.readOnlyWhenEditing && editingItem) {
+    //         processedField.readOnly = true;
+    //     }
+
+    //     if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
+    //         processedField.required = false;
+    //     }
+
+    //     // ===== OPTIONS PROCESSING (IMPORTANT PART) =====
+    //     if (field.type === 'select' && field.options) {
+    //         let optionsArray = [];
+
+    //         if (Array.isArray(field.options)) {
+    //         optionsArray = field.options;
+    //         } else if (typeof field.options === 'function') {
+    //         optionsArray = field.options(formData) || [];
+    //         } else if (typeof field.options === 'string') {
+    //         const relatedOptions = relatedData[field.options];
+    //         if (Array.isArray(relatedOptions)) {
+    //             optionsArray = relatedOptions.map(item => ({
+    //             value: item.id?.toString() || '',
+    //             label: item.name || item.title || item.email || `Item ${item.id}`
+    //             }));
+    //         }
+    //         }
+
+    //         optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
+
+    //         if (!optionsArray.some(opt => opt.value === '')) {
+    //         optionsArray = [{ value: '', label: `Select ${field.label}` }, ...optionsArray];
+    //         }
+
+    //         processedField.options = optionsArray;
+    //     }
+
+    //     return processedField;
+    //     })
+    //     // ✅ CONDITION MUST BE APPLIED LAST
+    //     .filter(field => {
+    //     if (!field) return false;
+    //     if (typeof field.condition === "function") {
+    //         return field.condition(formData);
+    //     }
+    //     return true;
+    //     });
+    // }, [formFields, relatedData, formData, editingItem]);
+
+
     const getProcessedFormFields = useCallback(() => {
-        return formFields.map(field => {
-            if (!field) return field;
+        return formFields
+            .map(field => {
+                if (!field) return null;
 
-            let processedField = { ...field };
+                let processedField = { ...field };
 
-            if (field.readOnlyWhenEditing && editingItem) {
-                processedField.readOnly = true;
-            }
 
-            if ((field.name === 'password' || field.name === 'confirmPassword') && editingItem) {
-                processedField.required = false;
-            }
-
-            if (field.type !== 'select' || !field.options) {
-                return processedField;
-            }
-
-            try {
-                let optionsArray = [];
-
-                if (Array.isArray(field.options)) {
-                    optionsArray = field.options;
-                } else if (typeof field.options === 'function') {
-                    // For dependent dropdowns (like subShelfOptions)
-                    if (field.dependentField) {
-                        const dependentValue = formData[field.dependentField];
-                        if (dependentValue) {
-                            // Call the function with dependent field value
-                            optionsArray = field.options(dependentValue) || [];
-                        } else {
-                            // If dependent field not selected, show empty or placeholder
-                            optionsArray = [{ value: '', label: `Select ${field.label}` }];
-                        }
-                    } else {
-                        // For other functions, pass formData
-                        optionsArray = field.options(formData) || [];
-                    }
-                } else if (typeof field.options === 'string') {
-                    // For regular select options from relatedData
-                    const relatedOptions = relatedData[field.options];
-                    if (Array.isArray(relatedOptions)) {
-                        optionsArray = relatedOptions.map(item => ({
-                            value: item.id?.toString() || item.role_name?.toString() || '',
-                            label: item.name || item.title || item.role_name || item.email || item.plan_name || `Item ${item.id}`
-                        }));
-                    } else {
-                        optionsArray = [];
-                    }
-                } else {
-                    console.warn(`Invalid options type for field ${field.name}:`, typeof field.options);
-                    optionsArray = [];
+                if (field.readOnlyWhenEditing && editingItem) {
+                    processedField.readOnly = true;
                 }
 
-                // Filter out invalid options
-                optionsArray = optionsArray.filter(opt => opt && typeof opt === 'object');
+                if (
+                    (field.name === 'password' || field.name === 'confirmPassword') &&
+                    editingItem
+                ) {
+                    processedField.required = false;
+                }
 
-                // Add empty option if needed
-                if (optionsArray.length > 0) {
-                    const hasEmptyOption = optionsArray.some(opt =>
-                        opt.value === '' || opt.value === null || opt.value === undefined
+
+                if (typeof field.condition === "function") {
+                    const shouldShow = field.condition(formData);
+                    if (!shouldShow) return null;
+                }
+
+                // ===== OPTIONS PROCESSING =====
+                if (field.type === 'select' && field.options) {
+                    let optionsArray = [];
+
+                    if (Array.isArray(field.options)) {
+                        optionsArray = field.options;
+                    } else if (typeof field.options === 'function') {
+                        optionsArray = field.options(formData) || [];
+                    } else if (typeof field.options === 'string') {
+                        const relatedOptions = relatedData[field.options];
+                        if (Array.isArray(relatedOptions)) {
+                            optionsArray = relatedOptions.map(item => ({
+                                value: String(item.id || ''),
+                                label:
+                                    item.name ||
+                                    item.title ||
+                                    item.email ||
+                                    `Item ${item.id}`
+                            }));
+                        }
+                    }
+
+                    optionsArray = optionsArray.filter(
+                        opt => opt && typeof opt === 'object'
                     );
 
-                    if (!hasEmptyOption) {
+                    if (!optionsArray.some(opt => opt.value === '')) {
                         optionsArray = [
                             { value: '', label: `Select ${field.label}` },
                             ...optionsArray
                         ];
                     }
+
+                    processedField.options = optionsArray;
                 }
 
-                processedField.options = optionsArray;
                 return processedField;
-
-            } catch (error) {
-                console.error(`Error processing field ${field.name}:`, error);
-                return {
-                    ...processedField,
-                    options: []
-                };
-            }
-        });
+            })
+            .filter(Boolean); // cleaner
     }, [formFields, relatedData, formData, editingItem]);
+
 
     const handleAdd = useCallback(() => {
         if (customHandlers?.handleAdd) {
@@ -805,7 +927,7 @@ const DynamicCRUD = ({
             console.log("formDaformDataformDataformData", formData);
             if (hasFileUpload) {
                 const submitData = new FormData();
-
+                console.log("submitdatasubmitData", submitData);
                 Object.keys(formData).forEach(key => {
                     const value = formData[key];
                     if (value !== null && value !== undefined && value !== '') {
@@ -848,6 +970,7 @@ const DynamicCRUD = ({
             } else {
 
                 const submitData = { ...formData };
+
                 Object.keys(submitData).forEach(key => {
                     if (submitData[key] === '') submitData[key] = null;
                 });

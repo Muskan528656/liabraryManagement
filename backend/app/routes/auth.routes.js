@@ -64,6 +64,7 @@ module.exports = (app) => {
         library_number,
         library_settings,
         country_code,
+        library_member_type
       } = req.body;
       const errors = validationResult(req);
       let success = false;
@@ -145,8 +146,10 @@ module.exports = (app) => {
             ? JSON.stringify(library_settings)
             : null,
           country_code: country_code ? String(country_code).trim() : "+91",
+          library_member_type: library_member_type
         });
 
+        console.log("newUsernewUser",newUser)
 
         if (newUser) {
 
@@ -222,7 +225,6 @@ module.exports = (app) => {
 
 
         const companyRes = await Auth.checkCompanybyTcode(tcode);
-        console.log("company000", companyRes)
         if (!companyRes?.length) {
           return res.status(400).json({
             success: false,

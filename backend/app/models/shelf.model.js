@@ -1,16 +1,19 @@
 const sql = require("./db.js");
 
-function init(schema) {
-    this.schema = schema;
+let schema = "";
+
+function init(schema_name) {
+    schema = schema_name;
 }
 
 // ================= FIND ALL =================
 async function findAll() {
     const q = `
-        SELECT id, shelf_name, note, sub_shelf, status,
-               createddate, lastmodifieddate
-        FROM ${this.schema}.shelf
-        ORDER BY createddate DESC
+        SELECT id, name, floor, rack, classification_type, 
+               classification_from, classification_to, capacity,
+               createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
+        FROM ${schema}.rack_mapping
+        ORDER BY lastmodifieddate DESC
     `;
     const r = await sql.query(q);
     return r.rows;
@@ -19,62 +22,88 @@ async function findAll() {
 // ================= FIND BY ID =================
 async function findById(id) {
     const q = `
-        SELECT id, shelf_name, note, sub_shelf, status,
-               createddate, lastmodifieddate
-        FROM ${this.schema}.shelf
+        SELECT id, name, floor, rack, classification_type, 
+               classification_from, classification_to, capacity,
+               createddate, lastmodifieddate, createdbyid, lastmodifiedbyid
+        FROM ${schema}.rack_mapping
         WHERE id=$1
     `;
     const r = await sql.query(q, [id]);
     return r.rows[0];
 }
 
+// ================= CHECK FOR DUPLICATES =================
+async function checkDuplicate(data, excludeId = null) {
+    // Check for duplicate name + floor + rack combination
+    let dupQuery = `
+        SELECT id FROM ${schema}.rack_mapping
+        WHERE name = $1 AND floor = $2 AND rack = $3
+    `;
+    let params = [data.name, data.floor, data.rack];
+    
+    if (excludeId) {
+        dupQuery += ` AND id <> $4`;
+        params.push(excludeId);
+    }
+    
+    dupQuery += ` LIMIT 1`;
+    
+    const dup = await sql.query(dupQuery, params);
+    
+    if (dup.rows.length > 0) {
+        throw new Error("This name, floor and rack combination already exists");
+    }
+
+    // Check for overlapping classification ranges if classification_type is same
+    if (data.classification_type && data.classification_from && data.classification_to) {
+        let rangeQuery = `
+            SELECT id FROM ${schema}.rack_mapping
+            WHERE classification_type = $1 
+            AND (
+                (classification_from <= $2 AND classification_to >= $2) OR
+                (classification_from <= $3 AND classification_to >= $3) OR
+                (classification_from >= $2 AND classification_to <= $3)
+            )
+        `;
+        let rangeParams = [data.classification_type, data.classification_from, data.classification_to];
+        
+        if (excludeId) {
+            rangeQuery += ` AND id <> $4`;
+            rangeParams.push(excludeId);
+        }
+        
+        rangeQuery += ` LIMIT 1`;
+        
+        const rangeDup = await sql.query(rangeQuery, rangeParams);
+        
+        if (rangeDup.rows.length > 0) {
+            throw new Error("Classification range overlaps with existing shelf");
+        }
+    }
+}
+
 async function create(data) {
-    let subShelvesText = null;
-    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
-        subShelvesText = String(data.sub_shelf).trim();
-    }
-
-    // Check for duplicate shelf_name + sub_shelf combination
-    if (data.shelf_name) {
-        let dupQuery;
-        let params;
-
-        if (subShelvesText === null) {
-            dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE shelf_name = $1 AND sub_shelf IS NULL
-                LIMIT 1
-            `;
-            params = [data.shelf_name];
-        } else {
-            dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE shelf_name = $1 AND sub_shelf = $2
-                LIMIT 1
-            `;
-            params = [data.shelf_name, subShelvesText];
-        }
-
-        const dup = await sql.query(dupQuery, params);
-
-        if (dup.rows.length > 0) {
-            throw new Error("This shelf name and sub-shelf combination already exists");
-        }
-    }
+    // Check for duplicates
+    await checkDuplicate(data);
 
     // INSERT
     const query = `
-        INSERT INTO ${this.schema}.shelf
-        (shelf_name, note, sub_shelf, status, createddate, lastmodifieddate)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        INSERT INTO ${schema}.rack_mapping
+        (name, floor, rack, classification_type, classification_from, classification_to, capacity, createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), $8, $9)
         RETURNING *
     `;
 
     const values = [
-        data.shelf_name || null,
-        data.note || null,
-        subShelvesText,
-        data.status === true || data.status === "true" || data.status === "1"
+        data.name || null,
+        data.floor || null,
+        data.rack || null,
+        data.classification_type || null,
+        data.classification_from || null,
+        data.classification_to || null,
+        data.capacity || 100,
+        data.createdbyid || null,
+        data.lastmodifiedbyid || null
     ];
 
     try {
@@ -82,57 +111,50 @@ async function create(data) {
         return result.rows[0];
     } catch (error) {
         if (error.code === '23505') { // unique_violation
-            throw new Error("This shelf name and sub-shelf combination already exists");
+            throw new Error("This rack mapping already exists");
         }
         throw error;
     }
 }
-
+async function findGrouped() {
+    const query = `
+        SELECT 
+            floor,
+            rack,
+            json_agg(
+                json_build_object(
+                    'id', id,
+                    'name', name,
+                    'classification_type', classification_type,
+                    'classification_from', classification_from,
+                    'classification_to', classification_to,
+                    'capacity', capacity
+                ) ORDER BY name
+            ) as shelves
+        FROM ${schema}.rack_mapping
+        GROUP BY floor, rack
+        ORDER BY floor, rack
+    `;
+    
+    const result = await sql.query(query);
+    return result.rows;
+}
 async function updateById(id, data) {
-    let subShelvesText = null;
-    if (data.sub_shelf !== undefined && data.sub_shelf !== null && data.sub_shelf !== '') {
-        subShelvesText = String(data.sub_shelf).trim();
-    }
-
     // Check for duplicates (excluding current id)
-    if (data.shelf_name) {
-        let dupQuery, params;
-
-        if (subShelvesText === null) {
-            dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE id <> $1
-                AND shelf_name = $2 
-                AND sub_shelf IS NULL
-                LIMIT 1
-            `;
-            params = [id, data.shelf_name];
-        } else {
-            dupQuery = `
-                SELECT id FROM ${this.schema}.shelf
-                WHERE id <> $1
-                AND shelf_name = $2 
-                AND sub_shelf = $3
-                LIMIT 1
-            `;
-            params = [id, data.shelf_name, subShelvesText];
-        }
-
-        const dup = await sql.query(dupQuery, params);
-
-        if (dup.rows.length > 0) {
-            throw new Error("This shelf name and sub-shelf combination already exists");
-        }
-    }
+    await checkDuplicate(data, id);
 
     // UPDATE query
     const q = `
-        UPDATE ${this.schema}.shelf
-        SET shelf_name = COALESCE($2, shelf_name),
-            note = COALESCE($3, note),
-            sub_shelf = COALESCE($4, sub_shelf),
-            status = COALESCE($5, status),
-            lastmodifieddate = NOW()
+        UPDATE ${schema}.rack_mapping
+        SET name = COALESCE($2, name),
+            floor = COALESCE($3, floor),
+            rack = COALESCE($4, rack),
+            classification_type = COALESCE($5, classification_type),
+            classification_from = COALESCE($6, classification_from),
+            classification_to = COALESCE($7, classification_to),
+            capacity = COALESCE($8, capacity),
+            lastmodifieddate = NOW(),
+            lastmodifiedbyid = COALESCE($9, lastmodifiedbyid)
         WHERE id = $1
         RETURNING *
     `;
@@ -140,10 +162,14 @@ async function updateById(id, data) {
     try {
         const r = await sql.query(q, [
             id,
-            data.shelf_name || null,
-            data.note || null,
-            subShelvesText,
-            data.status !== undefined ? (data.status === true || data.status === "true" || data.status === "1") : null
+            data.name || null,
+            data.floor || null,
+            data.rack || null,
+            data.classification_type || null,
+            data.classification_from || null,
+            data.classification_to || null,
+            data.capacity || null,
+            data.lastmodifiedbyid || null
         ]);
 
         if (r.rows.length === 0) {
@@ -153,50 +179,93 @@ async function updateById(id, data) {
         return r.rows[0];
     } catch (error) {
         if (error.code === '23505') { // unique_violation
-            throw new Error("This shelf name and sub-shelf combination already exists");
+            throw new Error("This rack mapping already exists");
         }
         throw error;
     }
 }
 
-// ================= FIND GROUPED SHELVES =================
-async function findGroupedShelves() {
+// ================= GET SUGGESTIONS =================
+async function getSuggestions(field, searchTerm, filters = {}) {
+    let q;
+    let params = [];
+    
+    if (field === 'name') {
+        // If floor and rack are provided, get names for that combination
+        if (filters.floor && filters.rack) {
+            q = `
+                SELECT DISTINCT name 
+                FROM ${schema}.rack_mapping
+                WHERE floor = $1 AND rack = $2
+                AND name ILIKE $3
+                ORDER BY name
+                LIMIT 20
+            `;
+            params = [filters.floor, filters.rack, `%${searchTerm}%`];
+        } else {
+            q = `
+                SELECT DISTINCT name 
+                FROM ${schema}.rack_mapping
+                WHERE name ILIKE $1
+                ORDER BY name
+                LIMIT 20
+            `;
+            params = [`%${searchTerm}%`];
+        }
+    } else if (field === 'floor') {
+        q = `
+            SELECT DISTINCT floor 
+            FROM ${schema}.rack_mapping
+            WHERE floor ILIKE $1
+            ORDER BY floor
+            LIMIT 20
+        `;
+        params = [`%${searchTerm}%`];
+    } else if (field === 'rack') {
+        // If floor is provided, get racks for that floor
+        if (filters.floor) {
+            q = `
+                SELECT DISTINCT rack 
+                FROM ${schema}.rack_mapping
+                WHERE floor = $1 AND rack ILIKE $2
+                ORDER BY rack
+                LIMIT 20
+            `;
+            params = [filters.floor, `%${searchTerm}%`];
+        } else {
+            q = `
+                SELECT DISTINCT rack 
+                FROM ${schema}.rack_mapping
+                WHERE rack ILIKE $1
+                ORDER BY rack
+                LIMIT 20
+            `;
+            params = [`%${searchTerm}%`];
+        }
+    } else {
+        return [];
+    }
+    
+    const r = await sql.query(q, params);
+    return r.rows.map(row => row[field]);
+}
+
+// ================= GET LAST BY FLOOR-RACK-NAME =================
+async function getLastByFloorRackName(floor, rack, name) {
     const q = `
-        SELECT id, shelf_name, sub_shelf
-        FROM ${this.schema}.shelf
-        WHERE status = true
-        ORDER BY shelf_name, sub_shelf;
+        SELECT * FROM ${schema}.rack_mapping
+        WHERE floor = $1 AND rack = $2 AND name = $3
+        ORDER BY classification_to DESC
+        LIMIT 1
     `;
-    const r = await sql.query(q);
-
-    // Group by shelf_name
-    const grouped = {};
-
-    r.rows.forEach(row => {
-        if (!grouped[row.shelf_name]) {
-            grouped[row.shelf_name] = [];
-        }
-
-        if (row.sub_shelf) {
-            grouped[row.shelf_name].push({
-                id: row.id,             
-                name: row.sub_shelf      
-            });
-        }
-    });
-
-    return Object.keys(grouped)
-        .map(shelf_name => ({
-            shelf_name,
-            sub_shelves: grouped[shelf_name]
-        }))
-        .sort((a, b) => a.shelf_name.localeCompare(b.shelf_name));
+    const r = await sql.query(q, [floor, rack, name]);
+    return r.rows[0] || null;
 }
 
 // ================= DELETE =================
 async function deleteById(id) {
     await sql.query(
-        `DELETE FROM ${this.schema}.shelf WHERE id=$1`,
+        `DELETE FROM ${schema}.rack_mapping WHERE id=$1`,
         [id]
     );
 }
@@ -208,5 +277,8 @@ module.exports = {
     create,
     updateById,
     deleteById,
-    findGroupedShelves,
+    getSuggestions,
+    getLastByFloorRackName,
+    checkDuplicate,
+    findGrouped
 };

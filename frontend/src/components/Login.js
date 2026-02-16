@@ -110,7 +110,7 @@ const Login = () => {
           title: "Success",
           message: `If the email exists, a password reset link has been sent to ${emailValue}`,
         });
-        
+
         setForgotEmail("");
         setForgotTcode("");
         setShowForgotModal(false);
@@ -304,7 +304,7 @@ const Login = () => {
                       {loading ? (
                         <>
                           <span className="loader-login"></span>
-                          <span>Signing in...</span>
+                          <span>Loading</span>
                         </>
                       ) : (
                         "Sign In"

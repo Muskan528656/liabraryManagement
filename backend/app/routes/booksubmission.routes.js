@@ -25,19 +25,33 @@ module.exports = (app) => {
   var router = require("express").Router();
 
 
-  router.get("/", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
-    try {
+  router.get(
+    "/",
+    fetchUser,
+    checkPermission("Book Submissions", "allow_view"),
+    async (req, res) => {
+      try {
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
-      BookSubmission.init(req.userinfo.tenantcode);
+        const filters = {
+          ...req.query,
+          memberType: req.userinfo.library_member_type
+        };
 
+        const submissions = await BookSubmission.findAll(filters);
 
-      const submissions = await BookSubmission.findAll(req.query);
-      return res.status(200).json({ success: true, data: submissions });
-    } catch (error) {
-      console.error("Error fetching book submissions:", error);
-      return res.status(500).json({ errors: "Internal server error" });
+        return res.status(200).json({
+          success: true,
+          data: submissions
+        });
+
+      } catch (error) {
+        console.error("Error fetching book submissions:", error);
+        return res.status(500).json({ errors: "Internal server error" });
+      }
     }
-  });
+  );
+
 
   router.get("/due_notifications", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
 
@@ -64,8 +78,12 @@ module.exports = (app) => {
 
   router.get("/:id", fetchUser, checkPermission("Book Submissions", "allow_view"), async (req, res) => {
     try {
-      BookSubmission.init(req.userinfo.tenantcode);
-      const submission = await BookSubmission.findById(req.params.id);
+      BookSubmission.init(req.userinfo.tenantcode, req.branchId);
+
+      const submission = await BookSubmission.findById(
+        req.params.id,
+        req.userinfo.library_member_type
+      );
       if (!submission) {
         return res.status(404).json({ errors: "Book submission not found" });
       }
@@ -91,7 +109,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: errors.array() });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
         const submissions = await BookSubmission.findByDateRange(req.query.startDate, req.query.endDate);
         return res.status(200).json({ success: true, data: submissions });
       } catch (error) {
@@ -116,7 +134,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: "Librarian ID (submitted_by) is required" });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
         const submission = await BookSubmission.create(req.body, userId);
 
@@ -169,7 +187,7 @@ module.exports = (app) => {
     checkPermission("Book Submissions", "allow_delete"),
     async (req, res) => {
       try {
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
         const result = await BookSubmission.deleteById(req.params.id);
 
         if (result.success) {
@@ -188,7 +206,7 @@ module.exports = (app) => {
       const bookId = req.params.bookId;
 
 
-      BookSubmission.init(req.userinfo.tenantcode);
+      BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
       const submitCount = await BookSubmission.getSubmitCountByBookId(bookId);
 
@@ -218,7 +236,7 @@ module.exports = (app) => {
           return res.status(400).json({ errors: "User ID is required" });
         }
 
-        BookSubmission.init(req.userinfo.tenantcode);
+        BookSubmission.init(req.userinfo.tenantcode, req.branchId);
 
         const result = await BookSubmission.cancelIssue(
           req.params.issueId,

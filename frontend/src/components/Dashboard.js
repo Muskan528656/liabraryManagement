@@ -404,8 +404,11 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
 
   const fetchDashboardSummary = async () => {
     try {
+      console.log("category api response:", categories);
       const libraryApi = new DataApi("library");
       const dashboardResponse = await libraryApi.get("/dashboard");
+      console.log("Dashboard API Response:", dashboardResponse);
+      console.log("Dashboard API Data:", libraryApi);
 
       if (dashboardResponse.data?.success) {
         const data = dashboardResponse.data.data;
@@ -591,7 +594,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
   };
 
   const handleUpcomingDueClick = () => {
-    navigate("/bookissue?filter=due_soon");
+    navigate("/booksubmit?filter=due_soon");
   };
 
   const getChartConfig = (filename) => ({
@@ -790,7 +793,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
       }
     },
 
-    labels: ['Issuedddd', 'Available', 'Overdue', 'Damaged'],
+    labels: ['Issued', 'Available', 'Overdue', 'Damaged'],
     colors: [SUCCESS_COLOR, ACCENT_COLOR, WARNING_COLOR, DANGER_COLOR],
 
     legend: {
@@ -869,7 +872,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
       type: "copiesStatus"
     },
     {
-      title: "Due ssSoon",
+      title: "Due Soon",
       value: formatNumber(metrics.dueSoonCount),
       icon: "fa-clock",
       color: WARNING_COLOR,
@@ -947,7 +950,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h6>
-              📚 Real-time analytics for efficient library management
+              📚 Real-Time Analytics For Efficient Library Management
             </h6>
           </div>
         </div>
@@ -957,66 +960,66 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
           {/* LEFT COLUMN – Summary Cards */}
           {/* <Col xl={6} lg={6} md={12}>
             <Row className="g-2 h-75"> */}
-              {summaryCards.map((card, index) => (
-                <Col xl={3} lg={6} md={6} sm={12} key={index}>
-                  <InteractiveCard
-                    onClick={() => handleCardClick(card.type)}
-                    style={
-                      card.type === "dueSoon" || card.type === "overdue"
-                        ? { borderLeft: `4px solid ${card.color}` }
-                        : {}
-                    }
-                  >
-                    <Card.Body className="p-3">
-                      <div className="d-flex align-items-center justify-content-between">
-                        <div>
-                          <p
-                            className="mb-1 text-uppercase"
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: "700",
-                              color: "#64748b",
-                            }}
-                          >
-                            {card.title}
-                          </p>
+          {summaryCards.map((card, index) => (
+            <Col xl={3} lg={6} md={6} sm={12} key={index}>
+              <InteractiveCard
+                onClick={() => handleCardClick(card.type)}
+                style={
+                  card.type === "dueSoon" || card.type === "overdue"
+                    ? { borderLeft: `4px solid ${card.color}` }
+                    : {}
+                }
+              >
+                <Card.Body className="p-3">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                      <p
+                        className="mb-1 text-uppercase"
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: "700",
+                          color: "#64748b",
+                        }}
+                      >
+                        {card.title}
+                      </p>
 
-                          <h2
-                            className="mb-0"
-                            style={{
-                              color: card.color,
-                              fontSize: "20px",
-                              fontWeight: "800",
-                            }}
-                          >
-                            {card.value}
-                          </h2>
-                        </div>
+                      <h2
+                        className="mb-0"
+                        style={{
+                          color: card.color,
+                          fontSize: "20px",
+                          fontWeight: "800",
+                        }}
+                      >
+                        {card.value}
+                      </h2>
+                    </div>
 
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "10px",
-                            backgroundColor: card.bgColor,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <i
-                            className={`fa-solid ${card.icon}`}
-                            style={{ fontSize: "18px", color: card.color }}
-                          ></i>
-                        </div>
-                      </div>
-                    </Card.Body>
-                  </InteractiveCard>
-                </Col>
-              ))}
-            {/* </Row>
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "10px",
+                        backgroundColor: card.bgColor,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <i
+                        className={`fa-solid ${card.icon}`}
+                        style={{ fontSize: "18px", color: card.color }}
+                      ></i>
+                    </div>
+                  </div>
+                </Card.Body>
+              </InteractiveCard>
+            </Col>
+          ))}
+          {/* </Row>
           </Col> */}
-        
+
           {/* RIGHT COLUMN – Dropdown / Other Content */}
           {/* <Col xl={6} lg={6} md={12} className="h-25">
             <PlanDropdownCard />
@@ -1035,8 +1038,8 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
           <Col lg={4}>
             <InteractiveCard onClick={handleUpcomingDueClick}>
               <Card.Header style={styles.cardHeader}>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
+                <div className="d-flex justify-content-between align-items-center ">
+                  <div >
                     <h6 className="fw-bold m-0 text-dark" style={{ fontSize: '14px' }}>
                       Members with Upcoming Due Dates
                     </h6>
@@ -1055,7 +1058,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                   </Badge>
                 </div>
               </Card.Header>
-              <Card.Body className="p-0">
+              <Card.Body className="p-0 ">
                 <div className="list-group list-group-flush">
                   {upcomingDueMembers.length > 0 ? (
                     upcomingDueMembers.slice(0, 5).map((member, idx) => {
@@ -1064,7 +1067,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                       return (
                         <div
                           key={member.id}
-                          className="list-group-item d-flex align-items-center justify-content-between px-2 py-2 border-light"
+                          className="list-group-item d-flex align-items-center justify-content-between px-2 py-2 border-light mt-3"
                           style={{ cursor: "pointer" }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1149,16 +1152,20 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
 
           {/* Funnel Chart */}
           <Col lg={8}>
-            <Card style={styles.card}>
-              <Card.Header style={styles.cardHeader}>
+            <Card style={styles.card} >
+              {/* <Card.Header style={styles.cardHeader}>
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <h6 className="fw-bold m-0 text-dark" style={{ fontSize: '14px' }}>Books with Highest Available Stock</h6>
                     <small className="text-muted" style={{ fontSize: '11px' }}>Top 10 books by available copies</small>
                   </div>
                 </div>
-              </Card.Header>
-              <Card.Body className="p-2">
+              </Card.Header> */}
+
+              {/* <Card.Body className="p-2 ">
+                <span className="fw-bold mb- text-dark " style={{ fontSize: '14px' }}>Books with Highest Available Stock </span>
+                <span className="text-muted" style={{ fontSize: '11px' }}>Top 10 books by available copies</span>
+
                 {topAvailableBooks.length > 0 ? (
                   <Chart
                     options={funnelChartOptions}
@@ -1172,12 +1179,43 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                     <small>No inventory data available</small>
                   </div>
                 )}
-                <div className="mt-2 text-center">
+                <div className="mt-2 text-center ">
                   <small className="text-muted" style={{ fontSize: '10px' }}>
                     <i className="fa-solid fa-circle-info me-1"></i>
                     Hover for details | Click toolbar for export options (PNG, SVG, CSV)
                   </small>
                 </div>
+              </Card.Body> */}
+              <Card.Body className="p-2">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="fw-bold text-dark ms-3" style={{ fontSize: '14px' }}>
+                    Books with Highest Available Stock
+                  </span>
+                  <span className="text-muted me-2" style={{ fontSize: '11px' }}>
+                    Top 10 books by available copies
+                  </span>
+                </div>
+
+                {topAvailableBooks.length > 0 ? (
+                  <Chart
+                    options={funnelChartOptions}
+                    series={funnelChartSeries}
+                    type="bar"
+                    height={280}
+                  />
+                ) : (
+                  <div className="d-flex flex-column align-items-center justify-content-center py-4 text-muted">
+                    <i className="fa-solid fa-book-open-reader fa-2x mb-2"></i>
+                    <small>No inventory data available</small>
+                  </div>
+                )}
+
+                {/* <div className="mt-2 text-center">
+                  <small className="text-muted" style={{ fontSize: '10px' }}>
+                    <i className="fa-solid fa-circle-info me-1"></i>
+                    Hover for details | Click toolbar for export options (PNG, SVG, CSV)
+                  </small>
+                </div> */}
               </Card.Body>
             </Card>
           </Col>
@@ -1186,7 +1224,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
         {/* 4. Secondary Analytics */}
         <Row className="g-2">
           {/* Top Categories - Clickable Card */}
-          <Col lg={4}>
+          <Col lg={4} sm={6}>
             <InteractiveCard onClick={handleTopCategoriesClick}>
               <Card.Header style={styles.cardHeader}>
                 <div className="d-flex justify-content-between align-items-center">
@@ -1243,17 +1281,28 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
           </Col>
 
           {/* Pie Chart */}
-          <Col lg={4}>
-          
+          <Col lg={4} sm={6}>
+
             <Card style={styles.card}>
               <Card.Body className="text-center p-2">
-                <div className="d-flex justify-content-between align-items-center mb-2">
+                {/* <div className="d-flex justify-content-between align-items-center mb-2">
                   <h6 className="fw-bold text-dark mb-0" style={{ fontSize: '14px' }}>
                     Books Copies Status
                   </h6>
 
+                </div> */}
+                
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="fw-bold text-dark ms-2" style={{ fontSize: '14px' }}>
+                     Books Copies Status
+                  </span>
+                  <span className="text-muted me-2" style={{ fontSize: '11px' }}>
+                    All Statuses of Book Copies 
+                  </span>
                 </div>
-                <Chart options={donutOptions} series={donutChartSeries} type="pie" width={360} />
+
+                
+                <Chart options={donutOptions} series={donutChartSeries} type="pie" width={380} />
                 {/* <div className="mt-2 d-flex justify-content-center flex-wrap gap-3">
                   {(() => {
                     const series = donutChartSeries || [];
