@@ -4,9 +4,16 @@
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
+let schema = "";
+let branchId = null;
 
-function init(schema_name) {
-  this.schema = schema_name;
+// function init(schema_name) {
+//   this.schema = schema_name;
+// }
+
+function init(schema_name, branch_id = null) {
+  schema = schema_name;
+  branchId = branch_id;
 }
 
 const getDashboardStats = async () => {
@@ -152,11 +159,11 @@ const fetchAll = async () => {
           WHERE return_date IS NOT NULL
           AND issue_date >= CURRENT_DATE - INTERVAL '30 days'
         ) AS avg_return_days
-      FROM demo.books where b.branch_id = '${branchId}'
+      FROM ${schema}.books b where b.branch_id = '${branchId}'
       LIMIT 1;
     `);
+console.log("result.rows: --", result.rows);
 
- 
 
     if (result.rows && result.rows.length > 0) {
       return [result.rows[0]];

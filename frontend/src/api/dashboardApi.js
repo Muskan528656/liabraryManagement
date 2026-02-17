@@ -18,6 +18,8 @@ const DashboardApi = {
  
     fetchAll: async () => {
         const token = sessionStorage.getItem("token");
+        console.log("cslll =>");
+        
         let response = await helper.fetchWithAuth(
             constants.API_BASE_URL + "/api/dashboard",
             "GET"

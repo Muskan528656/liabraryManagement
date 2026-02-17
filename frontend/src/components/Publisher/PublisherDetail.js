@@ -20,6 +20,7 @@ const PublisherDetail = ({ permissions }) => {
     const [totalBooks, setTotalBooks] = useState(0);
 
 
+
     const { timeZone } = useTimeZone();
     const fetchBookData = async (bookId) => {
         try {
@@ -46,10 +47,16 @@ const PublisherDetail = ({ permissions }) => {
         }
     }, [id]);
 
+
     const countryOptions = Country.getAllCountries().map((country) => ({
         value: country.isoCode,
         label: `${country.flag} ${country.name}`,
     }));
+
+    //red star for required fields
+    const requiredLabel = (label) => {
+        return <span>{label} <span style={{ color: 'red' }}>*</span></span>;
+    };
 
 
     console.log("countryOptions =>", countryOptions);
@@ -61,22 +68,26 @@ const PublisherDetail = ({ permissions }) => {
                 label: "Salutation",
                 type: "text"
             },
+    
             {
                 key: "name",
-                label: "Name",
-                type: "text"
+                label: requiredLabel("Name"),
+                type: "text",
+                required: true,
+                colSize: 6,
             },
             {
                 key: "email",
-                label: "Email",
+                label: requiredLabel("Email"),
+              
                 type: "email"
             },
             {
                 key: "phone",
-                label: "Phone",
+                label: requiredLabel("Phone"),
                 type: "tel"
             },
-         
+
             //  {
             //     key: "country",
             //     label: "Country",
@@ -84,43 +95,43 @@ const PublisherDetail = ({ permissions }) => {
             //     options: countryOptions,
 
             // },
-               {
+            {
                 key: "country",
                 label: "Country",
                 type: "select",
                 options: countryOptions,
                 required: false,
                 // placeholder: "Select a country",
-               
+
             },
-             {
-                    key: "state",
-                    label: "State",
-                    type: "select",
-                    options: (formData) => {
-                      if (!formData?.country) return [];
-            
-                      return State.getStatesOfCountry(formData.country).map((s) => ({
+            {
+                key: "state",
+                label: "State",
+                type: "select",
+                options: (formData) => {
+                    if (!formData?.country) return [];
+
+                    return State.getStatesOfCountry(formData.country).map((s) => ({
                         value: s.isoCode,
                         label: s.name,
-                      }));
-                    },
-                  },
-         
-           
-               {
-                    key: "city",
-                    label: "City",
-                    type: "select",
-                    options: (formData) => {
-                      if (!formData?.country || !formData?.state) return [];
-            
-                      return City.getCitiesOfState(formData.country, formData.state).map((c) => ({
+                    }));
+                },
+            },
+
+
+            {
+                key: "city",
+                label: "City",
+                type: "select",
+                options: (formData) => {
+                    if (!formData?.country || !formData?.state) return [];
+
+                    return City.getCitiesOfState(formData.country, formData.state).map((c) => ({
                         value: c.name,
                         label: c.name,
-                      }));
-                    },
-                  },
+                    }));
+                },
+            },
             {
                 key: "is_active",
                 label: "Active",
