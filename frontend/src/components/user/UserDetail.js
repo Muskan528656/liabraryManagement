@@ -121,9 +121,9 @@ const UserDetail = ({ permissions }) => {
     },
 
     details: [
-      { key: "firstname", label: "First Name", type: "text" , required:true, },
-      { key: "lastname", label: "Last Name", type: "text", required:true, },
-      { key: "email", label: "Email", type: "text",  required:true, },
+      { key: "firstname", label: "First Name", type: "text", required: true, },
+      { key: "lastname", label: "Last Name", type: "text", required: true, },
+      { key: "email", label: "Email", type: "text",  required: true, },
       {
         key: "country",
         label: "Country",
