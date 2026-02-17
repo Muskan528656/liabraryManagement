@@ -1,6 +1,3 @@
-
-
-
 import { Badge } from "react-bootstrap";
 import { COUNTRY_TIMEZONE } from "../../constants/COUNTRY_TIMEZONE";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
@@ -285,15 +282,10 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
             {
                 name: "time_zone",
                 label: "Time Zone",
-                type: "select",
+                type: "text",
                 options: (formData) => {
-
-
                     const currentCountryName = formData?.country || defaultCountryName;
-
-
                     const countryData = COUNTRY_TIMEZONE.find(c => c.countryName === currentCountryName);
-
                     if (countryData && countryData.timezones) {
                         return countryData.timezones.map(tz => ({
                             value: tz.zoneName,
