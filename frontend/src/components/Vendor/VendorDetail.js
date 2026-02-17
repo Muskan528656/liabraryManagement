@@ -172,7 +172,7 @@ const statusBadges = {
 };
 
 const countryCodeOptions = COUNTRY_CODES.map((country) => ({
-  value: country.name,
+  value: country.country_code,
   label: `${country.country_code} - ${country.country}`,
 }));
 
@@ -268,7 +268,7 @@ details: [
             (c) => c.country_code === cleanValue
           );
           return country
-            ? `${country.country_code} (${country.country})`
+            ? `${country.country_code} `
             : value || "N/A";
         },
       },

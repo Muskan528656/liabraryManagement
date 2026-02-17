@@ -15,7 +15,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
     } = permissions || {};
 
 
-    
+
     const extractData = (source) => {
         if (!source) return [];
         if (Array.isArray(source)) return source;
@@ -27,7 +27,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
     console.log("Extracted user roles:", userRoles);
-    
+
     const UserModel = createModel({
         modelName: "User",
         fields: {
@@ -123,12 +123,30 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     return country ? `${country.flag} ${country.countryName}` : value;
                 }
             },
+            // {
+            //     field: "country_code",
+            //     label: "Code",
+            //     render: (value) => value || <span className="text-muted">N/A</span>
+            // },
+            // { field: "phone", label: "Phone" },
             {
-                field: "country_code",
-                label: "Code",
-                render: (value) => value || <span className="text-muted">N/A</span>
+                field: "phone", // Use the main field name
+                label: "Phone",
+                render: (value, row) => {
+                    const countryCode = row.country_code || '';
+                    const phoneNumber = row.phone || value || '';
+
+                    console.log("Rendering phone number:", { countryCode, phoneNumber });
+                    if (!countryCode && !phoneNumber) return <span>-</span>;
+
+                    return (
+                        <span>
+                            {countryCode && <span style={{ color: '#666', marginRight: '4px' }}>{countryCode}</span>}
+                            {phoneNumber}
+                        </span>
+                    );
+                },
             },
-            { field: "phone", label: "Phone" },
             {
                 field: "currency",
                 label: "Currency",
@@ -362,55 +380,55 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
         // },
 
         validationRules: (formData, allUsers, editingUser) => {
-                const errors = [];
+            const errors = [];
 
-                if (!formData.firstname?.trim()) errors.push("First name is required");
-                if (!formData.lastname?.trim()) errors.push("Last name is required");
-                if (!formData.email?.trim()) errors.push("Email is required");
+            if (!formData.firstname?.trim()) errors.push("First name is required");
+            if (!formData.lastname?.trim()) errors.push("Last name is required");
+            if (!formData.email?.trim()) errors.push("Email is required");
 
-                if (!editingUser) {
-                    if (!formData.password?.trim()) {
-                        errors.push("Password is required");
-                    } else if (formData.password.length < 6) {
-                        errors.push("Password must be at least 6 characters long");
-                    }
-
-                    if (!formData.confirmPassword?.trim()) {
-                        errors.push("Confirm password is required");
-                    }
-
-                    if (
-                        formData.password &&
-                        formData.confirmPassword &&
-                        formData.password !== formData.confirmPassword
-                    ) {
-                        errors.push("Passwords do not match");
-                    }
+            if (!editingUser) {
+                if (!formData.password?.trim()) {
+                    errors.push("Password is required");
+                } else if (formData.password.length < 6) {
+                    errors.push("Password must be at least 6 characters long");
                 }
 
-                if (!formData.country) errors.push("Country is required");
-                if (!formData.userrole) errors.push("Role is required");
-
-                // Email validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (formData.email && !emailRegex.test(formData.email)) {
-                    errors.push("Invalid email format");
+                if (!formData.confirmPassword?.trim()) {
+                    errors.push("Confirm password is required");
                 }
 
-                // Phone validation (NEW)
-                if (formData.phone) {
-                    const phoneRegex = /^[0-9]{10}$/;
-                    if (!phoneRegex.test(formData.phone)) {
-                        errors.push("Phone number must be exactly 10 digits");
-                    }
+                if (
+                    formData.password &&
+                    formData.confirmPassword &&
+                    formData.password !== formData.confirmPassword
+                ) {
+                    errors.push("Passwords do not match");
                 }
+            }
 
-                const duplicate = allUsers.find(
-                    user => user.email === formData.email && user.id !== editingUser?.id
-                );
-                if (duplicate) errors.push("Email already exists");
+            if (!formData.country) errors.push("Country is required");
+            if (!formData.userrole) errors.push("Role is required");
 
-                return errors;
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (formData.email && !emailRegex.test(formData.email)) {
+                errors.push("Invalid email format");
+            }
+
+            // Phone validation (NEW)
+            if (formData.phone) {
+                const phoneRegex = /^[0-9]{10}$/;
+                if (!phoneRegex.test(formData.phone)) {
+                    errors.push("Phone number must be exactly 10 digits");
+                }
+            }
+
+            const duplicate = allUsers.find(
+                user => user.email === formData.email && user.id !== editingUser?.id
+            );
+            if (duplicate) errors.push("Email already exists");
+
+            return errors;
         },
 
 
