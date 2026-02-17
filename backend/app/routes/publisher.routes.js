@@ -62,10 +62,10 @@ module.exports = (app) => {
         // body('city', 'City is required').not().isEmpty(),
         // body('country', 'Country is required').not().isEmpty()
     ], async (req, res) => {
- 
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
- 
+
             return res.status(400).json({
                 success: false,
                 errors: errors.array(),
@@ -73,8 +73,8 @@ module.exports = (app) => {
         }
         try {
             const userId = req.userinfo.id;
- 
- 
+
+
             Publisher.init(req.userinfo.tenantcode);
             const data = await Publisher.insertPublisher(req.body, userId);
             return res.status(201).json({
@@ -91,7 +91,7 @@ module.exports = (app) => {
         }
     })
 
- 
+
     router.put("/:id", [
         body("name")
             .trim()
@@ -115,19 +115,33 @@ module.exports = (app) => {
     ], fetchUser, checkPermission("Publisher", "allow_edit"), async (req, res) => {
 
         const errors = validationResult(req);
- 
+
         if (!errors.isEmpty()) {
- 
             return res.status(400).json({
-                success: false,
-                errors: errors.array(),
+                errors: errors.array()[0].msg
             });
         }
+        // Publisher.init(req.userinfo.tenantcode, req.branchId);
         try {
 
             const { id } = req.params;
             const userId = req.userinfo.id;
-            Publisher.init(req.userinfo.tenantcode);
+            // Publisher.init(req.userinfo.tenantcode);
+
+            //check duplilcate email
+            // const duplicateVendor = await Publisher.findByEmail(
+            //     req.body.email,
+            //     req.params.id
+            // );
+
+            // console.log("Duplicate publisher check:", duplicateVendor);
+
+            // if (duplicateVendor) {
+            //     return res
+            //         .status(400)
+            //         .json({ errors: "Publisher with this email already exists" });
+            // }
+
             const data = await Publisher.updatePublisherByid(id, req.body, userId);
             return res.status(200).json({
                 success: true,

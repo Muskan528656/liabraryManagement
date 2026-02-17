@@ -123,12 +123,30 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                     return country ? `${country.flag} ${country.countryName}` : value;
                 }
             },
-            {
-                field: "country_code",
-                label: "Code",
-                render: (value) => value || <span className="text-muted">N/A</span>
+            // {
+            //     field: "country_code",
+            //     label: "Code",
+            //     render: (value) => value || <span className="text-muted">N/A</span>
+            // },
+            // { field: "phone", label: "Phone" },
+              {
+                field: "phone", // Use the main field name
+                label: "Phone",
+                render: (value, row) => {
+                    const countryCode = row.country_code || '';
+                    const phoneNumber = row.phone || value || '';
+
+                    console.log("Rendering phone number:", { countryCode, phoneNumber });
+                    if (!countryCode && !phoneNumber) return <span>-</span>;
+
+                    return (
+                        <span>
+                            {countryCode && <span style={{ color: '#666', marginRight: '4px' }}>{countryCode}</span>}
+                            {phoneNumber}
+                        </span>
+                    );
+                },
             },
-            { field: "phone", label: "Phone" },
             {
                 field: "currency",
                 label: "Currency",
