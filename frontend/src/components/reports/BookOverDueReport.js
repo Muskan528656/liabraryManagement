@@ -91,7 +91,7 @@ const BookBrrowedReport = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoryApi = new DataApi("category");
+        const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
         setCategories(categoriesData);
@@ -506,7 +506,8 @@ const BookBrrowedReport = () => {
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id || cat.name}>{cat.classification_from}-{cat.classification_to} {cat.name}</option>
+
                 ))}
               </Form.Select>
             </Col>

@@ -31,7 +31,7 @@ import { Bar, Pie } from "react-chartjs-2";
 import DataApi from "../../api/dataApi";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx'; 
+import * as XLSX from 'xlsx';
 import "./BookPopularityReport.css";
 
 // Register ChartJS components
@@ -51,7 +51,7 @@ const InactiveBooksReport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
-  
+
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -91,7 +91,7 @@ const InactiveBooksReport = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoryApi = new DataApi("category");
+        const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
         setCategories(categoriesData);
@@ -110,34 +110,34 @@ const InactiveBooksReport = () => {
   useEffect(() => {
 
     if (filters.days === "custom" && !filters.startDate && !filters.endDate) {
-    const today = new Date();
-    const lastMonth = new Date();
-    lastMonth.setMonth(today.getMonth() - 1);
+      const today = new Date();
+      const lastMonth = new Date();
+      lastMonth.setMonth(today.getMonth() - 1);
 
 
 
-    const formatDate = (date) => date.toISOString().split("T")[0];
+      const formatDate = (date) => date.toISOString().split("T")[0];
 
-    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);    
-    handleFilterChange("endDate", today.toISOString().split("T")[0]);    
-  
+      handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);
+      handleFilterChange("endDate", today.toISOString().split("T")[0]);
+
     }
     fetchReportData();
   }, [filters]);
 
 
-    const currentDate = new Date();
+  const currentDate = new Date();
 
-    const lastMonthDate = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - 1,
-      currentDate.getDate()
-    );
+  const lastMonthDate = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() - 1,
+    currentDate.getDate()
+  );
 
 
 
- 
-   
+
+
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -148,9 +148,9 @@ const InactiveBooksReport = () => {
 
       // Handle Custom Date Logic
       if (filters.days === "custom") {
-        
+
         params.append("days", "custom");
-      
+
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
       } else {
@@ -208,7 +208,7 @@ const InactiveBooksReport = () => {
     if (data.length === 0) return alert("No data to export");
 
     const headers = Object.keys(data[0]).join(",");
-    const rows = data.map(row => 
+    const rows = data.map(row =>
       Object.values(row).map(value => `"${value}"`).join(",")
     ).join("\n");
 
@@ -227,7 +227,7 @@ const InactiveBooksReport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inactive Books");
-    
+
     // Auto-size columns
     const maxWidth = 40;
     worksheet['!cols'] = Object.keys(data[0]).map(key => ({
@@ -325,7 +325,7 @@ const InactiveBooksReport = () => {
     <div className="container-fluid bg-light min-vh-100 pb-5">
       <div className="card shadow-sm border-0 mt-1 mx-2">
 
-       <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
+        <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
           <Col md={6} className="d-flex align-items-center gap-3 ms-3">
             <button
               onClick={() => navigate('/reports')}
@@ -408,8 +408,8 @@ const InactiveBooksReport = () => {
                 <Form.Control
                   type="date"
                   style={inputBaseStyle}
-                  value={filters.startDate }
-                  
+                  value={filters.startDate}
+
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
                 />
               </Col>
@@ -450,7 +450,7 @@ const InactiveBooksReport = () => {
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id || cat.name}>{cat.classification_from}-{cat.classification_to} {cat.name}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -473,21 +473,21 @@ const InactiveBooksReport = () => {
         {/* Content View */}
         <div className="p-3">
           {viewMode === "table" && (
-            
-              <ResizableTable
-                data={reportData?.records || []}
-                columns={columns}
-                loading={loading}
-                currentPage={currentPage}
-                recordsPerPage={10}
-                onPageChange={setCurrentPage}
-                showSerialNumber={true}
-                showActions={false}
-                showCheckbox={true}
-                selectedItems={selectedItems}
-                onSelectionChange={setSelectedItems}
-              />
-        
+
+            <ResizableTable
+              data={reportData?.records || []}
+              columns={columns}
+              loading={loading}
+              currentPage={currentPage}
+              recordsPerPage={10}
+              onPageChange={setCurrentPage}
+              showSerialNumber={true}
+              showActions={false}
+              showCheckbox={true}
+              selectedItems={selectedItems}
+              onSelectionChange={setSelectedItems}
+            />
+
           )}
 
           {viewMode === "dashboard" && (
@@ -532,7 +532,7 @@ const InactiveBooksReport = () => {
                 </Card>
               </Col>
               <Col lg={6}>
-                 <Card className="border-0 shadow-sm">
+                <Card className="border-0 shadow-sm">
                   <Card.Body>
                     <h6 className="fw-bold mb-3"><PieChartIcon className="me-2 text-info" />Category Stats</h6>
                     <div className="list-group list-group-flush">
