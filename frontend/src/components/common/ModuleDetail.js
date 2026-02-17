@@ -1202,7 +1202,17 @@ const ModuleDetail = ({
   };
 
   const handleBack = () => {
-    navigate(`/${moduleName}`);
+    console.log("Location State on Back:");
+   const callfrom = location?.state?.call;
+
+  console.log("callfrom",callfrom);
+  
+  if (callfrom=="bookIssue") {
+     navigate(`/bookissue`);
+   }else{
+
+     navigate(`/${moduleName}`);
+    }
   };
 
   if (loading) {
@@ -1823,7 +1833,7 @@ const ModuleDetail = ({
                       style={{ color: "var(--primary-color)" }}
                     >
                       {icon && <i className={`${icon} me-2 fs-6`}></i>}
-                      {moduleLabel} Details
+                      {moduleLabel} Detail
                     </h5>
                   </div>
 
