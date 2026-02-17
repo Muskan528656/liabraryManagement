@@ -30,6 +30,8 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 import ResizableTable from "../../components/common/ResizableTable";
 import RelatedTabContent from '../../components/librarycard/RelatedTab'
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const LibraryCardDetail = ({
   onEdit = null,
@@ -89,6 +91,9 @@ const LibraryCardDetail = ({
     () => new Set(["user_email", "card_number", "createddate", "lastmodifieddate"]),
     []
   );
+
+    const todayStr = new Date().toISOString().split("T")[0];
+
 
   const EDITABLE_FIELDS = useMemo(
     () => [
@@ -681,6 +686,7 @@ const LibraryCardDetail = ({
       {
         key: "dob",
         label: "Date of Birth",
+        max: todayStr,
         type: "date",
         colSize: 3,
       },
@@ -728,6 +734,7 @@ const LibraryCardDetail = ({
       {
         key: "registration_date",
         label: "Registration Date",
+        max:todayStr,
         type: "date",
         colSize: 3,
       },
@@ -735,15 +742,6 @@ const LibraryCardDetail = ({
         key: "job_title",
         label: "Job Title",
         type: "text",
-        // options: [
-        //   { label: "Principal", value: "Principal" },
-        //   { label: "Vice Principal", value: "Vice Principal" },
-        //   { label: "Teacher", value: "Teacher" },
-        //   { label: "Assistant Teacher", value: "Assistant Teacher" },
-        //   { label: "Librarian", value: "Librarian" },
-        //   { label: "Counselor", value: "Counselor" },
-        //   { label: "Administrator", value: "Administrator" },
-        // ],
         colSize: 3,
         condition: (data) => {
           const selectedType = typeOptions.find(
@@ -766,16 +764,6 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
-    {
-      key: "library_member_type", 
-      label: "Gender",
-      type: "select",
-      options: library_member_type.map((item) => ({ 
-        label: item, 
-        value: item 
-      })),
-      colSize: 3,
-    },
       {
         key: "section_name",
         label: "Section",
@@ -792,6 +780,16 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
+       {
+      key: "library_member_type", 
+      label: "Gender",
+      type: "select",
+      options: library_member_type.map((item) => ({ 
+        label: item, 
+        value: item 
+      })),
+      colSize: 3,
+    },
       {
         key: "is_active",
         label: "Status",
@@ -1229,7 +1227,7 @@ const LibraryCardDetail = ({
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
-        return `${day} ${month} ${year}`;
+        return `${day}/${month}/${year}`;
       } catch {
         return value;
       }
@@ -1452,7 +1450,62 @@ const LibraryCardDetail = ({
 
   const handleSave = async () => {
 
+
     console.log("Temp Data on Save:", tempData);
+
+    // DOB validation (same rule as create form)
+      if (tempData?.dob) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const dobDate = new Date(tempData.dob);
+        dobDate.setHours(0, 0, 0, 0);
+
+        if (dobDate >= today) {
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Invalid DOB",
+            message: "Date of Birth cannot be today or in the future",
+          });
+          return;
+        }
+
+        const age = today.getFullYear() - dobDate.getFullYear();
+        if (age < 4) {
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Invalid Age",
+            message: "Member must be at least 4 years old",
+          });
+          return;
+        }
+      }
+
+      if (tempData?.registration_date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const regDate = new Date(tempData.registration_date);
+      regDate.setHours(0, 0, 0, 0);
+
+      if (regDate > today) {
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Invalid Registration Date",
+          message: "Registration date cannot be in the future",
+        });
+        return;
+      }
+
+      if (tempData?.dob) {
+        const dobDate = new Date(tempData.dob);
+        if (regDate < dobDate) {
+          PubSub.publish("RECORD_ERROR_TOAST", {
+            title: "Invalid Registration Date",
+            message: "Registration date cannot be before Date of Birth",
+          });
+          return;
+        }
+      }
+    }
+
 
     if (!hasDataChanged()) {
       setIsEditing(false);
@@ -2049,6 +2102,7 @@ const LibraryCardDetail = ({
         <Form.Control
           type={controlType}
           value={isElementValue ? "" : fieldValue}
+          max={field.max} 
           readOnly={!isInputEditable}
           disabled={isEditing && isDisabledField}
           onChange={(e) => {
@@ -2102,6 +2156,7 @@ const LibraryCardDetail = ({
     navigate(`/${moduleName}`);
   };
 
+ 
   return (
     <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
       <ScrollToTop />

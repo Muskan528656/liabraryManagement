@@ -6,7 +6,7 @@ import AuthApi from "../api/authApi";
 import Loader from "./common/Loader";
 import "../App.css";
 import PubSub from "pubsub-js";
-
+import jwt_decode from "jwt-decode";
 const Login = () => {
   const [credentials, setCredentials] = useState({
     email: "",
@@ -163,6 +163,13 @@ const Login = () => {
       if (result.success) {
         // TOKEN STORE
         sessionStorage.setItem("token", result.authToken);
+        console.log("userBranchId bt=", jwt_decode(result.authToken).branch_id);
+        console.log("userBranchId token =", jwt_decode(result.authToken).token);
+        let userInfo = jwt_decode(result.authToken);
+         const userBranchId = userInfo.branch_id;
+         
+        sessionStorage.setItem('selectedBranch', JSON.stringify(userBranchId));
+  
         sessionStorage.setItem("Refresh Token", result.refreshToken);
 
         sessionStorage.setItem("permissions", JSON.stringify(result.permissions || []));

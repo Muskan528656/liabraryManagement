@@ -46,26 +46,38 @@ export const BranchProvider = ({ children }) => {
           //     setSelectedBranch(null); 
           //   }
           // } else {
-          if(sessionStorage.getItem('selectedBranch')){
-            const savedBranch = sessionStorage.getItem('selectedBranch');
-            if (savedBranch) {
-              try {
-                const parsedBranch = JSON.parse(savedBranch);
-                setSelectedBranch(parsedBranch);
-              } catch (e) {
-                setSelectedBranch(null);
-              }
-            } else {
-              setSelectedBranch(null); 
-            }
-          }else{
-            const userBranch = (branchData?.data?.data || []).find(b => b.id === userBranchId);
-            console.log("userBranch", userBranch);
-             sessionStorage.setItem('selectedBranch', JSON.stringify(userBranch));
-            if (userBranch) {
-              setSelectedBranch(userBranch);
-            }
-          }
+         const savedBranchRaw = sessionStorage.getItem('selectedBranch');
+
+let finalBranch = null;
+
+// 1️⃣ Try from sessionStorage only if id exists
+if (savedBranchRaw) {
+  try {
+    const parsedBranch = JSON.parse(savedBranchRaw);
+
+    if (parsedBranch && parsedBranch.id) {
+      finalBranch = parsedBranch;
+      console.log("Using branch from sessionStorage:", finalBranch);
+    }
+  } catch (error) {
+    console.log("Invalid sessionStorage branch");
+  }
+}
+
+// 2️⃣ If no valid session branch → fallback to userBranch
+if (!finalBranch) {
+  const userBranch = (branchData?.data?.data || []).find(
+    b => b.id === userBranchId
+  );
+
+  if (userBranch) {
+    finalBranch = userBranch;
+    sessionStorage.setItem('selectedBranch', JSON.stringify(userBranch));
+    console.log("Using branch from userBranchId:", finalBranch);
+  }
+}
+setSelectedBranch(finalBranch || null);
+
         }
       
     } catch (error) {

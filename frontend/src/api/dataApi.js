@@ -194,7 +194,9 @@ import axios from "axios";
 export default class DataApi {
   constructor(path) {
     this.token = sessionStorage.getItem("token");
-    this.branchId = JSON.parse(sessionStorage?.getItem('selectedBranch'))?.id || null;
+       let selectedBranch = JSON.parse(sessionStorage?.getItem('selectedBranch'));
+    this.branchId = selectedBranch ? selectedBranch?.id ? selectedBranch.id : selectedBranch : null;
+    
     this.baseUrl = `${constants.API_BASE_URL}/api/${path}`;
   }
 

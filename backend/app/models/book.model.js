@@ -21,11 +21,11 @@ async function findAll(filters = {}) {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     let query = `SELECT
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name,
+                    c.category AS category_name,
                     pub.name AS publisher_name,
                     s.shelf_name,
                     s.sub_shelf,
@@ -42,31 +42,31 @@ async function findAll(filters = {}) {
                     END AS price
                    FROM ${schema}.books b
                    LEFT JOIN ${schema}.authors a ON b.author_id = a.id
-                   LEFT JOIN ${schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${schema}.classification c ON b.category_id = c.id
                    LEFT JOIN ${schema}.publisher pub ON b.publisher_id = pub.id
                    LEFT JOIN ${schema}.shelf s ON b.shelf_id = s.id`;
-    
+
     const conditions = [];
     const params = [];
-    
+
     // Add automatic branch filter
     if (branchId) {
       conditions.push(`b.branch_id = $${params.length + 1}`);
       params.push(branchId);
     }
-    
+
     // Add search filter if provided
     if (filters.search) {
       conditions.push(`(b.title ILIKE $${params.length + 1} OR a.name ILIKE $${params.length + 2})`);
       params.push(`%${filters.search}%`, `%${filters.search}%`);
     }
-    
+
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
-    
+
     query += ` ORDER BY b.lastmodifieddate DESC`;
-    
+
     const result = await sql.query(query, params);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -80,9 +80,9 @@ async function findAllActive() {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     let query = `SELECT * from ${schema}.books where is_active='true'`
-    
+
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
   } catch (error) {
@@ -95,11 +95,11 @@ async function findById(id) {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     let query = `SELECT
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name,
+                    c.category AS category_name,
                     pub.name AS publisher_name,
                     s.shelf_name,
                     s.sub_shelf,
@@ -115,12 +115,12 @@ async function findById(id) {
                     END AS price
                    FROM ${schema}.books b
                    LEFT JOIN ${schema}.authors a ON b.author_id = a.id
-                   LEFT JOIN ${schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${schema}.classification c ON b.category_id = c.id
                    LEFT JOIN ${schema}.publisher pub ON b.publisher_id = pub.id
                    LEFT JOIN ${schema}.shelf s ON b.shelf_id = s.id`;
-    
+
     const params = [id];
-    
+
     // Add automatic branch filter
     if (branchId) {
       query += ` WHERE b.id = $1 AND b.branch_id = $2`;
@@ -128,7 +128,7 @@ async function findById(id) {
     } else {
       query += ` WHERE b.id = $1`;
     }
-    
+
     const result = await sql.query(query, params);
     if (result.rows.length > 0) {
       return result.rows[0];
@@ -220,14 +220,14 @@ async function updateById(id, bookData, userId) {
                        lastmodifieddate = NOW(), lastmodifiedbyid = $8,
                        language = $9, status = $10, pages = $11, price = $12,
                        publisher_id = $13, min_age = $14, max_age = $15 , inventory_binding = $16, shelf_id = $17`;
-    
+
     // Add branch_id to update if provided
     if (bookData.branch_id !== undefined) {
       query += `, branch_id = $18`;
     }
-    
+
     query += ` WHERE id = $1`;
-    
+
     // Add automatic branch filter
     if (branchId) {
       query += ` AND branch_id = $19 RETURNING *`;
@@ -254,7 +254,7 @@ async function updateById(id, bookData, userId) {
       bookData.inventory_binding !== undefined ? bookData.inventory_binding : currentBook.inventory_binding,
       bookData.shelf_id !== undefined ? bookData.shelf_id : currentBook.shelf_id,
     ];
-    
+
     // Add branch_id to values if provided
     if (bookData.branch_id !== undefined) {
       values.push(bookData.branch_id);
@@ -281,17 +281,17 @@ async function deleteById(id) {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     let query = `DELETE FROM ${schema}.books WHERE id = $1`;
     const params = [id];
-    
+
     if (branchId) {
       query += ` AND branch_id = $2`;
       params.push(branchId);
     }
-    
+
     query += ` RETURNING *`;
-    
+
     const result = await sql.query(query, params);
     if (result.rows.length > 0) {
       return { success: true, message: "Book deleted successfully" };
@@ -322,7 +322,7 @@ async function findByAgeRange(minAge, maxAge, filters = {}) {
 
     const params = [];
     let paramIndex = 1;
-    
+
     // Add automatic branch filter
     if (branchId) {
       query += ` AND b.branch_id = $${paramIndex}`;
@@ -357,7 +357,7 @@ async function findByISBN(isbn, excludeId = null) {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
     }
-    
+
     let query = `SELECT * FROM ${schema}.books WHERE isbn = $1`;
     const params = [isbn];
     let paramIndex = 2;
@@ -367,7 +367,7 @@ async function findByISBN(isbn, excludeId = null) {
       params.push(excludeId);
       paramIndex++;
     }
-    
+
     // Add automatic branch filter
     if (branchId) {
       query += ` AND branch_id = $${paramIndex}`;
@@ -394,7 +394,7 @@ async function generateInventoryReport() {
             b.title AS book_title,
             a.name AS author_name,
             pub.name AS publisher_name,
-            c.name AS category_name,
+            c.category AS category_name,
             v.name AS vendor_name,
 
             b.isbn,
@@ -427,7 +427,7 @@ async function generateInventoryReport() {
         LEFT JOIN ${schema}.authors a 
               ON b.author_id = a.id
 
-        LEFT JOIN ${schema}.categories c 
+        LEFT JOIN ${schema}.classification c 
               ON b.category_id = c.id
 
         LEFT JOIN ${schema}.publisher pub 
@@ -466,14 +466,14 @@ async function generateInventoryReport() {
             FROM ${schema}.book_issues
             GROUP BY book_id
         ) bd ON b.id = bd.book_id`;
-        
+
     // Add automatic branch filter
     if (branchId) {
       query += ` WHERE b.branch_id = $1`;
       const result = await sql.query(query, [branchId]);
       return result.rows.length > 0 ? result.rows : [];
     }
-    
+
     query += ` ORDER BY b.title ASC;`;
     const result = await sql.query(query);
     return result.rows.length > 0 ? result.rows : [];
@@ -484,7 +484,6 @@ async function generateInventoryReport() {
 }
 
 async function generateBookPopularityReport(params) {
-  console.log("Generating Report with params:", params);
   try {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -493,12 +492,12 @@ async function generateBookPopularityReport(params) {
     let dateFilter = '';
     let customFilter = '';
     const queryParams = [];
-    
+
 
     if (branchId) {
       branchFilter = `AND b.branch_id = '${branchId}'`;
     }
-   
+
 
     // --- 1. DATE FILTER LOGIC ---
     // Handle presets (30, 90, 365)
@@ -508,18 +507,16 @@ async function generateBookPopularityReport(params) {
         dateFilter = `AND bi.issue_date >= CURRENT_DATE - INTERVAL '${days} days'`;
       }
     }
-    // Handle Custom Range (requires both dates)
+
     else if (params.days === 'custom' && params.startDate && params.endDate) {
       dateFilter = `AND bi.issue_date BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`;
       queryParams.push(params.startDate, params.endDate);
-      customFilter = `AND COALESCE(isum.total_issues, 0) > 0`; // Only show books with issues in custom range
+      customFilter = `AND COALESCE(isum.total_issues, 0) > 0`;
     }
-    // Note: If none of the above match, dateFilter stays empty (Selects All Time), show all books
 
-    // --- 2. CATEGORY FILTER ---
     let categoryFilter = '';
     if (params.category) {
-      categoryFilter = `AND b.category_id = $${queryParams.length + 1}`;
+      categoryFilter = `AND c.category = $${queryParams.length + 1}`;
       queryParams.push(params.category);
     }
 
@@ -529,149 +526,101 @@ async function generateBookPopularityReport(params) {
       searchFilter = `AND (b.title ILIKE $${queryParams.length + 1} OR a.name ILIKE $${queryParams.length + 1})`;
       queryParams.push(`%${params.searchTerm}%`);
     }
-
-    // const query = `
-    //   WITH issue_base AS (
-    //     SELECT
-    //         bi.book_id,
-    //         bi.issued_to,
-    //         bi.issue_date,
-    //         DATE_TRUNC('month', bi.issue_date) AS issue_month
-    //     FROM ${schema}.book_issues bi
-    //     WHERE 1=1 ${dateFilter}
-    //   ),
-
-    //   issue_summary AS (
-    //       SELECT
-    //           book_id,
-    //           COUNT(*) AS total_issues,
-    //           COUNT(DISTINCT issued_to) AS unique_borrowers,
-    //           MAX(issue_date) AS last_issue_date,
-    //           COUNT(DISTINCT issue_month) AS active_months
-    //       FROM issue_base
-    //       GROUP BY book_id
-    //   ),
-
-    //   category_summary AS (
-    //       SELECT
-    //           b.category_id,
-    //           COUNT(ib.book_id) AS category_total_issues
-    //       FROM ${schema}.books b
-    //       LEFT JOIN issue_base ib ON ib.book_id = b.id
-    //       GROUP BY b.category_id
-    //   ),
-
-    //   dashboard_stats AS (
-    //       SELECT
-    //           -- Global metric: Current calendar month issues
-    //           COUNT(*) FILTER (
-    //               WHERE status = 'issued'
-    //               AND DATE_TRUNC('month', issue_date) = DATE_TRUNC('month', CURRENT_DATE)
-    //           ) AS total_issues_this_month,
-    //           -- Selected Period metric: Total volume of issues in filtered range
-    //           (SELECT COUNT(*) FROM issue_base) AS total_issues_in_period
-    //       FROM ${schema}.book_issues
-    //       LIMIT 1
-    //   )
-
-    //   SELECT
-    //       b.id,
-    //       b.title AS book_name,
-    //       a.name AS author,
-    //       c.name AS category,
-    //       b.total_copies AS copies,
-
-    //       -- Aggregated Metrics
-    //       COALESCE(isum.total_issues, 0) AS total_issues,
-    //       COALESCE(isum.unique_borrowers, 0) AS unique_borrowers,
-    //       ROUND(COALESCE(isum.total_issues, 0) / NULLIF(isum.active_months, 0), 2) AS avg_issues_per_month,
-
-    //       -- Dynamic Popularity Level based on the filtered period count
-    //       CASE
-    //           WHEN COALESCE(isum.total_issues, 0) >= 50 THEN 'High'
-    //           WHEN COALESCE(isum.total_issues, 0) BETWEEN 20 AND 49 THEN 'Medium'
-    //           ELSE 'Low'
-    //       END AS popularity_level,
-
-    //       -- Days Since Last Issue logic
-    //       CASE
-    //           WHEN isum.last_issue_date IS NULL THEN NULL
-    //           ELSE CURRENT_DATE - isum.last_issue_date
-    //       END AS days_since_last_issue,
-
-    //       -- Rankings relative to filters
-    //       RANK() OVER (ORDER BY COALESCE(isum.total_issues, 0) DESC) AS popularity_rank,
-
-    //       -- Metrics from CTEs
-    //       cs.category_total_issues,
-    //       ds.total_issues_this_month,
-    //       ds.total_issues_in_period,
-
-    //       -- Flags
-    //       CASE WHEN COALESCE(isum.total_issues, 0) = 0 THEN TRUE ELSE FALSE END AS never_issued,
-    //       CASE
-    //           WHEN COALESCE(isum.total_issues, 0) > 0 AND COALESCE(isum.total_issues, 0) = MAX(COALESCE(isum.total_issues, 0)) OVER ()
-    //           THEN TRUE ELSE FALSE
-    //       END AS is_most_popular
-
-    //   FROM ${schema}.books b
-    //   LEFT JOIN ${schema}.authors a ON b.author_id = a.id
-    //   LEFT JOIN ${schema}.categories c ON b.category_id = c.id
-    //   LEFT JOIN issue_summary isum ON b.id = isum.book_id
-    //   LEFT JOIN category_summary cs ON cs.category_id = b.category_id
-    //   CROSS JOIN dashboard_stats ds
-    //   WHERE 1=1 ${categoryFilter} ${searchFilter} ${customFilter}
-    //   ORDER BY total_issues DESC;
-    // `;
     const query = `SELECT *
-          FROM (
-              SELECT
-                  b.id AS book_id,
-                  b.title AS book_name,
-                  a.name AS author,
-                  c.name AS category,
-                  b.total_copies AS copies,
+FROM (
+  SELECT
+    b.id AS book_id,
+    b.title AS book_name,
+    a.name AS author,
 
-                  COUNT(bi.id) AS total_issues,
-                  COUNT(DISTINCT bi.issued_to) AS unique_borrowers,
+    c.code AS classification_code,
+    c.name AS classification_name,
+    c.category AS category,
 
-                  MAX(bi.issue_date) AS last_issue_date,
-                  (CURRENT_DATE - MAX(bi.issue_date)) AS days_since_last_issue,
+    b.total_copies AS copies,
 
-                  RANK() OVER (ORDER BY COUNT(bi.id) DESC) AS popularity_rank
+    COUNT(bi.id) AS total_issues,
+    COUNT(DISTINCT bi.issued_to) AS unique_borrowers,
 
-              FROM ${schema}.books b
+    MAX(bi.issue_date) AS last_issue_date,
+    (CURRENT_DATE - MAX(bi.issue_date)) AS days_since_last_issue,
 
-              JOIN ${schema}.book_issues bi
-                  ON b.id = bi.book_id
-                  ${dateFilter}
+    RANK() OVER (ORDER BY COUNT(bi.id) DESC) AS popularity_rank
 
-              LEFT JOIN ${schema}.authors a 
-                    ON b.author_id = a.id
+  FROM ${schema}.books b
 
-              LEFT JOIN ${schema}.categories c 
-                    ON b.category_id = c.id
+  JOIN ${schema}.book_issues bi
+    ON b.id = bi.book_id
+    ${dateFilter}
 
-              WHERE 1=1
-                    ${branchFilter}
-                    ${categoryFilter}
-                    ${searchFilter}
+  LEFT JOIN ${schema}.authors a 
+    ON b.author_id = a.id
 
-              GROUP BY
-                  b.id, b.title, a.name, c.name, b.total_copies
-          ) ranked_books
+  LEFT JOIN ${schema}.classification c 
+    ON b.category_id = c.id
 
-          ORDER BY total_issues DESC
-    `;
+  WHERE 1=1
+    ${branchFilter}
+    ${categoryFilter}
+    ${searchFilter}
+
+  GROUP BY
+    b.id, b.title, a.name,
+    c.code, c.name, c.category, c.id,
+    b.total_copies
+
+) ranked_books
+
+ORDER BY total_issues DESC
+`;
+    // const query = `SELECT *
+    //       FROM (
+    //           SELECT
+    //               b.id AS book_id,
+    //               b.title AS book_name,
+    //               a.name AS author,
+    //               c.name AS category,
+    //               b.total_copies AS copies,
+
+    //               COUNT(bi.id) AS total_issues,
+    //               COUNT(DISTINCT bi.issued_to) AS unique_borrowers,
+
+    //               MAX(bi.issue_date) AS last_issue_date,
+    //               (CURRENT_DATE - MAX(bi.issue_date)) AS days_since_last_issue,
+
+    //               RANK() OVER (ORDER BY COUNT(bi.id) DESC) AS popularity_rank
+
+    //           FROM ${schema}.books b
+
+    //           JOIN ${schema}.book_issues bi
+    //               ON b.id = bi.book_id
+    //               ${dateFilter}
+
+    //           LEFT JOIN ${schema}.authors a 
+    //                 ON b.author_id = a.id
+
+    //           LEFT JOIN ${schema}.classification c 
+    //                 ON b.category_id = c.id
+
+    //           WHERE 1=1
+    //                 ${branchFilter}
+    //                 ${categoryFilter}
+    //                 ${searchFilter}
+
+    //           GROUP BY
+    //               b.id, b.title, a.name, c.name, b.total_copies
+    //       ) ranked_books
+
+    //       ORDER BY total_issues DESC
+    // `;
 
 
 
     const result = await sql.query(query, queryParams);
     const rows = result.rows;
 
-    // 1. Process Main Table
     const mainTable = rows.map(row => ({
-      id: row.id,
+      id: row.book_id,
       book_name: row.book_name,
       author: row.author,
       category: row.category,
@@ -683,12 +632,11 @@ async function generateBookPopularityReport(params) {
       days_since_last_issue: row.days_since_last_issue
     }));
 
-    // 2. Extract Key Metrics
+
     const keyMetrics = {
-      // The count of all books issued in the CUSTOM date range
+
       totalIssuesInPeriod: rows.length > 0 ? parseInt(rows[0].total_issues_in_period) : 0,
 
-      // Global metric for current calendar month
       currentMonthIssues: rows.length > 0 ? parseInt(rows[0].total_issues_this_month) : 0,
 
       mostPopularBook: rows.find(r => r.is_most_popular)

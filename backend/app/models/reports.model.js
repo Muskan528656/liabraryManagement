@@ -90,9 +90,7 @@ async function getInactiveBooks(params) {
     let categoryFilter = '';
     let searchFilter = '';
 
-    // ----------------------------
-    // 1️⃣ DATE FILTER
-    // ----------------------------
+
 
     if (
       params.days &&
@@ -104,7 +102,7 @@ async function getInactiveBooks(params) {
 
       if (!isNaN(days)) {
         dateFilter = `
-          AND last_activity_date < 
+          AND last_activity_date >  
               CURRENT_DATE - ($${queryParams.length + 1} * INTERVAL '1 day')
         `;
         queryParams.push(days);
@@ -125,20 +123,14 @@ async function getInactiveBooks(params) {
       queryParams.push(params.startDate, params.endDate);
     }
 
-    // ----------------------------
-    // 2️⃣ CATEGORY FILTER
-    // ----------------------------
 
     if (params.category) {
       categoryFilter = `
-        AND b.category_id = $${queryParams.length + 1}
+        AND b.category_name = $${queryParams.length + 1}
       `;
       queryParams.push(params.category);
     }
 
-    // ----------------------------
-    // 3️⃣ SEARCH FILTER
-    // ----------------------------
 
     if (params.searchTerm) {
       searchFilter = `
@@ -151,10 +143,6 @@ async function getInactiveBooks(params) {
       queryParams.push(`%${params.searchTerm}%`);
     }
 
-    // ----------------------------
-    // MAIN QUERY
-    // ----------------------------
-
     const query = `
       WITH book_activity AS (
         SELECT
@@ -162,13 +150,13 @@ async function getInactiveBooks(params) {
           b.title,
           b.available_copies,
           b.category_id,
-          c.name AS category_name,
+          c.category AS category_name,
           COALESCE(MAX(bi.issue_date), b.createddate)::date AS last_activity_date
         FROM ${schema}.books b
         LEFT JOIN ${schema}.book_issues bi
           ON b.id = bi.book_id
           AND bi.branch_id = $1
-        LEFT JOIN ${schema}.categories c
+        LEFT JOIN ${schema}.classification c
           ON b.category_id = c.id
         LEFT JOIN ${schema}.authors a
           ON b.author_id = a.id
@@ -179,7 +167,7 @@ async function getInactiveBooks(params) {
           b.available_copies,
           b.category_id,
           b.createddate,
-          c.name,
+          c.category,
           a.name
       )
       SELECT *,
@@ -291,9 +279,9 @@ async function getBorrowingReport(params) {
 
     let dateFilter = '';
     const queryParams = [];
-      queryParams.push(branchId);
+    queryParams.push(branchId);
 
-    // --- 1. DATE FILTER ---
+
     if (
       params.days &&
       params.days !== 'custom' &&
@@ -317,7 +305,7 @@ async function getBorrowingReport(params) {
     // --- 2. CATEGORY FILTER ---
     let categoryFilter = '';
     if (params.category) {
-      categoryFilter = `AND b.category_id = $${queryParams.length + 1}`;
+      categoryFilter = `AND c.category = $${queryParams.length + 1}`;
       queryParams.push(params.category);
     }
 
@@ -371,12 +359,14 @@ async function getBorrowingReport(params) {
           bi.due_date,
           bi.status,
           li.first_name AS member_name,
+          c.category AS category_name,
 
           'OVERDUE' AS circulation_status
 
       FROM ${schema}.book_issues bi
       JOIN ${schema}.books b ON b.id = bi.book_id
       LEFT JOIN ${schema}.authors a ON b.author_id = a.id
+      LEFT JOIN ${schema}.classification c ON b.category_id = c.id
       LEFT JOIN ${schema}.library_members li ON bi.issued_to = li.id AND li.branch_id = $1
 
       WHERE 

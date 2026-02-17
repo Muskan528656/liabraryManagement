@@ -1001,27 +1001,6 @@ async function sendOverdueReminder() {
     }
 
 
-    // const query = `
-    //   SELECT 
-    //     bi.id,
-    //     bi.book_id,
-    //     bi.issued_to,
-    //     bi.due_date,
-    //     bi.issue_date,
-    //     b.title AS book_title,
-    //     lm.email AS student_email,
-    //     CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
-    //     lm.card_number
-    //   FROM demo.book_issues bi
-    //   INNER JOIN demo.books b ON bi.book_id = b.id
-    //   INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
-    //   WHERE DATE(bi.due_date) < $1 
-    //     AND bi.return_date IS NULL
-    //     AND bi.status IN ('issued', 'active', NULL)
-    //     AND lm.is_active = true
-    //   ORDER BY bi.due_date, lm.email
-    // `;
-
     const query = ` SELECT
     bi.id,
       bi.book_id,
