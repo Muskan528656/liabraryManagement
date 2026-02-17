@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -49,7 +49,7 @@ const BookPopularityReport = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
+  // categories extracted from report data using useMemo below
 
   const [filters, setFilters] = useState({
     days: "30",
@@ -86,15 +86,19 @@ const BookPopularityReport = () => {
     width: '100%'
   };
 
-  // Fetch Categories for Filter
+  // Fetch Categories for Filter (separate from report data so they don't disappear when filtering)
+  const [categories, setCategories] = useState([]);
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
-        console.log("Categories API Response:", response);
         const categoriesData = response?.data?.data || response?.data || [];
-        setCategories(categoriesData);
+        
+        // Get unique category names
+        const uniqueCategories = [...new Set(categoriesData.map(item => item.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -163,7 +167,7 @@ const BookPopularityReport = () => {
       const response = await api.get(
         `/book-popularity-analytics?${params.toString()}`
       );
-
+      console.log("Report API Response:", response);
       setReportData(response.data);
     } catch (err) {
       console.error("Error fetching report data:", err);
@@ -273,7 +277,7 @@ const BookPopularityReport = () => {
       label: "Category",
       width: "150px",
       align: "center",
-      render: (_, record) => `${record.classification_from || ''}-${record.classification_to || ''} (${record.category || '-'})`
+      render: (_, record) => record.category || '-'
     },
     {
       field: "available",
@@ -468,8 +472,8 @@ const BookPopularityReport = () => {
                 onChange={(e) => handleFilterChange("category", e.target.value)}
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.classification_from}-{cat.classification_to} {cat.name}</option>
+                {categories.map((opt, i) => (
+                  <option className="color-dark" key={i} value={opt}>{opt}</option>
                 ))}
               </Form.Select>
             </Col>
