@@ -779,129 +779,236 @@ const ModuleDetail = ({
     }
   };
 
+  // const handleSave = async () => {
+
+  //   console.log("hello check");
+  //   console.log("tempDataCheck-->", tempData);
+
+  //   //  if (customHandlers.beforeSave) {
+  //   //         const customResult = customHandlers.beforeSave(formData, editingItem);
+  //   //         if (customResult === false) return;
+  //   //     }
+
+  //   //  if (validationRules) {
+  //   //             const errors = validationRules(formData, data, editingItem);
+  //   //             console.log("validationRules",validationRules);
+  //   //             console.log("errors",errors);
+  //   //             if (errors.length > 0) {
+  //   //                 PubSub.publish("RECORD_ERROR_TOAST", {
+  //   //                     title: "Validation Error",
+  //   //                     message: errors.join(", "),
+  //   //                 });
+  //   //                 return;
+  //   //             }
+  //   //         }
+
+  //   try {
+  //     setSaving(true);
+
+  //     const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
+  //       if (key === "image") {
+  //         return value instanceof File || value === null || value === "null";
+  //       }
+  //       return false;
+  //     });
+
+  //     const api = new DataApi(moduleApi);
+  //     let response;
+
+  //     if (hasFileUpload) {
+  //       const formDataToSend = new FormData();
+
+  //       console.log("tempData-->", tempData);
+  //       console.log("formDataToSend before loop-->", formDataToSend);
+
+  //       for (const [key, value] of Object.entries(tempData)) {
+  //         if (key === "image") {
+  //           if (value instanceof File) {
+
+  //             formDataToSend.append("image", value);
+  //           } else if (value === null || value === "null") {
+
+  //             formDataToSend.append("image", "");
+  //           } else if (typeof value === "string" && value) {
+
+  //             formDataToSend.append("image", value);
+  //           }
+  //         } else {
+  //           if (value !== null && value !== undefined) {
+  //             if (typeof value === "object") {
+  //               formDataToSend.append(key, JSON.stringify(value));
+  //             } else {
+  //               formDataToSend.append(key, value);
+  //             }
+  //           }
+  //         }
+  //       }
+
+
+  //       for (let pair of formDataToSend.entries()) {
+
+  //       }
+
+
+  //       response = await api.updateFormData(formDataToSend, id);
+  //     } else {
+  //       console.log("check")
+  //       const cleanData = { ...tempData };
+  //       Object.keys(cleanData).forEach((key) => {
+  //         if (cleanData[key] === "" || cleanData[key] === "null") {
+  //           cleanData[key] = null;
+  //         }
+  //       });
+
+  //       console.log("cleandata", cleanData)
+  //       console.log("ide", id)
+
+  //       response = await api.update(cleanData, id);
+  //       console.log("response", response)
+  //     }
+
+
+
+  //     if (response && response.data) {
+  //       await fetchData();
+  //       PubSub.publish("RECORD_SAVED_TOAST", {
+  //         title: "Success",
+  //         message: `${moduleLabel} updated successfully`,
+  //       });
+  //       if (moduleName === "user") {
+  //         PubSub.publish("USER_UPDATED", { user: response.data });
+  //       }
+  //       setIsEditing(false);
+  //     }
+  //   } catch (err) {
+  //     let errorMessage = err.message;
+  //     console.log("Error during save:", err);
+  //     console.log("Error response data:", errorMessage);
+
+  //     if (err.response && err.response.data && err.response.data.errors) {
+  //       errorMessage = err.response.data.errors;
+  //     }
+
+  //     PubSub.publish("RECORD_ERROR_TOAST", {
+  //       title: "Update Failed",
+  //       message: ` ${moduleLabel}: ${errorMessage}`,
+  //     });
+
+  //     //  PubSub.publish("RECORD_ERROR_TOAST", {
+  //     //   title: "Update Failed",
+  //     //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
+  //     // });
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+
   const handleSave = async () => {
 
-    console.log("hello check");
-    console.log("tempDataCheck-->", tempData);
+  console.log("hello check");
+  console.log("tempDataCheck-->", tempData);
 
-    //  if (customHandlers.beforeSave) {
-    //         const customResult = customHandlers.beforeSave(formData, editingItem);
-    //         if (customResult === false) return;
-    //     }
+ 
+  // ✅ VALIDATION START
+  if (validationRules) {
+    const errors = validationRules(tempData, data );
 
-    //  if (validationRules) {
-    //             const errors = validationRules(formData, data, editingItem);
-    //             console.log("validationRules",validationRules);
-    //             console.log("errors",errors);
-    //             if (errors.length > 0) {
-    //                 PubSub.publish("RECORD_ERROR_TOAST", {
-    //                     title: "Validation Error",
-    //                     message: errors.join(", "),
-    //                 });
-    //                 return;
-    //             }
-    //         }
+    console.log("validationRules", validationRules);
+    console.log("errors", errors);
 
-    try {
-      setSaving(true);
-
-      const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
-        if (key === "image") {
-          return value instanceof File || value === null || value === "null";
-        }
-        return false;
-      });
-
-      const api = new DataApi(moduleApi);
-      let response;
-
-      if (hasFileUpload) {
-        const formDataToSend = new FormData();
-
-        console.log("tempData-->", tempData);
-        console.log("formDataToSend before loop-->", formDataToSend);
-
-        for (const [key, value] of Object.entries(tempData)) {
-          if (key === "image") {
-            if (value instanceof File) {
-
-              formDataToSend.append("image", value);
-            } else if (value === null || value === "null") {
-
-              formDataToSend.append("image", "");
-            } else if (typeof value === "string" && value) {
-
-              formDataToSend.append("image", value);
-            }
-          } else {
-            if (value !== null && value !== undefined) {
-              if (typeof value === "object") {
-                formDataToSend.append(key, JSON.stringify(value));
-              } else {
-                formDataToSend.append(key, value);
-              }
-            }
-          }
-        }
-
-
-        for (let pair of formDataToSend.entries()) {
-
-        }
-
-
-        response = await api.updateFormData(formDataToSend, id);
-      } else {
-        console.log("check")
-        const cleanData = { ...tempData };
-        Object.keys(cleanData).forEach((key) => {
-          if (cleanData[key] === "" || cleanData[key] === "null") {
-            cleanData[key] = null;
-          }
-        });
-
-        console.log("cleandata", cleanData)
-        console.log("ide", id)
-
-        response = await api.update(cleanData, id);
-        console.log("response", response)
-      }
-
-
-
-      if (response && response.data) {
-        await fetchData();
-        PubSub.publish("RECORD_SAVED_TOAST", {
-          title: "Success",
-          message: `${moduleLabel} updated successfully`,
-        });
-        if (moduleName === "user") {
-          PubSub.publish("USER_UPDATED", { user: response.data });
-        }
-        setIsEditing(false);
-      }
-    } catch (err) {
-      let errorMessage = err.message;
-      console.log("Error during save:", err);
-      console.log("Error response data:", errorMessage);
-
-      if (err.response && err.response.data && err.response.data.errors) {
-        errorMessage = err.response.data.errors;
-      }
-
+    if (errors.length > 0) {
       PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Update Failed",
-        message: ` ${moduleLabel}: ${errorMessage}`,
+        title: "Validation Error",
+        message: errors.join(", "),
+      });
+      return; // ❌ STOP SAVE
+    }
+  }
+  // ✅ VALIDATION END
+
+  try {
+    setSaving(true);
+
+    const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
+      if (key === "image") {
+        return value instanceof File || value === null || value === "null";
+      }
+      return false;
+    });
+
+    const api = new DataApi(moduleApi);
+    let response;
+
+    if (hasFileUpload) {
+      const formDataToSend = new FormData();
+
+      for (const [key, value] of Object.entries(tempData)) {
+        if (key === "image") {
+          if (value instanceof File) {
+            formDataToSend.append("image", value);
+          } else if (value === null || value === "null") {
+            formDataToSend.append("image", "");
+          } else if (typeof value === "string" && value) {
+            formDataToSend.append("image", value);
+          }
+        } else {
+          if (value !== null && value !== undefined) {
+            if (typeof value === "object") {
+              formDataToSend.append(key, JSON.stringify(value));
+            } else {
+              formDataToSend.append(key, value);
+            }
+          }
+        }
+      }
+
+      response = await api.updateFormData(formDataToSend, id);
+
+    } else {
+      const cleanData = { ...tempData };
+
+      Object.keys(cleanData).forEach((key) => {
+        if (cleanData[key] === "" || cleanData[key] === "null") {
+          cleanData[key] = null;
+        }
       });
 
-      //  PubSub.publish("RECORD_ERROR_TOAST", {
-      //   title: "Update Failed",
-      //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
-      // });
-    } finally {
-      setSaving(false);
+      response = await api.update(cleanData, id);
     }
-  };
+
+    if (response && response.data) {
+      await fetchData();
+
+      PubSub.publish("RECORD_SAVED_TOAST", {
+        title: "Success",
+        message: `${moduleLabel} updated successfully`,
+      });
+
+      if (moduleName === "user") {
+        PubSub.publish("USER_UPDATED", { user: response.data });
+      }
+
+      setIsEditing(false);
+    }
+
+  } catch (err) {
+    let errorMessage = err.message;
+
+    if (err.response && err.response.data && err.response.data.errors) {
+      errorMessage = err.response.data.errors;
+    }
+
+    PubSub.publish("RECORD_ERROR_TOAST", {
+      title: "Update Failed",
+      message: `${moduleLabel}: ${errorMessage}`,
+    });
+
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -1158,256 +1265,533 @@ const ModuleDetail = ({
     normalizedAddressFields?.address
   );
 
-  const renderField = (field, index, currentData) => {
-    if (!field || !field.key) return null;
+  // const renderField = (field, index, currentData) => {
+  //   if (!field || !field.key) return null;
 
 
 
-    const isNonEditableField = nonEditableFields.includes(field.key);
-    const shouldShowAsReadOnly = isEditing && isNonEditableField;
+  //   const isNonEditableField = nonEditableFields.includes(field.key);
+  //   const shouldShowAsReadOnly = isEditing && isNonEditableField;
+
+    
+
+  //   if (field.type === "toggle") {
+  //     const value = currentData ? Boolean(currentData[field.key]) : false;
+
+  //     return (
+  //       <Form.Group key={index} className="mb-3">
+  //         <Form.Label className="fw-semibold">
+  //           {isEditing ? field.label : null}
+  //         </Form.Label>
 
 
 
-    if (field.type === "toggle") {
-      const value = currentData ? Boolean(currentData[field.key]) : false;
+  //         {isEditing && !isNonEditableField && (
+  //           <div
+  //             className="custom-toggle mt-2"
+  //             onClick={() => handleFieldChange(field.key, !value)}
+  //             style={{
+  //               width: "60px",
+  //               height: "30px",
+  //               borderRadius: "20px",
+  //               background: value ? "var(--primary-color)" : "#d1d5db",
+  //               position: "relative",
+  //               cursor: "pointer",
+  //               transition: "0.3s",
+  //             }}
+  //           >
+  //             <div
+  //               style={{
+  //                 width: "24px",
+  //                 height: "24px",
+  //                 background: "#fff",
+  //                 borderRadius: "50%",
+  //                 position: "absolute",
+  //                 top: "3px",
+  //                 left: value ? "33px" : "3px",
+  //                 transition: "0.3s",
+  //                 boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+  //               }}
+  //             />
+  //           </div>
+  //         )}
+  //       </Form.Group>
+  //     );
+  //   }
 
-      return (
-        <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">
-            {isEditing ? field.label : null}
-          </Form.Label>
-
-
-
-          {isEditing && !isNonEditableField && (
-            <div
-              className="custom-toggle mt-2"
-              onClick={() => handleFieldChange(field.key, !value)}
-              style={{
-                width: "60px",
-                height: "30px",
-                borderRadius: "20px",
-                background: value ? "var(--primary-color)" : "#d1d5db",
-                position: "relative",
-                cursor: "pointer",
-                transition: "0.3s",
-              }}
-            >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  background: "#fff",
-                  borderRadius: "50%",
-                  position: "absolute",
-                  top: "3px",
-                  left: value ? "33px" : "3px",
-                  transition: "0.3s",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                }}
-              />
-            </div>
-          )}
-        </Form.Group>
-      );
-    }
-
-    if (
-      (!isEditing || shouldShowAsReadOnly) &&
-      (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
-    ) {
-      const userId = currentData ? currentData[field.key] : null;
-      if (userId) {
-        return (
-          <Form.Group key={index} className="mb-3">
-            <Form.Label className="fw-semibold">{field.label}</Form.Label>
-            <div className="form-control-plaintext p-0 border-0">
-              <UserAvatar
-                userId={userId}
-                size={36}
-                showName={true}
-                clickable={true}
-              />
-            </div>
-          </Form.Group>
-        );
-      }
-    }
+  //   if (
+  //     (!isEditing || shouldShowAsReadOnly) &&
+  //     (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
+  //   ) {
+  //     const userId = currentData ? currentData[field.key] : null;
+  //     if (userId) {
+  //       return (
+  //         <Form.Group key={index} className="mb-3">
+  //           <Form.Label className="fw-semibold">{field.label}</Form.Label>
+  //           <div className="form-control-plaintext p-0 border-0">
+  //             <UserAvatar
+  //               userId={userId}
+  //               size={36}
+  //               showName={true}
+  //               clickable={true}
+  //             />
+  //           </div>
+  //         </Form.Group>
+  //       );
+  //     }
+  //   }
 
 
-    if (field.type === "select" && field.options) {
-      // const options = getSelectOptions(field);
-      const options = getSelectOptions(field, isEditing ? tempData : data);
-      const rawValue = currentData ? currentData[field.key] : null;
-      const currentValue =
-        rawValue === undefined || rawValue === null ? "" : rawValue.toString();
+  //   if (field.type === "select" && field.options) {
+  //     // const options = getSelectOptions(field);
+  //     const options = getSelectOptions(field, isEditing ? tempData : data);
+  //     const rawValue = currentData ? currentData[field.key] : null;
+  //     const currentValue =
+  //       rawValue === undefined || rawValue === null ? "" : rawValue.toString();
       
-      // Check if field is disabled (supports function)
-      const isFieldDisabled = typeof field.disabled === 'function' 
-        ? field.disabled(tempData || data) 
-        : field.disabled;
+  //     // Check if field is disabled (supports function)
+  //     const isFieldDisabled = typeof field.disabled === 'function' 
+  //       ? field.disabled(tempData || data) 
+  //       : field.disabled;
 
-      return (
-        <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">{field.label}</Form.Label>
-          {isEditing && !isNonEditableField ? (
-            <Form.Select
-              value={currentValue}
-              onChange={(e) =>
-                handleFieldChange(field.key, e.target.value || null, field)
-              }
-              disabled={isFieldDisabled}
-            >
-              <option value="">{isFieldDisabled ? `${field.label} (Category required)` : `Select ${field.label}`}</option>
-              {options.map((option) => {
-                const optionId = getOptionValue(option);
-                const optionLabel = getOptionDisplayLabel(option);
-                return (
-                  <option key={optionId} value={optionId}>
-                    {optionLabel}
-                  </option>
-                );
-              })}
-              {/* Add current value as option if not in list (for creatable) */}
-              {field.creatable && currentValue && !options.find(opt => getOptionValue(opt) === currentValue) && (
-                <option key={currentValue} value={currentValue}>{currentValue}</option>
-              )}
-            </Form.Select>
-          ) : (
-            <Form.Control
-              type="text"
-              readOnly
-              value={field.render ? field.render(currentValue, currentData, externalData) : (() => {
-                if (field.displayKey && data) return data[field.displayKey] || "—";
-                const selected = options.find((opt) => {
-                  const optionValue = toStringSafe(getOptionValue(opt));
-                  const optValue =
-                    opt.id || opt.value || opt.role_name || opt.name;
-                  return (
-                    optionValue === currentValue ||
-                    toStringSafe(optValue) === currentValue
-                  );
-                });
-                return selected
-                  ? getOptionDisplayLabel(selected)
-                  : field.displayKey && data
-                    ? data[field.displayKey] || "—"
-                    : "—";
-              })()}
-              style={{
-                pointerEvents: "none",
-                opacity: 0.9,
-              }}
-            />
-          )}
-        </Form.Group>
-      );
-    }
+  //     return (
+  //       <Form.Group key={index} className="mb-3">
+  //         <Form.Label className="fw-semibold">{field.label}</Form.Label>
+  //         {isEditing && !isNonEditableField ? (
+  //           <Form.Select
+  //             value={currentValue}
+  //             onChange={(e) =>
+  //               handleFieldChange(field.key, e.target.value || null, field)
+  //             }
+  //             disabled={isFieldDisabled}
+  //           >
+  //             <option value="">{isFieldDisabled ? `${field.label} (Category required)` : `Select ${field.label}`}</option>
+  //             {options.map((option) => {
+  //               const optionId = getOptionValue(option);
+  //               const optionLabel = getOptionDisplayLabel(option);
+  //               return (
+  //                 <option key={optionId} value={optionId}>
+  //                   {optionLabel}
+  //                 </option>
+  //               );
+  //             })}
+  //             {/* Add current value as option if not in list (for creatable) */}
+  //             {field.creatable && currentValue && !options.find(opt => getOptionValue(opt) === currentValue) && (
+  //               <option key={currentValue} value={currentValue}>{currentValue}</option>
+  //             )}
+  //           </Form.Select>
+  //         ) : (
+  //           <Form.Control
+  //             type="text"
+  //             readOnly
+  //             value={field.render ? field.render(currentValue, currentData, externalData) : (() => {
+  //               if (field.displayKey && data) return data[field.displayKey] || "—";
+  //               const selected = options.find((opt) => {
+  //                 const optionValue = toStringSafe(getOptionValue(opt));
+  //                 const optValue =
+  //                   opt.id || opt.value || opt.role_name || opt.name;
+  //                 return (
+  //                   optionValue === currentValue ||
+  //                   toStringSafe(optValue) === currentValue
+  //                 );
+  //               });
+  //               return selected
+  //                 ? getOptionDisplayLabel(selected)
+  //                 : field.displayKey && data
+  //                   ? data[field.displayKey] || "—"
+  //                   : "—";
+  //             })()}
+  //             style={{
+  //               pointerEvents: "none",
+  //               opacity: 0.9,
+  //             }}
+  //           />
+  //         )}
+  //       </Form.Group>
+  //     );
+  //   }
 
 
-    if (field.type === "password") {
-      const rawValue = currentData ? currentData[field.key] : "";
-      const isVisible = passwordVisibility[field.key] || false;
+  //   if (field.type === "password") {
+  //     const rawValue = currentData ? currentData[field.key] : "";
+  //     const isVisible = passwordVisibility[field.key] || false;
 
-      return (
-        <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">{field.label}</Form.Label>
-          {!isEditing || isNonEditableField ? (
+  //     return (
+  //       <Form.Group key={index} className="mb-3">
+  //         <Form.Label className="fw-semibold">{field.label}</Form.Label>
+  //         {!isEditing || isNonEditableField ? (
 
-            <div className="form-control-plaintext">******</div>
-          ) : (
-            <InputGroup>
-              <Form.Control
-                type={isVisible ? "text" : "password"}
-                value={rawValue || ""}
-                onChange={(e) =>
-                  handleFieldChange(field.key, e.target.value)
-                }
-                style={{
-                  backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
-                  borderRight: "none",
-                }}
-              />
-              <InputGroup.Text
-                style={{
-                  backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
-                  borderLeft: "none",
-                  cursor: isNonEditableField ? "default" : "pointer",
-                }}
-                onClick={() =>
-                  !isNonEditableField && togglePasswordVisibility(field.key)
-                }
-              >
-                <i
-                  className={
-                    isVisible ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"
-                  }
-                ></i>
-              </InputGroup.Text>
-            </InputGroup>
-          )}
-        </Form.Group>
-      );
-    }
+  //           <div className="form-control-plaintext">******</div>
+  //         ) : (
+  //           <InputGroup>
+  //             <Form.Control
+  //               type={isVisible ? "text" : "password"}
+  //               value={rawValue || ""}
+  //               onChange={(e) =>
+  //                 handleFieldChange(field.key, e.target.value)
+  //               }
+  //               style={{
+  //                 backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
+  //                 borderRight: "none",
+  //               }}
+  //             />
+  //             <InputGroup.Text
+  //               style={{
+  //                 backgroundColor: isNonEditableField ? "#f8f9fa" : "#fff",
+  //                 borderLeft: "none",
+  //                 cursor: isNonEditableField ? "default" : "pointer",
+  //               }}
+  //               onClick={() =>
+  //                 !isNonEditableField && togglePasswordVisibility(field.key)
+  //               }
+  //             >
+  //               <i
+  //                 className={
+  //                   isVisible ? "fa-solid fa-eye" : "fa-solid fa-eye-slash"
+  //                 }
+  //               ></i>
+  //             </InputGroup.Text>
+  //           </InputGroup>
+  //         )}
+  //       </Form.Group>
+  //     );
+  //   }
 
-    const fieldValue = shouldShowAsReadOnly
-      ? formatValue(currentData[field.key], field)
-      : getFieldValue(field, currentData);
-    const isElementValue = React.isValidElement(fieldValue);
-    const controlType =
-      isEditing && !isNonEditableField
-        ? field.type === "number"
-          ? "number"
-          : field.type === "date"
-            ? "date"
-            : field.type === "datetime"
-              ? "datetime-local"
-              : "text"
-        : "text";
+  //   const fieldValue = shouldShowAsReadOnly
+  //     ? formatValue(currentData[field.key], field)
+  //     : getFieldValue(field, currentData);
+  //   const isElementValue = React.isValidElement(fieldValue);
+  //   const controlType =
+  //     isEditing && !isNonEditableField
+  //       ? field.type === "number"
+  //         ? "number"
+  //         : field.type === "date"
+  //           ? "date"
+  //           : field.type === "datetime"
+  //             ? "datetime-local"
+  //             : "text"
+  //       : "text";
 
-    if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
-      return (
-        <Form.Group key={index} className="mb-3">
-          <Form.Label className="fw-semibold">{field.label}</Form.Label>
-          <div className="form-control-plaintext">{fieldValue}</div>
-        </Form.Group>
-      );
-    }
+  //   if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
+  //     return (
+  //       <Form.Group key={index} className="mb-3">
+  //         <Form.Label className="fw-semibold">{field.label}</Form.Label>
+  //         <div className="form-control-plaintext">{fieldValue}</div>
+  //       </Form.Group>
+  //     );
+  //   }
+
+  //   return (
+  //     <Form.Group key={index} className="mb-3">
+  //       <Form.Label className="fw-semibold">{field.label}</Form.Label>
+  //       <Form.Control
+  //         type={controlType}
+  //         value={isElementValue ? "" : fieldValue ?? ""}
+  //         readOnly={!isEditing || isNonEditableField}
+  //         onChange={(e) => {
+  //           if (!isEditing || isNonEditableField) return;
+
+  //           let newValue = e.target.value;
+  //           if (field.type === "number")
+  //             newValue = newValue ? parseFloat(newValue) : null;
+  //           if (field.type === "datetime")
+  //             newValue = new Date(newValue).toISOString();
+
+  //           handleFieldChange(field.key, newValue);
+  //         }}
+  //         style={{
+  //           pointerEvents:
+  //             isEditing && !isNonEditableField ? "auto" : "none",
+  //           opacity: isEditing && !isNonEditableField ? 1 : 0.9,
+  //           backgroundColor:
+  //             isNonEditableField && isEditing ? "#f8f9fa" : "white",
+  //         }}
+  //       />
+  //       {isNonEditableField && isEditing && (
+  //         <Form.Text className="text-muted" style={{ fontSize: "0.75rem" }}>
+  //           This field cannot be edited
+  //         </Form.Text>
+  //       )}
+  //     </Form.Group>
+  //   );
+  // };
+
+
+  const renderField = (field, index, currentData) => {
+  if (!field || !field.key) return null;
+
+  const isNonEditableField = nonEditableFields.includes(field.key);
+  const shouldShowAsReadOnly = isEditing && isNonEditableField;
+
+  // Reusable Label Renderer
+  const renderLabel = () => (
+    <Form.Label className="">
+      {field.label}
+      {field.required && (
+        <span className="text-danger ms-1">*</span>
+      )}
+    </Form.Label>
+  );
+
+  //  TOGGLE
+  if (field.type === "toggle") {
+    const value = currentData ? Boolean(currentData[field.key]) : false;
 
     return (
       <Form.Group key={index} className="mb-3">
-        <Form.Label className="fw-semibold">{field.label}</Form.Label>
-        <Form.Control
-          type={controlType}
-          value={isElementValue ? "" : fieldValue ?? ""}
-          readOnly={!isEditing || isNonEditableField}
-          onChange={(e) => {
-            if (!isEditing || isNonEditableField) return;
+        {isEditing && renderLabel()}
 
-            let newValue = e.target.value;
-            if (field.type === "number")
-              newValue = newValue ? parseFloat(newValue) : null;
-            if (field.type === "datetime")
-              newValue = new Date(newValue).toISOString();
-
-            handleFieldChange(field.key, newValue);
-          }}
-          style={{
-            pointerEvents:
-              isEditing && !isNonEditableField ? "auto" : "none",
-            opacity: isEditing && !isNonEditableField ? 1 : 0.9,
-            backgroundColor:
-              isNonEditableField && isEditing ? "#f8f9fa" : "white",
-          }}
-        />
-        {isNonEditableField && isEditing && (
-          <Form.Text className="text-muted" style={{ fontSize: "0.75rem" }}>
-            This field cannot be edited
-          </Form.Text>
+        {isEditing && !isNonEditableField && (
+          <div
+            className="custom-toggle mt-2"
+            onClick={() => handleFieldChange(field.key, !value)}
+            style={{
+              width: "60px",
+              height: "30px",
+              borderRadius: "20px",
+              background: value ? "var(--primary-color)" : "#d1d5db",
+              position: "relative",
+              cursor: "pointer",
+              transition: "0.3s",
+            }}
+          >
+            <div
+              style={{
+                width: "24px",
+                height: "24px",
+                background: "#fff",
+                borderRadius: "50%",
+                position: "absolute",
+                top: "3px",
+                left: value ? "33px" : "3px",
+                transition: "0.3s",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              }}
+            />
+          </div>
         )}
       </Form.Group>
     );
-  };
+  }
+
+  //  CREATED BY / MODIFIED BY
+  if (
+    (!isEditing || shouldShowAsReadOnly) &&
+    (field.key === "createdbyid" || field.key === "lastmodifiedbyid")
+  ) {
+    const userId = currentData ? currentData[field.key] : null;
+    if (userId) {
+      return (
+        <Form.Group key={index} className="mb-3">
+          {renderLabel()}
+          <div className="form-control-plaintext p-0 border-0">
+            <UserAvatar
+              userId={userId}
+              size={36}
+              showName={true}
+              clickable={true}
+            />
+          </div>
+        </Form.Group>
+      );
+    }
+  }
+
+  //  SELECT
+  if (field.type === "select" && field.options) {
+    const options = getSelectOptions(field, isEditing ? tempData : data);
+    const rawValue = currentData ? currentData[field.key] : null;
+    const currentValue =
+      rawValue === undefined || rawValue === null ? "" : rawValue.toString();
+
+    const isFieldDisabled =
+      typeof field.disabled === "function"
+        ? field.disabled(tempData || data)
+        : field.disabled;
+
+    return (
+      <Form.Group key={index} className="mb-3">
+        {renderLabel()}
+
+        {isEditing && !isNonEditableField ? (
+          <Form.Select
+            value={currentValue}
+            onChange={(e) =>
+              handleFieldChange(field.key, e.target.value || null, field)
+            }
+            disabled={isFieldDisabled}
+          >
+            <option value="">
+              {isFieldDisabled
+                ? `${field.label} (Category required)`
+                : `Select ${field.label}`}
+            </option>
+
+            {options.map((option) => {
+              const optionId = getOptionValue(option);
+              const optionLabel = getOptionDisplayLabel(option);
+              return (
+                <option key={optionId} value={optionId}>
+                  {optionLabel}
+                </option>
+              );
+            })}
+
+            {field.creatable &&
+              currentValue &&
+              !options.find(
+                (opt) => getOptionValue(opt) === currentValue
+              ) && (
+                <option key={currentValue} value={currentValue}>
+                  {currentValue}
+                </option>
+              )}
+          </Form.Select>
+        ) : (
+          <Form.Control
+            type="text"
+            readOnly
+            value={
+              field.render
+                ? field.render(currentValue, currentData, externalData)
+                : (() => {
+                    if (field.displayKey && data)
+                      return data[field.displayKey] || "—";
+
+                    const selected = options.find((opt) => {
+                      const optionValue = toStringSafe(getOptionValue(opt));
+                      const optValue =
+                        opt.id || opt.value || opt.role_name || opt.name;
+
+                      return (
+                        optionValue === currentValue ||
+                        toStringSafe(optValue) === currentValue
+                      );
+                    });
+
+                    return selected
+                      ? getOptionDisplayLabel(selected)
+                      : field.displayKey && data
+                      ? data[field.displayKey] || "—"
+                      : "—";
+                  })()
+            }
+            style={{ pointerEvents: "none", opacity: 0.9 }}
+          />
+        )}
+      </Form.Group>
+    );
+  }
+
+  //  PASSWORD
+  if (field.type === "password") {
+    const rawValue = currentData ? currentData[field.key] : "";
+    const isVisible = passwordVisibility[field.key] || false;
+
+    return (
+      <Form.Group key={index} className="mb-3">
+        {renderLabel()}
+
+        {!isEditing || isNonEditableField ? (
+          <div className="form-control-plaintext">******</div>
+        ) : (
+          <InputGroup>
+            <Form.Control
+              type={isVisible ? "text" : "password"}
+              value={rawValue || ""}
+              onChange={(e) =>
+                handleFieldChange(field.key, e.target.value)
+              }
+            />
+            <InputGroup.Text
+              onClick={() =>
+                !isNonEditableField &&
+                togglePasswordVisibility(field.key)
+              }
+              style={{ cursor: "pointer" }}
+            >
+              <i
+                className={
+                  isVisible
+                    ? "fa-solid fa-eye"
+                    : "fa-solid fa-eye-slash"
+                }
+              />
+            </InputGroup.Text>
+          </InputGroup>
+        )}
+      </Form.Group>
+    );
+  }
+
+  //  DEFAULT INPUT
+  const fieldValue = shouldShowAsReadOnly
+    ? formatValue(currentData[field.key], field)
+    : getFieldValue(field, currentData);
+
+  const isElementValue = React.isValidElement(fieldValue);
+
+  const controlType =
+    isEditing && !isNonEditableField
+      ? field.type === "number"
+        ? "number"
+        : field.type === "date"
+        ? "date"
+        : field.type === "datetime"
+        ? "datetime-local"
+        : "text"
+      : "text";
+
+  if ((!isEditing || shouldShowAsReadOnly) && isElementValue) {
+    return (
+      <Form.Group key={index} className="mb-3">
+        {renderLabel()}
+        <div className="form-control-plaintext">{fieldValue}</div>
+      </Form.Group>
+    );
+  }
+
+  return (
+    <Form.Group key={index} className="mb-3">
+      {renderLabel()}
+
+      <Form.Control
+        type={controlType}
+        value={isElementValue ? "" : fieldValue ?? ""}
+        readOnly={!isEditing || isNonEditableField}
+        onChange={(e) => {
+          if (!isEditing || isNonEditableField) return;
+
+          let newValue = e.target.value;
+
+          if (field.type === "number") {
+            newValue = newValue ? parseFloat(newValue) : null;
+          }
+
+          if (field.type === "datetime") {
+            newValue = new Date(newValue).toISOString();
+          }
+
+          handleFieldChange(field.key, newValue);
+        }}
+        style={{
+          pointerEvents:
+            isEditing && !isNonEditableField ? "auto" : "none",
+          opacity: isEditing && !isNonEditableField ? 1 : 0.9,
+          backgroundColor:
+            isNonEditableField && isEditing ? "#f8f9fa" : "white",
+        }}
+      />
+
+      {isNonEditableField && isEditing && (
+        <Form.Text className="text-muted" style={{ fontSize: "0.75rem" }}>
+          This field cannot be edited
+        </Form.Text>
+      )}
+    </Form.Group>
+  );
+};
+
 
   return (
     <>

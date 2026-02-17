@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
-    Tabs, Tab, Alert, Modal, Badge
+    Tabs, Tab, Alert, Modal, Badge,
+    InputGroup
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -2175,7 +2176,7 @@ const BulkPurchasePage = ({ permissions }) => {
                         <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)} style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}>
                             Cancel
                         </Button>
-                        <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)", border: "none" }}>
+                        <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}>
                             {loading ? (
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -2199,67 +2200,40 @@ const BulkPurchasePage = ({ permissions }) => {
                     setShowAddBookModal(false);
                     setBarcodeInput("");
                 }} size="lg" centered>
-                    <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Header closeButton className=" p-2" style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                         <Modal.Title className="fw-bold">
-                            <i className="fa-solid fa-book me-2 text-success"></i>
+                            <i className="fa-solid fa-book me-2" style={{ color: "var(--primary-color)" }}> </i>
                             Add New Book
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className="pt-0">
-                        <Card className="mb-4 border-0 bg-light">
+                        <Card className="mb-4 border-0">
                             <Card.Body className="p-3">
-                                <div className="d-flex justify-content-between align-items-center">
-                                    {/* <div>
-                                        <h6 className="mb-1 fw-semibold">
-                                            <i className="fa-solid fa-barcode me-2"></i>
-                                            Scan Barcode / Enter ISBN
-                                        </h6>
-                                        <p className="mb-0 text-muted small">
-                                            Enter 10 or 13 digit ISBN to auto-fill details using Google Books API
-                                        </p>
-                                    </div> */}
-                                    {(loading || barcodeProcessing) && (
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                            <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                    )}
-                                </div>
+                                <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
 
-                                <Form.Group className="mt-3">
+                                <Form.Group>
                                     <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
-                                    <div className="mb-2">
+                                    <InputGroup>
                                         <Form.Control
                                             type="text"
                                             value={barcodeInput}
+                                            placeholder="Enter ISBN or barcode number"
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setBarcodeInput(value);
 
-                                                if (autoLookupTimeout) {
-                                                    clearTimeout(autoLookupTimeout);
-                                                }
+                                                if (autoLookupTimeout) clearTimeout(autoLookupTimeout);
 
                                                 if (value.length >= 10) {
-                                                    const timeout = setTimeout(() => {
-                                                        handleBarcodeLookup(value);
-                                                    }, 1500);
+                                                    const timeout = setTimeout(() => handleBarcodeLookup(value), 1500);
                                                     setAutoLookupTimeout(timeout);
                                                 }
                                             }}
-                                            placeholder="Enter ISBN or barcode number"
                                             onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleBarcodeLookup(barcodeInput);
-                                                }
+                                                if (e.key === "Enter") handleBarcodeLookup(barcodeInput);
                                             }}
                                         />
-                                    </div>
-
-                                    {/* <div className="d-flex gap-1 align-items-center"> */}
-                                    {/* <div className="flex-grow-1"> */}
-                                        <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
-                                    {/* </div> */}
-                                    {/* <Button
+                                        <Button
                                             variant="primary"
                                             onClick={() => handleBarcodeLookup(barcodeInput)}
                                             disabled={!barcodeInput.trim() || loading || barcodeProcessing}
@@ -2269,13 +2243,10 @@ const BulkPurchasePage = ({ permissions }) => {
                                             ) : (
                                                 <i className="fa-solid fa-search"></i>
                                             )}
-                                        </Button> */}
-                                    {/* </div> */}
-
-                                    {/* <Form.Text className="text-muted">
-                                        Using Google Books API for book information
-                                    </Form.Text> */}
+                                        </Button>
+                                    </InputGroup>
                                 </Form.Group>
+
                             </Card.Body>
                         </Card>
 
@@ -2406,13 +2377,13 @@ const BulkPurchasePage = ({ permissions }) => {
                         <Button variant="success" onClick={handleAddBook} disabled={loading}>
                             {loading ? (
                                 <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}></span>
                                     Adding...
                                 </>
                             ) : (
                                 <>
                                     <i className="fa-solid fa-plus me-2"></i>
-                                    Add Book
+                                    Save
                                 </>
                             )}
                         </Button>
