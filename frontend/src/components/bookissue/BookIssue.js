@@ -268,8 +268,7 @@ const BookIssue = ({ permissions }) => {
       label: "Book Title",
       width: 250,
       render: (value, record) => (
-        <a
-          href={`/book/${record.book_id}`}
+        <a href={`/book/${record.book_id}`}
           onClick={(e) => {
             e.preventDefault();
             navigate(`/book/${record.book_id}`);

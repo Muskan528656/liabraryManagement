@@ -779,129 +779,236 @@ const ModuleDetail = ({
     }
   };
 
+  // const handleSave = async () => {
+
+  //   console.log("hello check");
+  //   console.log("tempDataCheck-->", tempData);
+
+  //   //  if (customHandlers.beforeSave) {
+  //   //         const customResult = customHandlers.beforeSave(formData, editingItem);
+  //   //         if (customResult === false) return;
+  //   //     }
+
+  //   //  if (validationRules) {
+  //   //             const errors = validationRules(formData, data, editingItem);
+  //   //             console.log("validationRules",validationRules);
+  //   //             console.log("errors",errors);
+  //   //             if (errors.length > 0) {
+  //   //                 PubSub.publish("RECORD_ERROR_TOAST", {
+  //   //                     title: "Validation Error",
+  //   //                     message: errors.join(", "),
+  //   //                 });
+  //   //                 return;
+  //   //             }
+  //   //         }
+
+  //   try {
+  //     setSaving(true);
+
+  //     const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
+  //       if (key === "image") {
+  //         return value instanceof File || value === null || value === "null";
+  //       }
+  //       return false;
+  //     });
+
+  //     const api = new DataApi(moduleApi);
+  //     let response;
+
+  //     if (hasFileUpload) {
+  //       const formDataToSend = new FormData();
+
+  //       console.log("tempData-->", tempData);
+  //       console.log("formDataToSend before loop-->", formDataToSend);
+
+  //       for (const [key, value] of Object.entries(tempData)) {
+  //         if (key === "image") {
+  //           if (value instanceof File) {
+
+  //             formDataToSend.append("image", value);
+  //           } else if (value === null || value === "null") {
+
+  //             formDataToSend.append("image", "");
+  //           } else if (typeof value === "string" && value) {
+
+  //             formDataToSend.append("image", value);
+  //           }
+  //         } else {
+  //           if (value !== null && value !== undefined) {
+  //             if (typeof value === "object") {
+  //               formDataToSend.append(key, JSON.stringify(value));
+  //             } else {
+  //               formDataToSend.append(key, value);
+  //             }
+  //           }
+  //         }
+  //       }
+
+
+  //       for (let pair of formDataToSend.entries()) {
+
+  //       }
+
+
+  //       response = await api.updateFormData(formDataToSend, id);
+  //     } else {
+  //       console.log("check")
+  //       const cleanData = { ...tempData };
+  //       Object.keys(cleanData).forEach((key) => {
+  //         if (cleanData[key] === "" || cleanData[key] === "null") {
+  //           cleanData[key] = null;
+  //         }
+  //       });
+
+  //       console.log("cleandata", cleanData)
+  //       console.log("ide", id)
+
+  //       response = await api.update(cleanData, id);
+  //       console.log("response", response)
+  //     }
+
+
+
+  //     if (response && response.data) {
+  //       await fetchData();
+  //       PubSub.publish("RECORD_SAVED_TOAST", {
+  //         title: "Success",
+  //         message: `${moduleLabel} updated successfully`,
+  //       });
+  //       if (moduleName === "user") {
+  //         PubSub.publish("USER_UPDATED", { user: response.data });
+  //       }
+  //       setIsEditing(false);
+  //     }
+  //   } catch (err) {
+  //     let errorMessage = err.message;
+  //     console.log("Error during save:", err);
+  //     console.log("Error response data:", errorMessage);
+
+  //     if (err.response && err.response.data && err.response.data.errors) {
+  //       errorMessage = err.response.data.errors;
+  //     }
+
+  //     PubSub.publish("RECORD_ERROR_TOAST", {
+  //       title: "Update Failed",
+  //       message: ` ${moduleLabel}: ${errorMessage}`,
+  //     });
+
+  //     //  PubSub.publish("RECORD_ERROR_TOAST", {
+  //     //   title: "Update Failed",
+  //     //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
+  //     // });
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+
   const handleSave = async () => {
 
-    console.log("hello check");
-    console.log("tempDataCheck-->", tempData);
+  console.log("hello check");
+  console.log("tempDataCheck-->", tempData);
 
-    //  if (customHandlers.beforeSave) {
-    //         const customResult = customHandlers.beforeSave(formData, editingItem);
-    //         if (customResult === false) return;
-    //     }
+ 
+  // ✅ VALIDATION START
+  if (validationRules) {
+    const errors = validationRules(tempData, data );
 
-    //  if (validationRules) {
-    //             const errors = validationRules(formData, data, editingItem);
-    //             console.log("validationRules",validationRules);
-    //             console.log("errors",errors);
-    //             if (errors.length > 0) {
-    //                 PubSub.publish("RECORD_ERROR_TOAST", {
-    //                     title: "Validation Error",
-    //                     message: errors.join(", "),
-    //                 });
-    //                 return;
-    //             }
-    //         }
+    console.log("validationRules", validationRules);
+    console.log("errors", errors);
 
-    try {
-      setSaving(true);
-
-      const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
-        if (key === "image") {
-          return value instanceof File || value === null || value === "null";
-        }
-        return false;
-      });
-
-      const api = new DataApi(moduleApi);
-      let response;
-
-      if (hasFileUpload) {
-        const formDataToSend = new FormData();
-
-        console.log("tempData-->", tempData);
-        console.log("formDataToSend before loop-->", formDataToSend);
-
-        for (const [key, value] of Object.entries(tempData)) {
-          if (key === "image") {
-            if (value instanceof File) {
-
-              formDataToSend.append("image", value);
-            } else if (value === null || value === "null") {
-
-              formDataToSend.append("image", "");
-            } else if (typeof value === "string" && value) {
-
-              formDataToSend.append("image", value);
-            }
-          } else {
-            if (value !== null && value !== undefined) {
-              if (typeof value === "object") {
-                formDataToSend.append(key, JSON.stringify(value));
-              } else {
-                formDataToSend.append(key, value);
-              }
-            }
-          }
-        }
-
-
-        for (let pair of formDataToSend.entries()) {
-
-        }
-
-
-        response = await api.updateFormData(formDataToSend, id);
-      } else {
-        console.log("check")
-        const cleanData = { ...tempData };
-        Object.keys(cleanData).forEach((key) => {
-          if (cleanData[key] === "" || cleanData[key] === "null") {
-            cleanData[key] = null;
-          }
-        });
-
-        console.log("cleandata", cleanData)
-        console.log("ide", id)
-
-        response = await api.update(cleanData, id);
-        console.log("response", response)
-      }
-
-
-
-      if (response && response.data) {
-        await fetchData();
-        PubSub.publish("RECORD_SAVED_TOAST", {
-          title: "Success",
-          message: `${moduleLabel} updated successfully`,
-        });
-        if (moduleName === "user") {
-          PubSub.publish("USER_UPDATED", { user: response.data });
-        }
-        setIsEditing(false);
-      }
-    } catch (err) {
-      let errorMessage = err.message;
-      console.log("Error during save:", err);
-      console.log("Error response data:", errorMessage);
-
-      if (err.response && err.response.data && err.response.data.errors) {
-        errorMessage = err.response.data.errors;
-      }
-
+    if (errors.length > 0) {
       PubSub.publish("RECORD_ERROR_TOAST", {
-        title: "Update Failed",
-        message: ` ${moduleLabel}: ${errorMessage}`,
+        title: "Validation Error",
+        message: errors.join(", "),
+      });
+      return; // ❌ STOP SAVE
+    }
+  }
+  // ✅ VALIDATION END
+
+  try {
+    setSaving(true);
+
+    const hasFileUpload = Object.entries(tempData).some(([key, value]) => {
+      if (key === "image") {
+        return value instanceof File || value === null || value === "null";
+      }
+      return false;
+    });
+
+    const api = new DataApi(moduleApi);
+    let response;
+
+    if (hasFileUpload) {
+      const formDataToSend = new FormData();
+
+      for (const [key, value] of Object.entries(tempData)) {
+        if (key === "image") {
+          if (value instanceof File) {
+            formDataToSend.append("image", value);
+          } else if (value === null || value === "null") {
+            formDataToSend.append("image", "");
+          } else if (typeof value === "string" && value) {
+            formDataToSend.append("image", value);
+          }
+        } else {
+          if (value !== null && value !== undefined) {
+            if (typeof value === "object") {
+              formDataToSend.append(key, JSON.stringify(value));
+            } else {
+              formDataToSend.append(key, value);
+            }
+          }
+        }
+      }
+
+      response = await api.updateFormData(formDataToSend, id);
+
+    } else {
+      const cleanData = { ...tempData };
+
+      Object.keys(cleanData).forEach((key) => {
+        if (cleanData[key] === "" || cleanData[key] === "null") {
+          cleanData[key] = null;
+        }
       });
 
-      //  PubSub.publish("RECORD_ERROR_TOAST", {
-      //   title: "Update Failed",
-      //   message: `Failed to update ${moduleLabel}: ${errorMessage}`,
-      // });
-    } finally {
-      setSaving(false);
+      response = await api.update(cleanData, id);
     }
-  };
+
+    if (response && response.data) {
+      await fetchData();
+
+      PubSub.publish("RECORD_SAVED_TOAST", {
+        title: "Success",
+        message: `${moduleLabel} updated successfully`,
+      });
+
+      if (moduleName === "user") {
+        PubSub.publish("USER_UPDATED", { user: response.data });
+      }
+
+      setIsEditing(false);
+    }
+
+  } catch (err) {
+    let errorMessage = err.message;
+
+    if (err.response && err.response.data && err.response.data.errors) {
+      errorMessage = err.response.data.errors;
+    }
+
+    PubSub.publish("RECORD_ERROR_TOAST", {
+      title: "Update Failed",
+      message: `${moduleLabel}: ${errorMessage}`,
+    });
+
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleCancel = () => {
     setIsEditing(false);

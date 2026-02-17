@@ -27,7 +27,7 @@ async function findAll(filters = {}) {
         isactive,
         companyid
       FROM ${schema}."user"
-      WHERE 1=1 AND branch_id = $1
+      WHERE 1=1 AND branch_id = $1 
     `;
 
     const values = [branchId]; // Add branchId as the first parameter
@@ -48,6 +48,7 @@ async function findAll(filters = {}) {
     throw error;
   }
 }
+
 
 
 
@@ -193,29 +194,111 @@ async function create(userData, userId) {
 }
 
 
+// async function updateById(id, userData, userId = null) {
+//   if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
+//   try {
+
+//     // if (userData.email) {
+//     //   console.log("Checking for existing email:", userData.email);
+//     //   const existing = await this.findByEmail(userData.email);
+//     //   if (existing && existing.id !== id) {
+//     //     throw new Error("User with this email already exists");
+//     //   }
+//     // }
+
+//     const updateFields = [];
+//     const values = [];
+//     let i = 1;
+
+
+//     const add = (field, value) => {
+//       if (value !== undefined && value !== null) {
+//         updateFields.push(`${field} = $${i++}`);
+//         values.push(value);
+//       }
+//     };
+//     add("firstname", userData.firstname);
+//     add("lastname", userData.lastname);
+//     add("email", userData.email);
+//     add("password", userData.password);
+//     add("userrole", userData.userrole);
+//     add("phone", userData.phone);
+//     add("country_code", userData.country_code);
+//     add("country", userData.country);
+//     add("currency", userData.currency);
+//     add("time_zone", userData.time_zone);
+
+//     add("companyid", userData.companyid);
+//     add("profile_image", userData.profile_image);
+//     add("library_member_type", userData.library_member_type);
+
+//     // Add lastmodifiedbyid if userId is provided
+//     if (userId) {
+//       add("lastmodifiedbyid", userId);
+//     }
+
+
+//     if (updateFields.length === 0) {
+//       throw new Error("No fields to update");
+//     }
+
+
+//     values.push(id, branchId); // Add id and branchId to values
+
+
+//     const query = `
+//       UPDATE ${schema}."user"
+//       SET ${updateFields.join(", ")}
+//       WHERE id = $${i - 1} AND branch_id = $${i}  -- id is second to last, branch_id is last
+//       RETURNING
+//         id,
+//         firstname,
+//         lastname,
+//         email,
+//         password,
+//         userrole,
+//         phone,
+//         country_code,
+//         country,
+//         currency,
+//         time_zone,
+//         isactive,
+//         companyid,
+//         library_member_type,
+//         branch_id
+//     `;
+
+//     console.log("Query:", query);
+//     console.log("Values:", values);
+
+//     const result = await sql.query(query, values);
+
+
+//     return result.rows.length ? result.rows[0] : null;
+
+//   } catch (error) {
+//     console.error("Error in updateById:", error);
+//     throw error;
+//   }
+// }
+
 async function updateById(id, userData, userId = null) {
   if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
+
   try {
-
-    // if (userData.email) {
-    //   console.log("Checking for existing email:", userData.email);
-    //   const existing = await this.findByEmail(userData.email);
-    //   if (existing && existing.id !== id) {
-    //     throw new Error("User with this email already exists");
-    //   }
-    // }
-
     const updateFields = [];
     const values = [];
     let i = 1;
 
-
     const add = (field, value) => {
       if (value !== undefined && value !== null) {
-        updateFields.push(`${field} = $${i++}`);
+        updateFields.push(`${field} = $${i}`);
         values.push(value);
+        i++;
       }
     };
+
+    // Fields
     add("firstname", userData.firstname);
     add("lastname", userData.lastname);
     add("email", userData.email);
@@ -226,29 +309,29 @@ async function updateById(id, userData, userId = null) {
     add("country", userData.country);
     add("currency", userData.currency);
     add("time_zone", userData.time_zone);
-
     add("companyid", userData.companyid);
     add("profile_image", userData.profile_image);
     add("library_member_type", userData.library_member_type);
 
-    // Add lastmodifiedbyid if userId is provided
+    // Modified by
     if (userId) {
       add("lastmodifiedbyid", userId);
     }
-
 
     if (updateFields.length === 0) {
       throw new Error("No fields to update");
     }
 
+    // ✅ Correct parameter indexing
+    const idParam = i++;
+    const branchParam = i++;
 
-    values.push(id, branchId); // Add id and branchId to values
-
+    values.push(id, branchId);
 
     const query = `
       UPDATE ${schema}."user"
       SET ${updateFields.join(", ")}
-      WHERE id = $${i - 1} AND branch_id = $${i}  -- id is second to last, branch_id is last
+      WHERE id = $${idParam} AND branch_id = $${branchParam}
       RETURNING
         id,
         firstname,
@@ -269,9 +352,9 @@ async function updateById(id, userData, userId = null) {
 
     console.log("Query:", query);
     console.log("Values:", values);
+    console.log("Total Params:", values.length);
 
     const result = await sql.query(query, values);
-
 
     return result.rows.length ? result.rows[0] : null;
 
