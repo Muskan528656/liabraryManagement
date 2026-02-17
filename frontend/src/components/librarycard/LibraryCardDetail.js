@@ -764,16 +764,6 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
-    {
-      key: "library_member_type", 
-      label: "Gender",
-      type: "select",
-      options: library_member_type.map((item) => ({ 
-        label: item, 
-        value: item 
-      })),
-      colSize: 3,
-    },
       {
         key: "section_name",
         label: "Section",
@@ -790,6 +780,16 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
+       {
+      key: "library_member_type", 
+      label: "Gender",
+      type: "select",
+      options: library_member_type.map((item) => ({ 
+        label: item, 
+        value: item 
+      })),
+      colSize: 3,
+    },
       {
         key: "is_active",
         label: "Status",

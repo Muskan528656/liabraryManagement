@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -50,8 +50,6 @@ const InactiveBooksReport = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
-
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -87,14 +85,19 @@ const InactiveBooksReport = () => {
     width: '100%'
   };
 
-  // Fetch Categories for Filter
+  // Fetch Categories for Filter (separate from report data so they don't disappear when filtering)
+  const [categories, setCategories] = useState([]);
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
-        setCategories(categoriesData);
+        
+        // Get unique category names
+        const uniqueCategories = [...new Set(categoriesData.map(item => item.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -449,8 +452,8 @@ const InactiveBooksReport = () => {
                 onChange={(e) => handleFilterChange("category", e.target.value)}
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.classification_from}-{cat.classification_to} {cat.name}</option>
+                {categories.map((opt, i) => (
+                  <option className="color-dark" key={i} value={opt}>{opt}</option>
                 ))}
               </Form.Select>
             </Col>

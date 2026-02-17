@@ -25,7 +25,7 @@ async function findAll(filters = {}) {
     let query = `SELECT
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name,
+                    c.category AS category_name,
                     pub.name AS publisher_name,
                     s.shelf_name,
                     s.sub_shelf,
@@ -42,7 +42,7 @@ async function findAll(filters = {}) {
                     END AS price
                    FROM ${schema}.books b
                    LEFT JOIN ${schema}.authors a ON b.author_id = a.id
-                   LEFT JOIN ${schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${schema}.classification c ON b.category_id = c.id
                    LEFT JOIN ${schema}.publisher pub ON b.publisher_id = pub.id
                    LEFT JOIN ${schema}.shelf s ON b.shelf_id = s.id`;
 
@@ -99,7 +99,7 @@ async function findById(id) {
     let query = `SELECT
                     b.*,
                     a.name AS author_name,
-                    c.name AS category_name,
+                    c.category AS category_name,
                     pub.name AS publisher_name,
                     s.shelf_name,
                     s.sub_shelf,
@@ -115,7 +115,7 @@ async function findById(id) {
                     END AS price
                    FROM ${schema}.books b
                    LEFT JOIN ${schema}.authors a ON b.author_id = a.id
-                   LEFT JOIN ${schema}.categories c ON b.category_id = c.id
+                   LEFT JOIN ${schema}.classification c ON b.category_id = c.id
                    LEFT JOIN ${schema}.publisher pub ON b.publisher_id = pub.id
                    LEFT JOIN ${schema}.shelf s ON b.shelf_id = s.id`;
 
@@ -394,7 +394,7 @@ async function generateInventoryReport() {
             b.title AS book_title,
             a.name AS author_name,
             pub.name AS publisher_name,
-            c.name AS category_name,
+            c.category AS category_name,
             v.name AS vendor_name,
 
             b.isbn,
@@ -427,7 +427,7 @@ async function generateInventoryReport() {
         LEFT JOIN ${schema}.authors a 
               ON b.author_id = a.id
 
-        LEFT JOIN ${schema}.categories c 
+        LEFT JOIN ${schema}.classification c 
               ON b.category_id = c.id
 
         LEFT JOIN ${schema}.publisher pub 
@@ -484,7 +484,6 @@ async function generateInventoryReport() {
 }
 
 async function generateBookPopularityReport(params) {
-  console.log("Generating Report with params:", params);
   try {
     if (!schema) {
       throw new Error("Schema not initialized. Call init() first.");
@@ -512,12 +511,12 @@ async function generateBookPopularityReport(params) {
     else if (params.days === 'custom' && params.startDate && params.endDate) {
       dateFilter = `AND bi.issue_date BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`;
       queryParams.push(params.startDate, params.endDate);
-      customFilter = `AND COALESCE(isum.total_issues, 0) > 0`; // Only show books with issues in custom range
+      customFilter = `AND COALESCE(isum.total_issues, 0) > 0`;
     }
 
     let categoryFilter = '';
     if (params.category) {
-      categoryFilter = `AND b.category_id = $${queryParams.length + 1}`;
+      categoryFilter = `AND c.category = $${queryParams.length + 1}`;
       queryParams.push(params.category);
     }
 
@@ -534,9 +533,9 @@ FROM (
     b.title AS book_name,
     a.name AS author,
 
-    c.category AS category,
     c.code AS classification_code,
     c.name AS classification_name,
+    c.category AS category,
 
     b.total_copies AS copies,
 
@@ -567,7 +566,7 @@ FROM (
 
   GROUP BY
     b.id, b.title, a.name,
-    c.category, c.code, c.name,
+    c.code, c.name, c.category, c.id,
     b.total_copies
 
 ) ranked_books
@@ -621,7 +620,7 @@ ORDER BY total_issues DESC
     const rows = result.rows;
 
     const mainTable = rows.map(row => ({
-      id: row.id,
+      id: row.book_id,
       book_name: row.book_name,
       author: row.author,
       category: row.category,

@@ -5,7 +5,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     console.log("externalData in getBooksConfig check:", externalData);
     const authors = props.authors || externalData.authors || externalData.author || [];
     console.log("getBooksConfig - authors:", authors);
-    const categories = props.categories || externalData.categories || externalData.category || [];
+    const categories = props.categories || externalData.categories || externalData.classification || [];
     console.log("getBooksConfig - categories:", categories);
 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
@@ -28,7 +28,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     const categoryOptions = categories.map(c => ({
         // value: String(c.id),
         value: c.id,
-        name: c.name
+        name: c.category || c.name
     }));
 
     const publisherOptions = publishers.map(p => ({
@@ -79,8 +79,8 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 labelField: "name"
             },
             categories: {
-                endpoint: "category",
-                labelField: "name"
+                endpoint: "classification",
+                labelField: "category"
             },
             publishers: {
                 endpoint: "publisher",
@@ -290,7 +290,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
         },
         dataDependencies: {
             authors: "author",
-            categories: "category",
+            categories: "classification",
             publishers: "publisher"
         },
         features: {
@@ -322,9 +322,9 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 labelField: "author_name"
             },
             category_name: {
-                path: "category",
+                path: "classification",
                 idField: "category_id",
-                labelField: "category_name"
+                labelField: "category"
             },
             publisher_name: {
                 path: "publisher",
