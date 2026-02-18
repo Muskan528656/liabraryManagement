@@ -429,131 +429,277 @@ module.exports = (app) => {
   }
 );
 
+    // router.put(
+    //     "/:id",
+    //     fetchUser,
+    //     [
+    //         body("plan_id").optional().isUUID(),
+    //         body("member_id").optional().isUUID(),
+    //         body("user_id").optional().isUUID(),
+    //         body("card_id").optional().isUUID(),
+    //         body("plan_name").optional().notEmpty(),
+    //         body("start_date").optional().isISO8601(),
+    //         body("end_date").optional().isISO8601(),
+    //         body("is_active").optional().isBoolean(),
+    //         body("renewal").optional().isNumeric(),
+    //         body("allowed_books").optional().isNumeric(),
+    //         body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
+    //     ],
+    //     async (req, res) => {
+    //         const errors = validationResult(req);
+    //         if (!errors.isEmpty()) {
+    //             const errorMessages = errors.array().map(e => e.msg).join(", ");
+    //             return res.status(400).json({ success: false, error: errorMessages });
+    //         }
+
+
+
+    //         try {
+    //             const subscriptionId = req.params.id;
+
+    //             Subscription.init(req.userinfo.tenantcode);     
+    //             const subscriptionCheck = await sql.query(
+    //                 "SELECT id FROM ${schema}.subscriptions WHERE id = $1",
+    //                 [subscriptionId]
+    //             );
+
+    //             if (!subscriptionCheck.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Subscription not found"
+    //                 });
+    //             }
+
+
+    //             const modifiedById = req.userinfo?.id;
+    //             let modifiedByIdFormatted = modifiedById;
+
+    //             if (typeof modifiedById === 'number') {
+    //                 modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, '0')}`;
+    //             } else if (typeof modifiedById === 'string' && !uuidRegex.test(modifiedById)) {
+    //                 modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.padStart(12, '0')}`;
+    //             }
+
+
+    //             const updateData = {
+    //                 ...req.body,
+    //                 lastmodifiedbyid: modifiedByIdFormatted, // Use formatted ID
+    //                 lastmodifieddate: new Date()
+    //             };
+
+
+    //             Object.keys(updateData).forEach(key => {
+    //                 if (updateData[key] === null || updateData[key] === undefined) {
+    //                     delete updateData[key];
+    //                 }
+    //             });
+
+
+    //             const setClause = Object.keys(updateData)
+    //                 .map((key, index) => `${key} = $${index + 2}`)
+    //                 .join(', ');
+
+    //             const values = [subscriptionId, ...Object.values(updateData)];
+
+    //             const updateQuery = `
+    //             UPDATE ${schema}.subscriptions 
+    //             SET ${setClause}
+    //             WHERE id = $1
+    //             RETURNING *
+    //         `;
+
+
+
+
+    //             const result = await sql.query(updateQuery, values);
+
+    //             if (result.rows.length === 0) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Subscription not found"
+    //                 });
+    //             }
+
+    //             const updatedSubscription = result.rows[0];
+
+
+    //             if (req.body.plan_id && req.body.member_id) {
+    //                 await sql.query(
+    //                     "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
+    //                     [req.body.plan_id, req.body.member_id]
+    //                 );
+    //             }
+
+    //             res.status(200).json({
+    //                 success: true,
+    //                 message: "Subscription updated successfully",
+    //                 data: updatedSubscription
+    //             });
+
+    //         } catch (error) {
+    //             console.error("Error updating subscription:", error);
+
+    //             if (error.code === '22P02') {
+    //                 return res.status(400).json({
+    //                     success: false,
+    //                     error: "Invalid UUID format in update data",
+    //                     details: error.message
+    //                 });
+    //             }
+
+    //             res.status(500).json({
+    //                 success: false,
+    //                 error: "Internal server error",
+    //                 details: error.message
+    //             });
+    //         }
+    //     }
+    // );
+
     router.put(
-        "/:id",
-        fetchUser,
-        [
-            body("plan_id").optional().isUUID(),
-            body("member_id").optional().isUUID(),
-            body("user_id").optional().isUUID(),
-            body("card_id").optional().isUUID(),
-            body("plan_name").optional().notEmpty(),
-            body("start_date").optional().isISO8601(),
-            body("end_date").optional().isISO8601(),
-            body("is_active").optional().isBoolean(),
-            body("renewal").optional().isNumeric(),
-            body("allowed_books").optional().isNumeric(),
-            body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
-        ],
-        async (req, res) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages = errors.array().map(e => e.msg).join(", ");
-                return res.status(400).json({ success: false, error: errorMessages });
-            }
+      "/:id",
+      fetchUser,
+      [
+        body("plan_id").optional().isUUID(),
+        body("member_id").optional().isUUID(),
+        body("user_id").optional().isUUID(),
+        body("card_id").optional().isUUID(),
+        body("plan_name").optional().notEmpty(),
+        body("start_date").optional().isISO8601(),
+        body("end_date").optional().isISO8601(),
+        body("is_active").optional().isBoolean(),
+        body("renewal").optional().isNumeric(),
+        body("allowed_books").optional().isNumeric(),
+        body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
+      ],
+      async (req, res) => {
 
-
-
-            try {
-                const subscriptionId = req.params.id;
-
-                Subscription.init(req.userinfo.tenantcode);     
-                const subscriptionCheck = await sql.query(
-                    "SELECT id FROM ${schema}.subscriptions WHERE id = $1",
-                    [subscriptionId]
-                );
-
-                if (!subscriptionCheck.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Subscription not found"
-                    });
-                }
-
-
-                const modifiedById = req.userinfo?.id;
-                let modifiedByIdFormatted = modifiedById;
-
-                if (typeof modifiedById === 'number') {
-                    modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, '0')}`;
-                } else if (typeof modifiedById === 'string' && !uuidRegex.test(modifiedById)) {
-                    modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.padStart(12, '0')}`;
-                }
-
-
-                const updateData = {
-                    ...req.body,
-                    lastmodifiedbyid: modifiedByIdFormatted, // Use formatted ID
-                    lastmodifieddate: new Date()
-                };
-
-
-                Object.keys(updateData).forEach(key => {
-                    if (updateData[key] === null || updateData[key] === undefined) {
-                        delete updateData[key];
-                    }
-                });
-
-
-                const setClause = Object.keys(updateData)
-                    .map((key, index) => `${key} = $${index + 2}`)
-                    .join(', ');
-
-                const values = [subscriptionId, ...Object.values(updateData)];
-
-                const updateQuery = `
-                UPDATE ${schema}.subscriptions 
-                SET ${setClause}
-                WHERE id = $1
-                RETURNING *
-            `;
-
-
-
-
-                const result = await sql.query(updateQuery, values);
-
-                if (result.rows.length === 0) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Subscription not found"
-                    });
-                }
-
-                const updatedSubscription = result.rows[0];
-
-
-                if (req.body.plan_id && req.body.member_id) {
-                    await sql.query(
-                        "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
-                        [req.body.plan_id, req.body.member_id]
-                    );
-                }
-
-                res.status(200).json({
-                    success: true,
-                    message: "Subscription updated successfully",
-                    data: updatedSubscription
-                });
-
-            } catch (error) {
-                console.error("Error updating subscription:", error);
-
-                if (error.code === '22P02') {
-                    return res.status(400).json({
-                        success: false,
-                        error: "Invalid UUID format in update data",
-                        details: error.message
-                    });
-                }
-
-                res.status(500).json({
-                    success: false,
-                    error: "Internal server error",
-                    details: error.message
-                });
-            }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          const errorMessages = errors.array().map(e => e.msg).join(", ");
+          return res.status(400).json({ success: false, error: errorMessages });
         }
+
+        try {
+          const subscriptionId = req.params.id;
+
+          // initialize schema
+          Subscription.init(req.userinfo.tenantcode);
+          const schema = Subscription.schema;
+
+          //Check if subscription exists
+          const subscriptionCheck = await sql.query(
+            `SELECT id FROM ${schema}.subscriptions WHERE id = $1`,
+            [subscriptionId]
+          );
+
+          if (!subscriptionCheck.rows.length) {
+            return res.status(404).json({
+              success: false,
+              error: "Subscription not found"
+            });
+          }
+
+          // Format modifiedById
+          const modifiedById = req.userinfo?.id;
+          let modifiedByIdFormatted = modifiedById;
+
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+          if (typeof modifiedById === "number") {
+            modifiedByIdFormatted =
+              `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, "0")}`;
+          } else if (
+            typeof modifiedById === "string" &&
+            !uuidRegex.test(modifiedById)
+          ) {
+            modifiedByIdFormatted =
+              `00000000-0000-0000-0000-${modifiedById.padStart(12, "0")}`;
+          }
+
+          // Build update object
+          const updateData = {
+            ...req.body,
+            lastmodifiedbyid: modifiedByIdFormatted,
+            lastmodifieddate: new Date()
+          };
+
+          // Remove null / undefined
+          Object.keys(updateData).forEach(key => {
+            if (updateData[key] === null || updateData[key] === undefined) {
+              delete updateData[key];
+            }
+          });
+
+          if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+              success: false,
+              error: "No valid fields provided for update"
+            });
+          }
+
+          // Build SET clause dynamically
+          const keys = Object.keys(updateData);
+
+          const setClause = keys
+            .map((key, index) => `${key} = $${index + 2}`)
+            .join(", ");
+
+          const values = [subscriptionId, ...keys.map(k => updateData[k])];
+
+          const updateQuery = `
+            UPDATE ${schema}.subscriptions
+            SET ${setClause}
+            WHERE id = $1
+            RETURNING *
+          `;
+
+          const result = await sql.query(updateQuery, values);
+
+          if (!result.rows.length) {
+            return res.status(404).json({
+              success: false,
+              error: "Subscription not found"
+            });
+          }
+
+          const updatedSubscription = result.rows[0];
+
+          // Update member table if plan changed
+          if (req.body.plan_id && req.body.member_id) {
+            await sql.query(
+              `UPDATE ${schema}.library_members 
+              SET plan_id = $1 
+              WHERE id = $2`,
+              [req.body.plan_id, req.body.member_id]
+            );
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: "Subscription updated successfully",
+            data: updatedSubscription
+          });
+
+        } catch (error) {
+
+          console.error("Error updating subscription:", error);
+
+          if (error.code === "22P02") {
+            return res.status(400).json({
+              success: false,
+              error: "Invalid UUID format",
+              details: error.message
+            });
+          }
+
+          return res.status(500).json({
+            success: false,
+            error: "Internal server error",
+            details: error.message
+          });
+        }
+      }
     );
 
     router.delete("/:id", fetchUser, async (req, res) => {

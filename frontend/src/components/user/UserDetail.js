@@ -7,6 +7,19 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = ({ permissions }) => {
 
+
+   const other = permissions?.allowEdit
+      ? {
+          other: [
+           { key: "createdbyid", label: "Created By", type: "text" },
+           {
+              key: "createddate", label: "Created Date", type: "date",
+              render: (value) => convertToUserTimezone(value, timeZone)
+            },
+          ],
+        }
+      : {};
+
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
 
@@ -228,15 +241,7 @@ const UserDetail = ({ permissions }) => {
         ],
       },
     ],
-    other: [
-
-      { key: "createdbyid", label: "Created By", type: "text" },
-      {
-        key: "createddate", label: "Created Date", type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone)
-      },
-    ],
-
+    ...other,
 
     validationRules: (formData, allUsers = [], editingUser) => {
         const errors = [];
