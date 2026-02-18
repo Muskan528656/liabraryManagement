@@ -263,16 +263,30 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 type: "select",
                 asyncSelect: true,
                 required: true,
-                placeholder: "Search and select category",
-                helpText: "Type to search or select from existing categories",
+                placeholder: "Search or create category",
+                helpText: "Type to search existing categories or enter new name to create",
                 colSize: 6,
                 loadOptions: async (inputValue) => {
                     try {
                         const api = new (await import('../../api/dataApi')).default('classification');
-                        const searchParam = inputValue ? `&search=${encodeURIComponent(inputValue)}` : '';
-                        const response = await api.get(`/suggestions?field=category&limit=50${searchParam}`);
-                        return response.data?.map(item => ({ value: item, label: item })) || [];
+                        const response = await api.get('/');
+                        const classifications = response.data || [];
+                        
+                        // Extract unique categories and filter by input
+                        const uniqueCategories = [...new Set(classifications.map(item => item.category).filter(Boolean))];
+                        
+                        const filtered = inputValue 
+                            ? uniqueCategories.filter(category => 
+                                category?.toLowerCase().includes(inputValue.toLowerCase())
+                              )
+                            : uniqueCategories;
+                        
+                        return filtered.map(category => ({ 
+                            value: category, 
+                            label: category 
+                        })) || [];
                     } catch (e) {
+                        console.error("Error loading categories:", e);
                         return [];
                     }
                 },
@@ -286,20 +300,85 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 type: "select",
                 asyncSelect: true,
                 required: true,
-                placeholder: "Search and select name",
+                placeholder: "Search or create name",
                 helpText: (fieldState, formData) => {
                     if (!formData?.category) return "Please select a category first";
-                    return "Type to search or select from existing names";
+                    return "Search existing names or type new name to create. Supports DDC (000-099) and LLC (AC-AZ) classifications.";
                 },
                 colSize: 6,
                 loadOptions: async (inputValue, formData) => {
                     if (!formData?.category) return [];
                     try {
                         const api = new (await import('../../api/dataApi')).default('classification');
-                        const searchParam = inputValue ? `&search=${encodeURIComponent(inputValue)}` : '';
-                        const response = await api.get(`/suggestions?field=name&category=${encodeURIComponent(formData.category)}&limit=50${searchParam}`);
-                        return response.data?.map(item => ({ value: item, label: item })) || [];
+                        const response = await api.get('/');
+                        const classifications = response.data || [];
+                        
+                        // Filter by category first
+                        const categoryClassifications = classifications.filter(
+                            item => item.category === formData.category
+                        );
+                        
+                        // Enhanced search with code and range matching
+                        const filtered = inputValue 
+                            ? categoryClassifications.filter(item => {
+                                const searchValue = inputValue.toLowerCase().trim();
+                                
+                                // Direct name matching
+                                if (item.name?.toLowerCase().includes(searchValue)) {
+                                    return true;
+                                }
+                                
+                                // Code matching (exact or partial)
+                                if (item.code?.toLowerCase().includes(searchValue)) {
+                                    return true;
+                                }
+                                
+                                // Range matching - only for same classification type
+                                if (item.classification_from && item.classification_to) {
+                                    // Check if both item and search are numeric (DDC)
+                                    const isItemNumeric = /^\d+$/.test(item.classification_from) && /^\d+$/.test(item.classification_to);
+                                    const isSearchNumeric = /^\d+$/.test(searchValue);
+                                    
+                                    // Check if both item and search are alphabetic (LLC)
+                                    const isItemAlpha = /^[a-zA-Z]+$/.test(item.classification_from) && /^[a-zA-Z]+$/.test(item.classification_to);
+                                    const isSearchAlpha = /^[a-zA-Z]+$/.test(searchValue);
+                                    
+                                    // For numeric ranges (DDC)
+                                    if (isItemNumeric && isSearchNumeric) {
+                                        const searchNum = parseInt(searchValue);
+                                        const fromNum = parseInt(item.classification_from);
+                                        const toNum = parseInt(item.classification_to);
+                                        
+                                        if (searchNum >= fromNum && searchNum <= toNum) {
+                                            return true;
+                                        }
+                                    }
+                                    
+                                    // For alphabetic ranges (LLC)
+                                    else if (isItemAlpha && isSearchAlpha) {
+                                        const searchAlpha = searchValue.toUpperCase();
+                                        const fromAlpha = item.classification_from.toUpperCase();
+                                        const toAlpha = item.classification_to.toUpperCase();
+                                        
+                                        // Simple alphabetical range check
+                                        if (searchAlpha >= fromAlpha && searchAlpha <= toAlpha) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                                
+                                return false;
+                            })
+                            : categoryClassifications;
+                        
+                        // Create options with detailed information
+                        return filtered.map(item => ({
+                            value: item.name,
+                            label: `${item.name} (${item.code}) [${item.classification_from || '0'} to ${item.classification_to || '0'}]`,
+                            data: item
+                        }));
                     } catch (e) {
+                        console.error("Error loading names:", e);
                         return [];
                     }
                 },

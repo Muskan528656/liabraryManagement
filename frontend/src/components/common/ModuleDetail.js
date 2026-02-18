@@ -55,6 +55,7 @@ const normalizeListResponse = (payload) => {
   }
   if (Array.isArray(payload.rows)) return payload.rows;
   if (payload.records && Array.isArray(payload.records)) return payload.records;
+  if (payload.book_copies && Array.isArray(payload.book_copies)) return payload.book_copies;
   return [];
 };
 
@@ -440,6 +441,7 @@ const ModuleDetail = ({
       });
 
       for (const relatedModule of normalizedModules) {
+
         try {
           if (!relatedModule.api) continue;
           const api = new DataApi(relatedModule.api);
@@ -450,9 +452,7 @@ const ModuleDetail = ({
             const responseData = response.data.success
               ? response.data.data
               : response.data;
-            relatedDataObj[relatedModule.key] = Array.isArray(responseData)
-              ? responseData
-              : [responseData];
+            relatedDataObj[relatedModule.key] = normalizeListResponse(responseData);
           }
         } catch (error) {
           console.error(

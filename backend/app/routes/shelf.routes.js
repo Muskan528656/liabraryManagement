@@ -5,13 +5,26 @@ const { getNextRackNumber } = require("../utils/autoNumber.helper.js");
 module.exports = (app) => {
     const { body, validationResult } = require("express-validator");
     const router = require("express").Router();
-     router.get("/grouped", fetchUser, async (req, res) => {
+    router.get("/grouped", fetchUser, async (req, res) => {
         try {
             Shelf.init(req.userinfo.tenantcode);
-            const data = await Shelf.findGrouped(); // Yeh method aapko shelf.model.js mein banana hoga
+            const data = await Shelf.findGrouped();
             res.json(data);
         } catch (err) {
             console.error("Error fetching grouped shelves:", err);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    });
+
+    // ================= GET ALL WITH LIVE USAGE =================
+    router.get("/with-usage", fetchUser, async (req, res) => {
+        try {
+            Shelf.init(req.userinfo.tenantcode);
+            const branchId = req.branchId || null;
+            const data = await Shelf.findAllWithUsage(branchId);
+            res.json(data);
+        } catch (err) {
+            console.error("Error fetching shelves with usage:", err);
             res.status(500).json({ error: "Internal server error" });
         }
     });
@@ -83,13 +96,13 @@ module.exports = (app) => {
     router.get("/:id", fetchUser, async (req, res) => {
         try {
             const { id } = req.params;
-            
+
             // Validate UUID format
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (!uuidRegex.test(id)) {
                 return res.status(400).json({ error: "Invalid ID format" });
             }
-            
+
             Shelf.init(req.userinfo.tenantcode);
             const data = await Shelf.findById(id);
 

@@ -713,6 +713,10 @@ const BulkIssue = ({ permissions }) => {
         label += " (Out of Stock)";
       }
 
+      if (book.call_numbers && Array.isArray(book.call_numbers)) {
+        label += " [" + book.call_numbers.filter(Boolean).join(", ") + "]";
+      }
+
       return {
         value: book.id,
         label,
