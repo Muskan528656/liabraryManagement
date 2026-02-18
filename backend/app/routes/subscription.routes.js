@@ -28,379 +28,678 @@ module.exports = (app) => {
             res.status(500).json({ success: false, error: error.message });
         }
     });
+    // router.post(
+    //     "/",
+    //     fetchUser,
+    //     [
+    //         body("plan_id", "plan_id is required").notEmpty(),
+    //         body("member_id", "member_id is required").notEmpty(),
+    //         body("user_id", "user_id is required").notEmpty(),
+    //         body("card_id", "card_id is required").notEmpty(),
+    //         body("plan_name", "plan_name is required").notEmpty(),
+    //         body("duration_days").notEmpty(),
+    //         body("allowed_books").notEmpty(),
+    //         body("start_date").optional().isISO8601(),
+    //         body("end_date").optional().isISO8601(),
+    //         body("is_active").optional().isBoolean()
+    //     ],
+    //     async (req, res) => {
+    //         const errors = validationResult(req);
+    //         if (!errors.isEmpty()) {
+    //             const errorMessages = errors.array().map(e => e.msg).join(", ");
+    //             return res.status(400).json({ success: false, error: errorMessages });
+    //         }
+
+    //         try {
+    //             const {
+    //                 plan_id,
+    //                 user_id,
+    //                 card_id,
+    //                 member_id,
+    //                 plan_name,
+    //                 duration_days,
+    //                 allowed_books,
+    //                 start_date,
+    //                 end_date,
+    //                 is_active = true
+    //             } = req.body;
+
+    //             Subscription.init(req.userinfo.tenantcode)
+
+
+    //             const planExists = await sql.query(
+    //                 "SELECT id FROM ${schema}.plan WHERE id = $1",
+    //                 [plan_id]
+    //             );
+
+    //             if (!planExists.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Plan not found"
+    //                 });
+    //             }
+
+    //             const memberExists = await sql.query(
+    //                 "SELECT id FROM ${schema}.library_members WHERE id = $1",
+    //                 [member_id]
+    //             );
+
+    //             if (!memberExists.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Member not found"
+    //                 });
+    //             }
+
+
+    //             const userExists = await sql.query(
+    //                 "SELECT id FROM ${schema}.library_members WHERE id = $1",
+    //                 [user_id]
+    //             );
+
+    //             if (!userExists.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "User not found"
+    //                 });
+    //             }
+
+
+    //             const cardExists = await sql.query(
+    //                 "SELECT id FROM ${schema}.library_members WHERE id = $1",
+    //                 [card_id]
+    //             );
+
+    //             if (!cardExists.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Library card not found"
+    //                 });
+    //             }
+
+
+    //             const existingSubscription = await sql.query(
+    //                 `SELECT id FROM ${schema}.subscriptions
+    //              WHERE member_id = $1
+    //              AND is_active = true
+    //              AND (end_date IS NULL OR end_date > CURRENT_DATE)`,
+    //                 [member_id]
+    //             );
+
+    //             if (existingSubscription.rows.length > 0) {
+    //                 return res.status(400).json({
+    //                     success: false,
+    //                     error: "Member already has an active subscription"
+    //                 });
+    //             }
+
+
+    //             const subscriptionStartDate = start_date || new Date().toISOString().split('T')[0];
+
+    //             let subscriptionEndDate = end_date;
+    //             if (!subscriptionEndDate && duration_days) {
+    //                 const end = new Date(subscriptionStartDate);
+    //                 end.setDate(end.getDate() + parseInt(duration_days));
+    //                 subscriptionEndDate = end.toISOString().split('T')[0];
+    //             }
+
+
+
+
+
+
+
+    //             const createdById = req.userinfo?.id;
+
+
+
+
+
+
+    //             let createdByIdValue;
+
+
+    //             try {
+    //                 const userQuery = await sql.query(
+    //                     "SELECT id FROM ${schema}.user WHERE id = $1 OR user_id = $1",
+    //                     [createdById]
+    //                 );
+
+    //                 if (userQuery.rows.length > 0) {
+    //                     createdByIdValue = userQuery.rows[0].id;
+
+    //                 } else {
+
+    //                     createdByIdValue = createdById;
+    //                 }
+    //             } catch (dbError) {
+
+    //                 createdByIdValue = createdById;
+    //             }
+
+
+    //             const subscriptionData = {
+    //                 plan_id,
+    //                 member_id,
+    //                 user_id,
+    //                 card_id,
+    //                 plan_name,
+    //                 duration_days: duration_days || 30,
+    //                 allowed_books: allowed_books || 5,
+    //                 start_date: subscriptionStartDate,
+    //                 end_date: subscriptionEndDate,
+    //                 is_active,
+    //                 createdbyid: createdByIdValue,
+    //                 lastmodifiedbyid: createdByIdValue,
+    //                 createddate: new Date(),
+    //                 lastmodifieddate: new Date(),
+    //                 branch_id: req.branchId
+    //             };
+
+
+
+
+    //             const columns = Object.keys(subscriptionData);
+    //             const values = Object.values(subscriptionData);
+    //             const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    //             const columnNames = columns.join(', ');
+
+    //             const insertQuery = `
+    //             INSERT INTO ${schema}.subscriptions (${columnNames})
+    //             VALUES (${placeholders})
+    //             RETURNING *
+    //         `;
+
+
+
+
+
+    //             const result = await sql.query(insertQuery, values);
+    //             const newSubscription = result.rows[0];
+
+
+
+
+    //             await sql.query(
+    //                 "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
+    //                 [plan_id, member_id]
+    //             );
+
+    //             res.status(201).json({
+    //                 success: true,
+    //                 message: "Subscription created successfully",
+    //                 data: newSubscription
+    //             });
+
+    //         } catch (error) {
+    //             console.error("Error creating subscription:", error);
+    //             console.error("Error details:", {
+    //                 code: error.code,
+    //                 message: error.message,
+    //                 detail: error.detail,
+    //                 where: error.where
+    //             });
+
+
+    //             if (error.code === '22P02') {
+
+    //                 const match = error.message.match(/\$(\d+)/);
+    //                 if (match) {
+    //                     const paramIndex = parseInt(match[1]) - 1;
+    //                     console.error(`Parameter $${match[1]} (index ${paramIndex}) is causing the error`);
+
+
+    //                     try {
+    //                         const values = Object.values(subscriptionData || {});
+    //                         if (values[paramIndex] !== undefined) {
+    //                             console.error(`Problematic value at index ${paramIndex}:`, values[paramIndex]);
+    //                             console.error(`Type of value:`, typeof values[paramIndex]);
+    //                         }
+    //                     } catch (e) {
+    //                         console.error("Could not get problematic value:", e.message);
+    //                     }
+    //                 }
+
+    //                 return res.status(400).json({
+    //                     success: false,
+    //                     error: "Invalid input format. Please check all fields.",
+    //                     details: error.message
+    //                 });
+    //             }
+
+    //             res.status(500).json({
+    //                 success: false,
+    //                 error: "Internal server error",
+    //                 details: error.message
+    //             });
+    //         }
+    //     }
+    // );
+
     router.post(
-        "/",
-        fetchUser,
-        [
-            body("plan_id", "plan_id is required").notEmpty(),
-            body("member_id", "member_id is required").notEmpty(),
-            body("user_id", "user_id is required").notEmpty(),
-            body("card_id", "card_id is required").notEmpty(),
-            body("plan_name", "plan_name is required").notEmpty(),
-            body("duration_days").notEmpty(),
-            body("allowed_books").notEmpty(),
-            body("start_date").optional().isISO8601(),
-            body("end_date").optional().isISO8601(),
-            body("is_active").optional().isBoolean()
-        ],
-        async (req, res) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages = errors.array().map(e => e.msg).join(", ");
-                return res.status(400).json({ success: false, error: errorMessages });
-            }
+  "/",
+  fetchUser,
+  [
+    body("plan_id").notEmpty().withMessage("plan_id is required"),
+    body("member_id").notEmpty().withMessage("member_id is required"),
+    body("user_id").notEmpty().withMessage("user_id is required"),
+    body("card_id").notEmpty().withMessage("card_id is required"),
+    body("plan_name").notEmpty().withMessage("plan_name is required"),
+    body("duration_days").notEmpty(),
+    body("allowed_books").notEmpty(),
+    body("start_date").optional().isISO8601(),
+    body("end_date").optional().isISO8601(),
+    body("is_active").optional().isBoolean(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(e => e.msg).join(", ");
+      return res.status(400).json({ success: false, error: errorMessages });
+    }
 
-            try {
-                const {
-                    plan_id,
-                    user_id,
-                    card_id,
-                    member_id,
-                    plan_name,
-                    duration_days,
-                    allowed_books,
-                    start_date,
-                    end_date,
-                    is_active = true
-                } = req.body;
+    try {
+      const schema = req.userinfo.tenantcode; // ✅ IMPORTANT FIX
 
-                Subscription.init(req.userinfo.tenantcode)
+      const {
+        plan_id,
+        user_id,
+        card_id,
+        member_id,
+        plan_name,
+        duration_days,
+        allowed_books,
+        start_date,
+        end_date,
+        is_active = true,
+      } = req.body;
 
+      // Check Plan
+      const planExists = await sql.query(
+        `SELECT id FROM ${schema}.plan WHERE id = $1`,
+        [plan_id]
+      );
 
-                const planExists = await sql.query(
-                    "SELECT id FROM ${schema}.plan WHERE id = $1",
-                    [plan_id]
-                );
+      if (!planExists.rows.length) {
+        return res.status(404).json({
+          success: false,
+          error: "Plan not found",
+        });
+      }
 
-                if (!planExists.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Plan not found"
-                    });
-                }
+      // Check Member
+      const memberExists = await sql.query(
+        `SELECT id FROM ${schema}.library_members WHERE id = $1`,
+        [member_id]
+      );
 
-                const memberExists = await sql.query(
-                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
-                    [member_id]
-                );
+      if (!memberExists.rows.length) {
+        return res.status(404).json({
+          success: false,
+          error: "Member not found",
+        });
+      }
 
-                if (!memberExists.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Member not found"
-                    });
-                }
+      // Check Active Subscription
+      const existingSubscription = await sql.query(
+        `SELECT id FROM ${schema}.subscriptions
+         WHERE member_id = $1
+         AND is_active = true
+         AND (end_date IS NULL OR end_date > CURRENT_DATE)`,
+        [member_id]
+      );
 
+      if (existingSubscription.rows.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Member already has an active subscription",
+        });
+      }
 
-                const userExists = await sql.query(
-                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
-                    [user_id]
-                );
+      // Calculate Dates
+      const subscriptionStartDate =
+        start_date || new Date().toISOString().split("T")[0];
 
-                if (!userExists.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "User not found"
-                    });
-                }
+      let subscriptionEndDate = end_date;
 
+      if (!subscriptionEndDate && duration_days) {
+        const end = new Date(subscriptionStartDate);
+        end.setDate(end.getDate() + parseInt(duration_days));
+        subscriptionEndDate = end.toISOString().split("T")[0];
+      }
 
-                const cardExists = await sql.query(
-                    "SELECT id FROM ${schema}.library_members WHERE id = $1",
-                    [card_id]
-                );
+      const createdById = req.userinfo?.id;
 
-                if (!cardExists.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Library card not found"
-                    });
-                }
+      const subscriptionData = {
+        plan_id,
+        member_id,
+        user_id,
+        card_id,
+        plan_name,
+        duration_days: duration_days || 30,
+        allowed_books: allowed_books || 5,
+        start_date: subscriptionStartDate,
+        end_date: subscriptionEndDate,
+        is_active,
+        createdbyid: createdById,
+        lastmodifiedbyid: createdById,
+        createddate: new Date(),
+        lastmodifieddate: new Date(),
+        branch_id: req.branchId,
+      };
 
+      const columns = Object.keys(subscriptionData);
+      const values = Object.values(subscriptionData);
+      const placeholders = values
+        .map((_, index) => `$${index + 1}`)
+        .join(", ");
 
-                const existingSubscription = await sql.query(
-                    `SELECT id FROM ${schema}.subscriptions
-                 WHERE member_id = $1
-                 AND is_active = true
-                 AND (end_date IS NULL OR end_date > CURRENT_DATE)`,
-                    [member_id]
-                );
+      const insertQuery = `
+        INSERT INTO ${schema}.subscriptions (${columns.join(", ")})
+        VALUES (${placeholders})
+        RETURNING *
+      `;
 
-                if (existingSubscription.rows.length > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        error: "Member already has an active subscription"
-                    });
-                }
+      const result = await sql.query(insertQuery, values);
+      const newSubscription = result.rows[0];
 
+      // Update Member Plan
+      await sql.query(
+        `UPDATE ${schema}.library_members 
+         SET plan_id = $1 
+         WHERE id = $2`,
+        [plan_id, member_id]
+      );
 
-                const subscriptionStartDate = start_date || new Date().toISOString().split('T')[0];
+      res.status(201).json({
+        success: true,
+        message: "Subscription created successfully",
+        data: newSubscription,
+      });
 
-                let subscriptionEndDate = end_date;
-                if (!subscriptionEndDate && duration_days) {
-                    const end = new Date(subscriptionStartDate);
-                    end.setDate(end.getDate() + parseInt(duration_days));
-                    subscriptionEndDate = end.toISOString().split('T')[0];
-                }
+    } catch (error) {
+      console.error("Error creating subscription:", error);
 
+      res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        details: error.message,
+      });
+    }
+  }
+);
 
-
-
-
-
-
-                const createdById = req.userinfo?.id;
-
-
-
-
-
-
-                let createdByIdValue;
-
-
-                try {
-                    const userQuery = await sql.query(
-                        "SELECT id FROM ${schema}.user WHERE id = $1 OR user_id = $1",
-                        [createdById]
-                    );
-
-                    if (userQuery.rows.length > 0) {
-                        createdByIdValue = userQuery.rows[0].id;
-
-                    } else {
-
-                        createdByIdValue = createdById;
-                    }
-                } catch (dbError) {
-
-                    createdByIdValue = createdById;
-                }
-
-
-                const subscriptionData = {
-                    plan_id,
-                    member_id,
-                    user_id,
-                    card_id,
-                    plan_name,
-                    duration_days: duration_days || 30,
-                    allowed_books: allowed_books || 5,
-                    start_date: subscriptionStartDate,
-                    end_date: subscriptionEndDate,
-                    is_active,
-                    createdbyid: createdByIdValue,
-                    lastmodifiedbyid: createdByIdValue,
-                    createddate: new Date(),
-                    lastmodifieddate: new Date(),
-                    branch_id: req.branchId
-                };
-
-
-
-
-                const columns = Object.keys(subscriptionData);
-                const values = Object.values(subscriptionData);
-                const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
-                const columnNames = columns.join(', ');
-
-                const insertQuery = `
-                INSERT INTO ${schema}.subscriptions (${columnNames})
-                VALUES (${placeholders})
-                RETURNING *
-            `;
+    // router.put(
+    //     "/:id",
+    //     fetchUser,
+    //     [
+    //         body("plan_id").optional().isUUID(),
+    //         body("member_id").optional().isUUID(),
+    //         body("user_id").optional().isUUID(),
+    //         body("card_id").optional().isUUID(),
+    //         body("plan_name").optional().notEmpty(),
+    //         body("start_date").optional().isISO8601(),
+    //         body("end_date").optional().isISO8601(),
+    //         body("is_active").optional().isBoolean(),
+    //         body("renewal").optional().isNumeric(),
+    //         body("allowed_books").optional().isNumeric(),
+    //         body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
+    //     ],
+    //     async (req, res) => {
+    //         const errors = validationResult(req);
+    //         if (!errors.isEmpty()) {
+    //             const errorMessages = errors.array().map(e => e.msg).join(", ");
+    //             return res.status(400).json({ success: false, error: errorMessages });
+    //         }
 
 
 
+    //         try {
+    //             const subscriptionId = req.params.id;
+
+    //             Subscription.init(req.userinfo.tenantcode);     
+    //             const subscriptionCheck = await sql.query(
+    //                 "SELECT id FROM ${schema}.subscriptions WHERE id = $1",
+    //                 [subscriptionId]
+    //             );
+
+    //             if (!subscriptionCheck.rows.length) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Subscription not found"
+    //                 });
+    //             }
 
 
-                const result = await sql.query(insertQuery, values);
-                const newSubscription = result.rows[0];
+    //             const modifiedById = req.userinfo?.id;
+    //             let modifiedByIdFormatted = modifiedById;
+
+    //             if (typeof modifiedById === 'number') {
+    //                 modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, '0')}`;
+    //             } else if (typeof modifiedById === 'string' && !uuidRegex.test(modifiedById)) {
+    //                 modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.padStart(12, '0')}`;
+    //             }
+
+
+    //             const updateData = {
+    //                 ...req.body,
+    //                 lastmodifiedbyid: modifiedByIdFormatted, // Use formatted ID
+    //                 lastmodifieddate: new Date()
+    //             };
+
+
+    //             Object.keys(updateData).forEach(key => {
+    //                 if (updateData[key] === null || updateData[key] === undefined) {
+    //                     delete updateData[key];
+    //                 }
+    //             });
+
+
+    //             const setClause = Object.keys(updateData)
+    //                 .map((key, index) => `${key} = $${index + 2}`)
+    //                 .join(', ');
+
+    //             const values = [subscriptionId, ...Object.values(updateData)];
+
+    //             const updateQuery = `
+    //             UPDATE ${schema}.subscriptions 
+    //             SET ${setClause}
+    //             WHERE id = $1
+    //             RETURNING *
+    //         `;
 
 
 
 
-                await sql.query(
-                    "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
-                    [plan_id, member_id]
-                );
+    //             const result = await sql.query(updateQuery, values);
 
-                res.status(201).json({
-                    success: true,
-                    message: "Subscription created successfully",
-                    data: newSubscription
-                });
+    //             if (result.rows.length === 0) {
+    //                 return res.status(404).json({
+    //                     success: false,
+    //                     error: "Subscription not found"
+    //                 });
+    //             }
 
-            } catch (error) {
-                console.error("Error creating subscription:", error);
-                console.error("Error details:", {
-                    code: error.code,
-                    message: error.message,
-                    detail: error.detail,
-                    where: error.where
-                });
+    //             const updatedSubscription = result.rows[0];
 
 
-                if (error.code === '22P02') {
+    //             if (req.body.plan_id && req.body.member_id) {
+    //                 await sql.query(
+    //                     "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
+    //                     [req.body.plan_id, req.body.member_id]
+    //                 );
+    //             }
 
-                    const match = error.message.match(/\$(\d+)/);
-                    if (match) {
-                        const paramIndex = parseInt(match[1]) - 1;
-                        console.error(`Parameter $${match[1]} (index ${paramIndex}) is causing the error`);
+    //             res.status(200).json({
+    //                 success: true,
+    //                 message: "Subscription updated successfully",
+    //                 data: updatedSubscription
+    //             });
 
+    //         } catch (error) {
+    //             console.error("Error updating subscription:", error);
 
-                        try {
-                            const values = Object.values(subscriptionData || {});
-                            if (values[paramIndex] !== undefined) {
-                                console.error(`Problematic value at index ${paramIndex}:`, values[paramIndex]);
-                                console.error(`Type of value:`, typeof values[paramIndex]);
-                            }
-                        } catch (e) {
-                            console.error("Could not get problematic value:", e.message);
-                        }
-                    }
+    //             if (error.code === '22P02') {
+    //                 return res.status(400).json({
+    //                     success: false,
+    //                     error: "Invalid UUID format in update data",
+    //                     details: error.message
+    //                 });
+    //             }
 
-                    return res.status(400).json({
-                        success: false,
-                        error: "Invalid input format. Please check all fields.",
-                        details: error.message
-                    });
-                }
-
-                res.status(500).json({
-                    success: false,
-                    error: "Internal server error",
-                    details: error.message
-                });
-            }
-        }
-    );
+    //             res.status(500).json({
+    //                 success: false,
+    //                 error: "Internal server error",
+    //                 details: error.message
+    //             });
+    //         }
+    //     }
+    // );
 
     router.put(
-        "/:id",
-        fetchUser,
-        [
-            body("plan_id").optional().isUUID(),
-            body("member_id").optional().isUUID(),
-            body("user_id").optional().isUUID(),
-            body("card_id").optional().isUUID(),
-            body("plan_name").optional().notEmpty(),
-            body("start_date").optional().isISO8601(),
-            body("end_date").optional().isISO8601(),
-            body("is_active").optional().isBoolean(),
-            body("renewal").optional().isNumeric(),
-            body("allowed_books").optional().isNumeric(),
-            body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
-        ],
-        async (req, res) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages = errors.array().map(e => e.msg).join(", ");
-                return res.status(400).json({ success: false, error: errorMessages });
-            }
+      "/:id",
+      fetchUser,
+      [
+        body("plan_id").optional().isUUID(),
+        body("member_id").optional().isUUID(),
+        body("user_id").optional().isUUID(),
+        body("card_id").optional().isUUID(),
+        body("plan_name").optional().notEmpty(),
+        body("start_date").optional().isISO8601(),
+        body("end_date").optional().isISO8601(),
+        body("is_active").optional().isBoolean(),
+        body("renewal").optional().isNumeric(),
+        body("allowed_books").optional().isNumeric(),
+        body("status").optional().isIn(["active", "inactive", "expired", "cancelled"])
+      ],
+      async (req, res) => {
 
-
-
-            try {
-                const subscriptionId = req.params.id;
-
-                Subscription.init(req.userinfo.tenantcode);     
-                const subscriptionCheck = await sql.query(
-                    "SELECT id FROM ${schema}.subscriptions WHERE id = $1",
-                    [subscriptionId]
-                );
-
-                if (!subscriptionCheck.rows.length) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Subscription not found"
-                    });
-                }
-
-
-                const modifiedById = req.userinfo?.id;
-                let modifiedByIdFormatted = modifiedById;
-
-                if (typeof modifiedById === 'number') {
-                    modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, '0')}`;
-                } else if (typeof modifiedById === 'string' && !uuidRegex.test(modifiedById)) {
-                    modifiedByIdFormatted = `00000000-0000-0000-0000-${modifiedById.padStart(12, '0')}`;
-                }
-
-
-                const updateData = {
-                    ...req.body,
-                    lastmodifiedbyid: modifiedByIdFormatted, // Use formatted ID
-                    lastmodifieddate: new Date()
-                };
-
-
-                Object.keys(updateData).forEach(key => {
-                    if (updateData[key] === null || updateData[key] === undefined) {
-                        delete updateData[key];
-                    }
-                });
-
-
-                const setClause = Object.keys(updateData)
-                    .map((key, index) => `${key} = $${index + 2}`)
-                    .join(', ');
-
-                const values = [subscriptionId, ...Object.values(updateData)];
-
-                const updateQuery = `
-                UPDATE ${schema}.subscriptions 
-                SET ${setClause}
-                WHERE id = $1
-                RETURNING *
-            `;
-
-
-
-
-                const result = await sql.query(updateQuery, values);
-
-                if (result.rows.length === 0) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "Subscription not found"
-                    });
-                }
-
-                const updatedSubscription = result.rows[0];
-
-
-                if (req.body.plan_id && req.body.member_id) {
-                    await sql.query(
-                        "UPDATE ${schema}.library_members SET plan_id = $1 WHERE id = $2",
-                        [req.body.plan_id, req.body.member_id]
-                    );
-                }
-
-                res.status(200).json({
-                    success: true,
-                    message: "Subscription updated successfully",
-                    data: updatedSubscription
-                });
-
-            } catch (error) {
-                console.error("Error updating subscription:", error);
-
-                if (error.code === '22P02') {
-                    return res.status(400).json({
-                        success: false,
-                        error: "Invalid UUID format in update data",
-                        details: error.message
-                    });
-                }
-
-                res.status(500).json({
-                    success: false,
-                    error: "Internal server error",
-                    details: error.message
-                });
-            }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+          const errorMessages = errors.array().map(e => e.msg).join(", ");
+          return res.status(400).json({ success: false, error: errorMessages });
         }
+
+        try {
+          const subscriptionId = req.params.id;
+
+          // initialize schema
+          Subscription.init(req.userinfo.tenantcode);
+          const schema = Subscription.schema;
+
+          //Check if subscription exists
+          const subscriptionCheck = await sql.query(
+            `SELECT id FROM ${schema}.subscriptions WHERE id = $1`,
+            [subscriptionId]
+          );
+
+          if (!subscriptionCheck.rows.length) {
+            return res.status(404).json({
+              success: false,
+              error: "Subscription not found"
+            });
+          }
+
+          // Format modifiedById
+          const modifiedById = req.userinfo?.id;
+          let modifiedByIdFormatted = modifiedById;
+
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+          if (typeof modifiedById === "number") {
+            modifiedByIdFormatted =
+              `00000000-0000-0000-0000-${modifiedById.toString().padStart(12, "0")}`;
+          } else if (
+            typeof modifiedById === "string" &&
+            !uuidRegex.test(modifiedById)
+          ) {
+            modifiedByIdFormatted =
+              `00000000-0000-0000-0000-${modifiedById.padStart(12, "0")}`;
+          }
+
+          // Build update object
+          const updateData = {
+            ...req.body,
+            lastmodifiedbyid: modifiedByIdFormatted,
+            lastmodifieddate: new Date()
+          };
+
+          // Remove null / undefined
+          Object.keys(updateData).forEach(key => {
+            if (updateData[key] === null || updateData[key] === undefined) {
+              delete updateData[key];
+            }
+          });
+
+          if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+              success: false,
+              error: "No valid fields provided for update"
+            });
+          }
+
+          // Build SET clause dynamically
+          const keys = Object.keys(updateData);
+
+          const setClause = keys
+            .map((key, index) => `${key} = $${index + 2}`)
+            .join(", ");
+
+          const values = [subscriptionId, ...keys.map(k => updateData[k])];
+
+          const updateQuery = `
+            UPDATE ${schema}.subscriptions
+            SET ${setClause}
+            WHERE id = $1
+            RETURNING *
+          `;
+
+          const result = await sql.query(updateQuery, values);
+
+          if (!result.rows.length) {
+            return res.status(404).json({
+              success: false,
+              error: "Subscription not found"
+            });
+          }
+
+          const updatedSubscription = result.rows[0];
+
+          // Update member table if plan changed
+          if (req.body.plan_id && req.body.member_id) {
+            await sql.query(
+              `UPDATE ${schema}.library_members 
+              SET plan_id = $1 
+              WHERE id = $2`,
+              [req.body.plan_id, req.body.member_id]
+            );
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: "Subscription updated successfully",
+            data: updatedSubscription
+          });
+
+        } catch (error) {
+
+          console.error("Error updating subscription:", error);
+
+          if (error.code === "22P02") {
+            return res.status(400).json({
+              success: false,
+              error: "Invalid UUID format",
+              details: error.message
+            });
+          }
+
+          return res.status(500).json({
+            success: false,
+            error: "Internal server error",
+            details: error.message
+          });
+        }
+      }
     );
 
     router.delete("/:id", fetchUser, async (req, res) => {

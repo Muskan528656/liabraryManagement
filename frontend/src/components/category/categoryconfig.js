@@ -26,18 +26,20 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
         importMatchFields: ['code', 'classification_type'],
         importModel: ClassificationModel,
 
-        onFieldChange: async (fieldName, value, formData, setFormData, api, setFieldState) => {
-            // When category changes, fetch the last entry for this category to auto-fill name and range
-            if (fieldName === 'category' && value?.trim()) {
-                if (setFieldState) {
-                    setFieldState('category', { isLoading: true });
-                }
+        onFieldChange: async (fieldName, value, formData, setFormData) => {
+            const fieldValue = value?.value || value;
+            console.log("onFieldChange called:", fieldName, "value:", fieldValue);
 
+            const DataApi = (await import('../../api/dataApi')).default;
+            const api = new DataApi('classification');
+
+            if (fieldName === 'category' && fieldValue?.trim()) {
                 try {
-                    // Fetch last classification for this category
+
                     const response = await api.get(
-                        `/classification/last-by-category/${encodeURIComponent(value)}`
+                        `/last-by-category/${encodeURIComponent(fieldValue)}`
                     );
+                    console.log("Category response:", response.data);
 
                     if (response.data) {
                         const lastItem = response.data;
@@ -46,136 +48,52 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
 
                         setFormData(prev => ({
                             ...prev,
-                            name: lastItem.name || '',
-                            code: lastItem.code || '',
+                            category: fieldValue,
+                            name: '',
                             classification_from: from.toString(),
                             classification_to: to.toString(),
                             classification_type: lastItem.classification_type || prev.classification_type
                         }));
-
-                        if (setFieldState) {
-                            setFieldState('name', {
-                                helpText: `Auto-filled from category "${value}"`
-                            });
-                            setFieldState('classification_from', {
-                                disabled: true,
-                                required: true,
-                                helpText: "Auto-calculated (last + 1)"
-                            });
-                            setFieldState('classification_to', {
-                                disabled: true,
-                                required: true,
-                                helpText: "Auto-calculated (From + 9)"
-                            });
-                        }
                     } else {
-                        // No existing data for this category - clear dependent fields
                         setFormData(prev => ({
                             ...prev,
+                            category: fieldValue,
                             name: '',
                             classification_from: '',
                             classification_to: ''
                         }));
-
-                        if (setFieldState) {
-                            setFieldState('name', {
-                                helpText: "Enter new name for this category"
-                            });
-                            setFieldState('classification_from', {
-                                disabled: false,
-                                required: true,
-                                helpText: "Enter starting range"
-                            });
-                            setFieldState('classification_to', {
-                                disabled: false,
-                                required: true,
-                                helpText: "Enter ending range"
-                            });
-                        }
                     }
                 } catch (error) {
                     console.error("Error fetching category data:", error);
-                } finally {
-                    if (setFieldState) {
-                        setFieldState('category', { isLoading: false });
-                    }
                 }
             }
 
-            // When name changes, check for existing combination
-            if (fieldName === 'name' && value?.trim() && formData.category?.trim()) {
-                if (setFieldState) {
-                    setFieldState('combination', { isLoading: true });
-                }
+            if (fieldName === 'name' && fieldValue?.trim() && formData?.category) {
+                const selectedCategory = formData.category?.value || formData.category;
+                console.log("Name selected:", fieldValue, "Category:", selectedCategory);
 
                 try {
-                    const response = await api.get(
-                        `/classification/last-by-category-name/${encodeURIComponent(formData.category)}/${encodeURIComponent(value)}`
-                    );
+                    const url = `/last-by-category-name/${encodeURIComponent(selectedCategory)}/${encodeURIComponent(fieldValue)}`;
+                    console.log("Fetching:", url);
+                    const response = await api.get(url);
+                    console.log("Name response:", response.data);
 
                     if (response.data) {
-                        const lastItem = response.data;
-                        const from = lastItem.classification_to ? parseInt(lastItem.classification_to) + 1 : 1;
-                        const to = from + 9;
-
+                        const item = response.data;
+                        console.log("Filling range:", item.classification_from, "-", item.classification_to);
                         setFormData(prev => ({
                             ...prev,
-                            classification_from: from.toString(),
-                            classification_to: to.toString(),
-                            classification_type: lastItem.classification_type || prev.classification_type
+                            name: fieldValue,
+                            classification_from: item.classification_from || '',
+                            classification_to: item.classification_to || '',
+                            classification_type: item.classification_type || prev.classification_type,
+                            code: item.code || prev.code
                         }));
-
-                        if (setFieldState) {
-                            setFieldState('classification_from', {
-                                disabled: true,
-                                required: true,
-                                helpText: "Auto-calculated with 10 gap"
-                            });
-                            setFieldState('classification_to', {
-                                disabled: true,
-                                required: true,
-                                helpText: "Auto-calculated (From + 9)"
-                            });
-                            setFieldState('combination', {
-                                exists: true,
-                                isLoading: false,
-                                message: `Auto-filling range for existing "${value}" in "${formData.category}"`
-                            });
-                        }
                     } else {
-                        setFormData(prev => ({
-                            ...prev,
-                            classification_from: '',
-                            classification_to: ''
-                        }));
-
-                        if (setFieldState) {
-                            setFieldState('classification_from', {
-                                disabled: false,
-                                required: true,
-                                helpText: "Enter starting number"
-                            });
-                            setFieldState('classification_to', {
-                                disabled: false,
-                                required: true,
-                                helpText: "Enter ending number"
-                            });
-                            setFieldState('combination', {
-                                exists: false,
-                                isLoading: false,
-                                message: `New combination: "${value}" in "${formData.category}"`
-                            });
-                        }
+                        console.log("No data found for this category/name");
                     }
                 } catch (error) {
-                    console.error("Error fetching combination range:", error);
-                    if (setFieldState) {
-                        setFieldState('combination', {
-                            exists: false,
-                            isLoading: false,
-                            error: "Failed to check combination"
-                        });
-                    }
+                    console.error("Error fetching name data:", error);
                 }
             }
         },
@@ -210,39 +128,31 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 label: "Name",
                 width: "200px",
             },
-            // {
-            //     field: "classification_type",
-            //     label: "Type",
-            //     width: "80px",
-            //     render: (value) => (
-            //         <span className={`badge ${value === 'DDC' ? 'bg-primary' : 'bg-success'}`}>
-            //             {value}
-            //         </span>
-            //     ),
-            // },
-            {
-                field: "code",
-                label: "Code",
-                width: "100px",
-                render: (value) => <span className="font-monospace">{value || '-'}</span>,
-            },
             {
                 field: "category",
                 label: "Category",
                 width: "150px",
                 render: (value) => <span style={{ color: "#6c757d" }}>{value || '-'}</span>,
             },
+
+            {
+                field: "code",
+                label: "Code",
+                width: "100px",
+                render: (value) => <span className="font-monospace">{value || '-'}</span>,
+            },
+
             {
                 field: "classification_from",
                 label: "From",
                 width: "80px",
-                render: (value) => <span className="text-info font-monospace">{value || '-'}</span>,
+                render: (value) => <span className="text-primary font-monospace fs-6">{value || '-'}</span>,
             },
             {
                 field: "classification_to",
                 label: "To",
                 width: "80px",
-                render: (value) => <span className="text-info font-monospace">{value || '-'}</span>,
+                render: (value) => <span className="text-primary font-monospace fs-6">{value || '-'}</span>,
             },
             {
                 field: "is_active",
@@ -271,19 +181,19 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                         const api = new (await import('../../api/dataApi')).default('classification');
                         const response = await api.get('/');
                         const classifications = response.data || [];
-                        
+
                         // Extract unique categories and filter by input
                         const uniqueCategories = [...new Set(classifications.map(item => item.category).filter(Boolean))];
-                        
-                        const filtered = inputValue 
-                            ? uniqueCategories.filter(category => 
+
+                        const filtered = inputValue
+                            ? uniqueCategories.filter(category =>
                                 category?.toLowerCase().includes(inputValue.toLowerCase())
-                              )
+                            )
                             : uniqueCategories;
-                        
-                        return filtered.map(category => ({ 
-                            value: category, 
-                            label: category 
+
+                        return filtered.map(category => ({
+                            value: category,
+                            label: category
                         })) || [];
                     } catch (e) {
                         console.error("Error loading categories:", e);
@@ -292,7 +202,7 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 },
                 defaultOptions: true,
                 clearable: true,
-                creatable: true, // Allow creating new values
+                creatable: true,
             },
             {
                 name: "name",
@@ -312,65 +222,65 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                         const api = new (await import('../../api/dataApi')).default('classification');
                         const response = await api.get('/');
                         const classifications = response.data || [];
-                        
+
                         // Filter by category first
                         const categoryClassifications = classifications.filter(
                             item => item.category === formData.category
                         );
-                        
+
                         // Enhanced search with code and range matching
-                        const filtered = inputValue 
+                        const filtered = inputValue
                             ? categoryClassifications.filter(item => {
                                 const searchValue = inputValue.toLowerCase().trim();
-                                
+
                                 // Direct name matching
                                 if (item.name?.toLowerCase().includes(searchValue)) {
                                     return true;
                                 }
-                                
+
                                 // Code matching (exact or partial)
                                 if (item.code?.toLowerCase().includes(searchValue)) {
                                     return true;
                                 }
-                                
+
                                 // Range matching - only for same classification type
                                 if (item.classification_from && item.classification_to) {
                                     // Check if both item and search are numeric (DDC)
                                     const isItemNumeric = /^\d+$/.test(item.classification_from) && /^\d+$/.test(item.classification_to);
                                     const isSearchNumeric = /^\d+$/.test(searchValue);
-                                    
+
                                     // Check if both item and search are alphabetic (LLC)
                                     const isItemAlpha = /^[a-zA-Z]+$/.test(item.classification_from) && /^[a-zA-Z]+$/.test(item.classification_to);
                                     const isSearchAlpha = /^[a-zA-Z]+$/.test(searchValue);
-                                    
+
                                     // For numeric ranges (DDC)
                                     if (isItemNumeric && isSearchNumeric) {
                                         const searchNum = parseInt(searchValue);
                                         const fromNum = parseInt(item.classification_from);
                                         const toNum = parseInt(item.classification_to);
-                                        
+
                                         if (searchNum >= fromNum && searchNum <= toNum) {
                                             return true;
                                         }
                                     }
-                                    
+
                                     // For alphabetic ranges (LLC)
                                     else if (isItemAlpha && isSearchAlpha) {
                                         const searchAlpha = searchValue.toUpperCase();
                                         const fromAlpha = item.classification_from.toUpperCase();
                                         const toAlpha = item.classification_to.toUpperCase();
-                                        
+
                                         // Simple alphabetical range check
                                         if (searchAlpha >= fromAlpha && searchAlpha <= toAlpha) {
                                             return true;
                                         }
                                     }
                                 }
-                                
+
                                 return false;
                             })
                             : categoryClassifications;
-                        
+
                         // Create options with detailed information
                         return filtered.map(item => ({
                             value: item.name,
@@ -384,18 +294,9 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 },
                 defaultOptions: true,
                 clearable: true,
-                creatable: true, // Allow creating new values
+                creatable: true,
                 dependsOn: "category",
-            },
-            {
-                name: "config_classification",
-                label: "Library Classification Config",
-                type: "text",
-                required: false,
-                placeholder: "Auto-loaded from library settings",
-                helpText: "This value is loaded from library settings",
-                colSize: 6,
-                disabled: true,
+                disabled: (formData) => !formData?.category
             },
             {
                 name: "classification_from",
@@ -433,6 +334,8 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 colSize: 6,
                 helpText: (fieldState) => fieldState?.classification_to?.helpText || "",
             },
+
+
             {
                 name: "code",
                 label: "Code",
@@ -441,6 +344,16 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 placeholder: "Enter numeric code (e.g., 500)",
                 helpText: "Enter numeric code",
                 colSize: 6,
+            },
+            {
+                name: "classification_type",
+                label: "Library Classification Config",
+                type: "text",
+                required: false,
+                placeholder: "Auto-loaded from library settings",
+                colSize: 6,
+                disabled: true,
+                value: (externalData) => externalData?.librarySettings?.classification || '',
             },
             {
                 name: "is_active",
@@ -462,40 +375,43 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 errors.push("Name is required");
             }
 
-            // Validate code is numeric
             if (formData.code && !/^\d+$/.test(formData.code)) {
                 errors.push("Code must contain only numbers");
             }
 
-            // Get combination exists state from fieldState
-            const combinationExists = fieldState?.combination?.exists;
+            if (formData.code && formData.classification_from && formData.classification_to) {
+                const codeNum = parseInt(formData.code);
+                const fromNum = parseInt(formData.classification_from);
+                const toNum = parseInt(formData.classification_to);
 
-            // Validate range fields based on combination existence
+                if (codeNum < fromNum || codeNum > toNum) {
+                    errors.push(`Code must be between ${formData.classification_from} and ${formData.classification_to}`);
+                }
+            }
+            const combinationExists = fieldState?.combination?.exists;
             if (combinationExists) {
                 if (!formData.classification_from || !formData.classification_to) {
                     errors.push("Range fields are required");
                 }
             } else {
-                // For new combination, validate that range fields are provided manually
+
                 if (!formData.classification_from || !formData.classification_to) {
                     errors.push("Please enter range From and To");
                 }
-                // Validate that range values are numeric
+
                 if (formData.classification_from && !/^\d+$/.test(formData.classification_from)) {
                     errors.push("Range From must contain only numbers");
                 }
                 if (formData.classification_to && !/^\d+$/.test(formData.classification_to)) {
                     errors.push("Range To must contain only numbers");
                 }
-                // Validate that From is less than To
+
                 if (formData.classification_from && formData.classification_to) {
                     if (parseInt(formData.classification_from) >= parseInt(formData.classification_to)) {
                         errors.push("Range From must be less than Range To");
                     }
                 }
             }
-
-            // Check for duplicate code within same classification type
             if (formData.code && formData.classification_type) {
                 const duplicate = allClassifications.find(
                     item => item.code?.toString() === formData.code?.toString() &&
@@ -512,7 +428,14 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
 
         dataDependencies: {
             classificationTypes: 'classification/types',
-            lastClassification: 'classification/last'
+            lastClassification: 'classification/last',
+            librarySettings: 'librarysettings'
+        },
+
+        customHandlers: {
+            afterSave: () => {
+                console.log("Classification saved successfully, form will be reset");
+            }
         },
 
         features: {
@@ -550,12 +473,12 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
 
         customHandlers: {
             beforeSave: (formData, editingItem) => {
-                // Ensure code is numeric string
+
                 if (formData.code) {
                     formData.code = formData.code.toString().replace(/\D/g, '');
                 }
 
-                // Ensure range values are numeric strings
+
                 if (formData.classification_from) {
                     formData.classification_from = formData.classification_from.toString();
                 }

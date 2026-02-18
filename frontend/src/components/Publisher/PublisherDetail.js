@@ -8,16 +8,17 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 
 import { COUNTRY_CODES } from "../../constants/COUNTRY_CODES";
 import City_State from "../../constants/CityState.json";
+import { Country, State, City } from "country-state-city";
 
 
-
-const PublisherDetail = ({permissions}) => {
+const PublisherDetail = ({ permissions }) => {
 
     const { id } = useParams();
 
     const [book, setBook] = useState(null);
 
     const [totalBooks, setTotalBooks] = useState(0);
+
 
 
     const { timeZone } = useTimeZone();
@@ -43,9 +44,22 @@ const PublisherDetail = ({permissions}) => {
     useEffect(() => {
         if (id) {
             fetchBookData(id);
-
         }
     }, [id]);
+
+
+    const countryOptions = Country.getAllCountries().map((country) => ({
+        value: country.isoCode,
+        label: `${country.flag} ${country.name}`,
+    }));
+
+    //red star for required fields
+    const requiredLabel = (label) => {
+        return <span>{label} <span style={{ color: 'red' }}>*</span></span>;
+    };
+
+
+    console.log("countryOptions =>", countryOptions);
 
     const fields = {
         details: [
@@ -54,47 +68,68 @@ const PublisherDetail = ({permissions}) => {
                 label: "Salutation",
                 type: "text"
             },
+    
             {
                 key: "name",
-                label: "Name",
-                type: "text"
+                label: requiredLabel("Name"),
+                type: "text",
+                colSize: 6,
             },
             {
                 key: "email",
-                label: "Email",
+                label: requiredLabel("Email"),
+              
                 type: "email"
             },
             {
                 key: "phone",
-                label: "Phone",
+                label: requiredLabel("Phone"),
                 type: "tel"
             },
+
+            //  {
+            //     key: "country",
+            //     label: "Country",
+            //     type: "select",
+            //     options: countryOptions,
+
+            // },
             {
-                key: "city",
-                label: "City",
+                key: "country",
+                label: "Country",
                 type: "select",
-                options: City_State.map(item => ({
-                    value: item.name,
-                    label: `${item.name} `
-                })),
+                options: countryOptions,
+                required: false,
+                // placeholder: "Select a country",
+
             },
             {
                 key: "state",
                 label: "State",
                 type: "select",
-                options: City_State.map(item => ({
-                    value: item.state,
-                    label: `${item.state}`
-                })),
+                options: (formData) => {
+                    if (!formData?.country) return [];
+
+                    return State.getStatesOfCountry(formData.country).map((s) => ({
+                        value: s.isoCode,
+                        label: s.name,
+                    }));
+                },
             },
+
+
             {
-                key: "country",
-                label: "Country",
+                key: "city",
+                label: "City",
                 type: "select",
-                options: COUNTRY_CODES.map(item => ({
-                    value: item.country,
-                    label: `${item.country}(${item.country_code})`
-                })),
+                options: (formData) => {
+                    if (!formData?.country || !formData?.state) return [];
+
+                    return City.getCitiesOfState(formData.country, formData.state).map((c) => ({
+                        value: c.name,
+                        label: c.name,
+                    }));
+                },
             },
             {
                 key: "is_active",

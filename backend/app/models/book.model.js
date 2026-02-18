@@ -3,16 +3,16 @@ const sql = require("./db.js");
 let schema = "";
 
 function init(schema_name) {
-    schema = schema_name;
-    console.log("Schema:", schema);
+  schema = schema_name;
+  console.log("Schema:", schema);
 }
 
 // 2te a new book with optional copies
 async function create(data) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    try {
-        const bookQuery = `
+  try {
+    const bookQuery = `
             INSERT INTO ${schema}.books (
                 company_id, title, author_id, publisher_id, classification_id,
                 isbn, edition, publication_year, language, inventory_binding,
@@ -21,37 +21,37 @@ async function create(data) {
             RETURNING *
         `;
 
-        const bookValues = [
-            data.company_id || null,
-            data.title,
-            data.author_id || null,
-            data.publisher_id || null,
-            data.classification_id || null,
-            data.isbn || null,
-            data.edition || null,
-            data.publication_year || null,
-            data.language || 'English',
-            data.inventory_binding || null,
-            data.pages || null,
-            data.max_age || null,
-            data.min_age || null,
-            data.status || 'ACTIVE',
-            data.createdbyid || null
-        ];
+    const bookValues = [
+      data.company_id || null,
+      data.title,
+      data.author_id || null,
+      data.publisher_id || null,
+      data.classification_id || null,
+      data.isbn || null,
+      data.edition || null,
+      data.publication_year || null,
+      data.language || 'English',
+      data.inventory_binding || null,
+      data.pages || null,
+      data.max_age || null,
+      data.min_age || null,
+      data.status || 'ACTIVE',
+      data.createdbyid || null
+    ];
 
-        const bookResult = await sql.query(bookQuery, bookValues);
-        return bookResult.rows[0];
-    } catch (error) {
-        console.error("Error in Book.create:", error);
-        throw error;
-    }
+    const bookResult = await sql.query(bookQuery, bookValues);
+    return bookResult.rows[0];
+  } catch (error) {
+    console.error("Error in Book.create:", error);
+    throw error;
+  }
 }
 
 // Get all books with pagination and search
 async function findAll(filters = {}, page = 1, limit = 10) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    let query = `
+  let query = `
         SELECT b.*, 
                a.name as author_name, 
                p.name as publisher_name,
@@ -68,7 +68,7 @@ async function findAll(filters = {}, page = 1, limit = 10) {
         WHERE 1=1
     `;
 
-    let countQuery = `
+  let countQuery = `
         SELECT COUNT(DISTINCT b.id) as count
         FROM ${schema}.books b
         LEFT JOIN ${schema}.authors a ON b.author_id = a.id
@@ -77,75 +77,75 @@ async function findAll(filters = {}, page = 1, limit = 10) {
         WHERE 1=1
     `;
 
-    let values = [];
-    let paramCount = 0;
+  let values = [];
+  let paramCount = 0;
 
-    // Apply filters
-    if (filters.search) {
-        paramCount++;
-        const searchParam = `%${filters.search}%`;
-        query += ` AND (b.title ILIKE $${paramCount} OR a.name ILIKE $${paramCount} OR p.name ILIKE $${paramCount} OR c.name ILIKE $${paramCount} OR b.isbn ILIKE $${paramCount})`;
-        countQuery += ` AND (b.title ILIKE $${paramCount} OR a.name ILIKE $${paramCount} OR p.name ILIKE $${paramCount} OR c.name ILIKE $${paramCount} OR b.isbn ILIKE $${paramCount})`;
-        values.push(searchParam);
-    }
-
-    if (filters.author_id) {
-        paramCount++;
-        query += ` AND b.author_id = $${paramCount}`;
-        countQuery += ` AND b.author_id = $${paramCount}`;
-        values.push(filters.author_id);
-    }
-
-    if (filters.publisher_id) {
-        paramCount++;
-        query += ` AND b.publisher_id = $${paramCount}`;
-        countQuery += ` AND b.publisher_id = $${paramCount}`;
-        values.push(filters.publisher_id);
-    }
-
-    if (filters.classification_id) {
-        paramCount++;
-        query += ` AND b.classification_id = $${paramCount}`;
-        countQuery += ` AND b.classification_id = $${paramCount}`;
-        values.push(filters.classification_id);
-    }
-
-    if (filters.status) {
-        paramCount++;
-        query += ` AND b.status = $${paramCount}`;
-        countQuery += ` AND b.status = $${paramCount}`;
-        values.push(filters.status);
-    }
-
-    if (filters.isbn) {
-        paramCount++;
-        query += ` AND b.isbn = $${paramCount}`;
-        countQuery += ` AND b.isbn = $${paramCount}`;
-        values.push(filters.isbn);
-    }
-
-
-
-    // Add ordering
-    query += ' ORDER BY b.createddate DESC';
-
-    // Add pagination
-    const offset = (page - 1) * limit;
+  // Apply filters
+  if (filters.search) {
     paramCount++;
-    query += ` LIMIT $${paramCount}`;
-    values.push(limit);
+    const searchParam = `%${filters.search}%`;
+    query += ` AND (b.title ILIKE $${paramCount} OR a.name ILIKE $${paramCount} OR p.name ILIKE $${paramCount} OR c.name ILIKE $${paramCount} OR b.isbn ILIKE $${paramCount})`;
+    countQuery += ` AND (b.title ILIKE $${paramCount} OR a.name ILIKE $${paramCount} OR p.name ILIKE $${paramCount} OR c.name ILIKE $${paramCount} OR b.isbn ILIKE $${paramCount})`;
+    values.push(searchParam);
+  }
 
+  if (filters.author_id) {
     paramCount++;
-    query += ` OFFSET $${paramCount}`;
-    values.push(offset);
+    query += ` AND b.author_id = $${paramCount}`;
+    countQuery += ` AND b.author_id = $${paramCount}`;
+    values.push(filters.author_id);
+  }
 
-    const [booksResult, countResult] = await Promise.all([
-        sql.query(query, values),
-        sql.query(countQuery, values.slice(0, -2))
-    ]);
+  if (filters.publisher_id) {
+    paramCount++;
+    query += ` AND b.publisher_id = $${paramCount}`;
+    countQuery += ` AND b.publisher_id = $${paramCount}`;
+    values.push(filters.publisher_id);
+  }
+
+  if (filters.classification_id) {
+    paramCount++;
+    query += ` AND b.classification_id = $${paramCount}`;
+    countQuery += ` AND b.classification_id = $${paramCount}`;
+    values.push(filters.classification_id);
+  }
+
+  if (filters.status) {
+    paramCount++;
+    query += ` AND b.status = $${paramCount}`;
+    countQuery += ` AND b.status = $${paramCount}`;
+    values.push(filters.status);
+  }
+
+  if (filters.isbn) {
+    paramCount++;
+    query += ` AND b.isbn = $${paramCount}`;
+    countQuery += ` AND b.isbn = $${paramCount}`;
+    values.push(filters.isbn);
+  }
 
 
-    return booksResult.rows || [];
+
+  // Add ordering
+  query += ' ORDER BY b.createddate DESC';
+
+  // Add pagination
+  const offset = (page - 1) * limit;
+  paramCount++;
+  query += ` LIMIT $${paramCount}`;
+  values.push(limit);
+
+  paramCount++;
+  query += ` OFFSET $${paramCount}`;
+  values.push(offset);
+
+  const [booksResult, countResult] = await Promise.all([
+    sql.query(query, values),
+    sql.query(countQuery, values.slice(0, -2))
+  ]);
+
+
+  return booksResult.rows || [];
 
 }
 
@@ -179,9 +179,9 @@ async function findAll(filters = {}, page = 1, limit = 10) {
 //     return result.rows[0];
 // }
 async function findById(id) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `
+  const query = `
         SELECT 
             b.*, 
             a.name as author_name, 
@@ -233,57 +233,57 @@ async function findById(id) {
             c.classification_to
     `;
 
-    const result = await sql.query(query, [id]);
-    console.log("result.rows[0] iidie ", result.rows[0]);
+  const result = await sql.query(query, [id]);
+  console.log("result.rows[0] iidie ", result.rows[0]);
 
-    return result.rows[0] || null;
+  return result.rows[0] || null;
 }
 
 // Update a book
 async function update(id, data) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
-    let paramCount = 0;
-    let fields = [];
-    let values = [];
-    const allowedFields = [
-        'company_id', 'title', 'author_id', 'publisher_id', 'classification_id',
-        'isbn', 'edition', 'publication_year', 'language', 'inventory_binding',
-        'pages', 'max_age', 'min_age', 'status', 'lastmodifiedbyid'
-    ];
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  let paramCount = 0;
+  let fields = [];
+  let values = [];
+  const allowedFields = [
+    'company_id', 'title', 'author_id', 'publisher_id', 'classification_id',
+    'isbn', 'edition', 'publication_year', 'language', 'inventory_binding',
+    'pages', 'max_age', 'min_age', 'status', 'lastmodifiedbyid'
+  ];
 
-    for (const [key, value] of Object.entries(data)) {
-        if (value !== undefined && allowedFields.includes(key)) {
-            paramCount++;
-            fields.push(`${key} = $${paramCount}`);
-            values.push(value);
-        }
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined && allowedFields.includes(key)) {
+      paramCount++;
+      fields.push(`${key} = $${paramCount}`);
+      values.push(value);
     }
+  }
 
-    if (fields.length === 0) {
-        throw new Error('No fields to update');
-    }
+  if (fields.length === 0) {
+    throw new Error('No fields to update');
+  }
 
-    values.push(id);
-    const query = `UPDATE ${schema}.books SET ${fields.join(', ')} WHERE id = $${paramCount + 1} RETURNING *`;
+  values.push(id);
+  const query = `UPDATE ${schema}.books SET ${fields.join(', ')} WHERE id = $${paramCount + 1} RETURNING *`;
 
-    const result = await sql.query(query, values);
-    return result.rows[0];
+  const result = await sql.query(query, values);
+  return result.rows[0];
 }
 
 // Delete a book
 async function deleteById(id) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `DELETE FROM ${schema}.books WHERE id = $1 RETURNING *`;
-    const result = await sql.query(query, [id]);
-    return result.rows[0];
+  const query = `DELETE FROM ${schema}.books WHERE id = $1 RETURNING *`;
+  const result = await sql.query(query, [id]);
+  return result.rows[0];
 }
 
 // Get books by author
 async function findByAuthor(authorId) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `
+  const query = `
         SELECT b.*, 
                a.name as author_name, 
                p.name as publisher_name,
@@ -301,15 +301,15 @@ async function findByAuthor(authorId) {
         ORDER BY b.createddate DESC
     `;
 
-    const result = await sql.query(query, [authorId]);
-    return result.rows;
+  const result = await sql.query(query, [authorId]);
+  return result.rows;
 }
 
 // Get books by publisher
 async function findByPublisher(publisherId) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `
+  const query = `
         SELECT b.*, 
                a.name as author_name, 
                p.name as publisher_name,
@@ -327,15 +327,15 @@ async function findByPublisher(publisherId) {
         ORDER BY b.createddate DESC
     `;
 
-    const result = await sql.query(query, [publisherId]);
-    return result.rows;
+  const result = await sql.query(query, [publisherId]);
+  return result.rows;
 }
 
 // Get books by classification
 async function findByClassification(classificationId) {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+  if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const query = `
+  const query = `
         SELECT b.*, 
                a.name as author_name, 
                p.name as publisher_name,
@@ -353,18 +353,18 @@ async function findByClassification(classificationId) {
         ORDER BY b.createddate DESC
     `;
 
-    const result = await sql.query(query, [classificationId]);
-    return result.rows;
+  const result = await sql.query(query, [classificationId]);
+  return result.rows;
 }
 
 module.exports = {
-    init,
-    create,
-    findAll,
-    findById,
-    update,
-    deleteById,
-    findByAuthor,
-    findByPublisher,
-    findByClassification
+  init,
+  create,
+  findAll,
+  findById,
+  update,
+  deleteById,
+  findByAuthor,
+  findByPublisher,
+  findByClassification
 };

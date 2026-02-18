@@ -57,6 +57,7 @@ const DynamicCRUD = ({
     authors = [],
     categories = [],
     publishers = [],
+    onFieldChange = null,
 }) => {
     const {
         allowCreate = true,
@@ -1536,6 +1537,7 @@ const DynamicCRUD = ({
                 onSubmit={handleSave}
                 loading={loading}
                 editingItem={editingItem}
+                onFieldChange={onFieldChange}
             />
 
             <Modal backdrop="static" show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>

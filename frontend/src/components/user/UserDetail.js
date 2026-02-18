@@ -7,6 +7,19 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 
 const UserDetail = ({ permissions }) => {
 
+
+   const other = permissions?.allowEdit
+      ? {
+          other: [
+           { key: "createdbyid", label: "Created By", type: "text" },
+           {
+              key: "createddate", label: "Created Date", type: "date",
+              render: (value) => convertToUserTimezone(value, timeZone)
+            },
+          ],
+        }
+      : {};
+
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
 
@@ -121,9 +134,9 @@ const UserDetail = ({ permissions }) => {
     },
 
     details: [
-      { key: "firstname", label: "First Name", type: "text" },
-      { key: "lastname", label: "Last Name", type: "text" },
-      { key: "email", label: "Email", type: "text" },
+      { key: "firstname", label: "First Name", type: "text", required: true, },
+      { key: "lastname", label: "Last Name", type: "text", required: true, },
+      { key: "email", label: "Email", type: "text",  required: true, },
       {
         key: "country",
         label: "Country",
@@ -154,7 +167,7 @@ const UserDetail = ({ permissions }) => {
         readOnly: true,
         render: (value) => value || (companyInfo?.country_code ? companyInfo.country_code : "N/A")
       },
-      { key: "phone", label: "Phone", type: "text" },
+      { key: "phone", label: "Phone", type: "text", maxLength:"10", required:true },
       {
         key: "currency",
         label: "Currency",
@@ -195,6 +208,7 @@ const UserDetail = ({ permissions }) => {
         label: "User Role",
         type: "select",
         readOnly: true,
+        required:true,
 
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
 
@@ -210,6 +224,14 @@ const UserDetail = ({ permissions }) => {
         }
       },
       {
+        key: "library_member_type",
+        label: "Gender",
+        type: "select",
+        required: false,
+        options: library_member_type.map((item) => ({ label: item, value: item })),
+        colSize: 6,
+      },
+      {
         key: "isactive",
         label: "Status",
         type: "toggle",
@@ -218,24 +240,47 @@ const UserDetail = ({ permissions }) => {
           { value: false, label: "Inactive" },
         ],
       },
-      {
-        key: "library_member_type",
-        label: "Gender",
-        type: "select",
-        required: false,
-        options: library_member_type.map((item) => ({ label: item, value: item })),
-        colSize: 6,
-      },
     ],
-    other: [
+    ...other,
+
+    validationRules: (formData, allUsers = [], editingUser) => {
+        const errors = [];
+
+        if (!formData.firstname?.trim()) errors.push("First name is required");
+        if (!formData.lastname?.trim()) errors.push("Last name is required");
+        if (!formData.email?.trim()) errors.push("Email is required");
 
 
-      { key: "createdbyid", label: "Created By", type: "text" },
-      {
-        key: "createddate", label: "Created Date", type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone)
-      },
-    ],
+        if (!formData.country) errors.push("Country is required");
+        if (!formData.userrole) errors.push("Role is required");
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (formData.email && !emailRegex.test(formData.email)) {
+          errors.push("Invalid email format");
+        }
+
+        // Phone validation (10 digit)
+        if (formData.phone) {
+          const phoneRegex = /^[0-9]{10}$/;
+          if (!phoneRegex.test(formData.phone)) {
+            errors.push("Phone number must be exactly 10 digits");
+          }
+        }
+
+        //  Duplicate email check (safe handling)
+        if (Array.isArray(allUsers)) {
+          const duplicate = allUsers.find(
+            user =>
+              user.email === formData.email &&
+              user.id !== editingUser?.id
+          );
+          if (duplicate) errors.push("Email already exists");
+        }
+
+        return errors;
+      }
+
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -247,6 +292,7 @@ const UserDetail = ({ permissions }) => {
       moduleLabel="User"
       icon="fa-solid fa-users"
       fields={fields}
+      validationRules={fields.validationRules}
       externalData={externalData}
       timeZone={timeZone}
       permissions={permissions || {}}

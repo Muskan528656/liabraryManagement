@@ -4,8 +4,7 @@ import React from "react";
 import { createModel } from "../common/UniversalCSVXLSXImporter";
 
 export const getAuthorConfig = (externalData = {}, props = {}, permissions = {}) => {
-
-
+ 
     const AuthorModel = createModel({
         modelName: "Author",
         fields: {
@@ -107,30 +106,37 @@ export const getAuthorConfig = (externalData = {}, props = {}, permissions = {})
         ],
 
 
-        validationRules: (formData, allAuthors, editingAuthor) => {
-            const errors = [];
-            if (!formData.name?.trim()) {
-                errors.push("Author Name is required");
-            }
-            else {
+       validationRules: (formData, allAuthors, editingAuthor) => {
+        const errors = [];
 
-                if (!formData.email?.trim()) {
-                    errors.push("Author Email is required");
-                } else {
-                    const duplicateEmail = allAuthors.find(
-                        author => author.email?.toLowerCase() === formData.email?.toLowerCase() &&
-                            author.id !== editingAuthor?.id
-                    );
-                    if (duplicateEmail) {
-                        errors.push("Author with this email already exists");
-                    }
+        if (!formData.name?.trim()) {
+            errors.push("Author Name is required");
+        } else {
+            if (!formData.email?.trim()) {
+            errors.push("Author Email is required");
+            } else {
+            // ✅ Email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                errors.push("Invalid email format");
+            } else {
+                // ✅ Duplicate email check
+                const duplicateEmail = allAuthors.find(
+                (author) =>
+                    author.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                    author.id !== editingAuthor?.id
+                );
+
+                if (duplicateEmail) {
+                errors.push("Author with this email already exists");
                 }
-
-
             }
+            }
+        }
 
-            return errors;
+        return errors;
         },
+
         dataDependencies: {},
         features: {
             showBulkInsert: false,
@@ -152,9 +158,9 @@ export const getAuthorConfig = (externalData = {}, props = {}, permissions = {})
             { key: "email", label: "Email", type: "text" },
             { key: "bio", label: "Bio", type: "text" },
             { key: "created_at", label: "Created At", type: "date" },
-            { key: "updated_at", label: "Updated At", type: "date" },
-
+            { key: "updated_at", label: "Updated At", type: "date" },    
         ],
+       
         customHandlers: {
             beforeSave: (formData, editingItem) => {
                 return true;

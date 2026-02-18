@@ -105,7 +105,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
     damagedCount: 0,
     totalBooks: 0,
     totalTitles: 0,
-    availableBooks: 0,
+    availableBooks:0,
     issuedBooks: 0,
     booksThisMonth: 0,
     totalSubmissions: 0,
@@ -586,7 +586,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
   };
 
   const handleTopCategoriesClick = () => {
-    navigate("/category");
+    navigate("/classification");
   };
 
   const handleQuickStatsClick = () => {

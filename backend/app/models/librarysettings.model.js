@@ -287,8 +287,8 @@ async function getActiveSetting() {
   console.log("Query:", query, "Params:", [branchId]);
 
   const result = await sql.query(query, [branchId]);
-  console.log("result",result);
-  
+  console.log("result", result);
+
   return result.rows.length ? result.rows[0] : null;
 }
 
@@ -361,11 +361,11 @@ async function create(data, userId) {
        reservation_limit, membership_validity_days, issue_permission, 
        return_permission, issue_approval_required, digital_access,
        description, is_active, company_id, config_classification,
-       lost_book_fine_percentage, max_issue_per_day,
+       lost_book_fine_percentage, max_issue_per_day, branch_id,
        createddate, lastmodifieddate, createdbyid, lastmodifiedbyid)
       VALUES
       ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
-       $14,$15,$16,$17,$18, NOW(),NOW(),$19,$19)
+       $14,$15,$16,$17,$18,$19, NOW(),NOW(),$20,$20)
       RETURNING *
     `;
 
@@ -388,18 +388,72 @@ async function create(data, userId) {
     data.config_classification || "",
     data.lost_book_fine_percentage || 100,
     data.max_issue_per_day || 1,
-    userId || null,
-    branchId, // Adding branch_id
+    branchId, // $19 - branch_id
+    userId || null, // $20 - createdbyid and lastmodifiedbyid
   ];
 
   const result = await sql.query(query, params);
   return result.rows[0];
 }
-
 /* ------------------------------------------------------
    UPDATE BY ID
 ------------------------------------------------------ */
-async function updateById(id, data, userId) {
+// async function updateById(id, data, userId) {
+//   if (!schema) throw new Error("Schema not initialized.");
+
+//   const query = `
+//       UPDATE ${schema}.library_setting
+//       SET name = COALESCE($2, name),
+//           price = COALESCE($3, price),
+//           max_books = COALESCE($4, max_books),
+//           max_days = COALESCE($5, max_days),
+//           renewal_limit = COALESCE($6, renewal_limit),
+//           fine_per_day = COALESCE($7, fine_per_day),
+//           reservation_limit = COALESCE($8, reservation_limit),
+//           membership_validity_days = COALESCE($9, membership_validity_days),
+//           issue_permission = COALESCE($10, issue_permission),
+//           return_permission = COALESCE($11, return_permission),
+//           issue_approval_required = COALESCE($12, issue_approval_required),
+//           digital_access = COALESCE($13, digital_access),
+//           description = COALESCE($14, description),
+//           is_active = COALESCE($15, is_active),
+//           config_classification = COALESCE($16, config_classification),
+//           lost_book_fine_percentage = COALESCE($17, lost_book_fine_percentage),
+//           max_issue_per_day = COALESCE($18, max_issue_per_day),
+//           lastmodifieddate = NOW(),
+//           lastmodifiedbyid = $19
+//       WHERE id = $1
+//       RETURNING *
+//     `;
+
+//   const params = [
+//     id,
+//     data.name,
+//     data.price,
+//     data.max_books,
+//     data.max_days,
+//     data.renewal_limit,
+//     data.fine_per_day,
+//     data.reservation_limit,
+//     data.membership_validity_days,
+//     data.issue_permission,
+//     data.return_permission,
+//     data.issue_approval_required,
+//     data.digital_access,
+//     data.description,
+//     data.is_active,
+//     data.config_classification,
+//     data.lost_book_fine_percentage,
+//     data.max_issue_per_day,
+//     userId || null,
+//     branchId, // Adding branch_id for security check
+//   ];
+
+//   const result = await sql.query(query, params);
+//   return result.rows[0];
+// }
+async function updateById(id, data, userId, branchId) {
+  console.log("Updating setting with ID:", id, "Data:", data, "UserID:", userId, "BranchID:", branchId);
   if (!schema) throw new Error("Schema not initialized.");
 
   const query = `
@@ -418,12 +472,13 @@ async function updateById(id, data, userId) {
           digital_access = COALESCE($13, digital_access),
           description = COALESCE($14, description),
           is_active = COALESCE($15, is_active),
-          config_classification = COALESCE($16, config_classification),
+          config_classification =   COALESCE(NULLIF($16, ''), config_classification),
           lost_book_fine_percentage = COALESCE($17, lost_book_fine_percentage),
           max_issue_per_day = COALESCE($18, max_issue_per_day),
           lastmodifieddate = NOW(),
           lastmodifiedbyid = $19
-      WHERE id = $1
+      WHERE id = $1 
+      AND branch_id = $20
       RETURNING *
     `;
 
@@ -447,13 +502,16 @@ async function updateById(id, data, userId) {
     data.lost_book_fine_percentage,
     data.max_issue_per_day,
     userId || null,
-    branchId, // Adding branch_id for security check
+    branchId
   ];
 
+  console.log("Update Query:", query);
+  console.log("Update Params:", params);
+
   const result = await sql.query(query, params);
+  console.log("Update Result:", result);
   return result.rows[0];
 }
-
 /* ------------------------------------------------------
    CREATE OR UPDATE ACTIVE SETTINGS
 ------------------------------------------------------ */
@@ -516,7 +574,7 @@ async function deleteByKey(key) {
   // Since library_setting doesn't have a key column, 
   // we'll deactivate the active setting instead of deleting
   const activeSetting = await getActiveSetting();
-  
+
   if (!activeSetting) {
     return { success: false, message: "Setting not found" };
   }

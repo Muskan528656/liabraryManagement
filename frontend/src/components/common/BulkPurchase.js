@@ -1,9 +1,8 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Container, Row, Col, Card, Button, Form, Table,
-    Tabs, Tab, Alert, Modal, Badge
+    Tabs, Tab, Alert, Modal, Badge,
+    InputGroup
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
@@ -15,15 +14,21 @@ import UniversalBarcodeScanner from './UniversalBarcodeScanner';
 import PubSub from 'pubsub-js';
 import "../../App.css";
 import PermissionDenied from '../../utils/permission_denied';
+import { Country, State, City } from 'country-state-city';
+import { COUNTRY_CODES } from '../../constants/COUNTRY_CODES';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const BulkPurchasePage = ({ permissions }) => {
 
 
     const navigate = useNavigate();
 
+
     const [multiInsertRows, setMultiInsertRows] = useState([{
         vendor_id: "",
         book_id: "",
-        quantity: 0,
+        quantity: 1,
         unit_price: 0,
         purchase_date: new Date().toISOString().split('T')[0],
         notes: ""
@@ -49,13 +54,20 @@ const BulkPurchasePage = ({ permissions }) => {
         company_name: "",
         email: "",
         phone: "",
+        country_code: "+91",
+        gst_number: "",
+        pan_number: "",
         address: "",
         city: "",
         state: "",
         pincode: "",
         country: "India",
-        status: "active",
+        status: true,
     });
+
+
+
+
     const [bookFormData, setBookFormData] = useState({
         title: "",
         author_id: "",
@@ -635,6 +647,9 @@ const BulkPurchasePage = ({ permissions }) => {
 
     const handleMultiRowChange = (index, field, value) => {
         const updatedRows = [...multiInsertRows];
+        if (field === "quantity" || field === "unit_price") {
+            value = Math.floor(Number(value));
+        }
         updatedRows[index] = { ...updatedRows[index], [field]: value };
         setMultiInsertRows(updatedRows);
     };
@@ -678,37 +693,92 @@ const BulkPurchasePage = ({ permissions }) => {
         }
     };
 
+    // const handleAddVendor = async () => {
+    //     if (!vendorFormData.name || !vendorFormData.name.trim()) {
+    //         PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Vendor name is required" });
+    //         return;
+    //     }
+
+    //     try {
+    //         setLoading(true);
+    //         const vendorApi = new DataApi("vendor");
+    //         const response = await vendorApi.create(vendorFormData);
+
+    //         if (response.data) {
+    //             toast.success("Vendor added successfully");
+    //             setShowAddVendorModal(false);
+    //             setVendorFormData({
+    //                 name: "",
+    //                 company_name: "",
+    //                 email: "",
+    //                 phone: "",
+    //                 address: "",
+    //                 city: "",
+    //                 state: "",
+    //                 pincode: "",
+    //                 country: "India",
+    //                 status: "active",
+    //             });
+    //             await fetchVendors();
+    //         }
+    //     } catch (error) {
+    //         console.error("Error adding vendor:", error);
+    //         PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Failed to add vendor" });
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+
     const handleAddVendor = async () => {
-        if (!vendorFormData.name || !vendorFormData.name.trim()) {
-            PubSub.publish("RECORD_ERROR_TOAST", { title: "Validation Error", message: "Vendor name is required" });
+        if (!vendorFormData.name?.trim()) {
+            PubSub.publish("RECORD_ERROR_TOAST", {
+                title: "Validation Error",
+                message: "Vendor name is required",
+            });
             return;
         }
 
         try {
             setLoading(true);
+
             const vendorApi = new DataApi("vendor");
             const response = await vendorApi.create(vendorFormData);
 
-            if (response.data) {
-                toast.success("Vendor added successfully");
+            console.log("Vendor create response =>", response);
+
+
+            if (response?.data?.success || response?.status === 201 || response?.data) {
+                toast.success("Vendor added successfully ");
+
                 setShowAddVendorModal(false);
+
                 setVendorFormData({
                     name: "",
                     company_name: "",
                     email: "",
                     phone: "",
+                    country_code: "+91",
+                    gst_number: "",
+                    pan_number: "",
                     address: "",
                     city: "",
                     state: "",
                     pincode: "",
                     country: "India",
-                    status: "active",
+                    status: true,
                 });
+
                 await fetchVendors();
+            } else {
+                toast.error("Something went wrong while adding vendor");
             }
         } catch (error) {
             console.error("Error adding vendor:", error);
-            PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Failed to add vendor" });
+
+            toast.error(
+                error?.response?.data?.message || "Failed to add vendor"
+            );
         } finally {
             setLoading(false);
         }
@@ -849,7 +919,6 @@ const BulkPurchasePage = ({ permissions }) => {
                     }
 
                     successCount++;
-                    // Show individual success toast for each record
                     PubSub.publish("RECORD_SAVED_TOAST", {
                         message: `Purchase record ${i + 1} saved successfully`
                     });
@@ -905,6 +974,8 @@ const BulkPurchasePage = ({ permissions }) => {
     if (!permissions?.allowCreate) {
         return <PermissionDenied />;
     }
+
+    const todayStr = new Date().toISOString().split("T")[0];
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -1156,22 +1227,35 @@ const BulkPurchasePage = ({ permissions }) => {
                                                     <Form.Control
                                                         type="number"
                                                         value={row.quantity}
-                                                        onChange={(e) => handleMultiRowChange(index, "quantity", e.target.value)}
                                                         min="1"
+                                                        step="1"
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+
+                                                            const intValue = Math.floor(Number(value));
+
+                                                            handleMultiRowChange(index, "quantity", intValue < 1 ? 1 : intValue);
+                                                        }}
                                                         className="border-0 p-1"
-                                                        style={{ width: '100%' }}
                                                     />
+
                                                 </td>
                                                 <td className="border-end p-2" style={{ width: '10%' }}>
                                                     <Form.Control
                                                         type="number"
                                                         value={row.unit_price}
-                                                        onChange={(e) => handleMultiRowChange(index, "unit_price", e.target.value)}
                                                         min="0"
-                                                        step="0.01"
+                                                        step="1"
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+
+                                                            const intValue = Math.floor(Number(value));
+
+                                                            handleMultiRowChange(index, "unit_price", intValue < 0 ? 0 : intValue);
+                                                        }}
                                                         className="border-0 p-1"
-                                                        style={{ width: '100%' }}
                                                     />
+
                                                 </td>
                                                 <td className="border-end p-2" style={{ width: '12%' }}>
                                                     <div className="bg-light p-2 rounded text-center">
@@ -1184,6 +1268,7 @@ const BulkPurchasePage = ({ permissions }) => {
                                                     <Form.Control
                                                         type="date"
                                                         value={row.purchase_date}
+                                                        max={todayStr}
                                                         onChange={(e) => handleMultiRowChange(index, "purchase_date", e.target.value)}
                                                         className="border-0 p-1"
                                                         style={{ width: '100%' }}
@@ -1689,6 +1774,7 @@ const BulkPurchasePage = ({ permissions }) => {
 
     return (
         <>
+            <ToastContainer position="top-right" autoClose={2000} />
             <Row className="align-items-center">
                 <Col lg={6}></Col>
                 <Col lg={6}>
@@ -1800,52 +1886,293 @@ const BulkPurchasePage = ({ permissions }) => {
 
                 {/* Add Vendor Modal */}
                 <Modal backdrop="static" show={showAddVendorModal} onHide={() => setShowAddVendorModal(false)} size="lg" centered>
-                    <Modal.Header closeButton className="border-bottom-0 pb-0" style={{ background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)", color: "white" }}>
+                    <Modal.Header closeButton className="border-bottom-0 pb-2"
+                        style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                         <Modal.Title className="fw-bold">
                             Add New Vendor
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className="pt-0">
                         <Form>
+                            {/* ---------------- Contact Information ---------------- */}
                             <div className="mt-2 mb-4">
-                                <div className="d-flex align-items-center mb-3" style={{ padding: "10px", background: "#f8f9fa", borderRadius: "8px" }}>
-                                    <h6 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>Contact Person Information</h6>
+                                <div
+                                    className="d-flex align-items-center mt-2 p-2"
+                                    style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", borderRadius: "8px" }}>
+
+                                    <h6 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
+                                        Contact Person Information
+                                    </h6>
                                 </div>
+
                                 <Row>
-                                    <Col md={12}>
+                                    <Col md={6}>
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Contact Person Name <span className="text-danger">*</span></Form.Label>
+                                            <Form.Label>
+                                                Contact Person Name <span className="text-danger">*</span>
+                                            </Form.Label>
                                             <Form.Control
                                                 type="text"
-                                                name="name"
                                                 value={vendorFormData.name}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, name: e.target.value })}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        name: e.target.value,
+                                                    })
+                                                }
                                                 placeholder="Enter contact person name"
                                                 required
                                             />
                                         </Form.Group>
                                     </Col>
-                                    <Col md={4}>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Company Name</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                value={vendorFormData.company_name}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        company_name: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Enter company name"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={3}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Country Code</Form.Label>
+                                            <Form.Select
+                                                value={vendorFormData.country_code}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        country_code: e.target.value,
+                                                    })
+                                                }
+                                            >
+                                                {COUNTRY_CODES.map((country, index) => (
+                                                    <option key={index} value={country.country_code}>
+                                                        {country.country_code} - {country.country}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={3}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Phone</Form.Label>
                                             <Form.Control
                                                 type="tel"
-                                                name="phone"
                                                 value={vendorFormData.phone}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, phone: e.target.value })}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        phone: e.target.value,
+                                                    })
+                                                }
                                                 placeholder="Enter phone number"
                                             />
                                         </Form.Group>
                                     </Col>
-                                    <Col md={4}>
+
+                                    <Col md={6}>
                                         <Form.Group className="mb-3">
                                             <Form.Label>Email</Form.Label>
                                             <Form.Control
                                                 type="email"
-                                                name="email"
                                                 value={vendorFormData.email}
-                                                onChange={(e) => setVendorFormData({ ...vendorFormData, email: e.target.value })}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        email: e.target.value,
+                                                    })
+                                                }
                                                 placeholder="Enter email address"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            </div>
+
+                            {/* ---------------- Company Information ---------------- */}
+                            <div className="mb-3">
+                                <div
+                                    className="d-flex align-items-center mb-3 p-2"
+                                    style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)", borderRadius: "8px" }}>
+
+
+                                    <h6 className="mb-0 fw-bold" style={{ color: "var(--primary-color)" }}>
+                                        Company Information
+                                    </h6>
+                                </div>
+
+                                <Row>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>GST Number</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                value={vendorFormData.gst_number}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        gst_number: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Enter GST number"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>PAN Number</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                value={vendorFormData.pan_number}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        pan_number: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Enter PAN number"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Country</Form.Label>
+                                            <Form.Select
+                                                value={vendorFormData.country}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        country: e.target.value,
+                                                        state: "",
+                                                        city: "",
+                                                    })
+                                                }
+                                            >
+                                                {Country.getAllCountries().map((country) => (
+                                                    <option key={country.isoCode} value={country.name}>
+                                                        {country.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>State</Form.Label>
+                                            <Form.Select
+                                                value={vendorFormData.state}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        state: e.target.value,
+                                                        city: "",
+                                                    })
+                                                }
+                                            >
+                                                {State.getStatesOfCountry(
+                                                    Country.getAllCountries().find(
+                                                        (c) => c.name === vendorFormData.country
+                                                    )?.isoCode
+                                                ).map((state) => (
+                                                    <option key={state.isoCode} value={state.name}>
+                                                        {state.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>City</Form.Label>
+                                            <Form.Select
+                                                value={vendorFormData.city}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        city: e.target.value,
+                                                    })
+                                                }
+                                            >
+                                                {City.getCitiesOfState(
+                                                    Country.getAllCountries().find(
+                                                        (c) => c.name === vendorFormData.country
+                                                    )?.isoCode,
+                                                    State.getStatesOfCountry(
+                                                        Country.getAllCountries().find(
+                                                            (c) => c.name === vendorFormData.country
+                                                        )?.isoCode
+                                                    ).find((s) => s.name === vendorFormData.state)?.isoCode
+                                                ).map((city) => (
+                                                    <option key={city.name} value={city.name}>
+                                                        {city.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Pincode</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                value={vendorFormData.pincode}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        pincode: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Enter pincode"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={12}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Address</Form.Label>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={2}
+                                                value={vendorFormData.address}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        address: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Enter full address"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <Form.Group className='mb-3'>
+                                            <Form.Label>Status</Form.Label>
+                                            <Form.Check
+                                                type="switch"
+                                                checked={vendorFormData.status}
+                                                onChange={(e) =>
+                                                    setVendorFormData({
+                                                        ...vendorFormData,
+                                                        status: e.target.checked,
+                                                    })
+                                                }
                                             />
                                         </Form.Group>
                                     </Col>
@@ -1857,7 +2184,7 @@ const BulkPurchasePage = ({ permissions }) => {
                         <Button variant="outline-secondary" onClick={() => setShowAddVendorModal(false)} style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}>
                             Cancel
                         </Button>
-                        <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ background: "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)", border: "none" }}>
+                        <Button variant="primary" onClick={handleAddVendor} disabled={loading} style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}>
                             {loading ? (
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -1865,78 +2192,55 @@ const BulkPurchasePage = ({ permissions }) => {
                                 </>
                             ) : (
                                 <>
-                                    Add Vendor
+                                    Save
                                 </>
                             )}
                         </Button>
                     </Modal.Footer>
+
+
                 </Modal>
+
+
 
                 {/* Add Book Modal */}
                 <Modal show={showAddBookModal} onHide={() => {
                     setShowAddBookModal(false);
                     setBarcodeInput("");
                 }} size="lg" centered>
-                    <Modal.Header closeButton className="border-bottom-0 pb-0">
+                    <Modal.Header closeButton className=" p-2" style={{ backgroundColor: "var(--secondary-color)", color: "var(--primary-color)" }}>
                         <Modal.Title className="fw-bold">
-                            <i className="fa-solid fa-book me-2 text-success"></i>
+                            <i className="fa-solid fa-book me-2" style={{ color: "var(--primary-color)" }}> </i>
                             Add New Book
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className="pt-0">
-                        <Card className="mb-4 border-0 bg-light">
+                        <Card className="mb-4 border-0">
                             <Card.Body className="p-3">
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 className="mb-1 fw-semibold">
-                                            <i className="fa-solid fa-barcode me-2"></i>
-                                            Scan Barcode / Enter ISBN
-                                        </h6>
-                                        <p className="mb-0 text-muted small">
-                                            Enter 10 or 13 digit ISBN to auto-fill details using Google Books API
-                                        </p>
-                                    </div>
-                                    {(loading || barcodeProcessing) && (
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                            <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                    )}
-                                </div>
+                                <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
 
-                                <Form.Group className="mt-3">
+                                <Form.Group>
                                     <Form.Label className="small fw-semibold">Enter ISBN/Barcode</Form.Label>
-                                    <div className="mb-2">
+                                    <InputGroup>
                                         <Form.Control
                                             type="text"
                                             value={barcodeInput}
+                                            placeholder="Enter ISBN or barcode number"
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setBarcodeInput(value);
 
-                                                if (autoLookupTimeout) {
-                                                    clearTimeout(autoLookupTimeout);
-                                                }
+                                                if (autoLookupTimeout) clearTimeout(autoLookupTimeout);
 
                                                 if (value.length >= 10) {
-                                                    const timeout = setTimeout(() => {
-                                                        handleBarcodeLookup(value);
-                                                    }, 1500);
+                                                    const timeout = setTimeout(() => handleBarcodeLookup(value), 1500);
                                                     setAutoLookupTimeout(timeout);
                                                 }
                                             }}
-                                            placeholder="Enter ISBN or barcode number"
                                             onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleBarcodeLookup(barcodeInput);
-                                                }
+                                                if (e.key === "Enter") handleBarcodeLookup(barcodeInput);
                                             }}
                                         />
-                                    </div>
-
-                                    <div className="d-flex gap-2 align-items-center">
-                                        <div className="flex-grow-1">
-                                            <UniversalBarcodeScanner onBarcodeScanned={handleBarcodeScanned} />
-                                        </div>
                                         <Button
                                             variant="primary"
                                             onClick={() => handleBarcodeLookup(barcodeInput)}
@@ -1948,12 +2252,9 @@ const BulkPurchasePage = ({ permissions }) => {
                                                 <i className="fa-solid fa-search"></i>
                                             )}
                                         </Button>
-                                    </div>
-
-                                    <Form.Text className="text-muted">
-                                        Using Google Books API for book information
-                                    </Form.Text>
+                                    </InputGroup>
                                 </Form.Group>
+
                             </Card.Body>
                         </Card>
 
@@ -2062,13 +2363,13 @@ const BulkPurchasePage = ({ permissions }) => {
                         <Button variant="success" onClick={handleAddBook} disabled={loading}>
                             {loading ? (
                                 <>
-                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" style={{ borderColor: "var(--primary-color)", color: "var(--primary-color)" }}></span>
                                     Adding...
                                 </>
                             ) : (
                                 <>
                                     <i className="fa-solid fa-plus me-2"></i>
-                                    Add Book
+                                    Save
                                 </>
                             )}
                         </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -50,8 +50,6 @@ const BookBrrowedReport = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
-
   const [filters, setFilters] = useState({
     days: "30",
     startDate: "",
@@ -87,14 +85,19 @@ const BookBrrowedReport = () => {
     width: '100%'
   };
 
-  // Fetch Categories for Filter
+  // Fetch Categories for Filter (separate from report data so they don't disappear when filtering)
+  const [categories, setCategories] = useState([]);
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoryApi = new DataApi("category");
+        const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
-        setCategories(categoriesData);
+        
+        // Get unique category names
+        const uniqueCategories = [...new Set(categoriesData.map(item => item.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -110,34 +113,34 @@ const BookBrrowedReport = () => {
   useEffect(() => {
 
     if (filters.days === "custom" && !filters.startDate && !filters.endDate) {
-    const today = new Date();
-    const lastMonth = new Date();
-    lastMonth.setMonth(today.getMonth() - 1);
+      const today = new Date();
+      const lastMonth = new Date();
+      lastMonth.setMonth(today.getMonth() - 1);
 
 
 
-    const formatDate = (date) => date.toISOString().split("T")[0];
+      const formatDate = (date) => date.toISOString().split("T")[0];
 
-    handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
-    handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
-  
+      handleFilterChange("startDate", lastMonth.toISOString().split("T")[0]);      // Today
+      handleFilterChange("endDate", today.toISOString().split("T")[0]);    // Last month same day
+
     }
     fetchReportData();
   }, [filters]);
 
 
-    const currentDate = new Date();
+  const currentDate = new Date();
 
-    const lastMonthDate = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - 1,
-      currentDate.getDate()
-    );
+  const lastMonthDate = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() - 1,
+    currentDate.getDate()
+  );
 
 
 
- 
-   
+
+
 
   const fetchReportData = async () => {
     setLoading(true);
@@ -148,9 +151,9 @@ const BookBrrowedReport = () => {
 
       // Handle Custom Date Logic
       if (filters.days === "custom") {
-        
+
         params.append("days", "custom");
-      
+
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
       } else {
@@ -164,8 +167,8 @@ const BookBrrowedReport = () => {
         `/book-borrowing?${params.toString()}`
       );
 
-      console.log("respons",response)
-      console.log("book-borrwoing resp=>",response.data.records)
+      console.log("respons", response)
+      console.log("book-borrwoing resp=>", response.data.records)
       setReportData(response.data.records);
     } catch (err) {
       console.error("Error fetching report data:", err);
@@ -232,7 +235,7 @@ const BookBrrowedReport = () => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Overdue Books");
-    
+
     // Auto-size columns
     const wscols = Object.keys(data[0]).map(key => ({ wch: key.length + 10 }));
     worksheet['!cols'] = wscols;
@@ -244,17 +247,17 @@ const BookBrrowedReport = () => {
   const exportToPDF = () => {
     if (reportData.length === 0) return alert("No data to export");
     const doc = new jsPDF('p', 'mm', 'a4');
-    
+
     doc.setFontSize(16);
     doc.text('Overdue Books Report', 105, 15, { align: 'center' });
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
     const tableData = reportData.map(row => [
-      row.title, 
-      row.member_name, 
-      row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A', 
-      row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A', 
+      row.title,
+      row.member_name,
+      row.issue_date ? new Date(row.issue_date).toLocaleDateString() : 'N/A',
+      row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A',
       row.circulation_status
     ]);
 
@@ -349,7 +352,7 @@ const BookBrrowedReport = () => {
     );
   }
 
-  console.log("reportData",reportData)
+  console.log("reportData", reportData)
 
   return (
     <div className="container-fluid bg-light min-vh-100 pb-5">
@@ -381,7 +384,7 @@ const BookBrrowedReport = () => {
           </Dropdown>
         </div> */}
 
-       <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
+        <div className="library-header border shadow-sm mt-3 mb-2 rounded mx-2">
           <Col md={6} className="d-flex align-items-center gap-3 ms-3">
             <button
               onClick={() => navigate('/reports')}
@@ -464,8 +467,8 @@ const BookBrrowedReport = () => {
                 <Form.Control
                   type="date"
                   style={inputBaseStyle}
-                  value={filters.startDate }
-                  
+                  value={filters.startDate}
+
                   onChange={(e) => handleFilterChange("startDate", e.target.value)}
                 />
               </Col>
@@ -505,8 +508,8 @@ const BookBrrowedReport = () => {
                 onChange={(e) => handleFilterChange("category", e.target.value)}
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.name}</option>
+                {categories.map((opt, i) => (
+                  <option className="color-dark" key={i} value={opt}>{opt}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -529,19 +532,19 @@ const BookBrrowedReport = () => {
         {/* Content View */}
         <div className="p-3">
           {viewMode === "table" && (
-              <ResizableTable
-                data={reportData}
-                columns={columns}
-                loading={loading}
-                currentPage={currentPage}
-                recordsPerPage={10}
-                onPageChange={setCurrentPage}
-                showSerialNumber={true}
-                showActions={false}
-                showCheckbox={true}
-                selectedItems={selectedItems}
-                onSelectionChange={setSelectedItems}
-              />
+            <ResizableTable
+              data={reportData}
+              columns={columns}
+              loading={loading}
+              currentPage={currentPage}
+              recordsPerPage={10}
+              onPageChange={setCurrentPage}
+              showSerialNumber={true}
+              showActions={false}
+              showCheckbox={true}
+              selectedItems={selectedItems}
+              onSelectionChange={setSelectedItems}
+            />
           )}
 
           {viewMode === "dashboard" && (
@@ -586,7 +589,7 @@ const BookBrrowedReport = () => {
                 </Card>
               </Col>
               <Col lg={6}>
-                 <Card className="border-0 shadow-sm">
+                <Card className="border-0 shadow-sm">
                   <Card.Body>
                     <h6 className="fw-bold mb-3"><PieChartIcon className="me-2 text-info" />Category Stats</h6>
                     <div className="list-group list-group-flush">

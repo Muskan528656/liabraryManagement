@@ -56,7 +56,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
         isoCode: country.isoCode
     }));
 
-    console.log("countryOption=>",countryOptions)
+    console.log("countryOption=>", countryOptions)
 
     const {
         canCreate = true,
@@ -103,15 +103,34 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 label: "Email",
                 render: (value) => <span style={{ color: "#6c757d" }}>{value || '-'}</span>,
             },
+            // {
+
+            //     field: "phone",
+            //     label: "Phone",
+            //     render: (value) => <span>{value || '-'}</span>,
+            // },
+            // {
+            //     field: "country_code",
+            //     label: "Countryssss Code",
+            //     // render: (value) => <span>{value || '-'}</span>,
+            // },
             {
-                field: "phone",
+                field: "phone", // Use the main field name
                 label: "Phone",
-                render: (value) => <span>{value || '-'}</span>,
-            },
-            {
-                field: "country_code",
-                label: "Country Code",
-                render: (value) => <span>{value || '-'}</span>,
+                render: (value, row) => {
+                    const countryCode = row.country_code || '';
+                    const phoneNumber = row.phone || value || '';
+
+                    console.log("Rendering phone number:", { countryCode, phoneNumber });
+                    if (!countryCode && !phoneNumber) return <span>-</span>;
+
+                    return (
+                        <span>
+                            {countryCode && <span style={{ color: '#666', marginRight: '4px' }}>{countryCode}</span>}
+                            {phoneNumber}
+                        </span>
+                    );
+                },
             },
             {
                 field: "gst_number",
@@ -254,45 +273,45 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 options: (formData) => {
                     if (!formData?.country) return [];
 
-                      const selectedCountry = Country.getAllCountries()
-                       .find(c => c.name === formData.country);
+                    const selectedCountry = Country.getAllCountries()
+                        .find(c => c.name === formData.country);
 
-                        if (!selectedCountry) return [];
-                        return State.getStatesOfCountry(selectedCountry.isoCode)
+                    if (!selectedCountry) return [];
+                    return State.getStatesOfCountry(selectedCountry.isoCode)
                         .map(state => ({
-                            value: state.name,         
+                            value: state.name,
                             label: state.name,
                             isoCode: state.isoCode
                         }));
-                   }
+                }
             },
             {
-                    name: "city",
-                    label: "City",
-                    type: "select",
-                    colSize: 6,
-                    section: "Company Information",
-                    options: (formData) => {
-                        if (!formData?.country || !formData?.state) return [];
+                name: "city",
+                label: "City",
+                type: "select",
+                colSize: 6,
+                section: "Company Information",
+                options: (formData) => {
+                    if (!formData?.country || !formData?.state) return [];
 
-                        const selectedCountry = Country.getAllCountries()
-                            .find(c => c.name === formData.country);
+                    const selectedCountry = Country.getAllCountries()
+                        .find(c => c.name === formData.country);
 
-                        if (!selectedCountry) return [];
+                    if (!selectedCountry) return [];
 
-                        const selectedState = State.getStatesOfCountry(selectedCountry.isoCode)
-                            .find(s => s.name === formData.state);
+                    const selectedState = State.getStatesOfCountry(selectedCountry.isoCode)
+                        .find(s => s.name === formData.state);
 
-                        if (!selectedState) return [];
+                    if (!selectedState) return [];
 
-                        return City.getCitiesOfState(
-                            selectedCountry.isoCode,
-                            selectedState.isoCode
-                        ).map(city => ({
-                            value: city.name,     
-                            label: city.name
-                        }));
-                    }
+                    return City.getCitiesOfState(
+                        selectedCountry.isoCode,
+                        selectedState.isoCode
+                    ).map(city => ({
+                        value: city.name,
+                        label: city.name
+                    }));
+                }
 
             },
 
@@ -313,7 +332,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     return null;
                 }
             },
-         
+
             {
                 name: "address",
                 label: "Address",
@@ -427,7 +446,22 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                     { key: "name", label: "Vendor Name", type: "text" },
                     { key: "company_name", label: "Company Name", type: "text" },
                     { key: "email", label: "Email", type: "email" },
-                    { key: "phone", label: "Phone", type: "tel" },
+                    // { key: "phone", label: "Phone", type: "tel",  },
+                     {
+                        field: "phone",
+                        label: "Phone",
+                        sortable: true,
+                        render: (value, row) => {
+                            if (!value) return "-";
+
+                            let code = row.country_code || "";
+
+                            
+                            code = code.replace("+", "").trim();
+
+                            return `${code}-${value}`;
+                        },
+                    },
                     { key: "gst_number", label: "GST Number", type: "text" },
                     { key: "pan_number", label: "PAN Number", type: "text" },
                     { key: "address", label: "Address", type: "text" },
@@ -491,7 +525,7 @@ export const getVendorConfig = (externalData = {}, props = {}, permissions = {})
                 return cleanedData;
             },
             afterSave: (response, editingItem) => {
-    
+
             }
         },
         exportConfig: {

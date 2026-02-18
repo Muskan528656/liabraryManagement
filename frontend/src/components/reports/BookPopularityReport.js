@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -49,7 +49,7 @@ const BookPopularityReport = () => {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
+  // categories extracted from report data using useMemo below
 
   const [filters, setFilters] = useState({
     days: "30",
@@ -86,14 +86,19 @@ const BookPopularityReport = () => {
     width: '100%'
   };
 
-  // Fetch Categories for Filter
+  // Fetch Categories for Filter (separate from report data so they don't disappear when filtering)
+  const [categories, setCategories] = useState([]);
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoryApi = new DataApi("category");
+        const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
-        setCategories(categoriesData);
+        
+        // Get unique category names
+        const uniqueCategories = [...new Set(categoriesData.map(item => item.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -162,6 +167,7 @@ const BookPopularityReport = () => {
       const response = await api.get(
         `/book-popularity-analytics?${params.toString()}`
       );
+      console.log("Report API Response:", response);
       setReportData(response.data);
     } catch (err) {
       console.error("Error fetching report data:", err);
@@ -175,7 +181,6 @@ const BookPopularityReport = () => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
-      // Clear specific dates if user switches away from "custom"
       ...(field === "days" && value !== "custom" ? { startDate: "", endDate: "" } : {})
     }));
     setCurrentPage(1);
@@ -267,7 +272,13 @@ const BookPopularityReport = () => {
       ),
     },
     { field: "author", label: "Author", width: "150px", align: "center" },
-    { field: "category", label: "Category", width: "120px", align: "center" },
+    {
+      field: "classification",
+      label: "Category",
+      width: "150px",
+      align: "center",
+      render: (_, record) => record.category || '-'
+    },
     {
       field: "available",
       label: "Available",
@@ -461,8 +472,8 @@ const BookPopularityReport = () => {
                 onChange={(e) => handleFilterChange("category", e.target.value)}
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id || cat.name}>{cat.name}</option>
+                {categories.map((opt, i) => (
+                  <option className="color-dark" key={i} value={opt}>{opt}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -482,7 +493,7 @@ const BookPopularityReport = () => {
           </Row>
         </div>
 
-      
+
         <div className="p-3">
           {viewMode === "table" && (
             <div className="border rounded overflow-hidden">

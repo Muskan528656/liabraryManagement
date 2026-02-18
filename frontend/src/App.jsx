@@ -215,8 +215,8 @@ function AppContent() {
                   <Route path="/company/:id" element={<CompanyDetail permissions={getPermissionForModule("Company")} />} />
                   <Route path="reports/bookinventoryreport" element={<BookInventoryReport permissions={getPermissionForModule("Reports")} />} />
 
-                  <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Shelf")} />} />
-                  <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Shelf")} />} />
+                  <Route path="/shelf" element={<Shelf permissions={getPermissionForModule("Rack Mapping")} />} />
+                  <Route path="/shelf/:id" element={<ShelfDetail permissions={getPermissionForModule("Rack Mapping")} />} />
                   <Route path="/grade-sections" element={<GradeSection permissions={getPermissionForModule("Grade")} />} />
                   <Route path="/grade-sections/:id" element={<GradeSectionDetail permissions={getPermissionForModule("Grade")} />} />
                   <Route path="/branches" element={<Branch permissions={getPermissionForModule("Branches")} />} />

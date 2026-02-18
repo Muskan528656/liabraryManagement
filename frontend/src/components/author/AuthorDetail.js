@@ -2,9 +2,28 @@ import React from "react";
 import ModuleDetail from "../common/ModuleDetail";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
-import moment from "moment";
+
 const AuthorDetail = ({permissions}) => {
   const { timeZone } = useTimeZone();
+   const other = permissions?.allowEdit
+    ? {
+        other: [
+                { key: "createdbyid", label: "Created By", type: "text" },
+                {
+                key: "createddate",
+                label: "Created Date",
+                type: "date",
+                },
+
+                { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+                {
+                    key: "lastmodifieddate",
+                    label: "Last Modified Date",
+                    type: "date",   
+                },
+            ],
+      }
+    : {};
   const fields = {
     title: "name",
     subtitle: "email",
@@ -12,7 +31,6 @@ const AuthorDetail = ({permissions}) => {
     details: [
       { key: "name", label: "Name", type: "text" },
       { key: "email", label: "Email", type: "text" },
-
       {
         key: "bio",
         label: "Bio",
@@ -37,25 +55,49 @@ const AuthorDetail = ({permissions}) => {
       },
     ],
 
-    other: [
-      { key: "createdbyid", label: "Created By", type: "text" },
-      { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
+    ...other,
+    
 
-      {
-        key: "createddate",
-        label: "Created Date",
-        type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone),
-      },
+    // ✅ Custom validation like your book module
+    validationRules: (formData, allAuthors, editingAuthor) => {
 
-      {
-        key: "lastmodifieddate",
-        label: "Last Modified Date",
-        type: "date",
-        render: (value) => convertToUserTimezone(value, timeZone),
-      },
-    ],
+      console.log("allauthor",allAuthors)
+      const errors = [];
+
+      if (!formData.name?.trim()) {
+        errors.push("Author Name is required");
+      } else {
+        if (!formData.email?.trim()) {
+          errors.push("Author Email is required");
+        } else {
+          // Email format validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(formData.email)) {
+            errors.push("Invalid email format");
+          } else {
+           let duplicateEmail;
+
+            if (Array.isArray(allAuthors)) {
+              duplicateEmail = allAuthors.find(
+                (author) =>
+                  author.email?.toLowerCase() === formData.email?.toLowerCase() &&
+                  author.id !== editingAuthor?.id
+              );
+            }
+
+            if (duplicateEmail) {
+              errors.push("Author with this email already exists");
+            }
+          }
+        }
+      }
+
+      return errors;
+    }
   };
+
+
+
 
   return (
     <ModuleDetail
@@ -64,6 +106,7 @@ const AuthorDetail = ({permissions}) => {
       moduleLabel="Author"
       icon="fa-solid fa-user-pen"
       fields={fields}
+      validationRules ={fields.validationRules}
       permissions={ permissions || {}}
     />
   );

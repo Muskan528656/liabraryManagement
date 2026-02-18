@@ -175,7 +175,7 @@ async function findAll(filters = {}) {
     let query = `SELECT * 
                  FROM ${schema}.classification 
                  WHERE 1=1`;
-                 
+
     const values = [];
     let paramIndex = 1;
 
