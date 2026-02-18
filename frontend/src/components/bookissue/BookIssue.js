@@ -21,6 +21,8 @@ import { useTimeZone } from "../../contexts/TimeZoneContext";
 import moment from "moment";
 import { all } from "axios";
 import PermissionDenied from "../../utils/permission_denied";
+
+
 const BookIssue = ({ permissions }) => {
   const navigate = useNavigate();
   const { timeZone } = useTimeZone();
@@ -44,11 +46,13 @@ const BookIssue = ({ permissions }) => {
   const recordsPerPage = 20;
   const [durationDays, setDurationDays] = useState(7);
 
+
   const bookInputRef = useRef(null);
   const bookSearchInputRef = useRef(null);
   const bookInputTimer = useRef(null);
   const cardInputTimer = useRef(null);
 
+  const [back, setBack] = useState(false);
 
   const allowEdit = permissions?.allowEdit;
 
@@ -268,36 +272,45 @@ const BookIssue = ({ permissions }) => {
       label: "Book Title",
       width: 250,
       render: (value, record) => (
-        <a href={`/book/${record.book_id}`}
+
+        // style={{
+        //   color: "var(--primary-color)",
+        //   // color: "#6f42c1",
+        //   textDecoration: "none",
+        //   fontWeight: "600",
+        // }}
+        // onMouseEnter={(e) => {
+        //   try {
+        //     const bookPrefetch = {
+        //       id: record.book_id,
+        //       title: record.book_title,
+        //       isbn: record.book_isbn,
+        //       author_name: record.author_name,
+        //     };
+        //     sessionStorage.setItem(
+        //       `prefetch:book:${record.book_id}`,
+        //       JSON.stringify(bookPrefetch)
+        //     );
+        //   } catch (err) { }
+        //   e.target.style.textDecoration = "underline";
+        // }}
+        // onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+
+        <strong
+          style={{
+            color: "var(--primary-color)",  // Blue color
+            cursor: 'pointer',
+            textDecoration: 'none',
+            fontWeight: '500'  // Medium weight, bold nahi
+          }}
           onClick={(e) => {
             e.preventDefault();
-            navigate(`/book/${record.book_id}`);
+            navigate(`/book/${record.book_id}`, { state: { "call": "bookIssue" } });
           }}
-          style={{
-            color: "var(--primary-color)",
-            // color: "#6f42c1",
-            textDecoration: "none",
-            fontWeight: "600",
-          }}
-          onMouseEnter={(e) => {
-            try {
-              const bookPrefetch = {
-                id: record.book_id,
-                title: record.book_title,
-                isbn: record.book_isbn,
-                author_name: record.author_name,
-              };
-              sessionStorage.setItem(
-                `prefetch:book:${record.book_id}`,
-                JSON.stringify(bookPrefetch)
-              );
-            } catch (err) { }
-            e.target.style.textDecoration = "underline";
-          }}
-          onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
         >
-          <strong>{value || "N/A"}</strong>
-        </a>
+          {value || "N/A"}
+        </strong>
+
       ),
     },
 

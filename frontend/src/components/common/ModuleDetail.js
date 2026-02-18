@@ -1202,7 +1202,17 @@ const ModuleDetail = ({
   };
 
   const handleBack = () => {
-    navigate(`/${moduleName}`);
+    console.log("Location State on Back:");
+   const callfrom = location?.state?.call;
+
+  console.log("callfrom",callfrom);
+  
+  if (callfrom=="bookIssue") {
+     navigate(`/bookissue`);
+   }else{
+
+     navigate(`/${moduleName}`);
+    }
   };
 
   if (loading) {
@@ -1823,7 +1833,7 @@ const ModuleDetail = ({
                       style={{ color: "var(--primary-color)" }}
                     >
                       {icon && <i className={`${icon} me-2 fs-6`}></i>}
-                      {moduleLabel} Details
+                      {moduleLabel} Detail
                     </h5>
                   </div>
 
@@ -1976,9 +1986,10 @@ const ModuleDetail = ({
                       <h6
                         className="fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"
                         style={{
-                          color: "var(--primary-color)",
-                          borderRadius: "10px",
-                        }}
+                        color: "var(--primary-color)",
+                        background: "var(--primary-background-color)",
+                        borderRadius: "10px",
+                      }}
                       >
                         Others
                       </h6>
