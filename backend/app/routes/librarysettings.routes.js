@@ -170,12 +170,16 @@ module.exports = (app) => {
           } else if (setting.setting_key === 'renew_limit') {
             settingData.renewal_limit = parseInt(setting.setting_value) || 2;
           } else if (setting.setting_key === 'max_issue_per_day') {
-
-          } else if (setting.setting_key === 'lost_book_fine_percentage') {
-
+            settingData.max_issue_per_day =
+              parseInt(setting.setting_value) || 1;
+          }
+          else if (setting.setting_key === 'lost_book_fine_percentage') {
+            settingData.lost_book_fine_percentage =
+              parseFloat(setting.setting_value) || 100;
           }
           else if (setting.setting_key === 'config_classification') {
-            settingData.config_classification = setting.setting_value
+            settingData.config_classification =
+              setting.setting_value;
           }
         });
 
@@ -189,7 +193,8 @@ module.exports = (app) => {
         settingData.issue_approval_required = false;
         settingData.digital_access = false;
         settingData.is_active = true;
-        settingData.config_classification = "";
+        // settingData.config_classification = "";
+        LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
 
         const setting = await LibrarySettings.updateSettings(settingData, userId);
         return res.status(200).json({ success: true, data: setting });

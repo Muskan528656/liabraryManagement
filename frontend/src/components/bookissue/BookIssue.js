@@ -91,10 +91,10 @@ const BookIssue = ({ permissions }) => {
     try {
       const settingsApi = new DataApi("librarysettings");
 
-      console.log("settingsApi",settingsApi)
-      
+      console.log("settingsApi", settingsApi)
+
       const response = await settingsApi.get("/all");
-      console.log("response.data ",response)
+      console.log("response.data ", response)
       if (response.data && response.data.success && response.data.data) {
 
       } else if (
@@ -475,7 +475,7 @@ const BookIssue = ({ permissions }) => {
     {
       field: "status",
       label: "Status",
-      
+
       render: (value) => (
         <Badge
           style={{
@@ -483,7 +483,7 @@ const BookIssue = ({ permissions }) => {
             padding: "5px 30px 5px 25px",
           }}
           bg={value === "submitted" ? "secondary" : "primary"}>
-          {value === "submitted" ? "Submitted" : "Issued"}  
+          {value === "submitted" ? "Submitted" : "Issued"}
         </Badge>
       ),
     },
@@ -495,7 +495,7 @@ const BookIssue = ({ permissions }) => {
   }
 
   if (!permissions.allowCreate || !permissions.allowView) {
-     return <PermissionDenied />;
+    return <PermissionDenied />;
   }
 
   return (
@@ -553,14 +553,13 @@ const BookIssue = ({ permissions }) => {
               </Nav.Item>
             </Nav>
 
-         
+
             {activeTab === "list" && (
               <div className="d-flex align-items-center">
                 <InputGroup style={{ width: "250px", maxWidth: "100%" }}>
                   <InputGroup.Text
                     style={{
-                      background: "#f3e9fc",
-                      borderColor: "#e9ecef",
+                      background: "var(--primary-color)", borderColor: "#e9ecef",
                       padding: "0.375rem 0.75rem",
                       borderRight: "none",
                       borderTopLeftRadius: "6px",
@@ -569,7 +568,7 @@ const BookIssue = ({ permissions }) => {
                   >
                     <i
                       className="fa-solid fa-search"
-                      style={{ color: "#6f42c1", fontSize: "0.875rem" }}
+                      style={{ color: "white", fontSize: "0.875rem" }}
                     ></i>
                   </InputGroup.Text>
 

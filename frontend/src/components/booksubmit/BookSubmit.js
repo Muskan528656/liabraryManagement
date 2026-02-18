@@ -2186,7 +2186,7 @@ const BookSubmit = ({ permissions }) => {
                         variant="primary"
                         onClick={handleScanSubmit}
                         disabled={!((scanMethod === "isbn" ? isbn : cardNumber).trim()) || loading}
-                        style={{ backgroundColor: "#1e3a8a", border: "none" }}
+                        style={{ backgroundColor: "var(--primary-color)", border: "none" }}
                     >
                         {loading ? (
                             <Spinner animation="border" size="sm" className="me-2" />
