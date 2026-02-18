@@ -73,7 +73,6 @@ const PublisherDetail = ({ permissions }) => {
                 key: "name",
                 label: requiredLabel("Name"),
                 type: "text",
-                required: true,
                 colSize: 6,
             },
             {

@@ -398,7 +398,62 @@ async function create(data, userId) {
 /* ------------------------------------------------------
    UPDATE BY ID
 ------------------------------------------------------ */
-async function updateById(id, data, userId) {
+// async function updateById(id, data, userId) {
+//   if (!schema) throw new Error("Schema not initialized.");
+
+//   const query = `
+//       UPDATE ${schema}.library_setting
+//       SET name = COALESCE($2, name),
+//           price = COALESCE($3, price),
+//           max_books = COALESCE($4, max_books),
+//           max_days = COALESCE($5, max_days),
+//           renewal_limit = COALESCE($6, renewal_limit),
+//           fine_per_day = COALESCE($7, fine_per_day),
+//           reservation_limit = COALESCE($8, reservation_limit),
+//           membership_validity_days = COALESCE($9, membership_validity_days),
+//           issue_permission = COALESCE($10, issue_permission),
+//           return_permission = COALESCE($11, return_permission),
+//           issue_approval_required = COALESCE($12, issue_approval_required),
+//           digital_access = COALESCE($13, digital_access),
+//           description = COALESCE($14, description),
+//           is_active = COALESCE($15, is_active),
+//           config_classification = COALESCE($16, config_classification),
+//           lost_book_fine_percentage = COALESCE($17, lost_book_fine_percentage),
+//           max_issue_per_day = COALESCE($18, max_issue_per_day),
+//           lastmodifieddate = NOW(),
+//           lastmodifiedbyid = $19
+//       WHERE id = $1
+//       RETURNING *
+//     `;
+
+//   const params = [
+//     id,
+//     data.name,
+//     data.price,
+//     data.max_books,
+//     data.max_days,
+//     data.renewal_limit,
+//     data.fine_per_day,
+//     data.reservation_limit,
+//     data.membership_validity_days,
+//     data.issue_permission,
+//     data.return_permission,
+//     data.issue_approval_required,
+//     data.digital_access,
+//     data.description,
+//     data.is_active,
+//     data.config_classification,
+//     data.lost_book_fine_percentage,
+//     data.max_issue_per_day,
+//     userId || null,
+//     branchId, // Adding branch_id for security check
+//   ];
+
+//   const result = await sql.query(query, params);
+//   return result.rows[0];
+// }
+async function updateById(id, data, userId, branchId) {
+  console.log("Updating setting with ID:", id, "Data:", data, "UserID:", userId, "BranchID:", branchId);
   if (!schema) throw new Error("Schema not initialized.");
 
   const query = `
@@ -417,12 +472,13 @@ async function updateById(id, data, userId) {
           digital_access = COALESCE($13, digital_access),
           description = COALESCE($14, description),
           is_active = COALESCE($15, is_active),
-          config_classification = COALESCE($16, config_classification),
+          config_classification =   COALESCE(NULLIF($16, ''), config_classification),
           lost_book_fine_percentage = COALESCE($17, lost_book_fine_percentage),
           max_issue_per_day = COALESCE($18, max_issue_per_day),
           lastmodifieddate = NOW(),
           lastmodifiedbyid = $19
-      WHERE id = $1
+      WHERE id = $1 
+      AND branch_id = $20
       RETURNING *
     `;
 
@@ -446,13 +502,16 @@ async function updateById(id, data, userId) {
     data.lost_book_fine_percentage,
     data.max_issue_per_day,
     userId || null,
-    branchId, // Adding branch_id for security check
+    branchId
   ];
 
+  console.log("Update Query:", query);
+  console.log("Update Params:", params);
+
   const result = await sql.query(query, params);
+  console.log("Update Result:", result);
   return result.rows[0];
 }
-
 /* ------------------------------------------------------
    CREATE OR UPDATE ACTIVE SETTINGS
 ------------------------------------------------------ */

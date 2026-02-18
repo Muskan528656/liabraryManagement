@@ -116,7 +116,7 @@ const Settings = ({ permissions }) => {
       console.log("settingsArraysettingsArray", settingsArray)
 
       const response = await settingsApi.put('/bulk', { settings: settingsArray });
-console.log("reposne->>>",response)
+      console.log("reposne->>>", response)
       if (response.data && response.data.success) {
         setLibrarySettings({ ...tempSettings });
         setIsEditingSettings(false);
@@ -146,13 +146,21 @@ console.log("reposne->>>",response)
     setIsEditingSettings(false);
     setTempSettings({ ...librarySettings });
   };
-
   const handleSettingChange = (key, value) => {
     setTempSettings((prev) => ({
       ...prev,
-      [key]: parseInt(value) || value,
+      [key]:
+        typeof prev[key] === "number"
+          ? parseInt(value) || 0
+          : value,
     }));
   };
+  // const handleSettingChange = (key, value) => {
+  //   setTempSettings((prev) => ({
+  //     ...prev,
+  //     [key]: parseInt(value) || value,
+  //   }));
+  // };
 
   return (
     <Container fluid className=" detail-h4">

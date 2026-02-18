@@ -586,7 +586,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
   };
 
   const handleTopCategoriesClick = () => {
-    navigate("/category");
+    navigate("/classification");
   };
 
   const handleQuickStatsClick = () => {
