@@ -172,10 +172,13 @@ function init(schema_name) {
 ------------------------------------------------------ */
 async function findAll(filters = {}) {
   try {
-    let query = `SELECT * 
-                 FROM ${schema}.classification 
-                 WHERE 1=1`;
-
+    let query = `
+      SELECT c.*
+      FROM ${schema}.classification c
+      JOIN ${schema}.library_setting ls
+        ON c.classification_type = ls.config_classification
+      WHERE 1=1
+    `;
     const values = [];
     let paramIndex = 1;
 
@@ -210,6 +213,54 @@ async function findAll(filters = {}) {
     }
 
     query += ` ORDER BY lastmodifieddate DESC`;
+
+    const result = await sql.query(query, values);
+    return result.rows.length > 0 ? result.rows : [];
+
+  } catch (error) {
+    console.error("Error in findAll:", error);
+    throw error;
+  }
+}
+async function findAll(filters = {}) {
+  try {
+    let query = `
+      SELECT c.*
+      FROM ${schema}.classification c
+      JOIN ${schema}.library_setting ls
+        ON c.classification_type = ls.config_classification
+      WHERE 1=1
+    `;
+
+    const values = [];
+    let paramIndex = 1;
+
+    // optional extra filters (existing logic)
+    if (filters.category) {
+      query += ` AND c.category ILIKE $${paramIndex}`;
+      values.push(`%${filters.category}%`);
+      paramIndex++;
+    }
+
+    if (filters.code) {
+      query += ` AND c.code ILIKE $${paramIndex}`;
+      values.push(`%${filters.code}%`);
+      paramIndex++;
+    }
+
+    if (filters.name) {
+      query += ` AND c.name ILIKE $${paramIndex}`;
+      values.push(`%${filters.name}%`);
+      paramIndex++;
+    }
+
+    if (filters.is_active !== undefined) {
+      query += ` AND c.is_active = $${paramIndex}`;
+      values.push(filters.is_active === 'true' || filters.is_active === true);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY c.lastmodifieddate DESC`;
 
     const result = await sql.query(query, values);
     return result.rows.length > 0 ? result.rows : [];
