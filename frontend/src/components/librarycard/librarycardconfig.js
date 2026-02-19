@@ -216,8 +216,6 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
     console.log("Grades:", grades);
     console.log("GradeSectionsMap:", gradeSectionsMap);
     console.log("Sections:", sections);
-
-    // const library_member_type = ["Boys", "Girls", "Other"];
     const library_member_type = [
         { value: "Boys", label: "Male" },
         { value: "Girls", label: "Female" },
