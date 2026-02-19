@@ -76,9 +76,10 @@ export const AuthHelper = {
         const user = this.getUser();
         if (!user || !user.userrole) return false;
 console.log("yser",user.userrole)
+console.log("yser uu ",user)
         const superAdminRoles = ["SYSTEM ADMIN"];
 console.log("super admi->>>",superAdminRoles)
-        return superAdminRoles.includes(user.userrole);
+        return superAdminRoles.includes(user.role_name);
     },
 
 

@@ -23,6 +23,7 @@ const normalizeListResponse = (payload) => {
     if (Array.isArray(payload.records)) return payload.records;
     if (Array.isArray(payload.rows)) return payload.rows;
     if (payload.results && Array.isArray(payload.results)) return payload.results;
+    if (payload.book_copies && Array.isArray(payload.book_copies)) return payload.book_copies;
     return [];
 };
 
@@ -456,7 +457,6 @@ const DynamicCRUD = ({
                 vendors: "vendor",
                 vendor: "vendor",
                 books: "book",
-                book: "book",
                 "user-role": "user-role",
                 "userroles": "user-role",
                 subscriptions: "subscriptions",

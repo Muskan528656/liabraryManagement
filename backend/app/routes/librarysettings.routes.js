@@ -132,7 +132,7 @@ module.exports = (app) => {
           config_classification: req.body.config_classification !== undefined ? req.body.config_classification : true
         };
         console.log("settingDatasettingDatasettingData", settingData)
-        const setting = await LibrarySettings.updateSettings(settingData, userId);
+        const setting = await LibrarySettings.updateSettings(settingData, userId, branchId);
         return res.status(200).json({ success: true, data: setting });
       } catch (error) {
         console.error("Error updating settings:", error);
@@ -158,45 +158,60 @@ module.exports = (app) => {
         LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
         const userId = req.userinfo?.id || null;
 
+        // First, get the existing settings
+        const existingSettings = await LibrarySettings.getActiveSetting();
 
-        const settingData = {};
+        const settingData = {
+          // Keep existing values as defaults
+          name: existingSettings?.name || 'Default',
+          price: existingSettings?.price || 0,
+          max_books: existingSettings?.max_books || 1,
+          max_days: existingSettings?.max_days || 15,
+          renewal_limit: existingSettings?.renewal_limit || 2,
+          fine_per_day: existingSettings?.fine_per_day || 10,
+          reservation_limit: existingSettings?.reservation_limit || 3,
+          membership_validity_days: existingSettings?.membership_validity_days || 365,
+          issue_permission: existingSettings?.issue_permission !== undefined ? existingSettings?.issue_permission : true,
+          return_permission: existingSettings?.return_permission !== undefined ? existingSettings?.return_permission : true,
+          issue_approval_required: existingSettings?.issue_approval_required || false,
+          digital_access: existingSettings?.digital_access || false,
+          description: existingSettings?.description || null,
+          is_active: existingSettings?.is_active !== undefined ? existingSettings?.is_active : true,
+          config_classification: existingSettings?.config_classification || "",
+          lost_book_fine_percentage: existingSettings?.lost_book_fine_percentage || 100,
+          max_issue_per_day: existingSettings?.max_issue_per_day || 1
+        };
+
+        // Override with new values from request
         req.body.settings.forEach(setting => {
-          if (setting.setting_key === 'max_books_per_card') {
-            settingData.max_books = parseInt(setting.setting_value) || 1;
-          } else if (setting.setting_key === 'duration_days') {
-            settingData.max_days = parseInt(setting.setting_value) || 15;
-          } else if (setting.setting_key === 'fine_per_day') {
-            settingData.fine_per_day = parseFloat(setting.setting_value) || 10;
-          } else if (setting.setting_key === 'renew_limit') {
-            settingData.renewal_limit = parseInt(setting.setting_value) || 2;
-          } else if (setting.setting_key === 'max_issue_per_day') {
-            settingData.max_issue_per_day =
-              parseInt(setting.setting_value) || 1;
-          }
-          else if (setting.setting_key === 'lost_book_fine_percentage') {
-            settingData.lost_book_fine_percentage =
-              parseFloat(setting.setting_value) || 100;
-          }
-          else if (setting.setting_key === 'config_classification') {
-            settingData.config_classification =
-              setting.setting_value;
+          switch (setting.setting_key) {
+            case 'max_books_per_card':
+              settingData.max_books = parseInt(setting.setting_value) || 1;
+              break;
+            case 'duration_days':
+              settingData.max_days = parseInt(setting.setting_value) || 15;
+              break;
+            case 'fine_per_day':
+              settingData.fine_per_day = parseFloat(setting.setting_value) || 10;
+              break;
+            case 'renew_limit':
+              settingData.renewal_limit = parseInt(setting.setting_value) || 2;
+              break;
+            case 'max_issue_per_day':
+              settingData.max_issue_per_day = parseInt(setting.setting_value) || 1;
+              break;
+            case 'lost_book_fine_percentage':
+              settingData.lost_book_fine_percentage = parseFloat(setting.setting_value) || 100;
+              break;
+            case 'config_classification':
+              settingData.config_classification = setting.setting_value || "";
+              break;
           }
         });
 
-
-        settingData.name = 'Default';
-        settingData.price = 0;
-        settingData.reservation_limit = 3;
-        settingData.membership_validity_days = 365;
-        settingData.issue_permission = true;
-        settingData.return_permission = true;
-        settingData.issue_approval_required = false;
-        settingData.digital_access = false;
-        settingData.is_active = true;
-        // settingData.config_classification = "";
-        LibrarySettings.init(req.userinfo.tenantcode, req.branchId);
-
-        const setting = await LibrarySettings.updateSettings(settingData, userId);
+        console.log("Final settingData to save:", settingData);
+        console.log("req.branchIdreq.branchId", req.branchId)
+        const setting = await LibrarySettings.updateSettings(settingData, userId, req.branchId);
         return res.status(200).json({ success: true, data: setting });
       } catch (error) {
         console.error("Error updating settings:", error);

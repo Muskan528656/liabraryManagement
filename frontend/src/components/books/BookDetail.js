@@ -6,56 +6,31 @@ import { Card, Col, Row } from "react-bootstrap";
 import { convertToUserTimezone } from "../../utils/convertTimeZone";
 import { useTimeZone } from "../../contexts/TimeZoneContext";
 
-const BookDetail = ({ permissions}) => {
+
+const BookDetail = ({ permissions }) => {
 
   console.log("BookDetail permission prop:", permissions);
   const { id } = useParams();
-  const [externalData, setExternalData] = useState({ authors: [], categories: [] });
-  const [groupedShelves, setGroupedShelves] = useState([]);
-  const [subShelfOptions, setSubShelfOptions] = useState([]);
-  
+  const [externalData, setExternalData] = useState({ authors: [], classifications: [] });
+
   const [book, setBook] = useState(null);
-  const [availableBooks, setAvailableBooks] = useState(0);
-  const [totalBooks, setTotalBooks] = useState(0);
-  const [issuedBooksCount, setIssuedBooksCount] = useState(0);
-  const [submitBooksCount, setSubmitBooksCount] = useState(0);
-  const [showImporter, setShowImporter] = useState(false);
-
-  const inventoryBindings = [
-    { value: "hardcover", label: "Hardcover" },
-    { value: "paperback", label: "Paperback" },
-    { value: "spiral", label: "Spiral" },
-  ];
-
- 
+  const [relatedModules, setRelatedModules] = useState([]);
   const { timeZone } = useTimeZone();
   const fetchBookData = async (bookId) => {
     try {
 
       const bookApi = new DataApi("book");
-      const count = new DataApi("bookissue");
-      const submit = new DataApi("book_submissions");
 
 
       const bookResponse = await bookApi.fetchById(bookId);
       const bookData = bookResponse?.data || {};
-      setBook(bookData);
-      const total = bookData.total_copies || 0;
-      const available = bookData.available_copies || 0;
- 
-      setTotalBooks(total);
-      setAvailableBooks(available);
+      console.log("bookData ->", bookData);
 
-      const issuedCountResponse = await count.fetchIssuedCountByBookId(bookId);
-      const issuedCountData = issuedCountResponse?.data || {};
-      const issuedCount = issuedCountData.issued_count || 0;
-      setIssuedBooksCount(issuedCount);
-      const issuedSubmitResponse = await submit.fetchSubmitCountByBookId(bookId);
-      const issuedSubmitData = issuedSubmitResponse?.data || {};
-      const issuedSubmitCount = issuedSubmitData.submit_count || 0;
-      setSubmitBooksCount(issuedSubmitCount);
+      setRelatedModules(bookData.copies);
+      // Populate classification_label for the AsyncSelect display
+      setBook(bookData);
     } catch (error) {
-      console.error("Error fetching book or book issues:", error);
+      console.error("Error fetching book:", error);
     }
   };
 
@@ -66,23 +41,22 @@ const BookDetail = ({ permissions}) => {
       const authorsResponse = await authorApi.fetchAll();
       const authors = authorsResponse?.data?.data || authorsResponse?.data || [];
 
-      const categoryApi = new DataApi("category");
-      const categoriesResponse = await categoryApi.fetchAll();
-      const categories = categoriesResponse?.data?.data || categoriesResponse?.data || [];
+      const classificationApi = new DataApi("classification");
+      const classificationsResponse = await classificationApi.fetchAll();
+      const classifications = classificationsResponse?.data?.data || classificationsResponse?.data || [];
 
       const shelfApi = new DataApi("shelf/grouped");
       const groupedShelvesResponse = await shelfApi.fetchAll();
       const groupedShelves = groupedShelvesResponse?.data?.data || groupedShelvesResponse?.data || [];
 
       console.log("Fetched authors:", authors);
-      console.log("Fetched categories:", categories);
+      console.log("Fetched classifications:", classifications);
       console.log("Fetched groupedShelves:", groupedShelves);
 
       setExternalData({
         authors: Array.isArray(authors) ? authors : [],
-        categories: Array.isArray(categories) ? categories : [],
+        classifications: Array.isArray(classifications) ? classifications : [],
       });
-      setGroupedShelves(Array.isArray(groupedShelves) ? groupedShelves : []);
     } catch (error) {
       console.error("Error fetching external data:", error);
     }
@@ -96,28 +70,29 @@ const BookDetail = ({ permissions}) => {
     }
   }, [id]);
 
-useEffect(() => {
-  if (book?.shelf_name && groupedShelves.length) {
-    const shelf = groupedShelves.find(
-      s => s.shelf_name === book.shelf_name
-    );
-
-    if (shelf?.sub_shelves) {
-      setSubShelfOptions(
-        shelf.sub_shelves.map(sub => ({
-          value: sub.id,
-          label: sub.name
-        }))
-      );
+  useEffect(() => {
+    if (book?.classification_id && externalData.classifications.length) {
+      const selected = externalData.classifications.find(c => c.id === book.classification_id);
+      if (selected) {
+        // Update classification metadata in book state if missing
+        if (!book.classification_category || !book.classification_type) {
+          setBook(prev => ({
+            ...prev,
+            classification_category: selected.category || '',
+            classification_type: selected.classification_type || '',
+            classification_from: selected.classification_from || '',
+            classification_to: selected.classification_to || ''
+          }));
+        }
+      }
     }
-  }
-}, [book?.shelf_name, groupedShelves]);
+  }, [book?.classification_id, externalData.classifications]);
 
-
-  const shelfOptions = useMemo(() => groupedShelves.map(s => ({
-    value: s.shelf_name,
-    label: s.shelf_name
-  })), [groupedShelves]);
+  const inventoryBindings = useMemo(() => [
+    { value: "hardcover", label: "Hardcover" },
+    { value: "paperback", label: "Paperback" },
+    { value: "spiral", label: "Spiral" },
+  ], []);
 
   const fields = useMemo(() => ({
     title: "title",
@@ -141,61 +116,59 @@ useEffect(() => {
         options: "publisher",
         displayKey: "publisher_name"
       },
+      { key: "classification_code", label: "Class Code", type: "text" },
       {
-        key: "category_id",
-        label: "Category",
+        key: "classification_name",
+        label: "Classification",
         type: "select",
-        options: "categories",
-        displayKey: "category_name",
-        required: true
-      },
-
-         {
-          key: "shelf_name",
-          label: "Shelf",
-          type: "select",
-          options: shelfOptions,
-          onChange: (value, formData, setFormData) => {
-            const selectedShelf = groupedShelves.find(
-              s => s.shelf_name === value
-            );
-
-            const newSubOptions = selectedShelf?.sub_shelves?.map(sub => ({
-              value: sub.id,
-              label: sub.name
-            })) || [];
-
-            setSubShelfOptions(newSubOptions);
-
+        asyncSelect: true,
+        displayKey: "classification_name",
+        loadOptions: async (inputValue) => {
+          try {
+            const api = (await import('../../api/dataApi')).default;
+            const classificationApi = new api('classification');
+            const response = await classificationApi.get('/');
+            const classifications = response.data || [];
+            const filtered = inputValue
+              ? classifications.filter(item =>
+                item.category?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                item.name?.toLowerCase().includes(inputValue.toLowerCase()) ||
+                item.code?.toLowerCase().includes(inputValue.toLowerCase())
+              )
+              : classifications;
+            return filtered.map(item => ({
+              value: item.id,
+              label: `${item.category || ''} - ${item.name} (${item.code})`,
+              data: item
+            }));
+          } catch (e) { return []; }
+        },
+        onChange: (value, formData, setFormData) => {
+          if (value?.data) {
             setFormData(prev => ({
               ...prev,
-              shelf_name: value,
-              sub_shelf_id: "",
-              sub_shelf: ""
+              classification_id: value.value,
+              classification_category: value.data.category || '',
+              classification_type: value.data.classification_type || '',
+              classification_from: value.data.classification_from || '',
+              classification_to: value.data.classification_to || ''
             }));
-          },
-        },
-    
-     {
-        key: "shelf_id",
-        label: "Sub Shelf",
-        type: "select",
-        options: subShelfOptions,
-        onChange: (value, formData, setFormData) => {
-          const selectedSub = subShelfOptions.find(s => s.value === value);
-          setFormData(prev => ({
-            ...prev,
-            shelf_id: value,
-            sub_shelf: selectedSub ? selectedSub.label : ""
-          }));
+          }
         }
       },
+      { key: "classification_type", label: "Classification Type", type: "text", readOnly: true },
+      { key: "classification_from", label: "Range From", type: "text", readOnly: true },
+      { key: "classification_to", label: "Range To", type: "text", readOnly: true },
 
-      { key: "total_copies", label: "Total Copies", type: "number" },
-      { key: "available_copies", label: "Available Copies", type: "number" },
+
       { key: 'min_age', label: 'Min Age', type: 'number' },
       { key: 'max_age', label: 'Max Age', type: 'number' },
       { key: "inventory_binding", label: "Inventory Binding", type: "select", options: inventoryBindings },
+      { key: "language", label: "Language", type: "text" },
+      { key: "edition", label: "Edition", type: "text" },
+      { key: "publication_year", label: "Publication Year", type: "number" },
+      { key: "pages", label: "Total Pages", type: "number" },
+      { key: "status", label: "Status", type: "toggle" },
 
     ],
     other: [
@@ -213,7 +186,7 @@ useEffect(() => {
       },
       { key: "lastmodifiedbyid", label: "Last Modified By", type: "text" },
     ],
-  }), [groupedShelves, shelfOptions, inventoryBindings, timeZone, subShelfOptions]);
+  }), [inventoryBindings, timeZone]);
 
   const lookupNavigation = {
     author_name: {
@@ -221,46 +194,33 @@ useEffect(() => {
       idField: "author_id",
       labelField: "author_name"
     },
-    category_name: {
-      path: "category",
-      idField: "category_id",
-      labelField: "category_name"
+    classification_name: {
+      path: "classification",
+      idField: "classification_id",
+      labelField: "classification_name"
     }
   };
-  const cardData = [
-    {
-      title: "Total Copies",
-      value: totalBooks,
-      icon: "fa-solid fa-layer-group",
-      border: "border-start",
-    },
-    {
-      title: "Issued Copies",
-      value: issuedBooksCount,
-      icon: "fa-solid fa-book-open",
-      border: "border-start",
-    },
-    {
-      title: "Available Copies",
-      value: availableBooks,
-      icon: "fa-solid fa-cart-shopping",
-      border: "border-start",
-    },
-    {
-      title: "Book Submission",
-      value: submitBooksCount,
-      icon: "fa-solid fa-cart-shopping",
-      border: "border-start",
-    }
-  ];
+
 
   console.log("BookDetail permissions:", permissions);
+
+  const copies = Array.isArray(book?.copies) ? book.copies : [];
+
+  const statusBadgeStyle = (status) => {
+    const map = {
+      AVAILABLE: { background: "#d1fae5", color: "#065f46" },
+      BORROWED: { background: "#dbeafe", color: "#1e40af" },
+      MAINTENANCE: { background: "#fef3c7", color: "#92400e" },
+      LOST: { background: "#fee2e2", color: "#991b1b" },
+      DAMAGED: { background: "#f3e8ff", color: "#6b21a8" },
+    };
+    return map[status] || { background: "#f3f4f6", color: "#374151" };
+  };
 
   return (
     <>
       <Row>
-
-        <Col lg={9} className="mb-3">
+        <Col lg={12} className="mb-3">
           {book && (
             <ModuleDetail
               moduleName="book"
@@ -276,41 +236,133 @@ useEffect(() => {
             />
           )}
         </Col>
+      </Row>
 
+      {/* Book Copies Table */}
+      {book && (
+        <Row className="mb-4 px-3">
+          <Col lg={12}>
+            <Card style={{
+              border: "none",
+              borderRadius: "12px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              overflow: "hidden"
+            }}>
+              {/* Header */}
+              <div style={{
+                padding: "16px 24px",
+                borderBottom: "1px solid #e9ecef",
+                background: "linear-gradient(to right, #f8f9fa, #ffffff)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+                <h6 style={{
+                  margin: 0,
+                  color: "var(--primary-color)",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <i className="fa-solid fa-layer-group"></i>
+                  Inventory / Book Copies
+                </h6>
+                <span style={{
+                  background: "var(--primary-color)",
+                  color: "#fff",
+                  borderRadius: "20px",
+                  padding: "2px 12px",
+                  fontSize: "12px",
+                  fontWeight: "600"
+                }}>
+                  {copies.length} {copies.length === 1 ? "Copy" : "Copies"}
+                </span>
+              </div>
 
-        <Col lg={3} className="mb-3 mt-4">
-          <Row>
-            <Card className="p-4">
-              {cardData.map((item, index) => (
-                <Col lg={12} xs={12} key={index}>
-                  <Card
-                    className={`shadow - sm border-0 ${item.border} border-5 border-info mt-3`}
-
-                  >
-                    <Card.Body className="p-3">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="d-flex align-items-center">
-                          <div
-                            className="p-2 rounded-circle me-2"
-                            style={{ background: 'var(--primary-background-color)' }}
-                          >
-                            <i
-                              className={`${item.icon} fa-sm`}
-                              style={{ color: "var(--primary-color)" }}
-                            ></i>
-                          </div>
-                          <p className="mb-0 small text-muted fs-6">{item.title}</p>
-                        </div>
-                        <h5 className="mb-0 fw-bold">{item.value}</h5>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+              <Card.Body style={{ padding: 0 }}>
+                {copies.length === 0 ? (
+                  <div style={{
+                    padding: "40px 16px",
+                    textAlign: "center",
+                    background: "#f8f9fa"
+                  }}>
+                    <i className="fa-solid fa-inbox" style={{ fontSize: "32px", color: "#adb5bd", display: "block", marginBottom: "8px" }}></i>
+                    <p style={{ color: "#6c757d", margin: 0, fontSize: "14px" }}>No book copies found for this branch.</p>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
+                          {["#", "Barcode", "Call Number", "Status", "Price (₹)", "Rack Location", "Date Accessioned"].map((label, i) => (
+                            <th key={i} style={{
+                              padding: "12px 16px",
+                              textAlign: "left",
+                              fontWeight: "600",
+                              color: "#495057",
+                              whiteSpace: "nowrap"
+                            }}>
+                              {label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {copies.map((copy, idx) => {
+                          const badge = statusBadgeStyle(copy.status);
+                          const dateStr = copy.date_accessioned
+                            ? new Date(copy.date_accessioned).toLocaleDateString("en-IN")
+                            : "—";
+                          return (
+                            <tr
+                              key={copy.id || idx}
+                              style={{ borderBottom: "1px solid #e9ecef", transition: "background 0.15s" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#f8f9fa"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                              <td style={{ padding: "12px 16px", color: "#6c757d", fontWeight: "600" }}>{idx + 1}</td>
+                              <td style={{ padding: "12px 16px", fontFamily: "monospace", fontWeight: "600", color: "#1e293b" }}>
+                                {copy.barcode || "—"}
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#374151" }}>
+                                {copy.itemcallnumber || `${copy.cn_class || ""} ${copy.cn_item || ""} ${copy.cn_suffix || ""}`.trim() || "—"}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <span style={{
+                                  ...badge,
+                                  borderRadius: "20px",
+                                  padding: "3px 12px",
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  display: "inline-block"
+                                }}>
+                                  {copy.status || "—"}
+                                </span>
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#374151" }}>
+                                {copy.item_price != null ? `₹${parseFloat(copy.item_price).toFixed(2)}` : "—"}
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#6c757d", fontFamily: "monospace", fontSize: "12px" }}>
+                                {copy.full_location_code
+                                  ? <><i className="fa-solid fa-location-dot me-1" style={{ color: "var(--primary-color)" }}></i>{copy.full_location_code}{copy.rack_name ? ` (${copy.rack_name})` : ""}</>
+                                  : <span style={{ color: "#adb5bd" }}>Not assigned</span>
+                                }
+                              </td>
+                              <td style={{ padding: "12px 16px", color: "#6c757d" }}>{dateStr}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card.Body>
             </Card>
-          </Row >
-        </Col >
-      </Row >
+          </Col>
+        </Row>
+      )}
     </>
   );
 };

@@ -515,14 +515,17 @@ async function updateById(id, data, userId, branchId) {
 /* ------------------------------------------------------
    CREATE OR UPDATE ACTIVE SETTINGS
 ------------------------------------------------------ */
-async function updateSettings(data, userId) {
+async function updateSettings(data, userId, branchId) {
   if (!schema) throw new Error("Schema not initialized.");
 
   const existing = await getActiveSetting();
+  console.log("Existing setting in updateSettings:", existing);
+
   if (existing) {
-    return await updateById(existing.id, data, userId);
+    console.log("Updating existing setting with ID:", existing.id, "Data:", data,branchId);
+    return await updateById(existing.id, data, userId, branchId);
   }
-  return await create(data, userId);
+  return await create(data, userId, branchId);
 }
 
 /* ------------------------------------------------------
@@ -558,11 +561,11 @@ async function findByKey(key) {
 /* ------------------------------------------------------
    UPSERT SETTING (ADDED FOR ROUTES COMPATIBILITY)
 ------------------------------------------------------ */
-async function upsertSetting(data, userId) {
+async function upsertSetting(data, userId, branchId) {
   if (!schema) throw new Error("Schema not initialized.");
 
   // For library_setting, we'll use updateSettings which creates or updates the active setting
-  return await updateSettings(data, userId);
+  return await updateSettings(data, userId, branchId);
 }
 
 /* ------------------------------------------------------
@@ -602,4 +605,5 @@ module.exports = {
   updateById,
   updateSettings,
   deleteById,
+  upsertSetting
 };

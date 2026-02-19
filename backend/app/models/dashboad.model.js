@@ -1,243 +1,257 @@
 /**
- * @author      Aabid
- * @date        Nov, 2025
+ * @author      Muskan Khan
+ * @date        DEC, 2025
  * @copyright   www.ibirdsservices.com
  */
 const sql = require("./db.js");
 let schema = "";
 let branchId = null;
 
-// function init(schema_name) {
-//   this.schema = schema_name;
-// }
-
 function init(schema_name, branch_id = null) {
   schema = schema_name;
   branchId = branch_id;
 }
 
-const getDashboardStats = async () => {
+async function getDashboardStats() {
   try {
- 
-    const stats = {};
-
-    const totoalcopies = await sql.query(`SELECT COUNT(*) FROM ${schema}.total_copies`);
-    stats.totoalcopies = parseInt(totoalcopies.rows[0].count) || 0;
-
-
-    const bookCountResult = await sql.query(`SELECT COUNT(*) FROM ${schema}.books`);
-    stats.total_books = parseInt(bookCountResult.rows[0].count) || 0;
-
-
-    const booksubmission = await sql.query(
-      `SELECT COUNT(*) FROM ${schema}.book_submissions`
-    );
-    stats.total_submission = parseInt(booksubmission.rows[0].count) || 0;
-
-
-    const issuedBooksResult = await sql.query(
-      `SELECT COUNT(*) FROM ${schema}.book_issues WHERE return_date IS NULL`
-    );
-    stats.issued_books = parseInt(issuedBooksResult.rows[0].count) || 0;
-
-
-    const dailyActivityResult = await sql.query(
-      `SELECT COUNT(*) AS daily_activity FROM ${schema}.books WHERE DATE(createddate) = CURRENT_DATE`
-    );
-    stats.daily_activity = parseInt(dailyActivityResult.rows[0].daily_activity) || 0;
-
-
-    const monthlyActivityResult = await sql.query(
-      `SELECT COUNT(*) AS monthly_activity FROM ${schema}.books 
-       WHERE DATE_TRUNC('month', createddate) = DATE_TRUNC('month', CURRENT_DATE)`
-    );
-    stats.monthly_activity = parseInt(monthlyActivityResult.rows[0].monthly_activity) || 0;
-
-
-    const booksByCategoryResult = await sql.query(`    
-        SELECT 
-            c.id,
-            c.name AS category_name,
-            COUNT(b.id) AS book_count
-        FROM ${schema}.books b
-        LEFT JOIN ${schema}.categories c ON b.category_id = c.id
-        GROUP BY c.id, c.name
-        ORDER BY book_count DESC
-        LIMIT 10;
-    `);
-    stats.books_by_category = booksByCategoryResult.rows;
-
-
-    const monthlyTrendResult = await sql.query(`    
-        SELECT 
-            TO_CHAR(createddate, 'YYYY-MM') AS month, 
-            COUNT(*) AS book_count
-        FROM ${schema}.books
-        GROUP BY TO_CHAR(createddate, 'YYYY-MM')
-        ORDER BY month DESC
-        LIMIT 12;
-    `);
-    stats.monthly_trend = monthlyTrendResult.rows;
-
-
-
-    const totalCopiesResult = await sql.query(
-      `SELECT COALESCE(SUM(total_copies), 0) FROM ${schema}.books`
-    );
-    stats.total_copies = parseInt(totalCopiesResult.rows[0].coalesce) || 0;
-
-    const damagedBooksResult = await sql.query(
-      `SELECT COUNT(*) FROM ${schema}.book_issues WHERE status = 'damaged'`
-    );
-    stats.damaged_books = parseInt(damagedBooksResult.rows[0].count) || 0;
-
-    stats.available_copies = Math.max(0, stats.total_copies - stats.issued_books - stats.damaged_books);
-
-
-    if (stats.total_copies > 0) {
-      stats.available_percentage = Math.round((stats.available_copies / stats.total_copies) * 100);
-      stats.issued_percentage = Math.round((stats.issued_books / stats.total_copies) * 100);
-    } else {
-      stats.available_percentage = 0;
-      stats.issued_percentage = 0;
+    if (!schema) {
+      throw new Error("Schema not initialized. Call init() first.");
     }
+    console.log("Getting dashboard stats for schema:", schema);
+    console.log("Getting dashboard stats for branch:", branchId || "All Branches");
+    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+    const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
+    const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
- 
-    return stats;
+    const availableBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE status = 'AVAILABLE' AND home_branch_id = $1`;
+    const availableBooksResult = await sql.query(availableBooksQuery, [branchId]);
+    const availableBooks = parseInt(availableBooksResult.rows[0]?.count || 0);
 
-  } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    throw error;
-  }
-};
-const fetchAll = async () => {
-  try {
- 
+    const totalAuthorsQuery = `SELECT COUNT(*) as count FROM ${schema}.authors`;
+    const totalAuthorsResult = await sql.query(totalAuthorsQuery);
+    const totalAuthors = parseInt(totalAuthorsResult.rows[0]?.count || 0);
 
-    const result = await sql.query(`
+    const totalCategoriesQuery = `SELECT COUNT(*) as count FROM ${schema}.classification`;
+    const totalCategoriesResult = await sql.query(totalCategoriesQuery);
+    const totalCategories = parseInt(totalCategoriesResult.rows[0]?.count || 0);
+
+    const booksByCategoryQuery = `
       SELECT 
-   
-        (
-          SELECT COUNT(*) 
-          FROM ${schema}.book_issues 
-          WHERE return_date IS NULL
-          AND due_date BETWEEN NOW() AND (NOW() + INTERVAL '14 days')
-        ) AS total_due_soon,
+        c.name as category_name,
+        COUNT(bc.id) as book_count
+      FROM ${schema}.classification c
+      LEFT JOIN ${schema}.books b ON b.classification_id = c.id
+      LEFT JOIN ${schema}.book_copy bc ON bc.book_id = b.id AND bc.home_branch_id = $1
+      GROUP BY c.id, c.name
+      ORDER BY book_count DESC
+      LIMIT 10
+    `;
+    const booksByCategoryResult = await sql.query(booksByCategoryQuery, [branchId]);
 
-        /* Overdue books */
-        (
-          SELECT COUNT(*) 
-          FROM ${schema}.book_issues 
-          WHERE return_date IS NULL
-          AND due_date < NOW()
-        ) AS overdue_books,
-
-        /* Total fine collected this month */
-        (
-          SELECT COALESCE(SUM(bs.penalty), 0)
-          FROM ${schema}.book_submissions bs
-          WHERE DATE_TRUNC('month', bs.submit_date) = DATE_TRUNC('month', CURRENT_DATE)
-        ) AS fine_collected_this_month,
-
-        /* Books marked damaged */
-        (
-          SELECT COUNT(*)
-          FROM ${schema}.book_issues
-          WHERE status = 'damaged'
-        ) AS damaged_missing_books,
-
-        /* Total copies in library */
-        (
-          SELECT COALESCE(SUM(b.total_copies), 0)
-          FROM ${schema}.books b
-        ) AS total_book_copies,
-
-        /* Avg return days in last 30 days (FIXED) */
-        (
-          SELECT COALESCE(AVG(EXTRACT(DAY FROM ((return_date - issue_date) * INTERVAL '1 day'))), 0)
-          FROM ${schema}.book_issues
-          WHERE return_date IS NOT NULL
-          AND issue_date >= CURRENT_DATE - INTERVAL '30 days'
-        ) AS avg_return_days
-      FROM ${schema}.books b where b.branch_id = '${branchId}'
-      LIMIT 1;
-    `);
-console.log("result.rows: --", result.rows);
+    const booksByAuthorQuery = `
+      SELECT 
+        a.name as author_name,
+        COUNT(bc.id) as book_count
+      FROM ${schema}.authors a
+      LEFT JOIN ${schema}.books b ON b.author_id = a.id
+      LEFT JOIN ${schema}.book_copy bc ON bc.book_id = b.id AND bc.home_branch_id = $1
+      GROUP BY a.id, a.name
+      ORDER BY book_count DESC
+      LIMIT 10
+    `;
+    const booksByAuthorResult = await sql.query(booksByAuthorQuery, [branchId]);
 
 
-    if (result.rows && result.rows.length > 0) {
-      return [result.rows[0]];
-    } else {
-      return [
-        {
-          total_due_soon: 0,
-          overdue_books: 0,
-          fine_collected_this_month: 0,
-          damaged_missing_books: 0,
-          total_book_copies: 0,
-          avg_return_days: 0,
-        },
-      ];
-    }
-  } catch (error) {
-    console.error("Error fetching dashboard metrics:", error);
+    const totalCopies = totalBooks;
 
-    return [
-      {
-        total_due_soon: 0,
-        overdue_books: 0,
-        fine_collected_this_month: 0,
-        damaged_missing_books: 0,
-        total_book_copies: 0,
-        avg_return_days: 0,
-      },
-    ];
-  }
-};
+    const issuedBooks = totalCopies - availableBooks;
+    const issuedPercentage = totalCopies > 0 ? Math.round((issuedBooks / totalCopies) * 100) : 0;
+    const availablePercentage = totalCopies > 0 ? Math.round((availableBooks / totalCopies) * 100) : 0;
 
+    const monthlyTrendQuery = `
+      SELECT 
+        TO_CHAR(createddate, 'Mon YYYY') as month,
+        COUNT(*) as count
+      FROM ${schema}.book_copy
+      WHERE createddate >= NOW() - INTERVAL '6 months' AND home_branch_id = $1
+      GROUP BY TO_CHAR(createddate, 'Mon YYYY'), DATE_TRUNC('month', createddate)
+      ORDER BY DATE_TRUNC('month', createddate) ASC
+      LIMIT 6
+    `;
+    const monthlyTrendResult = await sql.query(monthlyTrendQuery, [branchId]);
 
+    const booksThisMonthQuery = `
+      SELECT COUNT(*) as count 
+      FROM ${schema}.book_copy 
+      WHERE DATE_TRUNC('month', createddate) = DATE_TRUNC('month', CURRENT_DATE) AND home_branch_id = $1
+    `;
+    const booksThisMonthResult = await sql.query(booksThisMonthQuery, [branchId]);
+    const booksThisMonth = parseInt(booksThisMonthResult.rows[0]?.count || 0);
 
-const getCompleteDashboardData = async () => {
-  try {
- 
+    const dailyActivityQuery = `
+      SELECT 
+        DATE(createddate) as date,
+        COUNT(*) as count
+      FROM ${schema}.book_copy
+      WHERE createddate >= CURRENT_DATE - INTERVAL '7 days' AND home_branch_id = $1
+      GROUP BY DATE(createddate)
+      ORDER BY DATE(createddate) ASC
+    `;
+    const dailyActivityResult = await sql.query(dailyActivityQuery, [branchId]);
 
-
-    const [stats, metrics] = await Promise.all([
-      getDashboardStats(),
-      fetchAll()
-    ]);
- 
-    const completeData = {
+    return {
       summary: {
-        totoalcopies: stats.totoalcopies,
-        totalBooks: stats.total_books,
-        totalCopies: stats.total_copies,
-        availableBooks: stats.available_copies,
-        issuedBooks: stats.issued_books,
-        damagedBooks: stats.damaged_books,
-        availablePercentage: stats.available_percentage,
-        issuedPercentage: stats.issued_percentage,
-        booksThisMonth: stats.monthly_activity,
-        totalSubmissions: stats.total_submission
+        totalBooks,
+        totalCopies,
+        availableBooks,
+        issuedBooks,
+        issuedPercentage,
+        availablePercentage,
+        totalAuthors,
+        totalCategories,
+        booksThisMonth,
       },
-      metrics: metrics[0], // Alert metrics
-      categories: stats.books_by_category,
-      monthlyTrend: stats.monthly_trend,
-      dailyActivity: stats.daily_activity
+      booksByCategory: booksByCategoryResult.rows,
+      booksByAuthor: booksByAuthorResult.rows,
+      monthlyTrend: monthlyTrendResult.rows,
+      dailyActivity: dailyActivityResult.rows,
     };
-
- 
-    return completeData;
-
   } catch (error) {
-    console.error("Error fetching complete dashboard data:", error);
+    console.error("Error in getDashboardStats:", error);
     throw error;
   }
-};
+}
+
+async function getStudentDashboardStats(userId, memberType = "all") {
+  try {
+    if (!schema) {
+      throw new Error("Schema not initialized. Call init() first.");
+    }
+
+    // Helper function to apply member_type filter (if needed in future, keeping generic structure)
+    function applyMemberTypeFilter(baseQuery, memberType, values = []) {
+      if (!memberType) return { query: baseQuery, values };
+      return { query: baseQuery, values };
+    }
+
+    // 1️⃣ Total books (Available Copies)
+    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE status = 'AVAILABLE' AND home_branch_id = $1`;
+    const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
+    const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
+
+    // 2️⃣ Issued books
+    // Using book_issues table.
+    let issuedBooksQuery = `
+      SELECT COUNT(*) as count
+      FROM ${schema}.book_issues bi
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.home_branch_id = $2
+    `;
+    // Removed join to library_members if not strictly needed for COUNT (optimization), 
+    // unless filtering by memberType which we are not restricting here for self-view.
+    let issuedBooksValues = [userId, branchId];
+    const issuedBooksResult = await sql.query(issuedBooksQuery, issuedBooksValues);
+    const issuedBooks = parseInt(issuedBooksResult.rows[0]?.count || 0);
+
+    // 3️⃣ Pending requests
+    let pendingRequestsQuery = `
+      SELECT COUNT(*) as count
+      FROM ${schema}.book_requests br
+      WHERE br.requested_by = $1 AND br.status = 'pending' AND br.home_branch_id = $2
+    `;
+    let pendingRequestsValues = [userId, branchId];
+    const pendingRequestsResult = await sql.query(pendingRequestsQuery, pendingRequestsValues);
+    const pendingRequests = parseInt(pendingRequestsResult.rows[0]?.count || 0);
+
+    // 4️⃣ Approved requests
+    let approvedRequestsQuery = `
+      SELECT COUNT(*) as count
+      FROM ${schema}.book_requests br
+      WHERE br.requested_by = $1 AND br.status = 'approved' AND br.home_branch_id = $2
+    `;
+    let approvedRequestsValues = [userId, branchId];
+    const approvedRequestsResult = await sql.query(approvedRequestsQuery, approvedRequestsValues);
+    const approvedRequests = parseInt(approvedRequestsResult.rows[0]?.count || 0);
+
+    // 5️⃣ Overdue books
+    let overdueBooksQuery = `
+      SELECT COUNT(*) as count
+      FROM ${schema}.book_issues bi
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL AND bi.due_date < CURRENT_DATE AND bi.home_branch_id = $2
+    `;
+    let overdueBooksValues = [userId, branchId];
+    const overdueBooksResult = await sql.query(overdueBooksQuery, overdueBooksValues);
+    const overdueBooks = parseInt(overdueBooksResult.rows[0]?.count || 0);
+
+    // 6️⃣ Total fines
+    const totalFinesQuery = `
+      SELECT COALESCE(SUM(penalty_amount), 0) as total_fines
+      FROM ${schema}.book_issues
+      WHERE issued_to = $1 AND home_branch_id = $2
+    `;
+    const totalFinesResult = await sql.query(totalFinesQuery, [userId, branchId]);
+    const totalFines = parseFloat(totalFinesResult.rows[0]?.total_fines || 0);
+
+    // 7️⃣ Recent issued books
+    const recentIssuedQuery = `
+      SELECT 
+        bi.*,
+        b.title AS book_title,
+        b.isbn AS book_isbn
+      FROM ${schema}.book_issues bi
+      LEFT JOIN ${schema}.book_copy bc ON bi.book_id = bc.id
+      LEFT JOIN ${schema}.books b ON bc.book_id = b.id
+      WHERE bi.issued_to = $1 AND bi.home_branch_id = $2
+      ORDER BY bi.issue_date DESC
+      LIMIT 5
+    `;
+    const recentIssuedResult = await sql.query(recentIssuedQuery, [userId, branchId]);
+
+    // 8️⃣ Recent requests
+    const recentRequestsQuery = `
+      SELECT 
+        br.*,
+        b.title AS book_title,
+        b.isbn AS book_isbn
+      FROM ${schema}.book_requests br
+      LEFT JOIN ${schema}.books b ON br.book_id = b.id
+      WHERE br.requested_by = $1 AND br.home_branch_id = $2
+      ORDER BY br.createddate DESC
+      LIMIT 5
+    `;
+    const recentRequestsResult = await sql.query(recentRequestsQuery, [userId, branchId]);
+
+    // 9️⃣ Due soon
+    let dueSoonQuery = `
+      SELECT COUNT(*) as count
+      FROM ${schema}.book_issues bi
+      WHERE bi.issued_to = $1 AND bi.return_date IS NULL
+        AND bi.due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days' AND bi.home_branch_id = $2
+    `;
+    let dueSoonValues = [userId, branchId];
+    const dueSoonResult = await sql.query(dueSoonQuery, dueSoonValues);
+    const dueSoon = parseInt(dueSoonResult.rows[0]?.count || 0);
+
+    return {
+      summary: {
+        totalBooks,
+        issuedBooks,
+        pendingRequests,
+        approvedRequests,
+        overdueBooks,
+        totalFines,
+        dueSoon,
+      },
+      recentIssued: recentIssuedResult.rows,
+      recentRequests: recentRequestsResult.rows,
+    };
+  } catch (error) {
+    console.error("Error in getStudentDashboardStats:", error);
+    throw error;
+  }
+}
 
 module.exports = {
   init,
   getDashboardStats,
-  fetchAll,
-  getCompleteDashboardData
+  getStudentDashboardStats,
 };
