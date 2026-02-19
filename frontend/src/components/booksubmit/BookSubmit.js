@@ -1605,8 +1605,10 @@ const BookSubmit = ({ permissions }) => {
                             e.stopPropagation();
                             try {
                                 sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
-                            } catch (err) { }
-                            navigate(`/book/${bookId}`, { state: record });
+                            } catch (err) { 
+                                console.log("error",err)
+                            }
+                            navigate(`/book/${bookId}`, { state:{ "call": "bookSubmission" }});
                         }}
                         onContextMenu={(e) => {
                             e.preventDefault();

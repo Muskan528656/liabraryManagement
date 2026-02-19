@@ -98,15 +98,16 @@ const BookDetail = ({ permissions }) => {
     title: "title",
     subtitle: "isbn",
     details: [
-      { key: "title", label: "Title", type: "text" },
+      { key: "title", label: "Title", type: "text" ,required: true},
       { key: "price", label: "Price", type: "text" },
-      { key: "isbn", label: "ISBN", type: "text" },
+      { key: "isbn", label: "ISBN", type: "text",required: true },
       {
         key: "author_id",
         label: "Author",
         type: "select",
         options: "authors",
-        displayKey: "author_name"
+        displayKey: "author_name",
+        required: true
       },
       {
         key: "publisher_id",
