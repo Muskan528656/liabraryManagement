@@ -172,10 +172,13 @@ function init(schema_name) {
 ------------------------------------------------------ */
 async function findAll(filters = {}) {
   try {
-    let query = `SELECT * 
-                 FROM ${schema}.classification 
-                 WHERE 1=1`;
-
+    let query = `
+      SELECT c.*
+      FROM ${schema}.classification c
+      JOIN ${schema}.library_setting ls
+        ON c.classification_type = ls.config_classification
+      WHERE 1=1
+    `;
     const values = [];
     let paramIndex = 1;
 
