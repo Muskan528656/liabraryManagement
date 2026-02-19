@@ -310,7 +310,6 @@ const BookIssue = ({ permissions }) => {
         >
           {value || "N/A"}
         </strong>
-
       ),
     },
 

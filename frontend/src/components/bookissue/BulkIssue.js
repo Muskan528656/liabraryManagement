@@ -1450,7 +1450,7 @@ const BulkIssue = ({ permissions }) => {
                       </div>
 
                       <h5 className="fw-bold mb-1">{getMemberName()}</h5>
-                      <span className="fw-bold mb-1"> Age: {getMemberAge()}</span>
+                       <span className="fw-bold mb-1"> Age : {getMemberAge()}</span>
                     </div>
 
                     <Row className="g-2 mb-3">

@@ -141,7 +141,6 @@ const DynamicCRUD = ({
             nameClickHandler(item);
             return;
         }
-
         navigate(`/${apiEndpoint}/${item.id}`, {
             state: { type: apiEndpoint, rowData: item },
         });
@@ -152,7 +151,6 @@ const DynamicCRUD = ({
 
             if (enablePrefetch) {
                 try {
-
                     if (isEdit) {
                         console.log("isEdit->>>", isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
@@ -161,8 +159,6 @@ const DynamicCRUD = ({
                     } else {
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
-
-
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -1406,8 +1402,6 @@ const DynamicCRUD = ({
                                     )} */}
                                     {showAdvancedFilter && (
                                         <AdvancedFilter
-
-
                                             fields={filterFields.length > 0
                                                 ? filterFields
                                                 : processedFormFields.filter(f => !['password', 'file', 'image', 'hidden'].includes(f.type))
@@ -1431,6 +1425,7 @@ const DynamicCRUD = ({
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
                                         showActions={allowEdit}
+                                        // showActions={false}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
 

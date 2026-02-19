@@ -30,7 +30,7 @@ async function findAll(filters = {}) {
       WHERE 1=1 AND branch_id = $1 
     `;
 
-    const values = [branchId]; // Add branchId as the first parameter
+    const values = [filters.branchId]; // Add branchId as the first parameter
     let paramIndex = 2;
 
     if (filters.isactive !== undefined && filters.isactive !== '') {
@@ -52,17 +52,33 @@ async function findAll(filters = {}) {
 
 
 
-async function findById(id) {
-  if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
+// async function findById(params) {
+//   if (!schema) throw new Error("Schema not initialized. Call User.init() first.");
 
-  try {
-    const query = `SELECT * FROM ${schema}."user" WHERE id = $1 AND branch_id = $2`;
-    const result = await sql.query(query, [id, branchId]);
-    return result.rows.length ? result.rows[0] : null;
-  } catch (error) {
-    console.error("Error in findById:", error);
-    throw error;
-  }
+//   try {
+//     const query = `SELECT * FROM ${schema}."user" WHERE id = $1 AND branch_id = $2`;
+//     const result = await sql.query(query, [params.currentUserId, params.branchId]);
+//     return result.rows.length ? result.rows[0] : null;
+//   } catch (error) {
+//     console.error("Error in findById:", error);
+//     throw error;
+//   }
+// }
+
+
+
+async function findById(params) {
+  const query = `
+    SELECT * FROM ${schema}."user"
+    WHERE id = $1 AND branch_id = $2
+  `;
+
+  const result = await sql.query(query, [
+    params.currentUserId,
+    params.branchId
+  ]);
+
+  return result.rows.length ? result.rows[0] : null;
 }
 
 

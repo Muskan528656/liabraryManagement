@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import DynamicCRUD from "../common/DynaminCrud";
 import { getVendorConfig } from "./vendorconfig";

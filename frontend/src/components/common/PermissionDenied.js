@@ -9,7 +9,9 @@ const PermissionDenied = () => {
     setIsRequesting(true);
     try {
       const notificationApi = new DataApi('notifications');
+      // console.log("notification=>",notificationApi)
       const result = await notificationApi.requestAccess();
+      // console.log("result=>",result)
       if (result.success) {
         toast.success("Access request sent to system admin. You will be redirected to login.");
       } else {
