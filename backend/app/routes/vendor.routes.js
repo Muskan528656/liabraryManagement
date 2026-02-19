@@ -10,7 +10,7 @@
  *              DELETE  /api/vendor/:id
  *
  *@author     Muskan Khan
-@date   DEC,   2025
+  @date   DEC,   2025
  * @copyright   www.ibirdsservices.com
  */
 

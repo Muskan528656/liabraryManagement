@@ -49,6 +49,7 @@ import "../../App.css";
 const UserRole = ({ permissions, ...props }) => {
   const baseConfig = getUserRoleConfig(
     {},
+    {},
     {
       canCreate: permissions?.allowCreate,
       canEdit: permissions?.allowEdit,

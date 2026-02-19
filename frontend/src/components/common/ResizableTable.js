@@ -248,7 +248,6 @@ const ResizableTable = ({
                     Showing {startRecord + 1} to {Math.min(endRecord, safeData.length)} of{" "}
                     {safeData.length} records
                 </div>
-
             )}
             <div
                 className="mt-2 table-responsive resizable-table-container "
@@ -529,6 +528,7 @@ const ResizableTable = ({
                                                             <button
                                                                 className="custom-btn-edit"
                                                                 title="Edit"
+
                                                             >
                                                                 <i className="fs-7 fa-solid fa-edit"></i>
                                                             </button>

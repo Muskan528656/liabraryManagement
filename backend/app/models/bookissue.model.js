@@ -882,7 +882,7 @@ function init(schema_name, branchId) {
   console.log("Schema:", schema);
 
   this.branchId = branchId || "";
-  console.log("Branch ID:", branchId);
+  console.log("Branch IDDD:", branchId);
 }
 
 
@@ -1002,13 +1002,15 @@ async function findByBookId(bookId, memberType) {
 }
 
 async function findByCardId(cardId, memberType) {
+  console.log("findByCardId called with cardId:", cardId, "memberType:", memberType);
+  console.log("Current schema:", schema);
   let query = `SELECT 
       bi.*,
       b.title AS book_title,
       b.isbn AS book_isbn
-    FROM ${schema}.book_issues bi
-    LEFT JOIN ${schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${schema}.library_members lm 
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.library_members lm 
       ON bi.issued_to = lm.id
     WHERE bi.issued_to = $1 
       AND bi.return_date IS NULL 
