@@ -19,8 +19,11 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
         if (source.data && Array.isArray(source.data)) return source.data;
         return [];
     };
-    const library_member_type = ["Boys", "Girls", "Other"];
-
+    const library_member_type = [
+        { value: "Boys", label: "Male" },
+        { value: "Girls", label: "Female" },
+        { value: "Other", label: "Others" }
+    ];
     const rawRoles = externalData?.userRoles || externalData?.["user-role"] || props?.userRoles;
     const userRoles = extractData(rawRoles);
     console.log("Extracted user roles:", userRoles);
@@ -323,7 +326,7 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
                 label: "Gender",
                 type: "select",
                 required: false,
-                options: library_member_type.map((item) => ({ label: item, value: item })),
+                options: library_member_type,
                 colSize: 6,
             },
         ],

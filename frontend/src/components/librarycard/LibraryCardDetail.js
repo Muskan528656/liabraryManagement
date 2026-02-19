@@ -92,7 +92,7 @@ const LibraryCardDetail = ({
     []
   );
 
-    const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0];
 
 
   const EDITABLE_FIELDS = useMemo(
@@ -563,7 +563,7 @@ const LibraryCardDetail = ({
 
 
         if (card.id) {
-          await fetchBookCounts(card.id);
+          await fetchBookCounts(card.id, card.id);
         }
       }
     } catch (error) {
@@ -660,7 +660,11 @@ const LibraryCardDetail = ({
       t => String(t.value) === String(data.type_id || data.type)
     );
   };
-  const library_member_type = ["Boys", "Girls", "Other"];
+  const library_member_type = [
+    { value: "Boys", label: "Male" },
+    { value: "Girls", label: "Female" },
+    { value: "Other", label: "Others" }
+  ];
 
 
   const fields = {
@@ -734,7 +738,7 @@ const LibraryCardDetail = ({
       {
         key: "registration_date",
         label: "Registration Date",
-        max:todayStr,
+        max: todayStr,
         type: "date",
         colSize: 3,
       },
@@ -780,16 +784,13 @@ const LibraryCardDetail = ({
           return selectedType?.label?.toLowerCase() === "student";
         }
       },
-       {
-      key: "library_member_type", 
-      label: "Gender",
-      type: "select",
-      options: library_member_type.map((item) => ({ 
-        label: item, 
-        value: item 
-      })),
-      colSize: 3,
-    },
+      {
+        key: "library_member_type",
+        label: "Gender",
+        type: "select",
+        options: library_member_type,
+        colSize: 3,
+      },
       {
         key: "is_active",
         label: "Status",
@@ -1449,37 +1450,34 @@ const LibraryCardDetail = ({
 
 
   const handleSave = async () => {
-
-
     console.log("Temp Data on Save:", tempData);
 
-    // DOB validation (same rule as create form)
-      if (tempData?.dob) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    if (tempData?.dob) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-        const dobDate = new Date(tempData.dob);
-        dobDate.setHours(0, 0, 0, 0);
+      const dobDate = new Date(tempData.dob);
+      dobDate.setHours(0, 0, 0, 0);
 
-        if (dobDate >= today) {
-          PubSub.publish("RECORD_ERROR_TOAST", {
-            title: "Invalid DOB",
-            message: "Date of Birth cannot be today or in the future",
-          });
-          return;
-        }
-
-        const age = today.getFullYear() - dobDate.getFullYear();
-        if (age < 4) {
-          PubSub.publish("RECORD_ERROR_TOAST", {
-            title: "Invalid Age",
-            message: "Member must be at least 4 years old",
-          });
-          return;
-        }
+      if (dobDate >= today) {
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Invalid DOB",
+          message: "Date of Birth cannot be today or in the future",
+        });
+        return;
       }
 
-      if (tempData?.registration_date) {
+      const age = today.getFullYear() - dobDate.getFullYear();
+      if (age < 4) {
+        PubSub.publish("RECORD_ERROR_TOAST", {
+          title: "Invalid Age",
+          message: "Member must be at least 4 years old",
+        });
+        return;
+      }
+    }
+
+    if (tempData?.registration_date) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -2102,7 +2100,7 @@ const LibraryCardDetail = ({
         <Form.Control
           type={controlType}
           value={isElementValue ? "" : fieldValue}
-          max={field.max} 
+          max={field.max}
           readOnly={!isInputEditable}
           disabled={isEditing && isDisabledField}
           onChange={(e) => {
@@ -2156,7 +2154,7 @@ const LibraryCardDetail = ({
     navigate(`/${moduleName}`);
   };
 
- 
+
   return (
     <Container fluid className="py-4" style={{ marginTop: "-20px" }}>
       <ScrollToTop />
@@ -2188,13 +2186,12 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (visible ? 
+                  {canEdit && !isEditing && visible ? (
                   <button onClick={handleEdit} className="custom-btn-primary">
                     <i className="fa-solid fa-edit me-2"></i>
                     Edit {moduleLabel}
-                  </button> : null
-
-                  ) : !isEditing ? null : (
+                  </button>
+                  ) : isEditing && visible ? (
                     <div className="d-flex gap-2">
                       <button
                         className="custom-btn-primary"
@@ -2213,7 +2210,7 @@ const LibraryCardDetail = ({
                         Cancel
                       </button>
                     </div>
-                  )}
+                  ) : null}
                   {/* {!isEditing && (
                     <button
                       onClick={handleDelete}
@@ -2321,7 +2318,7 @@ const LibraryCardDetail = ({
                         moduleName === "librarycard" && (
                           <>
                             <Col md={9}
-                              
+
                             >
                               <h6
                                 className="mb-4 fw-bold mb-0 d-flex align-items-center justify-content-between p-3 border rounded"

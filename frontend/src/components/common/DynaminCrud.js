@@ -23,6 +23,7 @@ const normalizeListResponse = (payload) => {
     if (Array.isArray(payload.records)) return payload.records;
     if (Array.isArray(payload.rows)) return payload.rows;
     if (payload.results && Array.isArray(payload.results)) return payload.results;
+    if (payload.book_copies && Array.isArray(payload.book_copies)) return payload.book_copies;
     return [];
 };
 
@@ -140,7 +141,6 @@ const DynamicCRUD = ({
             nameClickHandler(item);
             return;
         }
-
         navigate(`/${apiEndpoint}/${item.id}`, {
             state: { type: apiEndpoint, rowData: item },
         });
@@ -151,7 +151,6 @@ const DynamicCRUD = ({
 
             if (enablePrefetch) {
                 try {
-
                     if (isEdit) {
                         console.log("isEdit->>>", isEdit)
                         navigate(`/${apiEndpoint}/${item.id}`, {
@@ -160,8 +159,6 @@ const DynamicCRUD = ({
                     } else {
                         navigate(`/${apiEndpoint}/${item.id}`);
                     }
-
-
                 } catch (e) {
                     console.warn('Failed to cache data for detail view');
                 }
@@ -460,7 +457,6 @@ const DynamicCRUD = ({
                 vendors: "vendor",
                 vendor: "vendor",
                 books: "book",
-                book: "book",
                 "user-role": "user-role",
                 "userroles": "user-role",
                 subscriptions: "subscriptions",
@@ -1406,8 +1402,6 @@ const DynamicCRUD = ({
                                     )} */}
                                     {showAdvancedFilter && (
                                         <AdvancedFilter
-
-
                                             fields={filterFields.length > 0
                                                 ? filterFields
                                                 : processedFormFields.filter(f => !['password', 'file', 'image', 'hidden'].includes(f.type))
@@ -1431,6 +1425,7 @@ const DynamicCRUD = ({
                                         onPageChange={setCurrentPage}
                                         showSerialNumber={true}
                                         showActions={allowEdit}
+                                        // showActions={false}
                                         actionsRenderer={showActions ? (item) => (
                                             <div className="d-flex gap-2 justify-content-center">
 

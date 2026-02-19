@@ -105,7 +105,7 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
     damagedCount: 0,
     totalBooks: 0,
     totalTitles: 0,
-    availableBooks:0,
+    availableBooks: 0,
     issuedBooks: 0,
     booksThisMonth: 0,
     totalSubmissions: 0,
@@ -1291,17 +1291,17 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
                   </h6>
 
                 </div> */}
-                
+
                 <div className="d-flex align-items-center justify-content-between mb-2">
                   <span className="fw-bold text-dark ms-2" style={{ fontSize: '14px' }}>
-                     Books Copies Status
+                    Books Copies Status
                   </span>
                   <span className="text-muted me-2" style={{ fontSize: '11px' }}>
-                    All Statuses of Book Copies 
+                    All Statuses of Book Copies
                   </span>
                 </div>
 
-                
+
                 <Chart options={donutOptions} series={donutChartSeries} type="pie" width={380} />
                 {/* <div className="mt-2 d-flex justify-content-center flex-wrap gap-3">
                   {(() => {

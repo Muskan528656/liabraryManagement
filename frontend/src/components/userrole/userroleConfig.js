@@ -27,7 +27,8 @@ export const getUserRoleConfig = (externalData = {}, props = {}, permissions) =>
     });
 
 
-    const allowEdit = permissions?.allowEdit ?? false;
+    // const allowEdit = permissions?.allowEdit ?? false;
+        const allowEdit = true;
 
     return {
         moduleName: "user_roles",
@@ -121,6 +122,7 @@ export const getUserRoleConfig = (externalData = {}, props = {}, permissions) =>
             allowEdit: allowEdit,
             showImportButton: true,
             showAdvancedFilter: true,
+            showEditButtonInDetailView: allowEdit,
         },
 
         filterFields: [

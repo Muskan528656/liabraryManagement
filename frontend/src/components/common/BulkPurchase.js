@@ -74,8 +74,6 @@ const BulkPurchasePage = ({ permissions }) => {
         category_id: "",
         isbn: "",
         language: "",
-        total_copies: 1,
-        available_copies: 1,
     });
     const [authors, setAuthors] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -129,8 +127,6 @@ const BulkPurchasePage = ({ permissions }) => {
                 category_id: "",
                 isbn: barcodeInput || "",
                 language: "",
-                total_copies: 1,
-                available_copies: 1,
             });
         }
     }, [showAddBookModal]);
@@ -153,24 +149,27 @@ const BulkPurchasePage = ({ permissions }) => {
             let availableCount = 0;
             let totalBooksCount = 0;
 
-            if (issuedResponse.data && Array.isArray(issuedResponse.data)) {
-                totalIssuedRecords = issuedResponse.data.length;
-                currentIssuedCount = issuedResponse.data.filter(issue =>
-                    issue.status.toLowerCase() === "issued"
+            const issuedData = Array.isArray(issuedResponse.data) ? issuedResponse.data : (issuedResponse.data?.data || []);
+            if (issuedData.length > 0) {
+                totalIssuedRecords = issuedData.length;
+                currentIssuedCount = issuedData.filter(issue =>
+                    issue.status && issue.status.toLowerCase() === "issued"
                 ).length;
-                returnedCount = issuedResponse.data.filter(issue =>
-                    issue.status.toLowerCase() === "submitted"
+                returnedCount = issuedData.filter(issue =>
+                    issue.status && issue.status.toLowerCase() === "submitted"
                 ).length;
             }
 
-            if (purchaseResponse.data && Array.isArray(purchaseResponse.data)) {
-                purchasedCount = purchaseResponse.data.reduce((sum, purchase) =>
+            const purchaseData = Array.isArray(purchaseResponse.data) ? purchaseResponse.data : (purchaseResponse.data?.data || []);
+            if (purchaseData.length > 0) {
+                purchasedCount = purchaseData.reduce((sum, purchase) =>
                     sum + (parseInt(purchase.quantity) || 0), 0);
             }
 
-            if (bookResponse.data && Array.isArray(bookResponse.data)) {
-                totalBooksCount = bookResponse.data.length;
-                availableCount = bookResponse.data.reduce((sum, book) =>
+            const bookDataArr = Array.isArray(bookResponse.data) ? bookResponse.data : (bookResponse.data?.data || []);
+            if (bookDataArr.length > 0) {
+                totalBooksCount = bookDataArr.length;
+                availableCount = bookDataArr.reduce((sum, book) =>
                     sum + (parseInt(book.available_copies) || 0), 0);
             }
 
@@ -435,8 +434,6 @@ const BulkPurchasePage = ({ permissions }) => {
                     category_id: bookData.category_id || "",
                     isbn: bookData.isbn || isbn,
                     language: bookData.language || "English",
-                    total_copies: bookData.total_copies || 1,
-                    available_copies: bookData.available_copies || 1
                 };
             }
 
@@ -476,8 +473,6 @@ const BulkPurchasePage = ({ permissions }) => {
                                 category_id: bookData.category_id || "",
                                 isbn: bookData.isbn || isbn,
                                 language: bookData.language || "English",
-                                total_copies: bookData.total_copies || 1,
-                                available_copies: bookData.available_copies || 1
                             };
                         }
                     }
@@ -492,8 +487,6 @@ const BulkPurchasePage = ({ permissions }) => {
                     category_id: "",
                     isbn: barcode,
                     language: "English",
-                    total_copies: 1,
-                    available_copies: 1
                 };
             }
 
@@ -565,7 +558,8 @@ const BulkPurchasePage = ({ permissions }) => {
             const response = await vendorApi.fetchAll();
 
             if (response.data) {
-                setVendors(response.data);
+                const vendorData = Array.isArray(response.data) ? response.data : (response.data.data || []);
+                setVendors(vendorData);
             }
         } catch (error) {
             console.error("Error fetching vendors:", error);
@@ -577,7 +571,8 @@ const BulkPurchasePage = ({ permissions }) => {
             const bookApi = new DataApi("book/active");
             const response = await bookApi.fetchAll();
             if (response.data) {
-                setBooks(response.data);
+                const bookData = Array.isArray(response.data) ? response.data : (response.data.data || []);
+                setBooks(bookData);
             }
         } catch (error) {
             console.error("Error fetching books:", error);
@@ -814,8 +809,6 @@ const BulkPurchasePage = ({ permissions }) => {
                 ...bookFormData,
                 title: bookFormData.title.trim(),
                 language: bookFormData.language || "English",
-                total_copies: parseInt(bookFormData.total_copies) || 1,
-                available_copies: parseInt(bookFormData.available_copies) || 1
             };
 
             const response = await bookApi.create(bookDataToSend);
@@ -843,8 +836,6 @@ const BulkPurchasePage = ({ permissions }) => {
                         category_id: "",
                         isbn: "",
                         language: "",
-                        total_copies: 1,
-                        available_copies: 1,
                     });
                 } else {
                     PubSub.publish("RECORD_ERROR_TOAST", { title: "Creation Error", message: "Book created but could not get book ID" });
@@ -903,13 +894,30 @@ const BulkPurchasePage = ({ permissions }) => {
         try {
             setSaving(true);
             const purchaseApi = new DataApi("purchase");
+            const bookCopyApi = new DataApi("book-copy");
             let successCount = 0;
             let failCount = 0;
 
             for (let i = 0; i < convertedData.length; i++) {
                 const purchaseData = convertedData[i];
                 try {
-                    await purchaseApi.create(purchaseData);
+                    const purchaseResponse = await purchaseApi.create(purchaseData);
+
+                    if (purchaseResponse.data && purchaseResponse.data.success) {
+                        // Automatically create book copies in bulk
+                        try {
+                            await bookCopyApi.post('/bulk', {
+                                book_id: purchaseData.book_id,
+                                quantity: purchaseData.quantity,
+                                item_price: purchaseData.unit_price
+                            });
+                        } catch (copyErr) {
+                            console.error("Error creating copies for purchase row", i + 1, ":", copyErr);
+                            // We don't necessarily want to fail the whole thing if copies fail, 
+                            // but we should log it
+                        }
+                    }
+
                     successCount++;
                     PubSub.publish("RECORD_SAVED_TOAST", {
                         message: `Purchase record ${i + 1} saved successfully`
@@ -2339,28 +2347,6 @@ const BulkPurchasePage = ({ permissions }) => {
                                             value={bookFormData.language}
                                             onChange={(e) => setBookFormData({ ...bookFormData, language: e.target.value })}
                                             placeholder="Enter language"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Total Copies</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            value={bookFormData.total_copies}
-                                            onChange={(e) => setBookFormData({ ...bookFormData, total_copies: parseInt(e.target.value) || 1 })}
-                                            min="1"
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <Col md={6}>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Available Copies</Form.Label>
-                                        <Form.Control
-                                            type="number"
-                                            value={bookFormData.available_copies}
-                                            onChange={(e) => setBookFormData({ ...bookFormData, available_copies: parseInt(e.target.value) || 1 })}
-                                            min="1"
                                         />
                                     </Form.Group>
                                 </Col>

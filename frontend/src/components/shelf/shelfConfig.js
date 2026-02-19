@@ -13,12 +13,15 @@ export const getShelfConfig = (
             name: "Name",
             floor: "Floor",
             rack: "Rack",
+            shelf: "Shelf",
             classification_type: "Classification Type",
             classification_from: "From Range",
             classification_to: "To Range",
-            capacity: "Capacity"
+            capacity: "Capacity",
+            full_location_code: "Full Location Code",
+            is_active: "Active"
         },
-        required: ["name", "floor", "rack"]
+        required: ["name", "floor", "rack", "shelf"]
     });
 
     return {
@@ -35,10 +38,12 @@ export const getShelfConfig = (
                     name: editingItem.name || "",
                     floor: editingItem.floor || "",
                     rack: editingItem.rack || "",
+                    shelf: editingItem.shelf || "",
                     classification_type: editingItem.classification_type || "",
                     classification_from: editingItem.classification_from || "",
                     classification_to: editingItem.classification_to || "",
-                    capacity: editingItem.capacity || 100
+                    capacity: editingItem.capacity || 100,
+                    is_active: editingItem.is_active !== undefined ? editingItem.is_active : true
                 };
             }
 
@@ -46,69 +51,13 @@ export const getShelfConfig = (
                 name: "",
                 floor: "",
                 rack: "",
+                shelf: "",
                 classification_type: "",
                 classification_from: "",
                 classification_to: "",
-                capacity: 100
+                capacity: 100,
+                is_active: true
             };
-        },
-
-        onFieldChange: async (fieldName, value, formData, setFormData, api, setFieldState) => {
-            if (fieldName === 'floor' && value?.trim()) {
-                try {
-                    const response = await api.get(`/shelf/next-rack/${encodeURIComponent(value)}`);
-                    if (response.data?.rack) {
-                        setFormData(prev => ({
-                            ...prev,
-                            rack: response.data.rack
-                        }));
-                        if (setFieldState) {
-                            setFieldState('rack', {
-                                helpText: `Auto-generated: ${response.data.rack}`
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error fetching next rack number:", error);
-                }
-            }
-
-            // When name (category) changes, auto-fill classification fields
-            if (fieldName === 'name' && value) {
-                try {
-                    const api = (await import('../../api/dataApi')).default;
-                    const classificationApi = new api('classification');
-                    const response = await classificationApi.get('/');
-                    const classifications = response.data || [];
-
-                    // Find the selected classification by name
-                    const selected = classifications.find(item => item.name === value);
-
-                    if (selected) {
-                        setFormData(prev => ({
-                            ...prev,
-                            name: value,
-                            classification_type: selected.classification_type || '',
-                            classification_from: selected.classification_from || '',
-                            classification_to: selected.classification_to || ''
-                        }));
-
-                        if (setFieldState) {
-                            setFieldState('classification_type', {
-                                helpText: `Auto-filled: ${selected.classification_type}`
-                            });
-                            setFieldState('classification_from', {
-                                helpText: `Auto-filled: ${selected.classification_from}`
-                            });
-                            setFieldState('classification_to', {
-                                helpText: `Auto-filled: ${selected.classification_to}`
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error fetching classification details:", error);
-                }
-            }
         },
 
         columns: [
@@ -129,12 +78,18 @@ export const getShelfConfig = (
                 width: "100px",
                 render: (value) => <span className="font-monospace">{value || '-'}</span>,
             },
-            // {
-            //     field: "classification_type",
-            //     label: "Type",
-            //     width: "100px",
-            //     render: (value) => <span className="badge bg-info">{value || '-'}</span>,
-            // },
+            {
+                field: "shelf",
+                label: "Shelf",
+                width: "100px",
+                render: (value) => <span className="font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "classification_type",
+                label: "Type",
+                width: "100px",
+                render: (value) => <span className="badge bg-info">{value || '-'}</span>,
+            },
             {
                 field: "classification_from",
                 label: "From",
@@ -146,6 +101,12 @@ export const getShelfConfig = (
                 label: "To",
                 width: "80px",
                 render: (value) => <span className="text-info font-monospace">{value || '-'}</span>,
+            },
+            {
+                field: "full_location_code",
+                label: "Location",
+                width: "150px",
+                render: (value) => <span className="font-monospace">{value || '-'}</span>,
             },
             {
                 field: "capacity",
@@ -170,6 +131,16 @@ export const getShelfConfig = (
                         </div>
                     );
                 }
+            },
+            {
+                field: "is_active",
+                label: "Active",
+                width: "100px",
+                render: (value) => (
+                    <Badge bg={value ? "success" : "danger"}>
+                        {value ? "Active" : "Inactive"}
+                    </Badge>
+                )
             }
         ],
 
@@ -181,6 +152,20 @@ export const getShelfConfig = (
                 required: true,
                 placeholder: "Enter floor",
                 colSize: 6,
+                onChange: (value, formData, setFormData, setFieldState) => {
+                    // Update full location code when floor changes
+                    const locationCode = `${value || ''}-${formData.rack || ''}-${formData.shelf || ''}`;
+                    setFormData(prev => ({
+                        ...prev,
+                        floor: value,
+                        full_location_code: locationCode
+                    }));
+                    if (setFieldState) {
+                        setFieldState('full_location_code', {
+                            helpText: `Generated: ${locationCode}`
+                        });
+                    }
+                }
             },
             {
                 name: "rack",
@@ -189,6 +174,42 @@ export const getShelfConfig = (
                 required: true,
                 placeholder: "Enter rack number (e.g., RACK-01)",
                 colSize: 6,
+                onChange: (value, formData, setFormData, setFieldState) => {
+                    // Update full location code when rack changes
+                    const locationCode = `${formData.floor || ''}-${value || ''}-${formData.shelf || ''}`;
+                    setFormData(prev => ({
+                        ...prev,
+                        rack: value,
+                        full_location_code: locationCode
+                    }));
+                    if (setFieldState) {
+                        setFieldState('full_location_code', {
+                            helpText: `Generated: ${locationCode}`
+                        });
+                    }
+                }
+            },
+            {
+                name: "shelf",
+                label: "Shelf",
+                type: "text",
+                required: true,
+                placeholder: "Enter shelf (e.g., SHELF-A)",
+                colSize: 6,
+                onChange: (value, formData, setFormData, setFieldState) => {
+                    // Update full location code when shelf changes
+                    const locationCode = `${formData.floor || ''}-${formData.rack || ''}-${value || ''}`;
+                    setFormData(prev => ({
+                        ...prev,
+                        shelf: value,
+                        full_location_code: locationCode
+                    }));
+                    if (setFieldState) {
+                        setFieldState('full_location_code', {
+                            helpText: `Generated: ${locationCode}`
+                        });
+                    }
+                }
             },
             {
                 name: "name",
@@ -196,8 +217,8 @@ export const getShelfConfig = (
                 type: "select",
                 asyncSelect: true,
                 required: true,
-                placeholder: "Search and select category",
-                helpText: "Select category to auto-fill range",
+                placeholder: "Search or create category",
+                helpText: "Search existing categories or type new name to create. Supports DDC (000-099) and LLC (AC-AZ) classifications.",
                 colSize: 6,
                 loadOptions: async (inputValue) => {
                     try {
@@ -208,16 +229,62 @@ export const getShelfConfig = (
 
                         // Filter by input value if provided
                         const filtered = inputValue
-                            ? classifications.filter(item =>
-                                item.category?.toLowerCase().includes(inputValue.toLowerCase()) ||
-                                item.name?.toLowerCase().includes(inputValue.toLowerCase())
-                            )
+                            ? classifications.filter(item => {
+                                const searchValue = inputValue.toLowerCase().trim();
+
+                                // Direct name/category matching
+                                if (item.category?.toLowerCase().includes(searchValue) ||
+                                    item.name?.toLowerCase().includes(searchValue)) {
+                                    return true;
+                                }
+
+                                // Code matching (exact or partial)
+                                if (item.code?.toLowerCase().includes(searchValue)) {
+                                    return true;
+                                }
+
+                                // Range matching - only for same classification type
+                                if (item.classification_from && item.classification_to) {
+                                    // Check if both item and search are numeric (DDC)
+                                    const isItemNumeric = /^\d+$/.test(item.classification_from) && /^\d+$/.test(item.classification_to);
+                                    const isSearchNumeric = /^\d+$/.test(searchValue);
+
+                                    // Check if both item and search are alphabetic (LLC)
+                                    const isItemAlpha = /^[a-zA-Z]+$/.test(item.classification_from) && /^[a-zA-Z]+$/.test(item.classification_to);
+                                    const isSearchAlpha = /^[a-zA-Z]+$/.test(searchValue);
+
+                                    // For numeric ranges (DDC)
+                                    if (isItemNumeric && isSearchNumeric) {
+                                        const searchNum = parseInt(searchValue);
+                                        const fromNum = parseInt(item.classification_from);
+                                        const toNum = parseInt(item.classification_to);
+
+                                        if (searchNum >= fromNum && searchNum <= toNum) {
+                                            return true;
+                                        }
+                                    }
+
+                                    // For alphabetic ranges (LLC)
+                                    else if (isItemAlpha && isSearchAlpha) {
+                                        const searchAlpha = searchValue.toUpperCase();
+                                        const fromAlpha = item.classification_from.toUpperCase();
+                                        const toAlpha = item.classification_to.toUpperCase();
+
+                                        // Simple alphabetical range check
+                                        if (searchAlpha >= fromAlpha && searchAlpha <= toAlpha) {
+                                            return true;
+                                        }
+                                    }
+                                }
+
+                                return false;
+                            })
                             : classifications;
 
-                        // Create options with category - name (from-to) format
+                        // Create options with detailed information
                         return filtered.map(item => ({
                             value: item.name,
-                            label: `${item.category} - ${item.name} (${item.classification_from || '0'} to ${item.classification_to || '0'})`,
+                            label: `${item.category} - ${item.name} (${item.code}) [${item.classification_from || '0'} to ${item.classification_to || '0'}]`,
                             data: item
                         }));
                     } catch (e) {
@@ -227,22 +294,61 @@ export const getShelfConfig = (
                 },
                 defaultOptions: true,
                 clearable: true,
-            },
-            {
-                name: "classification_type",
-                label: "Classification Type",
-                type: "text",
-                required: true,
-                placeholder: "e.g., DDC, LLC",
-                colSize: 6,
-                readOnly: true,
-                helpText: "Auto-filled from category selection"
+                creatable: true, // Allow creating new values
+                onChange: async (value, formData, setFormData, setFieldState) => {
+                    // Auto-fill classification fields when name changes
+                    if (value) {
+                        try {
+                            const api = (await import('../../api/dataApi')).default;
+                            const classificationApi = new api('classification');
+                            const response = await classificationApi.get('/');
+                            const classifications = response.data || [];
+
+                            // Find the selected classification by name
+                            const selected = classifications.find(item => item.name === value);
+                            console.log("selected ->", selected);
+
+                            if (selected) {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    name: value,
+                                    classification_from: selected.classification_from || '',
+                                    classification_to: selected.classification_to || '',
+                                    classification_type: selected.classification_type || ''
+                                }));
+
+                                if (setFieldState) {
+                                    setFieldState('classification_from', {
+                                        helpText: `Auto-filled: ${selected.classification_from}`
+                                    });
+                                    setFieldState('classification_to', {
+                                        helpText: `Auto-filled: ${selected.classification_to}`
+                                    });
+                                    setFieldState('classification_type', {
+                                        helpText: `Auto-filled: ${selected.classification_type}`
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error fetching classification details:", error);
+                        }
+                    } else {
+                        // Clear classification fields when selection is cleared
+                        setFormData(prev => ({
+                            ...prev,
+                            name: '',
+                            classification_from: '',
+                            classification_to: '',
+                            classification_type: ''
+                        }));
+                    }
+                }
             },
             {
                 name: "classification_from",
                 label: "Range From",
                 type: "text",
-                required: true,
+                required: false,
                 placeholder: "Auto-filled",
                 colSize: 6,
                 readOnly: true,
@@ -252,7 +358,17 @@ export const getShelfConfig = (
                 name: "classification_to",
                 label: "Range To",
                 type: "text",
-                required: true,
+                required: false,
+                placeholder: "Auto-filled",
+                colSize: 6,
+                readOnly: true,
+                helpText: "Auto-filled from category selection"
+            },
+            {
+                name: "classification_type",
+                label: "Classification Type",
+                type: "text",
+                required: false,
                 placeholder: "Auto-filled",
                 colSize: 6,
                 readOnly: true,
@@ -266,6 +382,13 @@ export const getShelfConfig = (
                 placeholder: "Enter capacity",
                 defaultValue: 100,
                 min: 1,
+                colSize: 6,
+            },
+            {
+                name: "is_active",
+                label: "Active",
+                type: "checkbox",
+                required: false,
                 colSize: 6,
             }
         ],
@@ -285,20 +408,28 @@ export const getShelfConfig = (
                 errors.push("Rack is required");
             }
 
-            if (!formData.classification_type?.trim()) {
-                errors.push("Classification Type is required");
-            }
 
-            if (!formData.classification_from?.trim()) {
-                errors.push("Range From is required");
-            }
+            // Only validate classification fields if name is provided (category selected)
+            if (formData.name?.trim()) {
+                if (!formData.classification_from?.trim()) {
+                    errors.push("Range From is required when category is selected");
+                }
 
-            if (!formData.classification_to?.trim()) {
-                errors.push("Range To is required");
+                if (!formData.classification_to?.trim()) {
+                    errors.push("Range To is required when category is selected");
+                }
+
+                if (!formData.classification_type?.trim()) {
+                    errors.push("Classification Type is required when category is selected");
+                }
             }
 
             if (!formData.capacity) {
                 errors.push("Capacity is required");
+            }
+
+            if (!formData.shelf?.trim()) {
+                errors.push("Shelf is required");
             }
 
             return errors;
@@ -357,10 +488,12 @@ export const getShelfConfig = (
             { key: "name", label: "Name", type: "text" },
             { key: "floor", label: "Floor", type: "text" },
             { key: "rack", label: "Rack", type: "text" },
-            { key: "classification_type", label: "Classification Type", type: "text" },
+            { key: "shelf", label: "Shelf", type: "text" },
             { key: "classification_from", label: "Range From", type: "text" },
             { key: "classification_to", label: "Range To", type: "text" },
             { key: "capacity", label: "Capacity", type: "text" },
+            { key: "full_location_code", label: "Full Location Code", type: "text" },
+            { key: "is_active", label: "Active", type: "boolean" },
             { key: "createddate", label: "Created Date", type: "date" },
             { key: "lastmodifieddate", label: "Last Modified Date", type: "date" },
             { key: "createdbyid", label: "Created By", type: "text" },
