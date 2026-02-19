@@ -87,14 +87,14 @@ const BookBrrowedReport = () => {
 
   // Fetch Categories for Filter (separate from report data so they don't disappear when filtering)
   const [categories, setCategories] = useState([]);
-  
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categoryApi = new DataApi("classification");
         const response = await categoryApi.fetchAll();
         const categoriesData = response?.data?.data || response?.data || [];
-        
+
         // Get unique category names
         const uniqueCategories = [...new Set(categoriesData.map(item => item.category).filter(Boolean))];
         setCategories(uniqueCategories);
