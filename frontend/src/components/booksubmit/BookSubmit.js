@@ -1813,7 +1813,7 @@ const BookSubmit = ({ permissions }) => {
                                             marginBottom: "-1px"
                                         }}
                                     >
-                                        <span>View Submitted Books ({submittedBooks.length})</span>
+                                    <span>View Submitted Books ({submittedBooks.length})</span>
                                     </Nav.Link>
                                 </Nav.Item>
 
