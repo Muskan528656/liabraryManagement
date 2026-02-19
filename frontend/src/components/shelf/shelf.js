@@ -7,6 +7,8 @@ import { AuthHelper } from "../../utils/authHelper";
 const Shelf = ({ permissions, ...props }) => {
 
     const isSuperAdmin = AuthHelper.isSuperAdmin?.();
+    console.log("isSuperAdmin:", isSuperAdmin);
+    console.log("permissions:", permissions);
 
     console.log("Shelf Component Permissions:", permissions?.allow);
 

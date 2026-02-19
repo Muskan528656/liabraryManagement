@@ -102,6 +102,7 @@ io.on("connection", (socket) => {
 require("./app/routes/auth.routes.js")(app);
 require("./app/routes/book.routes.js")(app);
 require("./app/routes/author.routes.js")(app);
+require("./app/routes/book-copy.routes.js")(app);
 require("./app/routes/category.routes.js")(app);
 require("./app/routes/library.routes.js")(app);
 require("./app/routes/vendor.routes.js")(app);
@@ -128,6 +129,7 @@ require("./app/routes/reports.routes.js")(app);
 require("./app/routes/shelf.routes.js")(app);
 require("./app/routes/grade.routes.js")(app);
 require("./app/routes/branch.routes.js")(app);
+require("./app/routes/classification.routes.js")(app);
 // require("./app/routes/penalty.master.routes.js")(app);
 
 server.listen(PORT, '0.0.0.0', () => {

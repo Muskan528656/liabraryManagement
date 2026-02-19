@@ -5,30 +5,24 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     console.log("externalData in getBooksConfig check:", externalData);
     const authors = props.authors || externalData.authors || externalData.author || [];
     console.log("getBooksConfig - authors:", authors);
-    const categories = props.categories || externalData.categories || externalData.classification || [];
-    console.log("getBooksConfig - categories:", categories);
+    const classifications = props.classifications || externalData.classifications || externalData.category || [];
+    console.log("getBooksConfig - classifications:", classifications);
 
     const publishers = props.publishers || externalData.publishers || externalData.publisher || [];
     const groupedShelves = props.groupedShelves || externalData.groupedShelves || [];
+    const branches = props.branches || externalData.branches || [];
 
     console.log("getBooksConfig - publishers:", publishers);
     console.log("getBooksConfig - groupedShelves:", groupedShelves);
-
-    const shelfOptions = groupedShelves.map(s => ({
-        value: s.shelf_name,
-        label: s.shelf_name
-    }));
-
+    const uniqueCategories = [...new Set(classifications.map(c => c.category || "General"))];
     const authorOptions = authors.map(a => ({
-
-        // value: String(a.id),
         value: a.id,
         name: a.name
     }));
-    const categoryOptions = categories.map(c => ({
+    const classificationOptions = classifications.map(c => ({
         // value: String(c.id),
         value: c.id,
-        name: c.category || c.name
+        name: `${c.name} (${c.code})`
     }));
 
     const publisherOptions = publishers.map(p => ({
@@ -37,25 +31,24 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
         name: p.name
     }));
 
-
-    // console.log("authorOptions:", authorOptions);
-
     const BookModel = createModel({
         modelName: "Book",
         fields: {
             title: "Title",
-            price: "Price",
             author_id: "Author",
-            category_id: "Category",
+            classification_id: "Classification",
             publisher_id: "Publisher",
             isbn: "ISBN",
+            edition: "Edition",
+            publication_year: "Publication Year",
             language: "Language",
+            pages: "Pages",
             total_copies: "Total Copies",
             available_copies: "Available Copies",
             min_age: "Min Age",
             max_age: "Max Age",
         },
-        required: ["title", "author_id", "category_id", "isbn", "min_age"]
+        required: ["title", "author_id", "classification_id", "isbn", "min_age"]
     });
 
     const inventoryBindings = [
@@ -65,7 +58,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
     ];
     return {
         authors: authorOptions,
-        categories: categoryOptions,
+        classifications: classificationOptions,
         publishers: publisherOptions,
 
         moduleName: "book",
@@ -78,47 +71,56 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 endpoint: "author",
                 labelField: "name"
             },
-            categories: {
+            classifications: {
                 endpoint: "classification",
-                labelField: "category"
+                labelField: "name"
             },
             publishers: {
                 endpoint: "publisher",
-                labelField: "name",
-                extraPayload: {
-                    email: "auto@generated.com",
-                    phone: "0000000000",
-                    city: "Auto Generated",
-                    country: "Auto Generated",
-                    state: "",
-                    salutation: "Mr."
-                }
+                labelField: "name"
             }
         },
 
         initialFormData: {
             title: "",
             author_id: "",
-            category_id: "",
+            classification_id: "",
+            classification_category: "",
+            classification_code: "",
+            classification_type: "",
+            classification_from: "",
+            classification_to: "",
+            classification_label: "", // Store label for AsyncSelect display,
             publisher_id: "",
             isbn: "",
-            total_copies: 1,
-            available_copies: 1,
+            inventory_binding: "",
+            edition: "",
+            publication_year: "",
+            pages: "",
             language: "",
             min_age: "",
             max_age: "",
-
+            status: "ACTIVE",
+            company_id: "", // Managed by system but present in schema
+            suggested_rack_mapping_id: ""
         },
         columns: [
             { field: "title", label: "Title" },
-            { field: "price", label: "Price" },
             { field: "author_name", label: "Author" },
-            { field: "category_name", label: "Category" },
+            { field: "classification_name", label: "Classification" },
             { field: "publisher_name", label: "Publisher" },
             { field: "isbn", label: "ISBN" },
-            { field: "min_age", label: "Min Age" },
-            { field: "max_age", label: "Max Age" },
-            { field: "available_copies", label: "Available Copies" }
+            { field: "edition", label: "Edition" },
+            { field: "publication_year", label: "Year" },
+            {
+                field: "status",
+                label: "Status",
+                render: (val) => (
+                    <span className={`badge bg-${val === 'ACTIVE' ? 'success' : 'danger'}`}>
+                        {val}
+                    </span>
+                )
+            }
         ],
         formFields: [
             {
@@ -138,12 +140,135 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 colSize: 6,
             },
             {
-                name: "category_id",
-                label: "Category",
+                name: "classification_id",
+                label: "Classification",
                 type: "select",
-                options: "categories",
+                asyncSelect: true,
                 required: true,
+                placeholder: "Search classification by name, code or range",
+                helpText: "Supports DDC (000-099) and LLC (AC-AZ) classifications.",
                 colSize: 6,
+                loadOptions: async (inputValue) => {
+                    try {
+                        const api = (await import('../../api/dataApi')).default;
+                        const classificationApi = new api('classification');
+                        const response = await classificationApi.get('/');
+                        const classifications = response.data || [];
+
+                        const filtered = inputValue
+                            ? classifications.filter(item => {
+                                const searchValue = inputValue.toLowerCase().trim();
+                                if (item.category?.toLowerCase().includes(searchValue) ||
+                                    item.name?.toLowerCase().includes(searchValue) ||
+                                    item.code?.toLowerCase().includes(searchValue)) {
+                                    return true;
+                                }
+                                if (item.classification_from && item.classification_to) {
+                                    const isSearchNumeric = /^\d+$/.test(searchValue);
+                                    if (isSearchNumeric && /^\d+$/.test(item.classification_from)) {
+                                        const searchNum = parseInt(searchValue);
+                                        if (searchNum >= parseInt(item.classification_from) &&
+                                            searchNum <= parseInt(item.classification_to)) return true;
+                                    }
+                                }
+                                return false;
+                            })
+                            : classifications;
+
+                        return filtered.map(item => ({
+                            value: item.id,
+                            label: `${item.category || ''} - ${item.name} (${item.code})`,
+                            data: item
+                        }));
+                    } catch (e) {
+                        console.error("Error loading classifications:", e);
+                        return [];
+                    }
+                },
+                defaultOptions: true,
+                getOptionLabel: (value, formData) => formData.classification_label || value,
+                onChange: (value, formData, setFormData, setFieldState) => {
+                    if (value && typeof value === 'object' && value.data) {
+                        const selected = value.data;
+                        console.log(selected, "selected");
+                        const rawShelves = externalData.shelf || [];
+
+                        // Find matching shelf based on classification range
+                        let matchedShelfName = "";
+                        let matchedSubShelfId = "";
+
+                        const matched = rawShelves.find(s => {
+                            if (s.classification_type !== selected.classification_type) return false;
+
+                            if (s.classification_type === 'DDC') {
+                                const bFrom = parseFloat(selected.classification_from);
+                                const bTo = parseFloat(selected.classification_to);
+                                const sFrom = parseFloat(s.classification_from);
+                                const sTo = parseFloat(s.classification_to);
+                                return (bFrom >= sFrom && bTo <= sTo);
+                            } else {
+                                // For LLC or other alpha types
+                                const bFrom = (selected.classification_from || "").toUpperCase();
+                                const bTo = (selected.classification_to || "").toUpperCase();
+                                const sFrom = (s.classification_from || "").toUpperCase();
+                                const sTo = (s.classification_to || "").toUpperCase();
+                                return (bFrom >= sFrom && bTo <= sTo);
+                            }
+                        });
+
+                        if (matched) {
+                            matchedShelfName = `${matched.floor} - ${matched.rack}`;
+                            matchedSubShelfId = matched.id;
+                        }
+
+                        setFormData(prev => ({
+                            ...prev,
+                            classification_id: value.value,
+                            classification_category: selected.category || '',
+                            classification_type: selected.classification_type || '',
+                            classification_code: selected.code || '',
+                            classification_from: selected.classification_from || '',
+                            classification_to: selected.classification_to || '',
+                            classification_label: value.label || '',
+                            suggested_rack_mapping_id: matchedSubShelfId || prev.suggested_rack_mapping_id
+                        }));
+                    } else if (!value) {
+                        setFormData(prev => ({
+                            ...prev,
+                            classification_id: "",
+                            classification_category: "",
+                            classification_type: "",
+                            classification_code: "",
+                            classification_from: "",
+                            classification_to: "",
+                            classification_label: ""
+                        }));
+                    }
+                }
+            },
+            {
+                name: "classification_type",
+                label: "Classification Type",
+                type: "text",
+                readOnly: true,
+                colSize: 6,
+                placeholder: "Auto-filled"
+            },
+            {
+                name: "classification_from",
+                label: "Range From",
+                type: "text",
+                readOnly: true,
+                colSize: 3,
+                placeholder: "Auto-filled"
+            },
+            {
+                name: "classification_to",
+                label: "Range To",
+                type: "text",
+                readOnly: true,
+                colSize: 3,
+                placeholder: "Auto-filled"
             },
             {
                 name: "publisher_id",
@@ -154,75 +279,12 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 colSize: 6,
             },
             {
-                name: "shelf_name",
-                type: "select",
-                label: "Shelf",
-                options: shelfOptions,
-                required: false,
-                colSize: 6,
-                onChange: (value, formData, setFormData) => {
-                    // Reset sub_shelf when shelf changes
-                    setFormData(prev => ({
-                        ...prev,
-                        shelf_name: value,
-                        sub_shelf: ""
-                    }));
-                }
-            },
-            {
-                name: "sub_shelf_id",
-                label: "Sub Shelf",
-                type: "select",
-                options: (formData) => {
-                    if (!formData.shelf_name) return [];
-
-                    const selectedShelf = groupedShelves.find(
-                        s => s.shelf_name === formData.shelf_name
-                    );
-
-                    if (!selectedShelf || !Array.isArray(selectedShelf.sub_shelves)) return [];
-
-                    return selectedShelf.sub_shelves.map(sub => ({
-                        value: sub.id,
-                        label: sub.name
-                    }));
-                },
-                required: false,
-                colSize: 6,
-            }
-            ,
-            {
                 name: "isbn",
                 label: "ISBN",
                 type: "text",
                 required: true,
                 placeholder: "Enter ISBN",
                 colSize: 6,
-            },
-            {
-                name: "price",
-                label: "Price",
-                type: "number",
-                required: true,
-                placeholder: "Enter book price",
-                colSize: 6,
-            },
-
-            {
-                name: "total_copies",
-                label: "Total Copies",
-                type: "number",
-                placeholder: "Enter total copies",
-                colSize: 6,
-                props: { min: 1 }
-            },
-            {
-                name: "available_copies",
-                label: "Available Copies",
-                type: "number",
-                placeholder: "Enter available copies",
-                colSize: 6,
-                props: { min: 0 }
             },
             {
                 name: "min_age",
@@ -249,20 +311,50 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 options: inventoryBindings,
                 required: false,
                 colSize: 6,
-            }
-            , {
+            },
+            {
                 name: "language",
                 label: "Language",
                 type: "text",
                 placeholder: "Enter language",
                 colSize: 6,
             },
+
+            {
+                name: "edition",
+                label: "Edition",
+                type: "text",
+                placeholder: "e.g. 1st Edition",
+                colSize: 6,
+            },
+            {
+                name: "publication_year",
+                label: "Publication Year",
+                type: "number",
+                placeholder: "e.g. 2023",
+                colSize: 6,
+            },
+            {
+                name: "pages",
+                label: "Total Pages",
+                type: "number",
+                placeholder: "Enter page count",
+                colSize: 6,
+            },
+            {
+                name: "status",
+                label: "Status",
+                type: "toggle",
+                required: false,
+                colSize: 6,
+                helpText: "Switch to deactivate this book globally"
+            },
         ],
         validationRules: (formData, allBooks, editingBook) => {
             const errors = [];
             if (!formData.title?.trim()) errors.push("Title is required");
             if (!formData.author_id) errors.push("Author is required");
-            if (!formData.category_id) errors.push("Category is required");
+            if (!formData.classification_id) errors.push("Classification is required");
             if (!formData.isbn?.trim()) errors.push("ISBN is required");
             if (formData.min_age === undefined || formData.min_age === null || formData.min_age === "") {
                 errors.push("Min age is required");
@@ -274,12 +366,6 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 parseInt(formData.max_age) < parseInt(formData.min_age)) {
                 errors.push("Max age cannot be less than min age");
             }
-            if (formData.available_copies !== undefined && formData.available_copies !== null && formData.available_copies !== "" &&
-                formData.total_copies !== undefined && formData.total_copies !== null && formData.total_copies !== "" &&
-                parseInt(formData.available_copies) > parseInt(formData.total_copies)) {
-                errors.push("Available copies cannot exceed total copies");
-            }
-
 
             const duplicate = allBooks.find(
                 book => book.isbn === formData.isbn && book.id !== editingBook?.id
@@ -290,7 +376,7 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
         },
         dataDependencies: {
             authors: "author",
-            categories: "classification",
+            classifications: "classification",
             publishers: "publisher"
         },
         features: {
@@ -321,16 +407,50 @@ export const getBooksConfig = (externalData = {}, props = {}, permissions = {}, 
                 idField: "author_id",
                 labelField: "author_name"
             },
-            category_name: {
+            classification_name: {
                 path: "classification",
-                idField: "category_id",
-                labelField: "category"
+                idField: "classification_id",
+                labelField: "classification_name"
             },
             publisher_name: {
                 path: "publisher",
                 idField: "publisher_id",
                 labelField: "publisher_name"
             }
+        },
+        detailConfig: {
+            fields: {
+                details: [
+                    { key: "title", label: "Title" },
+                    { key: "author_name", label: "Author" },
+                    { key: "publisher_name", label: "Publisher" },
+                    { key: "isbn", label: "ISBN" },
+                    { key: "classification_name", label: "Classification" },
+                    { key: "language", label: "Language" },
+                    { key: "edition", label: "Edition" },
+                    { key: "publication_year", label: "Publication Year" },
+                    { key: "pages", label: "Pages" },
+                    { key: "min_age", label: "Min Age" },
+                    { key: "max_age", label: "Max Age" },
+                    { key: "inventory_binding", label: "Inventory Binding" },
+                    { key: "status", label: "Status", type: "toggle" },
+                ]
+            },
+            relatedModules: [
+                {
+                    key: "book_copies",
+                    label: "Inventory / Book Copies",
+                    api: "book-copy",
+                    endpoint: (id) => `?book_id=${id}`,
+                    columns: [
+                        { key: "barcode", label: "Barcode" },
+                        { key: "itemcallnumber", label: "Call Number" },
+                        { key: "status", label: "Status" },
+                        { key: "item_price", label: "Price" },
+                        { key: "branch_name", label: "Branch Name" }
+                    ]
+                }
+            ]
         },
         importModel: BookModel
     };

@@ -164,13 +164,19 @@ async function create(purchaseData, userId) {
     const purchaseResult = await sql.query(purchaseQuery, purchaseValues);
     const purchase = purchaseResult.rows[0];
 
-    const bookUpdateQuery = `UPDATE ${schema}.books 
-      SET total_copies = total_copies + $1,
-          available_copies = available_copies + $1,
-          lastmodifieddate = NOW()
-      WHERE id = $2 AND branch_id = $3`;
-
-    await sql.query(bookUpdateQuery, [purchaseData.quantity || 1, purchaseData.book_id || purchaseData.bookId, branchId]);
+    // Create book copies automatically after purchase
+    try {
+      const BookCopyModel = require("./book_copy.model.js");
+      BookCopyModel.init(schema, branchId);
+      await BookCopyModel.bulkCreate({
+        book_id: purchase.book_id,
+        quantity: purchase.quantity,
+        item_price: purchase.unit_price,
+        rack_mapping_id: purchaseData.rack_mapping_id || null
+      }, userId);
+    } catch (bcError) {
+      console.error("Error creating book copies for purchase:", bcError);
+    }
 
     return purchase;
 
@@ -215,31 +221,6 @@ async function updateById(id, purchaseData, userId) {
     ];
     const result = await sql.query(query, values);
 
-    if (oldBookId !== newBookId || oldQty !== newQty) {
-      if (oldBookId !== newBookId) {
-        await sql.query(`UPDATE ${schema}.books 
-                           SET total_copies = total_copies - $1,
-                               available_copies = available_copies - $1,
-                               lastmodifieddate = NOW()
-                           WHERE id = $2 AND branch_id = $3`, [oldQty, oldBookId, branchId]);
-      } else {
-        const qtyDiff = newQty - oldQty;
-        await sql.query(`UPDATE ${schema}.books 
-                           SET total_copies = total_copies + $1,
-                               available_copies = available_copies + $1,
-                               lastmodifieddate = NOW()
-                           WHERE id = $2 AND branch_id = $3`, [qtyDiff, newBookId, branchId]);
-      }
-
-      if (oldBookId !== newBookId) {
-        await sql.query(`UPDATE ${schema}.books 
-                           SET total_copies = total_copies + $1,
-                               available_copies = available_copies + $1,
-                               lastmodifieddate = NOW()
-                           WHERE id = $2 AND branch_id = $3`, [newQty, newBookId, branchId]);
-      }
-    }
-
     if (result.rows.length > 0) {
       return result.rows[0];
     }
@@ -262,15 +243,7 @@ async function deleteById(id) {
       return { success: false, message: "Purchase not found" };
     }
 
-    const purchaseData = purchase.rows[0];
-
     await sql.query(`DELETE FROM ${schema}.purchases WHERE id = $1 AND branch_id = $2`, [id, branchId]);
-
-    await sql.query(`UPDATE ${schema}.books 
-                       SET total_copies = total_copies - $1,
-                           available_copies = GREATEST(0, available_copies - $1),
-                           lastmodifieddate = NOW()
-                       WHERE id = $2 AND branch_id = $3`, [purchaseData.quantity, purchaseData.book_id, branchId]);
 
     return { success: true, message: "Purchase deleted successfully" };
   } catch (error) {
