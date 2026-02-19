@@ -75,7 +75,9 @@ const FormModal = ({
     if (field.onChange) {
       field.onChange(value, formData, setFormData);
     } else {
-      handleInputChange(field.name, value);
+      // If it's a react-select object, extract just the value
+      const val = value && typeof value === 'object' && 'value' in value ? value.value : value;
+      handleInputChange(field.name, val);
     }
 
     // Then call the global onFieldChange if provided
@@ -355,8 +357,8 @@ const FormModal = ({
             {field.asyncSelect ? (
               field.creatable ? (
                 <AsyncCreatableSelect
-                  value={value ? { value, label: value } : null}
-                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  value={value ? (typeof value === 'object' ? value : (field.getOptionLabel ? { value, label: field.getOptionLabel(value, formData) } : { value, label: value })) : null}
+                  onChange={(selected) => handleFieldChange(field, selected)}
                   isClearable={field.clearable !== false}
                   isDisabled={isDisabled || isReadOnly}
                   placeholder={field.placeholder || `Select or type ${field.label.toLowerCase()}`}
@@ -366,8 +368,8 @@ const FormModal = ({
                 />
               ) : (
                 <AsyncSelect
-                  value={value ? { value, label: value } : null}
-                  onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                  value={value ? (typeof value === 'object' ? value : (field.getOptionLabel ? { value, label: field.getOptionLabel(value, formData) } : { value, label: value })) : null}
+                  onChange={(selected) => handleFieldChange(field, selected)}
                   isClearable={field.clearable !== false}
                   isDisabled={isDisabled || isReadOnly}
                   placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`}
@@ -378,8 +380,8 @@ const FormModal = ({
               )
             ) : field.creatable ? (
               <CreatableSelect
-                value={value ? { value, label: value } : null}
-                onChange={(selected) => handleFieldChange(field, selected?.value || "")}
+                value={value ? (typeof value === 'object' ? value : { value, label: value }) : null}
+                onChange={(selected) => handleFieldChange(field, selected)}
                 options={fieldOptions}
                 isClearable={field.clearable !== false}
                 isDisabled={isDisabled || isReadOnly}

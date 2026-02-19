@@ -101,34 +101,39 @@ import DataApi from "../../api/dataApi";
 const Books = ({ permissions, ...props }) => {
   const { timeZone } = useTimeZone();
 
-  const [externalData, setExternalData] = useState({ authors: [], categories: [], publishers: [], shelf: [], groupedShelves: [] });
+  const [externalData, setExternalData] = useState({ authors: [], categories: [], publishers: [], shelf: [], branches: [] });
   const [loading, setLoading] = useState(true);
   const isSuperAdmin = AuthHelper.isSuperAdmin?.();
   console.log("Books Component Permissions:", permissions);
   const fetchExternalData = async () => {
     try {
       setLoading(true);
-      const [authorsRes, categoriesRes, publishersRes, ShelfResp, groupedShelvesRes] = await Promise.all([
+      const [authorsRes, categoriesRes, publishersRes, ShelfResp, GroupedShelfResp, branchesRes] = await Promise.all([
         new DataApi("author").fetchAll(),
         new DataApi("classification").fetchAll(),
         new DataApi("publisher").fetchAll(),
         new DataApi("shelf").fetchAll(),
-        // new DataApi("shelf/grouped").fetchAll()
+        new DataApi("shelf/grouped").fetchAll(),
+        new DataApi("branches").fetchAll().catch(() => ({ data: [] })) // Fallback if endpoint doesn't exist
       ]);
 
-      console.log("authttttttttttttttttt", authorsRes)
       const authors = authorsRes?.data?.data || authorsRes?.data || [];
       const categories = categoriesRes?.data?.data || categoriesRes?.data || [];
       const publishers = publishersRes?.data?.data || publishersRes?.data || [];
       const shelf = ShelfResp?.data?.data || ShelfResp?.data || [];
-      // const groupedShelves = groupedShelvesRes?.data?.data || groupedShelvesRes?.data || [];
-      console.log("shelfshelfshelf", shelf)
+      const groupedShelves = (GroupedShelfResp?.data || []).map(g => ({
+        shelf_name: `${g.floor} - ${g.rack}`,
+        sub_shelves: g.shelves || []
+      }));
+      const branches = branchesRes?.data?.data || branchesRes?.data || [];
+
       setExternalData({
         authors: Array.isArray(authors) ? authors : [],
-        categories: Array.isArray(categories) ? categories : [],
+        classifications: Array.isArray(categories) ? categories : [],
         publishers: Array.isArray(publishers) ? publishers : [],
         shelf: Array.isArray(shelf) ? shelf : [],
-        // groupedShelves: Array.isArray(groupedShelves) ? groupedShelves : [],
+        groupedShelves: Array.isArray(groupedShelves) ? groupedShelves : [],
+        branches: Array.isArray(branches) ? branches : [],
       });
       console.log("shelfshelfshelf", shelf)
     } catch (error) {
@@ -167,7 +172,7 @@ const Books = ({ permissions, ...props }) => {
       icon="fa-solid fa-book"
       permissions={permissions}
       authors={externalData.authors}
-      categories={externalData.categories}
+      classifications={externalData.classifications}
       publishers={externalData.publishers}
       shelf={externalData.shelf}
 

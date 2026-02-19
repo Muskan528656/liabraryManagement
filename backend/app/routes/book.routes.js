@@ -1,432 +1,315 @@
-/**
- * Handles all incoming request for /api/book endpoint
- * DB table for this public.books
- * Model used here is book.model.js
- * SUPPORTED API ENDPOINTS
- *              GET     /api/book
- *              GET     /api/book/:id
- *              POST    /api/book
- *              PUT     /api/book/:id
- *              DELETE  /api/book/:id
- *
- * @author      Muskan Khan
- * @date        DEC, 2025
- * @copyright   www.ibirdsservices.com
- */
+const express = require('express');
+const BookModel = require('../models/book.model');
+const BookCopyModel = require('../models/book_copy.model');
+const AuthorModel = require('../models/author.model');
+const PublisherModel = require('../models/publisher.model');
+const ClassificationModel = require('../models/classification.model');
+const { fetchUser, checkPermission } = require('../middleware/fetchuser.js');
+const { body, validationResult, query } = require('express-validator');
+const sql = require("../models/db.js");
 
-const e = require("express");
-const { fetchUser, checkPermission } = require("../middleware/fetchuser.js");
-const Book = require("../models/book.model.js");
+
 
 module.exports = (app) => {
-  
-  const { body, validationResult } = require("express-validator");
-
-  var router = require("express").Router();
-
-  router.get(
-    "/",
-    fetchUser,
-    async (req, res) => {
-      try {
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
-        
-        // Add search filter if present in query
-        const filters = {};
-        if (req.query.search) {
-          filters.search = req.query.search;
-        }
-        
-        const books = await Book.findAll(filters);
-        res.json(books);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    }
-  );
-
- router.get(
-    "/active",
-    fetchUser,
-    async (req, res) => {
-      try {
-        const branchId = req.headers["branch-id"];
-        Book.init(req.userinfo.tenantcode, branchId);
-        
-        // Add search filter if present in query
-        const filters = {};
-        if (req.query.search) {
-          filters.search = req.query.search;
-        }
-        
-        const books = await Book.findAllActive();
-        res.json(books);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    }
-  );
-
-
-    router.get(
-      "/book-popularity-analytics",
-      fetchUser,
-      async (req, res) => {
+    var router = express.Router();
+    // Init model middleware
+    const initModel = (req, res, next) => {
         try {
-          const branchId = req.branchId;
-          console.log("Branchre ID:", branchId);
-          
-          Book.init(req.userinfo.tenantcode, branchId);
-        
-          const filters = {
-            days: req.query.days || "",
-            startDate: req.query.startDate ? req.query.startDate.trim() : null,
-            endDate: req.query.endDate ? req.query.endDate.trim() : null,
-            category: req.query.category || null,
-            searchTerm: req.query.searchTerm || null
-          };
-    
-              
-          if (filters.days === 'custom') {
-            if (!filters.startDate || !filters.endDate) {
-              return res.status(400).json({ error: "startDate and endDate are required when days=custom" });
-            }
-    
-                
-            const startDate = new Date(filters.startDate);
-            const endDate = new Date(filters.endDate);
-    
-            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-              return res.status(400).json({ error: "Invalid date format for startDate or endDate" });
-            }
-    
-            if (startDate > endDate) {
-              return res.status(400).json({ error: "startDate cannot be after endDate" });
-            }
-          }
-    
-          const reportData = await Book.generateBookPopularityReport(filters);
-          res.json(reportData);
+            // BookModel now only takes schema, branchId is not used but passing for consistency if arg ignored provided only 1 arg
+            BookModel.init(req.userinfo.tenantcode);
+            BookCopyModel.init(req.userinfo.tenantcode, req.branchId);
+            AuthorModel.init(req.userinfo.tenantcode, req.branchId);
+            PublisherModel.init(req.userinfo.tenantcode, req.branchId);
+            ClassificationModel.init(req.userinfo.tenantcode, req.branchId);
+            next();
+        } catch (error) {
+            res.status(500).json({ message: "Error initializing model", error: error.message });
+        }
+    };
+
+    // Validation middleware for books
+    const bookValidationRules = () => {
+        return [
+            body('title')
+                .notEmpty()
+                .withMessage('Title is required')
+                .isLength({ max: 255 })
+                .withMessage('Title must not exceed 255 characters'),
+            body('author_id')
+                .optional({ checkFalsy: true })
+                .isUUID()
+                .withMessage('Author ID must be a valid UUID'),
+            body('publisher_id')
+                .optional({ checkFalsy: true })
+                .isUUID()
+                .withMessage('Publisher ID must be a valid UUID'),
+            body('classification_id')
+                .optional({ checkFalsy: true })
+                .isUUID()
+                .withMessage('Classification ID must be a valid UUID'),
+            body('isbn')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('ISBN must not exceed 50 characters'),
+            body('edition')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('Edition must not exceed 50 characters'),
+            body('publication_year')
+                .optional({ checkFalsy: true })
+                .isInt({ min: 1000, max: new Date().getFullYear() + 1 })
+                .withMessage('Publication year must be a valid year'),
+            body('language')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('Language must not exceed 50 characters'),
+            body('inventory_binding')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('Inventory binding must not exceed 50 characters'),
+            body('pages')
+                .optional({ checkFalsy: true })
+                .isInt({ min: 1 })
+                .withMessage('Pages must be a positive integer'),
+            body('price')
+                .optional({ checkFalsy: true })
+                .isFloat({ min: 0 })
+                .withMessage('Price must be a positive number'),
+            body('max_age')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('Max age must not exceed 50 characters'),
+            body('min_age')
+                .optional({ checkFalsy: true })
+                .isLength({ max: 50 })
+                .withMessage('Min age must not exceed 50 characters'),
+            body('status')
+                .optional()
+                .isIn(['ACTIVE', 'INACTIVE', 'DISCONTINUED'])
+                .withMessage('Status must be one of: ACTIVE, INACTIVE, DISCONTINUED'),
+            body('company_id')
+                .optional({ checkFalsy: true })
+                .isUUID()
+                .withMessage('Company ID must be a valid UUID')
+        ];
+    };
+
+    // Get all active books
+    router.get('/active', fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const result = await BookModel.findAll({ status: 'ACTIVE' }, 1, 1000);
+            res.json({
+                success: true,
+                data: result,
+                count: result.length
+            });
         } catch (err) {
-          console.error("Error generating book popularity report:", err);
-          res.status(500).json({ error: "Internal server error" });
+            console.error('Error getting active books:', err);
+            res.status(500).json({ message: 'Error retrieving active books', error: err.message });
         }
-      }
-    );
-
-  router.get("/inventory-report",
-    fetchUser,
-    async (req, res) => {
-      try {
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
-        
-        const report = await Book.generateInventoryReport();
-        res.json(report);
-      } catch (error) {
-        console.error("Error generating inventory report:", error);
-        res.status(500).json({ errors: "Internal server error" });
-      }
     });
 
-  router.get("/export-excel",
-    fetchUser,
-    // checkPermission("Reports", "allow_view"),
-    async (req, res) => {
-      try {
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
+    // Get all books with pagination
+    router.get('/', [
+        query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+        query('search').optional().isLength({ max: 255 }).withMessage('Search query too long'),
+        query('author_id').optional().isUUID().withMessage('Author ID must be a valid UUID'),
+        query('publisher_id').optional().isUUID().withMessage('Publisher ID must be a valid UUID'),
+        query('classification_id').optional().isUUID().withMessage('Classification ID must be a valid UUID'),
+        query('status').optional().isIn(['ACTIVE', 'INACTIVE', 'DISCONTINUED']).withMessage('Status must be valid'),
+        query('isbn').optional().isLength({ max: 50 }).withMessage('ISBN must not exceed 50 characters')
+    ], fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
 
-        const filters = {
-          days: req.query.days,
-          startDate: req.query.startDate,
-          endDate: req.query.endDate,
-          category: req.query.category,
-          searchTerm: req.query.searchTerm
-        };
+            const { page = 1, limit = 10, search, author_id, publisher_id, classification_id, status, isbn } = req.query;
+            const filters = {};
 
-        const workbook = await Book.exportBookPopularityReportExcel(filters);
+            if (search) filters.search = search;
+            if (author_id) filters.author_id = author_id;
+            if (publisher_id) filters.publisher_id = publisher_id;
+            if (classification_id) filters.classification_id = classification_id;
+            if (status) filters.status = status;
+            if (isbn) filters.isbn = isbn;
 
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=book-popularity-report-${new Date().toISOString().split('T')[0]}.xlsx`);
-
-        await workbook.xlsx.write(res);
-        res.end();
-      } catch (err) {
-        console.error("Error exporting to Excel:", err);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    }
-  );
-
-  router.get("/export-pdf",
-    fetchUser,
-    // checkPermission("Reports", "allow_view"),
-    async (req, res) => {
-      try {
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
-
-        const filters = {
-          days: req.query.days,
-          startDate: req.query.startDate,
-          endDate: req.query.endDate,
-          category: req.query.category,
-          searchTerm: req.query.searchTerm
-        };
-
-        const doc = await Book.exportBookPopularityReportPDF(filters);
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=book-popularity-report-${new Date().toISOString().split('T')[0]}.pdf`);
-
-        doc.pipe(res);
-        doc.end();
-      } catch (err) {
-        console.error("Error exporting to PDF:", err);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    }
-  );
-
-  router.get("/:id", fetchUser,
-    async (req, res) => {
-      try {
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
-        
-        const book = await Book.findById(req.params.id);
-        if (!book) {
-          return res.status(404).json({ errors: "Book not found" });
+            const result = await BookModel.findAll(filters, parseInt(page), parseInt(limit));
+            // const branches = await Branch.findAll();
+            res.json({
+                success: true,
+                data: result,
+                count: result.length
+            });
+            // res.json(result);
+        } catch (err) {
+            console.error('Error getting books:', err);
+            res.status(500).json({ message: 'Error retrieving books', error: err.message });
         }
-        return res.status(200).json(book);
-      } catch (error) {
-        console.error("Error fetching book:", error);
-        return res.status(500).json({ errors: "Internal server error" });
-      }
     });
 
+    // Get book by ID
+    router.get('/:id', fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const { id } = req.params;
 
-  router.get("/isbn/:isbn", fetchUser, async (req, res) => {
-    try {
-      const branchId = req.branchId;
-      Book.init(req.userinfo.tenantcode, branchId);
-      const isbn = decodeURIComponent(req.params.isbn);
-      
-      const book = await Book.findByISBN(isbn);
-      if (!book) {
-        return res.status(404).json({ errors: "Book not found" });
-      }
-      return res.status(200).json(book);
-    } catch (error) {
-      console.error("Error fetching book by ISBN:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
-
-
-
-  router.post(
-    "/",
-    fetchUser, 
-    [
-      body("title")
-        .optional()
-        .custom((value) => {
-          if (value === null || value === undefined || value === "") {
-            return true;
-          }
-          return value.trim().length > 0;
-        })
-        .withMessage("Title is required"),
-      body("author_id")
-        .optional()
-        .custom((value) => {
-          return true;
-        }),
-      body("category_id")
-        .optional()
-        .custom((value) => {
-          return true;
-        }),
-      body("publisher_id")
-        .optional()
-        .custom((value) => {
-          return true;
-        }),
-      body("min_age")
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage("Min age must be a non-negative integer"),
-      body("max_age")
-        .optional()
-        .custom((value) => {
-          if (value !== undefined && value !== null && value !== "") {
-            const numValue = parseInt(value);
-            if (isNaN(numValue) || numValue < 0) {
-              throw new Error("Max age must be a non-negative integer");
+            // Validate UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({ message: 'Invalid book ID format' });
             }
-          }
-          return true;
-        })
-        .custom((value, { req }) => {
-          if (
-            value !== undefined &&
-            value !== null &&
-            value !== "" &&
-            req.body.min_age !== undefined &&
-            req.body.min_age !== null &&
-            req.body.min_age !== ""
-          ) {
-            if (parseInt(value) < parseInt(req.body.min_age)) {
-              throw new Error("Max age cannot be less than min age");
+
+            const book = await BookModel.findById(id);
+            if (!book) {
+                return res.status(404).json({ message: 'Book not found' });
             }
-          }
-          return true;
-        }),
-      body("isbn")
-        .optional()
-        .custom((value) => {
-          if (value === null || value === undefined || value === "") {
-            return true;
-          }
-          return value.trim().length > 0;
-        })
-        .withMessage("ISBN is required"),
-    ],
-    async (req, res) => {
-      try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
-        }
 
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
+            // Fetch copies for this book related to this branch
+            const copiesResult = await BookCopyModel.findAll({ book_id: id });
+            book.copies = copiesResult.book_copies || [];
 
-        if (req.body.isbn && req.body.isbn.trim()) {
-          const existingBook = await Book.findByISBN(req.body.isbn);
-          if (existingBook) {
-            return res
-              .status(400)
-              .json({ errors: "Book with this ISBN already exists" });
-          }
+            res.json(book);
+        } catch (err) {
+            console.error('Error getting book:', err);
+            res.status(500).json({ message: 'Error retrieving book', error: err.message });
         }
+    });
 
-        const userId = req.userinfo?.id || null;
-        const book = await Book.create(req.body, userId);
-        if (!book) {
-          return res.status(400).json({ errors: "Failed to create book" });
-        }
-        return res.status(200).json({ success: true, data: book });
-      } catch (error) {
-        console.error("Error creating book:", error);
-        return res.status(500).json({ errors: error.message });
-      }
-    }
-  );
-  router.put(
-    "/:id",
-    fetchUser, 
-    [
-      body("title").notEmpty().withMessage("Title is required"),
-      body("author_id").notEmpty().withMessage("Author ID is required"),
-      body("category_id").notEmpty().withMessage("Category ID is required"),
-      body("publisher_id").optional(),
-      body("min_age")
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage("Min age must be a non-negative integer"),
-      body("max_age")
-        .optional()
-        .custom((value) => {
-          if (value !== undefined && value !== null && value !== "") {
-            const numValue = parseInt(value);
-            if (isNaN(numValue) || numValue < 0) {
-              throw new Error("Max age must be a non-negative integer");
+    // Create new book
+    router.post('/', bookValidationRules(), fetchUser, checkPermission('Books', 'allow_create'), initModel, async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
             }
-          }
-          return true;
-        })
-        .custom((value, { req }) => {
-          if (
-            value !== undefined &&
-            value !== null &&
-            value !== "" &&
-            req.body.min_age !== undefined &&
-            req.body.min_age !== null &&
-            req.body.min_age !== ""
-          ) {
-            if (parseInt(value) < parseInt(req.body.min_age)) {
-              throw new Error("Max age cannot be less than min age");
+
+            // Check if ISBN already exists if provided
+            if (req.body.isbn) {
+                const existingBook = await sql.query(
+                    `SELECT id FROM ${req.userinfo.tenantcode}.books WHERE isbn = $1`,
+                    [req.body.isbn]
+                );
+                if (existingBook.rows.length > 0) {
+                    return res.status(409).json({ message: 'ISBN already exists' });
+                }
             }
-          }
-          return true;
-        }),
-      body("isbn").notEmpty().withMessage("ISBN is required"),
-      body("shelf_id")
-        .optional()
-        .custom((value) => {
-          return true;
-        }),
-    ],
-    async (req, res) => {
-      try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+
+            // Inject createdbyid and branch info if needed
+            req.body.createdbyid = req.userinfo.id;
+            // If copies are provided, ensure they have the home_branch_id if missing
+            if (req.body.copies && Array.isArray(req.body.copies)) {
+                req.body.copies = req.body.copies.map(copy => ({
+                    ...copy,
+                    home_branch_id: copy.home_branch_id || req.branchId,
+                    createdbyid: req.userinfo.id
+                }));
+            }
+
+            const newBook = await BookModel.create(req.body);
+            return res.status(201).json({ success: true, data: newBook });
+        } catch (err) {
+            console.error('Error creating book:', err);
+            return res.status(500).json({ message: 'Error creating book', error: err.message });
         }
+    });
 
-        const branchId = req.branchId;
-        Book.init(req.userinfo.tenantcode, branchId);
+    // Update book
+    router.put('/:id', bookValidationRules(), fetchUser, checkPermission('Books', 'allow_edit'), initModel, async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
 
-        const existingBook = await Book.findById(req.params.id);
-        if (!existingBook) {
-          return res.status(404).json({ errors: "Book not found" });
+            const { id } = req.params;
+
+            const existingBook = await BookModel.findById(id);
+            if (!existingBook) {
+                return res.status(404).json({ message: 'Book not found' });
+            }
+
+            // Check if ISBN already exists (excluding current book)
+            if (req.body.isbn && req.body.isbn !== existingBook.isbn) {
+                const existingWithIsbn = await sql.query(
+                    `SELECT id FROM ${req.userinfo.tenantcode}.books WHERE isbn = $1 AND id != $2`,
+                    [req.body.isbn, id]
+                );
+                if (existingWithIsbn.rows.length > 0) {
+                    return res.status(409).json({ message: 'ISBN already exists' });
+                }
+            }
+
+            req.body.lastmodifiedbyid = req.userinfo.id;
+            const updatedBook = await BookModel.update(id, req.body);
+            res.json(updatedBook);
+        } catch (err) {
+            console.error('Error updating book:', err);
+            res.status(500).json({ message: 'Error updating book', error: err.message });
         }
+    });
 
-        const duplicateBook = await Book.findByISBN(
-          req.body.isbn,
-          req.params.id
-        );
-        if (duplicateBook) {
-          return res
-            .status(400)
-            .json({ errors: "Book with this ISBN already exists" });
+    // Delete book
+    router.delete('/:id', fetchUser, checkPermission('Books', 'allow_delete'), initModel, async (req, res) => {
+        try {
+            const { id } = req.params;
+            const deletedBook = await BookModel.deleteById(id);
+            if (!deletedBook) {
+                return res.status(404).json({ message: 'Book not found' });
+            }
+
+            res.json({ message: 'Book deleted successfully', book: deletedBook });
+        } catch (err) {
+            console.error('Error deleting book:', err);
+            res.status(500).json({ message: 'Error deleting book', error: err.message });
         }
+    });
 
-        const userId = req.userinfo?.id || null;
-        const book = await Book.updateById(req.params.id, req.body, userId);
-        if (!book) {
-          return res.status(400).json({ errors: "Failed to update book" });
+    // Get books by author
+    router.get('/author/:authorId', [
+        query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    ], fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const { authorId } = req.params;
+            const books = await BookModel.findByAuthor(authorId);
+            res.json(books);
+        } catch (err) {
+            console.error('Error getting books by author:', err);
+            res.status(500).json({ message: 'Error retrieving books', error: err.message });
         }
-        return res.status(200).json({ success: true, data: book });
-      } catch (error) {
-        console.error("Error updating book:", error);
-        return res.status(500).json({ errors: error.message });
-      }
-    }
-  );
+    });
 
-  router.delete("/:id", fetchUser, async (req, res) => {
-    try {
-      const branchId = req.branchId;
-      Book.init(req.userinfo.tenantcode, branchId);
-      const result = await Book.deleteById(req.params.id);
-      if (!result.success) {
-        return res.status(404).json({ errors: result.message });
-      }
-      return res.status(200).json({ success: true, message: result.message });
-    } catch (error) {
-      console.error("Error deleting book:", error);
-      return res.status(500).json({ errors: "Internal server error" });
-    }
-  });
+    // Get books by publisher
+    router.get('/publisher/:publisherId', [
+        query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    ], fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const { publisherId } = req.params;
+            const books = await BookModel.findByPublisher(publisherId);
+            res.json(books);
+        } catch (err) {
+            console.error('Error getting books by publisher:', err);
+            res.status(500).json({ message: 'Error retrieving books', error: err.message });
+        }
+    });
 
+    // Get books by classification
+    router.get('/classification/:classificationId', [
+        query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    ], fetchUser, checkPermission('Books', 'allow_view'), initModel, async (req, res) => {
+        try {
+            const { classificationId } = req.params;
+            const books = await BookModel.findByClassification(classificationId);
+            res.json(books);
+        } catch (err) {
+            console.error('Error getting books by classification:', err);
+            res.status(500).json({ message: 'Error retrieving books', error: err.message });
+        }
+    });
 
-
-  app.use(process.env.BASE_API_URL + "/api/book", router);
+    app.use(process.env.BASE_API_URL + "/api/book", router);
 };

@@ -8,17 +8,17 @@ import { convertToUserTimezone } from "../../utils/convertTimeZone";
 const UserDetail = ({ permissions }) => {
 
 
-   const other = permissions?.allowEdit
-      ? {
-          other: [
-           { key: "createdbyid", label: "Created By", type: "text" },
-           {
-              key: "createddate", label: "Created Date", type: "date",
-              render: (value) => convertToUserTimezone(value, timeZone)
-            },
-          ],
-        }
-      : {};
+  const other = permissions?.allowEdit
+    ? {
+      other: [
+        { key: "createdbyid", label: "Created By", type: "text" },
+        {
+          key: "createddate", label: "Created Date", type: "date",
+          render: (value) => convertToUserTimezone(value, timeZone)
+        },
+      ],
+    }
+    : {};
 
   const [isLoading, setIsLoading] = useState(true);
   const { timeZone } = useTimeZone();
@@ -54,8 +54,11 @@ const UserDetail = ({ permissions }) => {
     companies: [],
   });
 
-  const library_member_type = ["Boys", "Girls", "Other"];
-
+  const library_member_type = [
+    { value: "Boys", label: "Male" },
+    { value: "Girls", label: "Female" },
+    { value: "Other", label: "Others" }
+  ];
   useEffect(() => {
     const fetchExternalData = async () => {
       try {
@@ -136,7 +139,7 @@ const UserDetail = ({ permissions }) => {
     details: [
       { key: "firstname", label: "First Name", type: "text", required: true, },
       { key: "lastname", label: "Last Name", type: "text", required: true, },
-      { key: "email", label: "Email", type: "text",  required: true, },
+      { key: "email", label: "Email", type: "text", required: true, },
       {
         key: "country",
         label: "Country",
@@ -167,14 +170,14 @@ const UserDetail = ({ permissions }) => {
         readOnly: true,
         render: (value) => value || (companyInfo?.country_code ? companyInfo.country_code : "N/A")
       },
-      { key: "phone", label: "Phone", type: "text", maxLength:"10", required:true },
+      { key: "phone", label: "Phone", type: "text", maxLength: "10", required: true },
       {
         key: "currency",
         label: "Currency",
         type: "text",
         options: currencyOptions,
         readOnly: true,
-        disabled: true, 
+        disabled: true,
         render: (value) => {
           if (value) return value;
           if (companyInfo?.currency) return companyInfo.currency;
@@ -188,7 +191,7 @@ const UserDetail = ({ permissions }) => {
         type: "text",
         options: timeZoneOptions,
         readOnly: true,
-        disabled: true, 
+        disabled: true,
         render: (value) => {
           if (value) {
             const country = COUNTRY_TIMEZONE.find(c => c.timezones.some(t => t.zoneName === value));
@@ -208,7 +211,7 @@ const UserDetail = ({ permissions }) => {
         label: "User Role",
         type: "select",
         readOnly: true,
-        required:true,
+        required: true,
 
         options: externalData.userRoles.map(r => ({ value: r.id, label: r.role_name })),
 
@@ -228,7 +231,7 @@ const UserDetail = ({ permissions }) => {
         label: "Gender",
         type: "select",
         required: false,
-        options: library_member_type.map((item) => ({ label: item, value: item })),
+        options: library_member_type,
         colSize: 6,
       },
       {
@@ -244,42 +247,42 @@ const UserDetail = ({ permissions }) => {
     ...other,
 
     validationRules: (formData, allUsers = [], editingUser) => {
-        const errors = [];
+      const errors = [];
 
-        if (!formData.firstname?.trim()) errors.push("First name is required");
-        if (!formData.lastname?.trim()) errors.push("Last name is required");
-        if (!formData.email?.trim()) errors.push("Email is required");
+      if (!formData.firstname?.trim()) errors.push("First name is required");
+      if (!formData.lastname?.trim()) errors.push("Last name is required");
+      if (!formData.email?.trim()) errors.push("Email is required");
 
 
-        if (!formData.country) errors.push("Country is required");
-        if (!formData.userrole) errors.push("Role is required");
+      if (!formData.country) errors.push("Country is required");
+      if (!formData.userrole) errors.push("Role is required");
 
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (formData.email && !emailRegex.test(formData.email)) {
-          errors.push("Invalid email format");
-        }
-
-        // Phone validation (10 digit)
-        if (formData.phone) {
-          const phoneRegex = /^[0-9]{10}$/;
-          if (!phoneRegex.test(formData.phone)) {
-            errors.push("Phone number must be exactly 10 digits");
-          }
-        }
-
-        //  Duplicate email check (safe handling)
-        if (Array.isArray(allUsers)) {
-          const duplicate = allUsers.find(
-            user =>
-              user.email === formData.email &&
-              user.id !== editingUser?.id
-          );
-          if (duplicate) errors.push("Email already exists");
-        }
-
-        return errors;
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (formData.email && !emailRegex.test(formData.email)) {
+        errors.push("Invalid email format");
       }
+
+      // Phone validation (10 digit)
+      if (formData.phone) {
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(formData.phone)) {
+          errors.push("Phone number must be exactly 10 digits");
+        }
+      }
+
+      //  Duplicate email check (safe handling)
+      if (Array.isArray(allUsers)) {
+        const duplicate = allUsers.find(
+          user =>
+            user.email === formData.email &&
+            user.id !== editingUser?.id
+        );
+        if (duplicate) errors.push("Email already exists");
+      }
+
+      return errors;
+    }
 
   };
 
