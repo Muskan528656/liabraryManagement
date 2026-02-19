@@ -1366,6 +1366,7 @@ async function findByCardId(cardId, memberType) {
 async function issueBook(req) {
   try {
     const tenantcode = req.headers.tenantcode || "demo";
+    const branchId = req.userinfo.branch_id;
     schema = tenantcode;
 
     if (!req.body.card_id)
@@ -1381,7 +1382,6 @@ async function issueBook(req) {
       req.auth?.userId ||
       1;
 
-    const branchId = req.branchId;
 
     /* ================= MEMBER CHECK ================= */
 
@@ -1531,6 +1531,7 @@ async function issueBook(req) {
         member_id: member.member_id,
         user_id: userId,
         book_id: newIssue.book_id,
+        branch_id: branchId
       });
     } catch (err) {
       console.warn("Scheduler error:", err.message);

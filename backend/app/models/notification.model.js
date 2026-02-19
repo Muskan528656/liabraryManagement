@@ -294,14 +294,18 @@ async function upsertDueDateScheduler({
     },
   };
 
+  console.log("members=>",members);
+
   const existingJob = await sql.query(
     `SELECT *
      FROM ${schema}.scheduler
      WHERE action_type = 'BOOK_DUE_REMINDER'
-       AND config->>'due_date' = $1
-       AND config->>'branch_id' = $2`,
-    [due_date, String(branch_id)]
+       AND config->>'due_date' = $1`
+    [due_date]
   );
+
+
+  console.log("existingJob=>",existingJob);
 
   if (existingJob.rows.length > 0) {
     const job = existingJob.rows[0];
@@ -330,24 +334,25 @@ async function upsertDueDateScheduler({
       members,
     };
 
-    await sql.query(
-      `INSERT INTO ${schema}.scheduler
-       (action_type, next_run, is_active,
-        description, config,
-        createddate, createdbyid,
-        lastmodifieddate, lastmodifiedbyid)
-       VALUES ($1,$2,true,
-               $3,$4,
-               NOW(),$5,
-               NOW(),$5)`,
-      [
-        "BOOK_DUE_REMINDER",
-        due_date,
-        "Automatic reminder for due books",
-        config,
-        user_id,
-      ]
-    );
+
+    console.log("config=>",config);
+   const resp = await sql.query(
+  `INSERT INTO ${schema}.scheduler
+   (action_type, next_run, config, is_active, createddate, createdbyid)
+   VALUES ($1,$2,$3,true,NOW(),$4)
+   RETURNING *`,
+  [
+    "BOOK_DUE_REMINDER",
+    due_date,
+    config,
+    user_id,
+  ]
+  );
+
+console.log("response=>", resp.rows);
+
+
+    console.log("response=>",resp.rows)
   }
 }
 
