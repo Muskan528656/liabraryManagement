@@ -1217,21 +1217,54 @@ async function issueBook(req) {
       lastmodifiedbyid: userId,
     };
 
+    // If a specific book copy was selected, validate and attach it
+    const bookCopyId = req.body.book_copy_id || null;
+    if (bookCopyId) {
+      const copyCheck = await sql.query(
+        `SELECT id, status, book_id FROM ${schema}.book_copy WHERE id = $1`,
+        [bookCopyId]
+      );
+      if (copyCheck.rows.length === 0) {
+        return { success: false, message: "Selected book copy not found." };
+      }
+      const copy = copyCheck.rows[0];
+      if (copy.book_id !== req.body.book_id) {
+        return { success: false, message: "Selected copy does not belong to this book." };
+      }
+      if (copy.status !== 'AVAILABLE') {
+        return { success: false, message: `Selected copy is not available (status: ${copy.status}).` };
+      }
+      issueData.book_copy_id = bookCopyId;
+    }
 
-
-
-    const columns = Object.keys(issueData);
-    const values = Object.values(issueData);
-    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-
-    const insertQuery = `
-      INSERT INTO ${schema}.book_issues (${columns.join(', ')})
-      VALUES (${placeholders})
-      RETURNING *
-    `;
-
-
-    const insertRes = await sql.query(insertQuery, values);
+    let insertRes;
+    try {
+      const columns = Object.keys(issueData);
+      const values = Object.values(issueData);
+      const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
+      const insertQuery = `
+        INSERT INTO ${schema}.book_issues (${columns.join(', ')})
+        VALUES (${placeholders})
+        RETURNING *
+      `;
+      insertRes = await sql.query(insertQuery, values);
+    } catch (insertErr) {
+      // If book_copy_id column doesn't exist yet (migration not run), retry without it
+      if (insertErr.message && insertErr.message.includes('book_copy_id') && issueData.book_copy_id) {
+        console.warn('book_copy_id column not found in book_issues, inserting without it. Run migrate-book-copy-id.sql to enable copy tracking.');
+        const fallbackData = { ...issueData };
+        delete fallbackData.book_copy_id;
+        const cols = Object.keys(fallbackData);
+        const vals = Object.values(fallbackData);
+        const ph = cols.map((_, i) => `$${i + 1}`).join(', ');
+        insertRes = await sql.query(
+          `INSERT INTO ${schema}.book_issues (${cols.join(', ')}) VALUES (${ph}) RETURNING *`,
+          vals
+        );
+      } else {
+        throw insertErr;
+      }
+    }
     const newIssue = insertRes.rows[0];
 
 
@@ -1261,6 +1294,36 @@ async function issueBook(req) {
     }
 
     const updatedBook = updateBookRes.rows[0];
+
+    // Update the specific book copy status to ISSUED
+    if (bookCopyId) {
+      try {
+        await sql.query(
+          `UPDATE ${schema}.book_copy SET status = 'ISSUED', lastmodifieddate = NOW() WHERE id = $1`,
+          [bookCopyId]
+        );
+        console.log(`Book copy ${bookCopyId} status updated to ISSUED`);
+      } catch (copyUpdateErr) {
+        console.warn("Could not update book copy status:", copyUpdateErr.message);
+      }
+    } else {
+      // Auto-pick the first available copy for this book and mark it ISSUED
+      try {
+        const firstCopy = await sql.query(
+          `SELECT id FROM ${schema}.book_copy WHERE book_id = $1 AND status = 'AVAILABLE' LIMIT 1`,
+          [req.body.book_id]
+        );
+        if (firstCopy.rows.length > 0) {
+          await sql.query(
+            `UPDATE ${schema}.book_copy SET status = 'ISSUED', lastmodifieddate = NOW() WHERE id = $1`,
+            [firstCopy.rows[0].id]
+          );
+          console.log(`Auto-marked copy ${firstCopy.rows[0].id} as ISSUED`);
+        }
+      } catch (autoCopyErr) {
+        console.warn("Could not auto-update book copy status:", autoCopyErr.message);
+      }
+    }
 
 
 

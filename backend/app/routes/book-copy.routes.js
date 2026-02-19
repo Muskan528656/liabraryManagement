@@ -119,6 +119,55 @@ module.exports = (app) => {
         }
     });
 
+    // Search book copies by call number / barcode / title (for Book Issue)
+    router.get('/search-by-callnumber', fetchUser, initModel, async (req, res) => {
+        try {
+            const { q } = req.query;
+            if (!q || q.trim().length < 2) {
+                return res.json([]);
+            }
+            const schema = req.userinfo.tenantcode;
+            const searchTerm = `%${q.trim()}%`;
+
+            const query = `
+                SELECT 
+                    bc.id,
+                    bc.barcode,
+                    bc.itemcallnumber,
+                    bc.cn_class,
+                    bc.cn_item,
+                    bc.cn_suffix,
+                    bc.status,
+                    bc.item_price,
+                    bc.rack_mapping_id,
+                    bc.book_id,
+                    b.title as book_title,
+                    b.isbn as book_isbn,
+                    b.available_copies,
+                    rm.full_location_code as rack_location,
+                    rm.name as rack_name
+                FROM ${schema}.book_copy bc
+                LEFT JOIN ${schema}.books b ON b.id = bc.book_id
+                LEFT JOIN ${schema}.rack_mapping rm ON rm.id = bc.rack_mapping_id
+                WHERE bc.status = 'AVAILABLE'
+                  AND (
+                    bc.itemcallnumber ILIKE $1
+                    OR bc.barcode ILIKE $1
+                    OR b.title ILIKE $1
+                    OR bc.cn_class ILIKE $1
+                  )
+                ORDER BY bc.itemcallnumber ASC
+                LIMIT 30
+            `;
+
+            const { rows } = await sql.query(query, [searchTerm]);
+            res.json(rows);
+        } catch (err) {
+            console.error('Error searching by call number:', err);
+            res.status(500).json({ message: 'Error searching book copies', error: err.message });
+        }
+    });
+
     // Bulk create book copies
     router.post('/bulk', [
         body('book_id').notEmpty().isUUID().withMessage('Book ID is required'),

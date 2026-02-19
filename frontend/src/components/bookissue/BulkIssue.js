@@ -68,6 +68,12 @@ const BulkIssue = ({ permissions }) => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedBooks, setSelectedBooks] = useState([]);
 
+  // Call number search state
+  const [callNumberQuery, setCallNumberQuery] = useState("");
+  const [callNumberResults, setCallNumberResults] = useState([]);
+  const [callNumberLoading, setCallNumberLoading] = useState(false);
+  const [selectedCopies, setSelectedCopies] = useState({}); // bookId -> copyId mapping
+
   const [durationDays, setDurationDays] = useState(15);
   const [systemMaxBooks, setSystemMaxBooks] = useState(6);
   const [memberExtraAllowance, setMemberExtraAllowance] = useState(0);
@@ -265,49 +271,49 @@ const BulkIssue = ({ permissions }) => {
 
 
   useEffect(() => {
-  if (!selectedCard || memberAge === null || books.length === 0) {
-    setFilteredBooksByAge([]);
-    return;
-  }
-
-  const filtered = books.filter(book => {
-    const min = book.min_age !== null && book.min_age !== "" 
-      ? Number(book.min_age) 
-      : null;
-
-    const max = book.max_age !== null && book.max_age !== "" 
-      ? Number(book.max_age) 
-      : null;
-
-    if (memberAge === null || memberAge === undefined) return false;
-
-    // ✅ If no age restriction → allow
-    if (min === null && max === null) return true;
-
-    // ✅ If only min defined
-    if (min !== null && max === null) {
-      return memberAge >= min;
+    if (!selectedCard || memberAge === null || books.length === 0) {
+      setFilteredBooksByAge([]);
+      return;
     }
 
-    // ✅ If only max defined
-    if (min === null && max !== null) {
-      return memberAge <= max;
-    }
+    const filtered = books.filter(book => {
+      const min = book.min_age !== null && book.min_age !== ""
+        ? Number(book.min_age)
+        : null;
 
-    // ✅ Normal case (min and max both exist)
-    return memberAge >= min && memberAge <= max;
-  });
+      const max = book.max_age !== null && book.max_age !== ""
+        ? Number(book.max_age)
+        : null;
 
-  console.log("Member Age:", memberAge);
-  console.table(filtered.map(b => ({
-    title: b.title,
-    min: b.min_age,
-    max: b.max_age
-  })));
+      if (memberAge === null || memberAge === undefined) return false;
 
-  setFilteredBooksByAge(filtered);
+      // ✅ If no age restriction → allow
+      if (min === null && max === null) return true;
 
-}, [books, selectedCard, memberAge]);
+      // ✅ If only min defined
+      if (min !== null && max === null) {
+        return memberAge >= min;
+      }
+
+      // ✅ If only max defined
+      if (min === null && max !== null) {
+        return memberAge <= max;
+      }
+
+      // ✅ Normal case (min and max both exist)
+      return memberAge >= min && memberAge <= max;
+    });
+
+    console.log("Member Age:", memberAge);
+    console.table(filtered.map(b => ({
+      title: b.title,
+      min: b.min_age,
+      max: b.max_age
+    })));
+
+    setFilteredBooksByAge(filtered);
+
+  }, [books, selectedCard, memberAge]);
 
 
   const getNumberValue = (value) => {
@@ -913,6 +919,70 @@ const BulkIssue = ({ permissions }) => {
     return true;
   };
 
+  // Call number search function (debounced)
+  const searchByCallNumber = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setCallNumberResults([]);
+      return;
+    }
+    setCallNumberLoading(true);
+    try {
+      const resp = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/book-copy/search-by-callnumber?q=${encodeURIComponent(query.trim())}`,
+        "GET"
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        setCallNumberResults(Array.isArray(data) ? data : []);
+      } else {
+        setCallNumberResults([]);
+      }
+    } catch (err) {
+      console.error("Call number search error:", err);
+      setCallNumberResults([]);
+    } finally {
+      setCallNumberLoading(false);
+    }
+  };
+
+  // Add a copy from call number search to the selected books
+  const handleSelectCopy = (copy) => {
+    if (!selectedCard) {
+      showErrorToast("Please select a library card first.");
+      return;
+    }
+    // Find the book in the books list
+    const book = books.find(b => b.id?.toString() === copy.book_id?.toString());
+    if (!book) {
+      showErrorToast("Book not found in the books list.");
+      return;
+    }
+    if (isBookIssuedToSelectedCard(book.id)) {
+      showErrorToast("This book is already issued to this member.");
+      return;
+    }
+    // Check if already selected
+    const alreadySelected = selectedBooks.some(b => b.value?.toString() === book.id?.toString());
+    if (alreadySelected) {
+      showWarningToast("This book is already in your selection.");
+      return;
+    }
+    // Add to selected books
+    const newEntry = {
+      value: book.id,
+      label: `${book.title} (${book.isbn || 'N/A'})`,
+      subLabel: `Available: ${book.available_copies}`,
+      data: book,
+    };
+    setSelectedBooks(prev => [...prev, newEntry]);
+    // Track the specific copy
+    setSelectedCopies(prev => ({ ...prev, [book.id]: copy.id }));
+    // Clear search
+    setCallNumberQuery("");
+    setCallNumberResults([]);
+    showSuccessToast(`Added "${book.title}" (Copy: ${copy.itemcallnumber || copy.barcode}) to selection.`);
+  };
+
   const handleIssue = async () => {
     if (!validateIssuance()) {
       return;
@@ -936,6 +1006,10 @@ const BulkIssue = ({ permissions }) => {
             condition_before: "Good",
             remarks: "",
           };
+          // Attach specific copy ID if selected via call number search
+          if (selectedCopies[b.value]) {
+            body.book_copy_id = selectedCopies[b.value];
+          }
 
           const response = await helper.fetchWithAuth(
             `${constants.API_BASE_URL}/api/bookissue/issue`,
@@ -1010,11 +1084,19 @@ const BulkIssue = ({ permissions }) => {
 
       if (failedBooks.length === 0) {
         setSelectedBooks([]);
+        setSelectedCopies({});
         setRefreshTrigger(prev => prev + 1);
       } else {
         const remainingBooks = selectedBooks.filter(book =>
           !successBooks.some(success => success.title === book.data.title)
         );
+        // Clean up copies for successfully issued books
+        const newCopies = { ...selectedCopies };
+        successBooks.forEach(s => {
+          const found = selectedBooks.find(b => b.data.title === s.title);
+          if (found) delete newCopies[found.value];
+        });
+        setSelectedCopies(newCopies);
         setSelectedBooks(remainingBooks);
         setRefreshTrigger(prev => prev + 1);
       }
@@ -1146,34 +1228,34 @@ const BulkIssue = ({ permissions }) => {
   };
 
 
- const getMemberAge = () => {
-  let dob = null;
+  const getMemberAge = () => {
+    let dob = null;
 
-  if (memberInfo) {
-    dob = memberInfo.dob || memberInfo.date_of_birth;
-  } else {
-    const user = findUserByCardId(selectedCard?.value);
-    dob = user?.dob || user?.date_of_birth || selectedCard?.data?.dob;
-  }
+    if (memberInfo) {
+      dob = memberInfo.dob || memberInfo.date_of_birth;
+    } else {
+      const user = findUserByCardId(selectedCard?.value);
+      dob = user?.dob || user?.date_of_birth || selectedCard?.data?.dob;
+    }
 
-  if (!dob) return "N/A";
+    if (!dob) return "N/A";
 
-  const birthDate = new Date(dob);
-  const today = new Date();
+    const birthDate = new Date(dob);
+    const today = new Date();
 
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  // Adjust if birthday hasn't occurred yet this year
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
+    // Adjust if birthday hasn't occurred yet this year
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
 
-  return age;
-};
+    return age;
+  };
 
 
 
@@ -1368,7 +1450,7 @@ const BulkIssue = ({ permissions }) => {
                       </div>
 
                       <h5 className="fw-bold mb-1">{getMemberName()}</h5>
-                       <span className="fw-bold mb-1"> Age: {getMemberAge()}</span>
+                      <span className="fw-bold mb-1"> Age: {getMemberAge()}</span>
                     </div>
 
                     <Row className="g-2 mb-3">
@@ -1545,6 +1627,81 @@ const BulkIssue = ({ permissions }) => {
                     <Badge bg="primary" pill>
                       {selectedBooks.length} Selected
                     </Badge>
+                  )}
+                </div>
+
+                {/* Call Number Search */}
+                <div className="mb-3 p-3 rounded-3" style={{ background: "#f0f4ff", border: "1px solid #d0d9ff" }}>
+                  <div className="fw-bold small text-uppercase text-primary mb-2">
+                    <i className="fa-solid fa-barcode me-2"></i>Search by Call Number / Barcode
+                  </div>
+                  <div className="position-relative">
+                    <Form.Control
+                      type="text"
+                      placeholder="Type call number, barcode, or book title..."
+                      value={callNumberQuery}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCallNumberQuery(val);
+                        clearTimeout(window._cnSearchTimer);
+                        window._cnSearchTimer = setTimeout(() => searchByCallNumber(val), 400);
+                      }}
+                      style={{ paddingRight: "36px" }}
+                    />
+                    {callNumberLoading && (
+                      <Spinner animation="border" size="sm" className="position-absolute" style={{ right: "10px", top: "10px" }} />
+                    )}
+                    {callNumberQuery && !callNumberLoading && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="position-absolute p-0 text-muted"
+                        style={{ right: "10px", top: "8px" }}
+                        onClick={() => { setCallNumberQuery(""); setCallNumberResults([]); }}
+                      >
+                        <i className="fa-solid fa-xmark"></i>
+                      </Button>
+                    )}
+                  </div>
+
+                  {callNumberResults.length > 0 && (
+                    <div className="mt-2 rounded-3 overflow-hidden" style={{ border: "1px solid #dee2e6", maxHeight: "260px", overflowY: "auto", background: "white" }}>
+                      {callNumberResults.map((copy) => (
+                        <div
+                          key={copy.id}
+                          className="d-flex justify-content-between align-items-center px-3 py-2"
+                          style={{ borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f8f9ff"}
+                          onMouseLeave={e => e.currentTarget.style.background = "white"}
+                        >
+                          <div>
+                            <div className="fw-bold small text-dark">{copy.book_title}</div>
+                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                              <span className="me-2"><i className="fa-solid fa-hashtag me-1"></i>{copy.itemcallnumber || "N/A"}</span>
+                              <span className="me-2"><i className="fa-solid fa-barcode me-1"></i>{copy.barcode}</span>
+                              {copy.rack_location && <span><i className="fa-solid fa-location-dot me-1"></i>{copy.rack_location}</span>}
+                            </div>
+                            <div style={{ fontSize: "0.72rem" }}>
+                              <Badge bg="success" className="me-1">AVAILABLE</Badge>
+                              {copy.book_isbn && <span className="text-muted">ISBN: {copy.book_isbn}</span>}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => handleSelectCopy(copy)}
+                          >
+                            <i className="fa-solid fa-plus me-1"></i>Select
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {callNumberQuery.trim().length >= 2 && !callNumberLoading && callNumberResults.length === 0 && (
+                    <div className="text-muted small mt-2">
+                      <i className="fa-solid fa-circle-info me-1"></i>No available copies found for "{callNumberQuery}".
+                    </div>
                   )}
                 </div>
 
@@ -1733,6 +1890,11 @@ const BulkIssue = ({ permissions }) => {
                                   <Badge bg={book.data.available_copies > 0 ? "success" : "danger"}>
                                     Available: {book.data.available_copies || 0}
                                   </Badge>
+                                  {selectedCopies[book.value] && (
+                                    <Badge bg="info" className="ms-1">
+                                      <i className="fa-solid fa-barcode me-1"></i>Copy Selected
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1740,11 +1902,16 @@ const BulkIssue = ({ permissions }) => {
                               variant="light"
                               className="text-danger border-0 shadow-none"
                               size="sm"
-                              onClick={() =>
+                              onClick={() => {
                                 setSelectedBooks((prev) =>
                                   prev.filter((x) => x.value !== book.value)
-                                )
-                              }
+                                );
+                                setSelectedCopies(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[book.value];
+                                  return updated;
+                                });
+                              }}
                             >
                               <i className="fa-solid fa-trash-can"></i>
                             </Button>
