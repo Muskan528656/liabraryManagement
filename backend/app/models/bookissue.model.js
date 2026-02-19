@@ -1024,432 +1024,536 @@ async function findByCardId(cardId, memberType) {
   return result.rows || [];
 }
 
+// async function issueBook(req) {
+
+//   const branchId = req.userinfo.branch_id;
+//   console.log("branchId=>",branchId)
+//   console.log("request =>", req.body);
+
+//   try {
+//     const tenantcode = req.headers.tenantcode || 'demo';
+    
+//     schema = tenantcode;
+
+//     if (!req.body.card_id) {
+//       return { success: false, message: "Card ID is required" };
+//     }
+//     if (!req.body.book_id) {
+//       return { success: false, message: "Book ID is required" };
+//     }
+
+
+//     let userId = null;
+//     if (req.userinfo && req.userinfo.id) {
+//       userId = req.userinfo.id;
+//     } else if (req.user && req.user.id) {
+//       userId = req.user.id;
+//     } else if (req.headers['x-user-id']) {
+//       userId = req.headers['x-user-id'];
+//     } else if (req.auth && req.auth.userId) {
+//       userId = req.auth.userId;
+//     } else {
+//       console.warn(" No user ID found. Using default user ID 1");
+//       userId = 1;
+//     }
+
+
+//     const memberRes = await sql.query(
+//       `SELECT
+//         m.id AS member_id,
+//         m.user_id,
+//         m.card_number,
+//         m.plan_id,
+//         p.duration_days,
+//         p.allowed_books,
+//         p.max_allowed_books_at_time,
+//         p.is_active AS plan_active,
+//         m.first_name,
+//         m.last_name
+//        FROM ${schema}.library_members m
+//        LEFT JOIN ${schema}.plan p ON m.plan_id = p.id
+//        WHERE m.id = $1 AND m.is_active = true`,
+//       [req.body.card_id]
+//     );
+
+//     if (memberRes.rows.length === 0) {
+//       return { success: false, message: "Member not found or inactive" };
+//     }
+
+//     const member = memberRes.rows[0];
+
+//     console.log("membermember", member);
+
+//     if (!member.plan_id) {
+//       return { success: false, message: "No plan assigned to this member" };
+//     }
+
+//     if (!member.plan_active) {
+//       return { success: false, message: "Plan is not active" };
+//     }
+
+//     if (!member.allowed_books || member.allowed_books <= 0) {
+//       return { success: false, message: "This plan does not allow issuing books" };
+//     }
+
+
+//     let dailyLimit = member.max_allowed_books_at_time ? parseInt(member.max_allowed_books_at_time) : 2;
+//     if (isNaN(dailyLimit) || dailyLimit < 1) {
+//       dailyLimit = 2; // Default fallback
+//     }
+
+
+//     const issuedRes = await sql.query(
+//       `SELECT COUNT(*) AS total 
+//        FROM ${schema}.book_issues 
+//        WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`,
+//       [req.body.card_id]
+//     );
+
+//     const alreadyIssued = Number(issuedRes.rows[0].total || 0);
+
+
+//     if (alreadyIssued >= member.allowed_books) {
+//       return {
+//         success: false,
+//         message: `Total book limit exceeded. You can issue maximum ${member.allowed_books} books total.`
+//       };
+//     }
+
+
+
+//     const today = new Date().toISOString().split('T')[0];
+
+
+//     const dailyIssuedRes = await sql.query(
+//       `SELECT COUNT(*) AS daily_total 
+//        FROM ${schema}.book_issues 
+//        WHERE issued_to = $1 
+//        AND issue_date = $2 
+//        AND status = 'issued'
+//        AND (return_date IS NULL OR return_date > $2)`,
+//       [req.body.card_id, today]
+//     );
+
+//     const issuedToday = Number(dailyIssuedRes.rows[0].daily_total || 0);
+
+
+//     if (issuedToday >= dailyLimit) {
+//       return {
+//         success: false,
+//         message: `Daily limit reached! You can issue maximum ${dailyLimit} books per day. Already issued ${issuedToday} today.`
+//       };
+//     }
+
+
+//     const bookRes = await sql.query(
+//       `SELECT * FROM ${schema}.books WHERE id = $1`,
+//       [req.body.book_id]
+//     );
+
+//     if (bookRes.rows.length === 0) {
+//       return { success: false, message: "Book not found" };
+//     }
+
+//     const book = bookRes.rows[0];
+
+
+
+
+//     if (!book.available_copies || book.available_copies <= 0) {
+//       return {
+//         success: false,
+//         message: "This book is not available. All copies are currently issued."
+//       };
+//     }
+
+//     if (book.available_copies > book.total_copies) {
+//       console.warn("Warning: available_copies is greater than total_copies. Resetting...");
+//       await sql.query(
+//         `UPDATE ${schema}.books SET available_copies = total_copies WHERE id = $1`,
+//         [req.body.book_id]
+//       );
+//       book.available_copies = book.total_copies;
+//     }
+
+
+//     const memberHasBookRes = await sql.query(
+//       `SELECT COUNT(*) as count FROM ${schema}.book_issues 
+//        WHERE book_id = $1 
+//        AND issued_to = $2 
+//        AND return_date IS NULL 
+//        AND status = 'issued'`,
+//       [req.body.book_id, req.body.card_id]
+//     );
+
+//     if (parseInt(memberHasBookRes.rows[0].count) > 0) {
+//       return {
+//         success: false,
+//         message: "This member already has this book issued. Cannot issue same book again."
+//       };
+//     }
+
+
+//     const issueDate = req.body.issue_date
+//       ? new Date(req.body.issue_date)
+//       : new Date();
+
+//     let dueDate;
+//     if (req.body.due_date) {
+//       dueDate = new Date(req.body.due_date);
+//     } else {
+//       dueDate = new Date(issueDate);
+//       dueDate.setDate(dueDate.getDate() + (member.duration_days || 14));
+//     }
+
+
+
+
+
+//     const issueData = {
+//       book_id: req.body.book_id,
+//       issued_to: req.body.card_id,
+//       issued_by: userId,
+//       issue_date: issueDate.toISOString().split('T')[0],
+//       due_date: dueDate.toISOString().split('T')[0],
+//       status: 'issued',
+//       branch_id: req.branchId,
+//       createdbyid: userId,
+//       lastmodifiedbyid: userId,
+//     };
+
+
+
+
+//     const columns = Object.keys(issueData);
+//     const values = Object.values(issueData);
+//     const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
+
+//     const insertQuery = `
+//       INSERT INTO ${schema}.book_issues (${columns.join(', ')})
+//       VALUES (${placeholders})
+//       RETURNING *
+//     `;
+
+
+//     const insertRes = await sql.query(insertQuery, values);
+//     const newIssue = insertRes.rows[0];
+
+
+
+//     const updateBookQuery = `
+//       UPDATE ${schema}.books 
+//       SET 
+//         available_copies = available_copies - 1,
+//         lastmodifiedbyid = $2,
+//         lastmodifieddate = CURRENT_TIMESTAMP
+//       WHERE id = $1 
+//       AND available_copies > 0
+//       RETURNING available_copies, total_copies
+//     `;
+
+//     const updateBookRes = await sql.query(updateBookQuery, [
+//       req.body.book_id,
+//       userId
+//     ]);
+
+//     if (updateBookRes.rows.length === 0) {
+//       await sql.query(`DELETE FROM ${schema}.book_issues WHERE id = $1`, [newIssue.id]);
+//       return {
+//         success: false,
+//         message: "Failed to update book quantity. No available copies left. Issue record deleted."
+//       };
+//     }
+
+//     const updatedBook = updateBookRes.rows[0];
+
+
+
+//     try {
+//       const updateIssuedCountQuery = `
+//         UPDATE ${schema}.books 
+//         SET 
+//           issued_count = COALESCE(issued_count, 0) + 1,
+//           lastmodifiedbyid = $2,
+//           lastmodifieddate = CURRENT_TIMESTAMP
+//         WHERE id = $1
+//       `;
+//       await sql.query(updateIssuedCountQuery, [
+//         req.body.book_id,
+//         userId
+//       ]);
+
+//     } catch (err) {
+//       console.warn("Could not update issued count:", err.message);
+//     }
+
+
+//     try {
+//       const updateMemberQuery = `
+//         UPDATE ${schema}.library_members
+//         SET
+//           issued_books_count = COALESCE(issued_books_count, 0) + 1,
+//           last_issued_date = CURRENT_TIMESTAMP,
+//           lastmodifiedbyid = $2,
+//           lastmodifieddate = CURRENT_TIMESTAMP
+//         WHERE id = $1
+//       `;
+//       await sql.query(updateMemberQuery, [
+//         req.body.card_id,
+//         userId
+//       ]);
+
+//     } catch (err) {
+//       console.warn("Could not update member issued count:", err.message);
+//     }
+
+//     /* =========================
+//        CREATE DUE REMINDER NOTIFICATION
+//     ========================= */
+
+
+//     try {
+//       Notification.init(schema);
+
+//       await Notification.upsertDueDateScheduler({
+//         due_date: issueData.due_date,
+//         member_id: member.member_id,
+//         user_id: userId,
+//         book_id: newIssue.book_id,
+//         branchId: branchId,
+//       });
+
+//     } catch (error) {
+//       console.log(error);
+
+//     }
+
+//     return {
+//       success: true,
+//       message: "Book issued successfully",
+//       data: {
+//         ...newIssue,
+//         member_id: member.member_id,
+//         user_id: userId,
+//         book_title: book.title,
+//         member_name: `${member.first_name} ${member.last_name}`,
+//         card_number: member.card_number,
+//         due_date: dueDate.toISOString().split('T')[0],
+//         book_details: {
+//           old_available_copies: book.available_copies,
+//           new_available_copies: updatedBook.available_copies,
+//           total_copies: updatedBook.total_copies
+//         },
+//         limits_info: {
+//           total_allowed: member.allowed_books,
+//           currently_issued: alreadyIssued + 1,
+//           daily_limit: dailyLimit,
+//           issued_today: issuedToday + 1,
+//           remaining_today: dailyLimit - (issuedToday + 1)
+//         }
+//       }
+//     };
+
+//   } catch (err) {
+//     console.error("❌ ERROR in issueBook:", err);
+//     return {
+//       success: false,
+//       message: "Error issuing book",
+//       error: err.message,
+//       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+//     };
+//   }
+// }
+
 async function issueBook(req) {
-
-  console.log("request =>", req.body);
-
   try {
-    const tenantcode = req.headers.tenantcode || 'demo';
+    const tenantcode = req.headers.tenantcode || "demo";
+    const branchId = req.userinfo.branch_id;
     schema = tenantcode;
 
-    if (!req.body.card_id) {
+    if (!req.body.card_id)
       return { success: false, message: "Card ID is required" };
-    }
-    if (!req.body.book_id) {
+
+    if (!req.body.book_id)
       return { success: false, message: "Book ID is required" };
-    }
+
+    const userId =
+      req.userinfo?.id ||
+      req.user?.id ||
+      req.headers["x-user-id"] ||
+      req.auth?.userId ||
+      1;
 
 
-    let userId = null;
-    if (req.userinfo && req.userinfo.id) {
-      userId = req.userinfo.id;
-    } else if (req.user && req.user.id) {
-      userId = req.user.id;
-    } else if (req.headers['x-user-id']) {
-      userId = req.headers['x-user-id'];
-    } else if (req.auth && req.auth.userId) {
-      userId = req.auth.userId;
-    } else {
-      console.warn(" No user ID found. Using default user ID 1");
-      userId = 1;
-    }
-
+    /* ================= MEMBER CHECK ================= */
 
     const memberRes = await sql.query(
-      `SELECT
-        m.id AS member_id,
-        m.user_id,
-        m.card_number,
-        m.plan_id,
-        p.duration_days,
-        p.allowed_books,
-        p.max_allowed_books_at_time,
-        p.is_active AS plan_active,
-        m.first_name,
-        m.last_name
+      `SELECT 
+          m.id AS member_id,
+          m.first_name,
+          m.last_name,
+          m.plan_id,
+          p.allowed_books,
+          p.duration_days,
+          p.is_active AS plan_active
        FROM ${schema}.library_members m
        LEFT JOIN ${schema}.plan p ON m.plan_id = p.id
        WHERE m.id = $1 AND m.is_active = true`,
       [req.body.card_id]
     );
 
-    if (memberRes.rows.length === 0) {
+    if (!memberRes.rows.length)
       return { success: false, message: "Member not found or inactive" };
-    }
 
     const member = memberRes.rows[0];
 
-    console.log("membermember", member);
+    if (!member.plan_id)
+      return { success: false, message: "No plan assigned" };
 
-    if (!member.plan_id) {
-      return { success: false, message: "No plan assigned to this member" };
-    }
+    if (!member.plan_active)
+      return { success: false, message: "Plan inactive" };
 
-    if (!member.plan_active) {
-      return { success: false, message: "Plan is not active" };
-    }
-
-    if (!member.allowed_books || member.allowed_books <= 0) {
-      return { success: false, message: "This plan does not allow issuing books" };
-    }
-
-
-    let dailyLimit = member.max_allowed_books_at_time ? parseInt(member.max_allowed_books_at_time) : 2;
-    if (isNaN(dailyLimit) || dailyLimit < 1) {
-      dailyLimit = 2; // Default fallback
-    }
-
+    /* ================= TOTAL LIMIT CHECK ================= */
 
     const issuedRes = await sql.query(
-      `SELECT COUNT(*) AS total 
-       FROM ${schema}.book_issues 
-       WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`,
-      [req.body.card_id]
+      `SELECT COUNT(*) AS total
+       FROM ${schema}.book_issues
+       WHERE issued_to = $1
+         AND return_date IS NULL
+         AND status = 'issued'
+         AND branch_id = $2`,
+      [req.body.card_id, branchId]
     );
 
     const alreadyIssued = Number(issuedRes.rows[0].total || 0);
 
-
     if (alreadyIssued >= member.allowed_books) {
       return {
         success: false,
-        message: `Total book limit exceeded. You can issue maximum ${member.allowed_books} books total.`
+        message: `Maximum allowed books reached (${member.allowed_books})`,
       };
     }
 
-
-
-    const today = new Date().toISOString().split('T')[0];
-
-
-    const dailyIssuedRes = await sql.query(
-      `SELECT COUNT(*) AS daily_total 
-       FROM ${schema}.book_issues 
-       WHERE issued_to = $1 
-       AND issue_date = $2 
-       AND status = 'issued'
-       AND (return_date IS NULL OR return_date > $2)`,
-      [req.body.card_id, today]
-    );
-
-    const issuedToday = Number(dailyIssuedRes.rows[0].daily_total || 0);
-
-
-    if (issuedToday >= dailyLimit) {
-      return {
-        success: false,
-        message: `Daily limit reached! You can issue maximum ${dailyLimit} books per day. Already issued ${issuedToday} today.`
-      };
-    }
-
+    /* ================= BOOK CHECK ================= */
 
     const bookRes = await sql.query(
-      `SELECT * FROM ${schema}.books WHERE id = $1`,
-      [req.body.book_id]
+      `SELECT *
+       FROM ${schema}.books
+       WHERE id = $1 AND branch_id = $2`,
+      [req.body.book_id, branchId]
     );
 
-    if (bookRes.rows.length === 0) {
-      return { success: false, message: "Book not found" };
-    }
+    if (!bookRes.rows.length)
+      return { success: false, message: "Book not found in branch" };
 
     const book = bookRes.rows[0];
 
+    if (!book.available_copies || book.available_copies <= 0)
+      return { success: false, message: "No copies available" };
 
+    /* ================= DUPLICATE CHECK ================= */
 
-
-    if (!book.available_copies || book.available_copies <= 0) {
-      return {
-        success: false,
-        message: "This book is not available. All copies are currently issued."
-      };
-    }
-
-    if (book.available_copies > book.total_copies) {
-      console.warn("Warning: available_copies is greater than total_copies. Resetting...");
-      await sql.query(
-        `UPDATE ${schema}.books SET available_copies = total_copies WHERE id = $1`,
-        [req.body.book_id]
-      );
-      book.available_copies = book.total_copies;
-    }
-
-
-    const memberHasBookRes = await sql.query(
-      `SELECT COUNT(*) as count FROM ${schema}.book_issues 
-       WHERE book_id = $1 
-       AND issued_to = $2 
-       AND return_date IS NULL 
-       AND status = 'issued'`,
-      [req.body.book_id, req.body.card_id]
+    const duplicateRes = await sql.query(
+      `SELECT COUNT(*) AS count
+       FROM ${schema}.book_issues
+       WHERE book_id = $1
+         AND issued_to = $2
+         AND return_date IS NULL
+         AND status = 'issued'
+         AND branch_id = $3`,
+      [req.body.book_id, req.body.card_id, branchId]
     );
 
-    if (parseInt(memberHasBookRes.rows[0].count) > 0) {
-      return {
-        success: false,
-        message: "This member already has this book issued. Cannot issue same book again."
-      };
-    }
+    if (Number(duplicateRes.rows[0].count) > 0)
+      return { success: false, message: "Book already issued to member" };
 
+    /* ================= DATE CALCULATION ================= */
 
-    const issueDate = req.body.issue_date
-      ? new Date(req.body.issue_date)
-      : new Date();
+    const issueDate = new Date();
+    const dueDate = new Date(issueDate);
+    dueDate.setDate(dueDate.getDate() + (member.duration_days || 14));
 
-    let dueDate;
-    if (req.body.due_date) {
-      dueDate = new Date(req.body.due_date);
-    } else {
-      dueDate = new Date(issueDate);
-      dueDate.setDate(dueDate.getDate() + (member.duration_days || 14));
-    }
+    const issueDateStr = issueDate.toISOString().split("T")[0];
+    const dueDateStr = dueDate.toISOString().split("T")[0];
 
+    /* ================= INSERT BOOK ISSUE ================= */
 
+    const insertRes = await sql.query(
+      `INSERT INTO ${schema}.book_issues
+       (book_id, issued_to, issued_by, issue_date, due_date,
+        status, createddate, lastmodifieddate,
+        createdbyid, lastmodifiedbyid, branch_id)
+       VALUES ($1,$2,$3,$4,$5,
+               'issued', NOW(), NOW(),
+               $3,$3,$6)
+       RETURNING *`,
+      [
+        req.body.book_id,
+        req.body.card_id,
+        userId,
+        issueDateStr,
+        dueDateStr,
+        branchId,
+      ]
+    );
 
-
-
-    const issueData = {
-      book_id: req.body.book_id,
-      issued_to: req.body.card_id,
-      issued_by: userId,
-      issue_date: issueDate.toISOString().split('T')[0],
-      due_date: dueDate.toISOString().split('T')[0],
-      status: 'issued',
-      branch_id: req.branchId,
-      createdbyid: userId,
-      lastmodifiedbyid: userId,
-    };
-
-
-
-
-    const columns = Object.keys(issueData);
-    const values = Object.values(issueData);
-    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-
-    const insertQuery = `
-      INSERT INTO ${schema}.book_issues (${columns.join(', ')})
-      VALUES (${placeholders})
-      RETURNING *
-    `;
-
-
-    const insertRes = await sql.query(insertQuery, values);
     const newIssue = insertRes.rows[0];
 
+    /* ================= UPDATE BOOK STOCK ================= */
 
+    const updateBookRes = await sql.query(
+      `UPDATE ${schema}.books
+       SET available_copies = available_copies - 1,
+           lastmodifiedbyid = $2,
+           lastmodifieddate = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND branch_id = $3
+         AND available_copies > 0
+       RETURNING available_copies`,
+      [req.body.book_id, userId, branchId]
+    );
 
-    const updateBookQuery = `
-      UPDATE ${schema}.books 
-      SET 
-        available_copies = available_copies - 1,
-        lastmodifiedbyid = $2,
-        lastmodifieddate = CURRENT_TIMESTAMP
-      WHERE id = $1 
-      AND available_copies > 0
-      RETURNING available_copies, total_copies
-    `;
+    if (!updateBookRes.rows.length) {
+      await sql.query(
+        `DELETE FROM ${schema}.book_issues WHERE id = $1`,
+        [newIssue.id]
+      );
 
-    const updateBookRes = await sql.query(updateBookQuery, [
-      req.body.book_id,
-      userId
-    ]);
-
-    if (updateBookRes.rows.length === 0) {
-      await sql.query(`DELETE FROM ${schema}.book_issues WHERE id = $1`, [newIssue.id]);
       return {
         success: false,
-        message: "Failed to update book quantity. No available copies left. Issue record deleted."
+        message: "Stock update failed. Issue reverted.",
       };
     }
 
-    const updatedBook = updateBookRes.rows[0];
-
-
+    /* ================= CREATE SCHEDULER ================= */
 
     try {
-      const updateIssuedCountQuery = `
-        UPDATE ${schema}.books 
-        SET 
-          issued_count = COALESCE(issued_count, 0) + 1,
-          lastmodifiedbyid = $2,
-          lastmodifieddate = CURRENT_TIMESTAMP
-        WHERE id = $1
-      `;
-      await sql.query(updateIssuedCountQuery, [
-        req.body.book_id,
-        userId
-      ]);
-
-    } catch (err) {
-      console.warn("Could not update issued count:", err.message);
-    }
-
-
-    try {
-      const updateMemberQuery = `
-        UPDATE ${schema}.library_members
-        SET
-          issued_books_count = COALESCE(issued_books_count, 0) + 1,
-          last_issued_date = CURRENT_TIMESTAMP,
-          lastmodifiedbyid = $2,
-          lastmodifieddate = CURRENT_TIMESTAMP
-        WHERE id = $1
-      `;
-      await sql.query(updateMemberQuery, [
-        req.body.card_id,
-        userId
-      ]);
-
-    } catch (err) {
-      console.warn("Could not update member issued count:", err.message);
-    }
-
-    /* =========================
-       CREATE DUE REMINDER NOTIFICATION
-    ========================= */
-    // try {
-    //   Notification.init(schema);
-
-    //   // 📅 Tomorrow date (YYYY-MM-DD)
-    //   const tomorrow = new Date();
-    //   tomorrow.setDate(tomorrow.getDate() + 1);
-    //   const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
-    //   // 📅 Due date from request
-    //   const dueDateStr = new Date(req.body.due_date)
-    //     .toISOString()
-    //     .split("T")[0];
-
-    //   console.log("🔔 Due Date Check:", { dueDateStr, tomorrowStr });
-
-    //   // ✅ Create notification ONLY if due date is tomorrow
-    //   if (userId && dueDateStr === tomorrowStr) {
-    //     console.log("Creating due reminder notification...");
-
-    //     // 🛑 Prevent duplicate notification for same book, same user, same day
-    //     const existsRes = await sql.query(
-    //       `
-    //       SELECT id
-    //       FROM ${schema}.notifications
-    //       WHERE user_id = $1
-    //       AND member_id = $2
-    //         AND book_id = $3
-    //         AND type = 'due_reminder'
-    //         AND DATE(createddate) = CURRENT_DATE
-    //       `,
-    //       [userId, member.member_id, newIssue.book_id]
-    //     );
-
-    //     if (existsRes.rows.length === 0) {
-
-    //       // // ✅ Insert & RETURN notification
-    //       // const insertRes = await sql.query(
-    //       //   `
-    //       //   INSERT INTO ${schema}.notifications
-    //       //   (
-    //       //     user_id,
-    //       //     member_id,
-    //       //     book_id,
-    //       //     message,
-    //       //     is_read,
-    //       //     type,
-    //       //     createddate
-    //       //   )
-    //       //   VALUES ($1, $2, $3, $4, false, $5, NOW())
-    //       //   RETURNING *
-    //       //   `,
-    //       //   [
-    //       //     userId,
-    //       //     member.member_id,
-    //       //     newIssue.book_id,
-    //       //     `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-    //       //     "due_reminder"
-    //       //   ]
-    //       // );
-
-
-    //      let notification =  {
-    //          "user_id": userId,
-    //          "member_id": member.member_id,
-    //          "book_id": newIssue.book_id,
-    //          "message" : `Reminder: The book "${book.title}" is due for return tomorrow (${dueDateStr}). Please return it to avoid penalties.`,
-    //           "type": "due_reminder"
-    //         }
-
-    //         console.log("notification=>",notification);
-    //       Notification.create(notification);
-
-    //       // const notification = insertRes.rows[0];
-
-    //       // console.log("✅ Due reminder notification created and emitted:", notification.id);
-    //     } else {
-    //       console.log("⚠️ Due reminder already exists for today");
-    //     }
-    //   }
-
-    // } catch (notifErr) {
-    //   console.error("❌ Error creating due reminder notification:", notifErr);
-    // }
-
-
-    try {
-      Notification.init(schema);
-
-      // await Notification.createOrUpdateDueScheduler({
-      //   member_id: member.member_id,
-      //   user_id: userId,
-      //   due_date: issueData.due_date,
-      //   book_id: newIssue.book_id
-      // });
-
       await Notification.upsertDueDateScheduler({
-        due_date: issueData.due_date,
+        due_date: dueDateStr,
         member_id: member.member_id,
         user_id: userId,
-        book_id: newIssue.book_id
+        book_id: newIssue.book_id,
+        branch_id: branchId
       });
-
-    } catch (error) {
-      console.log(error);
-
+    } catch (err) {
+      console.warn("Scheduler error:", err.message);
     }
 
     return {
       success: true,
       message: "Book issued successfully",
-      data: {
-        ...newIssue,
-        member_id: member.member_id,
-        user_id: userId,
-        book_title: book.title,
-        member_name: `${member.first_name} ${member.last_name}`,
-        card_number: member.card_number,
-        due_date: dueDate.toISOString().split('T')[0],
-        book_details: {
-          old_available_copies: book.available_copies,
-          new_available_copies: updatedBook.available_copies,
-          total_copies: updatedBook.total_copies
-        },
-        limits_info: {
-          total_allowed: member.allowed_books,
-          currently_issued: alreadyIssued + 1,
-          daily_limit: dailyLimit,
-          issued_today: issuedToday + 1,
-          remaining_today: dailyLimit - (issuedToday + 1)
-        }
-      }
+      data: newIssue,
     };
-
   } catch (err) {
-    console.error("❌ ERROR in issueBook:", err);
+    console.error("ERROR:", err);
     return {
       success: false,
       message: "Error issuing book",
       error: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     };
   }
 }
+
 
 async function returnBook(issueId, returnData, userId) {
   try {

@@ -104,7 +104,7 @@ async function markAsRead(notificationId, userId) {
 async function markAllAsRead(userId) {
   const query = `
     UPDATE ${schema}.notifications
-    SET is_read = true, read_at = NOW()
+    SET is_read = true
     WHERE user_id = $1 AND is_read = false AND branch_id = $2
     RETURNING *
   `;
@@ -239,44 +239,124 @@ async function createDueReminderIfTomorrow(
   }
 }
 
-async function upsertDueDateScheduler(due_date, members) {
+// async function upsertDueDateScheduler(due_date, members, branchId) {
+//   const existingJob = await sql.query(
+//     `SELECT * FROM ${schema}.scheduler 
+//     WHERE action_type = 'BOOK_DUE_REMINDER' 
+//     AND config->>'due_date' = $1
+//     AND branch_id = $2`,
+//     [due_date, branchId]
+//   );
+
+//   if (existingJob.rows.length > 0) {
+//     const jobId = existingJob.rows[0].id;
+//     const updatedConfig = {
+//       ...existingJob.rows[0].config,
+//       members: { ...existingJob.rows[0].config.members, ...members }
+//     };
+
+//     await sql.query(
+//       `UPDATE ${schema}.scheduler 
+//       SET config = $1, 
+//       next_run = $2,
+//       updated_at = NOW()
+//       WHERE id = $3 AND branch_id = $4`,
+//       [updatedConfig, due_date, jobId, branchId]
+//     );
+//   } else {
+//     const config = {
+//       due_date,
+//       members
+//     };
+
+//     await sql.query(
+//       `INSERT INTO ${schema}.scheduler 
+//       (action_type, config, next_run, is_active, created_at, branch_id) 
+//       VALUES ($1, $2, $3, true, NOW(), $4)`,
+//       ["BOOK_DUE_REMINDER", config, due_date, branchId]
+//     );
+//   }
+// }
+
+
+async function upsertDueDateScheduler({
+  due_date,
+  member_id,
+  user_id,
+  book_id,
+  branch_id,
+}) {
+  const members = {
+    [member_id]: {
+      user_id,
+      book_id,
+      branch_id,
+    },
+  };
+
+  console.log("members=>",members);
+
   const existingJob = await sql.query(
-    `SELECT * FROM ${schema}.scheduler 
-    WHERE action_type = 'BOOK_DUE_REMINDER' 
-    AND config->>'due_date' = $1
-    AND branch_id = $2`,
-    [due_date, branchId]
+    `SELECT *
+     FROM ${schema}.scheduler
+     WHERE action_type = 'BOOK_DUE_REMINDER'
+       AND config->>'due_date' = $1`
+    [due_date]
   );
 
+
+  console.log("existingJob=>",existingJob);
+
   if (existingJob.rows.length > 0) {
-    const jobId = existingJob.rows[0].id;
+    const job = existingJob.rows[0];
+
     const updatedConfig = {
-      ...existingJob.rows[0].config,
-      members: { ...existingJob.rows[0].config.members, ...members }
+      ...job.config,
+      members: {
+        ...(job.config?.members || {}),
+        ...members,
+      },
     };
 
     await sql.query(
-      `UPDATE ${schema}.scheduler 
-      SET config = $1, 
-      next_run = $2,
-      updated_at = NOW()
-      WHERE id = $3 AND branch_id = $4`,
-      [updatedConfig, due_date, jobId, branchId]
+      `UPDATE ${schema}.scheduler
+       SET config = $1,
+           next_run = $2,
+           lastmodifieddate = NOW(),
+           lastmodifiedbyid = $3
+       WHERE id = $4`,
+      [updatedConfig, due_date, user_id, job.id]
     );
   } else {
     const config = {
       due_date,
-      members
+      branch_id,
+      members,
     };
 
-    await sql.query(
-      `INSERT INTO ${schema}.scheduler 
-      (action_type, config, next_run, is_active, created_at, branch_id) 
-      VALUES ($1, $2, $3, true, NOW(), $4)`,
-      ["BOOK_DUE_REMINDER", config, due_date, branchId]
-    );
+
+    console.log("config=>",config);
+   const resp = await sql.query(
+  `INSERT INTO ${schema}.scheduler
+   (action_type, next_run, config, is_active, createddate, createdbyid)
+   VALUES ($1,$2,$3,true,NOW(),$4)
+   RETURNING *`,
+  [
+    "BOOK_DUE_REMINDER",
+    due_date,
+    config,
+    user_id,
+  ]
+  );
+
+console.log("response=>", resp.rows);
+
+
+    console.log("response=>",resp.rows)
   }
 }
+
+
 
 async function createOrUpdateDueScheduler(issues) {
   const members = {};
@@ -350,7 +430,7 @@ async function sendDueReminderEmail(memberId, books, dueDate) {
 }
 
 
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('* * * * *', async () => {
   const jobs = await sql.query(`
     SELECT * FROM ${schema}.scheduler WHERE is_active = true
       AND next_run <= NOW()

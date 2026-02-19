@@ -563,7 +563,7 @@ const LibraryCardDetail = ({
 
 
         if (card.id) {
-          await fetchBookCounts(card.id);
+          await fetchBookCounts(card.id, card.id);
         }
       }
     } catch (error) {
@@ -2186,13 +2186,12 @@ const LibraryCardDetail = ({
                   </h5>
                 </div>
                 <div>
-                  {canEdit && !isEditing ? (visible ?
-                    <button onClick={handleEdit} className="custom-btn-primary">
-                      <i className="fa-solid fa-edit me-2"></i>
-                      Edit {moduleLabel}
-                    </button> : null
-
-                  ) : !isEditing ? null : (
+                  {canEdit && !isEditing && visible ? (
+                  <button onClick={handleEdit} className="custom-btn-primary">
+                    <i className="fa-solid fa-edit me-2"></i>
+                    Edit {moduleLabel}
+                  </button>
+                  ) : isEditing && visible ? (
                     <div className="d-flex gap-2">
                       <button
                         className="custom-btn-primary"
@@ -2211,7 +2210,7 @@ const LibraryCardDetail = ({
                         Cancel
                       </button>
                     </div>
-                  )}
+                  ) : null}
                   {/* {!isEditing && (
                     <button
                       onClick={handleDelete}

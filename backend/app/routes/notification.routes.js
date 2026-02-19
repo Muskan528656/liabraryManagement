@@ -105,6 +105,29 @@ module.exports = (app) => {
     }
   });
 
+  router.put("/mark-all-read", fetchUser, async (req, res) => {
+    try {
+      Notification.init(req.userinfo.tenantcode, req.branchId);
+
+      const userId = req.userinfo.id;
+
+      const updatedNotifications = await Notification.markAllAsRead(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: "All notifications marked as read",
+        count: updatedNotifications.length
+      });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to mark all notifications as read",
+        error: error.message
+      });
+    }
+  });
+
   router.put("/mark-read-by-related/:relatedId/:memberId/:type", fetchUser, async (req, res) => {
     try {
       Notification.init(req.userinfo.tenantcode, req.branchId);
@@ -170,60 +193,134 @@ module.exports = (app) => {
     }
   });
 
+  // router.post("/request-access", fetchUser, async (req, res) => {
+  //   try {
+  //     // Notification.init(req.userinfo.tenantcode, req.branchId);
+  //     Notification.init(req.userinfo.tenantcode, req.userinfo.branch_id);
+  //     User.init(req.userinfo.tenantcode);
+
+  //     const currentUserId = req.userinfo.id;
+  //     const branchId = req.userinfo.branch_id;
+  //     console.log("currentUserId=>",currentUserId, "branchID ",branchId);
+  //     const currentUser = await User.findById({currentUserId,branchId});
+  //     console.log("currentUser=>",currentUser);
+  //     if (!currentUser) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Current user not found"
+  //       });
+  //     }
+
+  //     // Find admin users
+  //     const adminUsers = await User.findAll({ userrole: 'ADMIN' });
+
+  //     if (adminUsers.length === 0) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "No admin users found"
+  //       });
+  //     }
+
+  //     const username = `${currentUser.firstname} ${currentUser.lastname}`;
+  //     const email = currentUser.email;
+
+  //     // Create notification for each admin
+  //     const notifications = [];
+  //     for (const admin of adminUsers) {
+  //       const notification = await Notification.create({
+  //         user_id: admin.id,
+  //         // message: `User ${username} (${email}) is requesting access to the system.`,
+  //         message:`User ${username} (${email}) Permission request raised. Pending for your approval.`,
+  //         type: "access_request"
+  //       });
+  //       notifications.push(notification);
+  //     }
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Access request sent to system admin",
+  //       notifications: notifications
+  //     });
+  //   } catch (error) {
+  //     console.error("Error sending access request:", error);
+  //     return res.status(500).json({
+  //       success: false,
+  //       message: "Failed to send access request",
+  //       error: error.message
+  //     });
+  //   }
+  // });
+
   router.post("/request-access", fetchUser, async (req, res) => {
-    try {
-      Notification.init(req.userinfo.tenantcode, req.branchId);
-      User.init(req.userinfo.tenantcode);
+  try {
+    const currentUserId = req.userinfo.id;
+    const branchId = req.userinfo.branch_id;
 
-      const currentUserId = req.userinfo.id;
-      const currentUser = await User.findById(currentUserId);
+    console.log("User ID:", currentUserId);
+    console.log("Branch ID:", branchId);
+    console.log("Tenant:", req.userinfo.tenantcode);
 
-      if (!currentUser) {
-        return res.status(404).json({
-          success: false,
-          message: "Current user not found"
-        });
-      }
+    // ✅ Correct init
+    Notification.init(req.userinfo.tenantcode, branchId);
+    User.init(req.userinfo.tenantcode);
 
-      // Find admin users
-      const adminUsers = await User.findAll({ userrole: 'ADMIN' });
+    // ✅ Pass object correctly
+    const currentUser = await User.findById({
+      currentUserId,
+      branchId
+    });
 
-      if (adminUsers.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No admin users found"
-        });
-      }
-
-      const username = `${currentUser.firstname} ${currentUser.lastname}`;
-      const email = currentUser.email;
-
-      // Create notification for each admin
-      const notifications = [];
-      for (const admin of adminUsers) {
-        const notification = await Notification.create({
-          user_id: admin.id,
-          // message: `User ${username} (${email}) is requesting access to the system.`,
-          message:`User ${username} (${email}) Permission request raised. Pending for your approval.`,
-          type: "access_request"
-        });
-        notifications.push(notification);
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: "Access request sent to system admin",
-        notifications: notifications
-      });
-    } catch (error) {
-      console.error("Error sending access request:", error);
-      return res.status(500).json({
+    if (!currentUser) {
+      return res.status(404).json({
         success: false,
-        message: "Failed to send access request",
-        error: error.message
+        message: "Current user not found"
       });
     }
-  });
+
+    // ✅ Check role case in DB
+    const adminUsers = await User.findAll({ userrole: 'SYSTEM ADMIN', branchId });
+
+    console.log("Admin Users:", adminUsers);
+
+    if (!adminUsers.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No admin users found"
+      });
+    }
+
+    const username = `${currentUser.firstname} ${currentUser.lastname}`;
+    const email = currentUser.email;
+
+    const notifications = [];
+
+    for (const admin of adminUsers) {
+      console.log("Creating notification for:", admin.id);
+
+      const notification = await Notification.create({
+        user_id: admin.id,
+        message: `User ${username} (${email}) Permission request raised. Pending for your approval.`,
+        type: "access_request"
+      });
+
+      notifications.push(notification);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Access request sent to system admin",
+      notifications
+    });
+
+  } catch (error) {
+    console.error("Error sending access request:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send access request",
+      error: error.message
+    });
+  }
+});
 
   app.use("/api/notifications", router);
 };
