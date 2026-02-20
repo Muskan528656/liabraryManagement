@@ -63,14 +63,19 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       setRawRows(data.slice(1));
 
       const initialMap = {};
-      headers.forEach((h) => {
-        const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const match = Object.keys(activeFields).find((key) => {
-          const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-          return key.toLowerCase() === normH || label === normH;
+   
+
+        headers.forEach((h) => {
+          const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
+          const match = Object.keys(activeFields).find((key) => {
+            const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            return key.toLowerCase() === normH || label === normH;
+          });
+          if (match) initialMap[h] = match;
         });
-        if (match) initialMap[h] = match;
-      });
+
+    console.log('Initial mapping = ', initialMap);
+    
       setMap(initialMap);
       setStep(1);
     };
@@ -124,6 +129,9 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
         setIsProcessing(false);
       }
     }
+
+
+
   };
 
   return (

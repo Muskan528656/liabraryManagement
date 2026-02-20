@@ -268,101 +268,111 @@ module.exports = (app) => {
 
 
   router.post(
-    "/",
-    fetchUser, checkPermission("Users", "allow_create"),
+  "/",
+  fetchUser,
+  checkPermission("Users", "allow_create"),
+  [
+    body("firstname").optional().notEmpty().withMessage("First name is required"),
+    body("lastname").optional().notEmpty().withMessage("Last name is required"),
+    body("email").optional().isEmail().withMessage("Email must be valid"),
+    body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
+    body("isactive").optional().isBoolean().withMessage("isactive must be boolean"),
+  ],
+  async (req, res) => {
+    try {
+      console.log("Incoming body:", req.body);
 
-    [
-      body("firstname").notEmpty().withMessage("First name is required"),
-      body("lastname").notEmpty().withMessage("Last name is required"),
-      body("email").optional().isEmail().withMessage("Email must be a valid email address"),
-      body("password").optional().isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
-      body("isactive").optional().isBoolean().withMessage("isactive must be a boolean"),
-      body("library_member_type").optional().isBoolean().withMessage("library_member_type "),
-    ],
-    async (req, res) => {
-      try {
-        console.log("Creating user with data:", req.body);
-        const errors = validationResult(req);
-        // if (!errors.isEmpty()) {
-        //   console.log("error",errors)
-        //   return res.status(400).json({ errors: errors.array() });
-        // }
+      const tenantcode = req.userinfo?.tenantcode;
+      const companyid = req.userinfo?.companyid;
 
-        const tenantcode = req.userinfo?.tenantcode;
-        const companyid = req.userinfo?.companyid;
+      if (!tenantcode) {
+        return res.status(400).json({
+          errors: "Tenant code is required."
+        });
+      }
 
+      let finalCompanyId = companyid;
 
+      if (!finalCompanyId) {
+        const companyCheck = await sql.query(
+          `SELECT c.id FROM public.company c 
+           WHERE LOWER(c.tenantcode) = LOWER($1) AND c.isactive = true
+           LIMIT 1`,
+          [tenantcode]
+        );
 
-
-        if (!tenantcode) {
-          console.error("Error: tenantcode is missing from req.userinfo");
+        if (companyCheck.rows.length === 0) {
           return res.status(400).json({
-            errors: "Tenant code is required. Please ensure you are authenticated properly."
+            errors: "Company not found."
           });
         }
 
-
-        let finalCompanyId = companyid;
-        if (!finalCompanyId) {
-          try {
-            const companyCheck = await sql.query(`
-              SELECT c.id FROM public.company c 
-              WHERE LOWER(c.tenantcode) = LOWER($1) AND c.isactive = true
-              LIMIT 1
-            `, [tenantcode]);
-            if (companyCheck.rows.length > 0) {
-              finalCompanyId = companyCheck.rows[0].id;
-
-            } else {
-              console.error("Company not found for tenantcode:", tenantcode);
-              return res.status(400).json({
-                errors: "Company not found for the given tenant code."
-              });
-            }
-          } catch (error) {
-            console.error("Error fetching company id from tenantcode:", error);
-            return res.status(500).json({
-              errors: "Failed to fetch company information."
-            });
-          }
-        }
-
-        User.init(tenantcode, req.branchId);
-        const userId = req.userinfo?.id || null;
-
-
-        let hashedPassword = req.body.password;
-        console.log("Hashed before password:", hashedPassword);
-        if (req.body.password) {
-          const salt = bcrypt.genSaltSync(10);
-          console.log("Salt for hashing:", salt);
-          // hashedPassword = bcrypt.hashSync(req.body.password, salt);
-          hashedPassword = bcrypt.hashSync(String(req.body.password), 10);
-          console.log("Hashed password:", hashedPassword);
-
-        }
-
-
-
-
-        const userData = {
-          ...req.body,
-          password: hashedPassword,
-          companyid: finalCompanyId
-        };
-        console.log("userDatauserDatauserData", userData)
-        const user = await User.create(userData, userId);
-        console.log("user->>>>", user)
-        if (!user) {
-          return res.status(400).json({ errors: "Failed to create user" });
-        }
-        return res.status(200).json({ success: true, data: user });
-      } catch (error) {
-        console.error("Error creating user:", error);
-        return res.status(500).json({ errors: error.message });
+        finalCompanyId = companyCheck.rows[0].id;
       }
+
+      User.init(tenantcode, req.branchId);
+      const userId = req.userinfo?.id || null;
+
+      // 🔥 SUPPORT BOTH SINGLE & BULK
+      const users = Array.isArray(req.body) ? req.body : [req.body];
+
+      let successCount = 0;
+      let errorsList = [];
+      let createdUsers = [];
+
+      for (let i = 0; i < users.length; i++) {
+        const row = users[i];
+
+        try {
+          if (!row.firstname || !row.lastname || !row.userrole || !row.country) {
+            throw new Error("Missing required fields");
+          }
+
+          let hashedPassword = row.password;
+          if (row.password) {
+            hashedPassword = bcrypt.hashSync(String(row.password), 10);
+          }
+
+          const userData = {
+            ...row,
+            password: hashedPassword,
+            companyid: finalCompanyId
+          };
+
+          console.log("Processing row:", userData);
+
+          const user = await User.create(userData, userId);
+
+          if (user) {
+            successCount++;
+            createdUsers.push(user);
+          } else {
+            throw new Error("User creation failed");
+          }
+
+        } catch (err) {
+          console.error(`Error at row ${i + 1}:`, err.message);
+          errorsList.push({
+            row: i + 1,
+            message: err.message
+          });
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        successCount,
+        errors: errorsList,
+        data: createdUsers
+      });
+
+    } catch (error) {
+      console.error("Fatal error:", error);
+      return res.status(500).json({ errors: error.message });
     }
-  );
+  }
+);
+
 
 
   router.put(

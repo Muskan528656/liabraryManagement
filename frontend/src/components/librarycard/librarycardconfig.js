@@ -256,9 +256,7 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                     />
                 );
             }
-        }
-        ,
-
+        },
         { field: "card_number", label: "Card Number", sortable: true },
         { field: "first_name", label: "First Name", sortable: true },
         { field: "last_name", label: "Last Name", sortable: true },
@@ -278,42 +276,42 @@ export const getLibraryCardConfig = async (externalData = {}, timeZone, permissi
                 return `${code}-${value}`;
             },
         },
-        // {
-        //     field: "grade_name",
-        //     label: "Grade & Section",
-        //     sortable: true,
-        //     render: (value, row) => {
-        //         const gradeName = row.grade_name || row.grade_id || "-";
-        //         const sectionName = row.section_name || row.section_id || "-";
+        {
+            field: "grade_name",
+            label: "Grade & Section",
+            sortable: true,
+            render: (value, row) => {
+                const gradeName = row.grade_name || row.grade_id || "-";
+                const sectionName = row.section_name || row.section_id || "-";
 
-        //         // If we have both grade and section, combine them
-        //         if (gradeName !== "-" && sectionName !== "-") {
-        //             return `${gradeName} - ${sectionName}`;
-        //         }
-        //         // If we only have grade
-        //         else if (gradeName !== "-") {
-        //             return gradeName;
-        //         }
-        //         // If we only have section
-        //         else if (sectionName !== "-") {
-        //             return sectionName;
-        //         }
-        //         // Otherwise show dash
-        //         return "-";
-        //     }
-        // },
+                // If we have both grade and section, combine them
+                if (gradeName !== "-" && sectionName !== "-") {
+                    return `${gradeName} - ${sectionName}`;
+                }
+                // If we only have grade
+                else if (gradeName !== "-") {
+                    return gradeName;
+                }
+                // If we only have section
+                else if (sectionName !== "-") {
+                    return sectionName;
+                }
+                // Otherwise show dash
+                return "-";
+            }
+        },
 
-        // {
-        //     field: "type_id",
-        //     label: "Type",
-        //     sortable: true,
-        //     render: (value) => {
-        //         const typeObj = objectTypesList.find(
-        //             (t) => t.value === value
-        //         );
-        //         return typeObj ? typeObj.label : "-";
-        //     }
-        // }
+        {
+            field: "type_id",
+            label: "Type",
+            sortable: true,
+            render: (value) => {
+                const typeObj = objectTypesList.find(
+                    (t) => t.value === value
+                );
+                return typeObj ? typeObj.label : "-";
+            }
+        }
         ,
         {
             field: "dob",

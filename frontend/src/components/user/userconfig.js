@@ -37,10 +37,10 @@ export const getUserConfig = (externalData = {}, props = {}, permissions = {}, c
             "password": "Password",
             "phone": "Phone",
             "country": "Country",
-            "country_code": "Country Code",
-            "currency": "Currency",
-            "time_zone": "Time Zone",
             "userrole": "Role",
+            "currency": "Currency",
+            "country_code": "Country Code",
+            "time_zone": "Time Zone",
             "isactive": "Status"
         },
         required: ["firstname", "lastname", "email", "password", "userrole", "country"],

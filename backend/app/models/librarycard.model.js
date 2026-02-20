@@ -20,7 +20,9 @@ async function findAll(memberType) {
       u.email AS user_email,
       p.plan_name,
       p.duration_days,
-      ot.label AS type_label
+      ot.label AS type_label,
+      g.grade_name,
+      g.section_name
     FROM ${schema}.library_members lm
     LEFT JOIN ${schema}."user" u
       ON lm.createdbyid = u.id
@@ -28,6 +30,8 @@ async function findAll(memberType) {
       ON lm.plan_id = p.id
     LEFT JOIN ${schema}.object_type ot
       ON lm.type_id = ot.id
+    LEFT JOIN ${schema}.grade g
+      ON lm.grade_id = g.id
     WHERE lm.branch_id = $1
   `;
 
