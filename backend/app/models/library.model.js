@@ -57,7 +57,7 @@ async function getDashboardStats() {
 
     // Due soon books (within 3 days)
     const dueSoonBooksQuery = `
-      SELECT COUNT(*) as count 
+      SELECT COUNT(*) as count  
       FROM ${schema}.book_copy bc 
       JOIN ${schema}.book_issues bi ON bc.book_id = bi.book_id 
       WHERE bi.due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days' 

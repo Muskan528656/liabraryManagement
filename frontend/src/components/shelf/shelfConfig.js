@@ -112,23 +112,10 @@ export const getShelfConfig = (
                 field: "capacity",
                 label: "Capacity",
                 width: "150px",
-                render: (value, row) => {
+                render: (value) => {
                     const capacity = parseInt(value) || 100;
-                    const used = row?.books_count || 0;
-                    const percentage = Math.min((used / capacity) * 100, 100);
-                    let variant = "success";
-                    if (percentage > 70) variant = "warning";
-                    if (percentage > 90) variant = "danger";
-
                     return (
-                        <div>
-                            <small className="text-muted">{used}/{capacity}</small>
-                            <ProgressBar
-                                now={percentage}
-                                variant={variant}
-                                style={{ height: '8px', marginTop: '4px' }}
-                            />
-                        </div>
+                        <span>{capacity}</span>
                     );
                 }
             },
@@ -378,7 +365,8 @@ export const getShelfConfig = (
                 type: "checkbox",
                 required: false,
                 colSize: 6,
-            }
+            },
+            
         ],
 
         validationRules: (formData, allShelves, editingItem) => {

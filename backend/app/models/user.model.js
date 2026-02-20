@@ -30,7 +30,7 @@ async function findAll(filters = {}) {
       WHERE 1=1 AND branch_id = $1 
     `;
 
-    const values = [filters.branchId]; // Add branchId as the first parameter
+    const values = [branchId];
     let paramIndex = 2;
 
     if (filters.isactive !== undefined && filters.isactive !== '') {
@@ -67,16 +67,13 @@ async function findAll(filters = {}) {
 
 
 
-async function findById(params) {
+async function findById(userId, branchId) {
   const query = `
     SELECT * FROM ${schema}."user"
     WHERE id = $1 AND branch_id = $2
   `;
-
-  const result = await sql.query(query, [
-    params.currentUserId,
-    params.branchId
-  ]);
+console.log("branchIdbranchIdbranchId",branchId)
+  const result = await sql.query(query, [userId, branchId]);
 
   return result.rows.length ? result.rows[0] : null;
 }

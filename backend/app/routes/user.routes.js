@@ -241,7 +241,7 @@ module.exports = (app) => {
   router.get("/:id", fetchUser, checkPermission("Users", "allow_view"), async (req, res) => {
     try {
       User.init(req.userinfo.tenantcode, req.branchId);
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id, req.branchId);
       if (!user) {
         return res.status(404).json({ errors: "User not found" });
       }
@@ -350,9 +350,9 @@ module.exports = (app) => {
           password: hashedPassword,
           companyid: finalCompanyId
         };
-console.log("userDatauserDatauserData",userData)
+        console.log("userDatauserDatauserData", userData)
         const user = await User.create(userData, userId);
-        console.log("user->>>>",user)
+        console.log("user->>>>", user)
         if (!user) {
           return res.status(400).json({ errors: "Failed to create user" });
         }
@@ -377,14 +377,14 @@ console.log("userDatauserDatauserData",userData)
       try {
         User.init(req.userinfo.tenantcode, req.branchId);
 
-        const existingUser = await User.findById(req.params.id);
+        const existingUser = await User.findById(req.params.id, req.branchId);
 
         console.log("Existing User:", existingUser);
 
         if (!existingUser) {
           return res.status(404).json({ errors: "User not found" });
         }
-        
+
 
         if (req.body.email) {
           const duplicateAuthor = await User.findByEmail(
