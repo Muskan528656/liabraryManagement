@@ -16,19 +16,19 @@ module.exports = (app) => {
     };
 
     // ================= GET ALL =================
-    router.get("/", fetchUser, initModel, async (req, res) => {
-        try {
-            const filters = {
-                search: req.query.search,
-                is_active: req.query.is_active,
-                classification_type: req.query.classification_type
-            };
-            const classifications = await Classification.findAll(filters);
-            res.json(classifications);
-        } catch (error) {
-            res.status(500).send(error.message);
-        }
-    });
+    // router.get("/", fetchUser, initModel, async (req, res) => {
+    //     try {
+    //         const filters = {
+    //             search: req.query.search,
+    //             is_active: req.query.is_active,
+    //             classification_type: req.query.classification_type
+    //         };
+    //         const classifications = await Classification.findAll(filters);
+    //         res.json(classifications);
+    //     } catch (error) {
+    //         res.status(500).send(error.message);
+    //     }
+    // });
 
     // ================= GET BY TYPE =================
     router.get("/type/:type", fetchUser, initModel, async (req, res) => {
