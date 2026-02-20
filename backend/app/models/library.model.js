@@ -19,13 +19,53 @@ async function getDashboardStats() {
     }
     console.log("Getting dashboard stats for schema:", schema);
     console.log("Getting dashboard stats for branch:", branchId || "All Branches");
-    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+
+    // Total distinct books (count of unique books)
+    const totalBooksQuery = `SELECT COUNT(DISTINCT b.id) as count FROM ${schema}.books b JOIN ${schema}.book_copy bc ON b.id = bc.book_id WHERE bc.home_branch_id = $1`;
     const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
+    console.log("Total Book->>>", totalBooks);
+    // Total copies (count of all book copies)
+    const totalCopiesQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+    const totalCopiesResult = await sql.query(totalCopiesQuery, [branchId]);
+    const totalCopies = parseInt(totalCopiesResult.rows[0]?.count || 0);
+    console.log("Total Copies->>>", totalCopies);
 
+    // Available copies
     const availableBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE status = 'AVAILABLE' AND home_branch_id = $1`;
     const availableBooksResult = await sql.query(availableBooksQuery, [branchId]);
     const availableBooks = parseInt(availableBooksResult.rows[0]?.count || 0);
+    console.log("Available Books->>>", availableBooks);
+
+    // Issued books
+    const issuedBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE status = 'ISSUED' AND home_branch_id = $1`;
+    const issuedBooksResult = await sql.query(issuedBooksQuery, [branchId]);
+    const issuedBooks = parseInt(issuedBooksResult.rows[0]?.count || 0);
+    console.log("Issued Books->>>", issuedBooks);
+
+    // Overdue books
+    const overdueBooksQuery = `
+      SELECT COUNT(*) as count 
+      FROM ${schema}.book_copy bc 
+      JOIN ${schema}.book_issues bi ON bc.book_id = bi.book_id 
+      WHERE bi.due_date < CURRENT_DATE 
+        AND bi.return_date IS NULL 
+        AND bc.home_branch_id = $1
+    `;
+    const overdueBooksResult = await sql.query(overdueBooksQuery, [branchId]);
+    const overdueBooks = parseInt(overdueBooksResult.rows[0]?.count || 0);
+
+    // Due soon books (within 3 days)
+    const dueSoonBooksQuery = `
+      SELECT COUNT(*) as count 
+      FROM ${schema}.book_copy bc 
+      JOIN ${schema}.book_issues bi ON bc.book_id = bi.book_id 
+      WHERE bi.due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '3 days' 
+        AND bi.return_date IS NULL 
+        AND bc.home_branch_id = $1
+    `;
+    const dueSoonBooksResult = await sql.query(dueSoonBooksQuery, [branchId]);
+    const dueSoonBooks = parseInt(dueSoonBooksResult.rows[0]?.count || 0);
 
     const totalAuthorsQuery = `SELECT COUNT(*) as count FROM ${schema}.authors`;
     const totalAuthorsResult = await sql.query(totalAuthorsQuery);
@@ -62,11 +102,6 @@ async function getDashboardStats() {
     const booksByAuthorResult = await sql.query(booksByAuthorQuery, [branchId]);
 
 
-    const totalCopiesQuery = `SELECT COUNT(*) as total FROM ${schema}.book_copy WHERE home_branch_id = $1`;
-    const totalCopiesResult = await sql.query(totalCopiesQuery, [branchId]);
-    const totalCopies = parseInt(totalCopiesResult.rows[0]?.total || 0);
-
-    const issuedBooks = totalCopies - availableBooks;
     const issuedPercentage = totalCopies > 0 ? Math.round((issuedBooks / totalCopies) * 100) : 0;
     const availablePercentage = totalCopies > 0 ? Math.round((availableBooks / totalCopies) * 100) : 0;
 
@@ -103,10 +138,12 @@ async function getDashboardStats() {
 
     return {
       summary: {
-        totalBooks,
-        totalCopies,
-        availableBooks,
-        issuedBooks,
+        totalBooks,           // Distinct books count
+        totalCopies,          // Total book copies
+        availableBooks,       // Available copies
+        issuedBooks,          // Issued copies
+        overdueBooks,         // Overdue books count
+        dueSoonBooks,         // Due soon books count
         issuedPercentage,
         availablePercentage,
         totalAuthors,
