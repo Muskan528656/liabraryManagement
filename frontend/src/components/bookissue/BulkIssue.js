@@ -59,6 +59,7 @@ const BulkIssue = ({ permissions }) => {
 
 
   const [books, setBooks] = useState([]);
+  const [bookCopies, setBookCopies] = useState([]); // Added
   const [libraryCards, setLibraryCards] = useState([]);
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [users, setUsers] = useState([]);
@@ -67,6 +68,12 @@ const BulkIssue = ({ permissions }) => {
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedBooks, setSelectedBooks] = useState([]);
+
+  // Call number search state
+  const [callNumberQuery, setCallNumberQuery] = useState("");
+  const [callNumberResults, setCallNumberResults] = useState([]);
+  const [callNumberLoading, setCallNumberLoading] = useState(false);
+  const [selectedCopies, setSelectedCopies] = useState({}); // bookId -> copyId mapping
 
   const [durationDays, setDurationDays] = useState(15);
   const [systemMaxBooks, setSystemMaxBooks] = useState(6);
@@ -92,6 +99,7 @@ const BulkIssue = ({ permissions }) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [memberAge, setMemberAge] = useState(null);
   const [filteredBooksByAge, setFilteredBooksByAge] = useState([]);
+  const [filteredCopiesByAge, setFilteredCopiesByAge] = useState([]); // Added
   const [showIssuedBooks, setShowIssuedBooks] = useState(false);
 
 
@@ -265,49 +273,56 @@ const BulkIssue = ({ permissions }) => {
 
 
   useEffect(() => {
-  if (!selectedCard || memberAge === null || books.length === 0) {
-    setFilteredBooksByAge([]);
-    return;
-  }
-
-  const filtered = books.filter(book => {
-    const min = book.min_age !== null && book.min_age !== "" 
-      ? Number(book.min_age) 
-      : null;
-
-    const max = book.max_age !== null && book.max_age !== "" 
-      ? Number(book.max_age) 
-      : null;
-
-    if (memberAge === null || memberAge === undefined) return false;
-
-    // ✅ If no age restriction → allow
-    if (min === null && max === null) return true;
-
-    // ✅ If only min defined
-    if (min !== null && max === null) {
-      return memberAge >= min;
+    if (books.length === 0) {
+      setFilteredBooksByAge([]);
+      setFilteredCopiesByAge([]);
+      return;
     }
 
-    // ✅ If only max defined
-    if (min === null && max !== null) {
-      return memberAge <= max;
+    // If no card selected, show all books/copies
+    if (!selectedCard) {
+      setFilteredBooksByAge(books);
+      setFilteredCopiesByAge(bookCopies);
+      return;
     }
 
-    // ✅ Normal case (min and max both exist)
-    return memberAge >= min && memberAge <= max;
-  });
+    const filtered = books.filter(book => {
+      const min = book.min_age !== null && book.min_age !== ""
+        ? Number(book.min_age)
+        : null;
 
-  console.log("Member Age:", memberAge);
-  console.table(filtered.map(b => ({
-    title: b.title,
-    min: b.min_age,
-    max: b.max_age
-  })));
+      const max = book.max_age !== null && book.max_age !== ""
+        ? Number(book.max_age)
+        : null;
 
-  setFilteredBooksByAge(filtered);
+      // If no DOB or member age not calculated, don't block
+      if (memberAge === null || memberAge === undefined) return true;
 
-}, [books, selectedCard, memberAge]);
+      // ✅ If no age restriction → allow
+      if (min === null && max === null) return true;
+
+      // ✅ If only min defined
+      if (min !== null && max === null) {
+        return memberAge >= min;
+      }
+
+      // ✅ If only max defined
+      if (min === null && max !== null) {
+        return memberAge <= max;
+      }
+
+      // ✅ Normal case (min and max both exist)
+      return memberAge >= min && memberAge <= max;
+    });
+
+    setFilteredBooksByAge(filtered);
+
+    // Filter copies matching those books
+    const filteredCopyIds = new Set(filtered.map(b => b.id.toString()));
+    const filteredCopies = bookCopies.filter(copy => filteredCopyIds.has(copy.book_id?.toString()));
+    setFilteredCopiesByAge(filteredCopies);
+
+  }, [books, bookCopies, selectedCard, memberAge]);
 
 
   const getNumberValue = (value) => {
@@ -339,28 +354,38 @@ const BulkIssue = ({ permissions }) => {
       const issueApi = new DataApi("bookissue");
       const subscriptionApi = new DataApi("subscriptions");
       const planApi = new DataApi("plans");
+      const copyApi = new DataApi("book-copy"); // Added
 
-      console.log("cardapi", cardApi)
       const [
         booksResp,
         cardsResp,
         usersResp,
         issuesResp,
         subscriptionResponse,
-        planResponse
+        planResponse,
+        copiesResp // Added
       ] = await Promise.all([
-        bookApi.fetchAll(),
+        bookApi.fetchAll("limit=2000"),
         cardApi.fetchAll(),
         userApi.fetchAll(),
         issueApi.fetchAll(),
         subscriptionApi.fetchAll(),
-        planApi.fetchAll()
+        planApi.fetchAll(),
+        copyApi.fetchAll("limit=2000") // Corrected to string query parameter
       ]);
 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
+
+      // Specifically extract book_copies from the complex response object
+      let copiesList = [];
+      if (copiesResp?.data?.book_copies) {
+        copiesList = copiesResp.data.book_copies;
+      } else {
+        copiesList = normalize(copiesResp);
+      }
       console.log("usersList", usersList);
 
       console.log("cardsList", cardsList);
@@ -388,7 +413,9 @@ const BulkIssue = ({ permissions }) => {
       }
 
       setBooks(booksList);
+      setBookCopies(copiesList);
       setFilteredBooksByAge(booksList);
+      setFilteredCopiesByAge(copiesList);
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
       setPlans(plansList);
@@ -453,9 +480,24 @@ const BulkIssue = ({ permissions }) => {
   };
 
   const normalize = (resp) => {
-    if (Array.isArray(resp?.data)) return resp.data;
-    if (Array.isArray(resp)) return resp;
-    if (resp?.data && !Array.isArray(resp.data)) return [resp.data];
+    // If resp is the axios response object
+    const data = resp?.data || resp;
+
+    if (Array.isArray(data)) return data;
+
+    // Handle { success: true, data: [...] }
+    if (data?.data && Array.isArray(data.data)) return data.data;
+
+    // Handle { book_copies: [...] }
+    if (data?.book_copies && Array.isArray(data.book_copies)) return data.book_copies;
+
+    // Handle other nested objects that might be arrays
+    if (typeof data === 'object' && data !== null) {
+      for (const key in data) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+    }
+
     return [];
   };
 
@@ -722,18 +764,20 @@ const BulkIssue = ({ permissions }) => {
   };
 
   const getBookOptions = () => {
-    const booksToShow = filteredBooksByAge;
+    const copiesToShow = filteredCopiesByAge;
 
-    if (booksToShow.length === 0) {
+    if (copiesToShow.length === 0) {
       return [{
-        label: selectedCard && memberAge !== null
-          ? `No books available for age ${memberAge} years`
-          : "No books available",
+        label: "No copies available",
         options: []
       }];
     }
 
-    const options = booksToShow.map((book) => {
+    const options = copiesToShow.map((copy) => {
+      // The backend already joins 'title' into 'copy.title' in BookCopyModel.findAll
+      const book = books.find(b => b.id?.toString() === copy.book_id?.toString()) || {};
+      const title = copy.title || book.title || 'Unknown Title';
+
       const minAge = getNumberValue(book.min_age);
       const maxAge = getNumberValue(book.max_age);
 
@@ -743,62 +787,33 @@ const BulkIssue = ({ permissions }) => {
 
       const ageLabel = isGeneral ? "All Ages" : `${minAge}-${maxAge} years`;
 
-      const isAlreadyIssued = selectedCard ? isBookIssuedToSelectedCard(book.id) : false;
+      const isAlreadyIssued = copy.status !== 'AVAILABLE';
 
-      const available = parseInt(book.available_copies || 0);
-      const isOutOfStock = available <= 0;
-
-      let label = `${book.title} ${book.isbn ? `(${book.isbn})` : ""}`;
-
-      // 🧠 Inform only — not blocking
-      if (isAlreadyIssued) {
-        label += " (Already Issued)";
-      }
-
-      if (isOutOfStock) {
-        label += " (Out of Stock)";
-      }
-
-      if (book.call_numbers && Array.isArray(book.call_numbers)) {
-        label += " [" + book.call_numbers.filter(Boolean).join(", ") + "]";
-      }
+      let label = `[${copy.barcode}] ${title}`;
+      if (copy.itemcallnumber) label += ` | Call: ${copy.itemcallnumber}`;
 
       return {
-        value: book.id,
+        value: book.id, // Keep book.id as value for backward compatibility if backend expects it
+        copy_id: copy.id, // Track specific copy
         label,
-        subLabel: `Available: ${available} | Age: ${ageLabel}`,
-        data: book,
-
-        // ✅ Only stock controls disabling
-        isDisabled: isOutOfStock,
+        subLabel: `Status: ${copy.status} | Rack: ${copy.rack_location || 'N/A'} | Age: ${ageLabel}`,
+        data: { ...book, copy_id: copy.id, barcode: copy.barcode },
+        isDisabled: isAlreadyIssued,
       };
     });
 
     return [{
-      label: selectedCard && memberAge !== null
-        ? `Books for age ${memberAge} years (${booksToShow.length})`
-        : `All Books (${booksToShow.length})`,
+      label: `Select Book Copies (${options.length})`,
       options
     }];
   };
 
 
   const availableForSelect = (option) => {
-    const b = option.data;
-
-    if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0) {
-      return {
-        ...option,
-        isDisabled: true,
-        label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Out of Stock)`,
-        data: { ...b, isOutOfStock: true }
-      };
-    }
-
-
+    // Rely on isDisabled set in getBookOptions based on physical copy status
     return {
       ...option,
-      data: { ...b, isOutOfStock: false }
+      data: { ...option.data, isOutOfStock: false }
     };
   };
 
@@ -913,6 +928,95 @@ const BulkIssue = ({ permissions }) => {
     return true;
   };
 
+  // Call number search function (debounced)
+  const searchByCallNumber = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setCallNumberResults([]);
+      return;
+    }
+    setCallNumberLoading(true);
+    try {
+      const resp = await helper.fetchWithAuth(
+        `${constants.API_BASE_URL}/api/book-copy/search-by-callnumber?q=${encodeURIComponent(query.trim())}`,
+        "GET"
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        const results = Array.isArray(data) ? data : [];
+        setCallNumberResults(results);
+
+        // 🚀 SMART AUTO-SELECT: If exact barcode match and only 1 result, auto-select it
+        // This is great for barcode scanners which usually send the full code at once
+        if (results.length === 1 && results[0].barcode === query.trim()) {
+          handleSelectCopy(results[0]);
+        }
+      } else {
+        setCallNumberResults([]);
+      }
+    } catch (err) {
+      console.error("Call number search error:", err);
+      setCallNumberResults([]);
+    } finally {
+      setCallNumberLoading(false);
+    }
+  };
+
+  // Add a copy from call number search to the selected books
+  const handleSelectCopy = (copy) => {
+    if (!selectedCard) {
+      showErrorToast("Please select a library card first.");
+      return;
+    }
+
+    if (memberInfo && !memberInfo.is_active) {
+      showErrorToast("This member is inactive and cannot issue books.");
+      return;
+    }
+
+    // Find the book in the books list
+    const book = books.find(b => b.id?.toString() === copy.book_id?.toString());
+    if (!book) {
+      showErrorToast("Book details for this copy not found.");
+      return;
+    }
+
+    if (isBookIssuedToSelectedCard(book.id)) {
+      showErrorToast(`"${book.title}" is already issued to this member.`);
+      return;
+    }
+
+    // Check if book is already in the selection list
+    const existingIndex = selectedBooks.findIndex(b => b.value?.toString() === book.id?.toString());
+
+    if (existingIndex !== -1) {
+      // ✅ Update existing selection with specific copy
+      setSelectedCopies(prev => ({ ...prev, [book.id]: copy }));
+      showSuccessToast(`Updated "${book.title}" to use specific copy: ${copy.barcode}`);
+    } else {
+      // ✅ Add new book selection with specific copy
+      // Check limits first
+      const availableToday = Math.min(remainingForCard, remainingForToday) - selectedBooks.length;
+      if (availableToday <= 0) {
+        showErrorToast(`Limit reached! Cannot select more books.`);
+        return;
+      }
+
+      const newEntry = {
+        value: book.id,
+        label: `${book.title} (${book.isbn || 'N/A'})`,
+        subLabel: `Available: ${book.available_copies}`,
+        data: book,
+      };
+      setSelectedBooks(prev => [...prev, newEntry]);
+      setSelectedCopies(prev => ({ ...prev, [book.id]: copy }));
+      showSuccessToast(`Selected "${book.title}" (Copy: ${copy.barcode})`);
+    }
+
+    // Clear search
+    setCallNumberQuery("");
+    setCallNumberResults([]);
+  };
+
   const handleIssue = async () => {
     if (!validateIssuance()) {
       return;
@@ -930,6 +1034,7 @@ const BulkIssue = ({ permissions }) => {
         try {
           const body = {
             book_id: b.value,
+            book_copy_id: b.copy_id || (selectedCopies[b.value] ? selectedCopies[b.value].id : null),
             card_id: selectedCard.value,
             issue_date: issueDate,
             due_date: dueDate,
@@ -1010,11 +1115,19 @@ const BulkIssue = ({ permissions }) => {
 
       if (failedBooks.length === 0) {
         setSelectedBooks([]);
+        setSelectedCopies({});
         setRefreshTrigger(prev => prev + 1);
       } else {
         const remainingBooks = selectedBooks.filter(book =>
           !successBooks.some(success => success.title === book.data.title)
         );
+        // Clean up copies for successfully issued books
+        const newCopies = { ...selectedCopies };
+        successBooks.forEach(s => {
+          const found = selectedBooks.find(b => b.data.title === s.title);
+          if (found) delete newCopies[found.value];
+        });
+        setSelectedCopies(newCopies);
         setSelectedBooks(remainingBooks);
         setRefreshTrigger(prev => prev + 1);
       }
@@ -1146,34 +1259,34 @@ const BulkIssue = ({ permissions }) => {
   };
 
 
- const getMemberAge = () => {
-  let dob = null;
+  const getMemberAge = () => {
+    let dob = null;
 
-  if (memberInfo) {
-    dob = memberInfo.dob || memberInfo.date_of_birth;
-  } else {
-    const user = findUserByCardId(selectedCard?.value);
-    dob = user?.dob || user?.date_of_birth || selectedCard?.data?.dob;
-  }
+    if (memberInfo) {
+      dob = memberInfo.dob || memberInfo.date_of_birth;
+    } else {
+      const user = findUserByCardId(selectedCard?.value);
+      dob = user?.dob || user?.date_of_birth || selectedCard?.data?.dob;
+    }
 
-  if (!dob) return "N/A";
+    if (!dob) return "N/A";
 
-  const birthDate = new Date(dob);
-  const today = new Date();
+    const birthDate = new Date(dob);
+    const today = new Date();
 
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  // Adjust if birthday hasn't occurred yet this year
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
+    // Adjust if birthday hasn't occurred yet this year
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
 
-  return age;
-};
+    return age;
+  };
 
 
 
@@ -1368,7 +1481,7 @@ const BulkIssue = ({ permissions }) => {
                       </div>
 
                       <h5 className="fw-bold mb-1">{getMemberName()}</h5>
-                       <span className="fw-bold mb-1"> Age : {getMemberAge()}</span>
+                      <span className="fw-bold mb-1"> Age : {getMemberAge()}</span>
                     </div>
 
                     <Row className="g-2 mb-3">
@@ -1548,6 +1661,7 @@ const BulkIssue = ({ permissions }) => {
                   )}
                 </div>
 
+
                 <div className="mb-4">
                   <Select
                     options={getBookOptions()}
@@ -1587,7 +1701,7 @@ const BulkIssue = ({ permissions }) => {
                           ? "Member is inactive"
                           : Math.min(remainingForCard, remainingForToday) === 0
                             ? `Daily limit reached (${issuedTodayForSelectedCard}/${dailyLimitCount})`
-                            : `Select up to ${Math.min(remainingForCard, remainingForToday) - selectedBooks.length} more book(s)... (${selectedBooks.length}/${Math.min(remainingForCard, remainingForToday)})`
+                            : `Search by barcode, title or call number... (${selectedBooks.length}/${Math.min(remainingForCard, remainingForToday)} selected)`
                     }
                     isDisabled={
                       !selectedCard ||
@@ -1733,6 +1847,20 @@ const BulkIssue = ({ permissions }) => {
                                   <Badge bg={book.data.available_copies > 0 ? "success" : "danger"}>
                                     Available: {book.data.available_copies || 0}
                                   </Badge>
+                                  {selectedCopies[book.value] && (
+                                    <div className="mt-2">
+                                      <Badge bg="info" className="p-2 d-inline-flex align-items-center">
+                                        <i className="fa-solid fa-barcode me-2"></i>
+                                        <div className="text-start">
+                                          <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Selected Copy</div>
+                                          <div className="fw-bold">{selectedCopies[book.value].barcode}</div>
+                                          {selectedCopies[book.value].itemcallnumber && (
+                                            <div style={{ fontSize: '0.65rem' }}>{selectedCopies[book.value].itemcallnumber}</div>
+                                          )}
+                                        </div>
+                                      </Badge>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1740,11 +1868,16 @@ const BulkIssue = ({ permissions }) => {
                               variant="light"
                               className="text-danger border-0 shadow-none"
                               size="sm"
-                              onClick={() =>
+                              onClick={() => {
                                 setSelectedBooks((prev) =>
                                   prev.filter((x) => x.value !== book.value)
-                                )
-                              }
+                                );
+                                setSelectedCopies(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[book.value];
+                                  return updated;
+                                });
+                              }}
                             >
                               <i className="fa-solid fa-trash-can"></i>
                             </Button>

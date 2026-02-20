@@ -877,12 +877,14 @@ let schema = "";
 let branchId = "";
 
 const { applyMemberTypeFilter } = require("../utils/autoNumber.helper.js");
-function init(schema_name, branchId) {
+function init(schema_name, branch_id) {
+  schema = schema_name;
   this.schema = schema_name;
-  console.log("Schema:", schema);
 
-  this.branchId = branchId || "";
-  console.log("Branch IDDD:", branchId);
+  branchId = branch_id || "";
+  this.branchId = branch_id || "";
+
+  console.log("Initialized BookIssue with Schema:", schema, "Branch:", branchId);
 }
 
 
@@ -1032,7 +1034,7 @@ async function findByCardId(cardId, memberType) {
 
 //   try {
 //     const tenantcode = req.headers.tenantcode || 'demo';
-    
+
 //     schema = tenantcode;
 
 //     if (!req.body.card_id) {
@@ -1271,8 +1273,8 @@ async function findByCardId(cardId, memberType) {
 
 //     try {
 //       const updateIssuedCountQuery = `
-//         UPDATE ${schema}.books 
-//         SET 
+//         UPDATE ${schema}.books
+//         SET
 //           issued_count = COALESCE(issued_count, 0) + 1,
 //           lastmodifiedbyid = $2,
 //           lastmodifieddate = CURRENT_TIMESTAMP
@@ -1365,6 +1367,159 @@ async function findByCardId(cardId, memberType) {
 //   }
 // }
 
+async function findAll(memberType) {
+  try {
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.branchId) throw new Error("Branch ID not initialized. Call init() first.");
+    console.log("Branch INW ID:", this.branchId);
+    let query = `SELECT
+                    bi.*,
+                    b.title AS book_title,
+                    b.isbn AS book_isbn,
+                    bc.barcode AS book_barcode,
+                    bc.itemcallnumber AS book_callnumber,
+                    lm.card_number,
+                    lm.first_name || ' ' || lm.last_name AS member_name,
+                    lm.id AS card_id,
+                    u.firstname || ' ' || u.lastname AS issued_by_name
+                 FROM ${this.schema}.book_issues bi
+                 LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+                 LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
+                 LEFT JOIN ${this.schema}.library_members lm
+                       ON bi.issued_to = lm.id
+                      AND lm.is_active = true
+                 LEFT JOIN ${this.schema}."user" u ON bi.issued_by = u.id WHERE bi.branch_id = '${this.branchId}' `;
+    let values = [];
+
+
+    const filtered = applyMemberTypeFilter(query, memberType, values);
+
+    query = filtered.query + ` ORDER BY bi.createddate DESC`;
+    values = filtered.values;
+
+    const result = await sql.query(query, values);
+    return result.rows || [];
+
+  } catch (error) {
+    console.error("Error in findAll:", error);
+    throw error;
+  }
+}
+
+async function findById(id, memberType) {
+  try {
+    if (!this.schema) throw new Error("Schema not initialized.");
+    if (!this.branchId) throw new Error("Branch ID not initialized.");
+    let query = `SELECT
+        bi.*,
+        b.title AS book_title,
+        b.isbn AS book_isbn,
+        bc.barcode AS book_barcode,
+        bc.itemcallnumber AS book_callnumber,
+        lm.card_number,
+        lm.first_name || ' ' || lm.last_name AS member_name,
+        lm.id AS card_id
+      FROM ${this.schema}.book_issues bi
+      LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+      LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
+      LEFT JOIN ${this.schema}.library_members lm
+        ON bi.issued_to = lm.id
+       AND lm.is_active = true
+      WHERE bi.id = $1  AND bi.branch_id = '${this.branchId}'`;
+
+    let values = [id];
+
+    const filtered = applyMemberTypeFilter(query, memberType, values);
+
+    const result = await sql.query(filtered.query, filtered.values);
+    return result.rows[0] || null;
+
+  } catch (error) {
+    throw error;
+  }
+}
+async function findActive(memberType) {
+  let query = `SELECT
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn,
+      bc.barcode AS book_barcode,
+      bc.itemcallnumber AS book_callnumber,
+      lm.card_number,
+      lm.first_name || ' ' || lm.last_name AS member_name,
+      lm.id AS card_id
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
+    LEFT JOIN ${this.schema}.library_members lm
+      ON bi.issued_to = lm.id
+     AND lm.is_active = true
+    WHERE bi.return_date IS NULL AND bi.branch_id = '${this.branchId}'`;
+
+  let values = [];
+
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  query = filtered.query + ` ORDER BY bi.issue_date DESC`;
+
+  const result = await sql.query(query, filtered.values);
+  return result.rows || [];
+}
+
+async function findByBookId(bookId, memberType) {
+  let query = `SELECT
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn,
+      bc.barcode AS book_barcode,
+      bc.itemcallnumber AS book_callnumber,
+      lm.card_number,
+      lm.first_name || ' ' || lm.last_name AS member_name,
+      lm.id AS card_id
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
+    LEFT JOIN ${this.schema}.library_members lm
+      ON bi.issued_to = lm.id
+     AND lm.is_active = true
+    WHERE bi.book_id = $1
+      AND bi.return_date IS NULL
+      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
+
+  let values = [bookId];
+
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  const result = await sql.query(filtered.query, filtered.values);
+  return result.rows || [];
+}
+
+async function findByCardId(cardId, memberType) {
+  console.log("findByCardId called with cardId:", cardId, "memberType:", memberType);
+  console.log("Current schema:", schema);
+  let query = `SELECT
+      bi.*,
+      b.title AS book_title,
+      b.isbn AS book_isbn,
+      bc.barcode AS book_barcode,
+      bc.itemcallnumber AS book_callnumber
+    FROM ${this.schema}.book_issues bi
+    LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
+    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
+    LEFT JOIN ${this.schema}.library_members lm
+      ON bi.issued_to = lm.id
+    WHERE bi.issued_to = $1
+      AND bi.return_date IS NULL
+      AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
+
+  let values = [cardId];
+
+  const filtered = applyMemberTypeFilter(query, memberType, values);
+
+  const result = await sql.query(filtered.query, filtered.values);
+  return result.rows || [];
+}
+
 async function issueBook(req) {
   try {
     const tenantcode = req.headers.tenantcode || "demo";
@@ -1374,8 +1529,8 @@ async function issueBook(req) {
     if (!req.body.card_id)
       return { success: false, message: "Card ID is required" };
 
-    if (!req.body.book_id)
-      return { success: false, message: "Book ID is required" };
+    if (!req.body.book_id && !req.body.book_copy_id && !req.body.barcode)
+      return { success: false, message: "Book selection is required" };
 
     const userId =
       req.userinfo?.id ||
@@ -1384,11 +1539,50 @@ async function issueBook(req) {
       req.auth?.userId ||
       1;
 
+    let bookCopyId = req.body.book_copy_id;
+    let bookId = req.body.book_id;
+
+    // Resolve book copy if not directly provided
+    if (!bookCopyId) {
+      if (req.body.barcode) {
+        const copyRes = await sql.query(
+          `SELECT id, book_id FROM ${schema}.book_copy WHERE barcode = $1 AND status = 'AVAILABLE' AND branch_id = $2`,
+          [req.body.barcode, branchId]
+        );
+        if (copyRes.rows.length === 0) {
+          return { success: false, message: "Available book copy not found with this barcode" };
+        }
+        bookCopyId = copyRes.rows[0].id;
+        bookId = copyRes.rows[0].book_id;
+      } else if (bookId) {
+        const copyRes = await sql.query(
+          `SELECT id FROM ${schema}.book_copy WHERE book_id = $1 AND status = 'AVAILABLE' AND home_branch_id = $2 LIMIT 1`,
+          [bookId, branchId]
+        );
+        if (copyRes.rows.length === 0) {
+          return { success: false, message: "No available copies for this book in your branch" };
+        }
+        bookCopyId = copyRes.rows[0].id;
+      }
+    } else {
+      // Verify the provided book_copy_id
+      const copyRes = await sql.query(
+        `SELECT id, book_id, status FROM ${schema}.book_copy WHERE id = $1`,
+        [bookCopyId]
+      );
+      if (copyRes.rows.length === 0) {
+        return { success: false, message: "Book copy not found" };
+      }
+      if (copyRes.rows[0].status !== 'AVAILABLE') {
+        return { success: false, message: `This copy is currently ${copyRes.rows[0].status}` };
+      }
+      bookId = copyRes.rows[0].book_id;
+    }
 
     /* ================= MEMBER CHECK ================= */
 
     const memberRes = await sql.query(
-      `SELECT 
+      `SELECT
           m.id AS member_id,
           m.first_name,
           m.last_name,
@@ -1439,17 +1633,16 @@ async function issueBook(req) {
     const bookRes = await sql.query(
       `SELECT *
        FROM ${schema}.books
-       WHERE id = $1 AND branch_id = $2`,
-      [req.body.book_id, branchId]
+       WHERE id = $1`,
+      [bookId]
     );
 
     if (!bookRes.rows.length)
-      return { success: false, message: "Book not found in branch" };
+      return { success: false, message: "Book not found" };
 
     const book = bookRes.rows[0];
 
-    if (!book.available_copies || book.available_copies <= 0)
-      return { success: false, message: "No copies available" };
+    // We rely on the book_copy table for availability, so no need to check available_copies here
 
     /* ================= DUPLICATE CHECK ================= */
 
@@ -1459,9 +1652,8 @@ async function issueBook(req) {
        WHERE book_id = $1
          AND issued_to = $2
          AND return_date IS NULL
-         AND status = 'issued'
-         AND branch_id = $3`,
-      [req.body.book_id, req.body.card_id, branchId]
+         AND status = 'issued'`,
+      [bookId, req.body.card_id]
     );
 
     if (Number(duplicateRes.rows[0].count) > 0)
@@ -1488,7 +1680,7 @@ async function issueBook(req) {
                $3,$3,$6)
        RETURNING *`,
       [
-        req.body.book_id,
+        bookId,
         req.body.card_id,
         userId,
         issueDateStr,
@@ -1499,31 +1691,13 @@ async function issueBook(req) {
 
     const newIssue = insertRes.rows[0];
 
-    /* ================= UPDATE BOOK STOCK ================= */
-
-    const updateBookRes = await sql.query(
-      `UPDATE ${schema}.books
-       SET available_copies = available_copies - 1,
-           lastmodifiedbyid = $2,
-           lastmodifieddate = CURRENT_TIMESTAMP
-       WHERE id = $1
-         AND branch_id = $3
-         AND available_copies > 0
-       RETURNING available_copies`,
-      [req.body.book_id, userId, branchId]
+    /* ================= UPDATE BOOK COPY STATUS ================= */
+    await sql.query(
+      `UPDATE ${schema}.book_copy SET status = 'BORROWED', lastmodifiedbyid = $2, lastmodifieddate = NOW() WHERE id = $1`,
+      [bookCopyId, userId]
     );
 
-    if (!updateBookRes.rows.length) {
-      await sql.query(
-        `DELETE FROM ${schema}.book_issues WHERE id = $1`,
-        [newIssue.id]
-      );
-
-      return {
-        success: false,
-        message: "Stock update failed. Issue reverted.",
-      };
-    }
+    // Stock update skipped as available_copies column does not exist in the books table
 
     /* ================= CREATE SCHEDULER ================= */
 
@@ -1557,13 +1731,13 @@ async function issueBook(req) {
 
 async function returnBook(issueId, returnData, userId) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
 
     const issueCheck = await sql.query(
       `SELECT bi.*, b.title as book_title
-       FROM ${schema}.book_issues bi
-       LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+       FROM ${this.schema}.book_issues bi
+       LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
        WHERE bi.id = $1`,
       [issueId]
     );
@@ -1589,7 +1763,7 @@ async function returnBook(issueId, returnData, userId) {
 
 
     const updateQuery = `
-      UPDATE ${schema}.book_issues 
+      UPDATE ${this.schema}.book_issues 
       SET return_date = $2, 
           status = $3, 
           lastmodifieddate = CURRENT_TIMESTAMP, 
@@ -1605,7 +1779,28 @@ async function returnBook(issueId, returnData, userId) {
       userId || 'system'
     ]);
 
-    return updateResult.rows[0];
+    const updatedIssue = updateResult.rows[0];
+
+    // Update Book Copy status
+    // Since we don't have book_copy_id in book_issues, we'll pick one borrowed copy of this book
+    let copyStatus = 'AVAILABLE';
+    if (status === 'lost') copyStatus = 'LOST';
+    if (status === 'damaged') copyStatus = 'DAMAGED';
+
+    await sql.query(
+      `UPDATE ${this.schema}.book_copy 
+       SET status = $2, lastmodifiedbyid = $3, lastmodifieddate = NOW() 
+       WHERE id = (
+         SELECT id FROM ${this.schema}.book_copy 
+         WHERE book_id = $1 AND status = 'BORROWED' 
+         LIMIT 1
+       )`,
+      [issue.book_id, copyStatus, userId || 'system']
+    );
+
+    // Skip stock update on books table as available_copies column does not exist
+
+    return updatedIssue;
   } catch (error) {
     console.error("Error in returnBook:", error);
     throw error;
@@ -1614,9 +1809,9 @@ async function returnBook(issueId, returnData, userId) {
 
 async function calculatePenalty(issueId) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
-    const issue = await findById(issueId);
+    const issue = await this.findById(issueId, null);
     if (!issue || issue.return_date) {
       return { penalty: 0, daysOverdue: 0 };
     }
@@ -1634,7 +1829,7 @@ async function calculatePenalty(issueId) {
 
     try {
       const settingsRes = await sql.query(
-        `SELECT fine_per_day FROM ${schema}.library_settings LIMIT 1`
+        `SELECT fine_per_day FROM ${this.schema}.library_settings LIMIT 1`
       );
 
       if (settingsRes.rows.length > 0 && settingsRes.rows[0].fine_per_day) {
@@ -1659,11 +1854,11 @@ async function calculatePenalty(issueId) {
 
 async function deleteById(id) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
 
     const issueRes = await sql.query(
-      `SELECT * FROM ${schema}.book_issues WHERE id = $1`,
+      `SELECT * FROM ${this.schema}.book_issues WHERE id = $1`,
       [id]
     );
 
@@ -1675,7 +1870,7 @@ async function deleteById(id) {
 
 
     const deleteResult = await sql.query(
-      `DELETE FROM ${schema}.book_issues WHERE id = $1 RETURNING *`,
+      `DELETE FROM ${this.schema}.book_issues WHERE id = $1 RETURNING *`,
       [id]
     );
 
@@ -1692,7 +1887,7 @@ async function deleteById(id) {
 
 async function getMemberAllowance(cardId) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
 
     const query = `
@@ -1707,8 +1902,8 @@ async function getMemberAllowance(cardId) {
         s.is_active as subscription_active,
         s.start_date,
         s.end_date
-      FROM ${schema}.library_members lm
-      LEFT JOIN ${schema}.subscriptions s ON lm.subscription_id = s.id
+      FROM ${this.schema}.library_members lm
+      LEFT JOIN ${this.schema}.subscriptions s ON lm.subscription_id = s.id
       WHERE lm.id = $1 AND lm.is_active = true
     `;
 
@@ -1723,7 +1918,7 @@ async function getMemberAllowance(cardId) {
 
     const activeIssuesRes = await sql.query(
       `SELECT COUNT(*) as count 
-       FROM ${schema}.book_issues 
+       FROM ${this.schema}.book_issues 
        WHERE issued_to = $1 AND return_date IS NULL AND status = 'issued'`,
       [cardId]
     );
@@ -1751,7 +1946,7 @@ async function getMemberAllowance(cardId) {
 
         const subscriptionIssuedRes = await sql.query(
           `SELECT COUNT(*) as sub_count 
-           FROM ${schema}.book_issues bi
+           FROM ${this.schema}.book_issues bi
            WHERE bi.issued_to = $1 
              AND bi.status = 'issued' 
              AND bi.return_date IS NULL
@@ -1818,11 +2013,11 @@ async function getMemberAllowance(cardId) {
 
 async function getIssuedCountByBookId(bookId) {
   try {
-    if (!schema) throw new Error("Schema not initialized. Call init() first.");
+    if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
 
     const query = `
       SELECT COUNT(*) AS issued_count
-      FROM ${schema}.book_issues
+      FROM ${this.schema}.book_issues
       WHERE book_id = $1 AND return_date IS NULL AND status = 'issued'
     `;
 
