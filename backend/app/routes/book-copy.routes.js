@@ -91,7 +91,7 @@ module.exports = (app) => {
     // Get all book copies with pagination
     router.get('/', [
         query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+        query('limit').optional().isInt({ min: 1, max: 5000 }).withMessage('Limit must be between 1 and 5000'),
         query('search').optional().isLength({ max: 255 }).withMessage('Search query too long'),
         query('book_id').optional().isUUID().withMessage('Book ID must be a valid UUID'),
         query('home_branch_id').optional().isUUID().withMessage('Home branch ID must be a valid UUID'),
@@ -143,7 +143,6 @@ module.exports = (app) => {
                     bc.book_id,
                     b.title as book_title,
                     b.isbn as book_isbn,
-                    b.available_copies,
                     rm.full_location_code as rack_location,
                     rm.name as rack_name
                 FROM ${schema}.book_copy bc

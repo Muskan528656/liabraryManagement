@@ -59,6 +59,7 @@ const BulkIssue = ({ permissions }) => {
 
 
   const [books, setBooks] = useState([]);
+  const [bookCopies, setBookCopies] = useState([]); // Added
   const [libraryCards, setLibraryCards] = useState([]);
   const [issuedBooks, setIssuedBooks] = useState([]);
   const [users, setUsers] = useState([]);
@@ -98,6 +99,7 @@ const BulkIssue = ({ permissions }) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [memberAge, setMemberAge] = useState(null);
   const [filteredBooksByAge, setFilteredBooksByAge] = useState([]);
+  const [filteredCopiesByAge, setFilteredCopiesByAge] = useState([]); // Added
   const [showIssuedBooks, setShowIssuedBooks] = useState(false);
 
 
@@ -271,8 +273,16 @@ const BulkIssue = ({ permissions }) => {
 
 
   useEffect(() => {
-    if (!selectedCard || memberAge === null || books.length === 0) {
+    if (books.length === 0) {
       setFilteredBooksByAge([]);
+      setFilteredCopiesByAge([]);
+      return;
+    }
+
+    // If no card selected, show all books/copies
+    if (!selectedCard) {
+      setFilteredBooksByAge(books);
+      setFilteredCopiesByAge(bookCopies);
       return;
     }
 
@@ -285,7 +295,8 @@ const BulkIssue = ({ permissions }) => {
         ? Number(book.max_age)
         : null;
 
-      if (memberAge === null || memberAge === undefined) return false;
+      // If no DOB or member age not calculated, don't block
+      if (memberAge === null || memberAge === undefined) return true;
 
       // ✅ If no age restriction → allow
       if (min === null && max === null) return true;
@@ -304,16 +315,14 @@ const BulkIssue = ({ permissions }) => {
       return memberAge >= min && memberAge <= max;
     });
 
-    console.log("Member Age:", memberAge);
-    console.table(filtered.map(b => ({
-      title: b.title,
-      min: b.min_age,
-      max: b.max_age
-    })));
-
     setFilteredBooksByAge(filtered);
 
-  }, [books, selectedCard, memberAge]);
+    // Filter copies matching those books
+    const filteredCopyIds = new Set(filtered.map(b => b.id.toString()));
+    const filteredCopies = bookCopies.filter(copy => filteredCopyIds.has(copy.book_id?.toString()));
+    setFilteredCopiesByAge(filteredCopies);
+
+  }, [books, bookCopies, selectedCard, memberAge]);
 
 
   const getNumberValue = (value) => {
@@ -345,28 +354,38 @@ const BulkIssue = ({ permissions }) => {
       const issueApi = new DataApi("bookissue");
       const subscriptionApi = new DataApi("subscriptions");
       const planApi = new DataApi("plans");
+      const copyApi = new DataApi("book-copy"); // Added
 
-      console.log("cardapi", cardApi)
       const [
         booksResp,
         cardsResp,
         usersResp,
         issuesResp,
         subscriptionResponse,
-        planResponse
+        planResponse,
+        copiesResp // Added
       ] = await Promise.all([
-        bookApi.fetchAll(),
+        bookApi.fetchAll("limit=2000"),
         cardApi.fetchAll(),
         userApi.fetchAll(),
         issueApi.fetchAll(),
         subscriptionApi.fetchAll(),
-        planApi.fetchAll()
+        planApi.fetchAll(),
+        copyApi.fetchAll("limit=2000") // Corrected to string query parameter
       ]);
 
       const booksList = normalize(booksResp);
       const cardsList = normalize(cardsResp);
       const usersList = normalize(usersResp);
       const issuesList = normalize(issuesResp);
+
+      // Specifically extract book_copies from the complex response object
+      let copiesList = [];
+      if (copiesResp?.data?.book_copies) {
+        copiesList = copiesResp.data.book_copies;
+      } else {
+        copiesList = normalize(copiesResp);
+      }
       console.log("usersList", usersList);
 
       console.log("cardsList", cardsList);
@@ -394,7 +413,9 @@ const BulkIssue = ({ permissions }) => {
       }
 
       setBooks(booksList);
+      setBookCopies(copiesList);
       setFilteredBooksByAge(booksList);
+      setFilteredCopiesByAge(copiesList);
       setUsers(usersList);
       setSubscriptions(subscriptionsList);
       setPlans(plansList);
@@ -459,9 +480,24 @@ const BulkIssue = ({ permissions }) => {
   };
 
   const normalize = (resp) => {
-    if (Array.isArray(resp?.data)) return resp.data;
-    if (Array.isArray(resp)) return resp;
-    if (resp?.data && !Array.isArray(resp.data)) return [resp.data];
+    // If resp is the axios response object
+    const data = resp?.data || resp;
+
+    if (Array.isArray(data)) return data;
+
+    // Handle { success: true, data: [...] }
+    if (data?.data && Array.isArray(data.data)) return data.data;
+
+    // Handle { book_copies: [...] }
+    if (data?.book_copies && Array.isArray(data.book_copies)) return data.book_copies;
+
+    // Handle other nested objects that might be arrays
+    if (typeof data === 'object' && data !== null) {
+      for (const key in data) {
+        if (Array.isArray(data[key])) return data[key];
+      }
+    }
+
     return [];
   };
 
@@ -728,18 +764,20 @@ const BulkIssue = ({ permissions }) => {
   };
 
   const getBookOptions = () => {
-    const booksToShow = filteredBooksByAge;
+    const copiesToShow = filteredCopiesByAge;
 
-    if (booksToShow.length === 0) {
+    if (copiesToShow.length === 0) {
       return [{
-        label: selectedCard && memberAge !== null
-          ? `No books available for age ${memberAge} years`
-          : "No books available",
+        label: "No copies available",
         options: []
       }];
     }
 
-    const options = booksToShow.map((book) => {
+    const options = copiesToShow.map((copy) => {
+      // The backend already joins 'title' into 'copy.title' in BookCopyModel.findAll
+      const book = books.find(b => b.id?.toString() === copy.book_id?.toString()) || {};
+      const title = copy.title || book.title || 'Unknown Title';
+
       const minAge = getNumberValue(book.min_age);
       const maxAge = getNumberValue(book.max_age);
 
@@ -749,62 +787,33 @@ const BulkIssue = ({ permissions }) => {
 
       const ageLabel = isGeneral ? "All Ages" : `${minAge}-${maxAge} years`;
 
-      const isAlreadyIssued = selectedCard ? isBookIssuedToSelectedCard(book.id) : false;
+      const isAlreadyIssued = copy.status !== 'AVAILABLE';
 
-      const available = parseInt(book.available_copies || 0);
-      const isOutOfStock = available <= 0;
-
-      let label = `${book.title} ${book.isbn ? `(${book.isbn})` : ""}`;
-
-      // 🧠 Inform only — not blocking
-      if (isAlreadyIssued) {
-        label += " (Already Issued)";
-      }
-
-      if (isOutOfStock) {
-        label += " (Out of Stock)";
-      }
-
-      if (book.call_numbers && Array.isArray(book.call_numbers)) {
-        label += " [" + book.call_numbers.filter(Boolean).join(", ") + "]";
-      }
+      let label = `[${copy.barcode}] ${title}`;
+      if (copy.itemcallnumber) label += ` | Call: ${copy.itemcallnumber}`;
 
       return {
-        value: book.id,
+        value: book.id, // Keep book.id as value for backward compatibility if backend expects it
+        copy_id: copy.id, // Track specific copy
         label,
-        subLabel: `Available: ${available} | Age: ${ageLabel}`,
-        data: book,
-
-        // ✅ Only stock controls disabling
-        isDisabled: isOutOfStock,
+        subLabel: `Status: ${copy.status} | Rack: ${copy.rack_location || 'N/A'} | Age: ${ageLabel}`,
+        data: { ...book, copy_id: copy.id, barcode: copy.barcode },
+        isDisabled: isAlreadyIssued,
       };
     });
 
     return [{
-      label: selectedCard && memberAge !== null
-        ? `Books for age ${memberAge} years (${booksToShow.length})`
-        : `All Books (${booksToShow.length})`,
+      label: `Select Book Copies (${options.length})`,
       options
     }];
   };
 
 
   const availableForSelect = (option) => {
-    const b = option.data;
-
-    if (b.available_copies !== undefined && parseInt(b.available_copies) <= 0) {
-      return {
-        ...option,
-        isDisabled: true,
-        label: `${b.title} ${b.isbn ? `(${b.isbn})` : ""} (Out of Stock)`,
-        data: { ...b, isOutOfStock: true }
-      };
-    }
-
-
+    // Rely on isDisabled set in getBookOptions based on physical copy status
     return {
       ...option,
-      data: { ...b, isOutOfStock: false }
+      data: { ...option.data, isOutOfStock: false }
     };
   };
 
@@ -933,7 +942,14 @@ const BulkIssue = ({ permissions }) => {
       );
       if (resp.ok) {
         const data = await resp.json();
-        setCallNumberResults(Array.isArray(data) ? data : []);
+        const results = Array.isArray(data) ? data : [];
+        setCallNumberResults(results);
+
+        // 🚀 SMART AUTO-SELECT: If exact barcode match and only 1 result, auto-select it
+        // This is great for barcode scanners which usually send the full code at once
+        if (results.length === 1 && results[0].barcode === query.trim()) {
+          handleSelectCopy(results[0]);
+        }
       } else {
         setCallNumberResults([]);
       }
@@ -951,36 +967,54 @@ const BulkIssue = ({ permissions }) => {
       showErrorToast("Please select a library card first.");
       return;
     }
+
+    if (memberInfo && !memberInfo.is_active) {
+      showErrorToast("This member is inactive and cannot issue books.");
+      return;
+    }
+
     // Find the book in the books list
     const book = books.find(b => b.id?.toString() === copy.book_id?.toString());
     if (!book) {
-      showErrorToast("Book not found in the books list.");
+      showErrorToast("Book details for this copy not found.");
       return;
     }
+
     if (isBookIssuedToSelectedCard(book.id)) {
-      showErrorToast("This book is already issued to this member.");
+      showErrorToast(`"${book.title}" is already issued to this member.`);
       return;
     }
-    // Check if already selected
-    const alreadySelected = selectedBooks.some(b => b.value?.toString() === book.id?.toString());
-    if (alreadySelected) {
-      showWarningToast("This book is already in your selection.");
-      return;
+
+    // Check if book is already in the selection list
+    const existingIndex = selectedBooks.findIndex(b => b.value?.toString() === book.id?.toString());
+
+    if (existingIndex !== -1) {
+      // ✅ Update existing selection with specific copy
+      setSelectedCopies(prev => ({ ...prev, [book.id]: copy }));
+      showSuccessToast(`Updated "${book.title}" to use specific copy: ${copy.barcode}`);
+    } else {
+      // ✅ Add new book selection with specific copy
+      // Check limits first
+      const availableToday = Math.min(remainingForCard, remainingForToday) - selectedBooks.length;
+      if (availableToday <= 0) {
+        showErrorToast(`Limit reached! Cannot select more books.`);
+        return;
+      }
+
+      const newEntry = {
+        value: book.id,
+        label: `${book.title} (${book.isbn || 'N/A'})`,
+        subLabel: `Available: ${book.available_copies}`,
+        data: book,
+      };
+      setSelectedBooks(prev => [...prev, newEntry]);
+      setSelectedCopies(prev => ({ ...prev, [book.id]: copy }));
+      showSuccessToast(`Selected "${book.title}" (Copy: ${copy.barcode})`);
     }
-    // Add to selected books
-    const newEntry = {
-      value: book.id,
-      label: `${book.title} (${book.isbn || 'N/A'})`,
-      subLabel: `Available: ${book.available_copies}`,
-      data: book,
-    };
-    setSelectedBooks(prev => [...prev, newEntry]);
-    // Track the specific copy
-    setSelectedCopies(prev => ({ ...prev, [book.id]: copy.id }));
+
     // Clear search
     setCallNumberQuery("");
     setCallNumberResults([]);
-    showSuccessToast(`Added "${book.title}" (Copy: ${copy.itemcallnumber || copy.barcode}) to selection.`);
   };
 
   const handleIssue = async () => {
@@ -1000,16 +1034,13 @@ const BulkIssue = ({ permissions }) => {
         try {
           const body = {
             book_id: b.value,
+            book_copy_id: b.copy_id || (selectedCopies[b.value] ? selectedCopies[b.value].id : null),
             card_id: selectedCard.value,
             issue_date: issueDate,
             due_date: dueDate,
             condition_before: "Good",
             remarks: "",
           };
-          // Attach specific copy ID if selected via call number search
-          if (selectedCopies[b.value]) {
-            body.book_copy_id = selectedCopies[b.value];
-          }
 
           const response = await helper.fetchWithAuth(
             `${constants.API_BASE_URL}/api/bookissue/issue`,
@@ -1450,7 +1481,7 @@ const BulkIssue = ({ permissions }) => {
                       </div>
 
                       <h5 className="fw-bold mb-1">{getMemberName()}</h5>
-                       <span className="fw-bold mb-1"> Age : {getMemberAge()}</span>
+                      <span className="fw-bold mb-1"> Age : {getMemberAge()}</span>
                     </div>
 
                     <Row className="g-2 mb-3">
@@ -1630,80 +1661,6 @@ const BulkIssue = ({ permissions }) => {
                   )}
                 </div>
 
-                {/* Call Number Search */}
-                <div className="mb-3 p-3 rounded-3" style={{ background: "#f0f4ff", border: "1px solid #d0d9ff" }}>
-                  <div className="fw-bold small text-uppercase text-primary mb-2">
-                    <i className="fa-solid fa-barcode me-2"></i>Search by Call Number / Barcode
-                  </div>
-                  <div className="position-relative">
-                    <Form.Control
-                      type="text"
-                      placeholder="Type call number, barcode, or book title..."
-                      value={callNumberQuery}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCallNumberQuery(val);
-                        clearTimeout(window._cnSearchTimer);
-                        window._cnSearchTimer = setTimeout(() => searchByCallNumber(val), 400);
-                      }}
-                      style={{ paddingRight: "36px" }}
-                    />
-                    {callNumberLoading && (
-                      <Spinner animation="border" size="sm" className="position-absolute" style={{ right: "10px", top: "10px" }} />
-                    )}
-                    {callNumberQuery && !callNumberLoading && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="position-absolute p-0 text-muted"
-                        style={{ right: "10px", top: "8px" }}
-                        onClick={() => { setCallNumberQuery(""); setCallNumberResults([]); }}
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </Button>
-                    )}
-                  </div>
-
-                  {callNumberResults.length > 0 && (
-                    <div className="mt-2 rounded-3 overflow-hidden" style={{ border: "1px solid #dee2e6", maxHeight: "260px", overflowY: "auto", background: "white" }}>
-                      {callNumberResults.map((copy) => (
-                        <div
-                          key={copy.id}
-                          className="d-flex justify-content-between align-items-center px-3 py-2"
-                          style={{ borderBottom: "1px solid #f0f0f0", cursor: "pointer" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f8f9ff"}
-                          onMouseLeave={e => e.currentTarget.style.background = "white"}
-                        >
-                          <div>
-                            <div className="fw-bold small text-dark">{copy.book_title}</div>
-                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                              <span className="me-2"><i className="fa-solid fa-hashtag me-1"></i>{copy.itemcallnumber || "N/A"}</span>
-                              <span className="me-2"><i className="fa-solid fa-barcode me-1"></i>{copy.barcode}</span>
-                              {copy.rack_location && <span><i className="fa-solid fa-location-dot me-1"></i>{copy.rack_location}</span>}
-                            </div>
-                            <div style={{ fontSize: "0.72rem" }}>
-                              <Badge bg="success" className="me-1">AVAILABLE</Badge>
-                              {copy.book_isbn && <span className="text-muted">ISBN: {copy.book_isbn}</span>}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => handleSelectCopy(copy)}
-                          >
-                            <i className="fa-solid fa-plus me-1"></i>Select
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {callNumberQuery.trim().length >= 2 && !callNumberLoading && callNumberResults.length === 0 && (
-                    <div className="text-muted small mt-2">
-                      <i className="fa-solid fa-circle-info me-1"></i>No available copies found for "{callNumberQuery}".
-                    </div>
-                  )}
-                </div>
 
                 <div className="mb-4">
                   <Select
@@ -1744,7 +1701,7 @@ const BulkIssue = ({ permissions }) => {
                           ? "Member is inactive"
                           : Math.min(remainingForCard, remainingForToday) === 0
                             ? `Daily limit reached (${issuedTodayForSelectedCard}/${dailyLimitCount})`
-                            : `Select up to ${Math.min(remainingForCard, remainingForToday) - selectedBooks.length} more book(s)... (${selectedBooks.length}/${Math.min(remainingForCard, remainingForToday)})`
+                            : `Search by barcode, title or call number... (${selectedBooks.length}/${Math.min(remainingForCard, remainingForToday)} selected)`
                     }
                     isDisabled={
                       !selectedCard ||
@@ -1891,9 +1848,18 @@ const BulkIssue = ({ permissions }) => {
                                     Available: {book.data.available_copies || 0}
                                   </Badge>
                                   {selectedCopies[book.value] && (
-                                    <Badge bg="info" className="ms-1">
-                                      <i className="fa-solid fa-barcode me-1"></i>Copy Selected
-                                    </Badge>
+                                    <div className="mt-2">
+                                      <Badge bg="info" className="p-2 d-inline-flex align-items-center">
+                                        <i className="fa-solid fa-barcode me-2"></i>
+                                        <div className="text-start">
+                                          <div style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>Selected Copy</div>
+                                          <div className="fw-bold">{selectedCopies[book.value].barcode}</div>
+                                          {selectedCopies[book.value].itemcallnumber && (
+                                            <div style={{ fontSize: '0.65rem' }}>{selectedCopies[book.value].itemcallnumber}</div>
+                                          )}
+                                        </div>
+                                      </Badge>
+                                    </div>
                                   )}
                                 </div>
                               </div>
