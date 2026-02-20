@@ -288,18 +288,48 @@ module.exports = (app) => {
   });
 
   // GET last classification by category only - MUST BE BEFORE /:id
-  router.get("/last-by-category/:category", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {
+// GET category range (MIN/MAX) - MUST BE BEFORE /:id
+router.get(
+  "/last-by-category/:category",
+  fetchUser,
+  checkPermission("Categories", "allow_view"),
+  async (req, res) => {
     try {
-      Classification.init(req.userinfo.tenantcode);
-      const lastClassification = await Classification.getLastClassificationByCategory(
-        req.params.category
-      );
-      return res.status(200).json(lastClassification);
+      // ✅ Set schema properly
+      schema = req.userinfo.tenantcode || "demo";
+      Classification.init(schema);
+
+      const category = req.params.category;
+      const type = req.query.type;
+
+      let query = `
+        SELECT 
+          MIN(classification_from::text) AS min_from,
+          MAX(classification_to::text) AS max_to
+        FROM ${schema}."classification"
+        WHERE category = $1
+      `;
+
+      const values = [category];
+
+      if (type) {
+        query += ` AND classification_type = $2`;
+        values.push(type);
+      }
+
+      const result = await sql.query(query, values);
+
+      return res.status(200).json(result.rows[0] || {});
+
     } catch (error) {
-      console.error("Error fetching last classification by category:", error);
-      return res.status(500).json({ errors: "Internal server error" });
+      console.error("Error fetching category range:", error);
+      return res.status(500).json({ errors: error.message });
     }
-  });
+  }
+);
+
+
+
 
   // GET last classification by category and name - MUST BE BEFORE /:id
   router.get("/last-by-category-name/:category/:name", fetchUser, checkPermission("Categories", "allow_view"), async (req, res) => {

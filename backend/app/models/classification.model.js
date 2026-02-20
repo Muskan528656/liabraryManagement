@@ -74,18 +74,35 @@ async function findById(id) {
         const query = `
             SELECT 
                 c.*,
-                b.name AS branch_name
+                b.branch_name,
+
+                creator.firstname AS createdby_name,
+                modifier.firstname AS lastmodifiedby_name
+
             FROM ${schema}.classification c
-            LEFT JOIN ${schema}.branches b ON c.branch_id = b.id
+
+            LEFT JOIN ${schema}.branches b 
+                ON c.branch_id = b.id
+
+            LEFT JOIN ${schema}."user" creator 
+                ON c.createdbyid = creator.id
+
+            LEFT JOIN ${schema}."user" modifier 
+                ON c.lastmodifiedbyid = modifier.id
+
             WHERE c.id = $1
         `;
+
         const result = await sql.query(query, [id]);
         return result.rows[0];
+
     } catch (error) {
         console.error("Error in Classification.findById:", error);
         throw error;
     }
 }
+
+
 
 // ================= CREATE =================
 async function create(data, userId) {
