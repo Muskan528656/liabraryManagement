@@ -217,146 +217,241 @@ export const saveImportedData = async ({
 
         const csvKey = key.toLowerCase().trim();
 
+        // if (Array.isArray(formFields)) {
+        //   // Array format: [{ name, label, type, options, required }, ...] or [{ field, label, ... }]
+
+        //   const formField = formFields.find((f) => {
+        //     if (!f) return false;
+
+        //     const fieldLabel = f.label?.toLowerCase().trim();
+        //     const fieldNameCheck = (f.name || f.field)?.toLowerCase().trim(); // Support both 'name' and 'field' properties
+
+        //     // Priority 1: Exact label match
+        //     if (fieldLabel === csvKey) {
+        //       return true;
+        //     }
+
+        //     // Priority 2: Exact name/field match (without _id suffix for select fields)
+        //     if (fieldNameCheck === csvKey || fieldNameCheck === csvKey + '_id') {
+        //       return true;
+        //     }
+
+        //     // Priority 3: Handle select fields with base name matching
+        //     if (f.type === 'select') {
+        //       const baseName = fieldNameCheck.replace('_id', '');
+        //       if (csvKey === baseName) {
+        //         return true;
+        //       }
+        //     }
+
+        //     // Priority 4: Strict fuzzy matching - only if CSV header contains ALL words from field label
+        //     const labelWords = fieldLabel?.split(/\s+/).filter(w => w.length > 0) || [];
+        //     if (labelWords.length > 0) {
+        //       const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
+        //       if (allLabelWordsInCsv) {
+        //         return true;
+        //       }
+        //     }
+
+        //     // Priority 5: Check if CSV key words are all in field name (for compound field names)
+        //     const csvWords = csvKey.split(/_+/).filter(w => w.length > 0);
+        //     if (csvWords.length > 1) { // Only apply for compound CSV keys like 'company_name'
+        //       const allCsvWordsInField = csvWords.every(word => fieldNameCheck.includes(word));
+        //       if (allCsvWordsInField) {
+        //         return true;
+        //       }
+        //     }
+
+        //     return false;
+        //   });
+
+        //   if (formField) {
+        //     fieldName = formField.name || formField.field; // Support both 'name' and 'field' properties
+        //     fieldType = formField.type || 'text';
+        //     optionKey = typeof formField.options === "string" ? formField.options : null;
+        //     isRequired = formField.required || false;
+        //   }
+        // } else {
+        //   // Object format: { fieldName: fieldLabel }
+        //   // Find all possible matches, then pick the best one
+        //   const possibleMatches = [];
+
+        //   Object.keys(formFields).forEach(key => {
+        //     const fieldLabel = formFields[key].toLowerCase().trim();
+
+        //     // Priority 1: Exact label match (highest priority)
+        //     if (fieldLabel === csvKey) {
+        //       possibleMatches.push({ key, priority: 1, labelLength: fieldLabel.length });
+        //       return;
+        //     }
+
+        //     // Priority 2: Exact name match
+        //     if (key === csvKey) {
+        //       possibleMatches.push({ key, priority: 2, labelLength: fieldLabel.length });
+        //       return;
+        //     }
+
+        //     // Priority 3: Field label is fully contained in CSV header
+        //     if (csvKey.includes(fieldLabel)) {
+        //       possibleMatches.push({ key, priority: 3, labelLength: fieldLabel.length });
+        //       return;
+        //     }
+
+        //     // Priority 4: CSV header is fully contained in field label
+        //     if (fieldLabel.includes(csvKey)) {
+        //       possibleMatches.push({ key, priority: 4, labelLength: fieldLabel.length });
+        //       return;
+        //     }
+
+        //     // Priority 5: All words from field label are in CSV header
+        //     const labelWords = fieldLabel.split(/\s+/).filter(w => w.length > 0);
+        //     if (labelWords.length > 0) {
+        //       const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
+        //       if (allLabelWordsInCsv) {
+        //         possibleMatches.push({ key, priority: 5, labelLength: fieldLabel.length });
+        //       }
+        //     }
+
+        //     // Debug logging for company_name field
+        //     if (key === 'company_name') {
+        //       console.log('Debug company_name mapping (object format):', {
+        //         csvKey,
+        //         fieldLabel,
+        //         key,
+        //         exactLabelMatch: fieldLabel === csvKey,
+        //         exactNameMatch: key === csvKey,
+        //         csvContainsLabel: csvKey.includes(fieldLabel),
+        //         labelContainsCsv: fieldLabel.includes(csvKey)
+        //       });
+        //     }
+        //   });
+
+        //   // Sort by priority (lower number = higher priority), then by label length (longer = better)
+        //   possibleMatches.sort((a, b) => {
+        //     if (a.priority !== b.priority) return a.priority - b.priority;
+        //     return b.labelLength - a.labelLength; // Prefer longer labels for same priority
+        //   });
+
+        //   const matchingFieldName = possibleMatches.length > 0 ? possibleMatches[0].key : null;
+
+        //   // Additional debug for company_name
+        //   if (matchingFieldName === 'company_name' || csvKey.includes('company')) {
+        //     console.log('Company name mapping result:', {
+        //       csvKey,
+        //       matchingFieldName,
+        //       possibleMatches: possibleMatches.map(m => ({ key: m.key, priority: m.priority }))
+        //     });
+        //   }
+
+        //   if (matchingFieldName) {
+        //     fieldName = matchingFieldName;
+        //     // Determine type based on field name patterns
+        //     if (matchingFieldName.includes('status') || matchingFieldName.includes('country_code') ||
+        //         matchingFieldName.includes('state') || matchingFieldName.includes('city')) {
+        //       fieldType = 'select';
+        //     } else {
+        //       fieldType = 'text';
+        //     }
+        //     // For object format, assume no related entities (optionKey = null)
+        //     optionKey = null;
+        //     isRequired = false;
+        //   }
+        // }
+
         if (Array.isArray(formFields)) {
-          // Array format: [{ name, label, type, options, required }, ...] or [{ field, label, ... }]
+  // ============================
+  // ARRAY FORMAT (SAFE VERSION)
+  // ============================
 
-          const formField = formFields.find((f) => {
-            if (!f) return false;
+  const formField = formFields.find((f) => {
+    if (!f) return false;
 
-            const fieldLabel = f.label?.toLowerCase().trim();
-            const fieldNameCheck = (f.name || f.field)?.toLowerCase().trim(); // Support both 'name' and 'field' properties
+    const fieldLabel = f.label?.toLowerCase().trim();
+    const fieldNameCheck = (f.name || f.field)?.toLowerCase().trim();
 
-            // Priority 1: Exact label match
-            if (fieldLabel === csvKey) {
-              return true;
-            }
+    // ✅ STRICT EXACT LABEL MATCH
+    if (fieldLabel === csvKey) return true;
 
-            // Priority 2: Exact name/field match (without _id suffix for select fields)
-            if (fieldNameCheck === csvKey || fieldNameCheck === csvKey + '_id') {
-              return true;
-            }
+    // ✅ STRICT EXACT NAME MATCH
+    if (fieldNameCheck === csvKey) return true;
 
-            // Priority 3: Handle select fields with base name matching
-            if (f.type === 'select') {
-              const baseName = fieldNameCheck.replace('_id', '');
-              if (csvKey === baseName) {
-                return true;
-              }
-            }
+    // ✅ Allow name_id match (for select fields)
+    if (fieldNameCheck === csvKey.replace("_id", "")) return true;
 
-            // Priority 4: Strict fuzzy matching - only if CSV header contains ALL words from field label
-            const labelWords = fieldLabel?.split(/\s+/).filter(w => w.length > 0) || [];
-            if (labelWords.length > 0) {
-              const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
-              if (allLabelWordsInCsv) {
-                return true;
-              }
-            }
+    return false; // 🚫 No fuzzy matching
+  });
 
-            // Priority 5: Check if CSV key words are all in field name (for compound field names)
-            const csvWords = csvKey.split(/_+/).filter(w => w.length > 0);
-            if (csvWords.length > 1) { // Only apply for compound CSV keys like 'company_name'
-              const allCsvWordsInField = csvWords.every(word => fieldNameCheck.includes(word));
-              if (allCsvWordsInField) {
-                return true;
-              }
-            }
+  if (formField) {
+    fieldName = formField.name || formField.field;
+    fieldType = formField.type || "text";
+    optionKey =
+      typeof formField.options === "string" ? formField.options : null;
+    isRequired = formField.required || false;
+  }
 
-            return false;
-          });
+} else {
+  // ============================
+  // OBJECT FORMAT (SAFE VERSION)
+  // ============================
 
-          if (formField) {
-            fieldName = formField.name || formField.field; // Support both 'name' and 'field' properties
-            fieldType = formField.type || 'text';
-            optionKey = typeof formField.options === "string" ? formField.options : null;
-            isRequired = formField.required || false;
-          }
-        } else {
-          // Object format: { fieldName: fieldLabel }
-          // Find all possible matches, then pick the best one
-          const possibleMatches = [];
+  const possibleMatches = [];
 
-          Object.keys(formFields).forEach(key => {
-            const fieldLabel = formFields[key].toLowerCase().trim();
+  Object.keys(formFields).forEach((key) => {
+    const fieldLabel = formFields[key]?.toLowerCase().trim();
+    const fieldKey = key?.toLowerCase().trim();
 
-            // Priority 1: Exact label match (highest priority)
-            if (fieldLabel === csvKey) {
-              possibleMatches.push({ key, priority: 1, labelLength: fieldLabel.length });
-              return;
-            }
+    // ✅ STRICT EXACT LABEL MATCH
+    if (fieldLabel === csvKey) {
+      possibleMatches.push({
+        key,
+        priority: 1,
+        labelLength: fieldLabel.length,
+      });
+      return;
+    }
 
-            // Priority 2: Exact name match
-            if (key === csvKey) {
-              possibleMatches.push({ key, priority: 2, labelLength: fieldLabel.length });
-              return;
-            }
+    // ✅ STRICT EXACT FIELD NAME MATCH
+    if (fieldKey === csvKey) {
+      possibleMatches.push({
+        key,
+        priority: 2,
+        labelLength: fieldLabel.length,
+      });
+      return;
+    }
 
-            // Priority 3: Field label is fully contained in CSV header
-            if (csvKey.includes(fieldLabel)) {
-              possibleMatches.push({ key, priority: 3, labelLength: fieldLabel.length });
-              return;
-            }
+    // 🚫 REMOVED ALL FUZZY MATCHING
+    // No includes()
+    // No partial word match
+    // No word-every-match logic
+  });
 
-            // Priority 4: CSV header is fully contained in field label
-            if (fieldLabel.includes(csvKey)) {
-              possibleMatches.push({ key, priority: 4, labelLength: fieldLabel.length });
-              return;
-            }
+  // Sort by priority only
+  possibleMatches.sort((a, b) => a.priority - b.priority);
 
-            // Priority 5: All words from field label are in CSV header
-            const labelWords = fieldLabel.split(/\s+/).filter(w => w.length > 0);
-            if (labelWords.length > 0) {
-              const allLabelWordsInCsv = labelWords.every(word => csvKey.includes(word));
-              if (allLabelWordsInCsv) {
-                possibleMatches.push({ key, priority: 5, labelLength: fieldLabel.length });
-              }
-            }
+  const matchingFieldName =
+    possibleMatches.length > 0 ? possibleMatches[0].key : null;
 
-            // Debug logging for company_name field
-            if (key === 'company_name') {
-              console.log('Debug company_name mapping (object format):', {
-                csvKey,
-                fieldLabel,
-                key,
-                exactLabelMatch: fieldLabel === csvKey,
-                exactNameMatch: key === csvKey,
-                csvContainsLabel: csvKey.includes(fieldLabel),
-                labelContainsCsv: fieldLabel.includes(csvKey)
-              });
-            }
-          });
+  if (matchingFieldName) {
+    fieldName = matchingFieldName;
 
-          // Sort by priority (lower number = higher priority), then by label length (longer = better)
-          possibleMatches.sort((a, b) => {
-            if (a.priority !== b.priority) return a.priority - b.priority;
-            return b.labelLength - a.labelLength; // Prefer longer labels for same priority
-          });
+    // Safe type detection
+    if (
+      matchingFieldName.includes("status") ||
+      matchingFieldName.includes("country_code") ||
+      matchingFieldName.includes("state") ||
+      matchingFieldName.includes("city")
+    ) {
+      fieldType = "select";
+    } else {
+      fieldType = "text";
+    }
 
-          const matchingFieldName = possibleMatches.length > 0 ? possibleMatches[0].key : null;
+    optionKey = null;
+    isRequired = false;
+  }
+}
 
-          // Additional debug for company_name
-          if (matchingFieldName === 'company_name' || csvKey.includes('company')) {
-            console.log('Company name mapping result:', {
-              csvKey,
-              matchingFieldName,
-              possibleMatches: possibleMatches.map(m => ({ key: m.key, priority: m.priority }))
-            });
-          }
-
-          if (matchingFieldName) {
-            fieldName = matchingFieldName;
-            // Determine type based on field name patterns
-            if (matchingFieldName.includes('status') || matchingFieldName.includes('country_code') ||
-                matchingFieldName.includes('state') || matchingFieldName.includes('city')) {
-              fieldType = 'select';
-            } else {
-              fieldType = 'text';
-            }
-            // For object format, assume no related entities (optionKey = null)
-            optionKey = null;
-            isRequired = false;
-          }
-        }
 
         if (!fieldName) {
           const safeKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");

@@ -65,13 +65,56 @@ export default function UniversalCSVXLSXImporter({ model, onDataParsed }) {
       const initialMap = {};
    
 
+        // Build a robust initial mapping:
+        // - normalize both header and model keys/labels
+        // - prefer exact key-name matches, then label matches
+        // - avoid assigning the same target key to multiple headers
+        const usedTargets = new Set();
         headers.forEach((h) => {
-          const normH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-          const match = Object.keys(activeFields).find((key) => {
-            const label = (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-            return key.toLowerCase() === normH || label === normH;
-          });
-          if (match) initialMap[h] = match;
+          const raw = (h || "").toString();
+          const normH = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+          const keyCandidates = Object.keys(activeFields).map((key) => ({
+            key,
+            keyNorm: key.toLowerCase().replace(/[^a-z0-9]/g, ""),
+            labelNorm: (fieldLabels[key] || "").toLowerCase().replace(/[^a-z0-9]/g, ""),
+          }));
+
+          // gather candidate matches by different strategies
+          const exactKeyMatches = keyCandidates.filter(kc => kc.keyNorm === normH);
+          const exactLabelMatches = keyCandidates.filter(kc => kc.labelNorm === normH);
+          const containsLabelMatches = keyCandidates.filter(kc => kc.labelNorm.includes(normH) || normH.includes(kc.labelNorm));
+
+          let match = null;
+
+          if (exactKeyMatches.length) match = exactKeyMatches[0];
+          else if (exactLabelMatches.length) match = exactLabelMatches[0];
+          else if (containsLabelMatches.length) match = containsLabelMatches[0];
+
+          // Disambiguation rules: if header contains 'code' prefer country_code-like targets
+          const headerHasCode = /code|iso|dial|countrycode/.test(normH);
+          if (!match && keyCandidates.length) {
+            // as a last resort, try keyword heuristics
+            const preferCode = keyCandidates.find(kc => /code|countrycode|country_code/.test(kc.key) || /code/.test(kc.labelNorm));
+            const preferCountry = keyCandidates.find(kc => /country/.test(kc.key) && !/code/.test(kc.key));
+            if (headerHasCode && preferCode) match = preferCode;
+            else if (!headerHasCode && preferCountry) match = preferCountry;
+            else match = keyCandidates[0];
+          }
+
+          // final disambiguation: if both 'country' and 'country_code' are present across headers,
+          // prefer mapping that matches whether header contains 'code'
+          if (match && !usedTargets.has(match.key)) {
+            // if this header looks like plain country but we accidentally matched country_code,
+            // try to pick the non-code variant if available
+            if (!headerHasCode && /countrycode|code/.test(match.key)) {
+              const alt = keyCandidates.find(kc => kc.keyNorm === 'country' && !usedTargets.has(kc.key));
+              if (alt) match = alt;
+            }
+
+            initialMap[h] = match.key;
+            usedTargets.add(match.key);
+          }
         });
 
     console.log('Initial mapping = ', initialMap);
