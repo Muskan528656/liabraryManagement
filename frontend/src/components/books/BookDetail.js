@@ -99,7 +99,6 @@ const BookDetail = ({ permissions }) => {
     subtitle: "isbn",
     details: [
       { key: "title", label: "Title", type: "text", required: true },
-      { key: "price", label: "Price", type: "text" },
       { key: "isbn", label: "ISBN", type: "text", required: true },
       {
         key: "author_id",

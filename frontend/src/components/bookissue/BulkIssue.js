@@ -299,20 +299,10 @@ const BulkIssue = ({ permissions }) => {
       if (memberAge === null || memberAge === undefined) return true;
 
       // ✅ If no age restriction → allow
-      if (min === null && max === null) return true;
+      if (min === null) return true;
 
-      // ✅ If only min defined
-      if (min !== null && max === null) {
-        return memberAge >= min;
-      }
-
-      // ✅ If only max defined
-      if (min === null && max !== null) {
-        return memberAge <= max;
-      }
-
-      // ✅ Normal case (min and max both exist)
-      return memberAge >= min && memberAge <= max;
+      // ✅ Only check min age, ignore max age
+      return memberAge >= min;
     });
 
     setFilteredBooksByAge(filtered);
@@ -785,19 +775,21 @@ const BulkIssue = ({ permissions }) => {
         (minAge === 0 && maxAge === 0) ||
         (book.min_age === null && book.max_age === null);
 
-      const ageLabel = isGeneral ? "All Ages" : `${minAge}-${maxAge} years`;
+      const ageLabel = isGeneral ? "All Ages" : `${minAge}+ years`;
 
       const isAlreadyIssued = copy.status !== 'AVAILABLE';
 
       let label = `[${copy.barcode}] ${title}`;
       if (copy.itemcallnumber) label += ` | Call: ${copy.itemcallnumber}`;
 
+      const subLabel = `Rack: ${copy.rack_location || 'N/A'}`;
+
       return {
-        value: book.id, // Keep book.id as value for backward compatibility if backend expects it
-        copy_id: copy.id, // Track specific copy
+        value: book.id,
+        copy_id: copy.id,
         label,
-        subLabel: `Status: ${copy.status} | Rack: ${copy.rack_location || 'N/A'} | Age: ${ageLabel}`,
-        data: { ...book, copy_id: copy.id, barcode: copy.barcode },
+        subLabel,
+        data: { ...book, copy_id: copy.id, barcode: copy.barcode, copyStatus: copy.status },
         isDisabled: isAlreadyIssued,
       };
     });
@@ -1725,10 +1717,10 @@ const BulkIssue = ({ permissions }) => {
                               <i className="fa-solid fa-box-open ms-2 text-warning" title="Out of stock"></i>
                             )}
                           </span>
-                          {data?.min_age !== undefined && data?.max_age !== undefined && (
+                          {data?.min_age !== undefined && (
                             <small className="text-dark">
                               <i className="fa-solid fa-user-group me-1"></i>
-                              Age: {data.min_age || 0} - {data.max_age || "Any"} years
+                              Age: {data.min_age || 0}+ years
                             </small>
                           )}
                           {isDisabled && data?.issuedToCurrentMember && (
@@ -1744,13 +1736,21 @@ const BulkIssue = ({ permissions }) => {
                             </small>
                           )}
                         </div>
-                        <Badge
-                          bg={isDisabled ? "secondary" :
-                            parseInt(data?.available_copies) > 0 ? "success" : "danger"}
-                          text={isDisabled ? "white" : "dark"}
-                        >
-                          {subLabel}
-                        </Badge>
+                        <div className="d-flex align-items-center gap-2">
+                          <Badge
+                            bg={data?.copyStatus?.toUpperCase() === 'AVAILABLE' ? "success" : "danger"}
+                            className="text-uppercase"
+                            style={{ fontSize: '0.65rem' }}
+                          >
+                            {data?.copyStatus || 'UNKNOWN'}
+                          </Badge>
+                          <Badge
+                            bg={isDisabled ? "secondary" : "info"}
+                            text={isDisabled ? "white" : "dark"}
+                          >
+                            {subLabel}
+                          </Badge>
+                        </div>
                       </div>
                     )}
                     formatGroupLabel={(group) => (
@@ -1837,10 +1837,10 @@ const BulkIssue = ({ permissions }) => {
                                 <div className="text-muted small">
                                   Author: {book.data.author || "Unknown"}
                                 </div>
-                                {(book.data.min_age || book.data.max_age) && (
+                                {book.data.min_age && (
                                   <div className="text-dark small">
                                     <i className="fa-solid fa-user-group me-1"></i>
-                                    Age: {book.data.min_age || "Any"} - {book.data.max_age || "Any"} years
+                                    Age: {book.data.min_age || 0}+ years
                                   </div>
                                 )}
                                 <div className="small">

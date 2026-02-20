@@ -26,8 +26,8 @@ const fetchUser = async (req, res, next) => {
     // Use branchId from headers, or fallback to branch_id from token
     req.branchId = branchId || decoded.branch_id;
     global.currentLoggedInUserId = decoded.id;
-    console.log("req.userinfo  =>", req.userinfo);
-    console.log("req.userinfo  dkk =>", req.branchId);
+    // console.log("req.userinfo  =>", req.userinfo);
+    // console.log("req.userinfo  dkk =>", req.branchId);
 
     Auth.init(req.userinfo.tenantcode, req.branchId);
 

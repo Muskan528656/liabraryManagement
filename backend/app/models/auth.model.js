@@ -71,7 +71,7 @@ async function findPermissionsByRole(roleId, roleName) {
   `;
 
   const values = [roleId];
-  console.log("roleName  =>", roleName);
+  // console.log("roleName  =>", roleName);
   if (roleName !== "SYSTEM ADMIN") {
     if (!branchId) {
       console.warn("BranchId missing for non-system role");
