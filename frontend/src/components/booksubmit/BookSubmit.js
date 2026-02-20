@@ -1550,41 +1550,41 @@ const BookSubmit = ({ permissions }) => {
             render: (value) => getStatusBadge(value)
         },
 
-        (allowEdit && {
-            field: "actions",
-            label: "Actions",
-            width: 200,
-            render: (value, record) => {
-                const isIssued = record.status?.toLowerCase() === 'issued';
+        // (allowEdit && {
+        //     field: "actions",
+        //     label: "Actions",
+        //     width: 200,
+        //     render: (value, record) => {
+        //         const isIssued = record.status?.toLowerCase() === 'issued';
 
-                if (!isIssued) {
-                    return <Badge bg="secondary">No Actions</Badge>;
-                }
+        //         if (!isIssued) {
+        //             return <Badge bg="secondary">No Actions</Badge>;
+        //         }
 
-                return (
-                    <div>
-                        <Button
-                            className="btn-custom"
-                            size="sm"
-                            onClick={() => handleSubmitClick(record)}
-                            title="Submitted Issue"
-                        >
-                            <i className="fa-solid fa-check-circle"></i> Submit
-                        </Button>
+        //         return (
+        //             <div>
+        //                 <Button
+        //                     className="btn-custom"
+        //                     size="sm"
+        //                     onClick={() => handleSubmitClick(record)}
+        //                     title="Submitted Issue"
+        //                 >
+        //                     <i className="fa-solid fa-check-circle"></i> Submit
+        //                 </Button>
 
-                        <Button
-                            className="m-1"
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleCancelClick(record)}
-                            title="Cancelled Issue"
-                        >
-                            <i className="fa-solid fa-times"></i>
-                        </Button>
-                    </div>
-                );
-            }
-        })
+        //                 <Button
+        //                     className="m-1"
+        //                     variant="outline-danger"
+        //                     size="sm"
+        //                     onClick={() => handleCancelClick(record)}
+        //                     title="Cancelled Issue"
+        //                 >
+        //                     <i className="fa-solid fa-times"></i>
+        //                 </Button>
+        //             </div>
+        //         );
+        //     }
+        // })
     ];
 
     const submittedBooksColumns = [
@@ -1605,10 +1605,10 @@ const BookSubmit = ({ permissions }) => {
                             e.stopPropagation();
                             try {
                                 sessionStorage.setItem(`prefetch:book:${bookId}`, JSON.stringify(record));
-                            } catch (err) { 
-                                console.log("error",err)
+                            } catch (err) {
+                                console.log("error", err)
                             }
-                            navigate(`/book/${bookId}`, { state:{ "call": "bookSubmission" }});
+                            navigate(`/book/${bookId}`, { state: { "call": "bookSubmission" } });
                         }}
                         onContextMenu={(e) => {
                             e.preventDefault();
@@ -1815,7 +1815,7 @@ const BookSubmit = ({ permissions }) => {
                                             marginBottom: "-1px"
                                         }}
                                     >
-                                    <span>View Submitted Books ({submittedBooks.length})</span>
+                                        <span>View Submitted Books ({submittedBooks.length})</span>
                                     </Nav.Link>
                                 </Nav.Item>
 
@@ -2111,7 +2111,7 @@ const BookSubmit = ({ permissions }) => {
                                                         loading={loadingSubmitted}
                                                         showCheckbox={false}
                                                         showSerialNumber={true}
-                                                        showActions={allowEdit}
+                                                        //     showActions={allowEdit}
                                                         searchTerm={searchTerm}
                                                         currentPage={currentPage}
                                                         recordsPerPage={recordsPerPage}

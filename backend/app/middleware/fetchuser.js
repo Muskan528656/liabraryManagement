@@ -7,7 +7,7 @@ const sql = require("../models/db.js");
 const fetchUser = async (req, res, next) => {
   var token = req.headers.authorization;
   var branchId = req.headers["branch-id"];
-  console.log("Branch ID:", branchId);
+  console.log("Branch ID from header:", branchId);
   if (!token) {
 
     global.currentLoggedInUserId = null;
@@ -23,7 +23,8 @@ const fetchUser = async (req, res, next) => {
     if (!decoded) return res.status(401).json({ errors: "Invalid token" });
 
     req.userinfo = decoded;
-    req.branchId = branchId;
+    // Use branchId from headers, or fallback to branch_id from token
+    req.branchId = branchId || decoded.branch_id;
     global.currentLoggedInUserId = decoded.id;
     console.log("req.userinfo  =>", req.userinfo);
     console.log("req.userinfo  dkk =>", req.branchId);

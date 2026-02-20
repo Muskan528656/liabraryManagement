@@ -170,99 +170,72 @@ function init(schema_name) {
 /* ------------------------------------------------------
    FIND ALL CLASSIFICATIONS WITH FILTERS
 ------------------------------------------------------ */
+// async function findAll(filters = {}) {
+//   try {
+//     let query = `
+//       SELECT c.*
+//       FROM ${schema}.classification c
+//       JOIN ${schema}.library_setting ls
+//         ON c.classification_type = ls.config_classification
+//       WHERE 1=1
+//     `;
+//     const values = [];
+//     let paramIndex = 1;
+
+//     if (filters.classification_type) {
+//       query += ` AND classification_type ILIKE $${paramIndex}`;
+//       values.push(`%${filters.classification_type}%`);
+//       paramIndex++;
+//     }
+
+//     if (filters.category) {
+//       query += ` AND category ILIKE $${paramIndex}`;
+//       values.push(`%${filters.category}%`);
+//       paramIndex++;
+//     }
+
+//     if (filters.code) {
+//       query += ` AND code ILIKE $${paramIndex}`;
+//       values.push(`%${filters.code}%`);
+//       paramIndex++;
+//     }
+
+//     if (filters.name) {
+//       query += ` AND name ILIKE $${paramIndex}`;
+//       values.push(`%${filters.name}%`);
+//       paramIndex++;
+//     }
+
+//     if (filters.is_active !== undefined) {
+//       query += ` AND is_active = $${paramIndex}`;
+//       values.push(filters.is_active === 'true' || filters.is_active === true);
+//       paramIndex++;
+//     }
+
+//     query += ` ORDER BY lastmodifieddate DESC`;
+
+//     const result = await sql.query(query, values);
+//     return result.rows.length > 0 ? result.rows : [];
+
+//   } catch (error) {
+//     console.error("Error in findAll:", error);
+//     throw error;
+//   }
+// }
 async function findAll(filters = {}) {
   try {
+    console.log("findAll API HIT");
+
     let query = `
-      SELECT c.*
+    SELECT c.*
       FROM ${schema}.classification c
       JOIN ${schema}.library_setting ls
         ON c.classification_type = ls.config_classification
-      WHERE 1=1
-    `;
-    const values = [];
-    let paramIndex = 1;
-
-    if (filters.classification_type) {
-      query += ` AND classification_type ILIKE $${paramIndex}`;
-      values.push(`%${filters.classification_type}%`);
-      paramIndex++;
-    }
-
-    if (filters.category) {
-      query += ` AND category ILIKE $${paramIndex}`;
-      values.push(`%${filters.category}%`);
-      paramIndex++;
-    }
-
-    if (filters.code) {
-      query += ` AND code ILIKE $${paramIndex}`;
-      values.push(`%${filters.code}%`);
-      paramIndex++;
-    }
-
-    if (filters.name) {
-      query += ` AND name ILIKE $${paramIndex}`;
-      values.push(`%${filters.name}%`);
-      paramIndex++;
-    }
-
-    if (filters.is_active !== undefined) {
-      query += ` AND is_active = $${paramIndex}`;
-      values.push(filters.is_active === 'true' || filters.is_active === true);
-      paramIndex++;
-    }
-
-    query += ` ORDER BY lastmodifieddate DESC`;
-
-    const result = await sql.query(query, values);
-    return result.rows.length > 0 ? result.rows : [];
-
-  } catch (error) {
-    console.error("Error in findAll:", error);
-    throw error;
-  }
-}
-async function findAll(filters = {}) {
-  try {
-    let query = `
-      SELECT c.*
-      FROM ${schema}.classification c
-      JOIN ${schema}.library_setting ls
-        ON c.classification_type = ls.config_classification
-      WHERE 1=1
+      WHERE 1=1      
     `;
 
-    const values = [];
-    let paramIndex = 1;
-
-    // optional extra filters (existing logic)
-    if (filters.category) {
-      query += ` AND c.category ILIKE $${paramIndex}`;
-      values.push(`%${filters.category}%`);
-      paramIndex++;
-    }
-
-    if (filters.code) {
-      query += ` AND c.code ILIKE $${paramIndex}`;
-      values.push(`%${filters.code}%`);
-      paramIndex++;
-    }
-
-    if (filters.name) {
-      query += ` AND c.name ILIKE $${paramIndex}`;
-      values.push(`%${filters.name}%`);
-      paramIndex++;
-    }
-
-    if (filters.is_active !== undefined) {
-      query += ` AND c.is_active = $${paramIndex}`;
-      values.push(filters.is_active === 'true' || filters.is_active === true);
-      paramIndex++;
-    }
-
-    query += ` ORDER BY c.lastmodifieddate DESC`;
-
-    const result = await sql.query(query, values);
+    const result = await sql.query(query);
+    console.log("result=>", result.rows.length)
     return result.rows.length > 0 ? result.rows : [];
 
   } catch (error) {
@@ -275,14 +248,36 @@ async function findAll(filters = {}) {
    FIND BY ID
 ------------------------------------------------------ */
 async function findById(id) {
-  try {
-    const query = `SELECT * FROM ${schema}.classification WHERE id = $1`;
-    const result = await sql.query(query, [id]);
-    return result.rows.length > 0 ? result.rows[0] : null;
-  } catch (error) {
-    console.error("Error in findById:", error);
-    throw error;
-  }
+    try {
+        const query = `
+            SELECT 
+                c.*,
+                b.branch_name,
+
+                creator.firstname AS createdby_name,
+                modifier.firstname AS lastmodifiedby_name
+
+            FROM ${schema}.classification c
+
+            LEFT JOIN ${schema}.branches b 
+                ON c.branch_id = b.id
+
+            LEFT JOIN ${schema}."user" creator 
+                ON c.createdbyid = creator.id
+
+            LEFT JOIN ${schema}."user" modifier 
+                ON c.lastmodifiedbyid = modifier.id
+
+            WHERE c.id = $1
+        `;
+
+        const result = await sql.query(query, [id]);
+        return result.rows[0];
+
+    } catch (error) {
+        console.error("Error in Classification.findById:", error);
+        throw error;
+    }
 }
 
 /* ------------------------------------------------------

@@ -34,30 +34,33 @@ const ShelfDetail = ({ permissions }) => {
             { key: "name", label: "Name", type: "text" },
             { key: "floor", label: "Floor", type: "text" },
             { key: "rack", label: "Rack", type: "text" },
-            { 
-                key: "classification_type", 
-                label: "Classification Type", 
+            {
+                key: "classification_type",
+                label: "Classification Type",
                 type: "text",
                 render: (value) => value ? <Badge bg="info">{value}</Badge> : '-'
             },
-            { 
-                key: "classification_from", 
-                label: "Range From", 
+            {
+                key: "classification_from",
+                label: "Range From",
                 type: "text",
                 render: (value) => <span className="font-monospace text-info">{value || '-'}</span>
             },
-            { 
-                key: "classification_to", 
-                label: "Range To", 
+            {
+                key: "classification_to",
+                label: "Range To",
                 type: "text",
                 render: (value) => <span className="font-monospace text-info">{value || '-'}</span>
             },
-            { 
-                key: "capacity", 
-                label: "Capacity", 
+            {
+                key: "capacity",
+                label: "Capacity",
                 type: "text",
                 render: (value) => <Badge bg="secondary">{value || 100}</Badge>
             },
+            { key: "is_active", label: "Status", type: "toggle" },
+
+
         ],
 
         other: [

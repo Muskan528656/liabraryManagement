@@ -3896,11 +3896,7 @@ const UniversalBarcodeScanner = ({ externalShow = false, onClose = null }) => {
                             <i className="fa-solid fa-search"></i>
                         </Button>
                     </InputGroup>
-                    <Form.Text className="text-muted" style={{ fontSize: "12px", marginTop: "6px", display: "block" }}>
-                        <i className="fa-solid fa-info-circle me-1"></i>
-                        Enter ISBN (10 or 13 digits) - book data will be fetched automatically from Google Books API.
-                        Also supports author names, supplier info, category, or JSON data.
-                    </Form.Text>
+
                 </div>
 
                 {loading && (
@@ -4120,11 +4116,7 @@ const UniversalBarcodeScanner = ({ externalShow = false, onClose = null }) => {
                                 <i className="fa-solid fa-search"></i>
                             </Button>
                         </InputGroup>
-                        <Form.Text className="text-muted" style={{ fontSize: "12px", marginTop: "6px", display: "block" }}>
-                            <i className="fa-solid fa-info-circle me-1"></i>
-                            Enter ISBN (10 or 13 digits) - book data will be fetched automatically from Google Books API.
-                            Also supports author names, supplier info, category, or JSON data.
-                        </Form.Text>
+                       
                     </div>
 
                     {loading && (

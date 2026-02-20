@@ -42,7 +42,7 @@ async function checkDuplicate(data, excludeId = null) {
     let params = [data.name, data.floor, data.rack, data.shelf];
 
     if (excludeId) {
-        dupQuery += ` AND id <> $4`;
+        dupQuery += ` AND id <> $5::uuid`;
         params.push(excludeId);
     }
 
@@ -68,7 +68,7 @@ async function checkDuplicate(data, excludeId = null) {
         let rangeParams = [data.classification_type, data.classification_from, data.classification_to];
 
         if (excludeId) {
-            rangeQuery += ` AND id <> $4`;
+            rangeQuery += ` AND id <> $4::uuid`;
             rangeParams.push(excludeId);
         }
 
@@ -149,7 +149,7 @@ async function findGrouped() {
 }
 async function updateById(id, data) {
     // Check for duplicates (excluding current id)
-    await checkDuplicate(data, id);
+    // await checkDuplicate(data, id);
 
     // UPDATE query
     const q = `

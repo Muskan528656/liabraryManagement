@@ -46,61 +46,41 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             // =========================
             // ✅ CATEGORY CHANGE
             // =========================
+            
             if (fieldName === 'category' && fieldValue?.trim()) {
                 try {
-                    const response = await api.get(
-                        `/last-by-category/${encodeURIComponent(fieldValue)}`
-                    );
-
-                    const lastItem = response.data;
-
-                    let from = "";
-                    let to = "";
-
-                    // ✅ Use TYPE instead of guessing (FIXED)
                     const type =
-                        lastItem?.classification_type ||
                         formData?.classification_type ||
                         defaultType;
 
-                    if (lastItem) {
-                        const lastTo = lastItem.classification_to;
+                    const response = await api.get(
+                        `/last-by-category/${encodeURIComponent(fieldValue)}?type=${type}`
+                    );
 
-                        // ✅ DDC → NUMERIC
-                        if (type === "DDC") {
-                            const nextFrom = parseInt(lastTo || "0") + 1;
-                            const nextTo = nextFrom + 9;
-
-                            from = nextFrom.toString();
-                            to = nextTo.toString();
-                        }
-
-                        // ✅ LLC → ALPHABET
-                        else if (type === "LLC") {
-                            const nextChar = lastTo
-                                ? String.fromCharCode(
-                                    lastTo.toUpperCase().charCodeAt(0) + 1
-                                )
-                                : "A";
-
-                            from = nextChar;
-                            to = nextChar;
-                        }
-                    }
+                    const { min_from, max_to } = response.data || {};
 
                     setFormData(prev => ({
                         ...prev,
                         category: fieldValue,
                         name: '',
-                        classification_from: from,
-                        classification_to: to,
+                        classification_from: min_from ?? "",
+                        classification_to: max_to ?? "",
                         classification_type: type
                     }));
 
                 } catch (error) {
-                    console.error("Error fetching category data:", error);
+                    console.error("Error fetching category range:", error);
+
+                    // fallback reset if error
+                    setFormData(prev => ({
+                        ...prev,
+                        category: fieldValue,
+                        classification_from: "",
+                        classification_to: ""
+                    }));
                 }
             }
+
 
             // =========================
             // ✅ NAME CHANGE
@@ -525,11 +505,28 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             librarySettings: 'librarysettings'
         },
 
-        customHandlers: {
-            afterSave: () => {
-                console.log("Classification saved successfully, form will be reset");
-            }
-        },
+       customHandlers: {
+    beforeSave: (formData, editingItem) => {
+
+        if (formData.code) {
+            formData.code = formData.code.toString().replace(/\D/g, '');
+        }
+
+        if (formData.classification_from) {
+            formData.classification_from = formData.classification_from.toString();
+        }
+
+        if (formData.classification_to) {
+            formData.classification_to = formData.classification_to.toString();
+        }
+
+        return true;
+    },
+    afterSave: (response, editingItem) => {
+        console.log("Classification saved:", response);
+    }
+},
+
 
         features: {
             showBulkInsert: false,
@@ -551,7 +548,7 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             { key: "code", label: "Code", type: "text" },
             { key: "name", label: "Name", type: "text" },
             { key: "category", label: "Category", type: "text" },
-            { key: "classification_from", label: "Range From", type: "text" },
+            { key: "classification_from", label: "Range From", type: "text"},
             { key: "classification_to", label: "Range To", type: "text" },
             {
                 key: "is_active",
@@ -567,10 +564,9 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
         customHandlers: {
             beforeSave: (formData, editingItem) => {
 
-                if (formData.code) {
+                if (formData.code && /^\d+$/.test(formData.code)) {
                     formData.code = formData.code.toString().replace(/\D/g, '');
                 }
-
 
                 if (formData.classification_from) {
                     formData.classification_from = formData.classification_from.toString();
