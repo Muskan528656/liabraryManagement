@@ -16,7 +16,13 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
         required: ["classification_type", "name"],
     });
 
-    const classificationTypes = externalData?.classificationTypes || ['DDC', 'LLC'];
+    const classificationTypes = externalData?.["librarysettings"] || [];
+
+    const classificationType = classificationTypes?.[0]?.config_classification || "";
+
+    console.log("classificationTypes=>", classificationType);
+
+ 
 
     return {
         moduleName: "classification",
@@ -33,64 +39,100 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             const DataApi = (await import('../../api/dataApi')).default;
             const api = new DataApi('classification');
 
+            // ✅ Get classification type from settings (FIXED)
+            const defaultType =
+                externalData?.["librarysettings"]?.[0]?.config_classification || "";
+
+            // =========================
+            // ✅ CATEGORY CHANGE
+            // =========================
             if (fieldName === 'category' && fieldValue?.trim()) {
                 try {
-
                     const response = await api.get(
                         `/last-by-category/${encodeURIComponent(fieldValue)}`
                     );
-                    console.log("Category response:", response.data);
 
-                    if (response.data) {
-                        const lastItem = response.data;
-                        const from = lastItem.classification_to ? parseInt(lastItem.classification_to) + 1 : 1;
-                        const to = from + 9;
+                    const lastItem = response.data;
 
-                        setFormData(prev => ({
-                            ...prev,
-                            category: fieldValue,
-                            name: '',
-                            classification_from: from.toString(),
-                            classification_to: to.toString(),
-                            classification_type: lastItem.classification_type || prev.classification_type
-                        }));
-                    } else {
-                        setFormData(prev => ({
-                            ...prev,
-                            category: fieldValue,
-                            name: '',
-                            classification_from: '',
-                            classification_to: ''
-                        }));
+                    let from = "";
+                    let to = "";
+
+                    // ✅ Use TYPE instead of guessing (FIXED)
+                    const type =
+                        lastItem?.classification_type ||
+                        formData?.classification_type ||
+                        defaultType;
+
+                    if (lastItem) {
+                        const lastTo = lastItem.classification_to;
+
+                        // ✅ DDC → NUMERIC
+                        if (type === "DDC") {
+                            const nextFrom = parseInt(lastTo || "0") + 1;
+                            const nextTo = nextFrom + 9;
+
+                            from = nextFrom.toString();
+                            to = nextTo.toString();
+                        }
+
+                        // ✅ LLC → ALPHABET
+                        else if (type === "LLC") {
+                            const nextChar = lastTo
+                                ? String.fromCharCode(
+                                    lastTo.toUpperCase().charCodeAt(0) + 1
+                                )
+                                : "A";
+
+                            from = nextChar;
+                            to = nextChar;
+                        }
                     }
+
+                    setFormData(prev => ({
+                        ...prev,
+                        category: fieldValue,
+                        name: '',
+                        classification_from: from,
+                        classification_to: to,
+                        classification_type: type
+                    }));
+
                 } catch (error) {
                     console.error("Error fetching category data:", error);
                 }
             }
 
+            // =========================
+            // ✅ NAME CHANGE
+            // =========================
             if (fieldName === 'name' && fieldValue?.trim() && formData?.category) {
-                const selectedCategory = formData.category?.value || formData.category;
+                const selectedCategory =
+                    formData.category?.value || formData.category;
+
                 console.log("Name selected:", fieldValue, "Category:", selectedCategory);
 
                 try {
-                    const url = `/last-by-category-name/${encodeURIComponent(selectedCategory)}/${encodeURIComponent(fieldValue)}`;
-                    console.log("Fetching:", url);
-                    const response = await api.get(url);
-                    console.log("Name response:", response.data);
+                    const url = `/last-by-category-name/${encodeURIComponent(
+                        selectedCategory
+                    )}/${encodeURIComponent(fieldValue)}`;
 
-                    if (response.data) {
-                        const item = response.data;
-                        console.log("Filling range:", item.classification_from, "-", item.classification_to);
+                    const response = await api.get(url);
+                    const item = response.data;
+
+                    const type =
+                        item?.classification_type ||
+                        formData?.classification_type ||
+                        defaultType;
+
+                    if (item) {
                         setFormData(prev => ({
                             ...prev,
                             name: fieldValue,
-                            classification_from: item.classification_from || '',
-                            classification_to: item.classification_to || '',
-                            classification_type: item.classification_type || prev.classification_type,
+                            classification_from: item.classification_from ?? '',
+                            classification_to: item.classification_to ?? '',
+                            classification_type: type,
                             code: item.code || prev.code
                         }));
-                    } else {
-                        console.log("No data found for this category/name");
                     }
                 } catch (error) {
                     console.error("Error fetching name data:", error);
@@ -98,10 +140,11 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             }
         },
 
+
         initialFormData: (editingItem) => {
             if (editingItem) {
                 return {
-                    classification_type: editingItem.classification_type || "DDC",
+                    classification_type:  classificationType,
                     code: editingItem.code || "",
                     category: editingItem.category || "",
                     name: editingItem.name || "",
@@ -112,7 +155,7 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             }
 
             return {
-                classification_type: "DDC",
+                classification_type:  classificationType,
                 code: "",
                 category: "",
                 name: "",
@@ -182,8 +225,21 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                         const response = await api.get('/');
                         const classifications = response.data || [];
 
+               
+                    console.log("calssifications", classifications);
+
                         // Extract unique categories and filter by input
-                        const uniqueCategories = [...new Set(classifications.map(item => item.category).filter(Boolean))];
+                    const uniqueCategories = [
+                        ...new Set(
+                            classifications
+                            .filter(item => item.classification_type === classificationType)
+                            .map(item => item.category)
+                            .filter(Boolean)
+                        )
+                    ];
+
+         
+                    console.log("uniqueCategories",uniqueCategories)
 
                         const filtered = inputValue
                             ? uniqueCategories.filter(category =>
@@ -206,98 +262,104 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             },
             {
                 name: "name",
-                label: "Name",
-                type: "select",
-                asyncSelect: true,
-                required: true,
-                placeholder: "Search or create name",
-                helpText: (fieldState, formData) => {
-                    if (!formData?.category) return "Please select a category first";
-                    return "Search existing names or type new name to create. Supports DDC (000-099) and LLC (AC-AZ) classifications.";
-                },
-                colSize: 6,
-                loadOptions: async (inputValue, formData) => {
-                    if (!formData?.category) return [];
-                    try {
-                        const api = new (await import('../../api/dataApi')).default('classification');
-                        const response = await api.get('/');
-                        const classifications = response.data || [];
-
-                        // Filter by category first
-                        const categoryClassifications = classifications.filter(
-                            item => item.category === formData.category
-                        );
-
-                        // Enhanced search with code and range matching
-                        const filtered = inputValue
-                            ? categoryClassifications.filter(item => {
-                                const searchValue = inputValue.toLowerCase().trim();
-
-                                // Direct name matching
-                                if (item.name?.toLowerCase().includes(searchValue)) {
-                                    return true;
-                                }
-
-                                // Code matching (exact or partial)
-                                if (item.code?.toLowerCase().includes(searchValue)) {
-                                    return true;
-                                }
-
-                                // Range matching - only for same classification type
-                                if (item.classification_from && item.classification_to) {
-                                    // Check if both item and search are numeric (DDC)
-                                    const isItemNumeric = /^\d+$/.test(item.classification_from) && /^\d+$/.test(item.classification_to);
-                                    const isSearchNumeric = /^\d+$/.test(searchValue);
-
-                                    // Check if both item and search are alphabetic (LLC)
-                                    const isItemAlpha = /^[a-zA-Z]+$/.test(item.classification_from) && /^[a-zA-Z]+$/.test(item.classification_to);
-                                    const isSearchAlpha = /^[a-zA-Z]+$/.test(searchValue);
-
-                                    // For numeric ranges (DDC)
-                                    if (isItemNumeric && isSearchNumeric) {
-                                        const searchNum = parseInt(searchValue);
-                                        const fromNum = parseInt(item.classification_from);
-                                        const toNum = parseInt(item.classification_to);
-
-                                        if (searchNum >= fromNum && searchNum <= toNum) {
-                                            return true;
-                                        }
-                                    }
-
-                                    // For alphabetic ranges (LLC)
-                                    else if (isItemAlpha && isSearchAlpha) {
-                                        const searchAlpha = searchValue.toUpperCase();
-                                        const fromAlpha = item.classification_from.toUpperCase();
-                                        const toAlpha = item.classification_to.toUpperCase();
-
-                                        // Simple alphabetical range check
-                                        if (searchAlpha >= fromAlpha && searchAlpha <= toAlpha) {
-                                            return true;
-                                        }
-                                    }
-                                }
-
-                                return false;
-                            })
-                            : categoryClassifications;
-
-                        // Create options with detailed information
-                        return filtered.map(item => ({
-                            value: item.name,
-                            label: `${item.name} (${item.code}) [${item.classification_from || '0'} to ${item.classification_to || '0'}]`,
-                            data: item
-                        }));
-                    } catch (e) {
-                        console.error("Error loading names:", e);
-                        return [];
-                    }
-                },
-                defaultOptions: true,
-                clearable: true,
-                creatable: true,
-                dependsOn: "category",
-                disabled: (formData) => !formData?.category
+                label:"Name",
+                type:"text",
+                colSize:6
             },
+            // {
+            //     name: "name",
+            //     label: "Name",
+            //     type: "select",
+            //     asyncSelect: true,
+            //     required: true,
+            //     placeholder: "Search or create name",
+            //     helpText: (fieldState, formData) => {
+            //         if (!formData?.category) return "Please select a category first";
+            //         return "Search existing names or type new name to create. Supports DDC (000-099) and LLC (AC-AZ) classifications.";
+            //     },
+            //     colSize: 6,
+            //     loadOptions: async (inputValue, formData) => {
+            //         if (!formData?.category) return [];
+            //         try {
+            //             const api = new (await import('../../api/dataApi')).default('classification');
+            //             const response = await api.get('/');
+            //             const classifications = response.data || [];
+
+            //             // Filter by category first
+            //             const categoryClassifications = classifications.filter(
+            //                 item => item.category === formData.category
+            //             );
+
+            //             // Enhanced search with code and range matching
+            //             const filtered = inputValue
+            //                 ? categoryClassifications.filter(item => {
+            //                     const searchValue = inputValue.toLowerCase().trim();
+
+            //                     // Direct name matching
+            //                     if (item.name?.toLowerCase().includes(searchValue)) {
+            //                         return true;
+            //                     }
+
+            //                     // Code matching (exact or partial)
+            //                     if (item.code?.toLowerCase().includes(searchValue)) {
+            //                         return true;
+            //                     }
+
+            //                     // Range matching - only for same classification type
+            //                     if (item.classification_from && item.classification_to) {
+            //                         // Check if both item and search are numeric (DDC)
+            //                         const isItemNumeric = /^\d+$/.test(item.classification_from) && /^\d+$/.test(item.classification_to);
+            //                         const isSearchNumeric = /^\d+$/.test(searchValue);
+
+            //                         // Check if both item and search are alphabetic (LLC)
+            //                         const isItemAlpha = /^[a-zA-Z]+$/.test(item.classification_from) && /^[a-zA-Z]+$/.test(item.classification_to);
+            //                         const isSearchAlpha = /^[a-zA-Z]+$/.test(searchValue);
+
+            //                         // For numeric ranges (DDC)
+            //                         if (isItemNumeric && isSearchNumeric) {
+            //                             const searchNum = parseInt(searchValue);
+            //                             const fromNum = parseInt(item.classification_from);
+            //                             const toNum = parseInt(item.classification_to);
+
+            //                             if (searchNum >= fromNum && searchNum <= toNum) {
+            //                                 return true;
+            //                             }
+            //                         }
+
+            //                         // For alphabetic ranges (LLC)
+            //                         else if (isItemAlpha && isSearchAlpha) {
+            //                             const searchAlpha = searchValue.toUpperCase();
+            //                             const fromAlpha = item.classification_from.toUpperCase();
+            //                             const toAlpha = item.classification_to.toUpperCase();
+
+            //                             // Simple alphabetical range check
+            //                             if (searchAlpha >= fromAlpha && searchAlpha <= toAlpha) {
+            //                                 return true;
+            //                             }
+            //                         }
+            //                     }
+
+            //                     return false;
+            //                 })
+            //                 : categoryClassifications;
+
+            //             // Create options with detailed information
+            //             return filtered.map(item => ({
+            //                 value: item.name,
+            //                 label: `${item.name} (${item.code}) [${item.classification_from || '0'} to ${item.classification_to || '0'}]`,
+            //                 data: item
+            //             }));
+            //         } catch (e) {
+            //             console.error("Error loading names:", e);
+            //             return [];
+            //         }
+            //     },
+            //     defaultOptions: true,
+            //     clearable: true,
+            //     creatable: true,
+            //     dependsOn: "category",
+            //     disabled: (formData) => !formData?.category
+            // },
             {
                 name: "classification_from",
                 label: "Range From",
@@ -345,16 +407,7 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
                 helpText: "Enter numeric code",
                 colSize: 6,
             },
-            {
-                name: "classification_type",
-                label: "Library Classification Config",
-                type: "text",
-                required: false,
-                placeholder: "Auto-loaded from library settings",
-                colSize: 6,
-                disabled: true,
-                value: (externalData) => externalData?.librarySettings?.classification || '',
-            },
+        
             {
                 name: "is_active",
                 label: "Active Status",
@@ -367,64 +420,104 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
         validationRules: (formData, allClassifications, editingItem, fieldState) => {
             const errors = [];
 
-            if (!formData.category?.trim()) {
+            const category = formData.category?.trim();
+            const name = formData.name?.trim();
+            const code = formData.code?.toString().trim();
+            const from = formData.classification_from?.toString().trim();
+            const to = formData.classification_to?.toString().trim();
+
+            // ✅ Required Fields
+            if (!category) {
                 errors.push("Category is required");
             }
 
-            if (!formData.name?.trim()) {
+            if (!name) {
                 errors.push("Name is required");
             }
 
-            if (formData.code && !/^\d+$/.test(formData.code)) {
-                errors.push("Code must contain only numbers");
+            // ✅ Code validation (Allow letters + numbers)
+            if (code && !/^[A-Za-z0-9]+$/.test(code)) {
+                errors.push("Code must contain only letters or numbers");
             }
 
-            if (formData.code && formData.classification_from && formData.classification_to) {
-                const codeNum = parseInt(formData.code);
-                const fromNum = parseInt(formData.classification_from);
-                const toNum = parseInt(formData.classification_to);
-
-                if (codeNum < fromNum || codeNum > toNum) {
-                    errors.push(`Code must be between ${formData.classification_from} and ${formData.classification_to}`);
-                }
+            // ✅ Range Required
+            if (!from || !to) {
+                errors.push("Please enter Range From and Range To");
             }
-            const combinationExists = fieldState?.combination?.exists;
-            if (combinationExists) {
-                if (!formData.classification_from || !formData.classification_to) {
-                    errors.push("Range fields are required");
-                }
-            } else {
 
-                if (!formData.classification_from || !formData.classification_to) {
-                    errors.push("Please enter range From and To");
-                }
+            // Detect type
+            const isNumericRange = /^\d+$/.test(from) && /^\d+$/.test(to);
+            const isAlphaRange = /^[A-Za-z]+$/.test(from) && /^[A-Za-z]+$/.test(to);
 
-                if (formData.classification_from && !/^\d+$/.test(formData.classification_from)) {
-                    errors.push("Range From must contain only numbers");
-                }
-                if (formData.classification_to && !/^\d+$/.test(formData.classification_to)) {
-                    errors.push("Range To must contain only numbers");
-                }
+            if (from && to) {
 
-                if (formData.classification_from && formData.classification_to) {
-                    if (parseInt(formData.classification_from) >= parseInt(formData.classification_to)) {
+                // =============================
+                // ✅ DDC (NUMERIC VALIDATION)
+                // =============================
+                if (isNumericRange) {
+
+                    const fromNum = parseInt(from);
+                    const toNum = parseInt(to);
+
+                    if (fromNum >= toNum) {
                         errors.push("Range From must be less than Range To");
                     }
+
+                    // Code inside range
+                    if (code && /^\d+$/.test(code)) {
+                        const codeNum = parseInt(code);
+                        if (codeNum < fromNum || codeNum > toNum) {
+                            errors.push(`Code must be between ${from} and ${to}`);
+                        }
+                    }
+                }
+
+                // =============================
+                // ✅ LLC (ALPHABETIC VALIDATION)
+                // =============================
+                else if (isAlphaRange) {
+
+                    if (from.toUpperCase() > to.toUpperCase()) {
+                        errors.push("Range From must be alphabetically less than Range To");
+                    }
+
+                    if (code && /^[A-Za-z]+$/.test(code)) {
+                        if (
+                            code.toUpperCase() < from.toUpperCase() ||
+                            code.toUpperCase() > to.toUpperCase()
+                        ) {
+                            errors.push(`Code must be between ${from} and ${to}`);
+                        }
+                    }
+                }
+
+                // =============================
+                // ❌ INVALID FORMAT
+                // =============================
+                else {
+                    errors.push("Range must be either numeric (DDC) or alphabetic (LLC)");
                 }
             }
-            if (formData.code && formData.classification_type) {
+
+            // ✅ Duplicate Code Check (Same Type)
+            if (code && formData.classification_type) {
                 const duplicate = allClassifications.find(
-                    item => item.code?.toString() === formData.code?.toString() &&
+                    item =>
+                        item.code?.toString().toUpperCase() === code.toUpperCase() &&
                         item.classification_type === formData.classification_type &&
                         item.id !== editingItem?.id
                 );
+
                 if (duplicate) {
-                    errors.push(`Code "${formData.code}" already exists for ${formData.classification_type} type`);
+                    errors.push(
+                        `Code "${code}" already exists for ${formData.classification_type} type`
+                    );
                 }
             }
 
             return errors;
         },
+
 
         dataDependencies: {
             classificationTypes: 'classification/types',
@@ -497,8 +590,8 @@ export const getClassificationConfig = (externalData = {}, props = {}, permissio
             {
                 name: "classification_type",
                 label: "Type",
-                type: "select",
-                options: classificationTypes.map(type => ({ value: type, label: type })),
+                type: "text",
+                // options: classificationTypes.map(type => ({ value: type, label: type })),
             },
             {
                 name: "code",

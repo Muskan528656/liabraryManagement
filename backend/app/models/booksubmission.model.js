@@ -29,7 +29,7 @@ async function create(submissionData, userId) {
   try {
 
     const issueRes = await sql.query(
-      `SELECT bi.*, b.title, b.isbn, b.available_copies
+      `SELECT bi.*, b.title, b.isbn
        FROM ${schema}.book_issues bi
        LEFT JOIN ${schema}.books b ON bi.book_id = b.id
        WHERE bi.id = $1 AND bi.branch_id = $2`,
@@ -151,17 +151,22 @@ async function create(submissionData, userId) {
     const submission = submissionRes.rows[0];
 
 
-    if (conditionAfterLower !== 'lost') {
-      console.log("updating book copies");
-      await sql.query(
-        `UPDATE ${schema}.books
-         SET available_copies = COALESCE(available_copies, 0) + 1,
-             lastmodifieddate = CURRENT_TIMESTAMP,
-             lastmodifiedbyid = $3
-         WHERE id = $1 AND branch_id = $2`,
-        [issue.book_id, branchId, userId]
-      );
-    }
+    // Update Book Copy status - find the borrowed copy for this book/member
+    let copyStatus = 'AVAILABLE';
+    if (conditionAfterLower === 'lost') copyStatus = 'LOST';
+    if (conditionAfterLower === 'damaged') copyStatus = 'DAMAGED';
+
+    await sql.query(
+      `UPDATE ${schema}.book_copy 
+       SET status = $2, lastmodifiedbyid = $3, lastmodifieddate = NOW() 
+       WHERE id = (
+         SELECT id FROM ${schema}.book_copy 
+         WHERE book_id = $1 AND status = 'BORROWED' 
+         ORDER BY lastmodifieddate ASC
+         LIMIT 1
+       )`,
+      [issue.book_id, copyStatus, userId]
+    );
 
     let issueStatus = 'returned';
     if (conditionAfterLower === 'lost') issueStatus = 'lost';
@@ -491,13 +496,16 @@ async function cancelIssue(issueId, userId, reason = "Cancelled by librarian") {
 
 
 
+    // Find and update a borrowed copy for this book
     await sql.query(
-      `UPDATE ${schema}.books
-   SET available_copies = available_copies + 1,
-       lastmodifieddate = CURRENT_TIMESTAMP,
-       lastmodifiedbyid = $2
-   WHERE id = $1 AND branch_id = $3`,
-      [issue.book_id, userId, branchId]
+      `UPDATE ${schema}.book_copy 
+       SET status = 'AVAILABLE', lastmodifiedbyid = $2, lastmodifieddate = NOW() 
+       WHERE id = (
+         SELECT id FROM ${schema}.book_copy 
+         WHERE book_id = $1 AND status = 'BORROWED' 
+         LIMIT 1
+       )`,
+      [issue.book_id, userId]
     );
     await sql.query(
       `INSERT INTO ${schema}.book_submissions
@@ -698,9 +706,9 @@ async function getAllBooks() {
                     lm.first_name || ' ' || lm.last_name AS student_name,
                     lm.email AS student_email,
                     lm.card_number
-                   FROM demo.book_issues bi
-                   LEFT JOIN demo.books b ON bi.book_id = b.id
-                   LEFT JOIN demo.library_members lm ON bi.issued_to = lm.id
+                   FROM ${schema}.book_issues bi
+                   LEFT JOIN ${schema}.books b ON bi.book_id = b.id
+                   LEFT JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
                    WHERE lm.is_active = true
                    ORDER BY bi.createddate DESC`;
     const result = await sql.query(query);
@@ -848,9 +856,9 @@ async function sendDueReminder() {
         lm.email AS student_email,
         CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
         lm.card_number
-      FROM demo.book_issues bi
-      INNER JOIN demo.books b ON bi.book_id = b.id
-      INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+      FROM ${schema}.book_issues bi
+      INNER JOIN ${schema}.books b ON bi.book_id = b.id
+      INNER JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
       WHERE DATE(bi.due_date) = $1 
         AND bi.return_date IS NULL
         AND bi.status IN ('issued', 'active', NULL)
@@ -1011,9 +1019,9 @@ async function sendOverdueReminder() {
         lm.email AS student_email,
           CONCAT(lm.first_name, ' ', lm.last_name) AS student_name,
             lm.card_number
-FROM demo.book_issues bi
-INNER JOIN demo.books b ON bi.book_id = b.id
-INNER JOIN demo.library_members lm ON bi.issued_to = lm.id
+FROM ${schema}.book_issues bi
+INNER JOIN ${schema}.books b ON bi.book_id = b.id
+INNER JOIN ${schema}.library_members lm ON bi.issued_to = lm.id
 WHERE DATE(bi.due_date) = $1
   AND bi.return_date IS NULL
   AND bi.status IN('issued', 'active', NULL)

@@ -409,9 +409,9 @@ const Dashboard = ({ userInfo: propUserInfo, disabled = false }) => {
       const dashboardResponse = await libraryApi.get("/dashboard");
       console.log("Dashboard API Response:", dashboardResponse);
       console.log("Dashboard API Data:", libraryApi);
-
       if (dashboardResponse.data?.success) {
         const data = dashboardResponse.data.data;
+        console.log("data.summary.totalBooks ",data)
         setDashboardData(data);
         if (data.summary) {
           setMetrics(prev => ({

@@ -298,7 +298,7 @@ export const getShelfConfig = (
                 onChange: async (selectedOption, formData, setFormData, setFieldState) => {
                     if (selectedOption) {
 
-                        const selected = selectedOption.data; // 
+                        const selected = selectedOption.data;  
 
                         setFormData(prev => ({
                             ...prev,
@@ -330,6 +330,7 @@ export const getShelfConfig = (
                         }));
                     }
                 }
+
             },
             {
                 name: "classification_from",

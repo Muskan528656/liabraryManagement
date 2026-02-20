@@ -112,7 +112,7 @@ module.exports = (app) => {
     // Get all books with pagination
     router.get('/', [
         query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-        query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+        query('limit').optional().isInt({ min: 1, max: 5000 }).withMessage('Limit must be between 1 and 5000'),
         query('search').optional().isLength({ max: 255 }).withMessage('Search query too long'),
         query('author_id').optional().isUUID().withMessage('Author ID must be a valid UUID'),
         query('publisher_id').optional().isUUID().withMessage('Publisher ID must be a valid UUID'),
@@ -166,8 +166,8 @@ module.exports = (app) => {
                 return res.status(404).json({ message: 'Book not found' });
             }
 
-            // Fetch copies for this book related to this branch
-            const copiesResult = await BookCopyModel.findAll({ book_id: id });
+            // Fetch all copies for this book related to this branch (up to 1000)
+            const copiesResult = await BookCopyModel.findAll({ book_id: id }, 1, 1000);
             book.copies = copiesResult.book_copies || [];
 
             res.json(book);

@@ -98,9 +98,9 @@ const BookDetail = ({ permissions }) => {
     title: "title",
     subtitle: "isbn",
     details: [
-      { key: "title", label: "Title", type: "text" ,required: true},
+      { key: "title", label: "Title", type: "text", required: true },
       { key: "price", label: "Price", type: "text" },
-      { key: "isbn", label: "ISBN", type: "text",required: true },
+      { key: "isbn", label: "ISBN", type: "text", required: true },
       {
         key: "author_id",
         label: "Author",
@@ -205,6 +205,29 @@ const BookDetail = ({ permissions }) => {
   console.log("BookDetail permissions:", permissions);
 
   const copies = Array.isArray(book?.copies) ? book.copies : [];
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const itemsPerPage = 5;
+
+  const filteredCopies = useMemo(() => {
+    if (!searchTerm) return copies;
+    const lowerSearch = searchTerm.toLowerCase();
+    return copies.filter(copy =>
+      copy.barcode?.toLowerCase().includes(lowerSearch) ||
+      copy.itemcallnumber?.toLowerCase().includes(lowerSearch) ||
+      copy.status?.toLowerCase().includes(lowerSearch) ||
+      copy.full_location_code?.toLowerCase().includes(lowerSearch)
+    );
+  }, [copies, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCopies = filteredCopies.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredCopies.length / itemsPerPage);
 
   const statusBadgeStyle = (status) => {
     const map = {
@@ -269,94 +292,149 @@ const BookDetail = ({ permissions }) => {
                   <i className="fa-solid fa-layer-group"></i>
                   Inventory / Book Copies
                 </h6>
-                <span style={{
-                  background: "var(--primary-color)",
-                  color: "#fff",
-                  borderRadius: "20px",
-                  padding: "2px 12px",
-                  fontSize: "12px",
-                  fontWeight: "600"
-                }}>
-                  {copies.length} {copies.length === 1 ? "Copy" : "Copies"}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+                  <div style={{ position: "relative" }}>
+                    <i className="fa-solid fa-magnifying-glass" style={{
+                      position: "absolute",
+                      left: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      color: "#94a3b8",
+                      fontSize: "13px"
+                    }}></i>
+                    <input
+                      type="text"
+                      placeholder="Search barcode, call no..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        padding: "6px 12px 6px 35px",
+                        fontSize: "13px",
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                        width: "220px",
+                        outline: "none",
+                        transition: "all 0.2s"
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = "var(--primary-color)"}
+                      onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                    />
+                  </div>
+                  <span style={{
+                    background: "var(--primary-color)",
+                    color: "#fff",
+                    borderRadius: "20px",
+                    padding: "2px 12px",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}>
+                    {filteredCopies.length} {filteredCopies.length === 1 ? "Copy" : "Copies"}
+                  </span>
+                </div>
               </div>
 
               <Card.Body style={{ padding: 0 }}>
-                {copies.length === 0 ? (
+                {filteredCopies.length === 0 ? (
                   <div style={{
                     padding: "40px 16px",
                     textAlign: "center",
                     background: "#f8f9fa"
                   }}>
-                    <i className="fa-solid fa-inbox" style={{ fontSize: "32px", color: "#adb5bd", display: "block", marginBottom: "8px" }}></i>
-                    <p style={{ color: "#6c757d", margin: 0, fontSize: "14px" }}>No book copies found for this branch.</p>
+                    <i className="fa-solid fa-circle-info" style={{ fontSize: "32px", color: "#adb5bd", display: "block", marginBottom: "8px" }}></i>
+                    <p style={{ color: "#6c757d", margin: 0, fontSize: "14px" }}>
+                      {searchTerm ? `No copies found matching "${searchTerm}"` : "No book copies found for this branch."}
+                    </p>
                   </div>
                 ) : (
-                  <div className="table-responsive">
-                    <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
-                          {["#", "Barcode", "Call Number", "Status", "Price (₹)", "Rack Location", "Date Accessioned"].map((label, i) => (
-                            <th key={i} style={{
-                              padding: "12px 16px",
-                              textAlign: "left",
-                              fontWeight: "600",
-                              color: "#495057",
-                              whiteSpace: "nowrap"
-                            }}>
-                              {label}
-                            </th>
+                  <>
+                    <div className="table-responsive">
+                      <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
+                            {["#", "Barcode", "Call Number", "Status", "Price (₹)", "Rack Location", "Date Accessioned"].map((label, i) => (
+                              <th key={i} style={{
+                                padding: "12px 16px",
+                                textAlign: "left",
+                                fontWeight: "600",
+                                color: "#495057",
+                                whiteSpace: "nowrap"
+                              }}>
+                                {label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentCopies.map((copy, idx) => {
+                            const badge = statusBadgeStyle(copy.status);
+                            const dateStr = copy.date_accessioned
+                              ? new Date(copy.date_accessioned).toLocaleDateString("en-IN")
+                              : "—";
+                            return (
+                              <tr
+                                key={copy.id || idx}
+                                style={{ borderBottom: "1px solid #e9ecef", transition: "background 0.15s" }}
+                                onMouseEnter={e => e.currentTarget.style.background = "#f8f9fa"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                              >
+                                <td style={{ padding: "12px 16px", color: "#6c757d", fontWeight: "600" }}>{indexOfFirstItem + idx + 1}</td>
+                                <td style={{ padding: "12px 16px", fontFamily: "monospace", fontWeight: "600", color: "#1e293b" }}>
+                                  {copy.barcode || "—"}
+                                </td>
+                                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                                  {copy.itemcallnumber || `${copy.cn_class || ""} ${copy.cn_item || ""} ${copy.cn_suffix || ""}`.trim() || "—"}
+                                </td>
+                                <td style={{ padding: "12px 16px" }}>
+                                  <span style={{
+                                    ...badge,
+                                    borderRadius: "20px",
+                                    padding: "3px 12px",
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    display: "inline-block"
+                                  }}>
+                                    {copy.status || "—"}
+                                  </span>
+                                </td>
+                                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                                  {copy.item_price != null ? `₹${parseFloat(copy.item_price).toFixed(2)}` : "—"}
+                                </td>
+                                <td style={{ padding: "12px 16px", color: "#6c757d", fontFamily: "monospace", fontSize: "12px" }}>
+                                  {copy.full_location_code
+                                    ? <><i className="fa-solid fa-location-dot me-1" style={{ color: "var(--primary-color)" }}></i>{copy.full_location_code}{copy.rack_name ? ` (${copy.rack_name})` : ""}</>
+                                    : <span style={{ color: "#adb5bd" }}>Not assigned</span>
+                                  }
+                                </td>
+                                <td style={{ padding: "12px 16px", color: "#6c757d" }}>{dateStr}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination UI */}
+                    {totalPages > 1 && (
+                      <div className="d-flex justify-content-between align-items-center px-4 py-3" style={{ borderTop: "1px solid #e9ecef", background: "#fdfdfd" }}>
+                        <div style={{ color: "#6c757d", fontSize: "13px" }}>
+                          Showing <b>{indexOfFirstItem + 1}</b> to <b>{Math.min(indexOfLastItem, filteredCopies.length)}</b> of <b>{filteredCopies.length}</b> copies
+                        </div>
+                        <ul className="pagination pagination-sm mb-0">
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => setCurrentPage(prev => prev - 1)}>&laquo;</button>
+                          </li>
+                          {[...Array(totalPages)].map((_, i) => (
+                            <li key={i} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                              <button className="page-link" onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
+                            </li>
                           ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {copies.map((copy, idx) => {
-                          const badge = statusBadgeStyle(copy.status);
-                          const dateStr = copy.date_accessioned
-                            ? new Date(copy.date_accessioned).toLocaleDateString("en-IN")
-                            : "—";
-                          return (
-                            <tr
-                              key={copy.id || idx}
-                              style={{ borderBottom: "1px solid #e9ecef", transition: "background 0.15s" }}
-                              onMouseEnter={e => e.currentTarget.style.background = "#f8f9fa"}
-                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                            >
-                              <td style={{ padding: "12px 16px", color: "#6c757d", fontWeight: "600" }}>{idx + 1}</td>
-                              <td style={{ padding: "12px 16px", fontFamily: "monospace", fontWeight: "600", color: "#1e293b" }}>
-                                {copy.barcode || "—"}
-                              </td>
-                              <td style={{ padding: "12px 16px", color: "#374151" }}>
-                                {copy.itemcallnumber || `${copy.cn_class || ""} ${copy.cn_item || ""} ${copy.cn_suffix || ""}`.trim() || "—"}
-                              </td>
-                              <td style={{ padding: "12px 16px" }}>
-                                <span style={{
-                                  ...badge,
-                                  borderRadius: "20px",
-                                  padding: "3px 12px",
-                                  fontSize: "12px",
-                                  fontWeight: "600",
-                                  display: "inline-block"
-                                }}>
-                                  {copy.status || "—"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "12px 16px", color: "#374151" }}>
-                                {copy.item_price != null ? `₹${parseFloat(copy.item_price).toFixed(2)}` : "—"}
-                              </td>
-                              <td style={{ padding: "12px 16px", color: "#6c757d", fontFamily: "monospace", fontSize: "12px" }}>
-                                {copy.full_location_code
-                                  ? <><i className="fa-solid fa-location-dot me-1" style={{ color: "var(--primary-color)" }}></i>{copy.full_location_code}{copy.rack_name ? ` (${copy.rack_name})` : ""}</>
-                                  : <span style={{ color: "#adb5bd" }}>Not assigned</span>
-                                }
-                              </td>
-                              <td style={{ padding: "12px 16px", color: "#6c757d" }}>{dateStr}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => setCurrentPage(prev => prev + 1)}>&raquo;</button>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </>
                 )}
               </Card.Body>
             </Card>
