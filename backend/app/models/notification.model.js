@@ -430,7 +430,7 @@ async function sendDueReminderEmail(memberId, books, dueDate) {
 }
 
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 9 * * *', async () => {
   const jobs = await sql.query(`
     SELECT * FROM ${schema}.scheduler WHERE is_active = true
       AND next_run <= NOW()

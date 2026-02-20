@@ -1,5 +1,5 @@
 const sql = require("./db.js");
-
+const Setting =  require('../models/librarysettings.model.js')
 let schema = "";
 let branchId = null;
 
@@ -13,6 +13,14 @@ async function findAll(filters = {}) {
     try {
         if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
+        // ✅ 1. Get current classification setting
+        const settings = await Setting.findAll();
+        const classificationSetting = settings.find(
+            s => s.key === "classification"
+        );
+
+        const currentClassificationType = classificationSetting?.value || null;
+
         let query = `
             SELECT 
                 c.*,
@@ -24,19 +32,15 @@ async function findAll(filters = {}) {
         const conditions = [];
         const params = [];
 
-        if (branchId) {
-            conditions.push(`c.branch_id = $${params.length + 1}`);
-            params.push(branchId);
+        // ✅ 2. Filter by setting classification
+        if (currentClassificationType) {
+            conditions.push(`c.classification_type = $${params.length + 1}`);
+            params.push(currentClassificationType);
         }
 
         if (filters.is_active !== undefined) {
             conditions.push(`c.is_active = $${params.length + 1}`);
             params.push(filters.is_active);
-        }
-
-        if (filters.classification_type) {
-            conditions.push(`c.classification_type = $${params.length + 1}`);
-            params.push(filters.classification_type);
         }
 
         if (filters.search) {
@@ -52,15 +56,17 @@ async function findAll(filters = {}) {
             query += ` WHERE ${conditions.join(' AND ')}`;
         }
 
-        query += ` ORDER BY c.classification_type, c.code`;
+        query += ` ORDER BY c.code`;
 
         const result = await sql.query(query, params);
         return result.rows;
+
     } catch (error) {
         console.error("Error in Classification.findAll:", error);
         throw error;
     }
 }
+
 
 // ================= FIND BY ID =================
 async function findById(id) {
