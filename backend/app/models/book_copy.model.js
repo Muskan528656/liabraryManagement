@@ -1,3 +1,4 @@
+
 const sql = require("./db.js");
 
 let schema = "";
@@ -47,31 +48,6 @@ async function create(data) {
     ];
 
     const result = await sql.query(query, values);
-
-    // Update rack capacity if rack_mapping_id is provided
-    if (rack_mapping_id) {
-        try {
-            const updateRackQuery = `
-                UPDATE ${schema}.rack_mapping 
-                SET capacity = capacity - 1,
-                    lastmodifieddate = NOW(),
-                    lastmodifiedbyid = $2
-                WHERE id = $1 AND capacity > 0
-                RETURNING capacity
-            `;
-            const rackResult = await sql.query(updateRackQuery, [rack_mapping_id, createdbyid]);
-
-            if (rackResult.rows.length > 0) {
-                console.log(`Rack capacity updated. New capacity: ${rackResult.rows[0].capacity}`);
-            } else {
-                console.warn(`Could not update rack capacity for rack_mapping_id: ${rack_mapping_id}`);
-            }
-        } catch (error) {
-            console.error("Error updating rack capacity:", error);
-            // Don't fail the book creation if rack update fails
-        }
-    }
-
     return result.rows[0];
 }
 
