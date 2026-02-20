@@ -19,7 +19,7 @@ async function getDashboardStats() {
     }
     console.log("Getting dashboard stats for schema:", schema);
     console.log("Getting dashboard stats for branch:", branchId || "All Branches");
-    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book WHERE home_branch_id = $1`;
     const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
@@ -62,7 +62,9 @@ async function getDashboardStats() {
     const booksByAuthorResult = await sql.query(booksByAuthorQuery, [branchId]);
 
 
-    const totalCopies = totalBooks;
+    const totalCopiesQuery = `SELECT COUNT(*) as total FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+    const totalCopiesResult = await sql.query(totalCopiesQuery, [branchId]);
+    const totalCopies = parseInt(totalCopiesResult.rows[0]?.total || 0);
 
     const issuedBooks = totalCopies - availableBooks;
     const issuedPercentage = totalCopies > 0 ? Math.round((issuedBooks / totalCopies) * 100) : 0;

@@ -30,6 +30,7 @@ module.exports = (app) => {
 
 
       const stats = await Library.getDashboardStats();
+      console.log("Dashboard Stats:", stats);
       return res.status(200).json({ success: true, data: stats, role: "admin" });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);

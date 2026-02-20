@@ -84,12 +84,12 @@ export const getShelfConfig = (
                 width: "100px",
                 render: (value) => <span className="font-monospace">{value || '-'}</span>,
             },
-            {
-                field: "classification_type",
-                label: "Type",
-                width: "100px",
-                render: (value) => <span className="badge bg-info">{value || '-'}</span>,
-            },
+            // {
+            //     field: "classification_type",
+            //     label: "Type",
+            //     width: "100px",
+            //     render: (value) => <span className="badge bg-info">{value || '-'}</span>,
+            // },
             {
                 field: "classification_from",
                 label: "From",
@@ -295,45 +295,32 @@ export const getShelfConfig = (
                 defaultOptions: true,
                 clearable: true,
                 creatable: true, // Allow creating new values
-                onChange: async (value, formData, setFormData, setFieldState) => {
-                    // Auto-fill classification fields when name changes
-                    if (value) {
-                        try {
-                            const api = (await import('../../api/dataApi')).default;
-                            const classificationApi = new api('classification');
-                            const response = await classificationApi.get('/');
-                            const classifications = response.data || [];
+                onChange: async (selectedOption, formData, setFormData, setFieldState) => {
+                    if (selectedOption) {
 
-                            // Find the selected classification by name
-                            const selected = classifications.find(item => item.name === value);
-                            console.log("selected ->", selected);
+                        const selected = selectedOption.data;  
 
-                            if (selected) {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    name: value,
-                                    classification_from: selected.classification_from || '',
-                                    classification_to: selected.classification_to || '',
-                                    classification_type: selected.classification_type || ''
-                                }));
+                        setFormData(prev => ({
+                            ...prev,
+                            name: selectedOption.value,
+                            classification_from: selected.classification_from || '',
+                            classification_to: selected.classification_to || '',
+                            classification_type: selected.classification_type || ''
+                        }));
 
-                                if (setFieldState) {
-                                    setFieldState('classification_from', {
-                                        helpText: `Auto-filled: ${selected.classification_from}`
-                                    });
-                                    setFieldState('classification_to', {
-                                        helpText: `Auto-filled: ${selected.classification_to}`
-                                    });
-                                    setFieldState('classification_type', {
-                                        helpText: `Auto-filled: ${selected.classification_type}`
-                                    });
-                                }
-                            }
-                        } catch (error) {
-                            console.error("Error fetching classification details:", error);
+                        if (setFieldState) {
+                            setFieldState('classification_from', {
+                                helpText: `Auto-filled: ${selected.classification_from}`
+                            });
+                            setFieldState('classification_to', {
+                                helpText: `Auto-filled: ${selected.classification_to}`
+                            });
+                            setFieldState('classification_type', {
+                                helpText: `Auto-filled: ${selected.classification_type}`
+                            });
                         }
+
                     } else {
-                        // Clear classification fields when selection is cleared
                         setFormData(prev => ({
                             ...prev,
                             name: '',
@@ -343,6 +330,7 @@ export const getShelfConfig = (
                         }));
                     }
                 }
+
             },
             {
                 name: "classification_from",
@@ -364,16 +352,16 @@ export const getShelfConfig = (
                 readOnly: true,
                 helpText: "Auto-filled from category selection"
             },
-            {
-                name: "classification_type",
-                label: "Classification Type",
-                type: "text",
-                required: false,
-                placeholder: "Auto-filled",
-                colSize: 6,
-                readOnly: true,
-                helpText: "Auto-filled from category selection"
-            },
+            // {
+            //     name: "classification_type",
+            //     label: "Classification Type",
+            //     type: "text",
+            //     required: false,
+            //     placeholder: "Auto-filled",
+            //     colSize: 6,
+            //     readOnly: true,
+            //     helpText: "Auto-filled from category selection"
+            // },
             {
                 name: "capacity",
                 label: "Capacity",

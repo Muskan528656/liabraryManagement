@@ -47,6 +47,31 @@ async function create(data) {
     ];
 
     const result = await sql.query(query, values);
+
+    // Update rack capacity if rack_mapping_id is provided
+    if (rack_mapping_id) {
+        try {
+            const updateRackQuery = `
+                UPDATE ${schema}.rack_mapping 
+                SET capacity = capacity - 1,
+                    lastmodifieddate = NOW(),
+                    lastmodifiedbyid = $2
+                WHERE id = $1 AND capacity > 0
+                RETURNING capacity
+            `;
+            const rackResult = await sql.query(updateRackQuery, [rack_mapping_id, createdbyid]);
+
+            if (rackResult.rows.length > 0) {
+                console.log(`Rack capacity updated. New capacity: ${rackResult.rows[0].capacity}`);
+            } else {
+                console.warn(`Could not update rack capacity for rack_mapping_id: ${rack_mapping_id}`);
+            }
+        } catch (error) {
+            console.error("Error updating rack capacity:", error);
+            // Don't fail the book creation if rack update fails
+        }
+    }
+
     return result.rows[0];
 }
 
@@ -154,6 +179,18 @@ async function findById(id) {
 async function update(id, data) {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
+    // Get current book copy to check if rack is changing
+    const getCurrentQuery = `SELECT * FROM ${schema}.book_copy WHERE id = $1`;
+    const currentResult = await sql.query(getCurrentQuery, [id]);
+    
+    if (currentResult.rows.length === 0) {
+        throw new Error("Book copy not found");
+    }
+    
+    const currentBookCopy = currentResult.rows[0];
+    const oldRackId = currentBookCopy.rack_mapping_id;
+    const newRackId = data.rack_mapping_id;
+
     const fields = [];
     const values = [];
     let paramCount = 0;
@@ -174,6 +211,41 @@ async function update(id, data) {
     const query = `UPDATE ${schema}.book_copy SET ${fields.join(', ')} WHERE id = $${paramCount + 1} RETURNING *`;
 
     const result = await sql.query(query, values);
+    
+    // Handle rack capacity updates if the rack is changing
+    if (oldRackId !== newRackId) {
+        try {
+            // If there was an old rack, increase its capacity
+            if (oldRackId) {
+                const increaseRackQuery = `
+                    UPDATE ${schema}.rack_mapping 
+                    SET capacity = capacity + 1,
+                        lastmodifieddate = NOW()
+                    WHERE id = $1
+                    RETURNING capacity
+                `;
+                await sql.query(increaseRackQuery, [oldRackId]);
+                console.log(`Old rack capacity increased. Rack ID: ${oldRackId}`);
+            }
+            
+            // If there's a new rack, decrease its capacity
+            if (newRackId) {
+                const decreaseRackQuery = `
+                    UPDATE ${schema}.rack_mapping 
+                    SET capacity = capacity - 1,
+                        lastmodifieddate = NOW()
+                    WHERE id = $1 AND capacity > 0
+                    RETURNING capacity
+                `;
+                await sql.query(decreaseRackQuery, [newRackId]);
+                console.log(`New rack capacity decreased. Rack ID: ${newRackId}`);
+            }
+        } catch (error) {
+            console.error("Error updating rack capacities during move:", error);
+            // Don't fail the update if rack capacity update fails
+        }
+    }
+    
     return result.rows[0];
 }
 
@@ -181,8 +253,43 @@ async function update(id, data) {
 async function deleteById(id) {
     if (!schema) throw new Error("Schema not initialized. Call init() first.");
 
+    // First, get the book copy to retrieve rack_mapping_id
+    const getQuery = `SELECT * FROM ${schema}.book_copy WHERE id = $1`;
+    const getResult = await sql.query(getQuery, [id]);
+    
+    if (getResult.rows.length === 0) {
+        throw new Error("Book copy not found");
+    }
+    
+    const bookCopy = getResult.rows[0];
+    const rack_mapping_id = bookCopy.rack_mapping_id;
+    
     const query = `DELETE FROM ${schema}.book_copy WHERE id = $1 RETURNING *`;
     const result = await sql.query(query, [id]);
+    
+    // Update rack capacity if rack_mapping_id exists
+    if (rack_mapping_id) {
+        try {
+            const updateRackQuery = `
+                UPDATE ${schema}.rack_mapping 
+                SET capacity = capacity + 1,
+                    lastmodifieddate = NOW()
+                WHERE id = $1
+                RETURNING capacity
+            `;
+            const rackResult = await sql.query(updateRackQuery, [rack_mapping_id]);
+            
+            if (rackResult.rows.length > 0) {
+                console.log(`Rack capacity updated after deletion. New capacity: ${rackResult.rows[0].capacity}`);
+            } else {
+                console.warn(`Could not update rack capacity for rack_mapping_id: ${rack_mapping_id}`);
+            }
+        } catch (error) {
+            console.error("Error updating rack capacity after deletion:", error);
+            // Don't fail the book copy deletion if rack update fails
+        }
+    }
+    
     return result.rows[0];
 }
 
@@ -321,6 +428,30 @@ async function bulkCreate(data, userId) {
 
         const result = await sql.query(query, values);
         copies.push(result.rows[0]);
+    }
+    
+    // Update rack capacity after creating all copies
+    if (resolvedRackId && quantity > 0) {
+        try {
+            const updateRackQuery = `
+                UPDATE ${schema}.rack_mapping 
+                SET capacity = capacity - $2,
+                    lastmodifieddate = NOW(),
+                    lastmodifiedbyid = $3
+                WHERE id = $1 AND capacity >= $2
+                RETURNING capacity
+            `;
+            const rackResult = await sql.query(updateRackQuery, [resolvedRackId, quantity, userId]);
+            
+            if (rackResult.rows.length > 0) {
+                console.log(`Rack capacity updated for bulk creation. New capacity: ${rackResult.rows[0].capacity}`);
+            } else {
+                console.warn(`Could not update rack capacity for rack_mapping_id: ${resolvedRackId}`);
+            }
+        } catch (error) {
+            console.error("Error updating rack capacity during bulk creation:", error);
+            // Don't fail the bulk creation if rack update fails
+        }
     }
 
     return copies;

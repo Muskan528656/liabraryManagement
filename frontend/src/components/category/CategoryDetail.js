@@ -128,28 +128,30 @@ const ClassificationDetail = ({ timeZone, permissions }) => {
       },
       { key: "classification_from", label: "Range From", type: "text" },
       { key: "classification_to", label: "Range To", type: "text" },
-      {
-        key: "name",
-        label: "Name",
-        type: "select",
-        options: (formData) => formData?._nameOptions || [],
-        creatable: true,
-        dependsOn: "category",
-        disabled: (formData) => !formData?.category,
-      },
+      { key: "name", label: "Name", type: "text" },
+      // {
+      //   key: "name",
+      //   label: "Name",
+      //   type: "select",
+      //   options: (formData) => formData?._nameOptions || [],
+      //   creatable: true,
+      //   dependsOn: "category",
+      //   disabled: (formData) => !formData?.category,
+      // },
 
       { key: "code", label: "Code", type: "text" },
+      { key: "is_active", label: "Status", type: "toggle" },
 
-      {
-        key: "is_active",
-        label: "Status",
-        type: "badge",
-        render: (value) => (
-          <span className={`badge ${value ? 'bg-success' : 'bg-secondary'}`}>
-            {value ? 'Active' : 'Inactive'}
-          </span>
-        )
-      },
+      // {
+      //   key: "is_active",
+      //   label: "Status",
+      //   type: "badge",
+      //   render: (value) => (
+      //     <span className={`badge ${value ? 'bg-success' : 'bg-secondary'}`}>
+      //       {value ? 'Active' : 'Inactive'}
+      //     </span>
+      //   )
+      // },
 
     ],
 
