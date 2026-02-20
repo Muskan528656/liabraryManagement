@@ -15,31 +15,23 @@ const ClassificationDetail = ({ timeZone, permissions }) => {
       label: "Created By",
       type: "text",
       disabled: true,
-      hidden: (formData, editingItem) =>
-        !editingItem || !permissions?.allowEdit,
     },
     {
       key: "lastmodifiedby_name",
       label: "Last Modified By",
       type: "text",
       disabled: true,
-      hidden: (formData, editingItem) =>
-        !editingItem || !permissions?.allowEdit,
     },
     {
       key: "createddate",
       label: "Created Date",
       type: "date",
-      hidden: (formData, editingItem) =>
-        !editingItem || !permissions?.allowEdit,
       render: (value) => convertToUserTimezone(value, timeZone),
     },
     {
       key: "lastmodifieddate",
       label: "Last Modified Date",
       type: "date",
-      hidden: (formData, editingItem) =>
-        !editingItem || !permissions?.allowEdit,
       render: (value) => convertToUserTimezone(value, timeZone),
     },
   ],
