@@ -19,7 +19,7 @@ async function getDashboardStats() {
     }
     console.log("Getting dashboard stats for schema:", schema);
     console.log("Getting dashboard stats for branch:", branchId || "All Branches");
-    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book_copy WHERE home_branch_id = $1`;
+    const totalBooksQuery = `SELECT COUNT(*) as count FROM ${schema}.book WHERE home_branch_id = $1`;
     const totalBooksResult = await sql.query(totalBooksQuery, [branchId]);
     const totalBooks = parseInt(totalBooksResult.rows[0]?.count || 0);
 
