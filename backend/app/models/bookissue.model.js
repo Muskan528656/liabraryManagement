@@ -1372,22 +1372,19 @@ async function findAll(memberType) {
     if (!this.schema) throw new Error("Schema not initialized. Call init() first.");
     if (!this.branchId) throw new Error("Branch ID not initialized. Call init() first.");
     console.log("Branch INW ID:", this.branchId);
-    let query = `SELECT
+    let query = `SELECT 
                     bi.*,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
-                    bc.barcode AS book_barcode,
-                    bc.itemcallnumber AS book_callnumber,
                     lm.card_number,
                     lm.first_name || ' ' || lm.last_name AS member_name,
                     lm.id AS card_id,
                     u.firstname || ' ' || u.lastname AS issued_by_name
                  FROM ${this.schema}.book_issues bi
                  LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-                 LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
-                 LEFT JOIN ${this.schema}.library_members lm
-                       ON bi.issued_to = lm.id
-                      AND lm.is_active = true
+                 LEFT JOIN ${this.schema}.library_members lm 
+                      ON bi.issued_to = lm.id 
+                     AND lm.is_active = true
                  LEFT JOIN ${this.schema}."user" u ON bi.issued_by = u.id WHERE bi.branch_id = '${this.branchId}' `;
     let values = [];
 
@@ -1410,20 +1407,17 @@ async function findById(id, memberType) {
   try {
     if (!this.schema) throw new Error("Schema not initialized.");
     if (!this.branchId) throw new Error("Branch ID not initialized.");
-    let query = `SELECT
+    let query = `SELECT 
         bi.*,
         b.title AS book_title,
         b.isbn AS book_isbn,
-        bc.barcode AS book_barcode,
-        bc.itemcallnumber AS book_callnumber,
         lm.card_number,
         lm.first_name || ' ' || lm.last_name AS member_name,
         lm.id AS card_id
       FROM ${this.schema}.book_issues bi
       LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-      LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
-      LEFT JOIN ${this.schema}.library_members lm
-        ON bi.issued_to = lm.id
+      LEFT JOIN ${this.schema}.library_members lm 
+        ON bi.issued_to = lm.id 
        AND lm.is_active = true
       WHERE bi.id = $1  AND bi.branch_id = '${this.branchId}'`;
 
@@ -1439,20 +1433,17 @@ async function findById(id, memberType) {
   }
 }
 async function findActive(memberType) {
-  let query = `SELECT
+  let query = `SELECT 
       bi.*,
       b.title AS book_title,
       b.isbn AS book_isbn,
-      bc.barcode AS book_barcode,
-      bc.itemcallnumber AS book_callnumber,
       lm.card_number,
       lm.first_name || ' ' || lm.last_name AS member_name,
       lm.id AS card_id
     FROM ${this.schema}.book_issues bi
     LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
-    LEFT JOIN ${this.schema}.library_members lm
-      ON bi.issued_to = lm.id
+    LEFT JOIN ${this.schema}.library_members lm 
+      ON bi.issued_to = lm.id 
      AND lm.is_active = true
     WHERE bi.return_date IS NULL AND bi.branch_id = '${this.branchId}'`;
 
@@ -1467,23 +1458,20 @@ async function findActive(memberType) {
 }
 
 async function findByBookId(bookId, memberType) {
-  let query = `SELECT
+  let query = `SELECT 
       bi.*,
       b.title AS book_title,
       b.isbn AS book_isbn,
-      bc.barcode AS book_barcode,
-      bc.itemcallnumber AS book_callnumber,
       lm.card_number,
       lm.first_name || ' ' || lm.last_name AS member_name,
       lm.id AS card_id
     FROM ${this.schema}.book_issues bi
     LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
-    LEFT JOIN ${this.schema}.library_members lm
-      ON bi.issued_to = lm.id
+    LEFT JOIN ${this.schema}.library_members lm 
+      ON bi.issued_to = lm.id 
      AND lm.is_active = true
-    WHERE bi.book_id = $1
-      AND bi.return_date IS NULL
+    WHERE bi.book_id = $1 
+      AND bi.return_date IS NULL 
       AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
 
   let values = [bookId];
@@ -1497,19 +1485,16 @@ async function findByBookId(bookId, memberType) {
 async function findByCardId(cardId, memberType) {
   console.log("findByCardId called with cardId:", cardId, "memberType:", memberType);
   console.log("Current schema:", schema);
-  let query = `SELECT
+  let query = `SELECT 
       bi.*,
       b.title AS book_title,
-      b.isbn AS book_isbn,
-      bc.barcode AS book_barcode,
-      bc.itemcallnumber AS book_callnumber
+      b.isbn AS book_isbn
     FROM ${this.schema}.book_issues bi
     LEFT JOIN ${this.schema}.books b ON bi.book_id = b.id
-    LEFT JOIN ${this.schema}.book_copy bc ON bc.book_id = b.id AND bc.status = 'BORROWED'
-    LEFT JOIN ${this.schema}.library_members lm
+    LEFT JOIN ${this.schema}.library_members lm 
       ON bi.issued_to = lm.id
-    WHERE bi.issued_to = $1
-      AND bi.return_date IS NULL
+    WHERE bi.issued_to = $1 
+      AND bi.return_date IS NULL 
       AND bi.status = 'issued' AND bi.branch_id = '${this.branchId}'`;
 
   let values = [cardId];
